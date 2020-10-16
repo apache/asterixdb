@@ -68,6 +68,7 @@ import org.apache.asterix.optimizer.rules.NestGroupByRule;
 import org.apache.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
 import org.apache.asterix.optimizer.rules.PushAggregateIntoNestedSubplanRule;
 import org.apache.asterix.optimizer.rules.PushFieldAccessRule;
+import org.apache.asterix.optimizer.rules.PushFieldAccessToExternalDataScanRule;
 import org.apache.asterix.optimizer.rules.PushGroupByThroughProduct;
 import org.apache.asterix.optimizer.rules.PushLimitIntoOrderByRule;
 import org.apache.asterix.optimizer.rules.PushLimitIntoPrimarySearchRule;
@@ -387,6 +388,7 @@ public final class RuleCollections {
         // remove assigns that could become unused after PushLimitIntoPrimarySearchRule
         physicalRewritesTopLevel.add(new RemoveUnusedAssignAndAggregateRule());
         physicalRewritesTopLevel.add(new IntroduceProjectsRule());
+        physicalRewritesTopLevel.add(new PushFieldAccessToExternalDataScanRule());
         physicalRewritesTopLevel.add(new SetAsterixPhysicalOperatorsRule());
         physicalRewritesTopLevel.add(new IntroduceRapidFrameFlushProjectAssignRule());
         physicalRewritesTopLevel.add(new SetExecutionModeRule());

@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
@@ -499,6 +500,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             writeFilterInformation(op.getMinFilterVars(), op.getMaxFilterVars());
             writeSelectLimitInformation(op.getSelectCondition(), op.getOutputLimit(), indent);
+            writeProjectInformation(op.getProjectionInfo());
             return null;
         } catch (IOException e) {
             throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
@@ -811,6 +813,13 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         }
     }
 
+    private void writeProjectInformation(IProjectionInfo<?> projectionInfo) throws IOException {
+        final String projectedFields = projectionInfo == null ? "" : projectionInfo.toString();
+        if (!projectedFields.isEmpty()) {
+            jsonGenerator.writeStringField("project", projectedFields);
+        }
+    }
+
     private void writeVariablesAndExpressions(List<LogicalVariable> variables,
             List<Mutable<ILogicalExpression>> expressions, Void indent) throws IOException, AlgebricksException {
         if (!variables.isEmpty()) {
@@ -847,6 +856,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     }
 
     /////////////// string fields ///////////////
+
     /** Writes "fieldName": "expr" */
     private void writeStringFieldExpression(String fieldName, Mutable<ILogicalExpression> expression, Void indent)
             throws AlgebricksException, IOException {
@@ -854,6 +864,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     }
 
     /////////////// array fields ///////////////
+
     /** Writes "fieldName": [ "var1", "var2", ... ] */
     private void writeArrayFieldOfVariables(String fieldName, List<LogicalVariable> variables) throws IOException {
         jsonGenerator.writeArrayFieldStart(fieldName);
@@ -925,6 +936,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     }
 
     /////////////// object fields ///////////////
+
     /** Writes "fieldName" : { "expressions": [ "expr1", "expr2", ...] } */
     private void writeObjectFieldWithExpressions(String fieldName, List<Mutable<ILogicalExpression>> exprs, Void indent)
             throws IOException, AlgebricksException {

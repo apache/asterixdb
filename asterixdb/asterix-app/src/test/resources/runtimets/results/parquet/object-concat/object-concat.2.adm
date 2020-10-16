@@ -1,0 +1,24 @@
+distribute result [$$16]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$16])
+    -- STREAM_PROJECT  |PARTITIONED|
+      exchange
+      -- SORT_MERGE_EXCHANGE [$$18(ASC) ]  |PARTITIONED|
+        order (ASC, $$18)
+        -- STABLE_SORT [$$18(ASC)]  |PARTITIONED|
+          exchange
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            project ([$$16, $$18])
+            -- STREAM_PROJECT  |PARTITIONED|
+              assign [$$16, $$18] <- [object-concat($$p.getField("coordinates"), $$p.getField("user")).getField("name"), $$p.getField("id")]
+              -- ASSIGN  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  data-scan []<-[$$p] <- test.ParquetDataset project (coordinates, user, id)
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
+                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -461,7 +461,9 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         }
         DataSourceScanOperator argScan = (DataSourceScanOperator) arg;
         boolean isomorphic = op.getDataSource().getId().equals(argScan.getDataSource().getId())
-                && op.getOutputLimit() == argScan.getOutputLimit();
+                && op.getOutputLimit() == argScan.getOutputLimit()
+                && Objects.equals(op.getProjectionInfo(), argScan.getProjectionInfo());
+
         if (!isomorphic) {
             return Boolean.FALSE;
         }

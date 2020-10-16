@@ -25,8 +25,9 @@ public class AlgebricksConfig {
 
     public static final String ALGEBRICKS_LOGGER_NAME = "org.apache.hyracks.algebricks";
     public static final Logger ALGEBRICKS_LOGGER = LogManager.getLogger(ALGEBRICKS_LOGGER_NAME);
-    public static final int SORT_SAMPLES = 100;
-    public static final boolean SORT_PARALLEL = true;
+    public static final int SORT_SAMPLES_DEFAULT = 100;
+    public static final boolean SORT_PARALLEL_DEFAULT = true;
     public static final boolean INDEX_ONLY_DEFAULT = true;
     public static final boolean SANITYCHECK_DEFAULT = false;
+    public static final boolean EXTERNAL_FIELD_PUSHDOWN_DEFAULT = false;
 }

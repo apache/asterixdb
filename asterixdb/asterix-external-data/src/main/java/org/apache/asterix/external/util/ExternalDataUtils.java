@@ -89,6 +89,7 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 public class ExternalDataUtils {
 
     private static final Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = new EnumMap<>(ATypeTag.class);
+
     static {
         valueParserFactoryMap.put(ATypeTag.INTEGER, IntegerParserFactory.INSTANCE);
         valueParserFactoryMap.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);
@@ -400,12 +401,17 @@ public class ExternalDataUtils {
      * Prepares the configuration of the external data and its adapter by filling the information required by
      * adapters and parsers.
      *
-     * @param adapterName adapter name
+     * @param adapterName   adapter name
      * @param configuration external data configuration
      */
     public static void prepare(String adapterName, Map<String, String> configuration) {
         if (!configuration.containsKey(ExternalDataConstants.KEY_READER)) {
             configuration.put(ExternalDataConstants.KEY_READER, adapterName);
+        }
+        final String inputFormat = configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT);
+        if (ExternalDataConstants.INPUT_FORMAT_PARQUET.equals(inputFormat)) {
+            //Parquet supports binary-to-binary conversion. No parsing is required
+            configuration.put(ExternalDataConstants.KEY_FORMAT, ExternalDataConstants.FORMAT_NOOP);
         }
         if (!configuration.containsKey(ExternalDataConstants.KEY_PARSER)
                 && configuration.containsKey(ExternalDataConstants.KEY_FORMAT)) {
@@ -523,7 +529,6 @@ public class ExternalDataUtils {
      * Regex matches all the provided patterns against the provided path
      *
      * @param path path to check against
-     *
      * @return {@code true} if all patterns match, {@code false} otherwise
      */
     public static boolean matchPatterns(List<Matcher> matchers, String path) {
@@ -539,7 +544,6 @@ public class ExternalDataUtils {
      * Converts the wildcard to proper regex
      *
      * @param pattern wildcard pattern to convert
-     *
      * @return regex expression
      */
     public static String patternToRegex(String pattern) {
@@ -682,6 +686,14 @@ public class ExternalDataUtils {
         }
     }
 
+    public static boolean supportsPushdown(Map<String, String> properties) {
+        //Currently, only Apache Parquet format is supported
+        return ExternalDataConstants.CLASS_NAME_PARQUET_INPUT_FORMAT
+                .equals(properties.get(ExternalDataConstants.KEY_INPUT_FORMAT))
+                || ExternalDataConstants.INPUT_FORMAT_PARQUET
+                        .equals(properties.get(ExternalDataConstants.KEY_INPUT_FORMAT));
+    }
+
     public static class AwsS3 {
         private AwsS3() {
             throw new AssertionError("do not instantiate");
@@ -740,7 +752,6 @@ public class ExternalDataUtils {
          * Validate external dataset properties
          *
          * @param configuration properties
-         *
          * @throws CompilationException Compilation exception
          */
         public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
@@ -827,7 +838,6 @@ public class ExternalDataUtils {
          * Validate external dataset properties
          *
          * @param configuration properties
-         *
          * @throws CompilationException Compilation exception
          */
         public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,

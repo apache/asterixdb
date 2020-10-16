@@ -117,9 +117,10 @@ public class ExternalDataConstants {
     // a string representing the NULL value
     public static final String KEY_NULL_STR = "null";
     public static final String KEY_REDACT_WARNINGS = "redact-warnings";
+    public static final String KEY_REQUESTED_FIELDS = "requested-fields";
 
     /**
-     *  Keys for adapter name
+     * Keys for adapter name
      **/
     public static final String KEY_ADAPTER_NAME_TWITTER_PUSH = "twitter_push";
     public static final String KEY_ADAPTER_NAME_PUSH_TWITTER = "push_twitter";
@@ -139,6 +140,8 @@ public class ExternalDataConstants {
     public static final String CLASS_NAME_TEXT_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
     public static final String CLASS_NAME_SEQUENCE_INPUT_FORMAT = "org.apache.hadoop.mapred.SequenceFileInputFormat";
     public static final String CLASS_NAME_RC_INPUT_FORMAT = "org.apache.asterix.hivecompat.io.RCFileInputFormat";
+    public static final String CLASS_NAME_PARQUET_INPUT_FORMAT =
+            "org.apache.asterix.external.input.record.reader.hdfs.parquet.MapredParquetInputFormat";
     public static final String CLASS_NAME_HDFS_FILESYSTEM = "org.apache.hadoop.hdfs.DistributedFileSystem";
     /**
      * input formats aliases
@@ -146,6 +149,7 @@ public class ExternalDataConstants {
     public static final String INPUT_FORMAT_TEXT = "text-input-format";
     public static final String INPUT_FORMAT_SEQUENCE = "sequence-input-format";
     public static final String INPUT_FORMAT_RC = "rc-input-format";
+    public static final String INPUT_FORMAT_PARQUET = "parquet-input-format";
     /**
      * Builtin streams
      */
@@ -179,10 +183,12 @@ public class ExternalDataConstants {
     public static final String FORMAT_SEMISTRUCTURED = "semi-structured";
     public static final String FORMAT_LINE_SEPARATED = "line-separated";
     public static final String FORMAT_HDFS_WRITABLE = "hdfs-writable";
+    public static final String FORMAT_NOOP = "noop";
     public static final String FORMAT_KV = "kv";
     public static final String FORMAT_CSV = "csv";
     public static final String FORMAT_TSV = "tsv";
     public static final Set<String> ALL_FORMATS;
+
     static {
         Set<String> formats = new HashSet<>(13);
         formats.add(FORMAT_HIVE);

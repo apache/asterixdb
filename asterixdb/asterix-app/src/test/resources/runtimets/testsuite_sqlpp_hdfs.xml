@@ -157,4 +157,41 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="parquet">
+    <test-case FilePath="parquet">
+      <compilation-unit name="select-all-fields">
+        <output-dir compare="Text">select-all-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="parquet">
+      <compilation-unit name="select-count-one-field">
+        <output-dir compare="Text">select-count-one-field</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="parquet">
+      <compilation-unit name="multi-file-multi-schema">
+        <output-dir compare="Text">multi-file-multi-schema</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="parquet">
+      <compilation-unit name="expression-pushdown">
+        <output-dir compare="Text">expression-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="parquet">
+      <compilation-unit name="missing-fields">
+        <output-dir compare="Text">missing-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="parquet">
+      <compilation-unit name="string-standard-utf8">
+        <output-dir compare="Text">string-standard-utf8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="parquet">
+      <compilation-unit name="object-concat">
+        <output-dir compare="Text">object-concat</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

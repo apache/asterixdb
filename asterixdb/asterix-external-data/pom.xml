@@ -158,7 +158,7 @@
     </plugins>
     <pluginManagement>
       <plugins>
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
           <groupId>org.eclipse.m2e</groupId>
           <artifactId>lifecycle-mapping</artifactId>
@@ -465,8 +465,16 @@
       <artifactId>azure-storage-blob</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.msgpack</groupId>
-        <artifactId>msgpack-core</artifactId>
+      <groupId>org.msgpack</groupId>
+      <artifactId>msgpack-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.parquet</groupId>
+      <artifactId>parquet-column</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.parquet</groupId>
+      <artifactId>parquet-hadoop</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>

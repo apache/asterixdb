@@ -46,7 +46,7 @@ public abstract class AbstractScanOperator extends AbstractLogicalOperator {
 
     @Override
     public void recomputeSchema() {
-        schema = new ArrayList<LogicalVariable>();
+        schema = new ArrayList<>();
         schema.addAll(inputs.get(0).getValue().getSchema());
         schema.addAll(variables);
     }
@@ -67,5 +67,4 @@ public abstract class AbstractScanOperator extends AbstractLogicalOperator {
             }
         };
     }
-
 }

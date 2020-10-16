@@ -36,6 +36,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.IVariableContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
@@ -327,8 +328,9 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         Mutable<ILogicalExpression> newSelectCondition = op.getSelectCondition() != null
                 ? exprDeepCopyVisitor.deepCopyExpressionReference(op.getSelectCondition()) : null;
+        IProjectionInfo<?> projectionInfo = op.getProjectionInfo() != null ? op.getProjectionInfo().createCopy() : null;
         DataSourceScanOperator opCopy = new DataSourceScanOperator(deepCopyVariableList(op.getVariables()),
-                op.getDataSource(), newSelectCondition, op.getOutputLimit());
+                op.getDataSource(), newSelectCondition, op.getOutputLimit(), projectionInfo);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
@@ -343,6 +344,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars());
         appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
         appendLimitInformation(plan, op.getOutputLimit());
+        appendProjectInformation(plan, op.getProjectionInfo());
         return null;
     }
 
@@ -370,6 +372,15 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         }
         if (maxFilterVars != null) {
             plan.append(" max:" + maxFilterVars);
+        }
+    }
+
+    private void appendProjectInformation(AlgebricksStringBuilderWriter plan, IProjectionInfo<?> projectionInfo) {
+        final String projectedFields = projectionInfo == null ? "" : projectionInfo.toString();
+        if (!projectedFields.isEmpty()) {
+            plan.append(" project (");
+            plan.append(projectedFields);
+            plan.append(")");
         }
     }
 

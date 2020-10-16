@@ -19,9 +19,14 @@
 package org.apache.asterix.test.runtime;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import org.apache.asterix.external.dataset.adapter.GenericAdapter;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData.Record;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,6 +36,11 @@ import org.apache.hadoop.hdfs.server.common.HdfsServerConstants.StartupOption;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextInputFormat;
+import org.apache.hyracks.api.util.IoUtil;
+import org.kitesdk.data.spi.JsonUtil;
+import org.kitesdk.data.spi.filesystem.JSONFileReader;
+
+import parquet.avro.AvroParquetWriter;
 
 /**
  * Manages a Mini (local VM) HDFS cluster with a configured number of datanodes.
@@ -43,6 +53,10 @@ public class HDFSCluster {
     private static final String DATA_PATH = "data/hdfs";
     private static final String HDFS_PATH = "/asterix";
     private static final HDFSCluster INSTANCE = new HDFSCluster();
+    //Temporary folder that holds generated binary files
+    private static final String BINARY_GEN_BASEDIR = "target" + File.separatorChar + "generated_bin_files";
+    //How many records should the schema inference method inspect to infer the schema for parquet files
+    private static final int NUM_OF_RECORDS_SCHEMA = 20;
 
     private MiniDFSCluster dfsCluster;
     private int numDataNodes = 2;
@@ -79,18 +93,25 @@ public class HDFSCluster {
         build.startupOption(StartupOption.REGULAR);
         dfsCluster = build.build();
         dfs = FileSystem.get(conf);
-        loadData(basePath);
+        //Generate binary files from JSON files (e.g., parquet files)
+        generateBinaryFiles(basePath);
+        //Load JSON/ADM files to HDFS
+        loadData(basePath, DATA_PATH);
+        //Load generated binary files (e.g., parquet files) to HDFS
+        loadData(basePath, BINARY_GEN_BASEDIR);
     }
 
-    private void loadData(File localDataRoot) throws IOException {
+    private void loadData(File localDataRoot, String dataPath) throws IOException {
         Path destDir = new Path(HDFS_PATH);
         dfs.mkdirs(destDir);
-        File srcDir = new File(localDataRoot, DATA_PATH);
+        File srcDir = new File(localDataRoot, dataPath);
         if (srcDir.exists()) {
             File[] listOfFiles = srcDir.listFiles();
             for (File srcFile : listOfFiles) {
-                Path path = new Path(srcFile.getAbsolutePath());
-                dfs.copyFromLocalFile(path, destDir);
+                if (srcFile.isFile()) {
+                    Path path = new Path(srcFile.getAbsolutePath());
+                    dfs.copyFromLocalFile(path, destDir);
+                }
             }
         }
     }
@@ -100,6 +121,16 @@ public class HDFSCluster {
         FileSystem lfs = FileSystem.getLocal(new Configuration());
         lfs.delete(new Path("build"), true);
         System.setProperty("hadoop.log.dir", "logs");
+    }
+
+    private void generateBinaryFiles(File localDataRoot) throws IOException {
+        File srcPath = new File(localDataRoot, DATA_PATH);
+        File destPath = new File(localDataRoot, BINARY_GEN_BASEDIR);
+        //Delete old generated files
+        IoUtil.delete(destPath);
+        Files.createDirectory(Paths.get(destPath.getAbsolutePath()));
+        //Write parquet files
+        writeParquetDir(new File(srcPath, "parquet"), destPath);
     }
 
     public void cleanup() throws Exception {
@@ -131,4 +162,27 @@ public class HDFSCluster {
         return conf;
     }
 
+    private void writeParquetDir(File parquetSrcDir, File destPath) throws IOException {
+        File[] listOfFiles = parquetSrcDir.listFiles();
+        for (File jsonFile : listOfFiles) {
+            String fileName = jsonFile.getName().substring(0, jsonFile.getName().indexOf(".")) + ".parquet";
+            Path outputPath = new Path(destPath.getAbsolutePath(), fileName);
+            writeParquetFile(jsonFile, outputPath);
+        }
+    }
+
+    public void writeParquetFile(File jsonInputPath, Path parquetOutputPath) throws IOException {
+        final FileInputStream schemaInputStream = new FileInputStream(jsonInputPath);
+        final FileInputStream jsonInputStream = new FileInputStream(jsonInputPath);
+        //Infer Avro schema
+        final Schema inputSchema = JsonUtil.inferSchema(schemaInputStream, "parquet_schema", NUM_OF_RECORDS_SCHEMA);
+        try (JSONFileReader<Record> reader = new JSONFileReader<>(jsonInputStream, inputSchema, Record.class)) {
+            reader.initialize();
+            try (AvroParquetWriter<Record> writer = new AvroParquetWriter<>(parquetOutputPath, inputSchema)) {
+                for (Record record : reader) {
+                    writer.write(record);
+                }
+            }
+        }
+    }
 }

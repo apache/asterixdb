@@ -23,123 +23,40 @@ import java.util.List;
 
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexingDatasource;
-import org.apache.asterix.external.api.IRawRecord;
-import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.external.input.record.GenericRecord;
-import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Writable>, IIndexingDatasource {
-
-    protected RecordReader<K, Writable> reader;
-    protected V value = null;
-    protected K key = null;
-    protected int currentSplitIndex = 0;
-    protected boolean read[];
-    protected InputFormat<?, ?> inputFormat;
-    protected InputSplit[] inputSplits;
-    protected String[] readSchedule;
-    protected String nodeName;
-    protected JobConf conf;
-    protected GenericRecord<Writable> record;
+public class HDFSRecordReader<K, V extends Writable> extends AbstractHDFSRecordReader<K, V>
+        implements IIndexingDatasource {
     // Indexing variables
-    protected final IExternalIndexer indexer;
-    protected final List<ExternalFile> snapshot;
-    protected final FileSystem hdfs;
+    private final IExternalIndexer indexer;
+    private final List<ExternalFile> snapshot;
+    private final FileSystem hdfs;
 
-    public HDFSRecordReader(boolean read[], InputSplit[] inputSplits, String[] readSchedule, String nodeName,
+    public HDFSRecordReader(boolean[] read, InputSplit[] inputSplits, String[] readSchedule, String nodeName,
             JobConf conf, List<ExternalFile> snapshot, IExternalIndexer indexer) throws IOException {
-        this.read = read;
-        this.inputSplits = inputSplits;
-        this.readSchedule = readSchedule;
-        this.nodeName = nodeName;
-        this.conf = conf;
-        this.inputFormat = conf.getInputFormat();
-        this.reader = new EmptyRecordReader<K, Writable>();
-        this.record = new GenericRecord<Writable>();
+        super(read, inputSplits, readSchedule, nodeName, conf);
         this.indexer = indexer;
         this.snapshot = snapshot;
         this.hdfs = FileSystem.get(conf);
-        nextInputSplit();
-    }
-
-    @Override
-    public void close() throws IOException {
-        reader.close();
-    }
-
-    @Override
-    public boolean hasNext() throws Exception {
-        if (reader.next(key, value)) {
-            return true;
-        }
-        while (nextInputSplit()) {
-            if (reader.next(key, value)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public IRawRecord<Writable> next() throws IOException {
-        record.set(value);
-        return record;
-    }
-
-    private boolean nextInputSplit() throws IOException {
-        for (; currentSplitIndex < inputSplits.length; currentSplitIndex++) {
-            /**
-             * read all the partitions scheduled to the current node
-             */
-            if (readSchedule[currentSplitIndex].equals(nodeName)) {
-                /**
-                 * pick an unread split to read synchronize among
-                 * simultaneous partitions in the same machine
-                 */
-                synchronized (read) {
-                    if (read[currentSplitIndex] == false) {
-                        read[currentSplitIndex] = true;
-                    } else {
-                        continue;
-                    }
-                }
-                if (snapshot != null) {
-                    String fileName = ((FileSplit) (inputSplits[currentSplitIndex])).getPath().toUri().getPath();
-                    FileStatus fileStatus = hdfs.getFileStatus(new Path(fileName));
-                    // Skip if not the same file stored in the files snapshot
-                    if (fileStatus.getModificationTime() != snapshot.get(currentSplitIndex).getLastModefiedTime()
-                            .getTime()) {
-                        continue;
-                    }
-                }
-
-                reader.close();
-                reader = getRecordReader(currentSplitIndex);
-                return true;
-            }
-        }
-        return false;
     }
 
     @SuppressWarnings("unchecked")
-    private RecordReader<K, Writable> getRecordReader(int splitIndex) throws IOException {
-        reader = (RecordReader<K, Writable>) inputFormat.getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
+    @Override
+    protected RecordReader<K, V> getRecordReader(int splitIndex) throws IOException {
+        reader = (RecordReader<K, V>) inputFormat.getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
         if (key == null) {
             key = reader.createKey();
-            value = (V) reader.createValue();
+            value = reader.createValue();
         }
         if (indexer != null) {
             try {
@@ -149,6 +66,19 @@ public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Wr
             }
         }
         return reader;
+    }
+
+    @Override
+    protected boolean onNextInputSplit() throws IOException {
+        if (snapshot != null) {
+            String fileName = ((FileSplit) (inputSplits[currentSplitIndex])).getPath().toUri().getPath();
+            FileStatus fileStatus = hdfs.getFileStatus(new Path(fileName));
+            // Skip if not the same file stored in the files snapshot
+            if (fileStatus.getModificationTime() != snapshot.get(currentSplitIndex).getLastModefiedTime().getTime()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -171,20 +101,8 @@ public class HDFSRecordReader<K, V extends Writable> implements IRecordReader<Wr
         return currentSplitIndex;
     }
 
-    public RecordReader<K, Writable> getReader() {
+    @Override
+    public RecordReader<K, V> getReader() {
         return reader;
-    }
-
-    @Override
-    public void setFeedLogManager(FeedLogManager feedLogManager) {
-    }
-
-    @Override
-    public void setController(AbstractFeedDataFlowController controller) {
-    }
-
-    @Override
-    public boolean handleException(Throwable th) {
-        return false;
     }
 }
