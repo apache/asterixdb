@@ -75,6 +75,8 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
 
     public static final String DESCRIPTOR_FILE_NAME = "lib.json";
 
+    public static final String DISTRIBUTION_DIR = "dist";
+
     private static final Logger LOGGER = LogManager.getLogger(ExternalLibraryManager.class);
 
     private final NodeControllerService ncs;
@@ -84,6 +86,7 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
     private final FileReference storageDir;
     private final Path storageDirPath;
     private final FileReference trashDir;
+    private final FileReference distDir;
     private final Path trashDirPath;
     private final Map<Pair<DataverseName, String>, ILibrary> libraries = new HashMap<>();
     private IPCSystem pythonIPC;
@@ -96,6 +99,7 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
         storageDir = baseDir.getChild(STORAGE_DIR_NAME);
         storageDirPath = storageDir.getFile().toPath();
         trashDir = baseDir.getChild(TRASH_DIR_NAME);
+        distDir = baseDir.getChild(DISTRIBUTION_DIR);
         trashDirPath = trashDir.getFile().toPath().normalize();
         objectMapper = createObjectMapper();
         router = new ExternalFunctionResultRouter();
@@ -174,6 +178,11 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
     public FileReference getLibraryDir(DataverseName dataverseName, String libraryName) throws HyracksDataException {
         FileReference dataverseDir = getDataverseDir(dataverseName);
         return getChildFileRef(dataverseDir, libraryName);
+    }
+
+    @Override
+    public FileReference getDistributionDir() {
+        return distDir;
     }
 
     @Override

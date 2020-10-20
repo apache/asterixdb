@@ -38,7 +38,6 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.asterix.api.http.IQueryWebServerRegistrant;
 import org.apache.asterix.api.http.server.ActiveStatsApiServlet;
 import org.apache.asterix.api.http.server.ApiServlet;
-import org.apache.asterix.api.http.server.BasicAuthServlet;
 import org.apache.asterix.api.http.server.CcQueryCancellationServlet;
 import org.apache.asterix.api.http.server.ClusterApiServlet;
 import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
@@ -51,7 +50,6 @@ import org.apache.asterix.api.http.server.QueryStatusApiServlet;
 import org.apache.asterix.api.http.server.RebalanceApiServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.ShutdownApiServlet;
-import org.apache.asterix.api.http.server.UdfApiServlet;
 import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.cc.CCExtensionManager;
@@ -294,7 +292,6 @@ public class CCApplication extends BaseCCApplication {
         addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_CC_DETAIL); // must not precede add of CLUSTER_STATE
         addServlet(jsonAPIServer, Servlets.DIAGNOSTICS);
         addServlet(jsonAPIServer, Servlets.ACTIVE_STATS);
-        addServlet(jsonAPIServer, Servlets.UDF);
         return jsonAPIServer;
     }
 
@@ -345,11 +342,6 @@ public class CCApplication extends BaseCCApplication {
                 return new DiagnosticsApiServlet(appCtx, ctx, paths);
             case Servlets.ACTIVE_STATS:
                 return new ActiveStatsApiServlet(appCtx, ctx, paths);
-            case Servlets.UDF:
-                return new BasicAuthServlet(ctx,
-                        new UdfApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(SQLPP),
-                                getStatementExecutorFactory(), componentProvider, server.getScheme(),
-                                server.getAddress().getPort()));
             default:
                 throw new IllegalStateException(key);
         }
