@@ -203,6 +203,7 @@ public class ErrorCode {
     public static final int INVALID_PROPERTY_FORMAT = 1112;
     public static final int INVALID_REGEX_PATTERN = 1113;
     public static final int EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES = 1114;
+    public static final int INVALID_DATABASE_OBJECT_NAME = 1115;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;
