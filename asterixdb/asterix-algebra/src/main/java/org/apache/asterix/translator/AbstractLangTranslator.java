@@ -31,6 +31,7 @@ import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Statement;
@@ -146,7 +147,7 @@ public abstract class AbstractLangTranslator {
                 dataverseName = dvDropStmt.getDataverseName();
                 invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
                 if (invalidOperation) {
-                    message = "Cannot drop dataverse:" + dataverseName;
+                    message = "Cannot drop dataverse: " + dataverseName;
                 }
                 break;
 
@@ -157,7 +158,7 @@ public abstract class AbstractLangTranslator {
                 }
                 invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
                 if (invalidOperation) {
-                    message = "Cannot drop a dataset belonging to the dataverse:"
+                    message = "Cannot drop a dataset belonging to the dataverse: "
                             + MetadataConstants.METADATA_DATAVERSE_NAME;
                 }
                 break;
@@ -182,12 +183,11 @@ public abstract class AbstractLangTranslator {
                     }
                 }
                 break;
-            default:
-                break;
         }
 
         if (invalidOperation) {
-            throw new AsterixException("Invalid operation - " + message);
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, stmt.getSourceLocation(),
+                    "Invalid operation - " + message);
         }
     }
 }

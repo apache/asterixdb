@@ -16,4 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-drop index Cust.ord;
+drop dataverse test if exists;
+create dataverse test;
+use test;
+create dataset t1(id int not unknown) primary key id;
+drop index t1.UnknownIdx;

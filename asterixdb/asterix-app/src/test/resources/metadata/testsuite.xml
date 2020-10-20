@@ -327,88 +327,124 @@
   </test-group>
   <test-group name="exception">
     <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_dataset">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1050: Cannot find dataset with name UnknownDataset in dataverse Default (in line 19, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_dataverse">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1063: Cannot find dataverse with name UnknownDataverse (in line 19, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_system_dataverse">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot drop dataverse: Metadata (in line 19, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_index">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1083: Cannot find index with name UnknownIdx (in line 23, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_nodegroup">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1080: Cannot find node group with name UnknownNodeGroup (in line 19, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_type1">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1082: Cannot find datatype with name UnknownType (in line 19, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot drop a dataset belonging to the dataverse: Metadata (in line 26, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot drop a dataset belonging to the dataverse: Metadata (in line 26, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_3">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot drop a dataset belonging to the dataverse: Metadata (in line 26, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_4">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot drop a dataset belonging to the dataverse: Metadata (in line 26, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_5">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot drop a dataset belonging to the dataverse: Metadata (in line 26, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_6">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot drop a dataset belonging to the dataverse: Metadata (in line 26, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_7">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot drop a dataset belonging to the dataverse: Metadata (in line 26, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_239_drop_system_dataset_8">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Invalid operation - Cannot drop a dataset belonging to the dataverse:Metadata</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot drop a dataset belonging to the dataverse: Metadata (in line 26, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_251_dataset_hint_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Invalid operation - Dataset: Book error in processing hint: TUPLE_SIZE Unknown hint</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Dataset: Book error in processing hint: TUPLE_SIZE Unknown hint</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_251_dataset_hint_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Invalid operation - Dataset: Book error in processing hint: SIZE Unknown hint</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Dataset: Book error in processing hint: SIZE Unknown hint</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_272_create_index_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Cannot find dataset with name Foo in dataverse test</expected-error>
+        <expected-error>ASX1050: Cannot find dataset with name Foo in dataverse test (in line 30, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_272_create_index_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Cannot find dataset with name Foo in dataverse test</expected-error>
+        <expected-error> ASX1050: Cannot find dataset with name Foo in dataverse test (in line 31, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <!-- This case should be fixed to return a proper message rather than NPE -->
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_dataset_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Field "name" is not found</expected-error>
+        <expected-error>ASX1014: Field "name" is not found (in line 34, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_255_create_dataset_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Field of type object cannot be used as a primary key field</expected-error>
+        <expected-error>ASX1022: Field of type object cannot be used as a primary key field (in line 39, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <!-- Feed datasets are not supported anymore
@@ -422,49 +458,49 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_266_create_dataset_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Field "point" is not found</expected-error>
+        <expected-error>ASX1014: Field "point" is not found (in line 34, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_266_create_dataset_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>The primary key field "id" cannot be nullable</expected-error>
+        <expected-error>ASX1021: The primary key field "id" cannot be nullable (in line 34, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>The field "[loc]" which is of type point cannot be indexed using the BTree index.</expected-error>
+        <expected-error>ASX1079: Compilation error: The field "[loc]" which is of type point cannot be indexed using the BTree index. (in line 37, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>The field "[age]" which is of type integer cannot be indexed using the RTree index.</expected-error>
+        <expected-error>ASX1079: Compilation error: The field "[age]" which is of type integer cannot be indexed using the RTree index. (in line 37, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_3">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>The field "[loc]" which is of type point cannot be indexed using the Length Partitioned Keyword index.</expected-error>
+        <expected-error>ASX1079: Compilation error: The field "[loc]" which is of type point cannot be indexed using the Length Partitioned Keyword index. (in line 37, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_4">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>The field "[loc]" which is of type point cannot be indexed using the Length Partitioned Keyword index.</expected-error>
+        <expected-error>ASX1079: Compilation error: The field "[loc]" which is of type point cannot be indexed using the Length Partitioned Keyword index. (in line 37, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_5">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>The field "[loc]" which is of type point cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
+        <expected-error>ASX1079: Compilation error: The field "[loc]" which is of type point cannot be indexed using the Length Partitioned N-Gram index. (in line 37, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_6">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>The field "[loc]" which is of type point cannot be indexed using the Length Partitioned N-Gram index.</expected-error>
+        <expected-error>ASX1079: Compilation error: The field "[loc]" which is of type point cannot be indexed using the Length Partitioned N-Gram index. (in line 37, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

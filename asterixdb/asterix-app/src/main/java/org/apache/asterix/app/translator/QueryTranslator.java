@@ -1380,7 +1380,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ARecordType aRecordType, ARecordType metaRecordType, List<List<String>> indexFields,
             List<IAType> indexFieldTypes) throws AlgebricksException {
         ValidateUtil.validateKeyFields(aRecordType, metaRecordType, indexFields, keySourceIndicators, indexFieldTypes,
-                stmtCreateIndex.getIndexType());
+                stmtCreateIndex.getIndexType(), stmtCreateIndex.getSourceLocation());
     }
 
     protected void handleCreateTypeStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
