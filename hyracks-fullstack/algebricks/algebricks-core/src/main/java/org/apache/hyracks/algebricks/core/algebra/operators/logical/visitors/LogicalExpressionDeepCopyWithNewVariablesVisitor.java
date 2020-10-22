@@ -33,7 +33,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
@@ -64,9 +63,7 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
     }
 
     private void deepCopyAnnotations(AbstractFunctionCallExpression src, AbstractFunctionCallExpression dest) {
-        Map<Object, IExpressionAnnotation> srcAnnotations = src.getAnnotations();
-        Map<Object, IExpressionAnnotation> destAnnotations = dest.getAnnotations();
-        srcAnnotations.forEach((key, value) -> destAnnotations.put(key, value.copy()));
+        src.copyAnnotationsInto(dest);
     }
 
     private void deepCopyOpaqueParameters(AbstractFunctionCallExpression src, AbstractFunctionCallExpression dest) {

@@ -18,30 +18,33 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.expressions;
 
-public class BroadcastExpressionAnnotation implements IExpressionAnnotation {
+import java.util.Objects;
+
+public final class BroadcastExpressionAnnotation implements IExpressionAnnotation {
 
     public enum BroadcastSide {
         LEFT,
-        RIGHT
+        RIGHT;
+
+        public static BroadcastSide getOppositeSide(BroadcastSide side) {
+            switch (side) {
+                case LEFT:
+                    return RIGHT;
+                case RIGHT:
+                    return LEFT;
+                default:
+                    throw new IllegalStateException(String.valueOf(side));
+            }
+        }
     }
 
-    private BroadcastSide side;
+    private final BroadcastSide side;
 
-    @Override
-    public Object getObject() {
+    public BroadcastExpressionAnnotation(BroadcastSide side) {
+        this.side = Objects.requireNonNull(side);
+    }
+
+    public BroadcastSide getBroadcastSide() {
         return side;
     }
-
-    @Override
-    public void setObject(Object side) {
-        this.side = (BroadcastSide) side;
-    }
-
-    @Override
-    public IExpressionAnnotation copy() {
-        BroadcastExpressionAnnotation hashBcast = new BroadcastExpressionAnnotation();
-        hashBcast.side = side;
-        return hashBcast;
-    }
-
 }

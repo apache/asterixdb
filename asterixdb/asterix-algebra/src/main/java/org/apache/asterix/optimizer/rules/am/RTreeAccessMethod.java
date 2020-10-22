@@ -370,8 +370,7 @@ public class RTreeAccessMethod implements IAccessMethod {
 
     @Override
     public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
-        if (optFuncExpr.getFuncExpr().getAnnotations()
-                .containsKey(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE)) {
+        if (optFuncExpr.getFuncExpr().hasAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class)) {
             return false;
         }
         // No additional analysis required.

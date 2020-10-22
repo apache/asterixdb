@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -50,7 +49,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -79,14 +77,7 @@ public class IntervalJoinUtils {
     }
 
     protected static RangeAnnotation findRangeAnnotation(AbstractFunctionCallExpression fexp) {
-        Iterator<IExpressionAnnotation> annotationIter = fexp.getAnnotations().values().iterator();
-        while (annotationIter.hasNext()) {
-            IExpressionAnnotation annotation = annotationIter.next();
-            if (annotation instanceof RangeAnnotation) {
-                return (RangeAnnotation) annotation;
-            }
-        }
-        return null;
+        return fexp.getAnnotation(RangeAnnotation.class);
     }
 
     protected static void setSortMergeIntervalJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,

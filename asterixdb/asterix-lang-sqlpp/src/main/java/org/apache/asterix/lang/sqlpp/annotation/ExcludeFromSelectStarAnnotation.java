@@ -19,15 +19,12 @@
 
 package org.apache.asterix.lang.sqlpp.annotation;
 
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 
-public final class ExcludeFromSelectStarAnnotation extends AbstractExpressionAnnotation {
+public final class ExcludeFromSelectStarAnnotation implements IExpressionAnnotation {
 
     public static final ExcludeFromSelectStarAnnotation INSTANCE = new ExcludeFromSelectStarAnnotation();
 
-    @Override
-    public IExpressionAnnotation copy() {
-        return this;
+    private ExcludeFromSelectStarAnnotation() {
     }
 }

@@ -960,8 +960,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     @Override
     public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) throws AlgebricksException {
-        if (optFuncExpr.getFuncExpr().getAnnotations()
-                .containsKey(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE)) {
+        if (optFuncExpr.getFuncExpr().hasAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class)) {
             return false;
         }
 

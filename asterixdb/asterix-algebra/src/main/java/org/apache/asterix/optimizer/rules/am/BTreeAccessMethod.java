@@ -978,13 +978,12 @@ public class BTreeAccessMethod implements IAccessMethod {
                     //And we were unable to determine its type
                     return false;
                 }
-            } else if (!optFuncExpr.getFuncExpr().getAnnotations()
-                    .containsKey(IndexedNLJoinExpressionAnnotation.INSTANCE)) {
+            } else if (!optFuncExpr.getFuncExpr().hasAnnotation(IndexedNLJoinExpressionAnnotation.class)) {
                 return false;
             }
         }
-        if (!index.isPrimaryIndex() && optFuncExpr.getFuncExpr().getAnnotations()
-                .containsKey(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE)) {
+        if (!index.isPrimaryIndex()
+                && optFuncExpr.getFuncExpr().hasAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class)) {
             return false;
         }
         // No additional analysis required for BTrees.

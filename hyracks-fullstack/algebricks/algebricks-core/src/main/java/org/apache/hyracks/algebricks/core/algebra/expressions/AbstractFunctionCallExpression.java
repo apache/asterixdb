@@ -52,7 +52,7 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
     final private List<Mutable<ILogicalExpression>> arguments;
     private Object[] opaqueParameters;
     private final FunctionKind kind;
-    private final Map<Object, IExpressionAnnotation> annotationMap = new HashMap<Object, IExpressionAnnotation>();
+    private final Map<Class<? extends IExpressionAnnotation>, IExpressionAnnotation> annotationMap = new HashMap<>();
 
     public AbstractFunctionCallExpression(FunctionKind kind, IFunctionInfo finfo,
             List<Mutable<ILogicalExpression>> arguments) {
@@ -230,17 +230,40 @@ public abstract class AbstractFunctionCallExpression extends AbstractLogicalExpr
         }
     }
 
-    public Map<Object, IExpressionAnnotation> getAnnotations() {
-        return annotationMap;
+    public boolean hasAnnotations() {
+        return !annotationMap.isEmpty();
     }
 
-    protected Map<Object, IExpressionAnnotation> cloneAnnotations() {
-        Map<Object, IExpressionAnnotation> m = new HashMap<Object, IExpressionAnnotation>();
-        for (Object k : annotationMap.keySet()) {
-            IExpressionAnnotation annot2 = annotationMap.get(k).copy();
-            m.put(k, annot2);
+    public boolean hasAnnotation(Class<? extends IExpressionAnnotation> annotationType) {
+        return annotationMap.containsKey(annotationType);
+    }
+
+    public <T extends IExpressionAnnotation> T getAnnotation(Class<T> annotationType) {
+        IExpressionAnnotation annotation = annotationMap.get(annotationType);
+        return annotation != null ? annotationType.cast(annotation) : null;
+    }
+
+    public void putAnnotation(IExpressionAnnotation annotation) {
+        annotationMap.put(annotation.getClass(), annotation);
+    }
+
+    public void putAnnotations(Collection<? extends IExpressionAnnotation> annotations) {
+        for (IExpressionAnnotation annotation : annotations) {
+            putAnnotation(annotation);
         }
-        return m;
+    }
+
+    public <T extends IExpressionAnnotation> T removeAnnotation(Class<T> annotationType) {
+        IExpressionAnnotation annotation = annotationMap.remove(annotationType);
+        return annotation != null ? annotationType.cast(annotation) : null;
+    }
+
+    public void copyAnnotationsInto(AbstractFunctionCallExpression outCallExpr) {
+        outCallExpr.putAnnotations(annotationMap.values());
+    }
+
+    public void copyAnnotationsInto(Collection<? super IExpressionAnnotation> outCollection) {
+        outCollection.addAll(annotationMap.values());
     }
 
     private final static void addFD(Collection<FunctionalDependency> fds, LogicalVariable var1, LogicalVariable var2) {

@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.rewriter.util;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -33,7 +32,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation.BroadcastSide;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
@@ -208,12 +206,9 @@ public class JoinUtils {
             }
             return side;
         } else {
-            Set<Object> annotationSet = fexp.getAnnotations().keySet();
-            for (Object o : annotationSet) {
-                if (o instanceof BroadcastExpressionAnnotation) {
-                    IExpressionAnnotation ann = (BroadcastExpressionAnnotation) o;
-                    return (BroadcastSide) ann.getObject();
-                }
+            BroadcastExpressionAnnotation bcastAnnnotation = fexp.getAnnotation(BroadcastExpressionAnnotation.class);
+            if (bcastAnnnotation != null) {
+                return bcastAnnnotation.getBroadcastSide();
             }
         }
         return null;

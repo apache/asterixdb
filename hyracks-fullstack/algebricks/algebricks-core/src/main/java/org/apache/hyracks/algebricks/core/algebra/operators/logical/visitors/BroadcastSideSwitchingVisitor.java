@@ -18,9 +18,6 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
-import java.util.Iterator;
-import java.util.Map;
-
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -66,32 +63,17 @@ public class BroadcastSideSwitchingVisitor implements ILogicalExpressionVisitor<
     @Override
     public ILogicalExpression visitScalarFunctionCallExpression(ScalarFunctionCallExpression expr, Void arg)
             throws AlgebricksException {
-        BroadcastExpressionAnnotation.BroadcastSide bSide;
         FunctionIdentifier fi = expr.getFunctionIdentifier();
         if (fi.equals(AlgebricksBuiltinFunctions.AND)) {
             for (Mutable<ILogicalExpression> a : expr.getArguments()) {
                 a.getValue().accept(this, null);
             }
         }
-        Iterator it = expr.getAnnotations().entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry) it.next();
-            if (pair.getKey() instanceof BroadcastExpressionAnnotation) {
-                bSide = (BroadcastExpressionAnnotation.BroadcastSide) ((BroadcastExpressionAnnotation) pair.getValue())
-                        .getObject();
-                switch (bSide) {
-                    case RIGHT:
-                        bSide = BroadcastExpressionAnnotation.BroadcastSide.LEFT;
-                        break;
-                    case LEFT:
-                        bSide = BroadcastExpressionAnnotation.BroadcastSide.RIGHT;
-                        break;
-                    default:
-                        bSide = null;
-                        break;
-                }
-                ((BroadcastExpressionAnnotation) pair.getValue()).setObject(bSide);
-            }
+        BroadcastExpressionAnnotation bcastAnn = expr.removeAnnotation(BroadcastExpressionAnnotation.class);
+        if (bcastAnn != null) {
+            BroadcastExpressionAnnotation.BroadcastSide oppositeSide =
+                    BroadcastExpressionAnnotation.BroadcastSide.getOppositeSide(bcastAnn.getBroadcastSide());
+            expr.putAnnotation(new BroadcastExpressionAnnotation(oppositeSide));
         }
         return null;
     }

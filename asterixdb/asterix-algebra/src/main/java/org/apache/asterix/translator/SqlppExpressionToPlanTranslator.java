@@ -1111,9 +1111,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         opExpr.getArguments().add(new MutableObject<>(lhsExpr));
         opExpr.getArguments().add(new MutableObject<>(rhsExpr));
         if (hints != null) {
-            for (IExpressionAnnotation hint : hints) {
-                opExpr.getAnnotations().put(hint, hint);
-            }
+            opExpr.putAnnotations(hints);
         }
         return opExpr;
     }

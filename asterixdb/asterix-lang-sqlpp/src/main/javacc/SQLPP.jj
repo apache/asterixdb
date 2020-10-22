@@ -206,6 +206,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpre
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.StringUtil;
 
@@ -2736,8 +2737,7 @@ Expression RelExpr() throws ParseException:
                 annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
                 break;
               case HASH_BROADCAST_JOIN_HINT:
-                annotation = new BroadcastExpressionAnnotation();
-                annotation.setObject(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
+                annotation = new BroadcastExpressionAnnotation(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
                 break;
             }
           }
@@ -3487,8 +3487,9 @@ Expression FunctionCallExpr() throws ParseException:
             break;
           case RANGE_HINT:
             try {
-              RangeAnnotation rangeAnn = new RangeAnnotation();
-              rangeAnn.setObject((Object) RangeMapBuilder.parseHint(parseExpression(funcName.hintToken.hintParams)));
+              Expression rangeExpr = parseExpression(funcName.hintToken.hintParams);
+              RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
+              RangeAnnotation rangeAnn = new RangeAnnotation(rangeMap);
               callExpr.addHint(rangeAnn);
             } catch (CompilationException e) {
               {
@@ -4164,7 +4165,9 @@ OrderbyClause OrderbyClause() throws ParseException :
               break;
             case RANGE_HINT:
               try {
-                oc.setRangeMap(RangeMapBuilder.parseHint(parseExpression(hintToken.hintParams)));
+                Expression rangeExpr = parseExpression(hintToken.hintParams);
+                RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
+                oc.setRangeMap(rangeMap);
               } catch (CompilationException e) {
                 throw new SqlppParseException(getSourceLocation(hintToken), e.getMessage());
               }

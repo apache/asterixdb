@@ -116,7 +116,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -895,9 +894,7 @@ abstract class LangExpressionToPlanTranslator
 
         // Put hints into function call expr.
         if (fcall.hasHints()) {
-            for (IExpressionAnnotation hint : fcall.getHints()) {
-                f.getAnnotations().put(hint, hint);
-            }
+            f.putAnnotations(fcall.getHints());
         }
 
         AssignOperator op = new AssignOperator(v, new MutableObject<>(f));
@@ -1240,9 +1237,7 @@ abstract class LangExpressionToPlanTranslator
 
         // Add hints as annotations.
         if (op.hasHints()) {
-            for (IExpressionAnnotation hint : op.getHints()) {
-                currExpr.getAnnotations().put(hint, hint);
-            }
+            currExpr.putAnnotations(op.getHints());
         }
 
         LogicalVariable assignedVar = context.newVar();

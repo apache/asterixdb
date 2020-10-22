@@ -54,7 +54,6 @@ public class AggregateFunctionCallExpression extends AbstractFunctionCallExpress
 
     @Override
     public AggregateFunctionCallExpression cloneExpression() {
-        cloneAnnotations();
         List<Mutable<ILogicalExpression>> clonedArgs = cloneArguments();
         AggregateFunctionCallExpression fun = new AggregateFunctionCallExpression(finfo, twoStep, clonedArgs);
         fun.setStepTwoAggregate(stepTwoAggregate);
@@ -62,6 +61,7 @@ public class AggregateFunctionCallExpression extends AbstractFunctionCallExpress
         fun.setSourceLocation(sourceLoc);
         // opaqueParameters are not really cloned
         fun.setOpaqueParameters(getOpaqueParameters());
+        copyAnnotationsInto(fun);
         return fun;
     }
 
