@@ -70,7 +70,12 @@ public interface IPartitioningProperty extends IStructuralProperty {
          *     higher than the "end" column
          * </ol>
          */
-        PARTIAL_BROADCAST_ORDERED_INTERSECT
+        PARTIAL_BROADCAST_ORDERED_INTERSECT,
+        /**
+         * Data is spatially partitioned based on it spatial position
+         * Currently, we are using grid partitioning, but it can be any other spatial partitioning schemes
+         */
+        SPATIAL_PARTITIONED
     }
 
     INodeDomain DOMAIN_FOR_UNPARTITIONED_DATA = new INodeDomain() {
