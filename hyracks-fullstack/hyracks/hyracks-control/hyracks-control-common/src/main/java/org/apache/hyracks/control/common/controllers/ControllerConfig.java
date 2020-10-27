@@ -132,4 +132,5 @@ public class ControllerConfig implements Serializable {
     public boolean isSslEnabled() {
         return getAppConfig().getBoolean(Option.SSL_ENABLED);
     }
+
 }

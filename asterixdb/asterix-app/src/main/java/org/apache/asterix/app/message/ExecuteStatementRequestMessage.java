@@ -114,9 +114,9 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         ClusterControllerService ccSrv = (ClusterControllerService) ccSrvContext.getControllerService();
         CCApplication ccApp = (CCApplication) ccSrv.getApplication();
         CCMessageBroker messageBroker = (CCMessageBroker) ccSrvContext.getMessageBroker();
-        final RuntimeDataException rejectionReason = getRejectionReason(ccSrv);
+        final RuntimeDataException rejectionReason = getRejectionReason(ccSrv, requestNodeId);
         if (rejectionReason != null) {
-            sendRejection(rejectionReason, messageBroker);
+            sendRejection(rejectionReason, messageBroker, requestMessageId, requestNodeId);
             return;
         }
         CCExtensionManager ccExtMgr = (CCExtensionManager) ccAppCtx.getExtensionManager();
@@ -176,7 +176,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         }
     }
 
-    private RuntimeDataException getRejectionReason(ClusterControllerService ccSrv) {
+    static RuntimeDataException getRejectionReason(ClusterControllerService ccSrv, String requestNodeId) {
         if (ccSrv.getNodeManager().getNodeControllerState(requestNodeId) == null) {
             return new RuntimeDataException(ErrorCode.REJECT_NODE_UNREGISTERED);
         }
@@ -189,7 +189,8 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         return null;
     }
 
-    private void sendRejection(RuntimeDataException reason, CCMessageBroker messageBroker) {
+    static void sendRejection(RuntimeDataException reason, CCMessageBroker messageBroker, long requestMessageId,
+            String requestNodeId) {
         ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
         responseMsg.setError(reason);
         try {

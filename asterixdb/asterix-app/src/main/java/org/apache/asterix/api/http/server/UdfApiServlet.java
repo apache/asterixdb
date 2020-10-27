@@ -38,6 +38,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.translator.RequestParameters;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IReceptionist;
 import org.apache.asterix.common.api.IRequestReference;
@@ -91,8 +92,9 @@ public class UdfApiServlet extends AbstractServlet {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected final ICcApplicationContext appCtx;
-    private final ClusterControllerService ccs;
+    protected final IApplicationContext plainAppCtx;
+    private ICcApplicationContext appCtx;
+    private ClusterControllerService ccs;
     private final HttpScheme httpServerProtocol;
     private final int httpServerPort;
 
@@ -100,29 +102,30 @@ public class UdfApiServlet extends AbstractServlet {
     protected final IStatementExecutorFactory statementExecutorFactory;
     protected final IStorageComponentProvider componentProvider;
     protected final IReceptionist receptionist;
-    protected final Path workingDir;
+    protected Path workingDir;
     protected String sysAuthHeader;
 
-    public UdfApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx,
+    public UdfApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx,
             ILangCompilationProvider compilationProvider, IStatementExecutorFactory statementExecutorFactory,
             IStorageComponentProvider componentProvider, HttpScheme httpServerProtocol, int httpServerPort) {
         super(ctx, paths);
-        this.appCtx = appCtx;
-        ICCServiceContext srvCtx = appCtx.getServiceContext();
-        this.ccs = (ClusterControllerService) srvCtx.getControllerService();
+        this.plainAppCtx = appCtx;
         this.compilationProvider = compilationProvider;
         this.statementExecutorFactory = statementExecutorFactory;
         this.componentProvider = componentProvider;
         this.receptionist = appCtx.getReceptionist();
         this.httpServerProtocol = httpServerProtocol;
         this.httpServerPort = httpServerPort;
-        File baseDir = srvCtx.getServerCtx().getBaseDir();
-        this.workingDir = baseDir.getAbsoluteFile().toPath().normalize().resolve(
-                Paths.get(ServerContext.APP_DIR_NAME, ExternalLibraryManager.LIBRARY_MANAGER_BASE_DIR_NAME, "tmp"));
     }
 
     @Override
     public void init() throws IOException {
+        appCtx = (ICcApplicationContext) plainAppCtx;
+        ICCServiceContext srvCtx = this.appCtx.getServiceContext();
+        this.ccs = (ClusterControllerService) srvCtx.getControllerService();
+        File baseDir = srvCtx.getServerCtx().getBaseDir();
+        this.workingDir = baseDir.getAbsoluteFile().toPath().normalize().resolve(
+                Paths.get(ServerContext.APP_DIR_NAME, ExternalLibraryManager.LIBRARY_MANAGER_BASE_DIR_NAME, "tmp"));
         initAuth();
         initStorage();
     }
@@ -151,11 +154,6 @@ public class UdfApiServlet extends AbstractServlet {
 
     @Override
     protected void post(IServletRequest request, IServletResponse response) {
-        IClusterManagementWork.ClusterState clusterState = appCtx.getClusterStateManager().getState();
-        if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
-            response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);
-            return;
-        }
         HttpRequest httpRequest = request.getHttpRequest();
         Pair<DataverseName, String> libraryName = parseLibraryName(request);
         if (libraryName == null) {
@@ -190,9 +188,8 @@ public class UdfApiServlet extends AbstractServlet {
                 }
                 fileUpload.renameTo(libraryTempFile.toFile());
                 URI downloadURI = createDownloadURI(libraryTempFile);
-                CreateLibraryStatement stmt = new CreateLibraryStatement(libraryName.first, libraryName.second,
-                        language, downloadURI, true, sysAuthHeader);
-                executeStatement(stmt, requestReference, request);
+                doCreate(libraryName.first, libraryName.second, language, downloadURI, true, sysAuthHeader,
+                        requestReference, request, response);
                 response.setStatus(HttpResponseStatus.OK);
             } catch (Exception e) {
                 response.setStatus(toHttpErrorStatus(e));
@@ -213,6 +210,14 @@ public class UdfApiServlet extends AbstractServlet {
         }
     }
 
+    protected void doCreate(DataverseName dataverseName, String libraryName, ExternalFunctionLanguage language,
+            URI downloadURI, boolean replaceIfExists, String sysAuthHeader, IRequestReference requestReference,
+            IServletRequest request, IServletResponse response) throws Exception {
+        CreateLibraryStatement stmt = new CreateLibraryStatement(dataverseName, libraryName, language, downloadURI,
+                replaceIfExists, sysAuthHeader);
+        executeStatement(stmt, requestReference, request, response);
+    }
+
     protected URI createDownloadURI(Path file) throws Exception {
         String path = paths[0].substring(0, trims[0]) + '/' + file.getFileName();
         String host = getHyracksClientConnection().getHost();
@@ -220,11 +225,6 @@ public class UdfApiServlet extends AbstractServlet {
     }
 
     protected void delete(IServletRequest request, IServletResponse response) {
-        IClusterManagementWork.ClusterState clusterState = appCtx.getClusterStateManager().getState();
-        if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
-            response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);
-            return;
-        }
         Pair<DataverseName, String> libraryName = parseLibraryName(request);
         if (libraryName == null) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
@@ -232,8 +232,7 @@ public class UdfApiServlet extends AbstractServlet {
         }
         try {
             IRequestReference requestReference = receptionist.welcome(request);
-            LibraryDropStatement stmt = new LibraryDropStatement(libraryName.first, libraryName.second, false);
-            executeStatement(stmt, requestReference, request);
+            doDrop(libraryName.first, libraryName.second, false, requestReference, request, response);
             response.setStatus(HttpResponseStatus.OK);
         } catch (Exception e) {
             response.setStatus(toHttpErrorStatus(e));
@@ -244,8 +243,19 @@ public class UdfApiServlet extends AbstractServlet {
         }
     }
 
-    protected void executeStatement(Statement statement, IRequestReference requestReference, IServletRequest request)
-            throws Exception {
+    protected void doDrop(DataverseName dataverseName, String libraryName, boolean replaceIfExists,
+            IRequestReference requestReference, IServletRequest request, IServletResponse response) throws Exception {
+        LibraryDropStatement stmt = new LibraryDropStatement(dataverseName, libraryName, replaceIfExists);
+        executeStatement(stmt, requestReference, request, response);
+    }
+
+    protected void executeStatement(Statement statement, IRequestReference requestReference, IServletRequest request,
+            IServletResponse response) throws Exception {
+        IClusterManagementWork.ClusterState clusterState = appCtx.getClusterStateManager().getState();
+        if (clusterState != IClusterManagementWork.ClusterState.ACTIVE) {
+            response.setStatus(HttpResponseStatus.SERVICE_UNAVAILABLE);
+            return;
+        }
         SessionOutput sessionOutput = new SessionOutput(new SessionConfig(SessionConfig.OutputFormat.ADM),
                 new PrintWriter(NullWriter.NULL_WRITER));
         ResponsePrinter printer = new ResponsePrinter(sessionOutput);

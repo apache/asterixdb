@@ -277,7 +277,8 @@ public class CCApplication extends BaseCCApplication {
                 ccServiceCtx.getControllerService().getExecutor());
         jsonAPIServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ccServiceCtx);
         jsonAPIServer.setAttribute(ServletConstants.CREDENTIAL_MAP,
-                parseCredentialMap(externalProperties.getCredentialFilePath()));
+                parseCredentialMap(((ClusterControllerService) (appCtx.getServiceContext().getControllerService()))
+                        .getCCConfig().getCredentialFilePath()));
 
         // Other APIs.
         addServlet(jsonAPIServer, Servlets.QUERY_STATUS);

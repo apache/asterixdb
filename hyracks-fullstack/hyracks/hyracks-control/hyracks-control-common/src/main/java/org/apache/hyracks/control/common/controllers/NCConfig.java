@@ -37,6 +37,7 @@ import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.control.common.config.ConfigManager;
+import org.apache.hyracks.control.common.config.OptionTypes;
 import org.apache.hyracks.util.file.FileUtil;
 
 public class NCConfig extends ControllerConfig {
@@ -95,7 +96,12 @@ public class NCConfig extends ControllerConfig {
         PYTHON_CMD(STRING, (String) null),
         PYTHON_ADDITIONAL_PACKAGES(STRING_ARRAY, (String[]) null),
         PYTHON_USE_BUNDLED_MSGPACK(BOOLEAN, true),
-        PYTHON_ARGS(STRING_ARRAY, (String[]) null);
+        PYTHON_ARGS(STRING_ARRAY, (String[]) null),
+        CREDENTIAL_FILE(
+                OptionTypes.STRING,
+                (Function<IApplicationConfig, String>) appConfig -> FileUtil
+                        .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
+                ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd");
 
         private final IOptionType parser;
         private final String defaultValueDescription;
@@ -236,6 +242,8 @@ public class NCConfig extends ControllerConfig {
                     return "True to include bundled msgpack on Python sys.path, false to use system-provided msgpack";
                 case PYTHON_ARGS:
                     return "Python args to pass to Python interpreter";
+                case CREDENTIAL_FILE:
+                    return "Path to HTTP basic credentials";
                 default:
                     throw new IllegalStateException("Not yet implemented: " + this);
             }
@@ -605,5 +613,9 @@ public class NCConfig extends ControllerConfig {
 
     public int getIOQueueSize() {
         return appConfig.getInt(Option.IO_QUEUE_SIZE);
+    }
+
+    public String getCredentialFilePath() {
+        return getAppConfig().getString(Option.CREDENTIAL_FILE);
     }
 }

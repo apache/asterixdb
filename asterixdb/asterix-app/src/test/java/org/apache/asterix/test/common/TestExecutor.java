@@ -1209,13 +1209,15 @@ public class TestExecutor {
                                 throw new Exception("invalid library format");
                             }
                             String libPath = command[5];
-                            librarian.install(dataverse, library, libPath, new Pair<>(username, pw));
+                            URI create = createEndpointURI("/admin/udf/" + dataverse + "/" + library);
+                            librarian.install(create, libPath, new Pair<>(username, pw));
                             break;
                         case "uninstall":
                             if (command.length != 5) {
                                 throw new Exception("invalid library format");
                             }
-                            librarian.uninstall(dataverse, library, new Pair<>(username, pw));
+                            URI delete = createEndpointURI("/admin/udf/" + dataverse + "/" + library);
+                            librarian.uninstall(delete, new Pair<>(username, pw));
                             break;
                         default:
                             throw new Exception("invalid library format");
@@ -2229,7 +2231,8 @@ public class TestExecutor {
 
     protected URI createEndpointURI(String pathAndQuery) throws URISyntaxException {
         InetSocketAddress endpoint;
-        if (!ncEndPointsList.isEmpty() && pathAndQuery.equals(Servlets.QUERY_SERVICE)) {
+        if (!ncEndPointsList.isEmpty() && (pathAndQuery.equals(Servlets.QUERY_SERVICE)
+                || pathAndQuery.startsWith(Servlets.getAbsolutePath(Servlets.UDF)))) {
             int endpointIdx = Math.abs(endpointSelector++ % ncEndPointsList.size());
             endpoint = ncEndPointsList.get(endpointIdx);
         } else if (isCcEndPointPath(pathAndQuery)) {
