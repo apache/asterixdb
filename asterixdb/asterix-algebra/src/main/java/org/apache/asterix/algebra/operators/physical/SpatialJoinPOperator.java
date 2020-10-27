@@ -63,8 +63,13 @@ public class SpatialJoinPOperator extends AbstractJoinPOperator {
         AbstractLogicalOperator op = (AbstractLogicalOperator) iop;
         INodeDomain targetNodeDomain = context.getComputationNodeDomain();
 
-        IPartitioningProperty ppLeft = new SpatialPartitionedProperty(new HashSet<>(keysLeftBranch), targetNodeDomain);
-        IPartitioningProperty ppRight = new SpatialPartitionedProperty(new HashSet<>(keysRightBranch), targetNodeDomain);
+        IPartitioningProperty ppLeft = null;
+        IPartitioningProperty ppRight = null;
+
+        if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
+            ppLeft = new SpatialPartitionedProperty(new HashSet<>(keysLeftBranch), targetNodeDomain);
+            ppRight = new SpatialPartitionedProperty(new HashSet<>(keysRightBranch), targetNodeDomain);
+        }
 
         List<ILocalStructuralProperty> ispLeft = new ArrayList<>();
         List<ILocalStructuralProperty> ispRight = new ArrayList<>();

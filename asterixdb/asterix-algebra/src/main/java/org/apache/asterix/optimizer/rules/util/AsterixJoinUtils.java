@@ -61,7 +61,7 @@ public class AsterixJoinUtils {
 
         FunctionIdentifier spatialFunctionIdentifier = SpatialJoinUtils.isSpatialJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
         if (spatialFunctionIdentifier != null) {
-
+            SpatialJoinUtils.setSpatialJoinOp(op, spatialFunctionIdentifier, sideLeft, sideRight, context);
         }
 
         FunctionIdentifier fi =
