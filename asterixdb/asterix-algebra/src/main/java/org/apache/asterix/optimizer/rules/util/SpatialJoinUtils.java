@@ -19,14 +19,22 @@
 
 package org.apache.asterix.optimizer.rules.util;
 
+import org.apache.asterix.algebra.operators.physical.IntervalMergeJoinPOperator;
+import org.apache.asterix.algebra.operators.physical.SpatialJoinPOperator;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.runtime.operators.joins.interval.utils.IIntervalJoinUtilFactory;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
 
 import java.util.Collection;
+import java.util.List;
 
 public class SpatialJoinUtils {
 
@@ -47,5 +55,11 @@ public class SpatialJoinUtils {
         }
 
         return fiReturn;
+    }
+
+    protected static void setSpatialJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
+                                                     List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IOptimizationContext context,
+                                                     IntervalPartitions intervalPartitions) throws CompilationException {
+        op.setPhysicalOperator(new SpatialJoinPOperator(op.getJoinKind(), AbstractJoinPOperator.JoinPartitioningType.BROADCAST, sideLeft, sideRight));
     }
 }

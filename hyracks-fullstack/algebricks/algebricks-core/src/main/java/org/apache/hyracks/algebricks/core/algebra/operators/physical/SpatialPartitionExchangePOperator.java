@@ -48,6 +48,7 @@ public class SpatialPartitionExchangePOperator extends AbstractExchangePOperator
 
     @Override
     public Pair<IConnectorDescriptor, IHyracksJobBuilder.TargetConstraint> createConnectorDescriptor(IConnectorDescriptorRegistry spec, ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) throws AlgebricksException {
+
         return null;
     }
 
