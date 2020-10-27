@@ -24,12 +24,14 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-public class SpatialPartitionedProperty implements IPartitioningProperty {
+public class SpatialPartitionedProperty extends AbstractGroupingProperty implements IPartitioningProperty {
 
     private INodeDomain domain;
 
-    public SpatialPartitionedProperty(INodeDomain domain) {
+    public SpatialPartitionedProperty(Set<LogicalVariable> partitioningVariables, INodeDomain domain) {
+        super(partitioningVariables);
         this.domain = domain;
     }
 
@@ -60,12 +62,12 @@ public class SpatialPartitionedProperty implements IPartitioningProperty {
 
     @Override
     public IPartitioningProperty clonePartitioningProperty() {
-        return new SpatialPartitionedProperty(this.domain);
+        return new SpatialPartitionedProperty(this.columnSet, this.domain);
     }
 
     @Override
     public void getColumns(Collection<LogicalVariable> columns) {
-
+        columns.addAll(columnSet);
     }
 
     @Override

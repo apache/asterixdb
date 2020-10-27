@@ -584,7 +584,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                 }
                 case SPATIAL_PARTITIONED: {
                     SpatialPartitionedProperty spp = (SpatialPartitionedProperty) pp;
-                    pop = new SpatialPartitionerPOperator();
+                    pop = new SpatialPartitionExchangePOperator(spp.getColumnSet(), spp.getNodeDomain());
                     break;
                 }
                 default: {

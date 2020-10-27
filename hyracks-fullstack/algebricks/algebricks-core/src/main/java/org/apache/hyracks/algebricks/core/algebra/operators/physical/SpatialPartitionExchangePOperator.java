@@ -20,10 +20,7 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.base.*;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -32,9 +29,18 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
 
-public class SpatialPartitionerPOperator extends AbstractExchangePOperator {
+import java.util.List;
+import java.util.Set;
 
+public class SpatialPartitionExchangePOperator extends AbstractExchangePOperator {
+
+    Set<LogicalVariable> partitioningFields;
     private INodeDomain domain;
+
+    public SpatialPartitionExchangePOperator(Set<LogicalVariable> partitioningFields, INodeDomain domain) {
+        this.partitioningFields = partitioningFields;
+        this.domain = domain;
+    }
 
     @Override
     public Pair<IConnectorDescriptor, IHyracksJobBuilder.TargetConstraint> createConnectorDescriptor(IConnectorDescriptorRegistry spec, ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) throws AlgebricksException {
