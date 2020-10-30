@@ -516,6 +516,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IRequestParameters requestParameters) throws Exception {
         CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
         DataverseName dvName = stmtCreateDataverse.getDataverseName();
+        for (String dvNamePart : dvName.getParts()) {
+            validateDatabaseObjectName(dvNamePart, stmtCreateDataverse.getSourceLocation());
+        }
         lockUtil.createDataverseBegin(lockManager, metadataProvider.getLocks(), dvName);
         try {
             doCreateDataverseStatement(metadataProvider, stmtCreateDataverse, requestParameters);
@@ -593,6 +596,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DatasetDecl dd = (DatasetDecl) stmt;
         DataverseName dataverseName = getActiveDataverseName(dd.getDataverse());
         String datasetName = dd.getName().getValue();
+        validateDatabaseObjectName(datasetName, stmt.getSourceLocation());
         TypeExpression itemTypeExpr = dd.getItemType();
         DataverseName itemTypeDataverseName;
         String itemTypeName;
@@ -963,6 +967,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
         DataverseName dataverseName = getActiveDataverseName(stmtCreateIndex.getDataverseName());
         String datasetName = stmtCreateIndex.getDatasetName().getValue();
+        String indexName = stmtCreateIndex.getIndexName().getValue();
+        validateDatabaseObjectName(indexName, stmt.getSourceLocation());
         lockUtil.createIndexBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
         try {
             doCreateIndex(metadataProvider, stmtCreateIndex, dataverseName, datasetName, hcc, requestParameters);
@@ -1388,6 +1394,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         SourceLocation sourceLoc = stmtCreateType.getSourceLocation();
         DataverseName dataverseName = getActiveDataverseName(stmtCreateType.getDataverseName());
         String typeName = stmtCreateType.getIdent().getValue();
+        validateDatabaseObjectName(typeName, sourceLoc);
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         lockUtil.createTypeBegin(lockManager, metadataProvider.getLocks(), dataverseName, typeName);
@@ -1978,6 +1985,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IStatementRewriter stmtRewriter) throws Exception {
         CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
         FunctionSignature signature = cfs.getFunctionSignature();
+        validateDatabaseObjectName(signature.getName(), stmt.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(signature.getDataverseName());
         signature.setDataverseName(dataverseName);
         DataverseName libraryDataverseName = null;
@@ -2876,6 +2884,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         SourceLocation sourceLoc = cfs.getSourceLocation();
         DataverseName dataverseName = getActiveDataverseName(cfs.getDataverseName());
         String feedName = cfs.getFeedName().getValue();
+        validateDatabaseObjectName(feedName, sourceLoc);
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         lockUtil.createFeedBegin(lockManager, metadataProvider.getLocks(), dataverseName, feedName);
@@ -2914,6 +2923,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         SourceLocation sourceLoc = cfps.getSourceLocation();
         DataverseName dataverseName = getActiveDataverseName(null);
         String policyName = cfps.getPolicyName();
+        validateDatabaseObjectName(policyName, sourceLoc);
         lockUtil.createFeedPolicyBegin(lockManager, metadataProvider.getLocks(), dataverseName, policyName);
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -3502,6 +3512,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         NodegroupDecl stmtCreateNodegroup = (NodegroupDecl) stmt;
         SourceLocation sourceLoc = stmtCreateNodegroup.getSourceLocation();
         String ngName = stmtCreateNodegroup.getNodegroupName().getValue();
+        validateDatabaseObjectName(ngName, sourceLoc);
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -3922,5 +3933,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc)
             throws CompilationException {
         ExternalDataUtils.validateAdapterSpecificProperties(configuration, srcLoc, warningCollector);
+    }
+
+    public static void validateDatabaseObjectName(String name, SourceLocation sourceLoc) throws CompilationException {
+        if (name == null || name.isEmpty()) {
+            throw new CompilationException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, "<empty>");
+        }
+        if (Character.isWhitespace(name.codePointAt(0))) {
+            throw new CompilationException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, name);
+        }
     }
 }

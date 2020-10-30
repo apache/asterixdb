@@ -4011,6 +4011,62 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
+      <compilation-unit name="invalid-dataverse-name">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="invalid-dataset-name">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="invalid-feed-name">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="invalid-feed-policy-name">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="invalid-index-name">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="invalid-nodegroup-name">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="invalid-type-name">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="invalid-udf-name">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
       <compilation-unit name="dataset-and-index-same-dataverse">
         <output-dir compare="Text">dataset-and-index-same-dataverse</output-dir>
       </compilation-unit>

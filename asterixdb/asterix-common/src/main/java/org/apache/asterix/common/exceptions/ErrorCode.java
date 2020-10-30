@@ -203,7 +203,7 @@ public class ErrorCode {
     public static final int INVALID_PROPERTY_FORMAT = 1112;
     public static final int INVALID_REGEX_PATTERN = 1113;
     public static final int EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES = 1114;
-    public static final int SYNONYM_EXISTS = 1115;
+    public static final int INVALID_DATABASE_OBJECT_NAME = 1115;
     public static final int UNKNOWN_SYNONYM = 1116;
     public static final int UNKNOWN_LIBRARY = 1117;
     public static final int COMPILATION_GROUPING_SETS_OVERFLOW = 1118;
@@ -219,7 +219,7 @@ public class ErrorCode {
     public static final int INCONSISTENT_FILTER_INDICATOR = 1128;
     public static final int UNSUPPORTED_GBY_OBY_SELECT_COMBO = 1129;
     public static final int ILLEGAL_RIGHT_OUTER_JOIN = 1130;
-
+    public static final int SYNONYM_EXISTS = 1131;
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;
     public static final int UTIL_DATAFLOW_UTILS_TUPLE_TOO_LARGE = 3002;
