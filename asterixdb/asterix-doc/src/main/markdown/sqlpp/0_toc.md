@@ -99,4 +99,5 @@
 * [Appendix 2. Performance Tuning](#Performance_tuning)
       * [Parallelism Parameter](#Parallelism_parameter)
       * [Memory Parameters](#Memory_parameters)
+      * [Query Hints](#Query_hints)
 * [Appendix 3. Variable Bindings and Name Resolution](#Variable_bindings_and_name_resolution)
