@@ -69,11 +69,16 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.JSONUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class BTree extends AbstractTreeIndex {
 
     public static final float DEFAULT_FILL_FACTOR = 0.7f;
-
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final long RESTART_OP = Long.MIN_VALUE;
     private static final long FULL_RESTART_OP = Long.MIN_VALUE + 1;
     private static final int MAX_RESTARTS = 10;
@@ -1086,6 +1091,7 @@ public class BTree extends AbstractTreeIndex {
                 }
                 ((IBTreeLeafFrame) leafFrame).insertSorted(tuple);
             } catch (HyracksDataException | RuntimeException e) {
+                logState(tuple, e);
                 handleException();
                 throw e;
             }
@@ -1193,6 +1199,24 @@ public class BTree extends AbstractTreeIndex {
         @Override
         public void abort() throws HyracksDataException {
             super.handleException();
+        }
+
+        private void logState(ITupleReference tuple, Exception e) {
+            try {
+                ObjectNode state = JSONUtil.createObject();
+                state.set("leafFrame", leafFrame.getState());
+                state.set("interiorFrame", interiorFrame.getState());
+                int tupleSize = Math.max(leafFrame.getBytesRequiredToWriteTuple(tuple),
+                        interiorFrame.getBytesRequiredToWriteTuple(tuple));
+                state.put("tupleSize", tupleSize);
+                state.put("spaceNeeded", tupleWriter.bytesRequired(tuple) + slotSize);
+                state.put("spaceUsed", leafFrame.getBuffer().capacity() - leafFrame.getTotalFreeSpace());
+                state.put("leafMaxBytes", leafMaxBytes);
+                state.put("maxTupleSize", maxTupleSize);
+                LOGGER.error("failed to add tuple {}", state, e);
+            } catch (Throwable t) {
+                e.addSuppressed(t);
+            }
         }
     }
 
