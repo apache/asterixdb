@@ -77,6 +77,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.PartialBroa
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PartialBroadcastRangeIntersectExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.RangePartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortMergeExchangePOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.SpatialPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IntervalColumn;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
@@ -185,6 +186,11 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
                         usedVariables.add(intervalCol.getStartColumn());
                         usedVariables.add(intervalCol.getEndColumn());
                     }
+                    break;
+                case SPATIAL_PARTITION_EXCHANGE:
+                    SpatialPartitionExchangePOperator spatialPartitionExchangePOperator =
+                            (SpatialPartitionExchangePOperator) physOp;
+                    usedVariables.addAll(spatialPartitionExchangePOperator.getPartitioningFields());
                     break;
                 default:
                     throw new AlgebricksException("Unhandled physical operator tag '" + physOp.getOperatorTag() + "'.");

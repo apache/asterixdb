@@ -35,8 +35,12 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class AsterixJoinUtils {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final int LEFT = 0;
     private static final int RIGHT = 1;
@@ -45,7 +49,7 @@ public class AsterixJoinUtils {
     }
 
     public static void setJoinAlgorithmAndExchangeAlgo(AbstractBinaryJoinOperator op, Boolean topLevelOp,
-                                                       IOptimizationContext context) throws AlgebricksException {
+            IOptimizationContext context) throws AlgebricksException {
         if (!topLevelOp) {
             return;
         }
@@ -59,9 +63,13 @@ public class AsterixJoinUtils {
         List<LogicalVariable> varsRight = op.getInputs().get(RIGHT).getValue().getSchema();
         AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) conditionLE;
 
-        FunctionIdentifier spatialFunctionIdentifier = SpatialJoinUtils.isSpatialJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
+        FunctionIdentifier spatialFunctionIdentifier =
+                SpatialJoinUtils.isSpatialJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
         if (spatialFunctionIdentifier != null) {
+            LOGGER.info("is spatial join");
             SpatialJoinUtils.setSpatialJoinOp(op, spatialFunctionIdentifier, sideLeft, sideRight, context);
+        } else {
+            LOGGER.info("is not spatial join");
         }
 
         FunctionIdentifier fi =
@@ -73,7 +81,8 @@ public class AsterixJoinUtils {
             }
             //Check RangeMap type
             RangeMap rangeMap = (RangeMap) rangeAnnotation.getObject();
-            if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize() && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
+            if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize()
+                    && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
                     && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
                 IWarningCollector warningCollector = context.getWarningCollector();
                 if (warningCollector.shouldWarn()) {
@@ -82,8 +91,8 @@ public class AsterixJoinUtils {
                 }
                 return;
             }
-            IntervalPartitions intervalPartitions =
-                    IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft, sideRight, rangeMap, context, LEFT, RIGHT);
+            IntervalPartitions intervalPartitions = IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft,
+                    sideRight, rangeMap, context, LEFT, RIGHT);
             IntervalJoinUtils.setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, context, intervalPartitions);
         }
 

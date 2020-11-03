@@ -18,13 +18,13 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.properties;
 
-import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
 public class SpatialPartitionedProperty extends AbstractGroupingProperty implements IPartitioningProperty {
 
@@ -41,7 +41,8 @@ public class SpatialPartitionedProperty extends AbstractGroupingProperty impleme
     }
 
     @Override
-    public IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses, List<FunctionalDependency> fds) {
+    public IPartitioningProperty normalize(Map<LogicalVariable, EquivalenceClass> equivalenceClasses,
+            List<FunctionalDependency> fds) {
         return this;
     }
 

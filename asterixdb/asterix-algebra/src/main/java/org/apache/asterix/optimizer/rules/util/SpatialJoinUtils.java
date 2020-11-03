@@ -19,11 +19,12 @@
 
 package org.apache.asterix.optimizer.rules.util;
 
-import org.apache.asterix.algebra.operators.physical.IntervalMergeJoinPOperator;
+import java.util.Collection;
+import java.util.List;
+
 import org.apache.asterix.algebra.operators.physical.SpatialJoinPOperator;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.runtime.operators.joins.interval.utils.IIntervalJoinUtilFactory;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -34,15 +35,12 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
 
-import java.util.Collection;
-import java.util.List;
-
 public class SpatialJoinUtils {
 
     protected static FunctionIdentifier isSpatialJoinCondition(ILogicalExpression e,
-                                                               Collection<LogicalVariable> inLeftAll, Collection<LogicalVariable> inRightAll,
-                                                               Collection<LogicalVariable> outLeftFields, Collection<LogicalVariable> outRightFields, int left,
-                                                               int right) {
+            Collection<LogicalVariable> inLeftAll, Collection<LogicalVariable> inRightAll,
+            Collection<LogicalVariable> outLeftFields, Collection<LogicalVariable> outRightFields, int left,
+            int right) {
         FunctionIdentifier fiReturn;
         boolean switchArguments = false;
 
@@ -71,6 +69,7 @@ public class SpatialJoinUtils {
             outLeftFields.add(var1);
         } else if (inRightAll.contains(var1) && !outRightFields.contains(var1)) {
             outRightFields.add(var1);
+            switchArguments = true;
         } else {
             return null;
         }
@@ -87,7 +86,10 @@ public class SpatialJoinUtils {
         return fiReturn;
     }
 
-    protected static void setSpatialJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi, List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IOptimizationContext context) throws CompilationException {
-        op.setPhysicalOperator(new SpatialJoinPOperator(op.getJoinKind(), AbstractJoinPOperator.JoinPartitioningType.BROADCAST, sideLeft, sideRight));
+    protected static void setSpatialJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
+            List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IOptimizationContext context)
+            throws CompilationException {
+        op.setPhysicalOperator(new SpatialJoinPOperator(op.getJoinKind(),
+                AbstractJoinPOperator.JoinPartitioningType.BROADCAST, sideLeft, sideRight));
     }
 }

@@ -18,7 +18,10 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
+import java.util.Set;
+
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -27,18 +30,21 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
+import org.apache.hyracks.algebricks.core.algebra.properties.SpatialPartitionedProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
-
-import java.util.List;
-import java.util.Set;
+import org.apache.hyracks.dataflow.common.data.partition.SpatialPartitionComputerFactory;
+import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 
 public class SpatialPartitionExchangePOperator extends AbstractExchangePOperator {
 
-    Set<LogicalVariable> partitioningFields;
+    private Set<LogicalVariable> partitioningFields;
     private INodeDomain domain;
 
     public SpatialPartitionExchangePOperator(Set<LogicalVariable> partitioningFields, INodeDomain domain) {
@@ -47,9 +53,21 @@ public class SpatialPartitionExchangePOperator extends AbstractExchangePOperator
     }
 
     @Override
-    public Pair<IConnectorDescriptor, IHyracksJobBuilder.TargetConstraint> createConnectorDescriptor(IConnectorDescriptorRegistry spec, ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) throws AlgebricksException {
+    public Pair<IConnectorDescriptor, IHyracksJobBuilder.TargetConstraint> createConnectorDescriptor(
+            IConnectorDescriptorRegistry spec, ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context)
+            throws AlgebricksException {
+        int[] keys = new int[partitioningFields.size()];
+        int i = 0;
+        for (LogicalVariable v : partitioningFields) {
+            keys[i] = opSchema.findVariable(v);
+            ++i;
+        }
 
-        return null;
+        // TODO: parse the partitioning parameters from user inputs
+        ITuplePartitionComputerFactory tpcf =
+                new SpatialPartitionComputerFactory(keys, -180.0, -83.0, 180.0, 90.0, 100, 100);
+        IConnectorDescriptor conn = new MToNPartitioningConnectorDescriptor(spec, tpcf);
+        return new Pair<>(conn, null);
     }
 
     @Override
@@ -58,12 +76,29 @@ public class SpatialPartitionExchangePOperator extends AbstractExchangePOperator
     }
 
     @Override
-    public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op, IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) throws AlgebricksException {
-        return null;
+    public String toString() {
+        return getOperatorTag().toString() + " " + partitioningFields;
     }
 
     @Override
-    public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) throws AlgebricksException {
+    public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) throws AlgebricksException {
+        return emptyUnaryRequirements();
+    }
 
+    @Override
+    public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context)
+            throws AlgebricksException {
+        IPartitioningProperty p =
+                new SpatialPartitionedProperty(new ListSet<LogicalVariable>(partitioningFields), domain);
+        this.deliveredProperties = new StructuralPropertiesVector(p, null);
+    }
+
+    public Set<LogicalVariable> getPartitioningFields() {
+        return partitioningFields;
+    }
+
+    public INodeDomain getDomain() {
+        return domain;
     }
 }

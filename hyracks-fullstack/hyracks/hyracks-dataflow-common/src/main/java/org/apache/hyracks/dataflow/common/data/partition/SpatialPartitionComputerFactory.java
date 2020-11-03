@@ -25,6 +25,7 @@ import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SpatialPartitionComputerFactory implements ITuplePartitionComputerFactory {
+    private final int[] partitioningFields;
     double minX;
     double minY;
     double maxX;
@@ -32,7 +33,9 @@ public class SpatialPartitionComputerFactory implements ITuplePartitionComputerF
     int numRows;
     int numColumns;
 
-    public SpatialPartitionComputerFactory(double minX, double minY, double maxX, double maxY, int numRows, int numColumns) {
+    public SpatialPartitionComputerFactory(int[] partitioningFields, double minX, double minY, double maxX, double maxY,
+            int numRows, int numColumns) {
+        this.partitioningFields = partitioningFields;
         this.minX = minX;
         this.minY = minY;
         this.maxX = maxX;
