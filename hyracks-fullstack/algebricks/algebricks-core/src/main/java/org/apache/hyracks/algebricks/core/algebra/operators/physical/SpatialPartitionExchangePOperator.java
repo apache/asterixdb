@@ -37,10 +37,10 @@ import org.apache.hyracks.algebricks.core.algebra.properties.SpatialPartitionedP
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
-import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
+import org.apache.hyracks.api.dataflow.value.ITupleMultiPartitionComputerFactory;
 import org.apache.hyracks.api.job.IConnectorDescriptorRegistry;
 import org.apache.hyracks.dataflow.common.data.partition.SpatialPartitionComputerFactory;
-import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
+import org.apache.hyracks.dataflow.std.connectors.MToNPartialBroadcastConnectorDescriptor;
 
 public class SpatialPartitionExchangePOperator extends AbstractExchangePOperator {
 
@@ -64,9 +64,11 @@ public class SpatialPartitionExchangePOperator extends AbstractExchangePOperator
         }
 
         // TODO: parse the partitioning parameters from user inputs
-        ITuplePartitionComputerFactory tpcf =
-                new SpatialPartitionComputerFactory(keys, -180.0, -83.0, 180.0, 90.0, 100, 100);
-        IConnectorDescriptor conn = new MToNPartitioningConnectorDescriptor(spec, tpcf);
+        int numRows = 10;
+        int numColumns = 10;
+        ITupleMultiPartitionComputerFactory tpcf =
+                new SpatialPartitionComputerFactory(keys, -180.0, -83.0, 180.0, 90.0, numRows, numColumns);
+        IConnectorDescriptor conn = new MToNPartialBroadcastConnectorDescriptor(spec, tpcf);
         return new Pair<>(conn, null);
     }
 
