@@ -29,16 +29,16 @@ public class SpatialPartitionComputerFactory implements ITuplePartitionComputerF
     double minY;
     double maxX;
     double maxY;
-    int weight;
-    int height;
+    int numRows;
+    int numColumns;
 
-    public SpatialPartitionComputerFactory(double minX, double minY, double maxX, double maxY, int weight, int height) {
+    public SpatialPartitionComputerFactory(double minX, double minY, double maxX, double maxY, int numRows, int numColumns) {
         this.minX = minX;
         this.minY = minY;
         this.maxX = maxX;
         this.maxY = maxY;
-        this.weight = weight;
-        this.height = height;
+        this.numRows = numRows;
+        this.numColumns = numColumns;
     }
 
     @Override
