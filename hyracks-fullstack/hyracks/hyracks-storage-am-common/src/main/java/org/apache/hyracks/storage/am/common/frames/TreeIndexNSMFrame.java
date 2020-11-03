@@ -31,6 +31,10 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.ophelpers.SlotOffTupleOff;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.util.JSONUtil;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
 
@@ -352,6 +356,22 @@ public abstract class TreeIndexNSMFrame implements ITreeIndexFrame {
         } else {
             frameTuple.resetByTupleIndex(this, tupleCount - 1);
             return frameTuple;
+        }
+    }
+
+    @Override
+    public ObjectNode getState() {
+        ObjectNode state = ITreeIndexFrame.super.getState();
+        state.put("largeFlag", getLargeFlag());
+        return state;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return JSONUtil.convertNode(getState());
+        } catch (JsonProcessingException e) {
+            return "failed to convert json";
         }
     }
 }

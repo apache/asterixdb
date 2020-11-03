@@ -101,4 +101,5 @@
       * [Parallelism Parameter](#Parallelism_parameter)
       * [Interval Joins](#Interval_joins)
       * [Memory Parameters](#Memory_parameters)
+      * [Query Hints](#Query_hints)
 * [Appendix 3. Variable Bindings and Name Resolution](#Variable_bindings_and_name_resolution)
