@@ -74,13 +74,10 @@ public class SpatialPartitionComputerFactory implements ITupleMultiPartitionComp
 
         @Override
         public BitSet partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
-            int fieldCount = accessor.getFieldCount();
-            int tupleCount = accessor.getTupleCount();
             int startOffset = accessor.getTupleStartOffset(tIndex);
             int slotLength = accessor.getFieldSlotsLength();
             int fIdx = partitioningFields[0];
             int fStart = accessor.getFieldStartOffset(tIndex, fIdx);
-//            int fEnd = accessor.getFieldEndOffset(tIndex, fIdx);
             double x1 = accessor.getBuffer().getDouble(startOffset + slotLength + fStart + 1);
             double y1 = accessor.getBuffer().getDouble(startOffset + slotLength + fStart + 8 + 1);
             double x2 = accessor.getBuffer().getDouble(startOffset + slotLength + fStart + 16 + 1);

@@ -64,8 +64,9 @@ public class SpatialPartitionExchangePOperator extends AbstractExchangePOperator
         }
 
         // TODO: parse the partitioning parameters from user inputs
-        int numRows = 10;
-        int numColumns = 10;
+        int numRows = 3;
+        int numColumns = 3;
+        int numPartitions = numRows * numColumns;
         ITupleMultiPartitionComputerFactory tpcf =
                 new SpatialPartitionComputerFactory(keys, -180.0, -83.0, 180.0, 90.0, numRows, numColumns);
         IConnectorDescriptor conn = new MToNPartialBroadcastConnectorDescriptor(spec, tpcf);

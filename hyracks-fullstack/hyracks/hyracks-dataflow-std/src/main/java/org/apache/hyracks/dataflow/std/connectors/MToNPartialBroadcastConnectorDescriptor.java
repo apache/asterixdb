@@ -43,8 +43,7 @@ public class MToNPartialBroadcastConnectorDescriptor extends AbstractMToNConnect
     }
 
     public MToNPartialBroadcastConnectorDescriptor(IConnectorDescriptorRegistry spec,
-                                                   ITupleMultiPartitionComputerFactory tpcf,
-                                                   int nConsumerPartitions) {
+            ITupleMultiPartitionComputerFactory tpcf, int nConsumerPartitions) {
         super(spec);
         this.tpcf = tpcf;
         this.overwrittenNumberConsumerPartitions = nConsumerPartitions;
@@ -54,9 +53,9 @@ public class MToNPartialBroadcastConnectorDescriptor extends AbstractMToNConnect
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException {
-        if (this.overwrittenNumberConsumerPartitions > 0) {
-            nConsumerPartitions = this.overwrittenNumberConsumerPartitions;
-        }
+//        if (this.overwrittenNumberConsumerPartitions > 0) {
+//            nConsumerPartitions = this.overwrittenNumberConsumerPartitions;
+//        }
         return new MultiPartitionDataWriter(ctx, nConsumerPartitions, edwFactory, recordDesc,
                 tpcf.createPartitioner(ctx));
     }
