@@ -57,7 +57,7 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 public class OptimizedHybridHashJoin {
 
     // Used for special probe BigObject which can not be held into the Join memory
-    private FrameTupleAppender bigProbeFrameAppender;
+    private FrameTupleAppender bigFrameAppender;
 
     public enum SIDE {
         BUILD,
@@ -149,10 +149,32 @@ public class OptimizedHybridHashJoin {
     }
 
     private void processTupleBuildPhase(int tid, int pid) throws HyracksDataException {
+        // insertTuple prevents the tuple to acquire a number of frames that is > the frame limit
         while (!bufferManager.insertTuple(pid, accessorBuild, tid, tempPtr)) {
-            int victimPartition = spillPolicy.selectVictimPartition(pid);
-            if (victimPartition < 0) {
-                throw HyracksDataException.create(ErrorCode.INSUFFICIENT_MEMORY);
+            int recordSize = VPartitionTupleBufferManager.calculateActualSize(null, accessorBuild.getTupleLength(tid));
+            double numFrames = (double) recordSize / (double) jobletCtx.getInitialFrameSize();
+            int victimPartition;
+            if (numFrames > bufferManager.getConstrain().frameLimit(pid)
+                    || (victimPartition = spillPolicy.selectVictimPartition(pid)) < 0) {
+                // insert request can never be satisfied
+                if (numFrames > memSizeInFrames || recordSize < jobletCtx.getInitialFrameSize()) {
+                    // the tuple is greater than the memory budget or although the record is small we could not find
+                    // a frame for it (possibly due to a bug)
+                    throw HyracksDataException.create(ErrorCode.INSUFFICIENT_MEMORY);
+                }
+                // Record is large but insertion failed either 1) we could not satisfy the request because of the
+                // frame limit or 2) we could not find a victim anymore (exhaused all victims) and the partition is
+                // memory-resident with no frame.
+                flushBigObjectToDisk(pid, accessorBuild, tid, buildRFWriters, buildRelName);
+                spilledStatus.set(pid);
+                if ((double) bufferManager.getPhysicalSize(pid)
+                        / (double) jobletCtx.getInitialFrameSize() > bufferManager.getConstrain().frameLimit(pid)) {
+                    // The partition is getting spilled, we need to check if the size of it is still under the frame
+                    // limit as frame limit for it might have changed (due to transition from memory-resident to
+                    // spilled)
+                    spillPartition(pid);
+                }
+                return;
             }
             spillPartition(victimPartition);
         }
@@ -495,24 +517,26 @@ public class OptimizedHybridHashJoin {
                 bufferManager.clearPartition(victim);
                 if (!bufferManager.insertTuple(pid, accessorProbe, tupleId, tempPtr)) {
                     // This should not happen if the size calculations are correct, just not to let the query fail.
-                    flushBigProbeObjectToDisk(pid, accessorProbe, tupleId);
+                    flushBigObjectToDisk(pid, accessorProbe, tupleId, probeRFWriters, probeRelName);
                 }
             } else {
-                flushBigProbeObjectToDisk(pid, accessorProbe, tupleId);
+                flushBigObjectToDisk(pid, accessorProbe, tupleId, probeRFWriters, probeRelName);
             }
         }
     }
 
-    private void flushBigProbeObjectToDisk(int pid, FrameTupleAccessor accessorProbe, int i)
-            throws HyracksDataException {
-        if (bigProbeFrameAppender == null) {
-            bigProbeFrameAppender = new FrameTupleAppender(new VSizeFrame(jobletCtx));
+    private void flushBigObjectToDisk(int pid, FrameTupleAccessor accessor, int i, RunFileWriter[] runFileWriters,
+            String refName) throws HyracksDataException {
+        if (bigFrameAppender == null) {
+            bigFrameAppender = new FrameTupleAppender(new VSizeFrame(jobletCtx));
         }
-        RunFileWriter runFileWriter = getSpillWriterOrCreateNewOneIfNotExist(probeRFWriters, probeRelName, pid);
-        if (!bigProbeFrameAppender.append(accessorProbe, i)) {
+
+        RunFileWriter runFileWriter = getSpillWriterOrCreateNewOneIfNotExist(runFileWriters, refName, pid);
+        if (!bigFrameAppender.append(accessor, i)) {
+
             throw new HyracksDataException("The given tuple is too big");
         }
-        bigProbeFrameAppender.write(runFileWriter, true);
+        bigFrameAppender.write(runFileWriter, true);
     }
 
     private boolean isBuildRelAllInMemory() {

@@ -120,4 +120,5 @@ public interface IPartitionedTupleBufferManager {
      */
     void clearPartition(int partition) throws HyracksDataException;
 
+    IPartitionedMemoryConstrain getConstrain();
 }

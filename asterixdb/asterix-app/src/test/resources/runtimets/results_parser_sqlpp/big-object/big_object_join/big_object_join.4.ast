@@ -1,0 +1,85 @@
+DataverseUse test
+Set compiler.joinmemory=256KB
+Query:
+SELECT ELEMENT [
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [c_custkey]
+    :
+    FieldAccessor [
+      Variable [ Name=$c ]
+      Field=c_custkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [o_orderkey]
+    :
+    FieldAccessor [
+      Variable [ Name=$o ]
+      Field=o_orderkey
+    ]
+  )
+  (
+    LiteralExpr [STRING] [len_c_comment]
+    :
+    FunctionCall asterix.string-length@1[
+      FieldAccessor [
+        Variable [ Name=$c ]
+        Field=c_comment
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [len_o_comment]
+    :
+    FunctionCall asterix.string-length@1[
+      FieldAccessor [
+        Variable [ Name=$o ]
+        Field=o_comment
+      ]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [c_comment]
+    :
+    FieldAccessor [
+      Variable [ Name=$c ]
+      Field=c_comment
+    ]
+  )
+]
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.Customer]
+  ]
+  AS Variable [ Name=$c ]
+,
+  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.Order]
+  ]
+  AS Variable [ Name=$o ]
+]
+Where
+  OperatorExpr [
+    FieldAccessor [
+      Variable [ Name=$c ]
+      Field=c_custkey
+    ]
+    =
+    FieldAccessor [
+      Variable [ Name=$o ]
+      Field=o_custkey
+    ]
+  ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=$o ]
+    Field=o_orderkey
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=$c ]
+    Field=c_custkey
+  ]
+  ASC
+
