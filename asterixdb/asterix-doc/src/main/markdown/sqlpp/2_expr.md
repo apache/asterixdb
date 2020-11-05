@@ -17,27 +17,31 @@
  ! under the License.
  !-->
 
-The query language is a highly composable expression language.
-Each expression in the query language returns zero or more data model instances.
-There are three major kinds of expressions.
-At the topmost level, an expression can be an OperatorExpression (similar to a mathematical expression) or a
-QuantifiedExpression (which yields a boolean value).
-Each will be detailed as we explore the full grammar of the language.
+An expression is a language fragment that can be evaluated to return a value. For example, the expression 2 + 3 returns the value 5. Expressions are the building blocks from which queries are constructed. SQL++ supports nearly all of the kinds of expressions in SQL, and adds some new kinds as well.
 
-    Expression ::= OperatorExpression | QuantifiedExpression
+SQL++ is an orthogonal language, which means that expressions can serve as operands of higher level expressions. By nesting expressions inside other expressions, complex queries can be built up. Any expression can be enclosed in parentheses to establish operator precedence.
 
-Note that in the following text, words enclosed in angle brackets denote keywords that are not case-sensitive.
+In this section, we'll discuss the various kinds of SQL++ expressions.
 
+---
+
+### Expr
+**![](../images/diagrams/Expr.png)**
+
+
+---
 
 ## <a id="Operator_expressions">Operator Expressions</a>
 
 Operators perform a specific operation on the input values or expressions.
 The syntax of an operator expression is as follows:
 
-    OperatorExpression ::= PathExpression
-                           | Operator OperatorExpression
-                           | OperatorExpression Operator (OperatorExpression)?
-                           | OperatorExpression <BETWEEN> OperatorExpression <AND> OperatorExpression
+---
+
+### OperatorExpr
+**![](../images/diagrams/OperatorExpr.png)**
+
+---
 
 The language provides a full set of operators that you can use within its statements.
 Here are the categories of operators:
@@ -64,7 +68,7 @@ The following table summarizes the precedence order (from higher to lower) of th
 | OR                                                                          | Disjunction |
 
 In general, if any operand evaluates to a `MISSING` value, the enclosing operator will return `MISSING`;
-if none of operands evaluates to a `MISSING` value but there is an operand evaluates to a `NULL` value,
+if none of the operands evaluates to a `MISSING` value but there is an operand which evaluates to a `NULL` value,
 the enclosing operator will return `NULL`. However, there are a few exceptions listed in
 [comparison operators](#Comparison_operators) and [logical operators](#Logical_operators).
 
@@ -89,15 +93,15 @@ Collection operators are used for membership tests (IN, NOT IN) or empty collect
 
 | Operator   |  Purpose                                     | Example    |
 |------------|----------------------------------------------|------------|
-| IN         |  Membership test                             | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.lang IN ["en", "de"]; |
-| NOT IN     |  Non-membership test                         | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.lang NOT IN ["en"]; |
-| EXISTS     |  Check whether a collection is not empty     | SELECT * FROM ChirpMessages cm <br/>WHERE EXISTS cm.referredTopics; |
-| NOT EXISTS |  Check whether a collection is empty         | SELECT * FROM ChirpMessages cm <br/>WHERE NOT EXISTS cm.referredTopics; |
+| IN         |  Membership test                             | FROM customers AS c <br/>WHERE c.address.zipcode IN ["02340", "02115"] <br/> SELECT *; |
+| NOT IN     |  Non-membership test                         | FROM customers AS c <br/>WHERE c.address.zipcode NOT IN ["02340", "02115"] <br/> SELECT *;|
+| EXISTS     |  Check whether a collection is not empty     | FROM orders AS o <br/>WHERE EXISTS  o.items <br/> SELECT *;|
+| NOT EXISTS |  Check whether a collection is empty         | FROM orders AS o <br/>WHERE NOT EXISTS  o.items <br/> SELECT *; |
 
 ### <a id="Comparison_operators">Comparison Operators</a>
 Comparison operators are used to compare values.
 The comparison operators fall into one of two sub-categories: missing value comparisons and regular value comparisons.
-The query language (and JSON) has two ways of representing missing information in a object - the presence of the field
+SQL++ (and JSON) has two ways of representing missing information in an object - the presence of the field
 with a NULL for its value (as in SQL), and the absence of the field (which JSON permits).
 For example, the first of the following objects represents Jack, whose friend is Jill.
 In the other examples, Jake is friendless a la SQL, with a friend field that is NULL, while Joe is friendless in a more
@@ -110,32 +114,32 @@ natural (for JSON) way, i.e., by not having a friend field.
 
 {"name": "Joe"}
 
-The following table enumerates all of the query language's comparison operators.
+The following table enumerates all of the comparison operators available in SQL++.
 
 | Operator       |  Purpose                                       | Example    |
 |----------------|------------------------------------------------|------------|
-| IS NULL        |  Test if a value is NULL                       | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS NULL; |
-| IS NOT NULL    |  Test if a value is not NULL                   | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS NOT NULL; |
-| IS MISSING     |  Test if a value is MISSING                    | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS MISSING; |
-| IS NOT MISSING |  Test if a value is not MISSING                | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS NOT MISSING;|
-| IS UNKNOWN     |  Test if a value is NULL or MISSING            | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS UNKNOWN; |
-| IS NOT UNKNOWN |  Test if a value is neither NULL nor MISSING   | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS NOT UNKNOWN;|
-| IS KNOWN (IS VALUED) |  Test if a value is neither NULL nor MISSING | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS KNOWN; |
-| IS NOT KNOWN (IS NOT VALUED) |  Test if a value is NULL or MISSING | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name IS NOT KNOWN; |
-| BETWEEN        |  Test if a value is between a start value and <br/>a end value. The comparison is inclusive <br/>to both start and end values. |  SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId BETWEEN 10 AND 20;|
-| =              |  Equality test                                 | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId=10; |
-| !=             |  Inequality test                               | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId!=10;|
-| <>             |  Inequality test                               | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId<>10;|
-| <              |  Less than                                     | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId<10; |
-| >              |  Greater than                                  | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId>10; |
-| <=             |  Less than or equal to                         | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId<=10; |
-| >=             |  Greater than or equal to                      | SELECT * FROM ChirpMessages cm <br/>WHERE cm.chirpId>=10; |
-| LIKE           |  Test if the left side matches a<br/> pattern defined on the right<br/> side; in the pattern,  "%" matches  <br/>any string while "&#95;" matches <br/> any character. | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name LIKE "%Giesen%";|
-| NOT LIKE       |  Test if the left side does not <br/>match a pattern defined on the right<br/> side; in the pattern,  "%" matches <br/>any string while "&#95;" matches <br/> any character. | SELECT * FROM ChirpMessages cm <br/>WHERE cm.user.name NOT LIKE "%Giesen%";|
+| IS NULL        |  Test if a value is NULL                       |FROM customers AS c <br/>WHERE c.name IS NULL <br/> SELECT *; |
+| IS NOT NULL    |  Test if a value is not NULL                   | FROM customers AS c <br/>WHERE c.name IS NOT NULL <br/> SELECT *; |
+| IS MISSING     |  Test if a value is MISSING                    | FROM customers AS c <br/>WHERE c.name IS MISSING <br/> SELECT *;  |
+| IS NOT MISSING |  Test if a value is not MISSING                | FROM customers AS c <br/>WHERE c.name IS NOT MISSING <br/> SELECT *; |
+| IS UNKNOWN     |  Test if a value is NULL or MISSING            | FROM customers AS c <br/>WHERE c.name IS UNKNOWN <br/> SELECT *; |
+| IS NOT UNKNOWN |  Test if a value is neither NULL nor MISSING   | FROM customers AS c <br/>WHERE c.name IS NOT UNKNOWN <br/> SELECT *; |
+| IS KNOWN (IS VALUED) |  Test if a value is neither NULL nor MISSING | FROM customers AS c <br/>WHERE c.name IS KNOWN <br/> SELECT *;  |
+| IS NOT KNOWN (IS NOT VALUED) |  Test if a value is NULL or MISSING | FROM customers AS c <br/>WHERE c.name IS NOT KNOWN <br/> SELECT *;  |
+| BETWEEN        |  Test if a value is between a start value and a end value. The comparison is inclusive of both the start and end values. |  FROM customers AS c WHERE c.rating BETWEEN 600 AND 700 SELECT *;|
+| =              |  Equality test                                 | FROM customers AS c <br/> WHERE c.rating = 640 <br/> SELECT *; |
+| !=             |  Inequality test                               | FROM customers AS c <br/> WHERE c.rating != 640 <br/> SELECT *;|
+| <>             |  Inequality test                               | FROM customers AS c <br/> WHERE c.rating <> 640 <br/> SELECT *;|
+| <              |  Less than                                     | FROM customers AS c <br/> WHERE c.rating < 640 <br/> SELECT *; |
+| >              |  Greater than                                  | FROM customers AS c <br/> WHERE c.rating > 640 <br/> SELECT *; |
+| <=             |  Less than or equal to                         | FROM customers AS c <br/> WHERE c.rating <= 640 <br/> SELECT *; |
+| >=             |  Greater than or equal to                      | FROM customers AS c <br/> WHERE c.rating >= 640 <br/> SELECT *; |
+| LIKE           |  Test if the left side matches a pattern defined on the right side; in the pattern,  "%" matches any string while "&#95;" matches any character. | FROM customers AS c WHERE c.name LIKE "%Dodge%" SELECT *;|
+| NOT LIKE       |  Test if the left side does not match a pattern defined on the right side; in the pattern, "%" matches any string while "&#95;" matches any character. | FROM customers AS c WHERE c.name NOT LIKE "%Dodge%" SELECT *;|
 
 The following table summarizes how the missing value comparison operators work.
 
-| Operator | Non-NULL/Non-MISSING value | NULL | MISSING |
+| Operator | Non-NULL/Non-MISSING value | NULL value| MISSING value|
 |----------|----------------|------|---------|
 | IS NULL  | FALSE | TRUE | MISSING |
 | IS NOT NULL | TRUE | FALSE | MISSING |
@@ -151,9 +155,9 @@ Logical operators perform logical `NOT`, `AND`, and `OR` operations over Boolean
 
 | Operator |  Purpose                                   | Example    |
 |----------|-----------------------------------------------------------------------------|------------|
-| NOT      |  Returns true if the following condition is false, otherwise returns false  | SELECT VALUE NOT TRUE;  |
-| AND      |  Returns true if both branches are true, otherwise returns false            | SELECT VALUE TRUE AND FALSE; |
-| OR       |  Returns true if one branch is true, otherwise returns false                | SELECT VALUE FALSE OR FALSE; |
+| NOT      |  Returns true if the following condition is false, otherwise returns false  | SELECT VALUE NOT 1 = 1; <br/> Returns FALSE  |
+| AND      |  Returns true if both branches are true, otherwise returns false            | SELECT VALUE 1 = 2 AND 1 = 1; <br/> Returns FALSE|
+| OR       |  Returns true if one branch is true, otherwise returns false                | SELECT VALUE 1 = 2 OR 1 = 1; <br/> Returns TRUE |
 
 The following table is the truth table for `AND` and `OR`.
 
@@ -182,45 +186,50 @@ The following table demonstrates the results of `NOT` on all possible inputs.
 
 ## <a id="Quantified_expressions">Quantified Expressions</a>
 
-    QuantifiedExpression ::= ( (<ANY>|<SOME>) | <EVERY> ) Variable <IN> Expression ( "," Variable "in" Expression )*
-                             <SATISFIES> Expression (<END>)?
+---
 
-Quantified expressions are used for expressing existential or universal predicates involving the elements of a
-collection.
+### QuantifiedExpr
+**![](../images/diagrams/QuantifiedExpr.png)**
+##### Synonym for `SOME`: `ANY` 
+ 
+---
+
+Quantified expressions are used for expressing existential or universal predicates involving the elements of a collection.
 
 The following pair of examples illustrate the use of a quantified expression to test that every (or some) element in the
 set [1, 2, 3] of integers is less than three. The first example yields `FALSE` and second example yields `TRUE`.
 
-It is useful to note that if the set were instead the empty set, the first expression would yield `TRUE` ("every" value in an
-empty set satisfies the condition) while the second expression would yield `FALSE` (since there isn't "some" value, as there are
-no values in the set, that satisfies the condition).
+It is useful to note that if the set were instead the empty set, the first expression would yield `TRUE` ("every" value in an empty set satisfies the condition) while the second expression would yield `FALSE` (since there isn't "some" value, as there are no values in the set, that satisfies the condition).
 
 A quantified expression will return a `NULL` (or `MISSING`) if the first expression in it evaluates to `NULL` (or `MISSING`).
-A type error will be raised if the first expression in a quantified expression does not return a collection.
+Otherwise, a type error will be raised if the first expression in a quantified expression does not return a collection.
 
 ##### Examples
 
-    EVERY x IN [ 1, 2, 3 ] SATISFIES x < 3
-    SOME x IN [ 1, 2, 3 ] SATISFIES x < 3
+    EVERY x IN [ 1, 2, 3 ] SATISFIES x < 3		Returns FALSE
+    SOME x IN [ 1, 2, 3 ] SATISFIES x < 3		Returns TRUE	
 
 
 ## <a id="Path_expressions">Path Expressions</a>
 
-    PathExpression  ::= PrimaryExpression ( Field | Index )*
-    Field           ::= "." Identifier
-    Index           ::= "[" Expression (":" ( Expression )? )? "]"
+---
+
+### PathExpr
+**![](../images/diagrams/PathExpr.png)**
+
+---
 
 Components of complex types in the data model are accessed via path expressions. Path access can be applied to the
 result of a query expression that yields an instance of a complex type, for example, an object or an array instance.
 
 For objects, path access is based on field names, and it accesses the field whose name was specified.<br/>
-For arrays, path access is based on (zero-based) array-style indexing. Array indexes can be used to retrieve either a
-single element from an array, or a whole subset of an array. Accessing a single element is achieved by
-providing a single index argument (zero-based element position), while obtaining a subset of an array is achieved by
+
+For arrays, path access is based on (zero-based) array-style indexing. Array indices can be used to retrieve either a single element from an array, or a whole subset of an array. Accessing a single element is achieved by providing a single index argument (zero-based element position), while obtaining a subset of an array is achieved by
 providing the `start` and `end` (zero-based) index positions; the returned subset is from position `start` to position
 `end - 1`; the `end` position argument is optional. If a position argument is negative then the element position is
-counted from the end of the array (`-1` addresses the last element, `-2` next to last, and so on). Multisets have
-similar behavior to arrays, except for retrieving arbitrary items as the order of items is not fixed in multisets.
+counted from the end of the array (`-1` addresses the last element, `-2` next to last, and so on).
+
+Multisets have similar behavior to arrays, except for retrieving arbitrary items as the order of items is not fixed in multisets.
 
 Attempts to access non-existent fields or out-of-bound array elements produce the special value `MISSING`. Type errors
 will be raised for inappropriate use of a path expression, such as applying a field accessor to a numeric value.
@@ -230,145 +239,113 @@ and also a composition thereof.
 
 ##### Examples
 
-    ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array
+    ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array						Returns [["a", "b", "c"]]
 
-    (["a", "b", "c"])[2]
+    (["a", "b", "c"])[2]										Returns ["c"]
     
-    (["a", "b", "c"])[-1]
+    (["a", "b", "c"])[-1]										Returns ["c"]
 
-    ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array[2]
+    ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array[2]					Returns ["c"]
 
-    (["a", "b", "c"])[0:2]
+    (["a", "b", "c"])[0:2]										Returns [["a", "b"]]
 
-    (["a", "b", "c"])[0:]
+    (["a", "b", "c"])[0:]										Returns [["a", "b", "c"]]
     
-    (["a", "b", "c"])[-2:-1]
+    (["a", "b", "c"])[-2:-1]									Returns [["b"]]
 
 
 ## <a id="Primary_expressions">Primary Expressions</a>
 
-    PrimaryExpr ::= Literal
-                  | VariableReference
-                  | ParameterReference
-                  | ParenthesizedExpression
-                  | FunctionCallExpression
-                  | CaseExpression
-                  | Constructor
+---
 
-The most basic building block for any expression in the query language is PrimaryExpression.
+### PrimaryExpr
+**![](../images/diagrams/PrimaryExpr.png)**
+
+---
+
+The most basic building block for any expression in SQL++ is PrimaryExpression.
 This can be a simple literal (constant) value, a reference to a query variable that is in scope, a parenthesized
 expression, a function call, or a newly constructed instance of the data model (such as a newly constructed object,
 array, or multiset of data model instances).
 
-## <a id="Literals">Literals</a>
+### <a id="Literals">Literals</a>
 
-    Literal        ::= StringLiteral
-                       | IntegerLiteral
-                       | FloatLiteral
-                       | DoubleLiteral
-                       | <NULL>
-                       | <MISSING>
-                       | <TRUE>
-                       | <FALSE>
-    StringLiteral  ::= "\"" (
-                                 <EscapeQuot>
-                               | <EscapeBslash>
-                               | <EscapeSlash>
-                               | <EscapeBspace>
-                               | <EscapeFormf>
-                               | <EscapeNl>
-                               | <EscapeCr>
-                               | <EscapeTab>
-                               | ~["\"","\\"])*
-                        "\""
-                        | "\'"(
-                                 <EscapeApos>
-                               | <EscapeBslash>
-                               | <EscapeSlash>
-                               | <EscapeBspace>
-                               | <EscapeFormf>
-                               | <EscapeNl>
-                               | <EscapeCr>
-                               | <EscapeTab>
-                               | ~["\'","\\"])*
-                          "\'"
-    <ESCAPE_Apos>  ::= "\\\'"
-    <ESCAPE_Quot>  ::= "\\\""
-    <EscapeBslash> ::= "\\\\"
-    <EscapeSlash>  ::= "\\/"
-    <EscapeBspace> ::= "\\b"
-    <EscapeFormf>  ::= "\\f"
-    <EscapeNl>     ::= "\\n"
-    <EscapeCr>     ::= "\\r"
-    <EscapeTab>    ::= "\\t"
+---
 
-    IntegerLiteral ::= <DIGITS>
-    <DIGITS>       ::= ["0" - "9"]+
-    FloatLiteral   ::= <DIGITS> ( "f" | "F" )
-                     | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
-                     | "." <DIGITS> ( "f" | "F" )
-    DoubleLiteral  ::= <DIGITS> "." <DIGITS>
-                       | "." <DIGITS>
+### Literal
+**![](../images/diagrams/Literal.png)**
 
-Literals (constants) in a query can be strings, integers, floating point values, double values, boolean constants, or
-special constant values like `NULL` and `MISSING`.
-The `NULL` value is like a `NULL` in SQL; it is used to represent an unknown field value.
-The special value `MISSING` is only meaningful in the context of field accesses; it occurs when the accessed field
-simply does not exist at all in a object being accessed.
+---
 
-The following are some simple examples of literals.
+The simplest kind of expression is a literal that directly represents a value in JSON format. Here are some examples:
 
-##### Examples
+  
 
-    'a string'
-    "test string"
-    42
+	-42
+	"Hello"
+	true
+	false
+	null
 
-Different from standard SQL, double quotes play the same role as single quotes and may be used for string literals in queries as well.
+ 
+Numeric literals may include a sign and an optional decimal point. They may also be written in exponential notation, like this:
 
-### <a id="Variable_references">Variable References</a>
+  
+	5e2
+	-4.73E-2
 
-    VariableReference     ::= <IDENTIFIER> | <DelimitedIdentifier>
-    <IDENTIFIER>          ::= (<LETTER> | "_") (<LETTER> | <DIGIT> | "_" | "$")*
-    <LETTER>              ::= ["A" - "Z", "a" - "z"]
-    DelimitedIdentifier   ::= "`" (<EscapeQuot>
-                                    | <EscapeBslash>
-                                    | <EscapeSlash>
-                                    | <EscapeBspace>
-                                    | <EscapeFormf>
-                                    | <EscapeNl>
-                                    | <EscapeCr>
-                                    | <EscapeTab>
-                                    | ~["`","\\"])*
-                              "`"
+  
 
-A variable in a query can be bound to any legal data model value.
-A variable reference refers to the value to which an in-scope variable is bound.
-(E.g., a variable binding may originate from one of the `FROM`, `WITH` or `LET` clauses of a `SELECT` statement or from
-an input parameter in the context of a function body.)
-Backticks, for example, \`id\`, are used for delimited identifiers.
-Delimiting is needed when a variable's desired name clashes with a keyword or includes characters not allowed in regular
-identifiers.
-More information on exactly how variable references are resolved can be found in the appendix section on Variable
-Resolution.
+String literals may be enclosed in either single quotes or double quotes. Inside a string literal, the delimiter character for that string must be "escaped" by a backward slash, as in these examples:
 
-##### Examples
+  
 
-    tweet
-    id
-    `SELECT`
-    `my-function`
+	"I read \"War and Peace\" today."
+	'I don\'t believe everything I read.'
+
+The table below shows how to escape characters in SQL++
+
+|Character Name |Escape Method
+|----------|----------------|
+|Single Quote| `\'`|
+|Double Quote|`\"`|
+|Backslash|`\\`|
+|Slash|`\/`|
+|Backspace|`\b`|
+|Formfeed|`\f`|
+|Newline|`\n`|
+|CarriageReturn|`\r`|
+|EscapeTab|`\t`|
+
+
+
+### <a id="Variable_references">Identifiers and Variable References</a>
+
+ 
+Like SQL, SQL++ makes use of a language construct called an *identifier*. An identifier starts with an alphabetic character or the underscore character _ , and contains only case-sensitive alphabetic characters, numeric digits, or the special characters _ and $. It is also possible for an identifier to include other special characters, or to be the same as a reserved word, by enclosing the identifier in back-ticks (it's then called a *delimited identifier*). Identifiers are used in variable names and in certain other places in SQL++ syntax, such as in path expressions, which we'll discuss soon. Here are some examples of identifiers:
+
+	X
+	customer_name
+	`SELECT`
+	`spaces in here`
+	`@&#`
+
+ 
+A very simple kind of SQL++ expression is a variable, which is simply an identifier. As in SQL, a variable can be bound to a value, which may be an input dataset, some intermediate result during processing of a query, or the final result of a query. We'll learn more about variables when we discuss queries.
+
+Note that the SQL++ rules for delimiting strings and identifiers are different from the SQL rules. In SQL, strings are always enclosed in single quotes, and double quotes are used for delimited identifiers.
 
 ### <a id="Parameter_references">Parameter References</a>
 
-    ParameterReference              ::= NamedParameterReference | PositionalParameterReference
-    NamedParameterReference         ::= "$" (<IDENTIFIER> | <DelimitedIdentifier>)
-    PositionalParameterReference    ::= ("$" <DIGITS>) | "?"
+A parameter reference is an external variable. Its value is provided using the [statement execution API](../api.html#queryservice).
 
-A statement parameter is an external variable which value is provided through the [statement execution API](../api.html#queryservice).
-An error will be raised if the parameter is not bound at the query execution time.
-Positional parameter numbering starts at 1.
-"?" parameters are interpreted as $1, .. $N in the order in which they appear in the statement.
+Parameter references come in two forms, *Named Parameter References* and *Positional Parameter References.*
+
+Named paramater references consist of the "$" symbol  followed by an identifier or delimited identifier.
+
+Positional parameter references can be either a "$" symbol followed by one or more digits or a "?" symbol. If numbered, positional parameters start at 1. "?" parameters are interpreted as $1 to $N based on the order in which they appear in the statement.
+
+Parameter references may appear as shown in the below examples:
 
 ##### Examples
 
@@ -376,12 +353,23 @@ Positional parameter numbering starts at 1.
     $1
     ?
 
+An error will be raised in the parameter is not bound at query execution time.
+
 ### <a id="Parenthesized_expressions">Parenthesized Expressions</a>
 
-    ParenthesizedExpression ::= "(" Expression ")" | Subquery
+---
+
+### ParenthesizedExpr
+**![](../images/diagrams/ParenthesizedExpr.png)**
+
+### Subquery
+**![](../images/diagrams/Subquery.png)**
+
+---
 
 An expression can be parenthesized to control the precedence order or otherwise clarify a query.
-For composability, a subquery is also an parenthesized expression.
+A [subquery](#Subqueries) (nested [selection](#Union_all)) may also be enclosed in parentheses. For more on these topics please see their respective sections.
+
 
 The following expression evaluates to the value 2.
 
@@ -389,20 +377,30 @@ The following expression evaluates to the value 2.
 
     ( 1 + 1 )
 
-### <a id="Function_call_expressions">Function Call Expressions</a>
+### <a id="Function_call_expressions">Function Calls</a>
 
-    FunctionCallExpression ::= ( FunctionName "(" ( Expression ( "," Expression )* )? ")" ) | WindowFunctionCall
+---
 
-Functions are included in the query language, like most languages, as a way to package useful functionality or to
+### FunctionCall
+**![](../images/diagrams/FunctionCall.png)**
+
+### OrdinaryFunctionCall
+**![](../images/diagrams/OrdinaryFunctionCall.png)**
+
+### AggregateFunctionCall
+**![](../images/diagrams/AggregateFunctionCall.png)**
+
+---
+
+Functions are included in SQL++, like most languages, as a way to package useful functionality or to
 componentize complicated or reusable computations.
 A function call is a legal query expression that represents the value resulting from the evaluation of its body
-expression with the given parameter bindings; the parameter value bindings can themselves be any expressions in the
-query language.
+expression with the given parameter bindings; the parameter value bindings can themselves be any expressions in SQL++.
 
 Note that Window functions, and aggregate functions used as window functions, have a more complex syntax.
-Window function calls are described in the section on [OVER Clauses](#Over_clauses).
+Window function calls are described in the section on [Window Queries](#Over_clauses).
 
-The following example is a (built-in) function call expression whose value is 8.
+The following example is a function call expression whose value is 8.
 
 ##### Example
 
@@ -410,9 +408,18 @@ The following example is a (built-in) function call expression whose value is 8.
 
 ## <a id="Case_expressions">Case Expressions</a>
 
-    CaseExpression ::= SimpleCaseExpression | SearchedCaseExpression
-    SimpleCaseExpression ::= <CASE> Expression ( <WHEN> Expression <THEN> Expression )+ ( <ELSE> Expression )? <END>
-    SearchedCaseExpression ::= <CASE> ( <WHEN> Expression <THEN> Expression )+ ( <ELSE> Expression )? <END>
+---
+
+### CaseExpr
+**![](../images/diagrams/CaseExpr.png)**
+
+### SimpleCaseExpr
+**![](../images/diagrams/SimpleCaseExpr.png)**
+
+### SearchedCaseExpr
+**![](../images/diagrams/SearchedCaseExpr.png)**
+
+---
 
 In a simple `CASE` expression, the query evaluator searches for the first `WHEN` ... `THEN` pair in which the `WHEN` expression is equal to the expression following `CASE` and returns the expression following `THEN`. If none of the `WHEN` ... `THEN` pairs meet this condition, and an `ELSE` branch exists, it returns the `ELSE` expression. Otherwise, `NULL` is returned.
 
@@ -427,56 +434,86 @@ The following example illustrates the form of a case expression.
 
 ### <a id="Constructors">Constructors</a>
 
-    Constructor              ::= ArrayConstructor | MultisetConstructor | ObjectConstructor
-    ArrayConstructor         ::= "[" ( Expression ( "," Expression )* )? "]"
-    MultisetConstructor      ::= "{{" ( Expression ( "," Expression )* )? "}}"
-    ObjectConstructor        ::= "{" ( FieldBinding ( "," FieldBinding )* )? "}"
-    FieldBinding             ::= Expression ( ":" Expression )?
+---
 
-A major feature of the query language is its ability to construct new data model instances. This is accomplished using
-its constructors for each of the model's complex object structures, namely arrays, multisets, and objects.
-Arrays are like JSON arrays, while multisets have bag semantics.
-Objects are built from fields that are field-name/field-value pairs, again like JSON.
+### Constructor
+**![](../images/diagrams/Constructor.png)**
 
-The following examples illustrate how to construct a new array with 4 items and a new object with 2 fields respectively.
-Array elements can be homogeneous (as in the first example),
-which is the common case, or they may be heterogeneous (as in the second example). The data values and field name values
-used to construct arrays, multisets, and objects in constructors are all simply query expressions. Thus, the collection
-elements, field names, and field values used in constructors can be simple literals or they can come from query variable
-references or even arbitrarily complex query expressions (subqueries).
-Type errors will be raised if the field names in an object are not strings, and
-duplicate field errors will be raised if they are not distinct.
+### ObjectConstructor
+**![](../images/diagrams/ObjectConstructor.png)**
 
-##### Examples
+### ArrayConstructor
+**![](../images/diagrams/ArrayConstructor.png)**
 
-    [ 'a', 'b', 'c', 'c' ]
+### MultisetConstructor
+**![](../images/diagrams/MultisetConstructor.png)**
 
-    [ 42, "forty-two!", { "rank" : "Captain", "name": "America" }, 3.14159 ]
+---
 
-    {
-      'project name': 'Hyracks',
-      'project members': [ 'vinayakb', 'dtabass', 'chenli', 'tsotras', 'tillw' ]
-    }
+Structured JSON values can be represented by constructors, as in these examples:
+
+	An object: { "name": "Bill", "age": 42 }
+	An array: [ 1, 2, "Hello", null ]  
+  
+In a constructed object, the names of the fields must be strings (either literal strings or computed strings), and an object may not contain any duplicate names. Of course, structured literals can be nested, as in this example:
+
+  
+
+	[ {"name": "Bill",
+	   "address":
+	      {"street": "25 Main St.",
+	       "city": "Cincinnati, OH"  
+	      }
+	  },
+	  {"name": "Mary",
+	   "address":
+	      {"street": "107 Market St.",
+	       "city": "St. Louis, MO"
+	      }
+	   }
+	]
+
+  
+
+The array items in an array constructor, and the field-names and field-values in an object constructor, may be represented by expressions. For example, suppose that the variables firstname, lastname, salary, and bonus are bound to appropriate values. Then structured values might be constructed by the following expressions:
+
+  
+
+An object:
+
+	{ 
+	  "name": firstname || " " || lastname,  
+	  "income": salary + bonus  
+	}
+
+  
+An array:
+
+	["1984", lastname, salary + bonus, null]
 
 
 If only one expression is specified instead of the field-name/field-value pair in an object constructor then this
 expression is supposed to provide the field value. The field name is then automatically generated based on the 
-kind of the value expression:
+kind of the value expression as in Q2.1:
 
-  * If it is a variable reference expression then generated field name is the name of that variable.
-  * If it is a field access expression then generated field name is the last identifier in that expression.
+  * If it is a variable reference expression then the generated field name is the name of that variable.
+  * If it is a field access expression then the generated field name is the last identifier in that expression.
   * For all other cases, a compilation error will be raised.
  
-##### Example
 
-    SELECT VALUE { user.alias, user.userSince }
-    FROM GleambookUsers user
-    WHERE user.id = 1;
+##### Example
+(Q2.1)
+
+	FROM customers AS c
+	WHERE c.custid = "C47"
+	SELECT VALUE {c.name, c.rating}
 
 This query outputs:
 
-    [ {
-        "alias": "Margarita",
-        "userSince": "2012-08-20T10:10:00"
-    } ]
 
+	[
+	    {
+	        "name": "S. Logan",
+	        "rating": 625
+	    }
+	]

@@ -96,6 +96,7 @@
       <item name="Filter-Based LSM Index Acceleration" href="sqlpp/filters.html"/>
       <item name="Support of Full-text Queries" href="sqlpp/fulltext.html"/>
       <item name="Support of Similarity Queries" href="sqlpp/similarity.html"/>
+      <item name="Support of Interval Joins" href="interval_join.html"/>
     </menu>
 
     <menu name="Deprecated">

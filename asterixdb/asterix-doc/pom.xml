@@ -52,7 +52,7 @@
             <configuration>
               <target>
                 <concat destfile="${project.build.directory}/generated-site/markdown/sqlpp/manual.md">
-                  <filelist dir="${project.basedir}/src/main/markdown/sqlpp" files="0_toc.md,1_intro.md,2_expr_title.md,2_expr.md,3_query_title.md,3_declare_dataverse.md,3_declare_function.md,3_query.md,4_error_title.md,4_error.md,5_ddl_head.md,5_ddl_dataset_index.md,5_ddl_function_removal.md,5_ddl_dml.md,appendix_1_title.md,appendix_1_keywords.md,appendix_2_title.md,appendix_2_parameters.md,appendix_2_parallel_sort.md,appendix_2_index_only.md,appendix_2_hints.md,appendix_2_interval_joins.md,appendix_3_title.md,appendix_3_resolution.md" />
+                  <filelist dir="${project.basedir}/src/main/markdown/sqlpp" files="0_toc.md,1_intro.md,2_expr_title.md,2_expr.md,3_query_title.md,3_query.md,4_windowfunctions_title.md,4_windowfunctions.md,5_error_title.md,5_error.md,6_sql_diff_title.md,6_sql_diff.md,7_ddl_head.md,7_ddl_dml.md,appendix_1_title.md,appendix_1_keywords.md,appendix_2_title.md,appendix_2_parameters.md,appendix_2_parallel_sort.md,appendix_2_index_only.md,appendix_2_hints.md,appendix_3_title.md,appendix_3_resolution.md,appendix_4_title.md,appendix_4_manual_data.md" />
                 </concat>
                 <concat destfile="${project.build.directory}/generated-site/markdown/sqlpp/builtins.md">
                   <filelist dir="${project.basedir}/src/main/markdown/builtins" files="0_toc.md,0_toc_sqlpp.md,0_toc_common.md,1_numeric_common.md,1_numeric_delta.md,2_string_common.md,2_string_delta.md,3_binary.md,4_spatial.md,5_similarity.md,6_tokenizing.md,7_temporal.md,7_allens.md,8_record.md,9_aggregate_sql.md,10_comparison.md,11_type.md,13_conditional.md,12_misc.md,15_bitwise.md,14_window.md" />
@@ -75,24 +75,28 @@
                 <concat destfile="${project.build.directory}/generated-site/markdown/udf.md">
                   <filelist dir="${project.basedir}/src/main/user-defined_function/" files="udf_title.md,udf.md" />
                 </concat>
+                <concat destfile="${project.build.directory}/generated-site/markdown/interval_join.md">
+                  <filelist dir="${project.basedir}/src/main/interval_join/" files="interval_join_title.md,interval_join.md" />
+                </concat>
               </target>
             </configuration>
             <goals>
               <goal>run</goal>
             </goals>
           </execution>
-		  <execution>
-			  <id>sqlpp</id>
-			  <phase>prepare-package</phase>
-			  <configuration>
-				  <target>
-					  <copy file="${project.basedir}/../asterix-lang-sqlpp/target/site/jjdoc/SQLPP.html" tofile="${project.build.directory}/site/SQLPP.html"/>
-				  </target>
-			  </configuration>
-			  <goals>
-				  <goal>run</goal>
-			  </goals>
-		  </execution>
+          <execution>
+              <!-- TODO: this is gross, we should consume this as part of the asterix-lang-sqlpp dependency's build, not copy -->
+              <id>sqlpp</id>
+              <phase>prepare-package</phase>
+              <configuration>
+                  <target>
+                      <copy file="${project.basedir}/../asterix-lang-sqlpp/target/site/jjdoc/SQLPP.html" tofile="${project.build.directory}/site/SQLPP.html"/>
+                  </target>
+              </configuration>
+              <goals>
+                  <goal>run</goal>
+              </goals>
+          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -123,11 +127,101 @@
         <configuration>
           <excludes combine.children="append">
             <exclude>src/site/resources/data/lineitem.tbl</exclude>
+            <exclude>src/main/grammar/sqlpp.ebnf</exclude>
           </excludes>
         </configuration>
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>generate.rr</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>venv</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>exec</goal>
+                </goals>
+                <configuration>
+                  <!--suppress UnresolvedMavenProperty -->
+                  <executable>${java.home}/bin/java</executable>
+                  <workingDirectory>${project.build.directory}</workingDirectory>
+                  <arguments>
+                    <argument>-jar</argument>
+                    <argument>rr.war</argument>
+                    <argument>-png</argument>
+                    <argument>-out:railroads.zip</argument>
+                    <argument>-color:#f7f7f7</argument>
+                    <argument>-width:1280</argument>
+                    <argument>../src/main/grammar/sqlpp.ebnf</argument>
+                  </arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>com.googlecode.maven-download-plugin</groupId>
+            <artifactId>download-maven-plugin</artifactId>
+            <version>1.4.2</version>
+            <executions>
+              <execution>
+                <id>install-rr</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>wget</goal>
+                </goals>
+                <configuration>
+                  <url>https://github.com/GuntherRademacher/rr/releases/download/v1.62/rr-1.62-java8.zip</url>
+                  <outputDirectory>${project.build.directory}</outputDirectory>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>extract-rr</id>
+                <phase>generate-sources</phase>
+                <configuration>
+                  <tasks>
+                    <echo message="Extracting rr" />
+                    <unzip src="${project.build.directory}/rr-1.62-java8.zip" dest="${project.build.directory}" />
+                  </tasks>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>extract-diagrams</id>
+                <phase>process-resources</phase>
+                <configuration>
+                  <tasks>
+                    <echo message="Extracting diagrams" />
+                    <unzip src="${project.build.directory}/railroads.zip" dest="${project.build.directory}" />
+                      <copy todir="${project.build.directory}/site/images/diagrams/">
+                      <fileset dir="${project.build.directory}/diagram/"/>
+                    </copy>
+                  </tasks>
+                </configuration>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <distributionManagement>
     <site>

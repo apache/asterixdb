@@ -35,7 +35,6 @@ but the sorted partitions are not merged into a single node.
 
     SET `compiler.sort.parallel` "true";
 
-    SELECT VALUE user
-    FROM GleambookUsers AS user
-    ORDER BY ARRAY_LENGTH(user.friendIds) DESC;
-
+    SELECT VALUE o
+    FROM orders AS o
+    ORDER BY ARRAY_LENGTH(o.items) DESC;

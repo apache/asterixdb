@@ -90,7 +90,13 @@ Here are steps to get AsterixDB running on your local machine:
 
 ## Documentation
 
+To generate the documentation, run asterix-doc with the generate.rr profile in maven, e.g  `mvn -Pgenerate.rr ...`
+Be sure to run `mvn package` beforehand or run `mvn site` in asterix-lang-sqlpp to generate some resources that
+are used in the documentation that are generated directly from the grammar.
+
 * [master](https://ci.apache.org/projects/asterixdb/index.html) |
+  [0.9.6](http://asterixdb.apache.org/docs/0.9.6/index.html) |
+  [0.9.5](http://asterixdb.apache.org/docs/0.9.5/index.html) |
   [0.9.4.1](http://asterixdb.apache.org/docs/0.9.4.1/index.html) |
   [0.9.4](http://asterixdb.apache.org/docs/0.9.4/index.html) |
   [0.9.3](http://asterixdb.apache.org/docs/0.9.3/index.html) |

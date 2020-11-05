@@ -17,6 +17,7 @@
  ! under the License.
  !-->
 
+## <a id="Interval_joins">Interval Joins</a>
 This system allows for the 13 types of Allen's interval-join relations.
 The default, when using these joins, is either Nested Loop, or Hybrid Hash Join.
 The optimal algorithm will be automatically selected based on the query.
@@ -27,7 +28,6 @@ Otherwise, the system will default to nested loop join.
 To use interval merge join you must include a range hint.
 Adding a range hint allows for the system to pick interval merge join.
 
-## <a id="Interval_joins">Types of Interval Joins</a>
 The 13 interval functions are `interval_after()`, `interval_before()`, `interval_covers()`, `interval_covered_by()`,
 `interval_ends()`, `interval_ended_by()`, `interval_meets()`, `interval_met_by()`, `interval_overlaps()`,
 `interval_overlapping()`, `interval_overlapped_by()`, `interval_starts()`, and `interval_started_by()`.
@@ -52,7 +52,7 @@ and B represents the second set interval parameter:
 | Overlapping(A, B)| (A.start >= B.start and B.start < A.end) or (B.end <= A.end and B.end < A.start)|
 | Starts(A, B) and Started_by(B, A) | A.start = B.start and A.end <= B.end |
 
-## <a id="Range_hint">Using a Range Hint</a>
+### <a id="Range_hint"> Using a Range Hint </a>
 
 To use an efficient interval join the data must be partitioned with the details in a range hint.
 Interval joins with a range hint currently work for intervals types of date, datetime, or time;

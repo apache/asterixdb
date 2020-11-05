@@ -17,12 +17,18 @@
  ! under the License.
  !-->
 
-# User-defined Functions #
+# <a id="DDL_and_DML_statements">7. DDL and DML statements</a>
 
-## <a id="#toc">Table of Contents</a> ##
-* [Introduction](#introduction)
-* [Installing an UDF Library](#installingUDF)
-* [Attaching an UDF on Data Feeds](#UDFOnFeeds)
-* [A quick look of the UDF configuration](#udfConfiguration)
-* [User defined Feed Adapters](#adapter)
-* [Unstalling an UDF Library](#uninstall)
+---
+
+### Stmnt
+**![](../images/diagrams/Stmnt.png)**
+
+### SingleStmnt
+**![](../images/diagrams/SingleStmnt.png)**
+
+---
+
+In addition to queries, an implementation of SQL++ needs to support statements for data definition
+and manipulation purposes as well as controlling the context to be used in evaluating query expressions.
+This section details the DDL and DML statements supported in SQL++ as realized today in Apache AsterixDB.

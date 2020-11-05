@@ -1,0 +1,243 @@
+Expr ::= OperatorExpr | QuantifiedExpr
+
+OperatorExpr ::= PathExpr
+                 | Operator OperatorExpr
+                 | OperatorExpr Operator OperatorExpr?
+                 | OperatorExpr "BETWEEN" OperatorExpr "AND" OperatorExpr
+
+QuantifiedExpr::= ( "SOME" | "EVERY" ) Variable "IN" Expr ( "," Variable "in" Expr )*
+                         "SATISFIES" Expr ("END")?
+
+PathExpr ::= PrimaryExpr ("." Identifier | "[" Expr (":" (Expr)? )? "]")*
+
+PrimaryExpr ::=  Literal
+                |VariableRef
+                |ParameterRef
+                |ParenthesizedExpr
+                |FunctionCall
+                |CaseExpr
+                |Constructor
+
+Literal ::=  StringLiteral
+            |IntegerLiteral
+            |FloatLiteral
+            |DoubleLiteral
+            |"NULL"
+            |"MISSING"
+            |"TRUE"
+            |"FALSE"
+
+ParenthesizedExpr ::= ("(" Expr ")") | Subquery
+
+Subquery ::= ("(" Selection ")")
+
+FunctionCall ::= OrdinaryFunctionCall | AggregateFunctionCall | WindowFunctionCall
+
+OrdinaryFunctionCall ::= Identifier "(" Expr ("," Expr)* ")"
+
+AggregateFunctionCall ::= Identifier "(" ("DISTINCT")? Expr ")"
+
+CaseExpr ::= SimpleCaseExpr | SearchedCaseExpr
+
+SimpleCaseExpr ::= "CASE" Expr ("WHEN" Expr "THEN" Expr)+ ("ELSE" Expr)? "END"
+
+SearchedCaseExpr ::= "CASE"("WHEN" Expr "THEN" Expr)+ ("ELSE" Expr)? "END"
+
+Constructor ::= ObjectConstructor | ArrayConstructor | MultisetConstructor
+
+ObjectConstructor ::= "{" ( Expr ( ":" Expr )?( ","Expr ( ":" Expr )? )* )? "}"
+
+ArrayConstructor ::= "[" Expr ("," Expr)* "]"
+
+MultisetConstructor ::= "{{" Expr ("," Expr)* "}}"
+
+Query ::= (Expr | Selection) ";"
+
+Selection ::= WithClause? QueryBlock UnionOption* OrderByClause? LimitClause?
+
+QueryBlock ::=  SelectClause StreamGenerator?
+               |StreamGenerator SelectClause
+
+StreamGenerator::= FromClause LetClause? WhereClause? (GroupByClause LetClause? HavingClause?)?
+
+SelectClause ::= "SELECT" ("DISTINCT" | "ALL")? "VALUE" Expr
+               | "SELECT" ("DISTINCT" | "ALL")? ((Expr ("AS"? Identifier)?) | "*" | Identifier "." "*") ("," ((Expr ("AS"? Identifier)?) | "*" | Identifier "." "*"))*
+
+FromClause ::= "FROM" FromTerm ("," FromTerm)*
+
+FromTerm ::= NamedExpr JoinStep*
+
+NamedExpr ::= Expr
+             |Expr "AS"? Variable
+
+JoinStep ::= ("INNER" | ("LEFT" "OUTER"?))? ("JOIN" NamedExpr "ON" Expr | "UNNEST" NamedExpr)
+
+LetClause ::= "LET" Variable "=" Expr ("," Variable "=" Expr)*
+
+WhereClause ::= "WHERE" Expr
+
+GroupByClause ::= "GROUP BY" Expr ("AS"? Identifier)? ( "," Expr ("AS"? Identifier)?)* GroupAsClause?
+
+HavingClause ::= "HAVING" Expr
+
+GroupAsClause ::= "GROUP AS" Identifier
+
+Selection ::= WithClause? QueryBlock UnionOption* OrderByClause? LimitClause?
+
+UnionOption ::= "UNION ALL" (QueryBlock | Subquery)
+
+WithClause ::= "WITH" Identifier "AS" Expr
+                       ("," Identifier "AS" Expr)*
+
+OrderbyClause ::= "ORDER BY" Expr ( "ASC" | "DESC" )?
+                       ( "," Expr ( "ASC" | "DESC" )? )*
+
+LimitClause ::= "LIMIT" Expr ("OFFSET" Expr)?
+
+Subquery ::= "(" Selection ")"
+
+WindowFunctionCall ::= WindowFunctionType "(" WindowFunctionArguments ")" WindowFunctionOptions? "OVER" (Variable "AS")? "(" WindowDefinition")"
+
+WindowFunctionType ::= AggregateFunction
+                     | WindowFunction
+
+WindowFunctionArguments ::=  ( ("DISTINCT")? Expr | (Expr ("," Expr ("," Expr)? )? )? )
+
+WindowFunctionOptions ::= ("FROM" ( "FIRST" | "LAST" ))? (( "RESPECT" | "IGNORE" ) "NULLS")?
+
+WindowDefinition ::= WindowPartitionClause? (WindowOrderClause (WindowFrameClause WindowFrameExclusion?)?)?
+
+WindowPartitionClause ::= "PARTITION" "BY" Expr ("," Expr)*
+
+WindowOrderClause ::= "ORDER" "BY" Expr ("ASC"|"DESC")? ("," Expr ("ASC" | "DESC")?)*
+
+WindowFrameClause ::= ("ROWS" | "RANGE" | "GROUPS") WindowFrameExtent
+
+WindowFrameExtent ::= ( ( "UNBOUNDED" | Expr ) "PRECEDING" | "CURRENT" "ROW" ) |
+"BETWEEN"( "UNBOUNDED" "PRECEDING" | "CURRENT" "ROW" | Expr ( "PRECEDING" | "FOLLOWING" ) )
+"AND" ( "UNBOUNDED" "FOLLOWING" | "CURRENT" "ROW" | Expr ( "PRECEDING" | "FOLLOWING" ) )
+
+WindowFrameExclusion ::= "EXCLUDE" ( "CURRENT" "ROW" | "GROUP" | "TIES" |
+"NO" "OTHERS" )
+
+Stmnt::= (SingleStmnt ";")+ "EOF"
+
+SingleStmnt ::= UseStmnt
+               |SetStmnt
+               |FunctionDeclaration
+               |Query
+               |CreateStmnt
+               |DropStmnt
+               |LoadStmnt
+               |InsertStmnt
+               |UpsertStmnt
+               |DeleteStmnt
+
+UseStmnt ::= "USE" Identifier
+
+FunctionDeclaration ::= "DELCARE" "FUNCTION" Identifier ParameterList "{" Expr "}"
+
+ParameterList ::= "(" ("VARIABLE" ("," "VARIABLE")*)?")"
+
+CreateStmnt ::= CreateDataverse
+              | CreateType
+              | CreateDataset
+              | CreateIndex
+              | CreateSynonym
+              | CreateFunction
+
+QualifiedName ::= Identifier ("." Identifier)?
+
+DoubleQualifiedName ::= Identifier "." Identifier ("." Identifier)?
+
+CreateDataverse ::= "CREATE" "DATAVERSE" Identifier ("IF" "NOT" "EXISTS")?
+
+CreateType ::= "CREATE" "TYPE" QualifiedName ("IF" "NOT" "EXISTS")? "AS" ObjectTypeDef
+
+ObjectTypeDef ::= ("CLOSED" | "OPEN")? "{" ObjectField ("," ObjectField)* "}"
+
+ObjectField ::= Identifier ":" Identifier "?"?
+
+TypeExpr ::= ObjectTypeDef
+            |ArrayTypeDef
+            |MultisetTypeDef
+            |TypeRef
+
+ArrayTypeDef ::= "[" TypeExpr "]"
+
+MultisetTypeDef ::= "{{" TypeExpr "}}"
+
+TypeRef ::= Identifier
+
+CreateDataset ::= CreateInternalDataset | CreateExternalDataset
+
+CreateInternalDataset ::= ( "INTERNAL" )? "DATASET" QualifiedName "(" QualifiedName ")" ("IF" "NOT" "EXISTS")?
+                           PrimaryKey ( "ON" Identifier )? ( "HINTS" Properties )?
+                           ( "USING" "COMPACTION" "POLICY" CompactionPolicy ( Configuration )? )?
+                           ( "WITH" "FILTER" "ON" Identifier )?
+
+CreateExternalDataset ::= "EXTERNAL" "DATASET" QualifiedName "(" QualifiedName ")" ("IF" "NOT" "EXISTS")? "USING" AdapterName
+                           Configuration ( "HINTS" Properties )?
+                           ( "USING" "COMPACTION" "POLICY" CompactionPolicy ( Configuration )? )?
+
+AdapterName ::= Identifier
+
+Configuration::= "(" (KeyValuePair ("," KeyValuePair)*)? ")"
+
+KeyValuePair ::= "(" StringLiteral "=" StringLiteral ")"
+
+Properties ::= ( "(" Identifier "=" ( StringLiteral | IntegerLiteral ) ( "," Identifier "=" ( StringLiteral | IntegerLiteral ) )* ")" )?
+
+PrimaryKey ::= "PRIMARY" "KEY" NestedField ( "," NestedField )* ("AUTOGENERATED")?
+
+NestedField ::= Identifier ( "." Identifier )*
+
+CompactionPolicy ::= Identifier
+
+CreateIndex ::= CreateSecondaryIndex | CreatePrimaryKeyIndex
+
+CreateSecondaryIndex ::= "CREATE" ("INDEX" Identifier ("IF" "NOT" "EXISTS")? "ON" QualifiedName
+                       "(" ( IndexField ) ( "," IndexField )* ")" ("TYPE" IndexType)? ("ENFORCED")?)
+
+CreatePrimaryKeyIndex ::=  "CREATE" "PRIMARY" "INDEX" Identifier? ("IF" "NOT" "EXISTS")? "ON" QualifiedName ("TYPE" "BTREE")?
+
+IndexField ::= NestedField (":" TypeRef)?
+
+IndexType ::= "BTREE"
+             |"RTREE"
+             |"KEYWORD"
+             |"NGRAM" "(" IntegerLiteral ")"
+
+CreateSynonym ::= "CREATE" "SYNONYM" QualifiedName "FOR" QualifiedName ("IF" "NOT" "EXISTS")?
+
+FunctionParameters ::= "(" ("VARIABLE" (":" TypeExpr)? ("," "VARIABLE" (":" TypeExpr)? )* )? ")"
+
+
+CreateFunction ::= "CREATE" ("OR" "REPLACE")? "FUNCTION" FunctionOrTypeName ("IF" "NOT" "EXISTS")? FunctionParameters ( "RETURNS" TypeExpr)?
+                   ( ("{" Expr "}") | ("AS" FunctionExternalIdentifier "AT" QualifiedName ("WITH" ObjectConstructor)?))
+
+DropStmnt ::= "DROP" ("DATAVERSE" Identifier
+                     | "TYPE" FunctionOrTypeName
+                     | ("DATSET" | "SYNONYM") QualifiedName
+                     | "INDEX" DoubleQualifiedName
+                     | "FUNCTION" FunctionSignature ) ("IF" "EXISTS")?
+
+FunctionSignature ::= FunctionOrTypeName "@" IntegerLiteral
+
+LoadStmnt ::= "LOAD" "DATASET" QualifiedName "USING" AdapterName Configuration ("PRE-SORTED")?
+
+InsertStmnt ::= "INSERT" "INTO" QualifiedName Query
+
+UpsertStmnt ::= "UPSERT" "INTO" QualifiedName Query
+
+DeleteStmnt ::= "DELETE" "FROM" QualifiedName (("AS")? Variable)? ("WHERE" Expr)?
+
+SetStmnt ::= "SET" Identifier StringLiteral
+
+
+
+
+
+
+
+

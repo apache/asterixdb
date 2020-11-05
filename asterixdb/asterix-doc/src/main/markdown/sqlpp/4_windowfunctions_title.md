@@ -17,12 +17,4 @@
  ! under the License.
  !-->
 
-# User-defined Functions #
-
-## <a id="#toc">Table of Contents</a> ##
-* [Introduction](#introduction)
-* [Installing an UDF Library](#installingUDF)
-* [Attaching an UDF on Data Feeds](#UDFOnFeeds)
-* [A quick look of the UDF configuration](#udfConfiguration)
-* [User defined Feed Adapters](#adapter)
-* [Unstalling an UDF Library](#uninstall)
+# <a id="Over_clauses">4. Window Functions</a>
