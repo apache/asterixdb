@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActiveEvent.Kind;
@@ -287,7 +288,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
             }
             LOGGER.log(level, "Acquiring locks");
             lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), dataverseName, entityName);
-            List<Dataset> datasets = ((ActiveEntityEventsListener) listener).getDatasets();
+            Set<Dataset> datasets = ((ActiveEntityEventsListener) listener).getDatasets();
             for (Dataset dataset : datasets) {
                 if (targetDataset != null && targetDataset.equals(dataset)) {
                     // DDL operation already acquired the proper lock for the operation

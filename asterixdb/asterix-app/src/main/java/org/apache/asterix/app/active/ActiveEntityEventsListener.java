@@ -23,6 +23,7 @@ import static org.apache.asterix.common.exceptions.ErrorCode.ACTIVE_ENTITY_NOT_R
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -85,7 +86,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     protected final MetadataProvider metadataProvider;
     protected final IHyracksClientConnection hcc;
     protected final EntityId entityId;
-    private final List<Dataset> datasets;
+    private final Set<Dataset> datasets;
     protected final ActiveEvent statsUpdatedEvent;
     protected final String runtimeName;
     protected final IRetryPolicyFactory retryPolicyFactory;
@@ -118,7 +119,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         this.metadataProvider = MetadataProvider.create(appCtx, null);
         this.hcc = hcc;
         this.entityId = entityId;
-        this.datasets = datasets;
+        this.datasets = new HashSet<>(datasets);
         this.retryPolicyFactory = retryPolicyFactory;
         this.state = ActivityState.STOPPED;
         this.statsTimestamp = -1;
@@ -251,19 +252,19 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     }
 
     @Override
-    public synchronized void remove(Dataset dataset) throws HyracksDataException {
+    public synchronized boolean remove(Dataset dataset) throws HyracksDataException {
         if (isActive()) {
             throw new RuntimeDataException(ErrorCode.CANNOT_REMOVE_DATASET_FROM_ACTIVE_ENTITY, entityId, state);
         }
-        getDatasets().remove(dataset);
+        return getDatasets().remove(dataset);
     }
 
     @Override
-    public synchronized void add(Dataset dataset) throws HyracksDataException {
+    public synchronized boolean add(Dataset dataset) throws HyracksDataException {
         if (isActive()) {
             throw new RuntimeDataException(ErrorCode.CANNOT_ADD_DATASET_TO_ACTIVE_ENTITY, entityId, state);
         }
-        getDatasets().add(dataset);
+        return getDatasets().add(dataset);
     }
 
     public JobId getJobId() {
@@ -676,7 +677,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     }
 
     @Override
-    public List<Dataset> getDatasets() {
+    public Set<Dataset> getDatasets() {
         return datasets;
     }
 

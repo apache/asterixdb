@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.metadata.api;
 
-import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -76,30 +76,32 @@ public interface IActiveEntityController extends IActiveEntityEventsListener {
      *
      * @param dataset
      *            the dataset to add
+     * @return <code>true</code> if the active entity did not already contain the dataset
      * @throws HyracksDataException
      *             if the entity is active
      */
-    void add(Dataset dataset) throws HyracksDataException;
+    boolean add(Dataset dataset) throws HyracksDataException;
 
     /**
      * Remove dataset from the list of associated datasets
      *
      * @param dataset
      *            the dataset to add
+     * @return <code>true</code> if the active entity contained the dataset
      * @throws HyracksDataException
      *             if the entity is active
      */
-    void remove(Dataset dataset) throws HyracksDataException;
+    boolean remove(Dataset dataset) throws HyracksDataException;
 
     /**
      * @return the list of associated datasets
      */
-    List<Dataset> getDatasets();
+    Set<Dataset> getDatasets();
 
     /**
      * replace the dataset object with the passed updated object
      *
-     * @param target
+     * @param dataset
      */
     void replace(Dataset dataset);
 

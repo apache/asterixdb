@@ -70,7 +70,7 @@ public class FrameTupleAccessor implements IFrameTupleAccessor {
     @Override
     public int getTupleStartOffset(int tupleIndex) {
         int offset = tupleIndex == 0 ? FrameConstants.TUPLE_START_OFFSET
-                : IntSerDeUtils.getInt(buffer.array(), tupleCountOffset - 4 * tupleIndex);
+                : IntSerDeUtils.getInt(buffer.array(), tupleCountOffset - FrameConstants.SIZE_LEN * tupleIndex);
         return start + offset;
     }
 

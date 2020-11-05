@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.test.active;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -54,7 +55,7 @@ public class TestUserActor extends Actor {
                 String entityName = actionListener.getEntityId().getEntityName();
                 try {
                     lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName, entityName);
-                    List<Dataset> datasets = actionListener.getDatasets();
+                    Collection<Dataset> datasets = actionListener.getDatasets();
                     for (Dataset dataset : datasets) {
                         lockUtil.modifyDatasetBegin(lockManager, mdProvider.getLocks(), dataset.getDataverseName(),
                                 dataset.getDatasetName());
@@ -77,7 +78,7 @@ public class TestUserActor extends Actor {
                 String entityName = actionListener.getEntityId().getEntityName();
                 try {
                     lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName, entityName);
-                    List<Dataset> datasets = actionListener.getDatasets();
+                    Collection<Dataset> datasets = actionListener.getDatasets();
                     for (Dataset dataset : datasets) {
                         lockUtil.modifyDatasetBegin(lockManager, mdProvider.getLocks(), dataset.getDataverseName(),
                                 dataset.getDatasetName());
@@ -98,7 +99,7 @@ public class TestUserActor extends Actor {
             protected void doExecute(MetadataProvider mdProvider) throws Exception {
                 DataverseName dataverseName = actionListener.getEntityId().getDataverseName();
                 String entityName = actionListener.getEntityId().getEntityName();
-                List<Dataset> datasets = actionListener.getDatasets();
+                Collection<Dataset> datasets = actionListener.getDatasets();
                 try {
                     lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName, entityName);
                     for (Dataset dataset : datasets) {
@@ -125,7 +126,7 @@ public class TestUserActor extends Actor {
                 String entityName = actionListener.getEntityId().getEntityName();
                 try {
                     lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName, entityName);
-                    List<Dataset> datasets = actionListener.getDatasets();
+                    Collection<Dataset> datasets = actionListener.getDatasets();
                     for (Dataset dataset : datasets) {
                         lockManager.upgradeDatasetLockToWrite(mdProvider.getLocks(), dataset.getDataverseName(),
                                 dataset.getDatasetName());

@@ -52,7 +52,7 @@ public enum ActivityState {
      */
     SUSPENDING,
     /**
-     * The activitiy has been suspended successfully. Next state must be resuming
+     * The activity has been suspended successfully. Next state must be resuming
      */
     SUSPENDED,
     /**
