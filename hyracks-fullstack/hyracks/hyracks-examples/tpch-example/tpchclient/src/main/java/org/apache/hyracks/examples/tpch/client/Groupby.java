@@ -148,7 +148,7 @@ public class Groupby {
         AbstractOperatorDescriptor grouper;
 
         if (alg.equalsIgnoreCase("hash")) {// external hash graph
-            grouper = new ExternalGroupOperatorDescriptor(spec, htSize, fileSize, keys, frameLimit,
+            grouper = new ExternalGroupOperatorDescriptor(spec, htSize, fileSize, keys, null, frameLimit,
                     new IBinaryComparatorFactory[] { IntegerBinaryComparatorFactory.INSTANCE },
                     new IntegerNormalizedKeyComputerFactory(),
                     new MultiFieldsAggregatorFactory(

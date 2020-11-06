@@ -22,6 +22,7 @@ package org.apache.hyracks.tests.unit;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryHashFunctionFamily;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.group.HashSpillableTableFactory;
@@ -34,14 +35,14 @@ public class ExternalHashGroupbyTest extends AbstractExternalGroupbyTest {
     ExternalGroupWriteOperatorNodePushable mergeOperator;
 
     @Override
-    protected void initial(IHyracksTaskContext ctx, int tableSize, int numFrames) {
+    protected void initial(IHyracksTaskContext ctx, int tableSize, int numFrames) throws HyracksDataException {
         ISpillableTableFactory tableFactory = new HashSpillableTableFactory(
                 new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE });
         buildOperator = new ExternalGroupBuildOperatorNodePushable(ctx, this.hashCode(), tableSize,
-                numFrames * ctx.getInitialFrameSize(), keyFields, numFrames, comparatorFactories,
+                numFrames * ctx.getInitialFrameSize(), keyFields, null, numFrames, comparatorFactories,
                 normalizedKeyComputerFactory, partialAggrInPlace, inRecordDesc, outputRec, tableFactory);
         mergeOperator = new ExternalGroupWriteOperatorNodePushable(ctx, this.hashCode(), tableFactory, outputRec,
-                outputRec, numFrames, keyFieldsAfterPartial, normalizedKeyComputerFactory, comparatorFactories,
+                outputRec, numFrames, keyFieldsAfterPartial, null, normalizedKeyComputerFactory, comparatorFactories,
                 finalAggrInPlace);
     }
 

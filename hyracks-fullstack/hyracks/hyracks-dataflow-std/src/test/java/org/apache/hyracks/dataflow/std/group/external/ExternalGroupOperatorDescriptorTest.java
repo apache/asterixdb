@@ -33,8 +33,8 @@ public class ExternalGroupOperatorDescriptorTest {
 
         // Sets a dummy variable.
         IOperatorDescriptorRegistry spec = new JobSpecification(32768);
-        ExternalGroupOperatorDescriptor eGByOp =
-                new ExternalGroupOperatorDescriptor(spec, 0, 0, null, 4, null, null, null, null, null, null, null);
+        ExternalGroupOperatorDescriptor eGByOp = new ExternalGroupOperatorDescriptor(spec, 0, 0, null, null, 4, null,
+                null, null, null, null, null, null);
 
         // Test 1: compiler.groupmemory: 512 bytes, frame size: 256 bytes, with 1 column group-by
         long memoryBudgetInBytes = 512;

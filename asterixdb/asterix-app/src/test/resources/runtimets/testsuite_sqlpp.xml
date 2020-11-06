@@ -5808,6 +5808,11 @@
         <output-dir compare="Text">group-by-all-ASTERIXDB-2611</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="group-by">
+      <compilation-unit name="hash-group-by-decor">
+        <output-dir compare="Text">hash-group-by-decor</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-join">
     <test-case FilePath="index-join">

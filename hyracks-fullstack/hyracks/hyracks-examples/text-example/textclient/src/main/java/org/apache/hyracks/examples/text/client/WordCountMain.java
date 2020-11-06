@@ -153,7 +153,7 @@ public class WordCountMain {
         IOperatorDescriptor gBy;
         int[] keys = new int[] { 0 };
         if ("hash".equalsIgnoreCase(algo)) {
-            gBy = new ExternalGroupOperatorDescriptor(spec, htSize, fileSize, keys, frameLimit,
+            gBy = new ExternalGroupOperatorDescriptor(spec, htSize, fileSize, keys, null, frameLimit,
                     new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                     new UTF8StringNormalizedKeyComputerFactory(),
                     new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {

@@ -126,7 +126,7 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
         int tableSize = 8;
 
         ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
-                keyFields, fileSize / spec.getFrameSize() + 1,
+                keyFields, null, fileSize / spec.getFrameSize() + 1,
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                 new UTF8StringNormalizedKeyComputerFactory(),
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
@@ -191,7 +191,7 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
         int tableSize = 8;
 
         ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
-                keyFields, fileSize / spec.getFrameSize() + 1,
+                keyFields, null, fileSize / spec.getFrameSize() + 1,
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                 new UTF8StringNormalizedKeyComputerFactory(),
                 new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {

@@ -27,9 +27,11 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ISpillableTableFactory extends Serializable {
+
     ISpillableTable buildSpillableTable(IHyracksTaskContext ctx, int inputSizeInTuple, long dataBytesSize,
-            int[] keyFields, IBinaryComparator[] comparatorFactories, INormalizedKeyComputer firstKeyNormalizerFactory,
-            IAggregatorDescriptorFactory aggregateFactory, RecordDescriptor inRecordDescriptor,
-            RecordDescriptor outRecordDescriptor, int framesLimit, int seed) throws HyracksDataException;
+            int[] gbyFields, int[] fdFields, IBinaryComparator[] comparatorFactories,
+            INormalizedKeyComputer firstKeyNormalizerFactory, IAggregatorDescriptorFactory aggregateFactory,
+            RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, int framesLimit, int seed)
+            throws HyracksDataException;
 
 }
