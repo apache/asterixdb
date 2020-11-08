@@ -26,4 +26,4 @@ use test;
 FROM tenk1
 WHERE unique2 < 10
 SELECT lead(ten * 2, 1, -1) OVER (PARTITION BY four ORDER BY ten) AS lead, ten, four
-ORDER BY four, ten
+ORDER BY four, ten, lead

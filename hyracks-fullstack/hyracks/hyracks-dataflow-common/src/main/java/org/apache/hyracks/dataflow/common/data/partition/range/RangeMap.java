@@ -35,16 +35,18 @@ import java.util.Arrays;
  * </pre>
  */
 public class RangeMap implements Serializable {
-    private static final long serialVersionUID = -7523433293419648234L;
+    private static final long serialVersionUID = 1L;
 
     private final int fields;
     private final byte[] bytes;
     private final int[] endOffsets;
+    private final double[] percentages;
 
-    public RangeMap(int numFields, byte[] bytes, int[] endOffsets) {
+    public RangeMap(int numFields, byte[] bytes, int[] endOffsets, double[] percentages) {
         this.fields = numFields;
         this.bytes = bytes;
         this.endOffsets = endOffsets;
+        this.percentages = percentages;
     }
 
     public int getSplitCount() {
@@ -53,6 +55,10 @@ public class RangeMap implements Serializable {
 
     public byte[] getByteArray() {
         return bytes;
+    }
+
+    public double[] getPercentages() {
+        return percentages;
     }
 
     public int getTag(int fieldIndex, int splitIndex) {
@@ -111,7 +117,7 @@ public class RangeMap implements Serializable {
 
     @Override
     public int hashCode() {
-        return fields + Arrays.hashCode(bytes) + Arrays.hashCode(endOffsets);
+        return fields + Arrays.hashCode(bytes) + Arrays.hashCode(endOffsets) + Arrays.hashCode(percentages);
     }
 
     @Override
@@ -124,11 +130,12 @@ public class RangeMap implements Serializable {
         }
         RangeMap other = (RangeMap) object;
         return fields == other.fields && Arrays.equals(endOffsets, other.endOffsets)
-                && Arrays.equals(bytes, other.bytes);
+                && Arrays.equals(bytes, other.bytes) && Arrays.equals(percentages, other.percentages);
     }
 
     @Override
     public String toString() {
         return "{SPLIT:" + getSplitCount() + '}';
     }
+
 }

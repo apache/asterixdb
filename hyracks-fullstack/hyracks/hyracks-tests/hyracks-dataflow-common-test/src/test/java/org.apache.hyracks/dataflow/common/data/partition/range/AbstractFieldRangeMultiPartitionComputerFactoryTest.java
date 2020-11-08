@@ -136,7 +136,7 @@ public abstract class AbstractFieldRangeMultiPartitionComputerFactoryTest extend
         for (int i = 0; i < integers.length; ++i) {
             offsets[i] = (i + 1) * INTEGER_LENGTH;
         }
-        return new RangeMap(1, getIntegerBytes(integers), offsets);
+        return new RangeMap(1, getIntegerBytes(integers), offsets, null);
     }
 
     private ByteBuffer prepareData(IHyracksTaskContext ctx, Long[] startPoints, Long duration)
@@ -194,7 +194,7 @@ public abstract class AbstractFieldRangeMultiPartitionComputerFactoryTest extend
         SourceLocation sourceLocation = new SourceLocation(0, 0);
 
         ITuplePartitionComputerFactory itpcf = new FieldRangePartitionComputerFactory(rangeFields,
-                minComparatorFactories, rangeMapSupplier, sourceLocation);
+                minComparatorFactories, rangeMapSupplier, sourceLocation, false);
 
         executeFieldRangePartitionTests(integers, itpcf, nParts, results, duration);
 

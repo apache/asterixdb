@@ -29,19 +29,23 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public final class FieldRangePartitionComputerFactory extends AbstractFieldRangePartitionComputerFactory
         implements ITuplePartitionComputerFactory {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final int[] rangeFields;
 
+    private final boolean usePercentage;
+
     public FieldRangePartitionComputerFactory(int[] rangeFields, IBinaryComparatorFactory[] comparatorFactories,
-            RangeMapSupplier rangeMapSupplier, SourceLocation sourceLocation) {
+            RangeMapSupplier rangeMapSupplier, SourceLocation sourceLocation, boolean usePercentage) {
         super(rangeMapSupplier, comparatorFactories, sourceLocation);
         this.rangeFields = rangeFields;
+        this.usePercentage = usePercentage;
     }
 
     @Override
     public ITuplePartitionComputer createPartitioner(IHyracksTaskContext taskContext) {
-        return new AbstractFieldRangeSinglePartitionComputer(taskContext) {
+        return new AbstractFieldRangeSinglePartitionComputer(taskContext,
+                usePercentage ? PercentageRangeMapPartitionComputer::new : RangeMapPartitionComputer::new) {
             @Override
             protected int computePartition(IFrameTupleAccessor accessor, int tIndex, int nParts)
                     throws HyracksDataException {

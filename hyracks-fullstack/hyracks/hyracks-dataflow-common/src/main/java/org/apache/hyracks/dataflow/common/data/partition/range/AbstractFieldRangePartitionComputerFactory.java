@@ -21,6 +21,8 @@ package org.apache.hyracks.dataflow.common.data.partition.range;
 
 import java.io.Serializable;
 import java.util.BitSet;
+import java.util.Random;
+import java.util.function.Supplier;
 
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -61,11 +63,10 @@ abstract class AbstractFieldRangePartitionComputerFactory implements Serializabl
 
         final IHyracksTaskContext taskContext;
 
-        final RangeMapPartitionComputer rangeMapPartitionComputer;
+        RangeMapPartitionComputer rangeMapPartitionComputer;
 
         private AbstractFieldRangePartitionComputer(IHyracksTaskContext taskContext) {
             this.taskContext = taskContext;
-            this.rangeMapPartitionComputer = new RangeMapPartitionComputer();
         }
 
         public void initialize() throws HyracksDataException {
@@ -76,8 +77,10 @@ abstract class AbstractFieldRangePartitionComputerFactory implements Serializabl
     abstract class AbstractFieldRangeSinglePartitionComputer extends AbstractFieldRangePartitionComputer
             implements ITuplePartitionComputer {
 
-        AbstractFieldRangeSinglePartitionComputer(IHyracksTaskContext taskContext) {
+        AbstractFieldRangeSinglePartitionComputer(IHyracksTaskContext taskContext,
+                Supplier<RangeMapPartitionComputer> supplier) {
             super(taskContext);
+            this.rangeMapPartitionComputer = supplier.get();
         }
 
         @Override
@@ -96,6 +99,7 @@ abstract class AbstractFieldRangePartitionComputerFactory implements Serializabl
 
         AbstractFieldRangeMultiPartitionComputer(IHyracksTaskContext taskContext) {
             super(taskContext);
+            this.rangeMapPartitionComputer = new RangeMapPartitionComputer();
         }
 
         @Override
@@ -127,11 +131,11 @@ abstract class AbstractFieldRangePartitionComputerFactory implements Serializabl
                 throws HyracksDataException;
     }
 
-    final class RangeMapPartitionComputer {
+    class RangeMapPartitionComputer {
 
-        private RangeMap rangeMap;
+        protected RangeMap rangeMap;
 
-        private IBinaryComparator[] comparators;
+        protected IBinaryComparator[] comparators;
 
         protected void initialize(IHyracksTaskContext taskContext) throws HyracksDataException {
             rangeMap = rangeMapSupplier.getRangeMap(taskContext);
@@ -164,7 +168,7 @@ abstract class AbstractFieldRangePartitionComputerFactory implements Serializabl
             return (int) Math.floor(slotIndex / rangesPerPart);
         }
 
-        private int findRangeMapSlot(IFrameTupleAccessor accessor, int tIndex, int[] rangeFields)
+        protected int findRangeMapSlot(IFrameTupleAccessor accessor, int tIndex, int[] rangeFields)
                 throws HyracksDataException {
             int slotIndex = 0;
             for (int slotNumber = 0, n = rangeMap.getSplitCount(); slotNumber < n; ++slotNumber) {
@@ -190,7 +194,7 @@ abstract class AbstractFieldRangePartitionComputerFactory implements Serializabl
             return slotIndex;
         }
 
-        private int compareSlotAndFields(IFrameTupleAccessor accessor, int tIndex, int[] rangeFields, int slotNumber)
+        protected int compareSlotAndFields(IFrameTupleAccessor accessor, int tIndex, int[] rangeFields, int slotNumber)
                 throws HyracksDataException {
             int c = 0;
             int startOffset = accessor.getTupleStartOffset(tIndex);
@@ -209,4 +213,51 @@ abstract class AbstractFieldRangePartitionComputerFactory implements Serializabl
             return c;
         }
     }
+
+    final class PercentageRangeMapPartitionComputer extends RangeMapPartitionComputer {
+        private final Random r = new Random();
+
+        @Override
+        protected int findRangeMapSlot(IFrameTupleAccessor accessor, int tIndex, int[] rangeFields)
+                throws HyracksDataException {
+            int slotIndex = 0;
+            for (int slotNumber = 0; slotNumber < rangeMap.getSplitCount(); ++slotNumber) {
+                int c = compareSlotAndFields(accessor, tIndex, rangeFields, slotNumber);
+                if (c == 0) {
+                    double percent = 100 * r.nextDouble();
+                    int slotIterator = slotNumber;
+
+                    while (slotIterator < rangeMap.getSplitCount()
+                            && compareSplittingVector(slotIterator, slotNumber) == 0) {
+                        percent -= rangeMap.getPercentages()[slotIterator];
+                        if (percent <= 0) {
+                            break;
+                        }
+                        slotIterator++;
+                    }
+                    return slotIterator;
+                }
+                if (c < 0) {
+                    return slotIndex;
+                }
+                slotIndex++;
+            }
+            return slotIndex;
+        }
+
+        private int compareSplittingVector(int slotNumber1, int slotNumber2) throws HyracksDataException {
+            int c = 0;
+            for (int fieldNum = 0; fieldNum < comparators.length; ++fieldNum) {
+                c = comparators[fieldNum].compare(rangeMap.getByteArray(),
+                        rangeMap.getStartOffset(fieldNum, slotNumber1), rangeMap.getLength(fieldNum, slotNumber1),
+                        rangeMap.getByteArray(), rangeMap.getStartOffset(fieldNum, slotNumber2),
+                        rangeMap.getLength(fieldNum, slotNumber2));
+                if (c != 0) {
+                    return c;
+                }
+            }
+            return c;
+        }
+    }
+
 }
