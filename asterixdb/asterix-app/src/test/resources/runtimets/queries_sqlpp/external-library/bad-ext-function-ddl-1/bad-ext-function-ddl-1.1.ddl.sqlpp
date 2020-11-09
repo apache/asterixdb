@@ -16,8 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-SELECT object_remove(fn, "Timestamp") as fn
-FROM Metadata.`Function` fn
-WHERE fn.DataverseName = "test"
-ORDER BY fn.Name, fn.Arity;
+DROP DATAVERSE externallibtest if exists;
+CREATE DATAVERSE  externallibtest;

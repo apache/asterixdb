@@ -11841,6 +11841,7 @@
       <compilation-unit name="bad-function-ddl-1">
         <output-dir compare="Text">bad-function-ddl-1</output-dir>
         <expected-error>Cannot find dataset TweetMessages in dataverse experiments nor an alias with name TweetMessages!</expected-error>
+        <expected-error>Cannot find dataset TweetMessages2 in dataverse experiments2 nor an alias with name TweetMessages2!</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -11865,6 +11866,7 @@
       <compilation-unit name="bad-function-ddl-5">
         <output-dir compare="Text">bad-function-ddl-5</output-dir>
         <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist</expected-error>
+        <expected-error>ASX1081: Cannot find function with name experiments2.function_that_does_not_exist </expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -11902,6 +11904,7 @@
         <output-dir compare="Text">bad-function-ddl-11</output-dir>
         <expected-error>ASX1001: Syntax error: Unexpected type declaration for parameter a in function myfn001</expected-error>
         <expected-error>ASX1001: Syntax error: Unexpected return type declaration for function myfn002</expected-error>
+        <expected-error>ASX1001: Syntax error: Unexpected return type declaration for function myfn003</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -11918,6 +11921,9 @@
       <compilation-unit name="drop-dependency-1">
         <output-dir compare="Text">drop-dependency-1</output-dir>
         <expected-error>Cannot drop dataverse. Function B.f0(2) depends on function C.f1(2)</expected-error>
+        <expected-error>Cannot drop dataverse. Function B.f3(2) depends on function C.f2(...)</expected-error>
+        <expected-error>Cannot drop dataverse. Function B.f5(...) depends on function C.f4(2)</expected-error>
+        <expected-error>Cannot drop dataverse. Function B.f7(...) depends on function C.f6(...)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -11925,6 +11931,7 @@
       <compilation-unit name="drop-dependency-2">
         <output-dir compare="Text">drop-dependency-2</output-dir>
         <expected-error>Cannot drop dataverse. Function B.f2(2) depends on dataset C.TweetMessages</expected-error>
+        <expected-error>Cannot drop dataverse. Function B.f3(...) depends on dataset C.TweetMessages</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -11932,6 +11939,9 @@
       <compilation-unit name="drop-dependency-3">
         <output-dir compare="Text">drop-dependency-3</output-dir>
         <expected-error>Cannot drop function C.f1(2) being used by function B.f0(2)</expected-error>
+        <expected-error>Cannot drop function C.f3(...) being used by function B.f2(2)</expected-error>
+        <expected-error>Cannot drop function C.f5(2) being used by function B.f4(...)</expected-error>
+        <expected-error>Cannot drop function C.f7(...) being used by function B.f6(...)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -11939,6 +11949,7 @@
       <compilation-unit name="drop-dependency-4">
         <output-dir compare="Text">drop-dependency-4</output-dir>
         <expected-error>Cannot drop dataset C.TweetMessages being used by function B.f2(2)</expected-error>
+        <expected-error>Cannot drop dataset C.TweetMessages being used by function B.f2(...)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -11946,6 +11957,9 @@
       <compilation-unit name="drop-dependency-5">
         <output-dir compare="Text">drop-dependency-5</output-dir>
         <expected-error>Cannot drop function C.f1(2) being used by function C.f0(2)</expected-error>
+        <expected-error>Cannot drop function C.f1(2) being used by function C.f0(...)</expected-error>
+        <expected-error>Cannot drop function C.f1(...) being used by function C.f0(2)</expected-error>
+        <expected-error>Cannot drop function C.f1(...) being used by function C.f0(...)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -11953,6 +11967,7 @@
       <compilation-unit name="drop-dependency-6">
         <output-dir compare="Text">drop-dependency-6</output-dir>
         <expected-error>Cannot drop dataset C.TweetMessages being used by function C.f2(2)</expected-error>
+        <expected-error>Cannot drop dataset C.TweetMessages being used by function C.f2(...)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -11960,6 +11975,7 @@
       <compilation-unit name="drop-function-1">
         <output-dir compare="Text">drop-function-1</output-dir>
         <expected-error>ASX1081: Cannot find function with name experiments.my_sum</expected-error>
+        <expected-error>ASX1081: Cannot find function with name experiments.my_sum_va</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12179,6 +12195,11 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf34">
         <output-dir compare="Text">udf34</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf35_varargs_misc">
+        <output-dir compare="Text">udf35_varargs_misc</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

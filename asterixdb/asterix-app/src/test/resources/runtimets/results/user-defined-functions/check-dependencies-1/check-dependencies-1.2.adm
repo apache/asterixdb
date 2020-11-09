@@ -1,0 +1,5 @@
+{ "DataverseName": "X", "Name": "fx1", "Dependencies": [ [  ], [  ], [  ] ] }
+{ "DataverseName": "X", "Name": "fx2", "Dependencies": [ [  ], [  ], [  ] ] }
+{ "DataverseName": "X", "Name": "fx3", "Dependencies": [ [  ], [ [ "X", "fx1", "1" ], [ "X", "fx2", "-1" ] ], [  ] ] }
+{ "DataverseName": "Y", "Name": "fy1", "Dependencies": [ [  ], [  ], [  ] ] }
+{ "DataverseName": "Y", "Name": "fy3", "Dependencies": [ [  ], [ [ "Y", "fy1", "1" ], [ "X", "fx2", "-1" ] ], [  ] ] }

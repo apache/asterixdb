@@ -16,8 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-SELECT object_remove(fn, "Timestamp") as fn
-FROM Metadata.`Function` fn
-WHERE fn.DataverseName = "test"
-ORDER BY fn.Name, fn.Arity;
+install externallibtest testlib admin admin target/data/externallib/asterix-external-data-testlib.zip

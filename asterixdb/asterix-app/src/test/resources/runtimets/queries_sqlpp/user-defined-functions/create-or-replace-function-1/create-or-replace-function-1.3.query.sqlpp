@@ -17,8 +17,6 @@
  * under the License.
  */
 
-use test;
-
 select f.Name, f.`Definition`
 from Metadata.`Function` f
-order by f.Name;
+order by f.Name, f.Arity;

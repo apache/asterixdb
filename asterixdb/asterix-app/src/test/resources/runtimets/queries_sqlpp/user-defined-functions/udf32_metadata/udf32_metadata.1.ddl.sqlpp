@@ -32,3 +32,25 @@ create function myfn002(a) {
 create function myfn003(a, b) {
   a + b
 };
+
+create function myfn004(...) {
+  args
+};
+
+/* Test function overloading */
+
+create function myfn005(a) {
+  a
+};
+
+create function myfn005(a, b) {
+  a + b
+};
+
+create function myfn006(a) {
+  a
+};
+
+create function myfn006(...) {
+  args
+};

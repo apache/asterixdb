@@ -17,7 +17,6 @@
  * under the License.
  */
 
-SELECT object_remove(fn, "Timestamp") as fn
-FROM Metadata.`Function` fn
+SELECT VALUE COUNT(*)
+FROM Metadata.`Function`
 WHERE fn.DataverseName = "test"
-ORDER BY fn.Name, fn.Arity;

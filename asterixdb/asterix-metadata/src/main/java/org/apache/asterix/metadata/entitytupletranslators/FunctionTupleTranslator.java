@@ -197,7 +197,8 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
                 dependencies);
     }
 
-    private List<TypeSignature> getParamTypes(ARecord functionRecord, DataverseName functionDataverseName) {
+    private List<TypeSignature> getParamTypes(ARecord functionRecord, DataverseName functionDataverseName)
+            throws AsterixException {
         ARecordType functionRecordType = functionRecord.getType();
         int paramTypesFieldIdx = functionRecordType.getFieldIndex(FUNCTION_ARECORD_FUNCTION_PARAMTYPES_FIELD_NAME);
         if (paramTypesFieldIdx < 0) {
@@ -221,7 +222,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
                     paramType = getTypeSignature(paramTypeName, paramTypeDataverseNameCanonical, functionDataverseName);
                     break;
                 default:
-                    throw new IllegalStateException(); //TODO:FIXME
+                    throw new AsterixException(ErrorCode.METADATA_ERROR, paramTypeObject.getType().getTypeName());
             }
             paramTypes.add(paramType);
         }

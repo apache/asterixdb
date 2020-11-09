@@ -17,7 +17,9 @@
  * under the License.
  */
 
-SELECT object_remove(fn, "Timestamp") as fn
-FROM Metadata.`Function` fn
-WHERE fn.DataverseName = "test"
-ORDER BY fn.Name, fn.Arity;
+/*
+ * Error: External varargs functions are not yet supported
+ */
+
+create function externallibtest.f(...)
+  as "org.apache.asterix.external.library.OpenCapitalFinderFactory" at testlib;

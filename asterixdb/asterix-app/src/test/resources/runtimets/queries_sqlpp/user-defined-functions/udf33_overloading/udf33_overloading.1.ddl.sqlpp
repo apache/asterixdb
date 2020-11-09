@@ -33,3 +33,11 @@ create function myfn(a) {
 create function myfn(a, b) {
   a + b
 };
+
+create function myfn2(a) {
+  -a
+};
+
+create function myfn2(...) {
+  array_length(args)
+};

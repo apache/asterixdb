@@ -20,7 +20,6 @@ package org.apache.asterix.lang.common.visitor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -62,8 +61,10 @@ import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionVisitor<Boolean, List<FunctionDecl>> {
@@ -303,33 +304,67 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
             // TODO(buyingyi): throw an exception for recursive function definition or limit the stack depth.
             implem.setFuncBody(rewriteFunctionBody(implem));
             // it's one of the functions we want to inline
-            List<LetClause> clauses = new ArrayList<>();
-            Iterator<VarIdentifier> paramIter = implem.getParamList().iterator();
-            VariableSubstitutionEnvironment subts = new VariableSubstitutionEnvironment();
+            List<Expression> argList = f.getExprList();
+            int argCount = argList.size();
+            List<LetClause> clauses = new ArrayList<>(argCount + 1);
+            List<Expression> argVars = new ArrayList<>(argCount);
             for (Expression e : f.getExprList()) {
-                VarIdentifier param = paramIter.next();
                 // Obs: we could do smth about passing also literals, or let
                 // variable inlining to take care of this.
+                VarIdentifier argVar;
                 if (e.getKind() == Kind.VARIABLE_EXPRESSION) {
-                    subts.addSubstituion(new VariableExpr(param), e);
+                    argVar = ((VariableExpr) e).getVar();
                 } else {
                     SourceLocation sourceLoc = e.getSourceLocation();
-                    VarIdentifier newV = context.newVariable();
+                    argVar = context.newVariable();
                     Pair<ILangExpression, VariableSubstitutionEnvironment> p1 =
                             e.accept(cloneVisitor, new VariableSubstitutionEnvironment());
-                    VariableExpr newVRef1 = new VariableExpr(newV);
+                    VariableExpr newVRef1 = new VariableExpr(argVar);
                     newVRef1.setSourceLocation(sourceLoc);
                     LetClause c = new LetClause(newVRef1, (Expression) p1.first);
                     c.setSourceLocation(sourceLoc);
                     clauses.add(c);
-                    VariableExpr newVRef2 = new VariableExpr(newV);
-                    newVRef2.setSourceLocation(sourceLoc);
-                    subts.addSubstituion(new VariableExpr(param), newVRef2);
+                }
+
+                VariableExpr argVarExpr = new VariableExpr(argVar);
+                argVarExpr.setSourceLocation(e.getSourceLocation());
+                argVars.add(argVarExpr);
+            }
+
+            VariableSubstitutionEnvironment subst = new VariableSubstitutionEnvironment();
+            List<VarIdentifier> paramList = implem.getParamList();
+            if (implem.getSignature().getArity() == FunctionIdentifier.VARARGS) {
+                if (paramList.size() != 1) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, expr.getSourceLocation(),
+                            paramList.size());
+                }
+                VarIdentifier paramVarargs = paramList.get(0);
+                CallExpr argsListExpr =
+                        new CallExpr(new FunctionSignature(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR), argVars);
+                argsListExpr.setSourceLocation(expr.getSourceLocation());
+
+                VarIdentifier argsVar = context.newVariable();
+                VariableExpr argsVarRef1 = new VariableExpr(argsVar);
+                argsVarRef1.setSourceLocation(expr.getSourceLocation());
+                LetClause c = new LetClause(argsVarRef1, argsListExpr);
+                c.setSourceLocation(expr.getSourceLocation());
+                clauses.add(c);
+
+                VariableExpr argsVarRef2 = new VariableExpr(argsVar);
+                argsVarRef2.setSourceLocation(expr.getSourceLocation());
+                subst.addSubstituion(new VariableExpr(paramVarargs), argsVarRef2);
+            } else {
+                if (paramList.size() != argCount) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, expr.getSourceLocation(),
+                            paramList.size());
+                }
+                for (int i = 0; i < argCount; i++) {
+                    subst.addSubstituion(new VariableExpr(paramList.get(i)), argVars.get(i));
                 }
             }
 
             Pair<ILangExpression, VariableSubstitutionEnvironment> p2 =
-                    implem.getFuncBody().accept(cloneVisitor, subts);
+                    implem.getFuncBody().accept(cloneVisitor, subst);
             Expression resExpr;
             if (clauses.isEmpty()) {
                 resExpr = (Expression) p2.first;

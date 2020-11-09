@@ -18,3 +18,5 @@
  */
 
 drop function experiments.my_sum(a, b);
+
+drop function experiments.my_sum_va(...);

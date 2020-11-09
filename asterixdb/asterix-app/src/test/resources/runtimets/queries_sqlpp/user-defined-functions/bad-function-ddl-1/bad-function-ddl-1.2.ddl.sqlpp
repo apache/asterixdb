@@ -17,7 +17,18 @@
  * under the License.
  */
 
-SELECT object_remove(fn, "Timestamp") as fn
-FROM Metadata.`Function` fn
-WHERE fn.DataverseName = "test"
-ORDER BY fn.Name, fn.Arity;
+/*
+ * Description  : Declare a varargs UDF on a dataset that does not exist
+ * Expected Res : Error
+ */
+
+drop dataverse experiments2 if exists;
+create dataverse experiments2;
+use experiments2;
+
+create function bad_function2(...) {
+  (select m.message_text
+  from TweetMessages2 m
+  where contains(m.message_text,args[1])
+  and spatial_intersect(m.sender_location, args[0]))
+};

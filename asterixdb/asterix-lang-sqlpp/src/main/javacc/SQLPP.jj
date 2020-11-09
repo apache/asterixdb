@@ -239,6 +239,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String RETURNS = "RETURNS";
 
     private static final String INT_TYPE_NAME = "int";
+    private static final String UDF_VARARGS_PARAM_NAME = "args"; // Note: this value is stored in the function metadata
 
     // error configuration
     protected static final boolean REPORT_EXPECTED_TOKENS = false;
@@ -1178,7 +1179,9 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
 {
   FunctionSignature signature = null;
   FunctionName fctName = null;
+  Pair<Integer, List<Pair<VarIdentifier,TypeExpression>>> paramsWithArity = null;
   List<Pair<VarIdentifier,TypeExpression>> params = null;
+  int arity = 0;
   TypeExpression returnType = null;
   Token beginPos = null, endPos = null;
   Expression functionBodyExpr = null;
@@ -1195,7 +1198,11 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
      defaultDataverse = fctName.dataverse;
   }
   ifNotExists = IfNotExists()
-  params = FunctionParameters()
+  paramsWithArity = FunctionParameters()
+  {
+    arity = paramsWithArity.first;
+    params = paramsWithArity.second;
+  }
   returnType = FunctionReturnType()
   (
     (
@@ -1210,7 +1217,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
         endPos = token;
         String functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine,
           endPos.beginColumn);
-        signature = new FunctionSignature(fctName.dataverse, fctName.function, params.size());
+        signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
         getCurrentScope().addFunctionDescriptor(signature, false);
         removeCurrentScope();
         defaultDataverse = currentDataverse;
@@ -1225,7 +1232,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
       <AT> libraryName = QualifiedName()
       (<WITH> withOptions = RecordConstructor())?
       {
-        signature = new FunctionSignature(fctName.dataverse, fctName.function, params.size());
+        signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
         defaultDataverse = currentDataverse;
         try {
           stmt = new CreateFunctionStatement(signature, params, returnType, libraryName.first,
@@ -1239,27 +1246,55 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
   )
 }
 
-List<Pair<VarIdentifier,TypeExpression>> FunctionParameters() :
+Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>> FunctionParameters() :
 {
-  List<Pair<VarIdentifier,TypeExpression>> paramList = Collections.<Pair<VarIdentifier,TypeExpression>>emptyList();
+  Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>> params = null;
 }
 {
-  <LEFTPAREN> (paramList = FunctionParameterList())? <RIGHTPAREN>
+  <LEFTPAREN> (params = FunctionParameterList())? <RIGHTPAREN>
   {
-    return paramList;
+    if (params == null) {
+      params = new Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>>(
+        0, Collections.<Pair<VarIdentifier, TypeExpression>>emptyList()
+      );
+    }
+    return params;
   }
 }
 
-List<Pair<VarIdentifier,TypeExpression>> FunctionParameterList() :
+Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>> FunctionParameterList() :
 {
-  List<Pair<VarIdentifier,TypeExpression>> paramList = new ArrayList<Pair<VarIdentifier,TypeExpression>>();
-  Pair<VarIdentifier,TypeExpression> param = null;
+  List<Pair<VarIdentifier, TypeExpression>> paramList = null;
+  Pair<VarIdentifier, TypeExpression> param = null;
+  int arity = 0;
 }
 {
-  param = FunctionParameter() { paramList.add(param); }
-  ( <COMMA> param = FunctionParameter() { paramList.add(param); } )*
+  (
+    (
+      <DOT> <DOT> <DOT>
+      {
+        param = new Pair<VarIdentifier, TypeExpression>(
+          SqlppVariableUtil.toInternalVariableIdentifier(UDF_VARARGS_PARAM_NAME), null
+        );
+        paramList = Collections.<Pair<VarIdentifier, TypeExpression>>singletonList(param);
+        arity = FunctionIdentifier.VARARGS;
+      }
+    )
+    |
+    (
+      param = FunctionParameter()
+      {
+        paramList = new ArrayList<Pair<VarIdentifier, TypeExpression>>();
+        paramList.add(param);
+      }
+      ( <COMMA> param = FunctionParameter() { paramList.add(param); } )*
+      {
+        arity = paramList.size();
+      }
+    )
+  )
   {
-    return paramList;
+    return new Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>>(arity, paramList);
   }
 }
 
@@ -1459,13 +1494,13 @@ String GetPolicy() throws ParseException:
 FunctionSignature FunctionSignature() throws ParseException:
 {
   FunctionName fctName = null;
-  List<Pair<VarIdentifier,TypeExpression>> params = null;
+  Pair<Integer, List<Pair<VarIdentifier,TypeExpression>>> params = null;
   int arity = 0;
 }
 {
   fctName = FunctionName()
   (
-    LOOKAHEAD(2) params = FunctionParameters() { arity = params.size(); }
+    LOOKAHEAD(2) params = FunctionParameters() { arity = params.first; }
   | ( <LEFTPAREN> arity = FunctionArity() <RIGHTPAREN> )
   | ( <ATT> arity = FunctionArity() ) // back-compat
   )
@@ -2564,19 +2599,21 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 {
   Token startToken = null;
   String functionName;
-  List<Pair<VarIdentifier,TypeExpression>> paramList;
+  Pair<Integer, List<Pair<VarIdentifier,TypeExpression>>> paramsWithArity = null;
   Expression funcBody;
   createNewScope();
 }
 {
   <DECLARE> { startToken = token; } <FUNCTION>
     functionName = Identifier()
-    paramList = FunctionParameters()
+    paramsWithArity = FunctionParameters()
   <LEFTBRACE>
     funcBody = FunctionBody()
   <RIGHTBRACE>
   {
-    FunctionSignature signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
+    int arity = paramsWithArity.first;
+    List<Pair<VarIdentifier,TypeExpression>> paramList = paramsWithArity.second;
+    FunctionSignature signature = new FunctionSignature(defaultDataverse, functionName, arity);
     getCurrentScope().addFunctionDescriptor(signature, false);
     ensureNoTypeDeclsInFunction(functionName, paramList, null, startToken);
     List<VarIdentifier> params = new ArrayList<VarIdentifier>(paramList.size());

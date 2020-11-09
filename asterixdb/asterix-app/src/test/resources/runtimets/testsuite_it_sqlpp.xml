@@ -24,6 +24,12 @@
 
   <test-group name="external-library">
     <test-case FilePath="external-library">
+      <compilation-unit name="bad-ext-function-ddl-1">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Variable number of parameters is not supported for external functions</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
       <compilation-unit name="create-or-replace-function-1">
         <output-dir compare="Text">create-or-replace-function-1</output-dir>
       </compilation-unit>

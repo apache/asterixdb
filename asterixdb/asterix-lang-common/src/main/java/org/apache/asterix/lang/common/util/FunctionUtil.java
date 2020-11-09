@@ -124,10 +124,19 @@ public class FunctionUtil {
             if (declaredFunctions.contains(fsWithDv)) {
                 return fsWithDv;
             }
+            FunctionSignature fsWithDvVarargs =
+                    new FunctionSignature(fsWithDv.getDataverseName(), fsWithDv.getName(), FunctionIdentifier.VARARGS);
+            if (declaredFunctions.contains(fsWithDvVarargs)) {
+                return fsWithDvVarargs;
+            }
             try {
                 Function function = metadataProvider.lookupUserDefinedFunction(fsWithDv);
                 if (function != null) {
                     return fsWithDv;
+                }
+                function = metadataProvider.lookupUserDefinedFunction(fsWithDvVarargs);
+                if (function != null) {
+                    return fsWithDvVarargs;
                 }
             } catch (AlgebricksException e) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
@@ -203,22 +212,29 @@ public class FunctionUtil {
             Expression expression, List<FunctionSignature> declaredFunctions, List<FunctionDecl> inputFunctionDecls,
             IFunctionCollector functionCollector, FunctionParser functionParser, DataverseName defaultDataverse)
             throws CompilationException {
+        if (expression == null) {
+            return Collections.emptyList();
+        }
         List<FunctionDecl> functionDecls =
                 inputFunctionDecls == null ? new ArrayList<>() : new ArrayList<>(inputFunctionDecls);
-        if (expression == null) {
-            return functionDecls;
-        }
         Set<CallExpr> functionCalls = functionCollector.getFunctionCalls(expression);
+        Set<FunctionSignature> functionSignatures = new HashSet<>();
         for (CallExpr functionCall : functionCalls) {
             FunctionSignature fs = functionCall.getFunctionSignature();
-            FunctionSignature fsWithDv = fs.getDataverseName() != null ? fs
-                    : new FunctionSignature(defaultDataverse, fs.getName(), fs.getArity());
-            if (declaredFunctions != null && declaredFunctions.contains(fsWithDv)) {
+            if (fs.getDataverseName() == null) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, functionCall.getSourceLocation(),
+                        fs);
+            }
+            if (!functionSignatures.add(fs)) {
+                // already seen this signature
+                continue;
+            }
+            if (declaredFunctions != null && declaredFunctions.contains(fs)) {
                 continue;
             }
             Function function;
             try {
-                function = metadataProvider.lookupUserDefinedFunction(fsWithDv);
+                function = metadataProvider.lookupUserDefinedFunction(fs);
             } catch (AlgebricksException e) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, functionCall.getSourceLocation(),
                         e.toString());

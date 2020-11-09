@@ -207,6 +207,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IResultSerializerFactoryProvider;
 import org.apache.hyracks.algebricks.runtime.serializer.ResultSerializerFactoryProvider;
@@ -2040,6 +2041,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Map<TypeSignature, Datatype> newInlineTypes;
             Function function;
             if (cfs.isExternal()) {
+                if (functionSignature.getArity() == FunctionIdentifier.VARARGS) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, cfs.getSourceLocation(),
+                            "Variable number of parameters is not supported for external functions");
+                }
                 List<Pair<VarIdentifier, TypeExpression>> paramList = cfs.getParameters();
                 int paramCount = paramList.size();
                 List<String> paramNames = new ArrayList<>(paramCount);

@@ -17,7 +17,16 @@
  * under the License.
  */
 
-SELECT object_remove(fn, "Timestamp") as fn
-FROM Metadata.`Function` fn
-WHERE fn.DataverseName = "test"
-ORDER BY fn.Name, fn.Arity;
+/*
+ * Description  : Declare a varargs UDF that uses a function that does not exist
+ * Expected Res : Error
+ */
+
+drop dataverse experiments2 if exists;
+create dataverse experiments2;
+use experiments2;
+
+
+create function bad_function2(...) {
+  function_that_does_not_exist()
+};

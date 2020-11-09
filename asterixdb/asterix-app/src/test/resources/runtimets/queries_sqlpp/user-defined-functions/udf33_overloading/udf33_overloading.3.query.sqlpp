@@ -17,7 +17,16 @@
  * under the License.
  */
 
-SELECT object_remove(fn, "Timestamp") as fn
-FROM Metadata.`Function` fn
-WHERE fn.DataverseName = "test"
-ORDER BY fn.Name, fn.Arity;
+/*
+ * Description  : Function overloading is allowed.
+ *                Non-varags function takes precedence over varargs function
+ * Expected Res : Success
+ */
+
+use experiments;
+
+{
+  "myfn2_0": myfn2(),   --- varargs fn
+  "myfn2_1": myfn2(1),  --- non-varags fn
+  "myfn2_2": myfn2(1,2) --- varargs fun
+}

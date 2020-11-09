@@ -1,5 +1,5 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
+ * Licensed to the Apache Software Foundation (ASF) under A
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
@@ -17,7 +17,22 @@
  * under the License.
  */
 
-SELECT object_remove(fn, "Timestamp") as fn
-FROM Metadata.`Function` fn
-WHERE fn.DataverseName = "test"
-ORDER BY fn.Name, fn.Arity;
+/*
+ * Description  : Try to drop a functional dependency
+ *                Drop a non-varargs function that is used by a varargs function
+ * Expected Res : Error
+ */
+
+drop dataverse C if exists;
+create dataverse C;
+use C;
+
+create function f1(message, text){
+  contains(message,text)
+};
+
+create function f0(...){
+  C.f1(args[0],args[1])
+};
+
+drop function f1(message, text);

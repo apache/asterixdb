@@ -1,5 +1,5 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under A
+ * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
@@ -18,21 +18,10 @@
  */
 
 /*
- * Description  : Try to drop a functional dependency
- * Expected Res : Error
+ * Description  : Error. Unknown function with varargs
+ * Expected Res : Failure
  */
 
-drop dataverse B if exists;
-drop dataverse C if exists;
-create dataverse C;
-use C;
+use experiments;
 
-create function f1(message, text){
-  contains(message,text)
-};
-
-create function f0(message, text){
-  C.f1(message,text)
-};
-
-drop function f1(message, text);
+my_sum_va(2, 3);

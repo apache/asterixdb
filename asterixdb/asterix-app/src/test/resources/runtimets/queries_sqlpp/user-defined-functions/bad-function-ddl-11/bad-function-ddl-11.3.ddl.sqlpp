@@ -17,7 +17,15 @@
  * under the License.
  */
 
-SELECT object_remove(fn, "Timestamp") as fn
-FROM Metadata.`Function` fn
-WHERE fn.DataverseName = "test"
-ORDER BY fn.Name, fn.Arity;
+/*
+ * Description  : Return type definition is prohibited for inline varargs functions
+ * Expected Res : Error
+ */
+
+drop dataverse experiments3 if exists;
+create dataverse experiments3;
+use experiments3;
+
+create function myfn003(...) returns string {
+  args[0]
+};

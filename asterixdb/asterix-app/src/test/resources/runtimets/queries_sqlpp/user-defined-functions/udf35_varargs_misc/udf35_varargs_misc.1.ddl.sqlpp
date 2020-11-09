@@ -16,20 +16,49 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 /*
- * Description  : Test drop function
+ * Description  : Miscellaneous tests for varargs functions
  * Expected Res : Success
  */
 
-drop dataverse experiments if exists;
-create dataverse experiments;
-use experiments;
+drop  dataverse test if exists;
+create dataverse test;
 
-create function my_sum(a, b) {
-  a + b
+use test;
+
+create type FacebookUserType as open {
+  id : bigint
 };
 
-create function my_sum_va(...) {
-  array_sum(args)
+create  dataset FacebookUsers(FacebookUserType) primary key id;
+
+-----
+
+create function f1(...) {
+  "const"
 };
+
+create function f2(...) {
+  string_join(args, "|")
+};
+
+create function f3(...) {
+  string_join(args, "|") || "||" || string_join(args, "|||")
+};
+
+create function f4(...) {
+  f3(args[0], args[1]) || "," || f3(args[2], args[3])
+};
+
+create function f5(...) {
+  select
+    case
+      when is_string(v) then "string"
+      when is_number(v) then "number"
+      when is_object(v) then "object"
+      when (is_array(v) or is_multiset(v)) then "list"
+    end as t
+  from args as v
+  order by v
+};
+

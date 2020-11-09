@@ -16,8 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Description  : Miscellaneous tests for varargs functions
+ * Expected Res : Success
+ */
 
-SELECT object_remove(fn, "Timestamp") as fn
-FROM Metadata.`Function` fn
-WHERE fn.DataverseName = "test"
-ORDER BY fn.Name, fn.Arity;
+use test;
+
+select id, f2() f2_0, f2(name) f2_1, f2(name, alias) f2_2
+from FacebookUsers fbu
+order by id;
