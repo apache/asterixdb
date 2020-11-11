@@ -59,6 +59,10 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
     @Override
     public boolean rewrite(Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
         AbstractFunctionCallExpression f = UnnestToDataScanRule.getFunctionCall(opRef);
+        if (f == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, opRef.getValue().getSourceLocation(),
+                    "");
+        }
         UnnestOperator unnest = (UnnestOperator) opRef.getValue();
         if (unnest.getPositionalVariable() != null) {
             // TODO remove this after enabling the support of positional variables in data scan
@@ -67,8 +71,7 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         }
 
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-        Pair<DataverseName, String> datasetReference = FunctionUtil.parseDatasetFunctionArguments(f.getArguments(),
-                metadataProvider.getDefaultDataverseName(), unnest.getSourceLocation());
+        Pair<DataverseName, String> datasetReference = FunctionUtil.parseDatasetFunctionArguments(f);
         DataverseName dataverseName = datasetReference.first;
         String datasetName = datasetReference.second;
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
@@ -122,8 +125,7 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
             throws AlgebricksException {
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expression;
         MetadataProvider metadata = (MetadataProvider) mp;
-        Pair<DataverseName, String> datasetInfo = FunctionUtil.parseDatasetFunctionArguments(f.getArguments(),
-                metadata.getDefaultDataverseName(), f.getSourceLocation());
+        Pair<DataverseName, String> datasetInfo = FunctionUtil.parseDatasetFunctionArguments(f);
         DataverseName dataverseName = datasetInfo.first;
         String datasetName = datasetInfo.second;
         Dataset dataset = metadata.findDataset(dataverseName, datasetName);

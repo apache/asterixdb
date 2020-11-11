@@ -56,6 +56,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -267,9 +268,7 @@ public class FunctionUtil {
         for (CallExpr functionCall : functionCalls) {
             FunctionSignature signature = functionCall.getFunctionSignature();
             if (isBuiltinDatasetFunction(signature)) {
-                Pair<DataverseName, String> datasetReference = parseDatasetFunctionArguments(functionCall.getExprList(),
-                        metadataProvider.getDefaultDataverseName(), functionCall.getSourceLocation(),
-                        ExpressionUtils::getStringLiteral);
+                Pair<DataverseName, String> datasetReference = parseDatasetFunctionArguments(functionCall);
                 datasourceDependencies.add(new Triple<>(datasetReference.first, datasetReference.second, null));
             } else if (BuiltinFunctions.getBuiltinFunctionInfo(signature.createFunctionIdentifier()) == null) {
                 functionDependencies.add(new Triple<>(signature.getDataverseName(), signature.getName(),
@@ -303,51 +302,34 @@ public class FunctionUtil {
                 && Objects.equals(FN_DATASET_NAME, fs.getName());
     }
 
-    public static Pair<DataverseName, String> parseDatasetFunctionArguments(
-            List<Mutable<ILogicalExpression>> datasetFnArgs, DataverseName defaultDataverseName,
-            SourceLocation sourceLoc) throws CompilationException {
-        return parseDatasetFunctionArguments(datasetFnArgs, defaultDataverseName, sourceLoc,
+    public static Pair<DataverseName, String> parseDatasetFunctionArguments(CallExpr datasetFn)
+            throws CompilationException {
+        return parseDatasetFunctionArguments(datasetFn.getExprList(), datasetFn.getSourceLocation(),
+                ExpressionUtils::getStringLiteral);
+    }
+
+    public static Pair<DataverseName, String> parseDatasetFunctionArguments(AbstractFunctionCallExpression datasetFn)
+            throws CompilationException {
+        return parseDatasetFunctionArguments(datasetFn.getArguments(), datasetFn.getSourceLocation(),
                 FunctionUtil::getStringConstant);
     }
 
-    public static <T> Pair<DataverseName, String> parseDatasetFunctionArguments(List<T> datasetFnArgs,
-            DataverseName defaultDataverseName, SourceLocation sourceLoc,
-            java.util.function.Function<T, String> argExtractFunction) throws CompilationException {
-        DataverseName dataverseName;
-        String datasetName;
-        switch (datasetFnArgs.size()) {
-            case 1: // AQL BACK-COMPAT case
-                String datasetArgBackCompat = argExtractFunction.apply(datasetFnArgs.get(0));
-                if (datasetArgBackCompat == null) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "Invalid argument to dataset()");
-                }
-                int pos = datasetArgBackCompat.indexOf('.');
-                if (pos > 0 && pos < datasetArgBackCompat.length() - 1) {
-                    dataverseName = DataverseName.createSinglePartName(datasetArgBackCompat.substring(0, pos)); // AQL BACK-COMPAT
-                    datasetName = datasetArgBackCompat.substring(pos + 1);
-                } else {
-                    dataverseName = defaultDataverseName;
-                    datasetName = datasetArgBackCompat;
-                }
-                break;
-            case 2:
-                String dataverseNameArg = argExtractFunction.apply(datasetFnArgs.get(0));
-                if (dataverseNameArg == null) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "Invalid argument to dataset()");
-                }
-                dataverseName = DataverseName.createFromCanonicalForm(dataverseNameArg);
+    private static <T> Pair<DataverseName, String> parseDatasetFunctionArguments(List<T> datasetFnArgs,
+            SourceLocation sourceLoc, java.util.function.Function<T, String> argExtractFunction)
+            throws CompilationException {
+        if (datasetFnArgs.size() != 2) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                    "Invalid number of arguments to dataset()");
+        }
+        String dataverseNameArg = argExtractFunction.apply(datasetFnArgs.get(0));
+        if (dataverseNameArg == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Invalid argument to dataset()");
+        }
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseNameArg);
 
-                datasetName = argExtractFunction.apply(datasetFnArgs.get(1));
-                if (datasetName == null) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "Invalid argument to dataset()");
-                }
-                break;
-            default:
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "Invalid number of arguments to dataset()");
+        String datasetName = argExtractFunction.apply(datasetFnArgs.get(1));
+        if (datasetName == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Invalid argument to dataset()");
         }
         return new Pair<>(dataverseName, datasetName);
     }
