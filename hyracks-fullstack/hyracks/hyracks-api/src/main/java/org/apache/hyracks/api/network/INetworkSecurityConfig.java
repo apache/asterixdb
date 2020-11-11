@@ -19,9 +19,10 @@
 package org.apache.hyracks.api.network;
 
 import java.io.File;
+import java.io.Serializable;
 import java.security.KeyStore;
 
-public interface INetworkSecurityConfig {
+public interface INetworkSecurityConfig extends Serializable {
 
     /**
      * Indicates if SSL is enabled
