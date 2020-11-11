@@ -18,13 +18,22 @@
  */
 package org.apache.asterix.optimizer.rules.subplan;
 
+import java.util.Set;
+
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.MoveFreeVariableOperatorOutOfSubplanRule;
 
 public class AsterixMoveFreeVariableOperatorOutOfSubplanRule extends MoveFreeVariableOperatorOutOfSubplanRule {
 
     @Override
-    protected boolean movableOperator(LogicalOperatorTag operatorTag) {
+    protected boolean movableOperatorKind(LogicalOperatorTag operatorTag) {
         return (operatorTag == LogicalOperatorTag.ASSIGN);
+    }
+
+    @Override
+    protected boolean movableIndependentOperator(ILogicalOperator op, Set<LogicalVariable> usedVars) {
+        return !usedVars.isEmpty();
     }
 }

@@ -70,29 +70,30 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
             rootRef = opRef;
             invoked = true;
         }
-        return rewriteForOperator(rootRef, opRef, context);
+        return rewriteForOperator(rootRef, opRef.getValue(), context);
     }
 
     // The core rewriting function for an operator.
-    private boolean rewriteForOperator(Mutable<ILogicalOperator> rootRef, Mutable<ILogicalOperator> opRef,
+    private boolean rewriteForOperator(Mutable<ILogicalOperator> rootRef, ILogicalOperator parentOperator,
             IOptimizationContext context) throws AlgebricksException {
         boolean changed = false;
-        ILogicalOperator parentOperator = opRef.getValue();
-        for (Mutable<ILogicalOperator> ref : parentOperator.getInputs()) {
+        List<Mutable<ILogicalOperator>> parentInputs = parentOperator.getInputs();
+        for (int i = 0, n = parentInputs.size(); i < n; i++) {
+            Mutable<ILogicalOperator> ref = parentInputs.get(i);
             ILogicalOperator op = ref.getValue();
             // Only processes subplan operator.
-            Deque<SubplanOperator> subplans = new ArrayDeque<>();
             if (op.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
                 // Recursively rewrites the child plan.
-                changed |= rewriteForOperator(rootRef, ref, context);
+                changed |= rewriteForOperator(rootRef, op, context);
                 continue;
             }
+            Deque<SubplanOperator> subplans = new ArrayDeque<>();
             while (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
                 SubplanOperator currentSubplan = (SubplanOperator) op;
                 // Recursively rewrites the pipelines inside a nested subplan.
                 for (ILogicalPlan subplan : currentSubplan.getNestedPlans()) {
                     for (Mutable<ILogicalOperator> nestedRootRef : subplan.getRoots()) {
-                        changed |= rewriteForOperator(nestedRootRef, nestedRootRef, context);
+                        changed |= rewriteForOperator(nestedRootRef, nestedRootRef.getValue(), context);
                     }
                 }
                 subplans.addFirst(currentSubplan);
@@ -106,17 +107,17 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
             // Recursively rewrites the pipelines inside a nested subplan.
             for (ILogicalPlan subplan : gby.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> nestedRootRef : subplan.getRoots()) {
-                    changed |= rewriteForOperator(nestedRootRef, nestedRootRef, context);
+                    changed |= rewriteForOperator(nestedRootRef, nestedRootRef.getValue(), context);
                 }
             }
-            changed |= pushSubplansIntoGroupBy(rootRef, parentOperator, subplans, gby, context);
+            changed |= pushSubplansIntoGroupBy(rootRef, parentOperator, i, subplans, gby, context);
         }
         return changed;
     }
 
     // Pushes subplans into the group by operator.
     private boolean pushSubplansIntoGroupBy(Mutable<ILogicalOperator> currentRootRef, ILogicalOperator parentOperator,
-            Deque<SubplanOperator> subplans, GroupByOperator gby, IOptimizationContext context)
+            int parentChildIdx, Deque<SubplanOperator> subplans, GroupByOperator gby, IOptimizationContext context)
             throws AlgebricksException {
         boolean changed = false;
         List<ILogicalPlan> newGbyNestedPlans = new ArrayList<>();
@@ -226,8 +227,16 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
         gby.getNestedPlans().addAll(newGbyNestedPlans);
 
         // Connects the group-by operator with its parent operator.
-        ILogicalOperator parent = !subplans.isEmpty() ? subplans.getFirst() : parentOperator;
-        parent.getInputs().get(0).setValue(gby);
+        ILogicalOperator parent;
+        int childIdx;
+        if (!subplans.isEmpty()) {
+            parent = subplans.getFirst();
+            childIdx = 0;
+        } else {
+            parent = parentOperator;
+            childIdx = parentChildIdx;
+        }
+        parent.getInputs().get(childIdx).setValue(gby);
 
         // Removes unnecessary pipelines inside the group by operator.
         changed |= cleanup(currentRootRef.getValue(), gby);
