@@ -16,22 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description      :  Test for clause of the position variable in FLWOR expression
- * Expected Result  :  Success
- * Date             :  09/17/2013
- */
 
--- handlevariable=status
+/*
+ * Test limit pushdown with UDFs (ASTERIXDB-2798).
+ */
 
 use test;
 
-select element {'partkey':gen0.partkey,'pid':p,'shipdate':j.l_shipdate}
-from
-    ( select element {'partkey':i.l_partkey, 'i': (select value x.i from g as x order by x.i.l_shipdate) }
-      from  LineItem as i
-      group by i.l_partkey group as g
-    ) as gen0,
-    gen0.i as j at p
-where p < 4
-order by partkey, p, shipdate;
+select value drop_fields(paper, 'title', 'authors', 'misc')
+from DBLP1 as paper
+order by id
+limit 5 offset 5;

@@ -1,0 +1,41 @@
+distribute result [$$75]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 5, 5
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      project ([$$75])
+      -- STREAM_PROJECT  |PARTITIONED|
+        assign [$$75] <- [get-item($$73, 0)]
+        -- ASSIGN  |PARTITIONED|
+          project ([$$73])
+          -- STREAM_PROJECT  |PARTITIONED|
+            exchange
+            -- SORT_MERGE_EXCHANGE [$$77(ASC) ]  |PARTITIONED|
+              project ([$$73, $$77])
+              -- STREAM_PROJECT  |PARTITIONED|
+                subplan {
+                          aggregate [$$73] <- [listify($$72)]
+                          -- AGGREGATE  |LOCAL|
+                            assign [$$72] <- [object-remove(object-remove(object-remove($$t1, "title"), "authors"), "misc")]
+                            -- ASSIGN  |LOCAL|
+                              unnest $$t1 <- scan-collection($$64)
+                              -- UNNEST  |LOCAL|
+                                nested tuple source
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                       }
+                -- SUBPLAN  |PARTITIONED|
+                  project ([$$77, $$64])
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$64] <- [to-array($$paper)]
+                    -- ASSIGN  |PARTITIONED|
+                      limit 10
+                      -- STREAM_LIMIT  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$77, $$paper] <- test.DBLP1 limit 10
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

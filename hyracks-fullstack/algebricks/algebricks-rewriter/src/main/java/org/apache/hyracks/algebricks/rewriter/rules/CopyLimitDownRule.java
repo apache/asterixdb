@@ -150,6 +150,7 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
     private static boolean isSafeOpCandidate(ILogicalOperator op) {
         switch (op.getOperatorTag()) {
             case UNIONALL:
+            case SUBPLAN: // subplan is a 'map' but is not yet marked as such
                 return true;
             // exclude following 'map' operators because they change cardinality
             case SELECT:
