@@ -64,6 +64,7 @@ public class IntroduceEnforcedListTypeRule implements IAlgebraicRewriteRule {
          * rewrite list constructor types for list constructor functions
          */
         List<Mutable<ILogicalExpression>> expressions;
+        // TODO(ali): what about other operators that could have list expressions?
         switch (op.getOperatorTag()) {
             case ASSIGN:
                 AbstractAssignOperator assignOp = (AbstractAssignOperator) op;
