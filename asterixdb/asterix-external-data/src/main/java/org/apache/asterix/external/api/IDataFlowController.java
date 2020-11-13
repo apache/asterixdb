@@ -22,11 +22,13 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 
 @FunctionalInterface
 public interface IDataFlowController {
 
-    public void start(IFrameWriter writer) throws HyracksDataException, InterruptedException;
+    public void start(IFrameWriter writer, ITupleFilter tupleFilter, long outputLimit)
+            throws HyracksDataException, InterruptedException;
 
     public default boolean pause() throws HyracksDataException {
         throw new RuntimeDataException(ErrorCode.OPERATION_NOT_SUPPORTED);

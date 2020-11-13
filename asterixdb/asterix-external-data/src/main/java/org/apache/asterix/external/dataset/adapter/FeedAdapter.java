@@ -25,6 +25,7 @@ import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 
 public class FeedAdapter implements IDataSourceAdapter, Closeable {
     private final AbstractFeedDataFlowController controller;
@@ -34,8 +35,9 @@ public class FeedAdapter implements IDataSourceAdapter, Closeable {
     }
 
     @Override
-    public void start(int partition, IFrameWriter writer) throws HyracksDataException, InterruptedException {
-        controller.start(writer);
+    public void start(int partition, IFrameWriter writer, ITupleFilter tupleFilter, long outputLimit)
+            throws HyracksDataException, InterruptedException {
+        controller.start(writer, tupleFilter, outputLimit);
     }
 
     @Override

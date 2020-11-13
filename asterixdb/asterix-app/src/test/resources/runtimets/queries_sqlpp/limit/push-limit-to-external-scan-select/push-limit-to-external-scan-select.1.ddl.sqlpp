@@ -16,25 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.library.adapter;
 
-import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.storage.am.common.api.ITupleFilter;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
 
-class TestTypedFeedDataFlowController extends AbstractFeedDataFlowController {
-    TestTypedFeedDataFlowController(IHyracksTaskContext ctx) {
-        super(ctx, null, 0);
-    }
+USE test;
 
-    @Override
-    public String getStats() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void start(IFrameWriter writer, ITupleFilter tupleFilter, long outputLimit) {
-        throw new UnsupportedOperationException();
-    }
-}
+CREATE EXTERNAL DATASET ds1(f1 INTEGER, f2 BOOLEAN, f3 STRING)
+  USING localfs(("path"="asterix_nc1://data/csv/sample_12.csv"), ("format"="csv"), ("header"="True"), ("null"=""));

@@ -22,6 +22,7 @@ import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 
 public class GenericAdapter implements IDataSourceAdapter {
 
@@ -32,8 +33,9 @@ public class GenericAdapter implements IDataSourceAdapter {
     }
 
     @Override
-    public void start(int partition, IFrameWriter writer) throws HyracksDataException, InterruptedException {
-        controller.start(writer);
+    public void start(int partition, IFrameWriter writer, ITupleFilter tupleFilter, long outputLimit)
+            throws HyracksDataException, InterruptedException {
+        controller.start(writer, tupleFilter, outputLimit);
     }
 
     @Override

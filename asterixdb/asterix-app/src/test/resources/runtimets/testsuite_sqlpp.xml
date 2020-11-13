@@ -13944,6 +13944,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="limit">
+      <compilation-unit name="push-limit-to-external-scan">
+        <output-dir compare="Text">push-limit-to-external-scan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="limit">
+      <compilation-unit name="push-limit-to-external-scan-select">
+        <output-dir compare="Text">push-limit-to-external-scan-select</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="limit">
       <compilation-unit name="push-limit-to-primary-scan">
         <output-dir compare="Text">push-limit-to-primary-scan</output-dir>
       </compilation-unit>

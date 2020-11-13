@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
@@ -105,10 +103,6 @@ public class DatasetDataSource extends DataSource {
             IProjectionInfo<?> projectionInfo) throws AlgebricksException {
         switch (dataset.getDatasetType()) {
             case EXTERNAL:
-                if (tupleFilterFactory != null || outputLimit >= 0) {
-                    throw CompilationException.create(ErrorCode.COMPILATION_ILLEGAL_STATE,
-                            "Tuple filter and limit are not supported by ExternalDataSource");
-                }
                 Dataset externalDataset = ((DatasetDataSource) dataSource).getDataset();
                 String itemTypeName = externalDataset.getItemTypeName();
                 IAType itemType = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
@@ -118,7 +112,8 @@ public class DatasetDataSource extends DataSource {
                 Map<String, String> properties = addProjectionInfo(projectionInfo, edd.getProperties());
                 ITypedAdapterFactory adapterFactory = metadataProvider.getConfiguredAdapterFactory(externalDataset,
                         edd.getAdapter(), properties, (ARecordType) itemType, null, context.getWarningCollector());
-                return metadataProvider.buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory);
+                return metadataProvider.buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory,
+                        tupleFilterFactory, outputLimit);
             case INTERNAL:
                 DataSourceId id = getId();
                 DataverseName dataverseName = id.getDataverseName();

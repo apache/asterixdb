@@ -16,25 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.library.adapter;
 
-import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.storage.am.common.api.ITupleFilter;
+USE test;
 
-class TestTypedFeedDataFlowController extends AbstractFeedDataFlowController {
-    TestTypedFeedDataFlowController(IHyracksTaskContext ctx) {
-        super(ctx, null, 0);
-    }
-
-    @Override
-    public String getStats() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void start(IFrameWriter writer, ITupleFilter tupleFilter, long outputLimit) {
-        throw new UnsupportedOperationException();
-    }
-}
+SELECT VALUE f1
+FROM ds1 t
+WHERE f1 > 2
+LIMIT 5

@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
@@ -86,17 +84,14 @@ public abstract class FunctionDataSource extends DataSource {
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
             IProjectionInfo<?> projectionInfo) throws AlgebricksException {
-        if (tupleFilterFactory != null || outputLimit >= 0) {
-            throw CompilationException.create(ErrorCode.COMPILATION_ILLEGAL_STATE,
-                    "tuple filter and limit are not supported by FunctionDataSource");
-        }
         GenericAdapterFactory adapterFactory = new GenericAdapterFactory();
         adapterFactory.setOutputType(RecordUtil.FULLY_OPEN_RECORD_TYPE);
         IClusterStateManager csm = metadataProvider.getApplicationContext().getClusterStateManager();
         FunctionDataSourceFactory factory =
                 new FunctionDataSourceFactory(createFunction(metadataProvider, getLocations(csm)));
         adapterFactory.configure(factory);
-        return metadataProvider.buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory);
+        return metadataProvider.buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory,
+                tupleFilterFactory, outputLimit);
     }
 
     protected abstract IDatasourceFunction createFunction(MetadataProvider metadataProvider,

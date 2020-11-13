@@ -94,8 +94,11 @@ public class LSMBTreeBatchPointSearchOperatorNodePushable extends BTreeSearchOpe
             cursor.next();
             matchingTupleCount++;
             ITupleReference tuple = cursor.getTuple();
-            if (tupleFilter != null && !tupleFilter.accept(referenceFilterTuple.reset(tuple))) {
-                continue;
+            if (tupleFilter != null) {
+                referenceFilterTuple.reset(tuple);
+                if (!tupleFilter.accept(referenceFilterTuple)) {
+                    continue;
+                }
             }
             tb.reset();
 

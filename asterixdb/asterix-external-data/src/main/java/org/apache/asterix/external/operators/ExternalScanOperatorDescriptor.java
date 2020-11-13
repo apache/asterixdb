@@ -29,6 +29,8 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
+import org.apache.hyracks.storage.am.common.api.ITupleFilter;
+import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 
 /*
  * A single activity operator that provides the functionality of scanning data using an
@@ -36,21 +38,31 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNod
  */
 public class ExternalScanOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private ITypedAdapterFactory adapterFactory;
+    private final ITypedAdapterFactory adapterFactory;
+
+    private final ITupleFilterFactory tupleFilterFactory;
+
+    private final long outputLimit;
 
     public ExternalScanOperatorDescriptor(JobSpecification spec, RecordDescriptor rDesc,
-            ITypedAdapterFactory dataSourceAdapterFactory) {
+            ITypedAdapterFactory dataSourceAdapterFactory, ITupleFilterFactory tupleFilterFactory, long outputLimit) {
         super(spec, 0, 1);
         outRecDescs[0] = rDesc;
         this.adapterFactory = dataSourceAdapterFactory;
+        this.tupleFilterFactory = tupleFilterFactory;
+        this.outputLimit = outputLimit;
+    }
+
+    public ExternalScanOperatorDescriptor(JobSpecification spec, RecordDescriptor rDesc,
+            ITypedAdapterFactory dataSourceAdapterFactory) {
+        this(spec, rDesc, dataSourceAdapterFactory, null, -1);
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
-            IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
-            throws HyracksDataException {
+            IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions) {
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
 
@@ -64,8 +76,10 @@ public class ExternalScanOperatorDescriptor extends AbstractSingleActivityOperat
                 }
                 try {
                     writer.open();
+                    ITupleFilter tupleFilter =
+                            tupleFilterFactory != null ? tupleFilterFactory.createTupleFilter(ctx) : null;
                     adapter = adapterFactory.createAdapter(ctx, partition);
-                    adapter.start(partition, writer);
+                    adapter.start(partition, writer, tupleFilter, outputLimit);
                     if (stats != null) {
                         stats.getTupleCounter().update(adapter.getProcessedTuples());
                     }
