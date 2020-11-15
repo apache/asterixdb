@@ -42,10 +42,10 @@ public class RecoveryTask {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Level level = Level.INFO;
-    private final ActiveEntityEventsListener listener;
+    protected final ActiveEntityEventsListener listener;
     private volatile boolean cancelRecovery = false;
     private final IRetryPolicyFactory retryPolicyFactory;
-    private final MetadataProvider metadataProvider;
+    protected final MetadataProvider metadataProvider;
     private final IClusterStateManager clusterStateManager;
 
     public RecoveryTask(ICcApplicationContext appCtx, ActiveEntityEventsListener listener,
@@ -118,8 +118,9 @@ public class RecoveryTask {
                 }
             }
             IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
+            IMetadataLockUtil lockUtil = metadataProvider.getApplicationContext().getMetadataLockUtil();
             try {
-                acquireRecoveryLocks(lockManager);
+                acquireRecoveryLocks(lockManager, lockUtil);
                 synchronized (listener) {
                     try {
                         if (!cancelRecovery && listener.getState() == ActivityState.TEMPORARILY_FAILED) {
@@ -173,7 +174,8 @@ public class RecoveryTask {
         return null;
     }
 
-    protected void acquireRecoveryLocks(IMetadataLockManager lockManager) throws AlgebricksException {
+    protected void acquireRecoveryLocks(IMetadataLockManager lockManager, IMetadataLockUtil lockUtil)
+            throws AlgebricksException {
         EntityId entityId = listener.getEntityId();
         lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), entityId.getDataverseName(),
                 entityId.getEntityName());
