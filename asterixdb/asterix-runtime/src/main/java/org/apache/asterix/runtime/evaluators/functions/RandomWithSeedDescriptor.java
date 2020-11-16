@@ -27,6 +27,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.utils.RandomHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -81,7 +82,9 @@ public class RandomWithSeedDescriptor extends AbstractScalarFunctionDynamicDescr
                             case BIGINT:
                             case FLOAT:
                             case DOUBLE:
-                                randomHelper.setSeed(bytes, offset + 1, arg0.getLength() - 1);
+                                double seed =
+                                        ATypeHierarchy.getDoubleValue(getIdentifier().getName(), 0, bytes, offset);
+                                randomHelper.setSeed(seed);
                                 randomHelper.nextDouble(resultPointable);
                                 break;
                             default:

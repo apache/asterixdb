@@ -84,6 +84,7 @@ public class ErrorCode {
     public static final int PARAMETERS_REQUIRED = 49;
     public static final int INVALID_PARAM = 50;
     public static final int INCOMPARABLE_TYPES = 51;
+    public static final int ILLEGAL_STATE = 52;
 
     public static final int UNSUPPORTED_JRE = 100;
 
