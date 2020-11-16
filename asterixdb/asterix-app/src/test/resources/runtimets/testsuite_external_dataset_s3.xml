@@ -25,6 +25,11 @@
         <output-dir compare="Text">common/json/json</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="create-with-session-token">
+        <output-dir compare="Text">create-with-session-token</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/json/gz">
         <placeholder name="adapter" value="S3" />

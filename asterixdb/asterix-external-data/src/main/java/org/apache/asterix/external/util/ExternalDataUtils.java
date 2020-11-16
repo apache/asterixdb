@@ -78,6 +78,8 @@ import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.ListBlobsOptions;
 
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.regions.Region;
@@ -710,13 +712,20 @@ public class ExternalDataUtils {
             // TODO(Hussain): Need to ensure that all required parameters are present in a previous step
             String accessKeyId = configuration.get(ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME);
             String secretAccessKey = configuration.get(ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME);
+            String sessionToken = configuration.get(ExternalDataConstants.AwsS3.SESSION_TOKEN_FIELD_NAME);
             String regionId = configuration.get(ExternalDataConstants.AwsS3.REGION_FIELD_NAME);
             String serviceEndpoint = configuration.get(ExternalDataConstants.AwsS3.SERVICE_END_POINT_FIELD_NAME);
 
             S3ClientBuilder builder = S3Client.builder();
 
             // Credentials
-            AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+            AwsCredentials credentials;
+            if (sessionToken != null) {
+                credentials = AwsSessionCredentials.create(accessKeyId, secretAccessKey, sessionToken);
+            } else {
+                credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+            }
+
             builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
 
             // Validate the region
