@@ -94,7 +94,7 @@ public class NCConfig extends ControllerConfig {
         IO_WORKERS_PER_PARTITION(POSITIVE_INTEGER, 2),
         IO_QUEUE_SIZE(POSITIVE_INTEGER, 10),
         PYTHON_CMD(STRING, (String) null),
-        PYTHON_ADDITIONAL_PACKAGES(STRING_ARRAY, (String[]) null),
+        PYTHON_ADDITIONAL_PACKAGES(STRING_ARRAY, new String[0]),
         PYTHON_USE_BUNDLED_MSGPACK(BOOLEAN, true),
         PYTHON_ARGS(STRING_ARRAY, (String[]) null),
         CREDENTIAL_FILE(
