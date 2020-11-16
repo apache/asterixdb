@@ -18,11 +18,79 @@
  */
 package org.apache.hyracks.util;
 
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class Span {
+
+    public static final Span INFINITE = new Span() {
+        @Override
+        public void reset() {
+            //no-op
+        }
+
+        @Override
+        public long getSpanNanos() {
+            return Long.MAX_VALUE;
+        }
+
+        @Override
+        public long getSpan(TimeUnit unit) {
+            return Long.MAX_VALUE;
+        }
+
+        @Override
+        public boolean elapsed() {
+            return false;
+        }
+
+        @Override
+        public long elapsed(TimeUnit unit) {
+            return -1;
+        }
+
+        @Override
+        public void sleep() throws InterruptedException {
+            new Semaphore(0).acquire();
+        }
+
+        @Override
+        public void sleep(long sleep, TimeUnit unit) throws InterruptedException {
+            unit.sleep(sleep);
+        }
+
+        @Override
+        public long remaining(TimeUnit unit) {
+            return Long.MAX_VALUE;
+        }
+
+        @Override
+        public void wait(Object monitor) throws InterruptedException {
+            monitor.wait();
+        }
+
+        @Override
+        public void loopUntilExhausted(ThrowingAction action) throws Exception {
+            super.loopUntilExhausted(action);
+        }
+
+        @Override
+        public void loopUntilExhausted(ThrowingAction action, long delay, TimeUnit delayUnit) throws Exception {
+            super.loopUntilExhausted(action, delay, delayUnit);
+        }
+
+        @Override
+        public String toString() {
+            return "<INFINITY>";
+        }
+    };
+
     private final long spanNanos;
     private volatile long startNanos;
+
+    private Span() {
+        spanNanos = startNanos = -1;
+    }
 
     private Span(long span, TimeUnit unit) {
         spanNanos = unit.toNanos(span);
