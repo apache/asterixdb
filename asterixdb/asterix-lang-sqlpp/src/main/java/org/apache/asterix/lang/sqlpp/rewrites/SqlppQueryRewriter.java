@@ -32,6 +32,7 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
+import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -464,6 +465,11 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
         @Override
         public Void visit(SelectExpression selectStatement, Void arg) throws CompilationException {
+            if (selectStatement.hasLetClauses()) {
+                for (LetClause letClause : selectStatement.getLetList()) {
+                    letClause.accept(this, arg);
+                }
+            }
             selectStatement.getSelectSetOperation().accept(this, arg);
             if (selectStatement.hasOrderby()) {
                 selectStatement.getOrderbyClause().accept(this, arg);
