@@ -131,29 +131,29 @@ public class SpatialTilesDescriptor extends AbstractUnnestingFunctionDynamicDesc
                             ATypeTag tag3 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes3[offset3]);
 
                             if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.RECTANGLE)
-                                    && (tag2 == ATypeTag.INTEGER) && (tag3 == ATypeTag.INTEGER)) {
-                                double x1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0
+                                    && (tag2 == ATypeTag.BIGINT) && (tag3 == ATypeTag.BIGINT)) {
+                                double x1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                         + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
-                                double y1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0
+                                double y1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                         + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
-                                double x2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0
+                                double x2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                         + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-                                double y2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0
+                                double y2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                         + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
 
-                                double minX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1
+                                double minX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                         + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
-                                double minY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1
+                                double minY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                         + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
-                                double maxX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1
+                                double maxX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                         + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-                                double maxY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1
+                                double maxY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                         + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
 
-                                int rows = AInt32SerializerDeserializer.getInt(bytes2, offset2 + 1);
-                                int columns = AInt32SerializerDeserializer.getInt(bytes3, offset3 + 1);
+                                int rows = (int) AInt64SerializerDeserializer.getLong(bytes2, offset2 + 1);
+                                int columns = (int) AInt64SerializerDeserializer.getLong(bytes3, offset3 + 1);
 
                                 int row1 = (int) Math.floor((y1 - minY) * rows / (maxY - minY));
                                 int col1 = (int) Math.floor((x1 - minX) * columns / (maxX - minX));
@@ -180,19 +180,19 @@ public class SpatialTilesDescriptor extends AbstractUnnestingFunctionDynamicDesc
                             } else {
                                 if (tag0 != ATypeTag.RECTANGLE) {
                                     throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
-                                            ATypeTag.SERIALIZED_POINT_TYPE_TAG);
+                                            ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
                                 }
                                 if (tag1 != ATypeTag.RECTANGLE) {
                                     throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes1[offset1],
-                                            ATypeTag.SERIALIZED_POINT_TYPE_TAG);
+                                            ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
                                 }
-                                if (tag2 != ATypeTag.INTEGER) {
+                                if (tag2 != ATypeTag.BIGINT) {
                                     throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes2[offset2],
-                                            ATypeTag.SERIALIZED_POINT_TYPE_TAG);
+                                            ATypeTag.SERIALIZED_INT64_TYPE_TAG);
                                 }
-                                if (tag3 != ATypeTag.INTEGER) {
+                                if (tag3 != ATypeTag.BIGINT) {
                                     throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes3[offset3],
-                                            ATypeTag.SERIALIZED_POINT_TYPE_TAG);
+                                            ATypeTag.SERIALIZED_INT64_TYPE_TAG);
                                 }
                             }
                             result.set(resultStorage);
