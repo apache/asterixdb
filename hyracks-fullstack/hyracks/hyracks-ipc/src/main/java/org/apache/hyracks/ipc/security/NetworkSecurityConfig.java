@@ -25,11 +25,12 @@ import org.apache.hyracks.api.network.INetworkSecurityConfig;
 
 public class NetworkSecurityConfig implements INetworkSecurityConfig {
 
+    private static final long serialVersionUID = -1914030130038989199L;
     private final boolean sslEnabled;
     private final File keyStoreFile;
     private final File trustStoreFile;
     private final String keyStorePassword;
-    private final KeyStore keyStore;
+    private final transient KeyStore keyStore;
 
     private NetworkSecurityConfig(boolean sslEnabled, String keyStoreFile, String keyStorePassword,
             String trustStoreFile, KeyStore keyStore) {
