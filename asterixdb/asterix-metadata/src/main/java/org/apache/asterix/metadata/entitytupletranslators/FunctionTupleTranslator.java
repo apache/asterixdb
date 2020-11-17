@@ -151,7 +151,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             externalIdentifier = new ArrayList<>(externalIdentifierList.size());
             IACursor externalIdentifierCursor = externalIdentifierList.getCursor();
             while (externalIdentifierCursor.next()) {
-                externalIdentifierList.add(externalIdentifierCursor.get());
+                externalIdentifier.add(((AString) externalIdentifierCursor.get()).getStringValue());
             }
             libraryName = getString(functionRecord, MetadataRecordTypes.FIELD_NAME_LIBRARY_NAME);
             String libraryDataverseCanonicalName = getString(functionRecord, FIELD_NAME_LIBRARY_DATAVERSE_NAME);
