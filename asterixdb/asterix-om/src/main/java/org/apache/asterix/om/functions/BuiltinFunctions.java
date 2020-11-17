@@ -1031,6 +1031,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "subset-collection", 3);
 
     public static final FunctionIdentifier RANGE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "range", 2);
+    public static final FunctionIdentifier SPATIAL_TILE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-tile", 4);
 
     // fuzzy functions
     public static final FunctionIdentifier FUZZY_EQ =
@@ -1233,6 +1235,8 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier CAST_TYPE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast", 1);
     public static final FunctionIdentifier CAST_TYPE_LAX =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast-lax", 1);
+    public static final FunctionIdentifier REFERENCE_TILE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "reference-tile", 5);
 
     public static final FunctionIdentifier CREATE_UUID =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-uuid", 0);
@@ -2136,6 +2140,9 @@ public class BuiltinFunctions {
         addFunction(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
         addFunction(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE, true);
         addFunction(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE, true);
+        //        addFunction(SPATIAL_TILE, OrderedListOfAInt32TypeComputer.INSTANCE, true);
+        addFunction(SPATIAL_TILE, AInt32TypeComputer.INSTANCE, true);
+        addFunction(REFERENCE_TILE, AInt32TypeComputer.INSTANCE, true);
 
         //geo functions
         addFunction(ST_AREA, ADoubleTypeComputer.INSTANCE, true);
@@ -3060,6 +3067,7 @@ public class BuiltinFunctions {
         addUnnestFun(RANGE, true);
         addUnnestFun(SCAN_COLLECTION, false);
         addUnnestFun(SUBSET_COLLECTION, false);
+        addUnnestFun(SPATIAL_TILE, false);
     }
 
     public enum DataSourceFunctionProperty implements BuiltinFunctionProperty {

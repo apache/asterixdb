@@ -85,6 +85,7 @@ import org.apache.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import org.apache.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
 import org.apache.asterix.optimizer.rules.SetupCommitExtensionOpRule;
 import org.apache.asterix.optimizer.rules.SimilarityCheckRule;
+import org.apache.asterix.optimizer.rules.SpatialJoinRule;
 import org.apache.asterix.optimizer.rules.SweepIllegalNonfunctionalFunctions;
 import org.apache.asterix.optimizer.rules.UnnestToDataScanRule;
 import org.apache.asterix.optimizer.rules.am.IntroduceJoinAccessMethodRule;
@@ -410,5 +411,11 @@ public final class RuleCollections {
         prepareForJobGenRewrites.add(new SweepIllegalNonfunctionalFunctions());
         prepareForJobGenRewrites.add(new FixReplicateOperatorOutputsRule());
         return prepareForJobGenRewrites;
+    }
+
+    public static final List<IAlgebraicRewriteRule> buildSpatialJoinRuleCollection() {
+        List<IAlgebraicRewriteRule> spatialJoin = new LinkedList<>();
+        spatialJoin.add(new SpatialJoinRule());
+        return spatialJoin;
     }
 }

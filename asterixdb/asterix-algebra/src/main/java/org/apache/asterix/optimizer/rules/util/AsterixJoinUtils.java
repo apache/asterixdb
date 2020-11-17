@@ -63,14 +63,27 @@ public class AsterixJoinUtils {
         List<LogicalVariable> varsRight = op.getInputs().get(RIGHT).getValue().getSchema();
         AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) conditionLE;
 
-        FunctionIdentifier spatialFunctionIdentifier =
-                SpatialJoinUtils.isSpatialJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
-        if (spatialFunctionIdentifier != null) {
-            LOGGER.info("is spatial join");
-            SpatialJoinUtils.setSpatialJoinOp(op, spatialFunctionIdentifier, sideLeft, sideRight, context);
-        } else {
-            LOGGER.info("is not spatial join");
-        }
+        //        FunctionIdentifier spatialFunctionIdentifier =
+        //                SpatialJoinUtils.isSpatialJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
+        //        if (spatialFunctionIdentifier != null) {
+        //            LOGGER.info("is spatial join");
+        ////            SpatialJoinUtils.setSpatialJoinOp(op, spatialFunctionIdentifier, sideLeft, sideRight, context);
+        //            Mutable<ILogicalOperator> leftOp = op.getInputs().get(LEFT);
+        //            LogicalVariable leftVar = context.newVar();
+        //            VariableReferenceExpression sideLeftVar = new VariableReferenceExpression(sideLeft.get(0));
+        //            UnnestOperator leftUnnestOp = new UnnestOperator(leftVar,
+        //                    new MutableObject<>(new UnnestingFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
+        //                            new MutableObject<>(sideLeftVar),
+        //                            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new ARectangle(new APoint(0, 0), new APoint(100, 100))))),
+        //                            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(100)))),
+        //                            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(100)))))));
+        //            leftUnnestOp.getInputs().add(new MutableObject<>(leftOp.getValue()));
+        //            leftOp.setValue(leftUnnestOp);
+        //
+        //            Mutable<ILogicalOperator> rightOp = op.getInputs().get(RIGHT);
+        //        } else {
+        //            LOGGER.info("is not spatial join");
+        //        }
 
         FunctionIdentifier fi =
                 IntervalJoinUtils.isIntervalJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);

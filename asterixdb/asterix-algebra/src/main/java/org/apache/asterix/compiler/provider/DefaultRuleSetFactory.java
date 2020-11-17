@@ -71,6 +71,7 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildFulltextContainsRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildAccessMethodRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildPlanCleanupRuleCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildSpatialJoinRuleCollection()));
 
         //put TXnRuleCollection!
         return defaultLogicalRewrites;
