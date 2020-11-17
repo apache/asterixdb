@@ -37,37 +37,16 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
 
     private volatile INetworkSecurityConfig config;
     private final ISocketChannelFactory sslSocketFactory;
-    private static final String TSL_VERSION = "TLSv1.2";
+    public static final String TSL_VERSION = "TLSv1.2";
 
     public NetworkSecurityManager(INetworkSecurityConfig config) {
         this.config = config;
-        if (config.isSslEnabled()) {
-            System.setProperty("javax.net.ssl.trustStore", config.getTrustStoreFile().getAbsolutePath());
-            System.setProperty("javax.net.ssl.trustStorePassword", config.getKeyStorePassword());
-        }
         sslSocketFactory = new SslSocketChannelFactory(this);
     }
 
     @Override
     public SSLContext newSSLContext() {
-        try {
-            final char[] password = getKeyStorePassword();
-            KeyStore engineKeyStore = config.getKeyStore();
-            if (engineKeyStore == null) {
-                engineKeyStore = loadKeyStoreFromFile(password);
-            }
-            final String defaultAlgorithm = KeyManagerFactory.getDefaultAlgorithm();
-            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(defaultAlgorithm);
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(defaultAlgorithm);
-            keyManagerFactory.init(engineKeyStore, password);
-            final KeyStore trustStore = loadTrustStoreFromFile(password);
-            trustManagerFactory.init(trustStore);
-            SSLContext ctx = SSLContext.getInstance(TSL_VERSION);
-            ctx.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
-            return ctx;
-        } catch (Exception ex) {
-            throw new IllegalStateException("Failed to create SSLEngine", ex);
-        }
+        return newSSLContext(config);
     }
 
     @Override
@@ -97,7 +76,28 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
         this.config = config;
     }
 
-    private KeyStore loadKeyStoreFromFile(char[] password) {
+    public static SSLContext newSSLContext(INetworkSecurityConfig config) {
+        try {
+            final char[] password = getKeyStorePassword(config);
+            KeyStore engineKeyStore = config.getKeyStore();
+            if (engineKeyStore == null) {
+                engineKeyStore = loadKeyStoreFromFile(password, config);
+            }
+            final String defaultAlgorithm = KeyManagerFactory.getDefaultAlgorithm();
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(defaultAlgorithm);
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(defaultAlgorithm);
+            keyManagerFactory.init(engineKeyStore, password);
+            final KeyStore trustStore = loadTrustStoreFromFile(password, config);
+            trustManagerFactory.init(trustStore);
+            SSLContext ctx = SSLContext.getInstance(TSL_VERSION);
+            ctx.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
+            return ctx;
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to create SSLEngine", ex);
+        }
+    }
+
+    private static KeyStore loadKeyStoreFromFile(char[] password, INetworkSecurityConfig config) {
         try {
             final KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(new FileInputStream(config.getKeyStoreFile()), password);
@@ -107,7 +107,7 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
         }
     }
 
-    private KeyStore loadTrustStoreFromFile(char[] password) {
+    private static KeyStore loadTrustStoreFromFile(char[] password, INetworkSecurityConfig config) {
         try {
             final KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
             ks.load(new FileInputStream(config.getTrustStoreFile()), password);
@@ -117,7 +117,7 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
         }
     }
 
-    private char[] getKeyStorePassword() {
+    private static char[] getKeyStorePassword(INetworkSecurityConfig config) {
         final String pass = config.getKeyStorePassword();
         return pass == null || pass.isEmpty() ? null : pass.toCharArray();
     }

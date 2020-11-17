@@ -469,7 +469,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             // our client socket factory when SSL is enabled
             if (networkSecurityManager.getConfiguration().isSslEnabled()) {
                 final RMIServerFactory serverSocketFactory = new RMIServerFactory(networkSecurityManager);
-                final RMIClientFactory clientSocketFactory = new RMIClientFactory(true);
+                final RMIClientFactory clientSocketFactory =
+                        new RMIClientFactory(networkSecurityManager.getConfiguration());
                 metadataNodeStub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
                         getMetadataProperties().getMetadataPort(), clientSocketFactory, serverSocketFactory);
             } else {
