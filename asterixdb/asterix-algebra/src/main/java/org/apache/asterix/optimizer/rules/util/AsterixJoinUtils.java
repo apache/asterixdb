@@ -63,14 +63,14 @@ public class AsterixJoinUtils {
         List<LogicalVariable> varsRight = op.getInputs().get(RIGHT).getValue().getSchema();
         AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) conditionLE;
 
-        FunctionIdentifier spatialFunctionIdentifier =
-                SpatialJoinUtils.isSpatialJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
-        if (spatialFunctionIdentifier != null) {
-            LOGGER.info("is spatial join");
-            SpatialJoinUtils.setSpatialJoinOp(op, spatialFunctionIdentifier, sideLeft, sideRight, context);
-        } else {
-            LOGGER.info("is not spatial join");
-        }
+        //        FunctionIdentifier spatialFunctionIdentifier =
+        //                SpatialJoinUtils.isSpatialJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
+        //        if (spatialFunctionIdentifier != null) {
+        //            LOGGER.info("is spatial join");
+        //            SpatialJoinUtils.setSpatialJoinOp(op, spatialFunctionIdentifier, sideLeft, sideRight, context);
+        //        } else {
+        //            LOGGER.info("is not spatial join");
+        //        }
 
         FunctionIdentifier fi =
                 IntervalJoinUtils.isIntervalJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
