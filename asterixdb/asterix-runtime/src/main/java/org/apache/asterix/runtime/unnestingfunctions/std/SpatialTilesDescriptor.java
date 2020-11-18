@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
@@ -34,7 +33,6 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
@@ -78,9 +76,7 @@ public class SpatialTilesDescriptor extends AbstractUnnestingFunctionDynamicDesc
                     throws HyracksDataException {
                 return new IUnnestingEvaluator() {
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private ArrayBackedValueStorage tileIdValues = new ArrayBackedValueStorage();
-                    private List<Integer> values = new ArrayList<>();
-                    private Integer[] x;
+                    private List<Integer> tileValues = new ArrayList<>();
                     private final DataOutput out = resultStorage.getDataOutput();
                     private final IPointable inputArg0 = new VoidPointable();
                     private final IPointable inputArg1 = new VoidPointable();
@@ -90,16 +86,9 @@ public class SpatialTilesDescriptor extends AbstractUnnestingFunctionDynamicDesc
                     private final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval2 = args[2].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval3 = args[3].createScalarEvaluator(ctx);
-                    private final UnorderedListBuilder listBuilder = new UnorderedListBuilder();
-                    private final AUnorderedListType listType =
-                            new AUnorderedListType(BuiltinType.AINT32, "AUnorderedList");
-//                    protected final AMutableInt32 aInt32 = new AMutableInt32(-1);
-                    private AMutableInt32 aInt32 = new AMutableInt32(0);
 
-                    double x1, y1, x2, y2, minX, minY, maxX, maxY;
-                    int rows, columns;
+                    private AMutableInt32 aInt32 = new AMutableInt32(0);
                     int pos;
-                    private boolean metUnknown = false;
 
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer intSerde =
@@ -128,28 +117,28 @@ public class SpatialTilesDescriptor extends AbstractUnnestingFunctionDynamicDesc
 
                         if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.RECTANGLE)
                                 && (tag2 == ATypeTag.BIGINT) && (tag3 == ATypeTag.BIGINT)) {
-                            x1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
+                            double x1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
-                            y1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
+                            double y1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
-                            x2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
+                            double x2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                     + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-                            y2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
+                            double y2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                     + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
 
-                            minX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                            double minX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
-                            minY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                            double minY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
-                            maxX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                            double maxX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                     + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-                            maxY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                            double maxY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                     + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
 
-                            rows = (int) AInt64SerializerDeserializer.getLong(bytes2, offset2 + 1);
-                            columns = (int) AInt64SerializerDeserializer.getLong(bytes3, offset3 + 1);
+                            int rows = (int) AInt64SerializerDeserializer.getLong(bytes2, offset2 + 1);
+                            int columns = (int) AInt64SerializerDeserializer.getLong(bytes3, offset3 + 1);
 
                             int row1 = (int) Math.floor((y1 - minY) * rows / (maxY - minY));
                             int col1 = (int) Math.floor((x1 - minX) * columns / (maxX - minX));
@@ -161,16 +150,13 @@ public class SpatialTilesDescriptor extends AbstractUnnestingFunctionDynamicDesc
                             int minCol = Math.min(col1, col2);
                             int maxCol = Math.max(col1, col2);
 
-                            values.clear();
+                            tileValues.clear();
                             for (int i = minRow; i <= maxRow; i++) {
                                 for (int j = minCol; j <= maxCol; j++) {
                                     int tileId = i * columns + j;
-                                    values.add(tileId);
+                                    tileValues.add(tileId);
                                 }
                             }
-
-                            x = new Integer[values.size()];
-                            x = values.toArray(x);
                             pos = 0;
                         } else {
                             if (tag0 != ATypeTag.RECTANGLE) {
@@ -196,8 +182,8 @@ public class SpatialTilesDescriptor extends AbstractUnnestingFunctionDynamicDesc
                     @Override
                     public boolean step(IPointable result) throws HyracksDataException {
                         try {
-                            if (pos < x.length) {
-                                aInt32.setValue(x[pos]);
+                            if (pos < tileValues.size()) {
+                                aInt32.setValue(tileValues.get(pos));
                                 resultStorage.reset();
                                 intSerde.serialize(aInt32, resultStorage.getDataOutput());
                                 result.set(resultStorage);
