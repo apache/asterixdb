@@ -190,4 +190,8 @@ public class NetworkUtil {
         }
         return refreshed;
     }
+
+    public static InetSocketAddress toInetSocketAddress(HttpHost httpHost) {
+        return new InetSocketAddress(httpHost.getAddress(), httpHost.getPort());
+    }
 }
