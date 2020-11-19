@@ -244,13 +244,16 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
 
     @Override
     public Boolean visit(LimitClause lc, List<FunctionDecl> arg) throws CompilationException {
-        Pair<Boolean, Expression> p1 = inlineUdfsInExpr(lc.getLimitExpr(), arg);
-        lc.setLimitExpr(p1.second);
-        boolean changed = p1.first;
-        if (lc.getOffset() != null) {
+        boolean changed = false;
+        if (lc.hasLimitExpr()) {
+            Pair<Boolean, Expression> p1 = inlineUdfsInExpr(lc.getLimitExpr(), arg);
+            lc.setLimitExpr(p1.second);
+            changed = p1.first;
+        }
+        if (lc.hasOffset()) {
             Pair<Boolean, Expression> p2 = inlineUdfsInExpr(lc.getOffset(), arg);
             lc.setOffset(p2.second);
-            changed = changed || p2.first;
+            changed |= p2.first;
         }
         return changed;
     }

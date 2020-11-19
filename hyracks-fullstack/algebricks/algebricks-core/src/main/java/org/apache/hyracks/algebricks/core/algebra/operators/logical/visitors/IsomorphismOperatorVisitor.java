@@ -197,11 +197,13 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         LimitOperator limitOpArg = (LimitOperator) copyAndSubstituteVar(op, arg);
+        if (!Objects.equals(op.getMaxObjects().getValue(), limitOpArg.getMaxObjects().getValue())) {
+            return Boolean.FALSE;
+        }
         if (!Objects.equals(op.getOffset().getValue(), limitOpArg.getOffset().getValue())) {
             return Boolean.FALSE;
         }
-        boolean isomorphic = op.getMaxObjects().getValue().equals(limitOpArg.getMaxObjects().getValue());
-        return isomorphic;
+        return Boolean.TRUE;
     }
 
     @Override

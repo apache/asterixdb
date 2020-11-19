@@ -1469,26 +1469,26 @@ abstract class LangExpressionToPlanTranslator
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(LimitClause lc, Mutable<ILogicalOperator> tupSource)
             throws CompilationException {
-        SourceLocation sourceLoc = lc.getSourceLocation();
-        LimitOperator opLim;
-
-        Pair<ILogicalExpression, Mutable<ILogicalOperator>> p1 = langExprToAlgExpression(lc.getLimitExpr(), tupSource);
-        ILogicalExpression maxObjectsExpr =
-                createLimitOffsetValueExpression(p1.first, lc.getLimitExpr().getSourceLocation());
-        Expression offset = lc.getOffset();
-        if (offset != null) {
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p2 = langExprToAlgExpression(offset, p1.second);
-            ILogicalExpression offsetExpr =
-                    createLimitOffsetValueExpression(p2.first, lc.getOffset().getSourceLocation());
-            opLim = new LimitOperator(maxObjectsExpr, offsetExpr);
-            opLim.getInputs().add(p2.second);
-            opLim.setSourceLocation(sourceLoc);
-        } else {
-            opLim = new LimitOperator(maxObjectsExpr);
-            opLim.getInputs().add(p1.second);
-            opLim.setSourceLocation(sourceLoc);
+        Mutable<ILogicalOperator> topOp = tupSource;
+        ILogicalExpression maxObjectsExpr = null;
+        if (lc.hasLimitExpr()) {
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p1 = langExprToAlgExpression(lc.getLimitExpr(), topOp);
+            // if user did provide the limit expression and it is NULL or MISSING then it'll be coerced to 0
+            maxObjectsExpr = createLimitOffsetValueExpression(p1.first, lc.getLimitExpr().getSourceLocation());
+            topOp = p1.second;
         }
-        return new Pair<>(opLim, null);
+        ILogicalExpression offsetExpr = null;
+        if (lc.hasOffset()) {
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> p2 = langExprToAlgExpression(lc.getOffset(), topOp);
+            offsetExpr = createLimitOffsetValueExpression(p2.first, lc.getOffset().getSourceLocation());
+            topOp = p2.second;
+        }
+
+        LimitOperator limitOp = new LimitOperator(maxObjectsExpr, offsetExpr);
+        limitOp.getInputs().add(topOp);
+        limitOp.setSourceLocation(lc.getSourceLocation());
+
+        return new Pair<>(limitOp, null);
     }
 
     private ILogicalExpression createLimitOffsetValueExpression(ILogicalExpression inputExpr, SourceLocation sourceLoc)

@@ -55,7 +55,7 @@
            * [GROUP AS Clause](#GROUP_AS_Clause)
       * [Selection and UNION ALL](#Union_all)
 	  * [WITH Clauses](#With_clauses)
-      * [ORDER By and LIMIT Clauses](#Order_By_clauses)
+      * [ORDER BY, LIMIT, and OFFSET Clauses](#Order_By_clauses)
 	  * [Subqueries](#Subqueries)
 * [4. Window Functions](#Over_clauses)
       * [Window Function Call](#Window_function_call)

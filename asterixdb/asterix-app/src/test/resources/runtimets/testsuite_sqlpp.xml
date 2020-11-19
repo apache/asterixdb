@@ -13949,6 +13949,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="limit">
+      <compilation-unit name="offset_without_limit">
+        <output-dir compare="Text">offset_without_limit</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="limit">
       <compilation-unit name="push-limit-to-external-scan">
         <output-dir compare="Text">push-limit-to-external-scan</output-dir>
       </compilation-unit>

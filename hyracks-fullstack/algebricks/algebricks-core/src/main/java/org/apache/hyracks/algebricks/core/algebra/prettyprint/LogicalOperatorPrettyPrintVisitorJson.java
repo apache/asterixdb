@@ -511,10 +511,11 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     public Void visitLimitOperator(LimitOperator op, Void indent) throws AlgebricksException {
         try {
             jsonGenerator.writeStringField(OPERATOR_FIELD, "limit");
-            writeStringFieldExpression("value", op.getMaxObjects(), indent);
-            Mutable<ILogicalExpression> offsetRef = op.getOffset();
-            if (offsetRef != null && offsetRef.getValue() != null) {
-                writeStringFieldExpression("offset", offsetRef, indent);
+            if (op.hasMaxObjects()) {
+                writeStringFieldExpression("value", op.getMaxObjects(), indent);
+            }
+            if (op.hasOffset()) {
+                writeStringFieldExpression("offset", op.getOffset().getValue(), indent);
             }
             return null;
         } catch (IOException e) {
@@ -858,9 +859,15 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     /////////////// string fields ///////////////
 
     /** Writes "fieldName": "expr" */
-    private void writeStringFieldExpression(String fieldName, Mutable<ILogicalExpression> expression, Void indent)
+    private void writeStringFieldExpression(String fieldName, Mutable<ILogicalExpression> expressionRef, Void indent)
             throws AlgebricksException, IOException {
-        jsonGenerator.writeStringField(fieldName, expression.getValue().accept(exprVisitor, indent));
+        writeStringFieldExpression(fieldName, expressionRef.getValue(), indent);
+    }
+
+    /** Writes "fieldName": "expr" */
+    private void writeStringFieldExpression(String fieldName, ILogicalExpression expression, Void indent)
+            throws AlgebricksException, IOException {
+        jsonGenerator.writeStringField(fieldName, expression.accept(exprVisitor, indent));
     }
 
     /////////////// array fields ///////////////

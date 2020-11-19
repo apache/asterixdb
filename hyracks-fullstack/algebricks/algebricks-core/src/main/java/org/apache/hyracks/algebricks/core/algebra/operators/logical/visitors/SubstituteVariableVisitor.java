@@ -179,10 +179,11 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitLimitOperator(LimitOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        op.getMaxObjects().getValue().substituteVar(pair.first, pair.second);
-        ILogicalExpression offset = op.getOffset().getValue();
-        if (offset != null) {
-            offset.substituteVar(pair.first, pair.second);
+        if (op.hasMaxObjects()) {
+            op.getMaxObjects().getValue().substituteVar(pair.first, pair.second);
+        }
+        if (op.hasOffset()) {
+            op.getOffset().getValue().substituteVar(pair.first, pair.second);
         }
         substVarTypes(op, pair);
         return null;

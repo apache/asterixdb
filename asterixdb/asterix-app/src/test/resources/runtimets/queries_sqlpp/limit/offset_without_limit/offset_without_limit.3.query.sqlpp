@@ -17,23 +17,11 @@
  * under the License.
  */
 /*
- * Description     : Test negative limit and offset values
+ * Description     : Test offset clause without limit clause (with order by)
  * Expected Result : Success
  */
 
-drop  dataverse test if exists;
-create  dataverse test;
-
-use test;
-
-create type test.DBLPType as
-{
-  id : bigint,
-  dblpid : string,
-  title : string,
-  authors : string,
-  misc : string
-};
-
-create  dataset DBLP1(DBLPType) primary key id;
-
+select value t
+from [6,5,4,3,2,1] t
+order by t
+offset 4

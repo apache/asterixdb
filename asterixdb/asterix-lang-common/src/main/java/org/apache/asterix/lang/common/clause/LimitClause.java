@@ -26,15 +26,16 @@ import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class LimitClause extends AbstractClause {
+
     private Expression limitExpr;
+
     private Expression offset;
 
-    public LimitClause() {
-        // Default constructor.
-    }
-
-    public LimitClause(Expression limitexpr, Expression offset) {
-        this.limitExpr = limitexpr;
+    public LimitClause(Expression limitExpr, Expression offset) {
+        if (limitExpr == null && offset == null) {
+            throw new IllegalArgumentException();
+        }
+        this.limitExpr = limitExpr;
         this.offset = offset;
     }
 
@@ -44,6 +45,10 @@ public class LimitClause extends AbstractClause {
 
     public void setLimitExpr(Expression limitexpr) {
         this.limitExpr = limitexpr;
+    }
+
+    public boolean hasLimitExpr() {
+        return limitExpr != null;
     }
 
     public Expression getOffset() {
@@ -82,6 +87,6 @@ public class LimitClause extends AbstractClause {
             return false;
         }
         LimitClause target = (LimitClause) object;
-        return limitExpr.equals(target.getLimitExpr()) && Objects.equals(offset, target.getOffset());
+        return Objects.equals(limitExpr, target.getLimitExpr()) && Objects.equals(offset, target.getOffset());
     }
 }

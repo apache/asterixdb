@@ -16,24 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description     : Test negative limit and offset values
- * Expected Result : Success
- */
-
-drop  dataverse test if exists;
-create  dataverse test;
-
 use test;
 
-create type test.DBLPType as
-{
-  id : bigint,
-  dblpid : string,
-  title : string,
-  authors : string,
-  misc : string
-};
-
-create  dataset DBLP1(DBLPType) primary key id;
-
+load  dataset DBLP1 using localfs ((`path`=`asterix_nc1://data/dblp-small/dblp-small-id.txt`),(`format`=`delimited-text`),(`delimiter`=`:`));

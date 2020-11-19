@@ -4417,16 +4417,23 @@ HavingClause HavingClause() throws ParseException:
 LimitClause LimitClause() throws ParseException:
 {
     Token startToken = null;
-    LimitClause lc = new LimitClause();
-    Expression expr;
-    pushForbiddenScope(getCurrentScope());
+    Expression limitExpr = null, offsetExpr = null;
 }
 {
-    <LIMIT> { startToken = token; } expr = Expression() { lc.setLimitExpr(expr); }
-    (<OFFSET> expr = Expression() { lc.setOffset(expr); })?
-
+  (
+    (
+      <LIMIT> { startToken = token; pushForbiddenScope(getCurrentScope()); } limitExpr = Expression()
+      ( <OFFSET> offsetExpr = Expression() )?
+      { popForbiddenScope(); }
+    )
+    |
+    (
+      <OFFSET> { startToken = token; pushForbiddenScope(getCurrentScope()); } offsetExpr = Expression()
+      { popForbiddenScope(); }
+    )
+  )
   {
-    popForbiddenScope();
+    LimitClause lc = new LimitClause(limitExpr, offsetExpr);
     return addSourceLocation(lc, startToken);
   }
 }

@@ -16,24 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 /*
- * Description     : Test negative limit and offset values
+ * Description     : Test offset clause without limit clause (with order by)
  * Expected Result : Success
  */
 
-drop  dataverse test if exists;
-create  dataverse test;
-
 use test;
 
-create type test.DBLPType as
-{
-  id : bigint,
-  dblpid : string,
-  title : string,
-  authors : string,
-  misc : string
-};
-
-create  dataset DBLP1(DBLPType) primary key id;
-
+select id, dblpid
+from DBLP1 as paper
+order by id
+offset 98

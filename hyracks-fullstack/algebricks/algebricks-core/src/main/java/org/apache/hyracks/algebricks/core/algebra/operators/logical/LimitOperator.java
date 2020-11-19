@@ -25,7 +25,6 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
@@ -34,30 +33,41 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public class LimitOperator extends AbstractLogicalOperator {
 
-    private final Mutable<ILogicalExpression> maxObjects; // mandatory
-    private final Mutable<ILogicalExpression> offset; // optional
-    private boolean topmost;
+    private final Mutable<ILogicalExpression> maxObjects; // optional, if not specified then offset is required
+    private final Mutable<ILogicalExpression> offset; // optional if maxObjects is specified, required otherwise
+    private final boolean topmost;
 
     public LimitOperator(ILogicalExpression maxObjectsExpr, ILogicalExpression offsetExpr, boolean topmost) {
-        this.maxObjects = new MutableObject<ILogicalExpression>(maxObjectsExpr);
-        this.offset = new MutableObject<ILogicalExpression>(offsetExpr);
+        if (maxObjectsExpr == null && offsetExpr == null) {
+            throw new IllegalArgumentException();
+        }
+        this.maxObjects = new MutableObject<>(maxObjectsExpr);
+        this.offset = new MutableObject<>(offsetExpr);
         this.topmost = topmost;
-    }
-
-    public LimitOperator(ILogicalExpression maxObjectsExpr, boolean topmost) {
-        this(maxObjectsExpr, null, topmost);
     }
 
     public LimitOperator(ILogicalExpression maxObjects, ILogicalExpression offset) {
         this(maxObjects, offset, true);
     }
 
+    public LimitOperator(ILogicalExpression maxObjectsExpr, boolean topmost) {
+        this(maxObjectsExpr, null, topmost);
+    }
+
     public LimitOperator(ILogicalExpression maxObjects) {
-        this(maxObjects, null, true);
+        this(maxObjects, true);
+    }
+
+    public boolean hasMaxObjects() {
+        return maxObjects.getValue() != null;
     }
 
     public Mutable<ILogicalExpression> getMaxObjects() {
         return maxObjects;
+    }
+
+    public boolean hasOffset() {
+        return offset.getValue() != null;
     }
 
     public Mutable<ILogicalExpression> getOffset() {
@@ -70,7 +80,7 @@ public class LimitOperator extends AbstractLogicalOperator {
 
     @Override
     public void recomputeSchema() {
-        schema = new ArrayList<LogicalVariable>();
+        schema = new ArrayList<>();
         schema.addAll(inputs.get(0).getValue().getSchema());
     }
 
@@ -82,13 +92,11 @@ public class LimitOperator extends AbstractLogicalOperator {
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
         boolean b = false;
-        if (visitor.transform(maxObjects)) {
-            b = true;
+        if (hasMaxObjects()) {
+            b = visitor.transform(maxObjects);
         }
-        if (offset.getValue() != null) {
-            if (visitor.transform(offset)) {
-                b = true;
-            }
+        if (hasOffset()) {
+            b |= visitor.transform(offset);
         }
         return b;
     }

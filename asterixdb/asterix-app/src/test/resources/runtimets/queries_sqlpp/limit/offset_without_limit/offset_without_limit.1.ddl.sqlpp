@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description     : Test negative limit and offset values
+ * Description     : Test offset clause without limit clause
  * Expected Result : Success
  */
 
@@ -36,4 +36,3 @@ create type test.DBLPType as
 };
 
 create  dataset DBLP1(DBLPType) primary key id;
-

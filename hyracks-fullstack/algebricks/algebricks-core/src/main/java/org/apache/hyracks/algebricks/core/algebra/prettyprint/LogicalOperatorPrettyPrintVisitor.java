@@ -386,10 +386,12 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitLimitOperator(LimitOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("limit " + op.getMaxObjects().getValue().accept(exprVisitor, indent));
-        ILogicalExpression offset = op.getOffset().getValue();
-        if (offset != null) {
-            buffer.append(", " + offset.accept(exprVisitor, indent));
+        addIndent(indent).append("limit");
+        if (op.hasMaxObjects()) {
+            buffer.append(' ').append(op.getMaxObjects().getValue().accept(exprVisitor, indent));
+        }
+        if (op.hasOffset()) {
+            buffer.append(" offset ").append(op.getOffset().getValue().accept(exprVisitor, indent));
         }
         return null;
     }

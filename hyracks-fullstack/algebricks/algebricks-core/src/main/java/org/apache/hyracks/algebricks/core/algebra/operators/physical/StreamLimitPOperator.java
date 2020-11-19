@@ -20,7 +20,6 @@ package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
@@ -89,11 +88,10 @@ public class StreamLimitPOperator extends AbstractPhysicalOperator {
         LimitOperator limit = (LimitOperator) op;
         IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
         IVariableTypeEnvironment env = context.getTypeEnvironment(op);
-        IScalarEvaluatorFactory maxObjectsFact = expressionRuntimeProvider
-                .createEvaluatorFactory(limit.getMaxObjects().getValue(), env, inputSchemas, context);
-        ILogicalExpression offsetExpr = limit.getOffset().getValue();
-        IScalarEvaluatorFactory offsetFact = (offsetExpr == null) ? null
-                : expressionRuntimeProvider.createEvaluatorFactory(offsetExpr, env, inputSchemas, context);
+        IScalarEvaluatorFactory maxObjectsFact = limit.hasMaxObjects() ? expressionRuntimeProvider
+                .createEvaluatorFactory(limit.getMaxObjects().getValue(), env, inputSchemas, context) : null;
+        IScalarEvaluatorFactory offsetFact = limit.hasOffset() ? expressionRuntimeProvider
+                .createEvaluatorFactory(limit.getOffset().getValue(), env, inputSchemas, context) : null;
         RecordDescriptor recDesc =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         StreamLimitRuntimeFactory runtime = new StreamLimitRuntimeFactory(maxObjectsFact, offsetFact, null,

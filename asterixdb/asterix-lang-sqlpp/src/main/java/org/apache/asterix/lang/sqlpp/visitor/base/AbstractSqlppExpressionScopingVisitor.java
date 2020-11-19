@@ -286,7 +286,9 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     @Override
     public Expression visit(LimitClause limitClause, ILangExpression arg) throws CompilationException {
         scopeChecker.pushForbiddenScope(scopeChecker.getCurrentScope());
-        limitClause.setLimitExpr(visit(limitClause.getLimitExpr(), limitClause));
+        if (limitClause.hasLimitExpr()) {
+            limitClause.setLimitExpr(visit(limitClause.getLimitExpr(), limitClause));
+        }
         if (limitClause.hasOffset()) {
             limitClause.setOffset(visit(limitClause.getOffset(), limitClause));
         }

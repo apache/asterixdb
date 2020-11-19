@@ -317,11 +317,18 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
 
     @Override
     public Void visit(LimitClause lc, Integer step) throws CompilationException {
-        out.print(skip(step) + "limit ");
-        lc.getLimitExpr().accept(this, step + 1);
-        if (lc.getOffset() != null) {
-            out.print(" offset ");
+        if (lc.hasLimitExpr()) {
+            out.print(skip(step) + "limit ");
+            lc.getLimitExpr().accept(this, step + 1);
+            if (lc.hasOffset()) {
+                out.print(" offset ");
+                lc.getOffset().accept(this, step + 1);
+            }
+        } else if (lc.hasOffset()) {
+            out.print(skip(step) + "offset ");
             lc.getOffset().accept(this, step + 1);
+        } else {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, lc.getSourceLocation(), "");
         }
         out.println();
         return null;

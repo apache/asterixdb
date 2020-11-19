@@ -56,7 +56,7 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
             return false;
         }
         LimitOperator limitOp = (LimitOperator) op;
-        if (!limitOp.isTopmostLimitOp()) {
+        if (!limitOp.isTopmostLimitOp() || !limitOp.hasMaxObjects()) {
             return false;
         }
 
@@ -79,7 +79,7 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
                 ILogicalOperator unsafeOp = unsafeOpRef.getValue();
                 ILogicalExpression maxObjectsExpr = limitOp.getMaxObjects().getValue();
                 ILogicalExpression newMaxObjectsExpr;
-                if (limitOp.getOffset().getValue() == null) {
+                if (!limitOp.hasOffset()) {
                     newMaxObjectsExpr = maxObjectsExpr.cloneExpression();
                 } else {
                     // Need to add an offset to the given limit value

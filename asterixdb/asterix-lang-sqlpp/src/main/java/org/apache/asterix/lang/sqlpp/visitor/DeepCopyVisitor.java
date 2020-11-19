@@ -324,7 +324,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public LimitClause visit(LimitClause limitClause, Void arg) throws CompilationException {
-        Expression limitExpr = (Expression) limitClause.getLimitExpr().accept(this, arg);
+        Expression limitExpr =
+                limitClause.hasLimitExpr() ? (Expression) limitClause.getLimitExpr().accept(this, arg) : null;
         Expression offsetExpr = limitClause.hasOffset() ? (Expression) limitClause.getOffset().accept(this, arg) : null;
         LimitClause copy = new LimitClause(limitExpr, offsetExpr);
         copy.setSourceLocation(limitClause.getSourceLocation());

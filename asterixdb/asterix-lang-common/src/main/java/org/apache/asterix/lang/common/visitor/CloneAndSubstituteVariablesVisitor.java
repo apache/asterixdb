@@ -198,15 +198,17 @@ public class CloneAndSubstituteVariablesVisitor extends
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(LimitClause lc,
             VariableSubstitutionEnvironment env) throws CompilationException {
-        Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = lc.getLimitExpr().accept(this, env);
-        Pair<ILangExpression, VariableSubstitutionEnvironment> p2;
-        Expression lcOffsetExpr = lc.getOffset();
-        if (lcOffsetExpr != null) {
-            p2 = lcOffsetExpr.accept(this, env);
-        } else {
-            p2 = new Pair<>(null, null);
+        Expression newLimitExpr = null;
+        if (lc.hasLimitExpr()) {
+            Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = lc.getLimitExpr().accept(this, env);
+            newLimitExpr = (Expression) p1.first;
         }
-        LimitClause c = new LimitClause((Expression) p1.first, (Expression) p2.first);
+        Expression newOffsetExpr = null;
+        if (lc.hasOffset()) {
+            Pair<ILangExpression, VariableSubstitutionEnvironment> p2 = lc.getOffset().accept(this, env);
+            newOffsetExpr = (Expression) p2.first;
+        }
+        LimitClause c = new LimitClause(newLimitExpr, newOffsetExpr);
         c.setSourceLocation(lc.getSourceLocation());
         return new Pair<>(c, env);
     }
