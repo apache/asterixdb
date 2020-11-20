@@ -36,9 +36,9 @@ public interface IServletRequest {
     FullHttpRequest getHttpRequest();
 
     /**
-     * Get a request parameter
+     * Get a request parameter. If there are multiple values, it returns the first one.
      *
-     * @param name
+     * @param name parameter name
      * @return the parameter or null if not found
      */
     String getParameter(CharSequence name);
@@ -46,8 +46,8 @@ public interface IServletRequest {
     /**
      * Get all values of a request parameter
      *
-     * @param name
-     * @return the parameter values or null if not found
+     * @param name parameter name
+     * @return the parameter values or empty list if not found
      */
     List<String> getParameterValues(CharSequence name);
 
@@ -59,16 +59,23 @@ public interface IServletRequest {
     Set<String> getParameterNames();
 
     /**
-     * Get the all request parameters
+     * Get all the request parameters. If there are multiple values for a parameter, it contains the first one.
      *
      * @return the parameters
      */
     Map<String, String> getParameters();
 
     /**
+     * Get all the values of all the request parameters.
+     *
+     * @return the parameters
+     */
+    Map<String, List<String>> getParametersValues();
+
+    /**
      * Get a request header
      *
-     * @param name
+     * @param name header name
      * @return the header or null if not found
      */
     String getHeader(CharSequence name);
@@ -76,8 +83,8 @@ public interface IServletRequest {
     /**
      * Get a request header if found, return the default value, otherwise
      *
-     * @param name
-     * @param defaultValue
+     * @param name header name
+     * @param defaultValue default value
      * @return the header or defaultValue if not found
      */
     default String getHeader(CharSequence name, String defaultValue) {

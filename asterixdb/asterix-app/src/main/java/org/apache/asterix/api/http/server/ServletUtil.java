@@ -52,6 +52,6 @@ public class ServletUtil {
 
     public static DataverseName getDataverseName(IServletRequest request, String dataverseParameterName) {
         List<String> values = request.getParameterValues(dataverseParameterName);
-        return values != null ? DataverseName.create(values) : null;
+        return !values.isEmpty() ? DataverseName.create(values) : null;
     }
 }

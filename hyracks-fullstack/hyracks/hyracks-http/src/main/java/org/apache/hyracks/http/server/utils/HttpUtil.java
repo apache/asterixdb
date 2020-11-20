@@ -24,7 +24,6 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -66,11 +65,6 @@ public class HttpUtil {
     public static final AsciiString PERMANENT = AsciiString.cached("permanent");
 
     private HttpUtil() {
-    }
-
-    public static String getParameter(Map<String, List<String>> parameters, CharSequence name) {
-        List<String> parameter = parameters.get(String.valueOf(name));
-        return parameter == null ? null : String.join(",", parameter);
     }
 
     public static IServletRequest toServletRequest(ChannelHandlerContext ctx, FullHttpRequest request,

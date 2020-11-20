@@ -1,0 +1,12 @@
+{
+	"requestID": "R{.*}",
+	"signature": {
+		"*": "*"
+	},
+	"type": "application/x-adm",
+	"results": [ "{ \"$1\": 1 }\n" ]
+	,
+	"plans":{},
+	"status": "success",
+	"metrics": "R{.*}"
+}

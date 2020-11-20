@@ -27,7 +27,12 @@
   &AsyncDeferredQueries;
   &GeoQueries;
   &TemporalQueries;
-  <test-group name="flwor">
+  <test-group name="api">
+    <test-case FilePath="api">
+      <compilation-unit name="multiple-param-values">
+        <output-dir compare="Text">multiple-param-values</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="api">
       <compilation-unit name="readonly-request">
         <output-dir compare="Text">readonly-request</output-dir>
