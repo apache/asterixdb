@@ -22,8 +22,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.asterix.om.base.AInt64;
+import org.apache.asterix.om.base.APoint;
+import org.apache.asterix.om.base.ARectangle;
+import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -32,9 +37,12 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.logging.log4j.LogManager;
@@ -43,6 +51,14 @@ import org.apache.logging.log4j.Logger;
 public class SpatialJoinRule implements IAlgebraicRewriteRule {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final int LEFT = 0;
+    private static final int RIGHT = 1;
+    private static final double MIN_X = -180.0;
+    private static final double MIN_Y = 83.0;
+    private static final double MAX_X = 180.0;
+    private static final double MAX_Y = 90.0;
+    private static final int NUM_ROWS = 100;
+    private static final int NUM_COLUMNS = 100;
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -75,11 +91,6 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        // Gets both input branches of spatial join.
-        List<Mutable<ILogicalOperator>> inputOps = joinOp.getInputs();
-        ILogicalOperator leftInputOp = inputOps.get(0).getValue();
-        ILogicalOperator rightInputOp = inputOps.get(1).getValue();
-
         // Extracts spatial intersect function's arguments
         List<Mutable<ILogicalExpression>> inputExprs = funcExpr.getArguments();
         if (inputExprs.size() != 2) {
@@ -95,6 +106,14 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
             return false;
         }
 
+        LOGGER.info("spatial-intersect is called");
+
+        // Gets both input branches of the spatial join.
+        List<Mutable<ILogicalOperator>> inputOps = joinOp.getInputs();
+        ILogicalOperator leftInputOp = inputOps.get(0).getValue();
+        ILogicalOperator rightInputOp = inputOps.get(1).getValue();
+
+        // Extract left and right variable of the predicate
         LogicalVariable inputVar0 = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
         LogicalVariable inputVar1 = ((VariableReferenceExpression) rightOperatingExpr).getVariableReference();
 
@@ -110,8 +129,28 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
             rightInputVar = inputVar0;
         }
 
-        LOGGER.info("spatial-intersect is called");
+        // Inject unnest operator to the left and right branch of the join operator
+        injectUnnestOperator(context, joinOp, leftInputVar, LEFT);
+        injectUnnestOperator(context, joinOp, rightInputVar, RIGHT);
 
         return false;
+    }
+
+    private void injectUnnestOperator(IOptimizationContext context, AbstractBinaryJoinOperator joinOp,
+            LogicalVariable inputVar, int side) {
+        Mutable<ILogicalOperator> sideOp = joinOp.getInputs().get(side);
+        LogicalVariable sideVar = context.newVar();
+        VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
+        UnnestOperator sideUnnestOp = new UnnestOperator(sideVar,
+                new MutableObject<>(new UnnestingFunctionCallExpression(
+                        BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
+                        new MutableObject<>(sideInputVar),
+                        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
+                                new ARectangle(new APoint(MIN_X, MIN_Y), new APoint(MAX_X, MAX_Y))))),
+                        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(NUM_ROWS)))),
+                        new MutableObject<>(
+                                new ConstantExpression(new AsterixConstantValue(new AInt64(NUM_COLUMNS)))))));
+        sideUnnestOp.getInputs().add(new MutableObject<>(sideOp.getValue()));
+        sideOp.setValue(sideUnnestOp);
     }
 }
