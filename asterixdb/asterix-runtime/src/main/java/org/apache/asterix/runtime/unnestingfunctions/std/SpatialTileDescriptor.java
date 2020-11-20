@@ -50,13 +50,13 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class SpatialTilesDescriptor extends AbstractUnnestingFunctionDynamicDescriptor {
+public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new SpatialTilesDescriptor();
+            return new SpatialTileDescriptor();
         }
     };
 
@@ -115,8 +115,8 @@ public class SpatialTilesDescriptor extends AbstractUnnestingFunctionDynamicDesc
                         ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes2[offset2]);
                         ATypeTag tag3 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes3[offset3]);
 
-                        if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.RECTANGLE)
-                                && (tag2 == ATypeTag.BIGINT) && (tag3 == ATypeTag.BIGINT)) {
+                        if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.RECTANGLE) && (tag2 == ATypeTag.BIGINT)
+                                && (tag3 == ATypeTag.BIGINT)) {
                             double x1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
                             double y1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
