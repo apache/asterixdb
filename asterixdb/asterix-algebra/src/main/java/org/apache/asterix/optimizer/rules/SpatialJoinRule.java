@@ -69,9 +69,8 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-
+        // Current operator should be a join.
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
-        // current operator should be a join.
         if (op.getOperatorTag() != LogicalOperatorTag.INNERJOIN
                 && op.getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
             return false;
@@ -97,8 +96,8 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        ILogicalExpression leftOperatingExpr = inputExprs.get(0).getValue();
-        ILogicalExpression rightOperatingExpr = inputExprs.get(1).getValue();
+        ILogicalExpression leftOperatingExpr = inputExprs.get(LEFT).getValue();
+        ILogicalExpression rightOperatingExpr = inputExprs.get(RIGHT).getValue();
 
         // left and right expressions should be variables.
         if (leftOperatingExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE
@@ -109,9 +108,8 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         LOGGER.info("spatial-intersect is called");
 
         // Gets both input branches of the spatial join.
-        List<Mutable<ILogicalOperator>> inputOps = joinOp.getInputs();
-        ILogicalOperator leftInputOp = inputOps.get(0).getValue();
-        ILogicalOperator rightInputOp = inputOps.get(1).getValue();
+        Mutable<ILogicalOperator> leftOp = joinOp.getInputs().get(LEFT);
+        Mutable<ILogicalOperator> rightOp = joinOp.getInputs().get(RIGHT);
 
         // Extract left and right variable of the predicate
         LogicalVariable inputVar0 = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
@@ -120,7 +118,7 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         LogicalVariable leftInputVar;
         LogicalVariable rightInputVar;
         Collection<LogicalVariable> liveVars = new HashSet<>();
-        VariableUtilities.getLiveVariables(leftInputOp, liveVars);
+        VariableUtilities.getLiveVariables(leftOp.getValue(), liveVars);
         if (liveVars.contains(inputVar0)) {
             leftInputVar = inputVar0;
             rightInputVar = inputVar1;
@@ -130,15 +128,13 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         }
 
         // Inject unnest operator to the left and right branch of the join operator
-        injectUnnestOperator(context, joinOp, leftInputVar, LEFT);
-        injectUnnestOperator(context, joinOp, rightInputVar, RIGHT);
+        injectUnnestOperator(context, leftOp, leftInputVar);
+        injectUnnestOperator(context, rightOp, rightInputVar);
 
         return false;
     }
 
-    private void injectUnnestOperator(IOptimizationContext context, AbstractBinaryJoinOperator joinOp,
-            LogicalVariable inputVar, int side) {
-        Mutable<ILogicalOperator> sideOp = joinOp.getInputs().get(side);
+    private void injectUnnestOperator(IOptimizationContext context, Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar) {
         LogicalVariable sideVar = context.newVar();
         VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar,
