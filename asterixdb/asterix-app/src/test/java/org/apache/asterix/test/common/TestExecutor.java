@@ -1035,6 +1035,7 @@ public class TestExecutor {
                 break;
             case "pollget":
             case "pollquery":
+            case "pollpost":
                 poll(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
                         expectedResultFileCtxs, testFile, actualPath, ctx.getType().substring("poll".length()),
                         expectedWarnings, plainExecutor);
