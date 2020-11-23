@@ -95,5 +95,11 @@
         <output-dir compare="Text">common/jsonl</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common">
+      <compilation-unit name="query-with-limit">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">query-with-limit</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
