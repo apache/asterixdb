@@ -27,7 +27,6 @@ import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.base.ARectangle;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -39,6 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
@@ -132,18 +132,21 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         LogicalVariable leftTileIdVar = injectUnnestOperator(context, leftOp, leftInputVar);
         LogicalVariable rightTileIdVar = injectUnnestOperator(context, rightOp, rightInputVar);
 
-        ScalarFunctionCallExpression tileIdEquiJoinCondition = new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
-                new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
-                new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
-        ScalarFunctionCallExpression updatedJoinCondition = new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
-                new MutableObject<>(tileIdEquiJoinCondition),
-                new MutableObject<>(joinCondition));
+        // Update the join conditions with the tile Id equality condition
+        ScalarFunctionCallExpression tileIdEquiJoinCondition =
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
+                        new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
+                        new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
+        ScalarFunctionCallExpression updatedJoinCondition =
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
+                        new MutableObject<>(tileIdEquiJoinCondition), new MutableObject<>(joinCondition));
         joinConditionRef.setValue(updatedJoinCondition);
 
         return true;
     }
 
-    private LogicalVariable injectUnnestOperator(IOptimizationContext context, Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar) {
+    private LogicalVariable injectUnnestOperator(IOptimizationContext context, Mutable<ILogicalOperator> sideOp,
+            LogicalVariable inputVar) {
         LogicalVariable sideVar = context.newVar();
         VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar,

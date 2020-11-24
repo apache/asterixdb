@@ -411,6 +411,7 @@ import org.apache.asterix.runtime.evaluators.functions.NumericUnaryMinusDescript
 import org.apache.asterix.runtime.evaluators.functions.OrDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.RandomDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.RandomWithSeedDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ReferenceTileDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SleepDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialAreaDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
@@ -1081,6 +1082,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(CircleRadiusAccessor.FACTORY);
         fc.add(CircleCenterAccessor.FACTORY);
         fc.add(LineRectanglePolygonAccessor.FACTORY);
+        fc.add(ReferenceTileDescriptor.FACTORY);
 
         // full-text function
         fc.add(FullTextContainsDescriptor.FACTORY);

@@ -1235,6 +1235,8 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier CAST_TYPE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast", 1);
     public static final FunctionIdentifier CAST_TYPE_LAX =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast-lax", 1);
+    public static final FunctionIdentifier REFERENCE_TILE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "reference-tile", 5);
 
     public static final FunctionIdentifier CREATE_UUID =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-uuid", 0);
@@ -2140,6 +2142,7 @@ public class BuiltinFunctions {
         addFunction(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE, true);
         //        addFunction(SPATIAL_TILE, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addFunction(SPATIAL_TILE, AInt32TypeComputer.INSTANCE, true);
+        addFunction(REFERENCE_TILE, AInt32TypeComputer.INSTANCE, true);
 
         //geo functions
         addFunction(ST_AREA, ADoubleTypeComputer.INSTANCE, true);
