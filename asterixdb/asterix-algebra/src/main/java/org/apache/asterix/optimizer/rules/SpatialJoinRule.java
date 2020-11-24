@@ -27,6 +27,7 @@ import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.base.ARectangle;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -128,13 +129,19 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         }
 
         // Inject unnest operator to the left and right branch of the join operator
-        injectUnnestOperator(context, leftOp, leftInputVar);
-        injectUnnestOperator(context, rightOp, rightInputVar);
+        LogicalVariable leftTileIdVar = injectUnnestOperator(context, leftOp, leftInputVar);
+        LogicalVariable rightTileIdVar = injectUnnestOperator(context, rightOp, rightInputVar);
 
-        return false;
+        ScalarFunctionCallExpression tileIdEquiJoinCondition = new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
+                new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
+                new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
+
+        exprRef.setValue(tileIdEquiJoinCondition);
+
+        return true;
     }
 
-    private void injectUnnestOperator(IOptimizationContext context, Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar) {
+    private LogicalVariable injectUnnestOperator(IOptimizationContext context, Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar) {
         LogicalVariable sideVar = context.newVar();
         VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar,
@@ -148,5 +155,6 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
                                 new ConstantExpression(new AsterixConstantValue(new AInt64(NUM_COLUMNS)))))));
         sideUnnestOp.getInputs().add(new MutableObject<>(sideOp.getValue()));
         sideOp.setValue(sideUnnestOp);
+        return sideVar;
     }
 }
