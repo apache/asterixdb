@@ -55,11 +55,11 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
     private static final int LEFT = 0;
     private static final int RIGHT = 1;
     private static final double MIN_X = -180.0;
-    private static final double MIN_Y = 83.0;
+    private static final double MIN_Y = -83.0;
     private static final double MAX_X = 180.0;
     private static final double MAX_Y = 90.0;
-    private static final int NUM_ROWS = 100;
-    private static final int NUM_COLUMNS = 100;
+    private static final int NUM_ROWS = 50;
+    private static final int NUM_COLUMNS = 50;
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
