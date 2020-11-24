@@ -79,14 +79,14 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
 
         // Finds SPATIAL_INTERSECT function in the join condition.
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) op;
-        Mutable<ILogicalExpression> exprRef = joinOp.getCondition();
-        ILogicalExpression exp = exprRef.getValue();
+        Mutable<ILogicalExpression> joinConditionRef = joinOp.getCondition();
+        ILogicalExpression joinCondition = joinConditionRef.getValue();
 
-        if (exp.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+        if (joinCondition.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
 
-        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) exp;
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) joinCondition;
         if (!funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
             return false;
         }
@@ -135,8 +135,10 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         ScalarFunctionCallExpression tileIdEquiJoinCondition = new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
                 new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
                 new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
-
-        exprRef.setValue(tileIdEquiJoinCondition);
+        ScalarFunctionCallExpression updatedJoinCondition = new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
+                new MutableObject<>(tileIdEquiJoinCondition),
+                new MutableObject<>(joinCondition));
+        joinConditionRef.setValue(updatedJoinCondition);
 
         return true;
     }
