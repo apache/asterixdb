@@ -132,14 +132,30 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         LogicalVariable leftTileIdVar = injectUnnestOperator(context, leftOp, leftInputVar);
         LogicalVariable rightTileIdVar = injectUnnestOperator(context, rightOp, rightInputVar);
 
+        // Compute reference tile ID
+        ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.REFERENCE_TILE),
+                new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
+                new MutableObject<>(new VariableReferenceExpression(rightInputVar)),
+                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
+                        new ARectangle(new APoint(MIN_X, MIN_Y), new APoint(MAX_X, MAX_Y))))),
+                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(NUM_ROWS)))),
+                new MutableObject<>(
+                        new ConstantExpression(new AsterixConstantValue(new AInt64(NUM_COLUMNS)))));
+
         // Update the join conditions with the tile Id equality condition
         ScalarFunctionCallExpression tileIdEquiJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
                         new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
                         new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
+        ScalarFunctionCallExpression referenceIdEquiJoinCondition =
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
+                        new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
+                        new MutableObject<>(referenceTileId));
         ScalarFunctionCallExpression updatedJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
-                        new MutableObject<>(tileIdEquiJoinCondition), new MutableObject<>(joinCondition));
+                        new MutableObject<>(tileIdEquiJoinCondition),
+                        new MutableObject<>(referenceIdEquiJoinCondition),
+                        new MutableObject<>(joinCondition));
         joinConditionRef.setValue(updatedJoinCondition);
 
         return true;

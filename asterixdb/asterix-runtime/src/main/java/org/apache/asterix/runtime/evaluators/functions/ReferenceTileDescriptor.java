@@ -146,8 +146,8 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                             double y = Math.max(ay1, by1);
 
                             // Compute the tile ID of the reference point
-                            int row = (int) Math.floor((x - minX) * rows / (maxX - minX));
-                            int col = (int) Math.floor((y - minY) * columns / (maxY - minY));
+                            int row = (int) Math.floor((y - minY) * rows / (maxY - minY));
+                            int col = (int) Math.floor((x - minX) * columns / (maxX - minX));
                             int tileId = row * columns + col;
                             try {
                                 out.writeByte(ATypeTag.SERIALIZED_INT32_TYPE_TAG);
