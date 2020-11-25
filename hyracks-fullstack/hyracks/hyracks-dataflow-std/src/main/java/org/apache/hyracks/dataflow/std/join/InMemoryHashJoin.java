@@ -32,6 +32,7 @@ import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -124,8 +125,10 @@ public class InMemoryHashJoin {
             storedTuplePointer.reset(bIndex, i);
             // If an insertion fails, then tries to insert the same tuple pointer again after compacting the table.
             if (!table.insert(entry, storedTuplePointer)) {
-                // TODO(ali): should check if insertion failed even after compaction and take action
-                compactTableAndInsertAgain(entry, storedTuplePointer);
+                if (!compactTableAndInsertAgain(entry, storedTuplePointer)) {
+                    throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                            "Record insertion failed in in-memory hash join even after compaction.");
+                }
             }
         }
     }
