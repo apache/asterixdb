@@ -53,9 +53,16 @@ class ExternalScalarJavaFunctionEvaluator extends ExternalScalarFunctionEvaluato
 
         String classname = finfo.getExternalIdentifier().get(0);
         try {
-            Class<?> clazz = Class.forName(classname, true, library.getClassLoader());
-            IFunctionFactory externalFunctionFactory = (IFunctionFactory) clazz.newInstance();
-            externalFunctionInstance = (IExternalScalarFunction) externalFunctionFactory.getExternalFunction();
+            //first, check if this class is assignable to the correct interface before running static initializers that
+            //may be dangerous
+            Class<?> clazz = Class.forName(classname, false, library.getClassLoader());
+            if (IFunctionFactory.class.isAssignableFrom(clazz)) {
+                //check if clazz implements IFunctionFactory
+                IFunctionFactory externalFunctionFactory = (IFunctionFactory) clazz.newInstance();
+                externalFunctionInstance = (IExternalScalarFunction) externalFunctionFactory.getExternalFunction();
+            } else {
+                throw new ClassCastException("Specified class does not implement IFunctionFactory");
+            }
         } catch (Exception e) {
             throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNABLE_TO_LOAD_CLASS, e, classname);
         }
