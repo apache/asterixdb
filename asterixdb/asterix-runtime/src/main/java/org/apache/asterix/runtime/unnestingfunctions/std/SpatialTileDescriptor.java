@@ -181,20 +181,15 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                     @SuppressWarnings("unchecked")
                     @Override
                     public boolean step(IPointable result) throws HyracksDataException {
-                        try {
-                            if (pos < tileValues.size()) {
-                                aInt32.setValue(tileValues.get(pos));
-                                resultStorage.reset();
-                                intSerde.serialize(aInt32, resultStorage.getDataOutput());
-                                result.set(resultStorage);
-                                ++pos;
-                                return true;
-                            } else {
-                                return false;
-                            }
-                        } catch (IOException e) {
-                            throw HyracksDataException.create(e);
+                        if (pos < tileValues.size()) {
+                            aInt32.setValue(tileValues.get(pos));
+                            resultStorage.reset();
+                            intSerde.serialize(aInt32, resultStorage.getDataOutput());
+                            result.set(resultStorage);
+                            ++pos;
+                            return true;
                         }
+                        return false;
                     }
                 };
             }
