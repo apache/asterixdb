@@ -6,24 +6,24 @@
           -- STREAM_SELECT  |PARTITIONED|
             -- STREAM_PROJECT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH  |PARTITIONED|
+                -- BTREE_SEARCH (test.testdst2.testdst2)  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$75(ASC)]  |PARTITIONED|
+                    -- STABLE_SORT [$$80(ASC)]  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- BTREE_SEARCH  |PARTITIONED|
+                            -- BTREE_SEARCH (test.testdst2.sec_Idx)  |PARTITIONED|
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   -- ASSIGN  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- SORT_GROUP_BY[$$73]  |PARTITIONED|
+                                      -- SORT_GROUP_BY[$$78]  |PARTITIONED|
                                               {
                                                 -- AGGREGATE  |LOCAL|
                                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                                               }
-                                        -- HASH_PARTITION_EXCHANGE [$$73]  |PARTITIONED|
-                                          -- SORT_GROUP_BY[$$66]  |PARTITIONED|
+                                        -- HASH_PARTITION_EXCHANGE [$$78]  |PARTITIONED|
+                                          -- SORT_GROUP_BY[$$71]  |PARTITIONED|
                                                   {
                                                     -- AGGREGATE  |LOCAL|
                                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -33,6 +33,6 @@
                                                 -- ASSIGN  |PARTITIONED|
                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      -- DATASOURCE_SCAN (test.testdst)  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -33,8 +33,8 @@ public class PlanPrettyPrinter {
         return new LogicalOperatorPrettyPrintVisitor();
     }
 
-    public static void printPhysicalOps(ILogicalPlan plan, AlgebricksStringBuilderWriter out, int indent)
-            throws AlgebricksException {
-        AbstractLogicalOperatorPrettyPrintVisitor.printPhysicalOps(plan, out, indent);
+    public static void printPhysicalOps(ILogicalPlan plan, AlgebricksStringBuilderWriter out, int indent,
+            boolean verbose) throws AlgebricksException {
+        AbstractLogicalOperatorPrettyPrintVisitor.printPhysicalOps(plan, out, indent, verbose);
     }
 }

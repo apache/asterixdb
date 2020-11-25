@@ -130,4 +130,13 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
         ILogicalOperator srcExchange = scan.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, scan, 0);
     }
+
+    @Override
+    public String toString(boolean verbose) {
+        String ss = super.toString(verbose);
+        if (verbose) {
+            ss += " (" + dataSource.getId() + ')';
+        }
+        return ss;
+    }
 }

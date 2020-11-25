@@ -3,13 +3,13 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- SORT_MERGE_EXCHANGE [$$l_returnflag(ASC), $$l_linestatus(ASC) ]  |PARTITIONED|
-          -- SORT_GROUP_BY[$$161, $$162]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$165, $$166]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- HASH_PARTITION_EXCHANGE [$$161, $$162]  |PARTITIONED|
-              -- SORT_GROUP_BY[$$129, $$130]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$165, $$166]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$133, $$134]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -20,6 +20,6 @@
                       -- ASSIGN  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN  |PARTITIONED|
+                            -- DATASOURCE_SCAN (tpch.LineItem)  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

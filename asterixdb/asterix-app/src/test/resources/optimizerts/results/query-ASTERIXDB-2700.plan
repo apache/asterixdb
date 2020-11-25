@@ -6,30 +6,30 @@
           -- STREAM_SELECT  |PARTITIONED|
             -- STREAM_PROJECT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH  |PARTITIONED|
+                -- BTREE_SEARCH (bigfun.GleambookMessagesComposite.GleambookMessagesComposite)  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$56(ASC), $$57(ASC)]  |PARTITIONED|
+                    -- STABLE_SORT [$$59(ASC), $$60(ASC)]  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- BTREE_SEARCH  |PARTITIONED|
+                            -- BTREE_SEARCH (bigfun.GleambookMessagesComposite.authorIdIx)  |PARTITIONED|
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
                                 -- ASSIGN  |PARTITIONED|
-                                  -- SORT_MERGE_EXCHANGE [$$42(ASC) ]  |PARTITIONED|
-                                    -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+                                  -- SORT_MERGE_EXCHANGE [$$45(ASC) ]  |PARTITIONED|
+                                    -- STABLE_SORT [$$45(ASC)]  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           -- STREAM_SELECT  |PARTITIONED|
                                             -- ASSIGN  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- BTREE_SEARCH  |PARTITIONED|
+                                                  -- BTREE_SEARCH (bigfun.GleambookUsersComposite.GleambookUsersComposite)  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- STABLE_SORT [$$53(ASC), $$54(ASC)]  |PARTITIONED|
+                                                      -- STABLE_SORT [$$56(ASC), $$57(ASC)]  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           -- STREAM_PROJECT  |PARTITIONED|
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              -- BTREE_SEARCH  |PARTITIONED|
+                                                              -- BTREE_SEARCH (bigfun.GleambookUsersComposite.usrSinceIx)  |PARTITIONED|
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                   -- ASSIGN  |PARTITIONED|
                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

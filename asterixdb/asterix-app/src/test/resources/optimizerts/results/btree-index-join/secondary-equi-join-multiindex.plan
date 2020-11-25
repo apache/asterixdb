@@ -5,18 +5,18 @@
         -- STREAM_SELECT  |PARTITIONED|
           -- STREAM_PROJECT  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- BTREE_SEARCH  |PARTITIONED|
+              -- BTREE_SEARCH (test.FacebookMessages.FacebookMessages)  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- STABLE_SORT [$$47(ASC)]  |PARTITIONED|
+                  -- STABLE_SORT [$$49(ASC)]  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       -- STREAM_PROJECT  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- BTREE_SEARCH  |PARTITIONED|
+                          -- BTREE_SEARCH (test.FacebookMessages.fbmIdxAutId)  |PARTITIONED|
                             -- BROADCAST_EXCHANGE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ASSIGN  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH  |PARTITIONED|
+                                    -- BTREE_SEARCH (test.FacebookUsers.FacebookUsers)  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- ASSIGN  |PARTITIONED|
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -20,7 +20,7 @@
                                       -- ASSIGN  |PARTITIONED|
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                            -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -31,16 +31,16 @@
                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
                                     -- STREAM_PROJECT  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                        -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
               -- AGGREGATE  |UNPARTITIONED|
-                -- SORT_MERGE_EXCHANGE [$$47(ASC) ]  |PARTITIONED|
+                -- SORT_MERGE_EXCHANGE [$$50(ASC) ]  |PARTITIONED|
                   -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- STABLE_SORT [$$47(ASC)]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
+                      -- STABLE_SORT [$$50(ASC)]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
                           -- NESTED_LOOP  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- REPLICATE  |PARTITIONED|
@@ -49,7 +49,7 @@
                                     -- ASSIGN  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                          -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -57,6 +57,6 @@
                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                      -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -4,13 +4,13 @@
       -- STREAM_SELECT  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH  |PARTITIONED|
+            -- BTREE_SEARCH (test.TestSet.TestSet)  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [$$22(ASC)]  |PARTITIONED|
+                -- STABLE_SORT [$$23(ASC)]  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH  |PARTITIONED|
+                        -- BTREE_SEARCH (test.TestSet.TestSetIndex)  |PARTITIONED|
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
                             -- UNNEST  |UNPARTITIONED|
                               -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

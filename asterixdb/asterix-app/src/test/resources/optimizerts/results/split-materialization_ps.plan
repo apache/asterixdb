@@ -3,8 +3,8 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- STABLE_SORT [$$85(ASC), $$86(ASC)]  |PARTITIONED|
-            -- RANGE_PARTITION_EXCHANGE [$$85(ASC), $$86(ASC)]  |PARTITIONED|
+          -- STABLE_SORT [$$91(ASC), $$92(ASC)]  |PARTITIONED|
+            -- RANGE_PARTITION_EXCHANGE [$$91(ASC), $$92(ASC)]  |PARTITIONED|
               -- FORWARD  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- REPLICATE  |PARTITIONED|
@@ -20,7 +20,7 @@
                                       -- STREAM_SELECT  |PARTITIONED|
                                         -- ASSIGN  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                            -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -30,7 +30,7 @@
                                 -- STREAM_SELECT  |PARTITIONED|
                                   -- ASSIGN  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                      -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -52,7 +52,7 @@
                                                 -- STREAM_SELECT  |PARTITIONED|
                                                   -- ASSIGN  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -62,6 +62,6 @@
                                           -- STREAM_SELECT  |PARTITIONED|
                                             -- ASSIGN  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

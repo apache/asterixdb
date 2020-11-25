@@ -9,17 +9,17 @@
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- REPLICATE  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- SORT_GROUP_BY[$$43, $$44]  |PARTITIONED|
+                      -- SORT_GROUP_BY[$$47, $$48]  |PARTITIONED|
                               {
                                 -- AGGREGATE  |LOCAL|
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                               }
-                        -- HASH_PARTITION_EXCHANGE [$$43, $$44]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$47, $$48]  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                  -- DATASOURCE_SCAN (`gby-using-orderby-desc`.Customers)  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -29,16 +29,16 @@
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- REPLICATE  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- SORT_GROUP_BY[$$43, $$44]  |PARTITIONED|
+                              -- SORT_GROUP_BY[$$47, $$48]  |PARTITIONED|
                                       {
                                         -- AGGREGATE  |LOCAL|
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                                       }
-                                -- HASH_PARTITION_EXCHANGE [$$43, $$44]  |PARTITIONED|
+                                -- HASH_PARTITION_EXCHANGE [$$47, $$48]  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ASSIGN  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                          -- DATASOURCE_SCAN (`gby-using-orderby-desc`.Customers)  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

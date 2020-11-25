@@ -3,52 +3,52 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- STABLE_SORT [$$66(ASC)]  |PARTITIONED|
-            -- RANGE_PARTITION_EXCHANGE [$$66(ASC)]  |PARTITIONED|
+          -- STABLE_SORT [$$69(ASC)]  |PARTITIONED|
+            -- RANGE_PARTITION_EXCHANGE [$$69(ASC)]  |PARTITIONED|
               -- FORWARD  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- REPLICATE  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- PRE_CLUSTERED_GROUP_BY[$$56]  |PARTITIONED|
+                      -- PRE_CLUSTERED_GROUP_BY[$$59]  |PARTITIONED|
                               {
                                 -- AGGREGATE  |LOCAL|
                                   -- STREAM_SELECT  |LOCAL|
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                               }
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- STABLE_SORT [$$56(ASC), $$57(ASC)]  |PARTITIONED|
-                            -- HASH_PARTITION_EXCHANGE [$$56]  |PARTITIONED|
+                          -- STABLE_SORT [$$59(ASC), $$60(ASC)]  |PARTITIONED|
+                            -- HASH_PARTITION_EXCHANGE [$$59]  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- HYBRID_HASH_JOIN [$$72][$$56]  |PARTITIONED|
+                                  -- HYBRID_HASH_JOIN [$$75][$$59]  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ASSIGN  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- REPLICATE  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     -- ASSIGN  |PARTITIONED|
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                    -- HASH_PARTITION_EXCHANGE [$$56]  |PARTITIONED|
+                                    -- HASH_PARTITION_EXCHANGE [$$59]  |PARTITIONED|
                                       -- STREAM_SELECT  |PARTITIONED|
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           -- ASSIGN  |PARTITIONED|
                                             -- STREAM_PROJECT  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- STABLE_SORT [$$76(ASC)]  |PARTITIONED|
+                                                    -- STABLE_SORT [$$79(ASC)]  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                                                        -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.TweetMessages.topicKeywordIx)  |PARTITIONED|
                                                           -- BROADCAST_EXCHANGE  |PARTITIONED|
                                                             -- STREAM_PROJECT  |PARTITIONED|
                                                               -- ASSIGN  |PARTITIONED|
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                   -- REPLICATE  |PARTITIONED|
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      -- BTREE_SEARCH  |PARTITIONED|
+                                                                      -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                           -- ASSIGN  |PARTITIONED|
                                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
@@ -60,46 +60,46 @@
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- REPLICATE  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- PRE_CLUSTERED_GROUP_BY[$$56]  |PARTITIONED|
+                                -- PRE_CLUSTERED_GROUP_BY[$$59]  |PARTITIONED|
                                         {
                                           -- AGGREGATE  |LOCAL|
                                             -- STREAM_SELECT  |LOCAL|
                                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                                         }
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- STABLE_SORT [$$56(ASC), $$57(ASC)]  |PARTITIONED|
-                                      -- HASH_PARTITION_EXCHANGE [$$56]  |PARTITIONED|
+                                    -- STABLE_SORT [$$59(ASC), $$60(ASC)]  |PARTITIONED|
+                                      -- HASH_PARTITION_EXCHANGE [$$59]  |PARTITIONED|
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- HYBRID_HASH_JOIN [$$72][$$56]  |PARTITIONED|
+                                            -- HYBRID_HASH_JOIN [$$75][$$59]  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                   -- ASSIGN  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- REPLICATE  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                          -- BTREE_SEARCH  |PARTITIONED|
+                                                          -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                               -- ASSIGN  |PARTITIONED|
                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                              -- HASH_PARTITION_EXCHANGE [$$56]  |PARTITIONED|
+                                              -- HASH_PARTITION_EXCHANGE [$$59]  |PARTITIONED|
                                                 -- STREAM_SELECT  |PARTITIONED|
                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                     -- ASSIGN  |PARTITIONED|
                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                          -- BTREE_SEARCH  |PARTITIONED|
+                                                          -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              -- STABLE_SORT [$$76(ASC)]  |PARTITIONED|
+                                                              -- STABLE_SORT [$$79(ASC)]  |PARTITIONED|
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                                                                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.TweetMessages.topicKeywordIx)  |PARTITIONED|
                                                                     -- BROADCAST_EXCHANGE  |PARTITIONED|
                                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                                         -- ASSIGN  |PARTITIONED|
                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                             -- REPLICATE  |PARTITIONED|
                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                                                -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                     -- ASSIGN  |PARTITIONED|
                                                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

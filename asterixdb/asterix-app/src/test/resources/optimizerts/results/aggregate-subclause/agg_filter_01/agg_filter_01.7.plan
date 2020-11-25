@@ -23,13 +23,13 @@
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                           }
                     -- SORT_MERGE_EXCHANGE [$$twenty(ASC) ]  |PARTITIONED|
-                      -- SORT_GROUP_BY[$$187]  |PARTITIONED|
+                      -- SORT_GROUP_BY[$$198]  |PARTITIONED|
                               {
                                 -- AGGREGATE  |LOCAL|
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                               }
-                        -- HASH_PARTITION_EXCHANGE [$$187]  |PARTITIONED|
-                          -- SORT_GROUP_BY[$$169]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$198]  |PARTITIONED|
+                          -- SORT_GROUP_BY[$$180]  |PARTITIONED|
                                   {
                                     -- AGGREGATE  |LOCAL|
                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -39,6 +39,6 @@
                                 -- ASSIGN  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                      -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

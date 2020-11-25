@@ -6,28 +6,28 @@
           -- STREAM_SELECT  |PARTITIONED|
             -- STREAM_PROJECT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH  |PARTITIONED|
+                -- BTREE_SEARCH (test.testdst3.testdst3)  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$46(ASC)]  |PARTITIONED|
+                    -- STABLE_SORT [$$49(ASC)]  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- BTREE_SEARCH  |PARTITIONED|
+                            -- BTREE_SEARCH (test.testdst3.sec3_Idx)  |PARTITIONED|
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- HYBRID_HASH_JOIN [$$43][$$39]  |PARTITIONED|
-                                      -- HASH_PARTITION_EXCHANGE [$$43]  |PARTITIONED|
+                                    -- HYBRID_HASH_JOIN [$$46][$$42]  |PARTITIONED|
+                                      -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
                                         -- ASSIGN  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                              -- DATASOURCE_SCAN (test.testdst)  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                      -- HASH_PARTITION_EXCHANGE [$$39]  |PARTITIONED|
+                                      -- HASH_PARTITION_EXCHANGE [$$42]  |PARTITIONED|
                                         -- ASSIGN  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                              -- DATASOURCE_SCAN (test.testdst2)  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

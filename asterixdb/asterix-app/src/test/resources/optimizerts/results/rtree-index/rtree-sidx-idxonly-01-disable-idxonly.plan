@@ -8,13 +8,13 @@
               -- STREAM_SELECT  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- BTREE_SEARCH  |PARTITIONED|
+                    -- BTREE_SEARCH (test.Fragile_raw.Fragile_raw)  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- STABLE_SORT [$$60(ASC)]  |PARTITIONED|
+                        -- STABLE_SORT [$$63(ASC)]  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- RTREE_SEARCH  |PARTITIONED|
+                                -- RTREE_SEARCH (test.Fragile_raw.cfLocation)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- ASSIGN  |PARTITIONED|
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

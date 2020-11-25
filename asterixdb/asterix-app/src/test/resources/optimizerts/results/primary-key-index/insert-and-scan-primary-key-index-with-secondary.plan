@@ -8,12 +8,12 @@
               -- INSERT_DELETE  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- MATERIALIZE  |PARTITIONED|
-                    -- HASH_PARTITION_EXCHANGE [$$15]  |PARTITIONED|
+                    -- HASH_PARTITION_EXCHANGE [$$16]  |PARTITIONED|
                       -- ASSIGN  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ASSIGN  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                -- DATASOURCE_SCAN (test.myData)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -255,9 +255,9 @@ public class APIFramework {
             compiler.optimize();
             if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
                 if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)) {
-                    // For Optimizer tests.
+                    // For Optimizer tests. Print physical operators in verbose mode.
                     AlgebricksStringBuilderWriter buf = new AlgebricksStringBuilderWriter(PlanPrettyPrinter.INIT_SIZE);
-                    PlanPrettyPrinter.printPhysicalOps(plan, buf, 0);
+                    PlanPrettyPrinter.printPhysicalOps(plan, buf, 0, true);
                     output.out().write(buf.toString());
                 } else {
                     if (isQuery || isLoad) {

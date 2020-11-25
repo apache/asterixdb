@@ -1,25 +1,25 @@
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
+  -- SORT_MERGE_EXCHANGE [$$25(ASC) ]  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- STREAM_SELECT  |PARTITIONED|
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$20]  |PARTITIONED|
+          -- PRE_CLUSTERED_GROUP_BY[$$21]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- STREAM_SELECT  |LOCAL|
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
-                -- HASH_PARTITION_EXCHANGE [$$20]  |PARTITIONED|
+              -- STABLE_SORT [$$21(ASC)]  |PARTITIONED|
+                -- HASH_PARTITION_EXCHANGE [$$21]  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- HYBRID_HASH_JOIN [$$21][$#1]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$21]  |PARTITIONED|
+                      -- HYBRID_HASH_JOIN [$$22][$#1]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$22]  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                -- DATASOURCE_SCAN (tpch.Customer)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         -- HASH_PARTITION_EXCHANGE [$#1]  |PARTITIONED|

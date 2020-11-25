@@ -93,4 +93,13 @@ public abstract class IndexSearchPOperator extends AbstractScanPOperator {
     public boolean expensiveThanMaterialization() {
         return true;
     }
+
+    @Override
+    public String toString(boolean verbose) {
+        String ss = super.toString();
+        if (verbose) {
+            ss += " (" + idx.getDataSource().getId() + '.' + idx.getId() + ')';
+        }
+        return ss;
+    }
 }

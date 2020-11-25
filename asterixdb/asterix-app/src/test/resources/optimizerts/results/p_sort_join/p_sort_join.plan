@@ -9,7 +9,7 @@
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- REPLICATE  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- SORT_GROUP_BY[$$81]  |PARTITIONED|
+                      -- SORT_GROUP_BY[$$87]  |PARTITIONED|
                               {
                                 -- AGGREGATE  |LOCAL|
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -17,25 +17,25 @@
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- HYBRID_HASH_JOIN [$$81][$$84]  |PARTITIONED|
-                                -- HASH_PARTITION_EXCHANGE [$$81]  |PARTITIONED|
-                                  -- STABLE_SORT [$$81(ASC)]  |PARTITIONED|
-                                    -- RANGE_PARTITION_EXCHANGE [$$81(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
+                              -- HYBRID_HASH_JOIN [$$87][$$90]  |PARTITIONED|
+                                -- HASH_PARTITION_EXCHANGE [$$87]  |PARTITIONED|
+                                  -- STABLE_SORT [$$87(ASC)]  |PARTITIONED|
+                                    -- RANGE_PARTITION_EXCHANGE [$$87(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ASSIGN  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                              -- DATASOURCE_SCAN (test.TestDS1)  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                -- HASH_PARTITION_EXCHANGE [$$84]  |PARTITIONED|
-                                  -- STABLE_SORT [$$84(ASC)]  |PARTITIONED|
-                                    -- RANGE_PARTITION_EXCHANGE [$$84(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
+                                -- HASH_PARTITION_EXCHANGE [$$90]  |PARTITIONED|
+                                  -- STABLE_SORT [$$90(ASC)]  |PARTITIONED|
+                                    -- RANGE_PARTITION_EXCHANGE [$$90(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ASSIGN  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                              -- DATASOURCE_SCAN (test.TestDS2)  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -45,7 +45,7 @@
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- REPLICATE  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- SORT_GROUP_BY[$$81]  |PARTITIONED|
+                              -- SORT_GROUP_BY[$$87]  |PARTITIONED|
                                       {
                                         -- AGGREGATE  |LOCAL|
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -53,24 +53,24 @@
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- HYBRID_HASH_JOIN [$$81][$$84]  |PARTITIONED|
-                                        -- HASH_PARTITION_EXCHANGE [$$81]  |PARTITIONED|
-                                          -- STABLE_SORT [$$81(ASC)]  |PARTITIONED|
-                                            -- RANGE_PARTITION_EXCHANGE [$$81(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
+                                      -- HYBRID_HASH_JOIN [$$87][$$90]  |PARTITIONED|
+                                        -- HASH_PARTITION_EXCHANGE [$$87]  |PARTITIONED|
+                                          -- STABLE_SORT [$$87(ASC)]  |PARTITIONED|
+                                            -- RANGE_PARTITION_EXCHANGE [$$87(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- ASSIGN  |PARTITIONED|
                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      -- DATASOURCE_SCAN (test.TestDS1)  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                        -- HASH_PARTITION_EXCHANGE [$$84]  |PARTITIONED|
-                                          -- STABLE_SORT [$$84(ASC)]  |PARTITIONED|
-                                            -- RANGE_PARTITION_EXCHANGE [$$84(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
+                                        -- HASH_PARTITION_EXCHANGE [$$90]  |PARTITIONED|
+                                          -- STABLE_SORT [$$90(ASC)]  |PARTITIONED|
+                                            -- RANGE_PARTITION_EXCHANGE [$$90(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- ASSIGN  |PARTITIONED|
                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      -- DATASOURCE_SCAN (test.TestDS2)  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
