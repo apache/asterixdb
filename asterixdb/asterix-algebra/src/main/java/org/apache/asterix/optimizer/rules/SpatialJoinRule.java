@@ -185,6 +185,11 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
                                 new ConstantExpression(new AsterixConstantValue(new AInt64(NUM_COLUMNS)))))));
         sideUnnestOp.getInputs().add(new MutableObject<>(sideOp.getValue()));
         sideOp.setValue(sideUnnestOp);
+        try {
+            context.computeAndSetTypeEnvironmentForOperator(sideUnnestOp);
+        } catch (AlgebricksException e) {
+            e.printStackTrace();
+        }
         return sideVar;
     }
 }
