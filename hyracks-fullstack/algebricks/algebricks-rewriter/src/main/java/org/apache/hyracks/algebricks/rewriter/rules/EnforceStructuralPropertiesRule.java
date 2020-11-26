@@ -79,7 +79,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePO
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SequentialMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortForwardPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortMergeExchangePOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.SpatialPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
@@ -98,7 +97,6 @@ import org.apache.hyracks.algebricks.core.algebra.properties.PartialBroadcastOrd
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.PropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
-import org.apache.hyracks.algebricks.core.algebra.properties.SpatialPartitionedProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
@@ -617,11 +615,6 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                     PartialBroadcastOrderedIntersectProperty pbp = (PartialBroadcastOrderedIntersectProperty) pp;
                     pop = new PartialBroadcastRangeIntersectExchangePOperator(pbp.getIntervalColumns(),
                             pbp.getNodeDomain(), pbp.getRangeMap());
-                    break;
-                }
-                case SPATIAL_PARTITIONED: {
-                    SpatialPartitionedProperty spp = (SpatialPartitionedProperty) pp;
-                    pop = new SpatialPartitionExchangePOperator(spp.getColumnSet(), spp.getNodeDomain());
                     break;
                 }
                 default: {

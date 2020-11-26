@@ -145,25 +145,25 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         //                        new ConstantExpression(new AsterixConstantValue(new AInt64(NUM_COLUMNS)))));
 
         // Update the join conditions with the tile Id equality condition
-//        ScalarFunctionCallExpression tileIdEquiJoinCondition =
-//                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
-//                        new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
-//                        new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
+        //        ScalarFunctionCallExpression tileIdEquiJoinCondition =
+        //                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
+        //                        new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
+        //                        new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
         //        ScalarFunctionCallExpression referenceIdEquiJoinCondition =
         //                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
         //                        new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
         //                        new MutableObject<>(referenceTileId));
-//        ScalarFunctionCallExpression spatialJoinCondition = new ScalarFunctionCallExpression(
-//                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
-//                new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
-//                new MutableObject<>(new VariableReferenceExpression(rightInputVar)));
+        //        ScalarFunctionCallExpression spatialJoinCondition = new ScalarFunctionCallExpression(
+        //                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
+        //                new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
+        //                new MutableObject<>(new VariableReferenceExpression(rightInputVar)));
         ScalarFunctionCallExpression updatedJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
                         new MutableObject<>(new ConstantExpression(new AsterixConstantValue(ABoolean.valueOf(true)))),
                         new MutableObject<>(new ConstantExpression(new AsterixConstantValue(ABoolean.valueOf(true))))
-//                        new MutableObject<>(tileIdEquiJoinCondition)
-                        //                        new MutableObject<>(referenceIdEquiJoinCondition),
-//                        new MutableObject<>(spatialJoinCondition)
+                //                        new MutableObject<>(tileIdEquiJoinCondition)
+                //                        new MutableObject<>(referenceIdEquiJoinCondition),
+                //                        new MutableObject<>(spatialJoinCondition)
                 );
         joinConditionRef.setValue(updatedJoinCondition);
 

@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.unnestingfunctions.std;
 
 import java.io.DataOutput;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

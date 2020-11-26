@@ -35,12 +35,8 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class AsterixJoinUtils {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final int LEFT = 0;
     private static final int RIGHT = 1;
@@ -62,53 +58,28 @@ public class AsterixJoinUtils {
         List<LogicalVariable> varsLeft = op.getInputs().get(LEFT).getValue().getSchema();
         List<LogicalVariable> varsRight = op.getInputs().get(RIGHT).getValue().getSchema();
         AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) conditionLE;
-
-        //        FunctionIdentifier spatialFunctionIdentifier =
-        //                SpatialJoinUtils.isSpatialJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
-        //        if (spatialFunctionIdentifier != null) {
-        //            LOGGER.info("is spatial join");
-        ////            SpatialJoinUtils.setSpatialJoinOp(op, spatialFunctionIdentifier, sideLeft, sideRight, context);
-        //            Mutable<ILogicalOperator> leftOp = op.getInputs().get(LEFT);
-        //            LogicalVariable leftVar = context.newVar();
-        //            VariableReferenceExpression sideLeftVar = new VariableReferenceExpression(sideLeft.get(0));
-        //            UnnestOperator leftUnnestOp = new UnnestOperator(leftVar,
-        //                    new MutableObject<>(new UnnestingFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
-        //                            new MutableObject<>(sideLeftVar),
-        //                            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new ARectangle(new APoint(0, 0), new APoint(100, 100))))),
-        //                            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(100)))),
-        //                            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(100)))))));
-        //            leftUnnestOp.getInputs().add(new MutableObject<>(leftOp.getValue()));
-        //            leftOp.setValue(leftUnnestOp);
-        //
-        //            Mutable<ILogicalOperator> rightOp = op.getInputs().get(RIGHT);
-        //        } else {
-        //            LOGGER.info("is not spatial join");
-        //        }
-
         FunctionIdentifier fi =
                 IntervalJoinUtils.isIntervalJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
-        if (fi != null) {
-            RangeAnnotation rangeAnnotation = IntervalJoinUtils.findRangeAnnotation(fexp);
-            if (rangeAnnotation == null) {
-                return;
-            }
-            //Check RangeMap type
-            RangeMap rangeMap = (RangeMap) rangeAnnotation.getObject();
-            if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize()
-                    && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
-                    && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
-                IWarningCollector warningCollector = context.getWarningCollector();
-                if (warningCollector.shouldWarn()) {
-                    warningCollector.warn(Warning.forHyracks(op.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
-                            "Date, DateTime, and Time are only range hints types supported for interval joins"));
-                }
-                return;
-            }
-            IntervalPartitions intervalPartitions = IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft,
-                    sideRight, rangeMap, context, LEFT, RIGHT);
-            IntervalJoinUtils.setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, context, intervalPartitions);
+        if (fi == null) {
+            return;
         }
-
-        return;
+        RangeAnnotation rangeAnnotation = IntervalJoinUtils.findRangeAnnotation(fexp);
+        if (rangeAnnotation == null) {
+            return;
+        }
+        //Check RangeMap type
+        RangeMap rangeMap = (RangeMap) rangeAnnotation.getObject();
+        if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize() && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
+                && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
+            IWarningCollector warningCollector = context.getWarningCollector();
+            if (warningCollector.shouldWarn()) {
+                warningCollector.warn(Warning.forHyracks(op.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
+                        "Date, DateTime, and Time are only range hints types supported for interval joins"));
+            }
+            return;
+        }
+        IntervalPartitions intervalPartitions =
+                IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft, sideRight, rangeMap, context, LEFT, RIGHT);
+        IntervalJoinUtils.setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, context, intervalPartitions);
     }
 }

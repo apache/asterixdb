@@ -34,28 +34,16 @@ public class MToNPartialBroadcastConnectorDescriptor extends AbstractMToNConnect
 
     protected ITupleMultiPartitionComputerFactory tpcf;
 
-    private int overwrittenNumberConsumerPartitions = -1;
-
     public MToNPartialBroadcastConnectorDescriptor(IConnectorDescriptorRegistry spec,
             ITupleMultiPartitionComputerFactory tpcf) {
         super(spec);
         this.tpcf = tpcf;
     }
 
-    public MToNPartialBroadcastConnectorDescriptor(IConnectorDescriptorRegistry spec,
-            ITupleMultiPartitionComputerFactory tpcf, int nConsumerPartitions) {
-        super(spec);
-        this.tpcf = tpcf;
-        this.overwrittenNumberConsumerPartitions = nConsumerPartitions;
-    }
-
     @Override
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
             throws HyracksDataException {
-        //                if (this.overwrittenNumberConsumerPartitions > 0) {
-        //                    nConsumerPartitions = this.overwrittenNumberConsumerPartitions;
-        //                }
         return new MultiPartitionDataWriter(ctx, nConsumerPartitions, edwFactory, recordDesc,
                 tpcf.createPartitioner(ctx));
     }
