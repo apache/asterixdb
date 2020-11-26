@@ -23,6 +23,8 @@ import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
+import com.google.common.collect.ImmutableList;
+
 public interface IMetadataLockUtil {
 
     // Dataverse helpers
@@ -59,7 +61,7 @@ public interface IMetadataLockUtil {
     // Index helpers
 
     void createIndexBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
-            String datasetName) throws AlgebricksException;
+            String datasetName, String fullTextConfigName) throws AlgebricksException;
 
     void dropIndexBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
             String datasetName) throws AlgebricksException;
@@ -72,7 +74,7 @@ public interface IMetadataLockUtil {
     void dropTypeBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName, String typeName)
             throws AlgebricksException;
 
-    // Function helpers
+    // Library helpers
 
     void createLibraryBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
             String libraryName) throws AlgebricksException;
@@ -87,6 +89,22 @@ public interface IMetadataLockUtil {
 
     void dropFunctionBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
             String functionName) throws AlgebricksException;
+
+    // Full-text filter helpers
+
+    void createFullTextFilterBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
+            String fullTextFilterName) throws AlgebricksException;
+
+    void dropFullTextFilterBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
+            String fullTextFilterName) throws AlgebricksException;
+
+    // Full-text config helpers
+
+    void createFullTextConfigBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
+            String fullTextConfigName, ImmutableList<String> fullTextFilterNames) throws AlgebricksException;
+
+    void dropFullTextConfigBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
+            String fullTextFilterName) throws AlgebricksException;
 
     // Adapter helpers
 

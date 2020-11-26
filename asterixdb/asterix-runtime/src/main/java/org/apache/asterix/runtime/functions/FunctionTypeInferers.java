@@ -321,6 +321,16 @@ public final class FunctionTypeInferers {
         }
     }
 
+    public static final class FullTextContainsTypeInferer implements IFunctionTypeInferer {
+        @Override
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
+            AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+            // get the full-text config evaluator from the expr which is set in FullTextContainsParameterCheckAndSetRule
+            fd.setImmutableStates(funcExpr.getOpaqueParameters()[0]);
+        }
+    }
+
     private static IAType[] getArgumentsTypes(AbstractFunctionCallExpression funExp, IVariableTypeEnvironment ctx)
             throws AlgebricksException {
         IAType[] argsTypes = new IAType[funExp.getArguments().size()];

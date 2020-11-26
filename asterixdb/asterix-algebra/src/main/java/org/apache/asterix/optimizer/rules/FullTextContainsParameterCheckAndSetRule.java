@@ -23,12 +23,15 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.utils.FullTextUtil;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
-import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.FullTextContainsFunctionDescriptor;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -45,11 +48,13 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRef
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
-/**
- * Checks whether the given parameters of the ftcontains() function are correct during the compilation.
- */
-public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule {
+import com.google.common.base.Strings;
 
+/**
+ * Checks whether the given parameters of the ftcontains() function are correct during the compilation,
+ * and fetch the full-text config from metadata which is necessary for the ftcontains() function
+ */
+public class FullTextContainsParameterCheckAndSetRule implements IAlgebraicRewriteRule {
     // Visitor for checking and transforming ftcontains() expression
     protected FullTextContainsExpressionVisitor ftcontainsExprVisitor = new FullTextContainsExpressionVisitor();
 
@@ -59,7 +64,7 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
         if (context.checkIfInDontApplySet(this, opRef.getValue())) {
             return false;
         }
-        if (checkParameter(opRef, context)) {
+        if (checkAndSetParameter(opRef, context)) {
             OperatorPropertiesUtil.typeOpRec(opRef, context);
             return true;
         }
@@ -69,10 +74,14 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
     /**
      * Check the correctness of the parameters of the ftcontains(). Also rearrange options as arguments.
      * The expected form of ftcontains() is ftcontains(expression1, expression2, parameters as a record).
+     *
+     * If ftcontains() has the full-text config argument, this method will also fetch it (FullTextConfigDescriptor) from metadata
+     * and set it in the function expression so that the full-text config can be utilized later at run-time.
      */
-    private boolean checkParameter(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+    private boolean checkAndSetParameter(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        ftcontainsExprVisitor.setContext(context);
         boolean modified = op.acceptExpressionTransform(ftcontainsExprVisitor);
         if (modified) {
             context.addToDontApplySet(this, op);
@@ -92,8 +101,13 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
         // The number of anticipated arguments for a full-text query when a user provide option(s) as a record.
         private static final int FULLTEXT_QUERY_WITH_OPTION_NO_OF_ARGUMENTS = 3;
 
+        private IOptimizationContext context;
+
         public FullTextContainsExpressionVisitor() {
-            // no parameter is needed.
+        }
+
+        public void setContext(IOptimizationContext context) {
+            this.context = context;
         }
 
         @Override
@@ -156,14 +170,22 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
                 // Sanity check for the types of the first two parameters
                 checkFirstAndSecondParamter(oldExprs, functionName);
 
+                // We cannot make ftConfigName a class-level variable in the visitor class
+                // because the visitor may be shared between multiple threads and such a variable may be corrupted
+                String ftConfigName = null;
                 // Checks and transforms the actual full-text parameters.
                 if (numberOfCorrectArguments == FULLTEXT_QUERY_WITH_OPTION_NO_OF_ARGUMENTS) {
-                    checkValueForThirdParameter(oldExprs.get(2), newExprs, functionName);
+                    ftConfigName =
+                            checkValueForThirdParameterAndGetFullTextConfig(oldExprs.get(2), newExprs, functionName);
                 } else {
                     // no option provided case: sets the default option here.
                     setDefaultValueForThirdParameter(newExprs);
                 }
 
+                MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
+                DataverseName dataverseName = metadataProvider.getDefaultDataverseName();
+                funcExpr.setOpaqueParameters(new Object[] { FullTextUtil
+                        .fetchFilterAndCreateConfigEvaluator(metadataProvider, dataverseName, ftConfigName) });
                 // Resets the last argument.
                 funcExpr.getArguments().clear();
                 funcExpr.getArguments().addAll(newExprs);
@@ -209,9 +231,14 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
          *
          * @param expr
          * @throws AlgebricksException
+         *
+         * @return the full-text config name if specified in the function option,
+         * null if not specified which implies the default full-text config will be utilized later
          */
-        private void checkValueForThirdParameter(Mutable<ILogicalExpression> expr,
+        private String checkValueForThirdParameterAndGetFullTextConfig(Mutable<ILogicalExpression> expr,
                 List<Mutable<ILogicalExpression>> newArgs, String functionName) throws AlgebricksException {
+            String ftConfigName = null;
+
             // Get the last parameter - this should be a record-constructor.
             AbstractFunctionCallExpression openRecConsExpr = (AbstractFunctionCallExpression) expr.getValue();
             FunctionIdentifier openRecConsFi = openRecConsExpr.getFunctionIdentifier();
@@ -222,8 +249,14 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
             }
 
             // We multiply 2 because the layout of the arguments are: [expr, val, expr1, val1, ...]
-            if (openRecConsExpr.getArguments().size() > FullTextContainsDescriptor.getParamTypeMap().size() * 2) {
+            if (openRecConsExpr.getArguments().size() > FullTextContainsFunctionDescriptor.getParamTypeMap().size()
+                    * 2) {
                 throw CompilationException.create(ErrorCode.TOO_MANY_OPTIONS_FOR_FUNCTION,
+                        openRecConsExpr.getSourceLocation(), functionName);
+            }
+
+            if (openRecConsExpr.getArguments().size() % 2 != 0) {
+                throw CompilationException.create(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER,
                         openRecConsExpr.getSourceLocation(), functionName);
             }
 
@@ -239,16 +272,15 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
                 }
 
                 option = option.toLowerCase();
-                if (!FullTextContainsDescriptor.getParamTypeMap().containsKey(option)) {
+                if (!FullTextContainsFunctionDescriptor.getParamTypeMap().containsKey(option)) {
                     throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, optionExprVal.getSourceLocation(),
                             functionName, option);
                 }
 
                 String optionTypeStringVal = null;
-
                 // If the option value is a constant, then we can check here.
                 if (optionExprVal.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                    switch (FullTextContainsDescriptor.getParamTypeMap().get(option)) {
+                    switch (FullTextContainsFunctionDescriptor.getParamTypeMap().get(option)) {
                         case STRING:
                             optionTypeStringVal = ConstantExpressionUtil.getStringConstant(optionExprVal);
                             if (optionTypeStringVal == null) {
@@ -265,8 +297,13 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
 
                     // Check the validity of option value
                     switch (option) {
-                        case FullTextContainsDescriptor.SEARCH_MODE_OPTION:
+                        case FullTextContainsFunctionDescriptor.SEARCH_MODE_OPTION:
                             checkSearchModeOption(optionTypeStringVal, functionName, optionExprVal.getSourceLocation());
+                            break;
+                        case FullTextContainsFunctionDescriptor.FULLTEXT_CONFIG_OPTION:
+                            checkFullTextConfigOption(optionTypeStringVal, functionName,
+                                    optionExprVal.getSourceLocation());
+                            ftConfigName = optionTypeStringVal;
                             break;
                         default:
                             throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED,
@@ -278,31 +315,45 @@ public class FullTextContainsParameterCheckRule implements IAlgebraicRewriteRule
                 newArgs.add(new MutableObject<ILogicalExpression>(optionExpr));
                 newArgs.add(new MutableObject<ILogicalExpression>(optionExprVal));
             }
+            return ftConfigName;
         }
 
         private void checkSearchModeOption(String optionVal, String functionName, SourceLocation sourceLoc)
                 throws AlgebricksException {
-            if (optionVal.equals(FullTextContainsDescriptor.CONJUNCTIVE_SEARCH_MODE_OPTION)
-                    || optionVal.equals(FullTextContainsDescriptor.DISJUNCTIVE_SEARCH_MODE_OPTION)) {
+            if (optionVal.equals(FullTextContainsFunctionDescriptor.SearchMode.ALL.getValue())
+                    || optionVal.equals(FullTextContainsFunctionDescriptor.SearchMode.ANY.getValue())) {
                 return;
             } else {
                 throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, sourceLoc, functionName, optionVal);
             }
         }
 
+        private void checkFullTextConfigOption(String optionVal, String functionName, SourceLocation sourceLoc)
+                throws AlgebricksException {
+            // Currently, here we only check if the full-text config is null or empty string
+            // We will check if the full-text config exists at run time
+            if (Strings.isNullOrEmpty(optionVal)) {
+                throw CompilationException.create(ErrorCode.COMPILATION_INVALID_EXPRESSION, sourceLoc, functionName,
+                        FullTextContainsFunctionDescriptor.FULLTEXT_CONFIG_OPTION, "not-null", "null");
+            } else {
+                return;
+            }
+        }
+
         /**
          * Sets the default option value(s) when a user doesn't provide any option.
          */
-        void setDefaultValueForThirdParameter(List<Mutable<ILogicalExpression>> newArgs) throws AlgebricksException {
+        void setDefaultValueForThirdParameter(List<Mutable<ILogicalExpression>> newArgs) {
             // Sets the search mode option: the default option is conjunctive search.
             ILogicalExpression searchModeOptionExpr = new ConstantExpression(
-                    new AsterixConstantValue(new AString(FullTextContainsDescriptor.SEARCH_MODE_OPTION)));
-            ILogicalExpression searchModeValExpr = new ConstantExpression(
-                    new AsterixConstantValue(new AString(FullTextContainsDescriptor.CONJUNCTIVE_SEARCH_MODE_OPTION)));
-
+                    new AsterixConstantValue(new AString(FullTextContainsFunctionDescriptor.SEARCH_MODE_OPTION)));
+            ILogicalExpression searchModeValExpr = new ConstantExpression(new AsterixConstantValue(
+                    new AString(FullTextContainsFunctionDescriptor.SearchMode.ALL.getValue())));
             // Add this option as arguments to the ftcontains().
             newArgs.add(new MutableObject<ILogicalExpression>(searchModeOptionExpr));
             newArgs.add(new MutableObject<ILogicalExpression>(searchModeValExpr));
+
+            // We don't set the full-text config option here because the default value should be null
         }
 
     }

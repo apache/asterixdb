@@ -19,20 +19,24 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.TokenizerCategory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.TokenizerInfo.TokenizerType;
 
 public interface IBinaryTokenizer {
-    public IToken getToken();
+    IToken getToken();
 
-    public boolean hasNext();
+    boolean hasNext();
 
-    public void next();
+    void next();
 
-    public void reset(byte[] data, int start, int length);
+    void reset(byte[] data, int start, int length);
 
     // Get the total number of tokens
-    public short getTokensCount();
+    short getTokensCount();
 
-    // Get the tokenizer types
-    public TokenizerType getTokenizerType();
+    // Get the tokenizer types: String or List
+    TokenizerType getTokenizerType();
+
+    // WORD or NGRAM tokenizer
+    TokenizerCategory getTokenizerCategory();
 }

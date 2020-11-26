@@ -46,6 +46,8 @@ public class MetadataConstants {
     public static final String COMPACTION_POLICY_DATASET_NAME = "CompactionPolicy";
     public static final String EXTERNAL_FILE_DATASET_NAME = "ExternalFile";
     public static final String SYNONYM_DATASET_NAME = "Synonym";
+    public static final String FULL_TEXT_CONFIG_DATASET_NAME = "FullTextConfig";
+    public static final String FULL_TEXT_FILTER_DATASET_NAME = "FullTextFilter";
 
     private MetadataConstants() {
     }

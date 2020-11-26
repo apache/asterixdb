@@ -18,12 +18,19 @@
  */
 package org.apache.asterix.metadata.utils;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 public class MetadataLockUtil implements IMetadataLockUtil {
 
@@ -89,9 +96,12 @@ public class MetadataLockUtil implements IMetadataLockUtil {
 
     @Override
     public void createIndexBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
-            String datasetName) throws AlgebricksException {
+            String datasetName, String fullTextConfigName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
         lockMgr.acquireDatasetCreateIndexLock(locks, dataverseName, datasetName);
+        if (!Strings.isNullOrEmpty(fullTextConfigName)) {
+            lockMgr.acquireFullTextConfigReadLock(locks, dataverseName, fullTextConfigName);
+        }
     }
 
     @Override
@@ -154,6 +164,43 @@ public class MetadataLockUtil implements IMetadataLockUtil {
             String functionName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
         lockMgr.acquireFunctionWriteLock(locks, dataverseName, functionName);
+    }
+
+    @Override
+    public void createFullTextFilterBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String fullTextFilterName) throws AlgebricksException {
+        lockMgr.acquireDataverseReadLock(locks, dataverseName);
+        lockMgr.acquireFullTextFilterWriteLock(locks, dataverseName, fullTextFilterName);
+    }
+
+    @Override
+    public void dropFullTextFilterBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String fullTextFilterName) throws AlgebricksException {
+        lockMgr.acquireDataverseReadLock(locks, dataverseName);
+        lockMgr.acquireFullTextFilterWriteLock(locks, dataverseName, fullTextFilterName);
+    }
+
+    @Override
+    public void createFullTextConfigBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String fullTextConfigName, ImmutableList<String> fullTextFilterNames) throws AlgebricksException {
+        lockMgr.acquireDataverseReadLock(locks, dataverseName);
+        lockMgr.acquireFullTextConfigWriteLock(locks, dataverseName, fullTextConfigName);
+
+        // We should avoid sorting the original list, and the original list is immutable and cannot be sorted anyway
+        List<String> fullTextFilterNamesMutable = new ArrayList<>(fullTextFilterNames);
+
+        // sort the filters to guarantee locks are always fetched in the same order to avoid dead lock between filters
+        Collections.sort(fullTextFilterNamesMutable);
+        for (String filterName : fullTextFilterNamesMutable) {
+            lockMgr.acquireFullTextFilterReadLock(locks, dataverseName, filterName);
+        }
+    }
+
+    @Override
+    public void dropFullTextConfigBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String configName) throws AlgebricksException {
+        lockMgr.acquireDataverseReadLock(locks, dataverseName);
+        lockMgr.acquireFullTextConfigWriteLock(locks, dataverseName, configName);
     }
 
     @Override

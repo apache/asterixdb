@@ -29,14 +29,16 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.FullTextContainsFunctionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -47,11 +49,14 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.BinaryEntry;
 import org.apache.hyracks.data.std.util.BinaryHashSet;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.IFullTextConfigEvaluator;
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.IFullTextConfigEvaluatorFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
+import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
-public class FullTextContainsEvaluator implements IScalarEvaluator {
+public class FullTextContainsFunctionEvaluator implements IScalarEvaluator {
 
     // assuming type indicator in serde format
     protected static final int TYPE_INDICATOR_SIZE = 1;
@@ -68,6 +73,8 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
     protected IPointable outRight = VoidPointable.FACTORY.createPointable();
     protected IPointable[] outOptions;
     protected int optionArgsLength;
+    // By default, we conduct a conjunctive search.
+    protected FullTextContainsFunctionDescriptor.SearchMode mode = FullTextContainsFunctionDescriptor.SearchMode.ALL;
 
     // To conduct a full-text search, we convert all strings to the lower case.
     // In addition, since each token does not include the length information (2 bytes) in the beginning,
@@ -77,8 +84,9 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
             BinaryComparatorFactoryProvider.UTF8STRING_LOWERCASE_TOKEN_POINTABLE_INSTANCE.createBinaryComparator();
     private final IBinaryComparator strLowerCaseCmp =
             BinaryComparatorFactoryProvider.UTF8STRING_LOWERCASE_POINTABLE_INSTANCE.createBinaryComparator();
-    private IBinaryTokenizer tokenizerForLeftArray = null;
-    private IBinaryTokenizer tokenizerForRightArray = null;
+
+    private IFullTextConfigEvaluator ftEvaluatorLeft;
+    private IFullTextConfigEvaluator ftEvaluatorRight;
 
     // Case insensitive hash for full-text search
     private IBinaryHashFunction hashFunc = null;
@@ -109,15 +117,23 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
     protected ISerializerDeserializer<ANull> nullSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
-    public FullTextContainsEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext context)
-            throws HyracksDataException {
+    public FullTextContainsFunctionEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext context,
+            IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory) throws HyracksDataException {
+
         evalLeft = args[0].createScalarEvaluator(context);
         evalRight = args[1].createScalarEvaluator(context);
         optionArgsLength = args.length - 2;
         this.evalOptions = new IScalarEvaluator[optionArgsLength];
         this.outOptions = new IPointable[optionArgsLength];
         this.argOptions = new TaggedValuePointable[optionArgsLength];
-        // Full-text search options
+
+        // We need to have two dedicated ftEvaluatorLeft and ftEvaluatorRight to let them have dedicated tokenizers.
+        //
+        // ftEvaluatorLeft and ftEvaluatorRight are shared by multiple threads on the NC node,
+        // so each thread needs a local copy of them here
+        this.ftEvaluatorLeft = fullTextConfigEvaluatorFactory.createFullTextConfigEvaluator();
+        this.ftEvaluatorRight = fullTextConfigEvaluatorFactory.createFullTextConfigEvaluator();
+
         for (int i = 0; i < optionArgsLength; i++) {
             this.evalOptions[i] = args[i + 2].createScalarEvaluator(context);
             this.outOptions[i] = VoidPointable.FACTORY.createPointable();
@@ -182,9 +198,10 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
         try {
             ABoolean b = fullTextContainsWithArg(typeTag2, argLeft, argRight) ? ABoolean.TRUE : ABoolean.FALSE;
             serde.serialize(b, out);
-        } catch (HyracksDataException e1) {
-            throw HyracksDataException.create(e1);
+        } catch (AlgebricksException e) {
+            throw new HyracksDataException(e, ErrorCode.ERROR_PROCESSING_TUPLE);
         }
+
         result.set(resultStorage);
     }
 
@@ -197,9 +214,13 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
      * After traversing all tokens and still the foundCount is less than the given threshold, then returns false.
      */
     private boolean fullTextContainsWithArg(ATypeTag typeTag2, IPointable arg1, IPointable arg2)
-            throws HyracksDataException {
+            throws HyracksDataException, AlgebricksException {
+        // The main logic
+
         // Since a fulltext search form is "ftcontains(X,Y,options)",
         // X (document) is the left side and Y (query predicate) is the right side.
+
+        setFullTextOption(argOptions);
 
         // Initialize variables that are required to conduct full-text search. (e.g., hash-set, tokenizer ...)
         if (rightHashSet == null) {
@@ -234,11 +255,14 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
         // Parameter: number of bucket, frame size, hashFunction, Comparator, byte array
         // that contains the key (this array will be set later.)
         rightHashSet = new BinaryHashSet(HASH_SET_SLOT_SIZE, HASH_SET_FRAME_SIZE, hashFunc, strLowerCaseTokenCmp, null);
-        tokenizerForLeftArray = BinaryTokenizerFactoryProvider.INSTANCE
-                .getWordTokenizerFactory(ATypeTag.STRING, false, true).createTokenizer();
+        IBinaryTokenizer tokenizerForLeftArray = BinaryTokenizerFactoryProvider.INSTANCE
+                .getWordTokenizerFactory(ATypeTag.STRING, true, true).createTokenizer();
+        ftEvaluatorLeft.setTokenizer(tokenizerForLeftArray);
     }
 
     void resetQueryArrayAndRight(byte[] arg2Array, ATypeTag typeTag2, IPointable arg2) throws HyracksDataException {
+
+        IBinaryTokenizer tokenizerForRightArray = null;
         // If the right side is an (un)ordered list, we need to apply the (un)ordered list tokenizer.
         switch (typeTag2) {
             case ARRAY:
@@ -256,6 +280,7 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
             default:
                 break;
         }
+        ftEvaluatorRight.setTokenizer(tokenizerForRightArray);
 
         queryArray = arg2Array;
         queryArrayStartOffset = arg2.getStartOffset();
@@ -279,17 +304,18 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
             queryArrayStartOffset = queryArrayStartOffset + numBytesToStoreLength;
             queryArrayLength = queryArrayLength - numBytesToStoreLength;
         }
-        tokenizerForRightArray.reset(queryArray, queryArrayStartOffset, queryArrayLength);
+        ftEvaluatorRight.reset(queryArray, queryArrayStartOffset, queryArrayLength);
 
         // Create tokens from the given query predicate
-        while (tokenizerForRightArray.hasNext()) {
-            tokenizerForRightArray.next();
+        while (ftEvaluatorRight.hasNext()) {
+            ftEvaluatorRight.next();
             queryTokenCount++;
 
+            IToken token = ftEvaluatorRight.getToken();
             // Insert the starting position and the length of the current token into the hash set.
             // We don't store the actual value of this token since we can access it via offset and length.
-            int tokenOffset = tokenizerForRightArray.getToken().getStartOffset();
-            int tokenLength = tokenizerForRightArray.getToken().getTokenLength();
+            int tokenOffset = token.getStartOffset();
+            int tokenLength = token.getTokenLength();
 
             // If a token comes from a string tokenizer, each token doesn't have the length data
             // in the beginning. Instead, if a token comes from an (un)ordered list, each token has
@@ -298,9 +324,8 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
             // e.g., 8database <--- we only need to store the offset of 'd' and length 8.
             if (typeTag2 == ATypeTag.ARRAY || typeTag2 == ATypeTag.MULTISET) {
                 // How many bytes are required to store the length of the given token?
-                numBytesToStoreLength = UTF8StringUtil.getNumBytesToStoreLength(
-                        UTF8StringUtil.getUTFLength(tokenizerForRightArray.getToken().getData(),
-                                tokenizerForRightArray.getToken().getStartOffset()));
+                numBytesToStoreLength = UTF8StringUtil
+                        .getNumBytesToStoreLength(UTF8StringUtil.getUTFLength(token.getData(), token.getStartOffset()));
                 tokenOffset = tokenOffset + numBytesToStoreLength;
                 tokenLength = tokenLength - numBytesToStoreLength;
             }
@@ -310,7 +335,7 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
             // Currently, for the full-text search, we don't support a phrase search yet.
             // So, each query predicate should have only one token.
             // The same logic should be applied in AbstractTOccurrenceSearcher() class.
-            checkWhetherFullTextPredicateIsPhrase(typeTag2, queryArray, tokenOffset, tokenLength, queryTokenCount);
+            checkWhetherFullTextPredicateIsPhrase(typeTag2, token.getData(), tokenOffset, tokenLength, queryTokenCount);
 
             // Count the number of tokens in the given query. We only count the unique tokens.
             // We only care about the first insertion of the token into the hash set
@@ -320,15 +345,18 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
             // Thus, when we find the current token (we don't increase the count in this case),
             // it should not exist.
             if (rightHashSet.find(keyEntry, queryArray, false) == -1) {
+                rightHashSet.setRefArray(token.getData());
                 rightHashSet.put(keyEntry);
                 uniqueQueryTokenCount++;
             }
-
         }
 
-        // Apply the full-text search option here
         // Based on the search mode option - "any" or "all", set the occurrence threshold of tokens.
-        setFullTextOption(argOptions, uniqueQueryTokenCount);
+        if (mode == FullTextContainsFunctionDescriptor.SearchMode.ANY) {
+            occurrenceThreshold = 1;
+        } else {
+            occurrenceThreshold = uniqueQueryTokenCount;
+        }
     }
 
     private void checkWhetherFullTextPredicateIsPhrase(ATypeTag typeTag, byte[] refArray, int tokenOffset,
@@ -359,21 +387,22 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
      * Sets the full-text options. The odd element is an option name and the even element is the argument
      * for that option. (e.g., argOptions[0] = "mode", argOptions[1] = "all")
      */
-    private void setFullTextOption(IPointable[] argOptions, int uniqueQueryTokenCount) throws HyracksDataException {
-        // By default, we conduct a conjunctive search.
-        occurrenceThreshold = uniqueQueryTokenCount;
+    private void setFullTextOption(IPointable[] argOptions) throws HyracksDataException {
+        // Maybe using a JSON parser here can make things easier?
         for (int i = 0; i < optionArgsLength; i = i + 2) {
             // mode option
-            if (compareStrInByteArrayAndPointable(FullTextContainsDescriptor.getSearchModeOptionArray(), argOptions[i],
-                    true) == 0) {
-                if (compareStrInByteArrayAndPointable(FullTextContainsDescriptor.getDisjunctiveFTSearchOptionArray(),
-                        argOptions[i + 1], true) == 0) {
+            if (compareStrInByteArrayAndPointable(FullTextContainsFunctionDescriptor.getSearchModeOptionArray(),
+                    argOptions[i], true) == 0) {
+                if (compareStrInByteArrayAndPointable(
+                        FullTextContainsFunctionDescriptor.getDisjunctiveFTSearchOptionArray(), argOptions[i + 1],
+                        true) == 0) {
                     // ANY
-                    occurrenceThreshold = 1;
+                    mode = FullTextContainsFunctionDescriptor.SearchMode.ANY;
                 } else if (compareStrInByteArrayAndPointable(
-                        FullTextContainsDescriptor.getConjunctiveFTSearchOptionArray(), argOptions[i + 1], true) == 0) {
+                        FullTextContainsFunctionDescriptor.getConjunctiveFTSearchOptionArray(), argOptions[i + 1],
+                        true) == 0) {
                     // ALL
-                    occurrenceThreshold = uniqueQueryTokenCount;
+                    mode = FullTextContainsFunctionDescriptor.SearchMode.ALL;
                 }
             }
         }
@@ -388,26 +417,20 @@ public class FullTextContainsEvaluator implements IScalarEvaluator {
         // The left side: field (document)
         // Resets the tokenizer for the given keywords in a document.
 
-        // How many bytes are required to store the length of the given string?
-        int numBytesToStoreLength = UTF8StringUtil
-                .getNumBytesToStoreLength(UTF8StringUtil.getUTFLength(arg1.getByteArray(), arg1.getStartOffset()));
-        int startOffset = arg1.getStartOffset() + numBytesToStoreLength;
-        int length = arg1.getLength() - numBytesToStoreLength;
-
-        tokenizerForLeftArray.reset(arg1.getByteArray(), startOffset, length);
+        ftEvaluatorLeft.reset(arg1.getByteArray(), arg1.getStartOffset(), arg1.getLength());
 
         // Creates tokens from a field in the left side (document)
-        while (tokenizerForLeftArray.hasNext()) {
-            tokenizerForLeftArray.next();
+        while (ftEvaluatorLeft.hasNext()) {
+            ftEvaluatorLeft.next();
 
+            IToken token = ftEvaluatorLeft.getToken();
             // Records the starting position and the length of the current token.
-            keyEntry.set(tokenizerForLeftArray.getToken().getStartOffset(),
-                    tokenizerForLeftArray.getToken().getTokenLength());
+            keyEntry.set(token.getStartOffset(), token.getTokenLength());
 
             // Checks whether this token exists in the query hash-set.
             // We don't count multiple occurrence of a token now.
             // So, finding the same query predicate twice will not be counted as a found.
-            if (rightHashSet.find(keyEntry, arg1.getByteArray(), true) == 1) {
+            if (rightHashSet.find(keyEntry, token.getData(), true) == 1) {
                 foundCount++;
                 if (foundCount >= occurrenceThreshold) {
                     return true;

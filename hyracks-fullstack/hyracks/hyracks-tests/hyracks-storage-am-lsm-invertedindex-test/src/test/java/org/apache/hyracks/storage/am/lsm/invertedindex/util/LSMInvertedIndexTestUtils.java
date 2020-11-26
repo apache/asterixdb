@@ -88,6 +88,9 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccesso
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.FullTextConfigEvaluatorFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.IFullTextConfigEvaluator;
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.TokenizerCategory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexMergeCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
@@ -113,10 +116,15 @@ import org.apache.hyracks.util.IThreadStats;
 import org.apache.hyracks.util.IThreadStatsCollector;
 import org.apache.hyracks.util.ThreadStats;
 
+import com.google.common.collect.ImmutableList;
+
 @SuppressWarnings("rawtypes")
 public class LSMInvertedIndexTestUtils {
 
     public static final int TEST_GRAM_LENGTH = 3;
+
+    public static FullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory =
+            new FullTextConfigEvaluatorFactory("test_config", TokenizerCategory.WORD, ImmutableList.of());
 
     public static TupleGenerator createStringDocumentTupleGen(Random rnd) throws IOException {
         IFieldValueGenerator[] fieldGens = new IFieldValueGenerator[2];
@@ -196,8 +204,9 @@ public class LSMInvertedIndexTestUtils {
         ITokenFactory tokenFactory = new UTF8WordTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory =
                 new DelimitedUTF8StringBinaryTokenizerFactory(true, false, tokenFactory);
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
-                fieldSerdes.length - 1, tokenizerFactory, invIndexType, null, null, null, null, null, null);
+        LSMInvertedIndexTestContext testCtx =
+                LSMInvertedIndexTestContext.create(harness, fieldSerdes, fieldSerdes.length - 1, tokenizerFactory,
+                        fullTextConfigEvaluatorFactory, invIndexType, null, null, null, null, null, null);
         return testCtx;
     }
 
@@ -207,8 +216,9 @@ public class LSMInvertedIndexTestUtils {
         ITokenFactory tokenFactory = new HashedUTF8WordTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory =
                 new DelimitedUTF8StringBinaryTokenizerFactory(true, false, tokenFactory);
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
-                fieldSerdes.length - 1, tokenizerFactory, invIndexType, null, null, null, null, null, null);
+        LSMInvertedIndexTestContext testCtx =
+                LSMInvertedIndexTestContext.create(harness, fieldSerdes, fieldSerdes.length - 1, tokenizerFactory,
+                        fullTextConfigEvaluatorFactory, invIndexType, null, null, null, null, null, null);
         return testCtx;
     }
 
@@ -218,8 +228,9 @@ public class LSMInvertedIndexTestUtils {
         ITokenFactory tokenFactory = new UTF8NGramTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory =
                 new NGramUTF8StringBinaryTokenizerFactory(TEST_GRAM_LENGTH, true, true, false, tokenFactory);
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
-                fieldSerdes.length - 1, tokenizerFactory, invIndexType, null, null, null, null, null, null);
+        LSMInvertedIndexTestContext testCtx =
+                LSMInvertedIndexTestContext.create(harness, fieldSerdes, fieldSerdes.length - 1, tokenizerFactory,
+                        fullTextConfigEvaluatorFactory, invIndexType, null, null, null, null, null, null);
         return testCtx;
     }
 
@@ -229,8 +240,9 @@ public class LSMInvertedIndexTestUtils {
         ITokenFactory tokenFactory = new HashedUTF8NGramTokenFactory();
         IBinaryTokenizerFactory tokenizerFactory =
                 new NGramUTF8StringBinaryTokenizerFactory(TEST_GRAM_LENGTH, true, true, false, tokenFactory);
-        LSMInvertedIndexTestContext testCtx = LSMInvertedIndexTestContext.create(harness, fieldSerdes,
-                fieldSerdes.length - 1, tokenizerFactory, invIndexType, null, null, null, null, null, null);
+        LSMInvertedIndexTestContext testCtx =
+                LSMInvertedIndexTestContext.create(harness, fieldSerdes, fieldSerdes.length - 1, tokenizerFactory,
+                        fullTextConfigEvaluatorFactory, invIndexType, null, null, null, null, null, null);
         return testCtx;
     }
 
@@ -561,7 +573,10 @@ public class LSMInvertedIndexTestUtils {
         iap.getParameters().put(HyracksConstants.HYRACKS_TASK_CONTEXT, ctx);
         IInvertedIndexAccessor accessor = (IInvertedIndexAccessor) invIndex.createAccessor(iap);
         IBinaryTokenizer tokenizer = testCtx.getTokenizerFactory().createTokenizer();
-        InvertedIndexSearchPredicate searchPred = new InvertedIndexSearchPredicate(tokenizer, searchModifier);
+        IFullTextConfigEvaluator fullTextConfigEvaluator =
+                fullTextConfigEvaluatorFactory.createFullTextConfigEvaluator();
+        InvertedIndexSearchPredicate searchPred =
+                new InvertedIndexSearchPredicate(tokenizer, fullTextConfigEvaluator, searchModifier);
         List<ITupleReference> documentCorpus = testCtx.getDocumentCorpus();
         // Project away the primary-key field.
         int[] fieldPermutation = new int[] { 0 };

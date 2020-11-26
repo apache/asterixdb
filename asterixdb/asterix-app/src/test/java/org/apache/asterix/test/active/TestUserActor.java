@@ -200,7 +200,7 @@ public class TestUserActor extends Actor {
                 DataverseName dataverseName = dataset.getDataverseName();
                 String datasetName = dataset.getDatasetName();
                 try {
-                    lockUtil.createIndexBegin(lockManager, mdProvider.getLocks(), dataverseName, datasetName);
+                    lockUtil.createIndexBegin(lockManager, mdProvider.getLocks(), dataverseName, datasetName, null);
                     if (actionListener.isActive()) {
                         throw new RuntimeDataException(ErrorCode.CANNOT_ADD_INDEX_TO_DATASET_CONNECTED_TO_ACTIVE_ENTITY,
                                 DatasetUtil.getFullyQualifiedDisplayName(dataverseName, datasetName) + ".index",

@@ -5481,6 +5481,11 @@
         <output-dir compare="Text">fulltext-index-large-data</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="stopwords-full-text-filter-1">
+        <output-dir compare="Text">stopwords-full-text-filter-1</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="global-aggregate">
     <test-case FilePath="global-aggregate">

@@ -131,6 +131,8 @@ import org.apache.asterix.lang.common.statement.CreateFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateIndexStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
+import org.apache.asterix.lang.common.statement.CreateFullTextFilterStatement;
+import org.apache.asterix.lang.common.statement.CreateFullTextConfigStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -143,6 +145,8 @@ import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.FunctionDropStatement;
 import org.apache.asterix.lang.common.statement.IndexDropStatement;
+import org.apache.asterix.lang.common.statement.FullTextFilterDropStatement;
+import org.apache.asterix.lang.common.statement.FullTextConfigDropStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.InternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.LoadStatement;
@@ -237,6 +241,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String UNBOUNDED = "UNBOUNDED";
     private static final String REPLACE = "REPLACE";
     private static final String RETURNS = "RETURNS";
+    private static final String CONFIG = "CONFIG";
+
 
     private static final String INT_TYPE_NAME = "int";
     private static final String UDF_VARARGS_PARAM_NAME = "args"; // Note: this value is stored in the function metadata
@@ -257,10 +263,12 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static class IndexParams {
       public IndexType type;
       public int gramLength;
+      public String fullTextConfig;
 
-      public IndexParams(IndexType type, int gramLength) {
+      public IndexParams(IndexType type, int gramLength, String fullTextConfig) {
         this.type = type;
         this.gramLength = gramLength;
+        this.fullTextConfig = fullTextConfig;
       }
     };
 
@@ -693,6 +701,7 @@ Statement CreateStatement() throws ParseException:
     | stmt = CreateSynonymStatement(startToken)
     | stmt = CreateFeedStatement(startToken)
     | stmt = CreateFeedPolicyStatement(startToken)
+    | stmt = CreateFullTextStatement(startToken)
   )
   {
     return stmt;
@@ -1027,6 +1036,7 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
     if (indexType != null) {
       stmt.setIndexType(indexType.type);
       stmt.setGramLength(indexType.gramLength);
+      stmt.setFullTextConfigName(indexType.fullTextConfig);
     }
     stmt.setEnforced(enforced);
     return addSourceLocation(stmt, startStmtToken);
@@ -1081,6 +1091,7 @@ IndexParams IndexType() throws ParseException:
 {
   IndexType type = null;
   int gramLength = 0;
+  String fullTextConfig = null;
 }
 {
   (<BTREE>
@@ -1095,10 +1106,18 @@ IndexParams IndexType() throws ParseException:
     {
       type = IndexType.LENGTH_PARTITIONED_WORD_INVIX;
     }
-  |<FULLTEXT>
+  | <FULLTEXT>
     {
       type = IndexType.SINGLE_PARTITION_WORD_INVIX;
     }
+    // For now we don't allow inverted index creation using a full-text config in another data verse.
+    // We may want to support corss-dataverse full-text config access later
+    // If so, replace the Identifier() with QualifiedName() to get the dataverse name
+    ( <USING> Identifier()
+      {
+        fullTextConfig = token.image;
+      }
+    )?
   | <NGRAM> <LEFTPAREN> <INTEGER_LITERAL>
     {
       type = IndexType.LENGTH_PARTITIONED_NGRAM_INVIX;
@@ -1106,7 +1125,7 @@ IndexParams IndexType() throws ParseException:
     }
   <RIGHTPAREN>)
     {
-      return new IndexParams(type, gramLength);
+      return new IndexParams(type, gramLength, fullTextConfig);
     }
 }
 
@@ -1418,6 +1437,69 @@ CreateFeedPolicyStatement FeedPolicySpecification(Token startStmtToken) throws P
   }
 }
 
+Statement CreateFullTextStatement(Token startStmtToken) throws ParseException:
+{
+  Statement stmt = null;
+}
+{
+  (
+    <FULLTEXT>
+    (
+      <FILTER> stmt = CreateFullTextFilterSpec(startStmtToken)
+      | (<IDENTIFIER> { expectToken(CONFIG); } stmt = CreateFullTextConfigSpec(startStmtToken))
+    )
+  )
+  {
+    return stmt;
+  }
+}
+
+CreateFullTextFilterStatement CreateFullTextFilterSpec(Token startStmtToken) throws ParseException:
+{
+  CreateFullTextFilterStatement stmt = null;
+  Pair<DataverseName,Identifier> nameComponents = null;
+  boolean ifNotExists = false;
+  RecordConstructor expr = null;
+}
+{
+  (
+    nameComponents = QualifiedName() ifNotExists = IfNotExists()
+    <AS>
+    expr = RecordConstructor()
+  )
+  {
+    try {
+      stmt = new CreateFullTextFilterStatement(nameComponents.first, nameComponents.second.getValue(), ifNotExists, expr);
+      return addSourceLocation(stmt, startStmtToken);
+    } catch (CompilationException e) {
+       throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
+    }
+  }
+}
+
+CreateFullTextConfigStatement CreateFullTextConfigSpec(Token startStmtToken) throws ParseException:
+{
+  CreateFullTextConfigStatement stmt = null;
+  Pair<DataverseName,Identifier> nameComponents = null;
+  boolean ifNotExists = false;
+  RecordConstructor expr = null;
+}
+{
+  (
+    nameComponents = QualifiedName() ifNotExists = IfNotExists()
+    <AS>
+    expr = RecordConstructor()
+  )
+  {
+    try {
+      stmt = new CreateFullTextConfigStatement(nameComponents.first, nameComponents.second.getValue(), ifNotExists, expr);
+      return addSourceLocation(stmt, startStmtToken);
+    } catch (CompilationException e) {
+       throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
+    }
+  }
+}
+
 CreateSynonymStatement CreateSynonymStatement(Token startStmtToken) throws ParseException:
 {
   CreateSynonymStatement stmt = null;
@@ -1569,6 +1651,7 @@ Statement DropStatement() throws ParseException:
     | stmt = DropFeedStatement(startToken)
     | stmt = DropFeedPolicyStatement(startToken)
     | stmt = DropSynonymStatement(startToken)
+    | stmt = DropFullTextStatement(startToken)
   )
   {
     return stmt;
@@ -1622,6 +1705,50 @@ IndexDropStatement DropIndexSpecification(Token startStmtToken) throws ParseExce
     return addSourceLocation(stmt, startStmtToken);
   }
 }
+
+Statement DropFullTextStatement(Token startStmtToken) throws ParseException:
+{
+  Statement stmt = null;
+}
+{
+  <FULLTEXT>
+  (
+    <FILTER> stmt = DropFullTextFilterSpec(startStmtToken)
+     | (<IDENTIFIER> { expectToken(CONFIG); } stmt = DropFullTextConfigSpec(startStmtToken))
+  )
+  {
+    return stmt;
+  }
+}
+
+FullTextFilterDropStatement DropFullTextFilterSpec(Token startStmtToken) throws ParseException:
+{
+  FullTextFilterDropStatement stmt = null;
+  Pair<DataverseName,Identifier> nameComponents = null;
+  boolean ifExists = false;
+}
+{
+  nameComponents = QualifiedName() ifExists = IfExists()
+  {
+    stmt = new FullTextFilterDropStatement(nameComponents.first, nameComponents.second.getValue(), ifExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
+}
+
+FullTextConfigDropStatement DropFullTextConfigSpec(Token startStmtToken) throws ParseException:
+{
+  FullTextConfigDropStatement stmt = null;
+  Pair<DataverseName,Identifier> nameComponents = null;
+  boolean ifExists = false;
+}
+{
+  nameComponents = QualifiedName() ifExists = IfExists()
+  {
+    stmt = new FullTextConfigDropStatement(nameComponents.first, nameComponents.second.getValue(), ifExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
+}
+
 
 NodeGroupDropStatement DropNodeGroupStatement(Token startStmtToken) throws ParseException:
 {

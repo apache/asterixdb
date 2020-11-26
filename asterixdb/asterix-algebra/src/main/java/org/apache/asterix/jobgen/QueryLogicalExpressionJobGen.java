@@ -140,11 +140,13 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
         IScalarEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
         IFunctionDescriptor fd = null;
         if (expr.getFunctionInfo() instanceof IExternalFunctionInfo) {
+            // Expr is an external function
             fd = ExternalFunctionDescriptorProvider
                     .getExternalFunctionDescriptor((IExternalFunctionInfo) expr.getFunctionInfo());
             CompilerProperties props = ((IApplicationContext) context.getAppContext()).getCompilerProperties();
             FunctionTypeInferers.SET_ARGUMENTS_TYPE.infer(expr, fd, env, props);
         } else {
+            // Expr is an internal (built-in) function
             fd = resolveFunction(expr, env, context);
         }
         return fd.createEvaluatorFactory(args);

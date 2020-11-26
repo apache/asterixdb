@@ -154,7 +154,6 @@
           </ignoredUsedUndeclaredDependencies>
           <usedDependencies combine.children="append">
             <usedDependency>org.apache.hadoop:hadoop-common</usedDependency>
-            <usedDependency>org.apache.asterix:asterix-fuzzyjoin</usedDependency>
             <usedDependency>org.apache.asterix:asterix-geo</usedDependency>
           </usedDependencies>
           <ignoredUnusedDeclaredDependencies>
@@ -753,12 +752,6 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-jul</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.asterix</groupId>
-      <artifactId>asterix-fuzzyjoin</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.asterix</groupId>

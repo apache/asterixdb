@@ -53,6 +53,7 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.asterix.optimizer.rules.am.OptimizableOperatorSubTree.DataSourceType;
+import org.apache.asterix.optimizer.rules.util.FullTextUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -80,6 +81,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -214,7 +216,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     /**
      * Choose all indexes that match the given access method. These indexes will be used as index-search
      * to replace the given predicates in a SELECT operator. Also, if there are multiple same type of indexes
-     * on the same field, only of them will be chosen. Allowed cases (AccessMethod, IndexType) are:
+     * on the same field, only one of them will be chosen. Allowed cases (AccessMethod, IndexType) are:
      * [BTreeAccessMethod , IndexType.BTREE], [RTreeAccessMethod , IndexType.RTREE],
      * [InvertedIndexAccessMethod, IndexType.SINGLE_PARTITION_WORD_INVIX || SINGLE_PARTITION_NGRAM_INVIX ||
      * LENGTH_PARTITIONED_WORD_INVIX || LENGTH_PARTITIONED_NGRAM_INVIX]
@@ -235,13 +237,34 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 IAccessMethod chosenAccessMethod = amEntry.getKey();
                 Index chosenIndex = indexEntry.getKey();
                 IndexType indexType = chosenIndex.getIndexType();
-                boolean isKeywordOrNgramIndexChosen = indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
-                        || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX
-                        || indexType == IndexType.SINGLE_PARTITION_WORD_INVIX
+                boolean isKeywordIndexChosen = indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
+                        || indexType == IndexType.SINGLE_PARTITION_WORD_INVIX;
+                boolean isNgramIndexChosen = indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX
                         || indexType == IndexType.SINGLE_PARTITION_NGRAM_INVIX;
                 if ((chosenAccessMethod == BTreeAccessMethod.INSTANCE && indexType == IndexType.BTREE)
                         || (chosenAccessMethod == RTreeAccessMethod.INSTANCE && indexType == IndexType.RTREE)
-                        || (chosenAccessMethod == InvertedIndexAccessMethod.INSTANCE && isKeywordOrNgramIndexChosen)) {
+                        // the inverted index will be utilized
+                        // For Ngram, the full-text config used in the index and in the query are always the default one,
+                        // so we don't check if the full-text config in the index and query match
+                        //
+                        // Note that the ngram index can be used in both
+                        // 1) full-text ftcontains() function
+                        // 2) non-full-text, regular string contains() function
+                        // 3) edit-distance functions that take keyword as an argument,
+                        //     e.g. edit_distance_check() when the threshold is larger than 1
+                        || (chosenAccessMethod == InvertedIndexAccessMethod.INSTANCE && isNgramIndexChosen)
+                        // the inverted index will be utilized
+                        // For keyword, different full-text configs may apply to different indexes on the same field,
+                        // so we need to check if the config used in the index matches the config in the ftcontains() query
+                        // If not, then we cannot use this index.
+                        //
+                        // Note that for now, the keyword/fulltext index can be utilized in
+                        // 1) the full-text ftcontains() function
+                        // 2) functions that take keyword as an argument, e.g. edit_distance_check() when the threshold is 1
+                        || (chosenAccessMethod == InvertedIndexAccessMethod.INSTANCE && isKeywordIndexChosen
+                                && isSameFullTextConfigInIndexAndQuery(analysisCtx,
+                                        chosenIndex.getFullTextConfigName()))) {
+
                     if (resultVarsToIndexTypesMap.containsKey(indexEntry.getValue())) {
                         List<IndexType> appliedIndexTypes = resultVarsToIndexTypesMap.get(indexEntry.getValue());
                         if (!appliedIndexTypes.contains(indexType)) {
@@ -258,6 +281,30 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             }
         }
         return result;
+    }
+
+    private boolean isSameFullTextConfigInIndexAndQuery(AccessMethodAnalysisContext analysisCtx,
+            String indexFullTextConfig) {
+        IOptimizableFuncExpr expr = analysisCtx.getMatchedFuncExpr(0);
+        if (FullTextUtil.isFullTextContainsFunctionExpr(expr)) {
+            // ftcontains()
+            String expectedConfig = FullTextUtil.getFullTextConfigNameFromExpr(expr);
+            if (Strings.isNullOrEmpty(expectedConfig)) {
+                return Strings.isNullOrEmpty(indexFullTextConfig);
+            } else if (expectedConfig.equals(indexFullTextConfig)) {
+                return true;
+            }
+        } else {
+            // besides ftcontains(), there are other functions that utilize the full-text inverted-index,
+            // e.g. edit_distance_check(),
+            // for now, we don't accept users to specify the full-text config in those functions,
+            // that means, we assume the full-text config used in those function is always the default one with the name null,
+            // and if the index full-text config name is also null, the index can be utilized
+            if (Strings.isNullOrEmpty(indexFullTextConfig)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

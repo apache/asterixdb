@@ -45,8 +45,8 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearche
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListTupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IObjectFactory;
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.IFullTextConfigEvaluator;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
-import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.TokenizerInfo.TokenizerType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
@@ -126,25 +126,27 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
     protected void tokenizeQuery(InvertedIndexSearchPredicate searchPred) throws HyracksDataException {
         ITupleReference queryTuple = searchPred.getQueryTuple();
         int queryFieldIndex = searchPred.getQueryFieldIndex();
-        IBinaryTokenizer queryTokenizer = searchPred.getQueryTokenizer();
+        IFullTextConfigEvaluator fullTextAnalyzer = searchPred.getFullTextConfigEvaluator();
+        fullTextAnalyzer.setTokenizer(searchPred.getQueryTokenizer());
+
         // Is this a full-text query?
         // Then, the last argument is conjunctive or disjunctive search option, not a query text.
         // Thus, we need to remove the last argument.
         boolean isFullTextSearchQuery = searchPred.getIsFullTextSearchQuery();
         // Get the type of query tokenizer.
-        TokenizerType queryTokenizerType = queryTokenizer.getTokenizerType();
+        TokenizerType queryTokenizerType = fullTextAnalyzer.getTokenizer().getTokenizerType();
         int tokenCountInOneField = 0;
 
         queryTokenAppender.reset(queryTokenFrame, true);
-        queryTokenizer.reset(queryTuple.getFieldData(queryFieldIndex), queryTuple.getFieldStart(queryFieldIndex),
+        fullTextAnalyzer.reset(queryTuple.getFieldData(queryFieldIndex), queryTuple.getFieldStart(queryFieldIndex),
                 queryTuple.getFieldLength(queryFieldIndex));
 
-        while (queryTokenizer.hasNext()) {
-            queryTokenizer.next();
+        while (fullTextAnalyzer.hasNext()) {
+            fullTextAnalyzer.next();
             queryTokenBuilder.reset();
             tokenCountInOneField++;
             try {
-                IToken token = queryTokenizer.getToken();
+                IToken token = fullTextAnalyzer.getToken();
                 // For the full-text search, we don't support a phrase search yet.
                 // So, each field should have only one token.
                 // If it's a list, it can have multiple keywords in it. But, each keyword should not be a phrase.
@@ -161,6 +163,7 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
                     }
                 }
 
+                // Includes the length of the string, e.g. 8database where 8 (of type byte instead of char) is the length of "database"
                 token.serializeToken(queryTokenBuilder.getFieldData());
                 queryTokenBuilder.addFieldEndOffset();
                 // WARNING: assuming one frame is big enough to hold all tokens

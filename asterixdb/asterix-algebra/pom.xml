@@ -231,5 +231,10 @@
       <groupId>it.unimi.dsi</groupId>
       <artifactId>fastutil</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-fuzzyjoin</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 </project>

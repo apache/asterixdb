@@ -109,6 +109,13 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_WORKING_MEMORY_SIZE = "WorkingMemorySize";
     public static final String FIELD_NAME_APPLIED_FUNCTIONS = "AppliedFunctions";
     public static final String FIELD_NAME_WHERE_CLAUSE = "WhereClause";
+    public static final String FIELD_NAME_FULL_TEXT_CONFIG_NAME = "FullTextConfigName";
+    public static final String FIELD_NAME_FULL_TEXT_FILTER_NAME = "FullTextFilterName";
+    public static final String FIELD_NAME_FULL_TEXT_FILTER_TYPE = "FullTextFilterType";
+    public static final String FIELD_NAME_FULL_TEXT_TOKENIZER = "Tokenizer";
+    public static final String FIELD_NAME_FULL_TEXT_FILTER_PIPELINE = "FullTextFilterPipeline";
+    public static final String FIELD_NAME_FULL_TEXT_STOPWORD_LIST = "StopwordList";
+    public static final String FIELD_NAME_FULL_TEXT_STEMMER_LANGUAGE = "Language";
 
     //---------------------------------- Record Types Creation ----------------------------------//
     //--------------------------------------- Properties ----------------------------------------//
@@ -508,6 +515,41 @@ public final class MetadataRecordTypes {
             new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
             //IsOpen?
             true);
+
+    //---------------------------------- FullText Config and Filter -------------------------//
+    public static final int FULL_TEXT_ARECORD_DATAVERSE_NAME_FIELD_INDEX = 0;
+
+    // FullText Config
+    public static final int FULL_TEXT_ARECORD_CONFIG_NAME_FIELD_INDEX = 1;
+    public static final int FULL_TEXT_ARECORD_CONFIG_TOKENIZER_FIELD_INDEX = 2;
+    public static final int FULL_TEXT_ARECORD_FILTER_PIPELINE_FIELD_INDEX = 3;
+
+    // FullText Filter
+    public static final int FULL_TEXT_ARECORD_FILTER_NAME_FIELD_INDEX = 1;
+    public static final int FULL_TEXT_ARECORD_FILTER_TYPE_FIELD_INDEX = 2;
+
+    // Stopword Filter
+    public static final int FULLTEXT_ENTITY_ARECORD_STOPWORD_LIST_FIELD_INDEX = 3;
+
+    // Stemmer Filter
+    public static final int FULLTEXT_ENTITY_ARECORD_STEMMER_LANGUAGE_FIELD_INDEX = 3;
+
+    public static final String RECORD_NAME_FULL_TEXT_CONFIG = "FullTextConfigRecordType";
+    public static final ARecordType FULL_TEXT_CONFIG_RECORDTYPE = createRecordType(RECORD_NAME_FULL_TEXT_CONFIG,
+            new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FULL_TEXT_CONFIG_NAME, FIELD_NAME_FULL_TEXT_TOKENIZER,
+                    FIELD_NAME_FULL_TEXT_FILTER_PIPELINE },
+            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, AUnionType.createNullableType(BuiltinType.ASTRING),
+                    AUnionType
+                            .createNullableType(new AOrderedListType(BuiltinType.ASTRING, "FullTextFilterPipeline")) },
+            true);
+
+    public static final String RECORD_NAME_FULL_TEXT_FILTER = "FullTextFilterRecordType";
+    // Different filters may have different fields, e.g.
+    // stopwords filter has the stopwords list, so this type is OPEN
+    public static final ARecordType FULL_TEXT_FILTER_RECORDTYPE = createRecordType(RECORD_NAME_FULL_TEXT_FILTER,
+            new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FULL_TEXT_FILTER_NAME,
+                    FIELD_NAME_FULL_TEXT_FILTER_TYPE },
+            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING }, true);
 
     // private members
     private MetadataRecordTypes() {

@@ -122,7 +122,8 @@ public class MetadataBootstrap {
                     MetadataPrimaryIndexes.FEED_DATASET, MetadataPrimaryIndexes.FEED_POLICY_DATASET,
                     MetadataPrimaryIndexes.LIBRARY_DATASET, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET,
                     MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET,
-                    MetadataPrimaryIndexes.SYNONYM_DATASET };
+                    MetadataPrimaryIndexes.SYNONYM_DATASET, MetadataPrimaryIndexes.FULL_TEXT_CONFIG_DATASET,
+                    MetadataPrimaryIndexes.FULL_TEXT_FILTER_DATASET };
 
     private MetadataBootstrap() {
     }
@@ -172,6 +173,7 @@ public class MetadataBootstrap {
             } else {
                 insertNewCompactionPoliciesIfNotExist(mdTxnCtx);
                 insertSynonymEntitiesIfNotExist(mdTxnCtx);
+                insertFullTextConfigAndFilterIfNotExist(mdTxnCtx);
             }
             // #. initialize datasetIdFactory
             MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
@@ -310,6 +312,38 @@ public class MetadataBootstrap {
         if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                 MetadataConstants.SYNONYM_DATASET_NAME) == null) {
             insertMetadataDatasets(mdTxnCtx, new IMetadataIndex[] { MetadataPrimaryIndexes.SYNONYM_DATASET });
+        }
+    }
+
+    // For backward-compatibility: for old datasets created by an older version of AsterixDB, they
+    // 1) may not have such a full-text config dataset in the metadata catalog,
+    // 2) may not have the default full-text config as an entry in the metadata catalog
+    // So here, let's try to insert if not exists
+    private static void insertFullTextConfigAndFilterIfNotExist(MetadataTransactionContext mdTxnCtx)
+            throws AlgebricksException {
+
+        // We need to insert data types first because datasets depend on data types
+        // ToDo: create a new function to reduce duplicated code here: addDatatypeIfNotExist()
+        IAType fullTextConfigRecordType = MetadataPrimaryIndexes.FULL_TEXT_CONFIG_DATASET.getPayloadRecordType();
+        if (MetadataManager.INSTANCE.getDatatype(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                fullTextConfigRecordType.getTypeName()) == null) {
+            MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(MetadataConstants.METADATA_DATAVERSE_NAME,
+                    fullTextConfigRecordType.getTypeName(), fullTextConfigRecordType, false));
+        }
+        IAType fullTextFilterRecordType = MetadataPrimaryIndexes.FULL_TEXT_FILTER_DATASET.getPayloadRecordType();
+        if (MetadataManager.INSTANCE.getDatatype(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                fullTextFilterRecordType.getTypeName()) == null) {
+            MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(MetadataConstants.METADATA_DATAVERSE_NAME,
+                    fullTextFilterRecordType.getTypeName(), fullTextFilterRecordType, false));
+        }
+
+        if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                MetadataConstants.FULL_TEXT_CONFIG_DATASET_NAME) == null) {
+            insertMetadataDatasets(mdTxnCtx, new IMetadataIndex[] { MetadataPrimaryIndexes.FULL_TEXT_CONFIG_DATASET });
+        }
+        if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                MetadataConstants.FULL_TEXT_FILTER_DATASET_NAME) == null) {
+            insertMetadataDatasets(mdTxnCtx, new IMetadataIndex[] { MetadataPrimaryIndexes.FULL_TEXT_FILTER_DATASET });
         }
     }
 
@@ -510,7 +544,11 @@ public class MetadataBootstrap {
     }
 
     private static void ensureCatalogUpgradability(IMetadataIndex index) {
-        if (index != MetadataPrimaryIndexes.SYNONYM_DATASET) {
+        if (index != MetadataPrimaryIndexes.SYNONYM_DATASET
+                // Backward-compatibility: FULLTEXT_ENTITY_DATASET is added to AsterixDB recently
+                // and may not exist in an older dataverse
+                && index != MetadataPrimaryIndexes.FULL_TEXT_CONFIG_DATASET
+                && index != MetadataPrimaryIndexes.FULL_TEXT_FILTER_DATASET) {
             throw new IllegalStateException(
                     "attempt to create metadata index " + index.getIndexName() + ". Index should already exist");
         }

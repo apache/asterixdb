@@ -618,6 +618,10 @@ public class UTF8StringUtil {
         int count = 0;
 
         for (int i = 0; i < strlen; i++) {
+            // ToDo: we shouldn't use str.charAt(i) to convert raw byte array to UTF-8 chars
+            // one UTF-8 char has at most four bytes, and one Java char we get via str.charAt(i) has 2 bytes
+            // In this case, a UTF-8 char may be consistent of 2 Java chars, and 1 Java char can be converted into 3 UTF-8 bytes
+            // For the emoji, it can be 6 bytes after encoded to UTF-8
             c = str.charAt(i);
             utflen += UTF8StringUtil.getModifiedUTF8Len(c);
         }

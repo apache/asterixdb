@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.TokenizerCategory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.TokenizerInfo.TokenizerType;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
@@ -51,6 +52,8 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
         return byteIndex < sentenceEndOffset;
     }
 
+    // ToDo: current solution (where a white list defined for non-separator chars) is not suitable for double-surrogate utf-8 chars
+    // which are always judged as separators
     public static boolean isSeparator(char c) {
         return !(Character.isLetterOrDigit(c) || Character.getType(c) == Character.OTHER_LETTER
                 || Character.getType(c) == Character.OTHER_NUMBER);
@@ -118,5 +121,10 @@ public class DelimitedUTF8StringBinaryTokenizer extends AbstractUTF8StringBinary
     @Override
     public TokenizerType getTokenizerType() {
         return TokenizerType.STRING;
+    }
+
+    @Override
+    public TokenizerCategory getTokenizerCategory() {
+        return TokenizerCategory.WORD;
     }
 }
