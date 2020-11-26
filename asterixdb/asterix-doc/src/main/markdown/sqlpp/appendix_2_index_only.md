@@ -19,9 +19,9 @@
 
 ## <a id="Index_Only">Controlling Index-Only-Plan Parameter</a>
 By default, the system tries to build an index-only plan whenever utilizing a secondary index is possible.
-For example, if a SELECT or JOIN query can utilize an enforced B+Tree or R-Tree index on a field, the optimizer
+For example, if a `SELECT` or `JOIN` query can utilize an enforced B+Tree or R-Tree index on a field, the optimizer
 checks whether a secondary-index search alone can generate the result that the query asks for. It
-mainly checks two conditions: (1) predicates used in WHERE only uses the primary key field and/or secondary key field
+mainly checks two conditions: (1) predicates used in `WHERE` only uses the primary key field and/or secondary key field
 and (2) the result does not return any other fields. If these two conditions hold, it builds an index-only plan.
 Since an index-only plan only searches a secondary-index to answer a query, it is faster than
 a non-index-only plan that needs to search the primary index.
@@ -33,5 +33,5 @@ However, this index-only plan can be turned off per query by setting the followi
 
     set `compiler.indexonly` "false";
 
-    SELECT m.message AS message
-    FROM GleambookMessages m where m.message = " love product-b its shortcut-menu is awesome:)";
+    SELECT o.order_date AS orderdate
+    FROM orders o where o.order_date = "2020-05-01";

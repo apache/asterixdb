@@ -123,8 +123,8 @@ public class ExternalGroupByPOperator extends AbstractGroupByPOperator {
         GroupByOperator gby = (GroupByOperator) op;
         checkGroupAll(gby);
         List<LogicalVariable> gbyCols = getGroupByColumns();
-        int keys[] = JobGenHelper.variablesToFieldIndexes(gbyCols, inputSchemas[0]);
-        int fdColumns[] = getFdColumns(gby, inputSchemas[0]);
+        int[] gbyColumns = JobGenHelper.variablesToFieldIndexes(gbyCols, inputSchemas[0]);
+        int[] fdColumns = getFdColumns(gby, inputSchemas[0]);
 
         if (gby.getNestedPlans().size() != 1) {
             throw new AlgebricksException(
@@ -159,14 +159,6 @@ public class ExternalGroupByPOperator extends AbstractGroupByPOperator {
                     aggOpInputSchemas, context);
             intermediateTypes
                     .add(partialAggregationTypeComputer.getType(aggFun, aggOpInputEnv, context.getMetadataProvider()));
-        }
-
-        int[] keyAndDecFields = new int[keys.length + fdColumns.length];
-        for (i = 0; i < keys.length; ++i) {
-            keyAndDecFields[i] = keys[i];
-        }
-        for (i = 0; i < fdColumns.length; i++) {
-            keyAndDecFields[keys.length + i] = fdColumns[i];
         }
 
         List<LogicalVariable> keyAndDecVariables = new ArrayList<LogicalVariable>();
@@ -225,15 +217,14 @@ public class ExternalGroupByPOperator extends AbstractGroupByPOperator {
         // Calculates the hash table size (# of unique hash values) based on the budget and a tuple size.
         int frameSize = context.getFrameSize();
         long memoryBudgetInBytes = localMemoryRequirements.getMemoryBudgetInBytes(frameSize);
-        int numFds = gby.getDecorList().size();
-        int groupByColumnsCount = gby.getGroupByList().size() + numFds;
+        int allColumns = gbyColumns.length + fdColumns.length;
         int hashTableSize = ExternalGroupOperatorDescriptor.calculateGroupByTableCardinality(memoryBudgetInBytes,
-                groupByColumnsCount, frameSize);
+                allColumns, frameSize);
 
         int framesLimit = localMemoryRequirements.getMemoryBudgetInFrames();
         long inputSize = framesLimit * (long) frameSize;
         ExternalGroupOperatorDescriptor gbyOpDesc = new ExternalGroupOperatorDescriptor(spec, hashTableSize, inputSize,
-                keyAndDecFields, framesLimit, comparatorFactories, normalizedKeyFactory, aggregatorFactory,
+                gbyColumns, fdColumns, framesLimit, comparatorFactories, normalizedKeyFactory, aggregatorFactory,
                 mergeFactory, recordDescriptor, recordDescriptor, new HashSpillableTableFactory(hashFunctionFactories));
         gbyOpDesc.setSourceLocation(gby.getSourceLocation());
         contributeOpDesc(builder, gby, gbyOpDesc);

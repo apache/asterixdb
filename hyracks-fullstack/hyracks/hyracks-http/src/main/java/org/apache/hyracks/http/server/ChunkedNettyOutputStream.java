@@ -112,9 +112,7 @@ public class ChunkedNettyOutputStream extends OutputStream {
                 buffer = null;
                 buffer = ctx.alloc().buffer(size);
             } else {
-                ByteBuf aBuffer = ctx.alloc().buffer(buffer.readableBytes());
-                aBuffer.writeBytes(buffer);
-                response.error(aBuffer);
+                response.error(buffer);
                 buffer.clear();
             }
         }

@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.api.exceptions;
 
+import java.util.Objects;
+
 public interface IFormattedException {
 
     /**
@@ -40,4 +42,27 @@ public interface IFormattedException {
      * @return the exception message
      */
     String getMessage();
+
+    /**
+     * Tests for matching component & errorCode against this exception
+     *
+     * @param component the component to match
+     * @param errorCode the errorCode to match
+     * @return <code>true</code> if this {@link IFormattedException} instance matches the supplied parameters
+     */
+    default boolean matches(String component, int errorCode) {
+        Objects.requireNonNull(component, "component");
+        return component.equals(getComponent()) && errorCode == getErrorCode();
+    }
+
+    /**
+     * Tests for matching component & errorCode against supplied throwable
+     *
+     * @param component the component to match
+     * @param errorCode the errorCode to match
+     * @return <code>true</code> if the supplied {@link Throwable}  matches the supplied parameters
+     */
+    static boolean matches(Throwable th, String component, int errorCode) {
+        return th instanceof IFormattedException && ((IFormattedException) th).matches(component, errorCode);
+    }
 }

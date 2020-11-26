@@ -124,7 +124,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         VariableExpr rightPositionVar = nestClause.getPositionalVariable() == null ? null
                 : (VariableExpr) nestClause.getPositionalVariable().accept(this, arg);
         Expression conditionExpresion = (Expression) nestClause.getConditionExpression().accept(this, arg);
-        NestClause copy = new NestClause(nestClause.getJoinType(), rightExpression, rightVar, rightPositionVar,
+        NestClause copy = new NestClause(nestClause.getNestType(), rightExpression, rightVar, rightPositionVar,
                 conditionExpresion);
         copy.setSourceLocation(nestClause.getSourceLocation());
         return copy;
@@ -136,7 +136,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         VariableExpr rightVar = (VariableExpr) unnestClause.getRightVariable().accept(this, arg);
         VariableExpr rightPositionVar = unnestClause.getPositionalVariable() == null ? null
                 : (VariableExpr) unnestClause.getPositionalVariable().accept(this, arg);
-        UnnestClause copy = new UnnestClause(unnestClause.getJoinType(), rightExpression, rightVar, rightPositionVar);
+        UnnestClause copy = new UnnestClause(unnestClause.getUnnestType(), rightExpression, rightVar, rightPositionVar);
         copy.setSourceLocation(unnestClause.getSourceLocation());
         return copy;
     }
@@ -324,7 +324,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public LimitClause visit(LimitClause limitClause, Void arg) throws CompilationException {
-        Expression limitExpr = (Expression) limitClause.getLimitExpr().accept(this, arg);
+        Expression limitExpr =
+                limitClause.hasLimitExpr() ? (Expression) limitClause.getLimitExpr().accept(this, arg) : null;
         Expression offsetExpr = limitClause.hasOffset() ? (Expression) limitClause.getOffset().accept(this, arg) : null;
         LimitClause copy = new LimitClause(limitExpr, offsetExpr);
         copy.setSourceLocation(limitClause.getSourceLocation());

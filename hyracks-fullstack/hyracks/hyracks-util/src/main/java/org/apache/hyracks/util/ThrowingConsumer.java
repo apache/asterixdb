@@ -40,4 +40,10 @@ public interface ThrowingConsumer<V> {
         };
     }
 
+    static <R> ThrowingFunction<R, Void> asFunction(ThrowingConsumer<R> consumer) {
+        return input -> {
+            consumer.process(input);
+            return null;
+        };
+    }
 }

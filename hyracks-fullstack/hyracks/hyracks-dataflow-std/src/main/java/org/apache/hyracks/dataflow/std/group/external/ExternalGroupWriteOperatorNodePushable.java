@@ -28,6 +28,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.dataflow.common.io.RunFileReader;
@@ -42,6 +43,7 @@ import org.apache.logging.log4j.Logger;
 
 public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable
         implements IRunFileWriterGenerator {
+
     private static final Logger LOGGER = LogManager.getLogger();
     private final IHyracksTaskContext ctx;
     private final Object stateId;
@@ -49,7 +51,8 @@ public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputS
     private final RecordDescriptor partialAggRecordDesc;
     private final RecordDescriptor outRecordDesc;
     private final IAggregatorDescriptorFactory mergeAggregatorFactory;
-    private final int[] mergeGroupFields;
+    private final int[] gbyFields;
+    private final int[] fdFields; // nullable
     private final IBinaryComparator[] groupByComparators;
     private final int frameLimit;
     private final INormalizedKeyComputer nmkComputer;
@@ -57,29 +60,38 @@ public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputS
 
     public ExternalGroupWriteOperatorNodePushable(IHyracksTaskContext ctx, Object stateId,
             ISpillableTableFactory spillableTableFactory, RecordDescriptor partialAggRecordDesc,
-            RecordDescriptor outRecordDesc, int framesLimit, int[] groupFields,
+            RecordDescriptor outRecordDesc, int framesLimit, int[] gbyFields, int[] fdFields,
             INormalizedKeyComputerFactory nmkFactory, IBinaryComparatorFactory[] comparatorFactories,
-            IAggregatorDescriptorFactory aggregatorFactory) {
+            IAggregatorDescriptorFactory aggregatorFactory) throws HyracksDataException {
+        if (comparatorFactories.length != gbyFields.length) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE, "mismatch in group by fields and comparators");
+        }
         this.ctx = ctx;
         this.stateId = stateId;
         this.spillableTableFactory = spillableTableFactory;
         this.frameLimit = framesLimit;
         this.nmkComputer = nmkFactory == null ? null : nmkFactory.createNormalizedKeyComputer();
-
         this.partialAggRecordDesc = partialAggRecordDesc;
         this.outRecordDesc = outRecordDesc;
-
         this.mergeAggregatorFactory = aggregatorFactory;
 
         //create merge group fields
-        int numGroupFields = groupFields.length;
-        mergeGroupFields = new int[numGroupFields];
-        for (int i = 0; i < numGroupFields; i++) {
-            mergeGroupFields[i] = i;
+        this.gbyFields = new int[gbyFields.length];
+        int position = 0;
+        for (int i = 0; i < this.gbyFields.length; i++, position++) {
+            this.gbyFields[i] = position;
+        }
+        if (fdFields != null) {
+            this.fdFields = new int[fdFields.length];
+            for (int i = 0; i < this.fdFields.length; i++, position++) {
+                this.fdFields[i] = position;
+            }
+        } else {
+            this.fdFields = null;
         }
 
         //setup comparators for grouping
-        groupByComparators = new IBinaryComparator[Math.min(mergeGroupFields.length, comparatorFactories.length)];
+        groupByComparators = new IBinaryComparator[comparatorFactories.length];
         for (int i = 0; i < groupByComparators.length; i++) {
             groupByComparators[i] = comparatorFactories[i].createBinaryComparator();
         }
@@ -122,12 +134,12 @@ public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputS
             if (runs[i] != null) {
                 // Calculates the hash table size (# of unique hash values) based on the budget and a tuple size.
                 int memoryBudgetInBytes = ctx.getInitialFrameSize() * frameLimit;
-                int groupByColumnsCount = mergeGroupFields.length;
-                int hashTableCardinality = ExternalGroupOperatorDescriptor.calculateGroupByTableCardinality(
-                        memoryBudgetInBytes, groupByColumnsCount, ctx.getInitialFrameSize());
+                int allFields = gbyFields.length + (fdFields == null ? 0 : fdFields.length);
+                int hashTableCardinality = ExternalGroupOperatorDescriptor
+                        .calculateGroupByTableCardinality(memoryBudgetInBytes, allFields, ctx.getInitialFrameSize());
                 hashTableCardinality = Math.min(hashTableCardinality, numOfTuples[i]);
                 ISpillableTable partitionTable = spillableTableFactory.buildSpillableTable(ctx, hashTableCardinality,
-                        runs[i].getFileSize(), mergeGroupFields, groupByComparators, nmkComputer,
+                        runs[i].getFileSize(), gbyFields, fdFields, groupByComparators, nmkComputer,
                         mergeAggregatorFactory, partialAggRecordDesc, outRecordDesc, frameLimit, level);
                 RunFileWriter[] runFileWriters = new RunFileWriter[partitionTable.getNumPartitions()];
                 int[] sizeInTuplesNextLevel =

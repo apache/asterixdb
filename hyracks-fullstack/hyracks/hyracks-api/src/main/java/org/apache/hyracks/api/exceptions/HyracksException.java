@@ -20,7 +20,6 @@ package org.apache.hyracks.api.exceptions;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Objects;
 
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
@@ -152,11 +151,6 @@ public class HyracksException extends IOException implements IFormattedException
             msgCache = ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), sourceLoc, params);
         }
         return msgCache;
-    }
-
-    public boolean matches(String component, int errorCode) {
-        Objects.requireNonNull(component, "component");
-        return component.equals(this.component) && errorCode == this.errorCode;
     }
 
     @Override

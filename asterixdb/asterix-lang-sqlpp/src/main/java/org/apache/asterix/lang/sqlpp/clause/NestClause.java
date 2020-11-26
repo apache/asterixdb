@@ -23,14 +23,17 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.asterix.lang.sqlpp.optype.JoinType;
+import org.apache.asterix.lang.sqlpp.optype.UnnestType;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 
 public class NestClause extends AbstractBinaryCorrelateWithConditionClause {
 
-    public NestClause(JoinType joinType, Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar,
+    private final UnnestType nestType;
+
+    public NestClause(UnnestType nestType, Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar,
             Expression conditionExpr) {
-        super(joinType, rightExpr, rightVar, rightPosVar, conditionExpr);
+        super(rightExpr, rightVar, rightPosVar, conditionExpr);
+        this.nestType = nestType;
     }
 
     @Override
@@ -43,4 +46,24 @@ public class NestClause extends AbstractBinaryCorrelateWithConditionClause {
         return ClauseType.NEST_CLAUSE;
     }
 
+    public UnnestType getNestType() {
+        return nestType;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * super.hashCode() + nestType.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof NestClause)) {
+            return false;
+        }
+        NestClause target = (NestClause) object;
+        return super.equals(target) && nestType.equals(target.getNestType());
+    }
 }

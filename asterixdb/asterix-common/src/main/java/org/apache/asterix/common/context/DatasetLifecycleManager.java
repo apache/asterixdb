@@ -55,6 +55,8 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentIdGenerator;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.LocalResource;
+import org.apache.hyracks.storage.common.buffercache.IRateLimiter;
+import org.apache.hyracks.storage.common.buffercache.SleepRateLimiter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -310,6 +312,16 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
+    public synchronized IRateLimiter getRateLimiter(int datasetId, int partition, long writeRateLimit) {
+        DatasetResource dataset = datasets.get(datasetId);
+        IRateLimiter rateLimiter = dataset.getRateLimiter(partition);
+        if (rateLimiter == null) {
+            rateLimiter = populateRateLimiter(dataset, partition, writeRateLimit);
+        }
+        return rateLimiter;
+    }
+
+    @Override
     public synchronized boolean isRegistered(int datasetId) {
         return datasets.containsKey(datasetId);
     }
@@ -322,6 +334,12 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
                 logManager, dataset.getDatasetInfo(), idGenerator);
         dataset.setPrimaryIndexOperationTracker(partition, opTracker);
         dataset.setIdGenerator(partition, idGenerator);
+    }
+
+    private IRateLimiter populateRateLimiter(DatasetResource dataset, int partition, long writeRateLimit) {
+        IRateLimiter rateLimiter = SleepRateLimiter.create(writeRateLimit);
+        dataset.setRateLimiter(partition, rateLimiter);
+        return rateLimiter;
     }
 
     private void validateDatasetLifecycleManagerState() throws HyracksDataException {

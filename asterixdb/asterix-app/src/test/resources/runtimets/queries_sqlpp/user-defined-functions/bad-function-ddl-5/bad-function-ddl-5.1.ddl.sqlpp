@@ -18,7 +18,7 @@
  */
 
 /*
- * Description  : Declare a UDF that uses a function that does not exist
+ * Description  : Declare a non-varargs UDF that uses a function that does not exist
  * Expected Res : Error
  */
 

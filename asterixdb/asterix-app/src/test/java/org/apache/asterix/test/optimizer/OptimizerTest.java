@@ -37,7 +37,6 @@ import org.apache.asterix.api.java.AsterixJavaClient;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -73,7 +72,6 @@ public class OptimizerTest {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String SEPARATOR = File.separator;
-    private static final String EXTENSION_AQL = "aql";
     private static final String EXTENSION_SQLPP = "sqlpp";
     private static final String EXTENSION_RESULT = "plan";
     private static final String FILENAME_IGNORE = "ignore.txt";
@@ -87,7 +85,6 @@ public class OptimizerTest {
     private static final ArrayList<String> ignore = AsterixTestHelper.readTestListFile(FILENAME_IGNORE, PATH_BASE);
     private static final ArrayList<String> only = AsterixTestHelper.readTestListFile(FILENAME_ONLY, PATH_BASE);
     protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
-    private static final ILangCompilationProvider aqlCompilationProvider = new AqlCompilationProvider();
     private static final ILangCompilationProvider sqlppCompilationProvider = new SqlppCompilationProvider();
     protected static ILangCompilationProvider extensionLangCompilationProvider = null;
     protected static IStatementExecutorFactory statementExecutorFactory = new DefaultStatementExecutorFactory();
@@ -134,7 +131,7 @@ public class OptimizerTest {
                 suiteBuildPerFile(innerfile, testArgs, subdir);
             }
         }
-        if (file.isFile() && (file.getName().endsWith(EXTENSION_AQL) || file.getName().endsWith(EXTENSION_SQLPP))) {
+        if (file.isFile() && file.getName().endsWith(EXTENSION_SQLPP)) {
             String resultFileName = AsterixTestHelper.extToResExt(file.getName(), EXTENSION_RESULT);
             File expectedFile = new File(PATH_EXPECTED + path + resultFileName);
             File actualFile = new File(PATH_ACTUAL + SEPARATOR + path + resultFileName);
@@ -194,8 +191,7 @@ public class OptimizerTest {
             // Forces the creation of actualFile.
             actualFile.getParentFile().mkdirs();
 
-            ILangCompilationProvider provider =
-                    queryFile.getName().endsWith("aql") ? aqlCompilationProvider : sqlppCompilationProvider;
+            ILangCompilationProvider provider = sqlppCompilationProvider;
             if (extensionLangCompilationProvider != null) {
                 provider = extensionLangCompilationProvider;
             }

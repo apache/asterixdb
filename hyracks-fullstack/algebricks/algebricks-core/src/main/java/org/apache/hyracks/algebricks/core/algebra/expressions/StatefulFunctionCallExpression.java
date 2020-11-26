@@ -50,11 +50,13 @@ public class StatefulFunctionCallExpression extends AbstractFunctionCallExpressi
 
     @Override
     public StatefulFunctionCallExpression cloneExpression() {
-        cloneAnnotations();
         List<Mutable<ILogicalExpression>> clonedArgs = cloneArguments();
         StatefulFunctionCallExpression clonedExpr =
                 new StatefulFunctionCallExpression(finfo, propertiesComputer, clonedArgs);
         clonedExpr.setSourceLocation(sourceLoc);
+        // opaqueParameters are not really cloned
+        clonedExpr.setOpaqueParameters(getOpaqueParameters());
+        copyAnnotationsInto(clonedExpr);
         return clonedExpr;
     }
 

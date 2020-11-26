@@ -252,11 +252,18 @@ public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<V
 
     @Override
     public Void visit(LimitClause lc, Integer step) throws CompilationException {
-        out.println(skip(step) + "Limit");
-        lc.getLimitExpr().accept(this, step + 1);
-        if (lc.getOffset() != null) {
-            out.println(skip(step + 1) + "Offset");
-            lc.getOffset().accept(this, step + 2);
+        if (lc.hasLimitExpr()) {
+            out.println(skip(step) + "Limit");
+            lc.getLimitExpr().accept(this, step + 1);
+            if (lc.hasOffset()) {
+                out.println(skip(step + 1) + "Offset");
+                lc.getOffset().accept(this, step + 2);
+            }
+        } else if (lc.hasOffset()) {
+            out.println(skip(step) + "Offset");
+            lc.getOffset().accept(this, step + 1);
+        } else {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, lc.getSourceLocation(), "");
         }
         return null;
     }

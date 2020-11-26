@@ -369,7 +369,7 @@ public final class SqlppGroupingSetsVisitor extends AbstractSqlppExpressionScopi
 
         return selectElement
                 ? SetOperationVisitor.createSelectBlock(newSelectExpr, distinct,
-                        selectElementConvertToRegular ? SqlppGroupingSetsVisitor::getFieldByName : null,
+                        selectElementConvertToRegular ? SqlppRewriteUtil::getFieldByName : null,
                         selectElementConvertToRegular ? selectElementMainProjectionName : null, context)
                 : SetOperationVisitor.createSelectBlock(newSelectExpr, distinct,
                         SqlppGroupingSetsVisitor::removeFieldsByName, extraProjections.values(), context);
@@ -433,17 +433,6 @@ public final class SqlppGroupingSetsVisitor extends AbstractSqlppExpressionScopi
             resultExpr = callExpr;
         }
         return resultExpr;
-    }
-
-    private static Expression getFieldByName(Expression inExpr, String fieldName) {
-        LiteralExpr fieldNameExpr = new LiteralExpr(new StringLiteral(fieldName));
-        fieldNameExpr.setSourceLocation(inExpr.getSourceLocation());
-        List<Expression> argList = new ArrayList<>(2);
-        argList.add(inExpr);
-        argList.add(fieldNameExpr);
-        CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.FIELD_ACCESS_BY_NAME), argList);
-        callExpr.setSourceLocation(inExpr.getSourceLocation());
-        return callExpr;
     }
 
     private String generateProjectionName(List<Projection> projectionList) {

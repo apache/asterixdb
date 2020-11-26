@@ -91,6 +91,9 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Rewrites several variable-arg functions into their corresponding internal list-input functions.
         rewriteListInputFunctions();
 
+        // Rewrites RIGHT OUTER JOINs into LEFT OUTER JOINs if possible
+        rewriteRightJoins();
+
         // Inlines functions recursively.
         inlineDeclaredUdfs(inlineUdfs);
     }

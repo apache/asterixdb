@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-drop nodegroup group1;
+drop nodegroup UnknownNodeGroup;

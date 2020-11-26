@@ -117,9 +117,10 @@ public class ExternalDataConstants {
     // a string representing the NULL value
     public static final String KEY_NULL_STR = "null";
     public static final String KEY_REDACT_WARNINGS = "redact-warnings";
+    public static final String KEY_REQUESTED_FIELDS = "requested-fields";
 
     /**
-     *  Keys for adapter name
+     * Keys for adapter name
      **/
     public static final String KEY_ADAPTER_NAME_TWITTER_PUSH = "twitter_push";
     public static final String KEY_ADAPTER_NAME_PUSH_TWITTER = "push_twitter";
@@ -131,6 +132,7 @@ public class ExternalDataConstants {
     public static final String KEY_ALIAS_ADAPTER_NAME_SOCKET = "socket_adapter";
     public static final String KEY_ADAPTER_NAME_HTTP = "http_adapter";
     public static final String KEY_ADAPTER_NAME_AWS_S3 = "S3";
+    public static final String KEY_ADAPTER_NAME_AZURE_BLOB = "AZUREBLOB";
 
     /**
      * HDFS class names
@@ -138,6 +140,8 @@ public class ExternalDataConstants {
     public static final String CLASS_NAME_TEXT_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
     public static final String CLASS_NAME_SEQUENCE_INPUT_FORMAT = "org.apache.hadoop.mapred.SequenceFileInputFormat";
     public static final String CLASS_NAME_RC_INPUT_FORMAT = "org.apache.asterix.hivecompat.io.RCFileInputFormat";
+    public static final String CLASS_NAME_PARQUET_INPUT_FORMAT =
+            "org.apache.asterix.external.input.record.reader.hdfs.parquet.MapredParquetInputFormat";
     public static final String CLASS_NAME_HDFS_FILESYSTEM = "org.apache.hadoop.hdfs.DistributedFileSystem";
     /**
      * input formats aliases
@@ -145,6 +149,7 @@ public class ExternalDataConstants {
     public static final String INPUT_FORMAT_TEXT = "text-input-format";
     public static final String INPUT_FORMAT_SEQUENCE = "sequence-input-format";
     public static final String INPUT_FORMAT_RC = "rc-input-format";
+    public static final String INPUT_FORMAT_PARQUET = "parquet-input-format";
     /**
      * Builtin streams
      */
@@ -178,10 +183,12 @@ public class ExternalDataConstants {
     public static final String FORMAT_SEMISTRUCTURED = "semi-structured";
     public static final String FORMAT_LINE_SEPARATED = "line-separated";
     public static final String FORMAT_HDFS_WRITABLE = "hdfs-writable";
+    public static final String FORMAT_NOOP = "noop";
     public static final String FORMAT_KV = "kv";
     public static final String FORMAT_CSV = "csv";
     public static final String FORMAT_TSV = "tsv";
     public static final Set<String> ALL_FORMATS;
+
     static {
         Set<String> formats = new HashSet<>(13);
         formats.add(FORMAT_HIVE);
@@ -286,8 +293,30 @@ public class ExternalDataConstants {
         public static final String REGION_FIELD_NAME = "region";
         public static final String ACCESS_KEY_ID_FIELD_NAME = "accessKeyId";
         public static final String SECRET_ACCESS_KEY_FIELD_NAME = "secretAccessKey";
+        public static final String SESSION_TOKEN_FIELD_NAME = "sessionToken";
         public static final String CONTAINER_NAME_FIELD_NAME = "container";
         public static final String DEFINITION_FIELD_NAME = "definition";
         public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";
+    }
+
+    public static class AzureBlob {
+        private AzureBlob() {
+            throw new AssertionError("do not instantiate");
+        }
+
+        public static final String ACCOUNT_NAME_FIELD_NAME = "accountName";
+        public static final String ACCOUNT_KEY_FIELD_NAME = "accountKey";
+        public static final String SHARED_ACCESS_SIGNATURE_FIELD_NAME = "sharedAccessSignature";
+        public static final String CONTAINER_NAME_FIELD_NAME = "container";
+        public static final String DEFINITION_FIELD_NAME = "definition";
+        public static final String BLOB_ENDPOINT_FIELD_NAME = "blobEndpoint";
+        public static final String ENDPOINT_SUFFIX_FIELD_NAME = "endpointSuffix";
+
+        // Connection string requires PascalCase (MyFieldFormat)
+        public static final String CONNECTION_STRING_ACCOUNT_NAME = "AccountName";
+        public static final String CONNECTION_STRING_ACCOUNT_KEY = "AccountKey";
+        public static final String CONNECTION_STRING_SHARED_ACCESS_SIGNATURE = "SharedAccessSignature";
+        public static final String CONNECTION_STRING_BLOB_ENDPOINT = "BlobEndpoint";
+        public static final String CONNECTION_STRING_ENDPOINT_SUFFIX = "EndpointSuffix";
     }
 }

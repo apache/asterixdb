@@ -19,13 +19,14 @@
 package org.apache.asterix.app.external;
 
 import java.io.IOException;
+import java.net.URI;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public interface IExternalUDFLibrarian {
-    void install(String dataverse, String libName, String libPath, Pair<String, String> credentials) throws Exception;
 
-    void uninstall(String dataverse, String libName, Pair<String, String> credentials)
-            throws IOException, AsterixException;
+    void install(URI path, String libPath, Pair<String, String> credentials) throws Exception;
+
+    void uninstall(URI path, Pair<String, String> credentials) throws IOException, AsterixException;
 }

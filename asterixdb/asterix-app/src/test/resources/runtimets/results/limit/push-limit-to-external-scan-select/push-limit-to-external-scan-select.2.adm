@@ -1,0 +1,22 @@
+distribute result [$$16]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 5
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      exchange
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        limit 5
+        -- STREAM_LIMIT  |PARTITIONED|
+          project ([$$16])
+          -- STREAM_PROJECT  |PARTITIONED|
+            assign [$$16] <- [$$t.getField(0)]
+            -- ASSIGN  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                data-scan []<-[$$t] <- test.ds1 condition (gt($$t.getField(0), 2)) limit 5
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

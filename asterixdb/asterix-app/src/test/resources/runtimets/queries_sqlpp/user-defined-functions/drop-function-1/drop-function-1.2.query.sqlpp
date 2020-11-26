@@ -19,4 +19,7 @@
 
 use experiments;
 
-my_sum(2, 3);
+{
+  "t1": my_sum(2, 3),
+  "t2": my_sum_va(4, 5)
+}

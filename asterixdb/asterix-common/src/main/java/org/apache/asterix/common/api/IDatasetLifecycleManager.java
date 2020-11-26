@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
+import org.apache.hyracks.storage.common.buffercache.IRateLimiter;
 
 public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IIndex> {
     /**
@@ -102,6 +103,16 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
      * @return
      */
     ILSMComponentIdGenerator getComponentIdGenerator(int datasetId, int partition, String path);
+
+    /**
+     * creates (if necessary) and returns the rate limiter of a dataset.
+     *
+     * @param datasetId
+     * @param partition
+     * @param path
+     * @return
+     */
+    IRateLimiter getRateLimiter(int datasetId, int partition, long writeRateLimit);
 
     /**
      * creates (if necessary) and returns the dataset virtual buffer caches.

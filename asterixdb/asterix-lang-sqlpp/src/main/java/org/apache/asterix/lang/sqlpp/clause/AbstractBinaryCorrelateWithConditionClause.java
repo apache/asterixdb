@@ -21,15 +21,14 @@ package org.apache.asterix.lang.sqlpp.clause;
 
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.sqlpp.optype.JoinType;
 
 public abstract class AbstractBinaryCorrelateWithConditionClause extends AbstractBinaryCorrelateClause {
 
     private Expression conditionExpr;
 
-    public AbstractBinaryCorrelateWithConditionClause(JoinType joinType, Expression rightExpr, VariableExpr rightVar,
+    public AbstractBinaryCorrelateWithConditionClause(Expression rightExpr, VariableExpr rightVar,
             VariableExpr rightPosVar, Expression conditionExpr) {
-        super(joinType, rightExpr, rightVar, rightPosVar);
+        super(rightExpr, rightVar, rightPosVar);
         this.conditionExpr = conditionExpr;
     }
 
@@ -57,5 +56,4 @@ public abstract class AbstractBinaryCorrelateWithConditionClause extends Abstrac
         AbstractBinaryCorrelateWithConditionClause target = (AbstractBinaryCorrelateWithConditionClause) object;
         return super.equals(target) && conditionExpr.equals(target.getConditionExpression());
     }
-
 }

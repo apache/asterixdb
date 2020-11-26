@@ -32,17 +32,20 @@ import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AsterixInputStreamReader extends Reader {
-    private AsterixInputStream in;
-    private byte[] bytes = new byte[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
-    private ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-    private CharBuffer charBuffer = CharBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
-    private CharsetDecoder decoder;
-    private boolean done = false;
-    private boolean remaining = false;
+    private final AsterixInputStream in;
+    private final CharsetDecoder decoder;
+    private final byte[] bytes;
+    protected final ByteBuffer byteBuffer;
+    protected final CharBuffer charBuffer;
+    protected boolean done = false;
+    protected boolean remaining = false;
 
     public AsterixInputStreamReader(AsterixInputStream in) {
         this.in = in;
         this.decoder = StandardCharsets.UTF_8.newDecoder();
+        bytes = new byte[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
+        byteBuffer = ByteBuffer.wrap(bytes);
+        charBuffer = CharBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
         this.byteBuffer.flip();
     }
 

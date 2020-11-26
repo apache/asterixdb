@@ -1,0 +1,6 @@
+{ "t0_fivethous": 0, "t1_fivethous": 0, "t1_unique1": 0, "t0_n_unique1": 0 }
+{ "t0_fivethous": 0, "t1_fivethous": 0, "t1_unique1": 0, "t0_n_unique1": 5000 }
+{ "t0_fivethous": 0, "t1_fivethous": 0, "t1_unique1": 5000, "t0_n_unique1": 0 }
+{ "t0_fivethous": 0, "t1_fivethous": 0, "t1_unique1": 5000, "t0_n_unique1": 5000 }
+{ "t0_fivethous": null, "t1_fivethous": 1, "t1_unique1": 1, "t0_n_unique1": null }
+{ "t0_fivethous": null, "t1_fivethous": 1, "t1_unique1": 5001, "t0_n_unique1": null }

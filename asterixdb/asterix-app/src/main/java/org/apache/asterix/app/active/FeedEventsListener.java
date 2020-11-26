@@ -65,10 +65,11 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
     }
 
     @Override
-    public synchronized void remove(Dataset dataset) throws HyracksDataException {
+    public synchronized boolean remove(Dataset dataset) throws HyracksDataException {
         super.remove(dataset);
         feedConnections.removeIf(o -> o.getDataverseName().equals(dataset.getDataverseName())
                 && o.getDatasetName().equals(dataset.getDatasetName()));
+        return false;
     }
 
     public synchronized void addFeedConnection(FeedConnection feedConnection) {
@@ -98,8 +99,8 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
     @Override
     protected JobId compileAndStartJob(MetadataProvider mdProvider) throws HyracksDataException {
         try {
-            Pair<JobSpecification, AlgebricksAbsolutePartitionConstraint> jobInfo = FeedOperations
-                    .buildStartFeedJob(mdProvider, feed, feedConnections, statementExecutor, hcc, translatorLang);
+            Pair<JobSpecification, AlgebricksAbsolutePartitionConstraint> jobInfo =
+                    FeedOperations.buildStartFeedJob(mdProvider, feed, feedConnections, statementExecutor, hcc);
             JobSpecification feedJob = jobInfo.getLeft();
             feedJob.setProperty(ActiveNotificationHandler.ACTIVE_ENTITY_PROPERTY_NAME, entityId);
             // TODO(Yingyi): currently we do not check IFrameWriter protocol violations for Feed jobs.

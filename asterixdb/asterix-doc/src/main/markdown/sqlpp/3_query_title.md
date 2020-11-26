@@ -19,7 +19,22 @@
 
 # <a id="Queries">3. Queries</a>
 
-A query can be any legal expression or `SELECT` statement. A query always ends with a semicolon.
+A *query* can be an expression, or it can be constructed from blocks of code called *query blocks*. A query block may contain several clauses, including `SELECT`, `FROM`, `LET`, `WHERE`, `GROUP BY`, and `HAVING`. 
 
-    Query ::= (Expression | SelectStatement) ";"
+---
+### Query
+**![](../images/diagrams/Query.png)**
 
+### Selection
+**![](../images/diagrams/Selection.png)**
+
+### QueryBlock
+**![](../images/diagrams/QueryBlock.png)**
+
+### StreamGenerator
+**![](../images/diagrams/StreamGenerator.png)**
+
+
+---
+
+Note that, unlike SQL, SQL++ allows the `SELECT` clause to appear either at the beginning or at the end of a query block. For some queries, placing the `SELECT` clause at the end may make a query block easier to understand, because the `SELECT` clause refers to variables defined in the other clauses.

@@ -94,7 +94,7 @@ public class RangeMapBuilder {
             // TODO Add support for composite fields.
         }
 
-        return new RangeMap(1, abvs.getByteArray(), offsets);
+        return new RangeMap(1, abvs.getByteArray(), offsets, null);
     }
 
     @SuppressWarnings("unchecked")

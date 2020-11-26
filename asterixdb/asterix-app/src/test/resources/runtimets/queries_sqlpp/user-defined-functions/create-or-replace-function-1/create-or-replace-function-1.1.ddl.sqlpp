@@ -30,12 +30,50 @@ create function f1(a, b) {
   a + b
 };
 
-/* Replace an existing function */
+/* Replaces an existing function */
 create or replace function f1(a, b) {
   a - b
 };
 
-/* Create new function */
+/* Creates new function */
 create or replace function f2(a, b) {
   a * b
+};
+
+/* Test varargs functions */
+
+create function f3(...) {
+  string_join(args, ".")
+};
+
+/* Replaces an existing function */
+create or replace function f3(...) {
+  string_join(args, ",")
+};
+
+/* Creates new function */
+create or replace function f4(...) {
+  string_join(args, "/")
+};
+
+/* Overloading. cannot replace varargs function with non-varargs and vice-versa */
+
+/* Creates new non-varargs function */
+create or replace function f5(a) {
+  upper(a)
+};
+
+/* Creates new varargs function (overloading) */
+create or replace function f5(...) {
+  string_join(args, ".")
+};
+
+/* Creates new varargs function */
+create or replace function f6(...) {
+  string_join(args, ",")
+};
+
+/* Creates new non-varargs function */
+create or replace function f6(a) {
+  lower(a)
 };

@@ -42,7 +42,6 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
-import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.messaging.CCMessageBroker;
@@ -115,9 +114,9 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         ClusterControllerService ccSrv = (ClusterControllerService) ccSrvContext.getControllerService();
         CCApplication ccApp = (CCApplication) ccSrv.getApplication();
         CCMessageBroker messageBroker = (CCMessageBroker) ccSrvContext.getMessageBroker();
-        final RuntimeDataException rejectionReason = getRejectionReason(ccSrv);
+        final RuntimeDataException rejectionReason = getRejectionReason(ccSrv, requestNodeId);
         if (rejectionReason != null) {
-            sendRejection(rejectionReason, messageBroker);
+            sendRejection(rejectionReason, messageBroker, requestMessageId, requestNodeId);
             return;
         }
         CCExtensionManager ccExtMgr = (CCExtensionManager) ccAppCtx.getExtensionManager();
@@ -162,8 +161,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             responseMsg.setStatementProperties(statementProperties);
             responseMsg.setExecutionPlans(translator.getExecutionPlans());
             responseMsg.setWarnings(warnings);
-        } catch (AlgebricksException | HyracksException | TokenMgrError
-                | org.apache.asterix.lang.sqlpp.parser.TokenMgrError pe) {
+        } catch (AlgebricksException | HyracksException | org.apache.asterix.lang.sqlpp.parser.TokenMgrError pe) {
             // we trust that "our" exceptions are serializable and have a comprehensible error message
             GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, pe.getMessage(), pe);
             responseMsg.setError(pe);
@@ -178,7 +176,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         }
     }
 
-    private RuntimeDataException getRejectionReason(ClusterControllerService ccSrv) {
+    static RuntimeDataException getRejectionReason(ClusterControllerService ccSrv, String requestNodeId) {
         if (ccSrv.getNodeManager().getNodeControllerState(requestNodeId) == null) {
             return new RuntimeDataException(ErrorCode.REJECT_NODE_UNREGISTERED);
         }
@@ -191,7 +189,8 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         return null;
     }
 
-    private void sendRejection(RuntimeDataException reason, CCMessageBroker messageBroker) {
+    static void sendRejection(RuntimeDataException reason, CCMessageBroker messageBroker, long requestMessageId,
+            String requestNodeId) {
         ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
         responseMsg.setError(reason);
         try {

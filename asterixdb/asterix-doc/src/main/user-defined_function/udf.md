@@ -38,7 +38,7 @@ well. We can invoke `asterixhelper` like so:
 
 Then, in your `cc.conf`, in the `[cc]` section, add the correct `credential.file` path
 
-    [cc]
+    [nc]
     address = 127.0.0.1
     ...
     ...
@@ -77,7 +77,7 @@ here is an example that uses the sample UDF `mysum` to compute the sum of two in
     USE udfs;
 
     CREATE FUNCTION mysum(a: int32, b: int32)
-      RETURNS int32
+    RETURNS int32
       AS "org.apache.asterix.external.library.MySumFactory" AT testlib;
 
 ## <a id="PythonUDF">Creating a Python UDF</a>
@@ -126,7 +126,8 @@ With the library deployed, we can define a function within it for use. For examp
 
     USE udfs;
 
-    CREATE FUNCTION sentiment(a) 
+    CREATE FUNCTION sentiment(a)
+    RETURNS TweetType
       AS "sentiment_mod", "sent_model.sentiment" AT pylib;
 
 By default, AsterixDB will treat all external functions as deterministic. It means the function must return the same
@@ -200,7 +201,6 @@ Then we define the function we want to apply to the feed
     USE udfs;
 
     CREATE FUNCTION addMentionedUsers(t: TweetType)
-      RETURNS TweetType
       AS "org.apache.asterix.external.library.AddMentionedUsersFactory" AT testlib
       WITH { "resources": { "textFieldName": "text" } };
 
@@ -215,6 +215,23 @@ After creating the feed, we attach the UDF onto the feed pipeline and start the 
 You can check the annotated Tweets by querying the `ProcessedTweets` dataset:
 
     SELECT * FROM ProcessedTweets LIMIT 10;
+    
+## <a name="adapter">Installing a user-defined Feed Adapter</a>
+
+First, upload a zip file packaged the same way as a Java UDF, but also containing the adapter you would like to use.
+Next, issue a `CREATE ADAPTER` statement referencing the class name. For example:
+
+    CREATE ADAPTER TweetAdapter
+      AS "org.apache.asterix.external.library.adapter.TestTypedAdapterFactory" AT testlib;
+      
+
+Then, the adapter can be used like any other adapter in a feed.
+
+    CREATE FEED TweetFeed WITH {
+      "adapter-name": "TweetAdapter",
+      "type-name" : "TweetType",
+      "num_output_records": 4
+    };
 
 ## <a name="uninstall">Unstalling an UDF Library</a>
 

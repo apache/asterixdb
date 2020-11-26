@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
@@ -343,6 +344,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars());
         appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
         appendLimitInformation(plan, op.getOutputLimit());
+        appendProjectInformation(plan, op.getProjectionInfo());
         return null;
     }
 
@@ -373,12 +375,23 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         }
     }
 
+    private void appendProjectInformation(AlgebricksStringBuilderWriter plan, IProjectionInfo<?> projectionInfo) {
+        final String projectedFields = projectionInfo == null ? "" : projectionInfo.toString();
+        if (!projectedFields.isEmpty()) {
+            plan.append(" project (");
+            plan.append(projectedFields);
+            plan.append(")");
+        }
+    }
+
     @Override
     public Void visitLimitOperator(LimitOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("limit " + op.getMaxObjects().getValue().accept(exprVisitor, indent));
-        ILogicalExpression offset = op.getOffset().getValue();
-        if (offset != null) {
-            buffer.append(", " + offset.accept(exprVisitor, indent));
+        addIndent(indent).append("limit");
+        if (op.hasMaxObjects()) {
+            buffer.append(' ').append(op.getMaxObjects().getValue().accept(exprVisitor, indent));
+        }
+        if (op.hasOffset()) {
+            buffer.append(" offset ").append(op.getOffset().getValue().accept(exprVisitor, indent));
         }
         return null;
     }

@@ -26,4 +26,4 @@ use test;
 FROM tenk1 t
 WHERE t.unique2 < 10
 SELECT lag(t.ten) OVER (PARTITION BY t.four ORDER BY t.ten) AS lag, t.ten, t.four
-ORDER BY t.four, t.ten
+ORDER BY t.four, t.ten, lag

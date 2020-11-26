@@ -29,7 +29,7 @@ create  dataverse test;
 use test;
 
 
-create type test.DBLPType as
+create type DBLPType as
 {
   id : bigint,
   dblpid : string,
@@ -58,6 +58,21 @@ create type onekType1 as
   string4 : string
 };
 
-create  dataset DBLP1(DBLPType) primary key id;
+create dataset DBLP1(DBLPType) primary key id;
 
 create dataset onek1(onekType1) primary key unique2;
+
+create function drop_fields(obj, field1, field2, field3) {
+  (
+    select value object_remove(t3, field3)
+    from (
+      select value object_remove(t2, field2)
+      from (
+        select value object_remove(t1, field1)
+        from (
+          select value t0 from to_array(obj) t0
+        ) t1
+      ) t2
+    ) t3
+  )[0]
+};

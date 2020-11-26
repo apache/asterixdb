@@ -30,7 +30,7 @@ import org.apache.asterix.api.java.AsterixJavaClient;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.compiler.provider.AqlCompilationProvider;
+import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestExecutor;
@@ -64,7 +64,7 @@ public class DmlTest {
                 new BufferedReader(new InputStreamReader(new FileInputStream(LOAD_FOR_ENLIST_FILE), "UTF-8"));
         AsterixJavaClient asterixLoad =
                 new AsterixJavaClient((ICcApplicationContext) integrationUtil.cc.getApplicationContext(),
-                        integrationUtil.getHyracksClientConnection(), loadReader, ERR, new AqlCompilationProvider(),
+                        integrationUtil.getHyracksClientConnection(), loadReader, ERR, new SqlppCompilationProvider(),
                         new DefaultStatementExecutorFactory(), new StorageComponentProvider());
         try {
             asterixLoad.compile(true, false, false, false, false, true, false);

@@ -180,6 +180,7 @@ import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
 import org.apache.asterix.lang.sqlpp.optype.SetOpType;
+import org.apache.asterix.lang.sqlpp.optype.UnnestType;
 import org.apache.asterix.lang.sqlpp.parser.SqlppGroupingSetsParser;
 import org.apache.asterix.lang.sqlpp.parser.SqlppGroupingSetsParser.GroupingElement;
 import org.apache.asterix.lang.sqlpp.parser.SqlppGroupingSetsParser.GroupingSet;
@@ -205,6 +206,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpre
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.StringUtil;
 
@@ -237,6 +239,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String RETURNS = "RETURNS";
 
     private static final String INT_TYPE_NAME = "int";
+    private static final String UDF_VARARGS_PARAM_NAME = "args"; // Note: this value is stored in the function metadata
 
     // error configuration
     protected static final boolean REPORT_EXPECTED_TOKENS = false;
@@ -358,6 +361,16 @@ class SQLPPParser extends ScopeChecker implements IParser {
     }
 
     @Override
+    public List<String> parseMultipartIdentifier() throws CompilationException {
+        return parseImpl(new ParseFunction<List<String>>() {
+            @Override
+            public List<String> parse() throws ParseException {
+                return SQLPPParser.this.MultipartIdentifier();
+            }
+        });
+    }
+
+    @Override
     public FunctionDecl parseFunctionBody(FunctionSignature signature, List<String> paramNames)
       throws CompilationException {
         return parseImpl(new ParseFunction<FunctionDecl>() {
@@ -389,7 +402,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
             throw new CompilationException(ErrorCode.PARSE_ERROR, LogRedactionUtil.userData(getMessage(e)));
         } catch (Error e) {
             // this is here as the JavaCharStream that's below the lexer sometimes throws Errors that are not handled
-            // by the ANTLR-generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
+            // by the generated lexer or parser (e.g it does this for invalid backslash u + 4 hex digits escapes)
             final String msg = e.getClass().getSimpleName() + (e.getMessage() != null ? ": " + e.getMessage() : "");
             throw new CompilationException(ErrorCode.PARSE_ERROR, LogRedactionUtil.userData(msg));
         } finally {
@@ -1166,7 +1179,9 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
 {
   FunctionSignature signature = null;
   FunctionName fctName = null;
+  Pair<Integer, List<Pair<VarIdentifier,TypeExpression>>> paramsWithArity = null;
   List<Pair<VarIdentifier,TypeExpression>> params = null;
+  int arity = 0;
   TypeExpression returnType = null;
   Token beginPos = null, endPos = null;
   Expression functionBodyExpr = null;
@@ -1183,7 +1198,11 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
      defaultDataverse = fctName.dataverse;
   }
   ifNotExists = IfNotExists()
-  params = FunctionParameters()
+  paramsWithArity = FunctionParameters()
+  {
+    arity = paramsWithArity.first;
+    params = paramsWithArity.second;
+  }
   returnType = FunctionReturnType()
   (
     (
@@ -1198,7 +1217,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
         endPos = token;
         String functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine,
           endPos.beginColumn);
-        signature = new FunctionSignature(fctName.dataverse, fctName.function, params.size());
+        signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
         getCurrentScope().addFunctionDescriptor(signature, false);
         removeCurrentScope();
         defaultDataverse = currentDataverse;
@@ -1213,7 +1232,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
       <AT> libraryName = QualifiedName()
       (<WITH> withOptions = RecordConstructor())?
       {
-        signature = new FunctionSignature(fctName.dataverse, fctName.function, params.size());
+        signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
         defaultDataverse = currentDataverse;
         try {
           stmt = new CreateFunctionStatement(signature, params, returnType, libraryName.first,
@@ -1227,27 +1246,55 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
   )
 }
 
-List<Pair<VarIdentifier,TypeExpression>> FunctionParameters() :
+Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>> FunctionParameters() :
 {
-  List<Pair<VarIdentifier,TypeExpression>> paramList = Collections.<Pair<VarIdentifier,TypeExpression>>emptyList();
+  Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>> params = null;
 }
 {
-  <LEFTPAREN> (paramList = FunctionParameterList())? <RIGHTPAREN>
+  <LEFTPAREN> (params = FunctionParameterList())? <RIGHTPAREN>
   {
-    return paramList;
+    if (params == null) {
+      params = new Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>>(
+        0, Collections.<Pair<VarIdentifier, TypeExpression>>emptyList()
+      );
+    }
+    return params;
   }
 }
 
-List<Pair<VarIdentifier,TypeExpression>> FunctionParameterList() :
+Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>> FunctionParameterList() :
 {
-  List<Pair<VarIdentifier,TypeExpression>> paramList = new ArrayList<Pair<VarIdentifier,TypeExpression>>();
-  Pair<VarIdentifier,TypeExpression> param = null;
+  List<Pair<VarIdentifier, TypeExpression>> paramList = null;
+  Pair<VarIdentifier, TypeExpression> param = null;
+  int arity = 0;
 }
 {
-  param = FunctionParameter() { paramList.add(param); }
-  ( <COMMA> param = FunctionParameter() { paramList.add(param); } )*
+  (
+    (
+      <DOT> <DOT> <DOT>
+      {
+        param = new Pair<VarIdentifier, TypeExpression>(
+          SqlppVariableUtil.toInternalVariableIdentifier(UDF_VARARGS_PARAM_NAME), null
+        );
+        paramList = Collections.<Pair<VarIdentifier, TypeExpression>>singletonList(param);
+        arity = FunctionIdentifier.VARARGS;
+      }
+    )
+    |
+    (
+      param = FunctionParameter()
+      {
+        paramList = new ArrayList<Pair<VarIdentifier, TypeExpression>>();
+        paramList.add(param);
+      }
+      ( <COMMA> param = FunctionParameter() { paramList.add(param); } )*
+      {
+        arity = paramList.size();
+      }
+    )
+  )
   {
-    return paramList;
+    return new Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>>(arity, paramList);
   }
 }
 
@@ -1447,13 +1494,13 @@ String GetPolicy() throws ParseException:
 FunctionSignature FunctionSignature() throws ParseException:
 {
   FunctionName fctName = null;
-  List<Pair<VarIdentifier,TypeExpression>> params = null;
+  Pair<Integer, List<Pair<VarIdentifier,TypeExpression>>> params = null;
   int arity = 0;
 }
 {
   fctName = FunctionName()
   (
-    LOOKAHEAD(2) params = FunctionParameters() { arity = params.size(); }
+    LOOKAHEAD(2) params = FunctionParameters() { arity = params.first; }
   | ( <LEFTPAREN> arity = FunctionArity() <RIGHTPAREN> )
   | ( <ATT> arity = FunctionArity() ) // back-compat
   )
@@ -2552,19 +2599,21 @@ FunctionDecl FunctionDeclaration() throws ParseException:
 {
   Token startToken = null;
   String functionName;
-  List<Pair<VarIdentifier,TypeExpression>> paramList;
+  Pair<Integer, List<Pair<VarIdentifier,TypeExpression>>> paramsWithArity = null;
   Expression funcBody;
   createNewScope();
 }
 {
   <DECLARE> { startToken = token; } <FUNCTION>
     functionName = Identifier()
-    paramList = FunctionParameters()
+    paramsWithArity = FunctionParameters()
   <LEFTBRACE>
     funcBody = FunctionBody()
   <RIGHTBRACE>
   {
-    FunctionSignature signature = new FunctionSignature(defaultDataverse, functionName, paramList.size());
+    int arity = paramsWithArity.first;
+    List<Pair<VarIdentifier,TypeExpression>> paramList = paramsWithArity.second;
+    FunctionSignature signature = new FunctionSignature(defaultDataverse, functionName, arity);
     getCurrentScope().addFunctionDescriptor(signature, false);
     ensureNoTypeDeclsInFunction(functionName, paramList, null, startToken);
     List<VarIdentifier> params = new ArrayList<VarIdentifier>(paramList.size());
@@ -2725,8 +2774,7 @@ Expression RelExpr() throws ParseException:
                 annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
                 break;
               case HASH_BROADCAST_JOIN_HINT:
-                annotation = new BroadcastExpressionAnnotation();
-                annotation.setObject(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
+                annotation = new BroadcastExpressionAnnotation(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
                 break;
             }
           }
@@ -3476,8 +3524,9 @@ Expression FunctionCallExpr() throws ParseException:
             break;
           case RANGE_HINT:
             try {
-              RangeAnnotation rangeAnn = new RangeAnnotation();
-              rangeAnn.setObject((Object) RangeMapBuilder.parseHint(parseExpression(funcName.hintToken.hintParams)));
+              Expression rangeExpr = parseExpression(funcName.hintToken.hintParams);
+              RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
+              RangeAnnotation rangeAnn = new RangeAnnotation(rangeMap);
               callExpr.addHint(rangeAnn);
             } catch (CompilationException e) {
               {
@@ -4025,18 +4074,17 @@ FromTerm FromTerm() throws ParseException :
   Expression leftExpr = null;
   VariableExpr leftVar = null;
   VariableExpr posVar = null;
+  AbstractBinaryCorrelateClause correlateClause = null;
   List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<AbstractBinaryCorrelateClause>();
 }
 {
   leftExpr = Expression() ((<AS>)? leftVar = Variable())? (<AT> posVar = Variable())?
   (
-     {JoinType joinType = JoinType.INNER; }
-     (joinType = JoinType())?
-     {
-       AbstractBinaryCorrelateClause correlateClause = null;
-     }
-     (correlateClause = JoinClause(joinType)
-      | correlateClause = UnnestClause(joinType)
+     (
+      correlateClause = JoinOrUnnestClause(JoinType.INNER, UnnestType.INNER)
+      | ( <INNER> correlateClause = JoinOrUnnestClause(JoinType.INNER, UnnestType.INNER) )
+      | ( <LEFT> ( <OUTER> )? correlateClause = JoinOrUnnestClause(JoinType.LEFTOUTER, UnnestType.LEFTOUTER) )
+      | ( <RIGHT> ( <OUTER> )? correlateClause = JoinClause(JoinType.RIGHTOUTER) )
      )
      {
         correlateClauses.add(correlateClause);
@@ -4052,6 +4100,17 @@ FromTerm FromTerm() throws ParseException :
   }
 }
 
+AbstractBinaryCorrelateClause JoinOrUnnestClause(JoinType joinType, UnnestType unnestType) throws ParseException :
+{
+  AbstractBinaryCorrelateClause correlateClause = null;
+}
+{
+  ( correlateClause = JoinClause(joinType) | correlateClause = UnnestClause(unnestType) )
+  {
+    return correlateClause;
+  }
+}
+
 JoinClause JoinClause(JoinType joinType) throws ParseException :
 {
     Token startToken = null;
@@ -4063,15 +4122,15 @@ JoinClause JoinClause(JoinType joinType) throws ParseException :
 {
   <JOIN> { startToken = token; } rightExpr = Expression() ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())? <ON> conditionExpr = Expression()
   {
-    if(rightVar==null){
-        rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
+    if (rightVar == null) {
+      rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
     }
     JoinClause joinClause = new JoinClause(joinType, rightExpr, rightVar, posVar, conditionExpr);
     return addSourceLocation(joinClause, startToken);
   }
 }
 
-UnnestClause UnnestClause(JoinType joinType) throws ParseException :
+UnnestClause UnnestClause(UnnestType unnestType) throws ParseException :
 {
     Token startToken = null;
     Expression rightExpr;
@@ -4084,20 +4143,9 @@ UnnestClause UnnestClause(JoinType joinType) throws ParseException :
     if (rightVar == null) {
       rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
     }
-    UnnestClause unnestClause = new UnnestClause(joinType, rightExpr, rightVar, posVar);
+    UnnestClause unnestClause = new UnnestClause(unnestType, rightExpr, rightVar, posVar);
     return addSourceLocation(unnestClause, startToken);
   }
-}
-
-JoinType JoinType() throws ParseException :
-{
-   JoinType joinType = JoinType.INNER;
-}
-{
-     (<INNER>|<LEFT> (<OUTER>)? {joinType = JoinType.LEFTOUTER; })
-     {
-       return joinType;
-     }
 }
 
 List<LetClause> LetClause() throws ParseException:
@@ -4154,7 +4202,9 @@ OrderbyClause OrderbyClause() throws ParseException :
               break;
             case RANGE_HINT:
               try {
-                oc.setRangeMap(RangeMapBuilder.parseHint(parseExpression(hintToken.hintParams)));
+                Expression rangeExpr = parseExpression(hintToken.hintParams);
+                RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
+                oc.setRangeMap(rangeMap);
               } catch (CompilationException e) {
                 throw new SqlppParseException(getSourceLocation(hintToken), e.getMessage());
               }
@@ -4367,16 +4417,23 @@ HavingClause HavingClause() throws ParseException:
 LimitClause LimitClause() throws ParseException:
 {
     Token startToken = null;
-    LimitClause lc = new LimitClause();
-    Expression expr;
-    pushForbiddenScope(getCurrentScope());
+    Expression limitExpr = null, offsetExpr = null;
 }
 {
-    <LIMIT> { startToken = token; } expr = Expression() { lc.setLimitExpr(expr); }
-    (<OFFSET> expr = Expression() { lc.setOffset(expr); })?
-
+  (
+    (
+      <LIMIT> { startToken = token; pushForbiddenScope(getCurrentScope()); } limitExpr = Expression()
+      ( <OFFSET> offsetExpr = Expression() )?
+      { popForbiddenScope(); }
+    )
+    |
+    (
+      <OFFSET> { startToken = token; pushForbiddenScope(getCurrentScope()); } offsetExpr = Expression()
+      { popForbiddenScope(); }
+    )
+  )
   {
-    popForbiddenScope();
+    LimitClause lc = new LimitClause(limitExpr, offsetExpr);
     return addSourceLocation(lc, startToken);
   }
 }
@@ -4575,6 +4632,7 @@ TOKEN [IGNORE_CASE]:
   | <REFRESH : "refresh">
   | <RETURN : "return">
   | <RETURNING : "returning">
+  | <RIGHT : "right">
   | <RTREE : "rtree">
   | <RUN : "run">
   | <SATISFIES : "satisfies">

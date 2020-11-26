@@ -1,0 +1,18 @@
+distribute result [$$15]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit offset 98
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      project ([$$15])
+      -- STREAM_PROJECT  |PARTITIONED|
+        assign [$$15] <- [{"id": $$17, "dblpid": $$paper.getField(1)}]
+        -- ASSIGN  |PARTITIONED|
+          exchange
+          -- SORT_MERGE_EXCHANGE [$$17(ASC) ]  |PARTITIONED|
+            data-scan []<-[$$17, $$paper] <- test.DBLP1
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                empty-tuple-source
+                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

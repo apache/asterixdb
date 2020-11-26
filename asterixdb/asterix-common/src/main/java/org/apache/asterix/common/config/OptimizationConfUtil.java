@@ -64,6 +64,8 @@ public class OptimizationConfUtil {
                 compilerProperties.isIndexOnly());
         boolean sanityCheck = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_INTERNAL_SANITYCHECK_KEY,
                 compilerProperties.isSanityCheck());
+        boolean externalFieldPushdown = getBoolean(querySpecificConfig,
+                CompilerProperties.COMPILER_EXTERNAL_FIELD_PUSHDOWN_KEY, compilerProperties.isFieldAccessPushdown());
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -76,6 +78,7 @@ public class OptimizationConfUtil {
         physOptConf.setSortSamples(sortNumSamples);
         physOptConf.setIndexOnly(indexOnly);
         physOptConf.setSanityCheckEnabled(sanityCheck);
+        physOptConf.setExternalFieldPushdown(externalFieldPushdown);
         return physOptConf;
     }
 

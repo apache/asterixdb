@@ -40,7 +40,7 @@ public class AwsS3ExternalDatasetOnePartitionTest extends AwsS3ExternalDatasetTe
 
     @Parameterized.Parameters(name = "AwsS3ExternalDatasetOnePartitionTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        SUITE_TESTS = "testsuite_external_dataset_one_partition.xml";
+        SUITE_TESTS = "testsuite_external_dataset_s3_one_partition.xml";
         ONLY_TESTS = "only_external_dataset.xml";
         TEST_CONFIG_FILE_NAME = "src/test/resources/cc-single.conf";
         PREPARE_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareS3Bucket;

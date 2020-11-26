@@ -20,8 +20,4 @@
 SELECT object_remove(fn, "Timestamp") as fn
 FROM Metadata.`Function` fn
 WHERE fn.DataverseName = "test"
-UNION ALL
-SELECT object_remove(dt, "Timestamp") as dt
-FROM Metadata.`Datatype` dt
-WHERE dt.DataverseName = "test"
-ORDER BY dt.DatatypeName, fn.Name;
+ORDER BY fn.Name, fn.Arity;

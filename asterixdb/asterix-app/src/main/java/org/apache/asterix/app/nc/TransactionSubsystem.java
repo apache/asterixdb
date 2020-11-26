@@ -65,7 +65,8 @@ public class TransactionSubsystem implements ITransactionSubsystem {
         this.id = appCtx.getServiceContext().getNodeId();
         this.txnProperties = appCtx.getTransactionProperties();
         this.transactionManager = new TransactionManager(this);
-        this.lockManager = new ConcurrentLockManager(txnProperties.getLockManagerShrinkTimer());
+        this.lockManager =
+                new ConcurrentLockManager(txnProperties.getLockManagerShrinkTimer(), txnProperties.getLockTableSize());
         final ReplicationProperties repProperties = appCtx.getReplicationProperties();
         final boolean replicationEnabled = repProperties.isReplicationEnabled();
         final CheckpointProperties checkpointProperties = new CheckpointProperties(txnProperties, id);

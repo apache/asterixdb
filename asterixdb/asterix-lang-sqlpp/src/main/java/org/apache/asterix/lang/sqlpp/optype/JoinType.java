@@ -20,8 +20,7 @@
 package org.apache.asterix.lang.sqlpp.optype;
 
 public enum JoinType {
-
     INNER,
-    LEFTOUTER
-
+    LEFTOUTER,
+    RIGHTOUTER
 }

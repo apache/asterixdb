@@ -28,12 +28,9 @@ The tuples are not grouped into a single output tuple — each tuple remains
 separate in the query output.
 
 All window functions must be used with an OVER clause.
-Refer to [OVER Clauses](manual.html#Over_clauses) for details.
+Refer to [Window Queries](manual.html#Over_clauses) for details.
 
 Window functions cannot appear in the FROM clause clause or LIMIT clause.
-
-The examples in this section use the `GleambookMessages` dataset,
-described in the section on [SELECT Statements](manual.html#SELECT_statements).
 
 ### cume_dist ###
 

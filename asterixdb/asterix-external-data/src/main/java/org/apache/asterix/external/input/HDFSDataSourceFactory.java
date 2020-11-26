@@ -35,6 +35,7 @@ import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.IndexingScheduler;
 import org.apache.asterix.external.input.record.reader.IndexingStreamRecordReader;
 import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.ParquetFileRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
 import org.apache.asterix.external.provider.ExternalIndexerProvider;
@@ -107,7 +108,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
             read = new boolean[readSchedule.length];
             Arrays.fill(read, false);
             String formatString = configuration.get(ExternalDataConstants.KEY_FORMAT);
-            if (formatString == null || formatString.equals(ExternalDataConstants.FORMAT_HDFS_WRITABLE)) {
+            if (formatString == null || formatString.equals(ExternalDataConstants.FORMAT_HDFS_WRITABLE)
+                    || formatString.equals(ExternalDataConstants.FORMAT_NOOP)) {
                 RecordReader<?, ?> reader = conf.getInputFormat().getRecordReader(inputSplits[0], conf, Reporter.NULL);
                 this.recordClass = reader.createValue().getClass();
                 reader.close();
@@ -215,7 +217,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
                 }
             }
             restoreConfig(ctx);
-            return new HDFSRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, files, indexer);
+            return createRecordReader(configuration, read, inputSplits, readSchedule, nodeName, conf, files, indexer);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -239,5 +241,16 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     @Override
     public List<String> getRecordReaderNames() {
         return recordReaderNames;
+    }
+
+    private static IRecordReader<? extends Object> createRecordReader(Map<String, String> configuration, boolean[] read,
+            InputSplit[] inputSplits, String[] readSchedule, String nodeName, JobConf conf, List<ExternalFile> files,
+            IExternalIndexer indexer) throws IOException {
+        if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT.trim())
+                .equals(ExternalDataConstants.INPUT_FORMAT_PARQUET)) {
+            return new ParquetFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf);
+        } else {
+            return new HDFSRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, files, indexer);
+        }
     }
 }

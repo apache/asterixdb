@@ -66,7 +66,7 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
     @Override
     public ISpillableTable buildSpillableTable(final IHyracksTaskContext ctx, int suggestTableSize,
-            long inputDataBytesSize, final int[] keyFields, final IBinaryComparator[] comparators,
+            long inputDataBytesSize, final int[] gbyFields, final int[] fdFields, final IBinaryComparator[] comparators,
             final INormalizedKeyComputer firstKeyNormalizerFactory, IAggregatorDescriptorFactory aggregateFactory,
             RecordDescriptor inRecordDescriptor, RecordDescriptor outRecordDescriptor, final int framesLimit,
             final int seed) throws HyracksDataException {
@@ -79,26 +79,47 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
             throw new HyracksDataException("The given frame limit is too small to partition the data.");
         }
 
-        final int[] intermediateResultKeys = new int[keyFields.length];
-        for (int i = 0; i < keyFields.length; i++) {
-            intermediateResultKeys[i] = i;
+        final int[] intermediateResultGbyFields = new int[gbyFields.length];
+        for (int i = 0; i < gbyFields.length; i++) {
+            intermediateResultGbyFields[i] = i;
+        }
+
+        final int[] allFields;
+        final int[] intermediateResultAllFields;
+        if (fdFields == null) {
+            // no need to combine gby and fd
+            allFields = gbyFields;
+            intermediateResultAllFields = intermediateResultGbyFields;
+        } else {
+            allFields = new int[gbyFields.length + fdFields.length];
+            intermediateResultAllFields = new int[gbyFields.length + fdFields.length];
+            int k = 0;
+            int position = 0;
+            for (int i = 0; i < gbyFields.length; i++, position++, k++) {
+                allFields[k] = gbyFields[i];
+                intermediateResultAllFields[k] = position;
+            }
+            for (int i = 0; i < fdFields.length; i++, position++, k++) {
+                allFields[k] = fdFields[i];
+                intermediateResultAllFields[k] = position;
+            }
         }
 
         final FrameTuplePairComparator ftpcInputCompareToAggregate =
-                new FrameTuplePairComparator(keyFields, intermediateResultKeys, comparators);
+                new FrameTuplePairComparator(gbyFields, intermediateResultGbyFields, comparators);
 
         final ITuplePartitionComputer tpc =
-                new FieldHashPartitionComputerFamily(keyFields, hashFunctionFamilies).createPartitioner(seed);
+                new FieldHashPartitionComputerFamily(gbyFields, hashFunctionFamilies).createPartitioner(seed);
 
         // For calculating hash value for the already aggregated tuples (not incoming tuples)
         // This computer is required to calculate the hash value of a aggregated tuple
         // while doing the garbage collection work on Hash Table.
         final ITuplePartitionComputer tpcIntermediate =
-                new FieldHashPartitionComputerFamily(intermediateResultKeys, hashFunctionFamilies)
+                new FieldHashPartitionComputerFamily(intermediateResultGbyFields, hashFunctionFamilies)
                         .createPartitioner(seed);
 
         final IAggregatorDescriptor aggregator = aggregateFactory.createAggregator(ctx, inRecordDescriptor,
-                outRecordDescriptor, keyFields, intermediateResultKeys, null, -1);
+                outRecordDescriptor, allFields, intermediateResultAllFields, null, -1);
 
         final AggregateState aggregateState = aggregator.createAggregateStates();
 
@@ -225,8 +246,8 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
 
             private void initStateTupleBuilder(IFrameTupleAccessor accessor, int tIndex) throws HyracksDataException {
                 stateTupleBuilder.reset();
-                for (int k = 0; k < keyFields.length; k++) {
-                    stateTupleBuilder.addField(accessor, tIndex, keyFields[k]);
+                for (int k = 0; k < allFields.length; k++) {
+                    stateTupleBuilder.addField(accessor, tIndex, allFields[k]);
                 }
                 aggregator.init(stateTupleBuilder, accessor, tIndex, aggregateState);
             }
@@ -246,10 +267,10 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                         hashTableForTuplePointer.getTuplePointer(hashEntryPid, tid, pointer);
                         bufferAccessor.reset(pointer);
                         outputTupleBuilder.reset();
-                        for (int k = 0; k < intermediateResultKeys.length; k++) {
+                        for (int k = 0; k < intermediateResultAllFields.length; k++) {
                             outputTupleBuilder.addField(bufferAccessor.getBuffer().array(),
-                                    bufferAccessor.getAbsFieldStartOffset(intermediateResultKeys[k]),
-                                    bufferAccessor.getFieldLength(intermediateResultKeys[k]));
+                                    bufferAccessor.getAbsFieldStartOffset(intermediateResultAllFields[k]),
+                                    bufferAccessor.getFieldLength(intermediateResultAllFields[k]));
                         }
 
                         boolean hasOutput = false;

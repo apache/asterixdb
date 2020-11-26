@@ -138,6 +138,17 @@
                         <xs:attribute name="type" type="test:parameter-type-enum" />
                      </xs:complexType>
                   </xs:element>
+                  <xs:element name="placeholder" minOccurs="0" maxOccurs="unbounded">
+                     <xs:annotation>
+                        <xs:documentation>
+                           Values for placeholders in the test files.
+                        </xs:documentation>
+                     </xs:annotation>
+                     <xs:complexType>
+                        <xs:attribute name="name" type="xs:string" />
+                        <xs:attribute name="value" type="xs:string" />
+                     </xs:complexType>
+                  </xs:element>
                   <xs:element name="output-dir" minOccurs="0">
                      <xs:annotation>
                         <xs:documentation>

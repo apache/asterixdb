@@ -107,7 +107,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     public void register(ILSMMemoryComponent memoryComponent) {
         ILSMIndex index = memoryComponent.getLsmIndex();
         if (index.isPrimaryIndex()) {
-            synchronized (primaryIndexes) {
+            synchronized (this) {
                 if (!primaryIndexes.contains(index)) {
                     // make sure only add index once
                     primaryIndexes.add(index);
@@ -134,7 +134,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     public void unregister(ILSMMemoryComponent memoryComponent) {
         ILSMIndex index = memoryComponent.getLsmIndex();
         if (index.isPrimaryIndex()) {
-            synchronized (primaryIndexes) {
+            synchronized (this) {
                 int pos = primaryIndexes.indexOf(index);
                 if (pos >= 0) {
                     primaryIndexes.remove(index);
@@ -485,43 +485,41 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
             int cycles = 0;
             while (vbc.getUsage() >= flushPageBudget && cycles <= primaryIndexes.size()) {
                 // find the first modified memory component while avoiding infinite loops
-                while (cycles <= primaryIndexes.size()
-                        && primaryIndexes.get(flushPtr).isCurrentMutableComponentEmpty()) {
-                    flushPtr = (flushPtr + 1) % primaryIndexes.size();
-                    cycles++;
-                }
-
                 ILSMIndex primaryIndex = primaryIndexes.get(flushPtr);
                 flushPtr = (flushPtr + 1) % primaryIndexes.size();
-                // we need to manually flush this memory component because it may be idle at this point
-                // note that this is different from flushing a filtered memory component
-                PrimaryIndexOperationTracker opTracker =
-                        (PrimaryIndexOperationTracker) primaryIndex.getOperationTracker();
-                synchronized (opTracker) {
-                    boolean flushable = !primaryIndex.isCurrentMutableComponentEmpty();
-                    if (flushable && !opTracker.isFlushLogCreated()) {
-                        // if the flush log has already been created, then we can simply wait for
-                        // that flush to complete
-                        ILSMMemoryComponent memoryComponent = primaryIndex.getCurrentMemoryComponent();
-                        if (memoryComponent.getState() == ComponentState.READABLE_WRITABLE) {
-                            // before we schedule the flush, mark the memory component as unwritable to prevent
-                            // future writers
-                            memoryComponent.setUnwritable();
-                        }
+                cycles++;
+                if (!primaryIndex.isCurrentMutableComponentEmpty() && !flushingIndexes.contains(primaryIndex)) {
+                    // we need to manually flush this memory component because it may be idle at this point
+                    // note that this is different from flushing a filtered memory component
+                    PrimaryIndexOperationTracker opTracker =
+                            (PrimaryIndexOperationTracker) primaryIndex.getOperationTracker();
+                    synchronized (opTracker) {
+                        boolean flushable = !primaryIndex.isCurrentMutableComponentEmpty();
+                        if (flushable && !opTracker.isFlushLogCreated()) {
+                            // if the flush log has already been created, then we can simply wait for
+                            // that flush to complete
+                            ILSMMemoryComponent memoryComponent = primaryIndex.getCurrentMemoryComponent();
+                            if (memoryComponent.getState() == ComponentState.READABLE_WRITABLE) {
+                                // before we schedule the flush, mark the memory component as unwritable to prevent
+                                // future writers
+                                memoryComponent.setUnwritable();
+                            }
 
-                        opTracker.setFlushOnExit(true);
-                        opTracker.flushIfNeeded();
-                        // If the flush cannot be scheduled at this time, then there must be active writers.
-                        // The flush will be eventually scheduled when writers exit
-                        if (LOGGER.isInfoEnabled()) {
-                            LOGGER.info("Requested flushing {} index {}",
-                                    isMetadataIndex(primaryIndex) ? "metadata" : "primary", primaryIndex.toString());
+                            opTracker.setFlushOnExit(true);
+                            opTracker.flushIfNeeded();
+                            // If the flush cannot be scheduled at this time, then there must be active writers.
+                            // The flush will be eventually scheduled when writers exit
+                            if (LOGGER.isInfoEnabled()) {
+                                LOGGER.info("Requested flushing {} index {}",
+                                        isMetadataIndex(primaryIndex) ? "metadata" : "primary",
+                                        primaryIndex.toString());
+                            }
                         }
-                    }
-                    if ((flushable || opTracker.isFlushLogCreated()) && !isMetadataIndex(primaryIndex)) {
-                        // global vbc cannot wait on metadata indexes because metadata indexes support full
-                        // ACID transactions. Waiting on metadata indexes can introduce deadlocks.
-                        return primaryIndex;
+                        if ((flushable || opTracker.isFlushLogCreated()) && !isMetadataIndex(primaryIndex)) {
+                            // global vbc cannot wait on metadata indexes because metadata indexes support full
+                            // ACID transactions. Waiting on metadata indexes can introduce deadlocks.
+                            return primaryIndex;
+                        }
                     }
                 }
             }

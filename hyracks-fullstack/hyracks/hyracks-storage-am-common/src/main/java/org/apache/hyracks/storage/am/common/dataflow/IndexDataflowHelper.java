@@ -73,6 +73,7 @@ public class IndexDataflowHelper implements IIndexDataflowHelper {
         // Get local resource
         LocalResource lr = getResource();
         if (lr == null) {
+            LOGGER.error("index {} does not exist", resourceRef.getRelativePath());
             throw HyracksDataException.create(ErrorCode.INDEX_DOES_NOT_EXIST);
         }
         IResource resource = lr.getResource();

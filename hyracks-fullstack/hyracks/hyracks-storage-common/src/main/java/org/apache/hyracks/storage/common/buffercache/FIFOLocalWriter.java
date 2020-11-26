@@ -40,6 +40,7 @@ public class FIFOLocalWriter implements IFIFOPageWriter {
     public void write(ICachedPage page) {
         CachedPage cPage = (CachedPage) page;
         try {
+            callback.beforeWrite(cPage);
             bufferCache.write(cPage);
             callback.afterWrite(cPage);
         } catch (Exception e) {

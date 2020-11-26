@@ -33,6 +33,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -67,7 +68,11 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     }
 
     @Override
-    public void start(IFrameWriter writer) throws HyracksDataException, InterruptedException {
+    public void start(IFrameWriter writer, ITupleFilter tupleFilter, long outputLimit)
+            throws HyracksDataException, InterruptedException {
+        if (tupleFilter != null || outputLimit >= 0) {
+            throw new RuntimeDataException(ErrorCode.DATAFLOW_ILLEGAL_STATE);
+        }
         synchronized (this) {
             if (state == State.STOPPED) {
                 return;

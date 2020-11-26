@@ -19,7 +19,6 @@
 
 package org.apache.asterix.hyracks.bootstrap;
 
-import static org.apache.asterix.algebra.base.ILangExtension.Language.AQL;
 import static org.apache.asterix.algebra.base.ILangExtension.Language.SQLPP;
 import static org.apache.asterix.api.http.server.ServletConstants.ASTERIX_APP_CONTEXT_INFO_ATTR;
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
@@ -39,7 +38,6 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.asterix.api.http.IQueryWebServerRegistrant;
 import org.apache.asterix.api.http.server.ActiveStatsApiServlet;
 import org.apache.asterix.api.http.server.ApiServlet;
-import org.apache.asterix.api.http.server.BasicAuthServlet;
 import org.apache.asterix.api.http.server.CcQueryCancellationServlet;
 import org.apache.asterix.api.http.server.ClusterApiServlet;
 import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
@@ -52,7 +50,6 @@ import org.apache.asterix.api.http.server.QueryStatusApiServlet;
 import org.apache.asterix.api.http.server.RebalanceApiServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.api.http.server.ShutdownApiServlet;
-import org.apache.asterix.api.http.server.UdfApiServlet;
 import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.cc.CCExtensionManager;
@@ -263,8 +260,7 @@ public class CCApplication extends BaseCCApplication {
                 externalProperties.getWebInterfacePort(), config);
         webServer.setAttribute(HYRACKS_CONNECTION_ATTR, hcc);
         webServer.addServlet(new ApiServlet(webServer.ctx(), new String[] { "/*" }, appCtx,
-                ccExtensionManager.getCompilationProvider(AQL), ccExtensionManager.getCompilationProvider(SQLPP),
-                getStatementExecutorFactory(), componentProvider));
+                ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(), componentProvider));
         return webServer;
     }
 
@@ -279,13 +275,13 @@ public class CCApplication extends BaseCCApplication {
                 ccServiceCtx.getControllerService().getExecutor());
         jsonAPIServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ccServiceCtx);
         jsonAPIServer.setAttribute(ServletConstants.CREDENTIAL_MAP,
-                parseCredentialMap(externalProperties.getCredentialFilePath()));
+                parseCredentialMap(((ClusterControllerService) (appCtx.getServiceContext().getControllerService()))
+                        .getCCConfig().getCredentialFilePath()));
 
         // Other APIs.
         addServlet(jsonAPIServer, Servlets.QUERY_STATUS);
         addServlet(jsonAPIServer, Servlets.QUERY_RESULT);
         addServlet(jsonAPIServer, Servlets.QUERY_SERVICE);
-        addServlet(jsonAPIServer, Servlets.QUERY_AQL);
         addServlet(jsonAPIServer, Servlets.RUNNING_REQUESTS);
         addServlet(jsonAPIServer, Servlets.CONNECTOR);
         addServlet(jsonAPIServer, Servlets.SHUTDOWN);
@@ -296,7 +292,6 @@ public class CCApplication extends BaseCCApplication {
         addServlet(jsonAPIServer, Servlets.CLUSTER_STATE_CC_DETAIL); // must not precede add of CLUSTER_STATE
         addServlet(jsonAPIServer, Servlets.DIAGNOSTICS);
         addServlet(jsonAPIServer, Servlets.ACTIVE_STATS);
-        addServlet(jsonAPIServer, Servlets.UDF);
         return jsonAPIServer;
     }
 
@@ -329,9 +324,6 @@ public class CCApplication extends BaseCCApplication {
                 return new QueryServiceServlet(ctx, paths, appCtx, SQLPP,
                         ccExtensionManager.getCompilationProvider(SQLPP), getStatementExecutorFactory(),
                         componentProvider, null);
-            case Servlets.QUERY_AQL:
-                return new QueryServiceServlet(ctx, paths, appCtx, AQL, ccExtensionManager.getCompilationProvider(AQL),
-                        getStatementExecutorFactory(), componentProvider, null);
             case Servlets.CONNECTOR:
                 return new ConnectorApiServlet(ctx, paths, appCtx);
             case Servlets.REBALANCE:
@@ -350,11 +342,6 @@ public class CCApplication extends BaseCCApplication {
                 return new DiagnosticsApiServlet(appCtx, ctx, paths);
             case Servlets.ACTIVE_STATS:
                 return new ActiveStatsApiServlet(appCtx, ctx, paths);
-            case Servlets.UDF:
-                return new BasicAuthServlet(ctx,
-                        new UdfApiServlet(ctx, paths, appCtx, ccExtensionManager.getCompilationProvider(SQLPP),
-                                getStatementExecutorFactory(), componentProvider, server.getScheme(),
-                                server.getAddress().getPort()));
             default:
                 throw new IllegalStateException(key);
         }

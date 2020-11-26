@@ -28,6 +28,9 @@ import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
+import org.apache.hyracks.util.JSONUtil;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public interface ITreeIndexFrame {
 
@@ -122,4 +125,14 @@ public interface ITreeIndexFrame {
     public ITupleReference getLeftmostTuple() throws HyracksDataException;
 
     public ITupleReference getRightmostTuple() throws HyracksDataException;
+
+    default ObjectNode getState() {
+        ObjectNode json = JSONUtil.createObject();
+        json.put("tupleCount", getTupleCount());
+        json.put("freeSpaceOff", getFreeSpaceOff());
+        json.put("level", getLevel());
+        json.put("pageLsn", getPageLsn());
+        json.put("totalFreeSpace", getTotalFreeSpace());
+        return json;
+    }
 }

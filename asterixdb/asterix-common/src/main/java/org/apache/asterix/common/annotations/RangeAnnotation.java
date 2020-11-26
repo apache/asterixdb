@@ -18,28 +18,27 @@
  */
 package org.apache.asterix.common.annotations;
 
+import java.util.Objects;
+
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 
-public class RangeAnnotation implements IExpressionAnnotation {
+public final class RangeAnnotation implements IExpressionAnnotation {
 
-    private RangeMap map;
+    public static final String HINT_STRING = "range";
 
-    @Override
-    public Object getObject() {
+    private final RangeMap map;
+
+    public RangeAnnotation(RangeMap map) {
+        this.map = Objects.requireNonNull(map);
+    }
+
+    public RangeMap getRangeMap() {
         return map;
     }
 
     @Override
-    public void setObject(Object side) {
-        this.map = (RangeMap) side;
+    public String toString() {
+        return HINT_STRING + ':' + map;
     }
-
-    @Override
-    public IExpressionAnnotation copy() {
-        RangeAnnotation rangAnn = new RangeAnnotation();
-        rangAnn.map = map;
-        return rangAnn;
-    }
-
 }

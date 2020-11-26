@@ -22,15 +22,22 @@ import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNEC
 import static org.apache.asterix.common.utils.Servlets.QUERY_RESULT;
 import static org.apache.asterix.common.utils.Servlets.QUERY_SERVICE;
 import static org.apache.asterix.common.utils.Servlets.QUERY_STATUS;
+import static org.apache.asterix.common.utils.Servlets.UDF;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExtension;
+import org.apache.asterix.api.http.server.BasicAuthServlet;
 import org.apache.asterix.api.http.server.NCQueryServiceServlet;
+import org.apache.asterix.api.http.server.NCUdfApiServlet;
 import org.apache.asterix.api.http.server.NetDiagnosticsApiServlet;
 import org.apache.asterix.api.http.server.QueryResultApiServlet;
 import org.apache.asterix.api.http.server.QueryStatusApiServlet;
@@ -73,6 +80,9 @@ import org.apache.asterix.transaction.management.resource.PersistentLocalResourc
 import org.apache.asterix.translator.Receptionist;
 import org.apache.asterix.util.MetadataBuiltinFunctions;
 import org.apache.asterix.utils.RedactionUtil;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.config.IConfigManager;
@@ -204,6 +214,12 @@ public class NCApplication extends BaseNCApplication {
                 ncExtensionManager.getCompilationProvider(ILangExtension.Language.SQLPP);
         apiServer.addServlet(new NCQueryServiceServlet(apiServer.ctx(), new String[] { QUERY_SERVICE },
                 getApplicationContext(), sqlppCompilationProvider.getLanguage(), sqlppCompilationProvider, null));
+        apiServer.setAttribute(ServletConstants.CREDENTIAL_MAP,
+                parseCredentialMap(((NodeControllerService) ncServiceCtx.getControllerService()).getConfiguration()
+                        .getCredentialFilePath()));
+        apiServer.addServlet(new BasicAuthServlet(apiServer.ctx(),
+                new NCUdfApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext(),
+                        sqlppCompilationProvider, apiServer.getScheme(), apiServer.getAddress().getPort())));
         apiServer.addServlet(new QueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS));
         apiServer.addServlet(new QueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT));
         webManager.add(apiServer);
@@ -339,5 +355,25 @@ public class NCApplication extends BaseNCApplication {
 
     protected void configurePersistedResourceRegistry() {
         ncServiceCtx.setPersistedResourceRegistry(new PersistedResourceRegistry());
+    }
+
+    private Map<String, String> parseCredentialMap(String credPath) {
+        File credentialFile = new File(credPath);
+        Map<String, String> storedCredentials = new HashMap<>();
+        if (credentialFile.exists()) {
+            try (CSVParser p =
+                    CSVParser.parse(credentialFile, Charset.defaultCharset(), CSVFormat.DEFAULT.withDelimiter(':'))) {
+                List<CSVRecord> recs = p.getRecords();
+                for (CSVRecord r : recs) {
+                    if (r.size() != 2) {
+                        throw new IOException("Passwd file must have exactly two fields.");
+                    }
+                    storedCredentials.put(r.get(0), r.get(1));
+                }
+            } catch (IOException e) {
+                LOGGER.error("Malformed credential file", e);
+            }
+        }
+        return storedCredentials;
     }
 }

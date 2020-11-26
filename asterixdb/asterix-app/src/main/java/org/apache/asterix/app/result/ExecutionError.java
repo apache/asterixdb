@@ -20,7 +20,6 @@ package org.apache.asterix.app.result;
 
 import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.common.api.ICodedMessage;
-import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 
@@ -38,7 +37,6 @@ public class ExecutionError implements ICodedMessage {
         Throwable rootCause = ResultUtil.getRootCause(t);
         String msg = rootCause.getMessage();
         if (!(rootCause instanceof AlgebricksException || rootCause instanceof HyracksException
-                || rootCause instanceof TokenMgrError
                 || rootCause instanceof org.apache.asterix.lang.sqlpp.parser.TokenMgrError)) {
             msg = rootCause.getClass().getSimpleName() + (msg == null ? "" : ": " + msg);
         }

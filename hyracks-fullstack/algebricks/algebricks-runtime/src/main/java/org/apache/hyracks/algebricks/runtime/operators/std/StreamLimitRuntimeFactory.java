@@ -45,6 +45,9 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
             IScalarEvaluatorFactory offsetEvalFactory, int[] projectionList,
             IBinaryIntegerInspectorFactory binaryIntegerInspectorFactory) {
         super(projectionList);
+        if (maxObjectsEvalFactory == null && offsetEvalFactory == null) {
+            throw new IllegalArgumentException();
+        }
         this.maxObjectsEvalFactory = maxObjectsEvalFactory;
         this.offsetEvalFactory = offsetEvalFactory;
         this.binaryIntegerInspectorFactory = binaryIntegerInspectorFactory;
@@ -61,29 +64,32 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
     }
 
     @Override
-    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx) {
+    public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
+            throws HyracksDataException {
         IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
         final IBinaryIntegerInspector bii = binaryIntegerInspectorFactory.createBinaryIntegerInspector(ctx);
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
             private final IPointable p = VoidPointable.FACTORY.createPointable();
-            private IScalarEvaluator evalMaxObjects;
-            private IScalarEvaluator evalOffset = null;
-            private int toWrite = 0; // how many tuples still to write
-            private int toSkip = 0; // how many tuples still to skip
-            private boolean firstTuple = true;
-            private boolean afterLastTuple = false;
+            private final IScalarEvaluator evalMaxObjects =
+                    maxObjectsEvalFactory != null ? maxObjectsEvalFactory.createScalarEvaluator(evalCtx) : null;
+            private final IScalarEvaluator evalOffset =
+                    offsetEvalFactory != null ? offsetEvalFactory.createScalarEvaluator(evalCtx) : null;
+            private final boolean toWriteUnlimited = maxObjectsEvalFactory == null;
+            private int toWrite; // how many tuples still to write
+            private int toSkip; // how many tuples still to skip
+            private boolean firstTuple;
+            private boolean afterLastTuple;
 
             @Override
             public void open() throws HyracksDataException {
                 super.open();
-                if (evalMaxObjects == null) {
+                if (tRef == null) {
                     initAccessAppendRef(ctx);
-                    evalMaxObjects = maxObjectsEvalFactory.createScalarEvaluator(evalCtx);
-                    if (offsetEvalFactory != null) {
-                        evalOffset = offsetEvalFactory.createScalarEvaluator(evalCtx);
-                    }
                 }
+                firstTuple = true;
                 afterLastTuple = false;
+                toWrite = 0;
+                toSkip = 0;
             }
 
             @Override
@@ -104,14 +110,16 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                 for (int t = start; t < nTuple; t++) {
                     if (firstTuple) {
                         firstTuple = false;
-                        toWrite = evaluateInteger(evalMaxObjects, t);
+                        if (evalMaxObjects != null) {
+                            toWrite = evaluateInteger(evalMaxObjects, t);
+                        }
                         if (evalOffset != null) {
                             toSkip = evaluateInteger(evalOffset, t);
                         }
                     }
                     if (toSkip > 0) {
                         toSkip--;
-                    } else if (toWrite > 0) {
+                    } else if (toWriteUnlimited || toWrite > 0) {
                         toWrite--;
                         if (projectionList != null) {
                             appendProjectionToFrame(t, projectionList);
@@ -125,27 +133,16 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                 }
             }
 
-            @Override
-            public void close() throws HyracksDataException {
-                toWrite = 0; // how many tuples still to write
-                toSkip = 0; // how many tuples still to skip
-                firstTuple = true;
-                afterLastTuple = false;
-                super.close();
-            }
-
             private int evaluateInteger(IScalarEvaluator eval, int tIdx) throws HyracksDataException {
                 tRef.reset(tAccess, tIdx);
                 eval.evaluate(tRef, p);
-                int lim = bii.getIntegerValue(p.getByteArray(), p.getStartOffset(), p.getLength());
-                return lim;
+                return bii.getIntegerValue(p.getByteArray(), p.getStartOffset(), p.getLength());
             }
 
             @Override
             public void flush() throws HyracksDataException {
                 appender.flush(writer);
             }
-
         };
     }
 }

@@ -29,3 +29,7 @@ use experiments;
 create function my_sum(a, b) {
   a + b
 };
+
+create function my_sum_va(...) {
+  array_sum(args)
+};

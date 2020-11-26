@@ -18,10 +18,12 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.expressions;
 
+/**
+ *  Represents an expression annotation.
+ *  <ol>
+ *  <li>Implementation classes are used as keys in the expression annotation map</li>
+ *  <li>Each annotation instance must be an immutable object</li>
+ *  </ol>
+ */
 public interface IExpressionAnnotation {
-    public Object getObject();
-
-    public void setObject(Object object);
-
-    public IExpressionAnnotation copy();
 }

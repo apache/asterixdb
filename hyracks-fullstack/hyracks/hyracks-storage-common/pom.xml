@@ -71,5 +71,9 @@
       <artifactId>snappy-java</artifactId>
       <version>1.1.7.1</version>
     </dependency>
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+    </dependency>
   </dependencies>
 </project>

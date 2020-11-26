@@ -44,11 +44,11 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
 
     private static final int MERGE_ACTIVITY_ID = 1;
 
-    private static final long serialVersionUID = 1L;
-    private final int[] keyFields;
+    private static final long serialVersionUID = 2L;
+    private final int[] gbyFields;
+    private final int[] fdFields; // nullable
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final INormalizedKeyComputerFactory firstNormalizerFactory;
-
     private final IAggregatorDescriptorFactory partialAggregatorFactory;
     private final IAggregatorDescriptorFactory intermediateAggregateFactory;
 
@@ -60,7 +60,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
     private final long fileSize;
 
     public ExternalGroupOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputSizeInTuple, long inputFileSize,
-            int[] keyFields, int framesLimit, IBinaryComparatorFactory[] comparatorFactories,
+            int[] gbyFields, int[] fdFields, int framesLimit, IBinaryComparatorFactory[] comparatorFactories,
             INormalizedKeyComputerFactory firstNormalizerFactory, IAggregatorDescriptorFactory partialAggregatorFactory,
             IAggregatorDescriptorFactory intermediateAggregateFactory, RecordDescriptor partialAggRecordDesc,
             RecordDescriptor outRecordDesc, ISpillableTableFactory spillableTableFactory) {
@@ -76,7 +76,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
         }
         this.partialAggregatorFactory = partialAggregatorFactory;
         this.intermediateAggregateFactory = intermediateAggregateFactory;
-        this.keyFields = keyFields;
+        this.gbyFields = gbyFields;
+        this.fdFields = fdFields;
         this.comparatorFactories = comparatorFactories;
         this.firstNormalizerFactory = firstNormalizerFactory;
         this.spillableTableFactory = spillableTableFactory;
@@ -93,13 +94,6 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
         this.fileSize = inputFileSize;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.apache.hyracks.api.dataflow.IOperatorDescriptor#contributeActivities
-     * (org.apache.hyracks.api.dataflow.IActivityGraphBuilder)
-     */
     @Override
     public void contributeActivities(IActivityGraphBuilder builder) {
         AggregateActivity aggregateAct = new AggregateActivity(new ActivityId(getOperatorId(), AGGREGATE_ACTIVITY_ID));
@@ -126,7 +120,7 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 final IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
                 throws HyracksDataException {
             return new ExternalGroupBuildOperatorNodePushable(ctx, new TaskId(getActivityId(), partition), tableSize,
-                    fileSize, keyFields, framesLimit, comparatorFactories, firstNormalizerFactory,
+                    fileSize, gbyFields, fdFields, framesLimit, comparatorFactories, firstNormalizerFactory,
                     partialAggregatorFactory, recordDescProvider.getInputRecordDescriptor(getActivityId(), 0),
                     outRecDescs[0], spillableTableFactory);
         }
@@ -145,8 +139,8 @@ public class ExternalGroupOperatorDescriptor extends AbstractOperatorDescriptor 
                 throws HyracksDataException {
             return new ExternalGroupWriteOperatorNodePushable(ctx,
                     new TaskId(new ActivityId(getOperatorId(), AGGREGATE_ACTIVITY_ID), partition),
-                    spillableTableFactory, partialRecDesc, outRecDesc, framesLimit, keyFields, firstNormalizerFactory,
-                    comparatorFactories, intermediateAggregateFactory);
+                    spillableTableFactory, partialRecDesc, outRecDesc, framesLimit, gbyFields, fdFields,
+                    firstNormalizerFactory, comparatorFactories, intermediateAggregateFactory);
 
         }
 

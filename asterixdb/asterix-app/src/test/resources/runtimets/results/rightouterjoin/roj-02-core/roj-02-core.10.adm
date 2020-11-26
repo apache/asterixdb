@@ -1,0 +1,8 @@
+{ "t3_unique1": 5057, "t3_unique2": 6 }
+{ "t3_unique1": 6701, "t3_unique2": 7 }
+{ "t3_unique1": 7164, "t3_unique2": 4, "t2_unique1": 7164, "t2_unique2": 4 }
+{ "t3_unique1": 8009, "t3_unique2": 5, "t2_unique1": 8009, "t2_unique2": 5 }
+{ "t3_unique1": 3420, "t3_unique2": 2, "t2_unique1": 3420, "t2_unique2": 2, "t1_unique1": 3420, "t1_unique2": 2 }
+{ "t3_unique1": 9850, "t3_unique2": 3, "t2_unique1": 9850, "t2_unique2": 3, "t1_unique1": 9850, "t1_unique2": 3 }
+{ "t3_unique1": 1891, "t3_unique2": 1, "t2_unique1": 1891, "t2_unique2": 1, "t1_unique1": 1891, "t1_unique2": 1, "t0_unique1": 1891, "t0_unique2": 1 }
+{ "t3_unique1": 8800, "t3_unique2": 0, "t2_unique1": 8800, "t2_unique2": 0, "t1_unique1": 8800, "t1_unique2": 0, "t0_unique1": 8800, "t0_unique2": 0 }

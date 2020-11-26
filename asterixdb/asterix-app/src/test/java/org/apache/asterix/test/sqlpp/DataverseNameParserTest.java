@@ -23,22 +23,14 @@ import java.util.List;
 
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.DataverseNameTest;
-import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
-import org.apache.asterix.lang.common.base.IRewriterFactory;
-import org.apache.asterix.lang.common.base.IStatementRewriter;
-import org.apache.asterix.lang.common.expression.FieldAccessor;
-import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
-import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriterFactory;
 import org.junit.Assert;
 
 public class DataverseNameParserTest extends DataverseNameTest {
 
     private final IParserFactory parserFactory = new SqlppParserFactory();
-
-    private final IRewriterFactory rewriterFactory = new SqlppRewriterFactory(parserFactory);
 
     @Override
     protected void testDataverseNameImpl(DataverseName dataverseName, List<String> parts, String expectedCanonicalForm,
@@ -49,22 +41,14 @@ public class DataverseNameParserTest extends DataverseNameTest {
 
         // check parse-ability of the display form
         IParser parser = parserFactory.createParser(displayForm);
-        Expression expr = parser.parseExpression();
-        IStatementRewriter rewriter = rewriterFactory.createStatementRewriter();
+        List<String> parsedParts = parser.parseMultipartIdentifier();
 
-        for (int i = parts.size() - 1; i >= 0; i--) {
+        int partCount = parts.size();
+        Assert.assertEquals("Unexpected parsed part count: " + parsedParts.size(), partCount, parsedParts.size());
+
+        for (int i = 0; i < partCount; i++) {
             String part = parts.get(i);
-            String parsedPart;
-            if (i > 0) {
-                Assert.assertEquals(Expression.Kind.FIELD_ACCESSOR_EXPRESSION, expr.getKind());
-                FieldAccessor faExpr = (FieldAccessor) expr;
-                parsedPart = faExpr.getIdent().getValue();
-                expr = faExpr.getExpr();
-            } else {
-                Assert.assertEquals(Expression.Kind.VARIABLE_EXPRESSION, expr.getKind());
-                VariableExpr varExpr = (VariableExpr) expr;
-                parsedPart = rewriter.toFunctionParameterName(varExpr.getVar());
-            }
+            String parsedPart = parsedParts.get(i);
             Assert.assertEquals("unexpected parsed part at position " + i + " in " + parts, part, parsedPart);
         }
     }

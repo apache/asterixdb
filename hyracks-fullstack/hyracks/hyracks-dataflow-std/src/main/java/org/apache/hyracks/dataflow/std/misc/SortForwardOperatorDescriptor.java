@@ -36,6 +36,7 @@ import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.marshalling.DoubleArraySerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntArraySerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
@@ -130,6 +131,7 @@ public class SortForwardOperatorDescriptor extends AbstractForwardOperatorDescri
         private int numFields;
         private byte[] splitValues;
         private int[] splitValuesEndOffsets;
+        private double[] percentages;
 
         private RangeMapReaderActivityNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecordDescriptor,
                 ActivityId activityId, int partition) {
@@ -138,6 +140,7 @@ public class SortForwardOperatorDescriptor extends AbstractForwardOperatorDescri
             this.frameTupleReference = new FrameTupleReference();
             this.activityId = activityId;
             this.partition = partition;
+            this.numFields = -1;
         }
 
         @Override
@@ -165,6 +168,7 @@ public class SortForwardOperatorDescriptor extends AbstractForwardOperatorDescri
             numFields = IntegerSerializerDeserializer.read(dataInputStream);
             splitValues = ByteArraySerializerDeserializer.read(dataInputStream);
             splitValuesEndOffsets = IntArraySerializerDeserializer.read(dataInputStream);
+            percentages = DoubleArraySerializerDeserializer.read(dataInputStream);
         }
 
         @Override
@@ -181,7 +185,7 @@ public class SortForwardOperatorDescriptor extends AbstractForwardOperatorDescri
             // store the range map in the state object of ctx so that next activity (forward) could retrieve it
             TaskId rangeMapReaderTaskId = new TaskId(activityId, partition);
             RangeMapState rangeMapState = new RangeMapState(ctx.getJobletContext().getJobId(), rangeMapReaderTaskId);
-            rangeMapState.rangeMap = new RangeMap(numFields, splitValues, splitValuesEndOffsets);
+            rangeMapState.rangeMap = new RangeMap(numFields, splitValues, splitValuesEndOffsets, percentages);
             ctx.setStateObject(rangeMapState);
         }
     }

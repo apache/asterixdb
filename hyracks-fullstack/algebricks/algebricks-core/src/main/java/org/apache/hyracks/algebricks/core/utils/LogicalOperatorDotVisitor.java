@@ -425,10 +425,12 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     @Override
     public String visitLimitOperator(LimitOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
-        stringBuilder.append("limit ").append(op.getMaxObjects().getValue().toString());
-        ILogicalExpression offset = op.getOffset().getValue();
-        if (offset != null) {
-            stringBuilder.append(", ").append(offset.toString());
+        stringBuilder.append("limit");
+        if (op.hasMaxObjects()) {
+            stringBuilder.append(' ').append(op.getMaxObjects().getValue());
+        }
+        if (op.hasOffset()) {
+            stringBuilder.append(" offset ").append(op.getOffset().getValue());
         }
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);

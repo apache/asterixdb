@@ -19,14 +19,15 @@
 package org.apache.hyracks.http.server;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.http.api.IServletRequest;
-import org.apache.hyracks.http.server.utils.HttpUtil;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -34,22 +35,24 @@ import io.netty.handler.codec.http.HttpScheme;
 import io.netty.handler.codec.http.QueryStringDecoder;
 
 public class BaseRequest implements IServletRequest {
+
+    private static final List<String> NO_PARAM = Collections.singletonList(null);
     protected final FullHttpRequest request;
-    protected final Map<String, List<String>> parameters;
+    protected final Map<? extends CharSequence, List<String>> parameters;
     protected final InetSocketAddress remoteAddress;
     protected final HttpScheme scheme;
     protected final InetSocketAddress localAddress;
 
     public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request, HttpScheme scheme) {
         QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
-        Map<String, List<String>> param = decoder.parameters();
+        Map<? extends CharSequence, List<String>> param = decoder.parameters();
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
         return new BaseRequest(request, localAddress, remoteAddress, param, scheme);
     }
 
     protected BaseRequest(FullHttpRequest request, InetSocketAddress localAddress, InetSocketAddress remoteAddress,
-            Map<String, List<String>> parameters, HttpScheme scheme) {
+            Map<? extends CharSequence, List<String>> parameters, HttpScheme scheme) {
         this.request = request;
         this.localAddress = localAddress;
         this.remoteAddress = remoteAddress;
@@ -64,28 +67,33 @@ public class BaseRequest implements IServletRequest {
 
     @Override
     public String getParameter(CharSequence name) {
-        return HttpUtil.getParameter(parameters, name);
+        return parameters.getOrDefault(name, NO_PARAM).get(0);
     }
 
     @Override
     public List<String> getParameterValues(CharSequence name) {
-        List<String> values = parameters.get(String.valueOf(name));
-        return values != null ? Collections.unmodifiableList(values) : null;
+        return Collections.unmodifiableList(parameters.getOrDefault(name, Collections.emptyList()));
     }
 
     @Override
     public Set<String> getParameterNames() {
-        return Collections.unmodifiableSet(parameters.keySet());
+        Set<String> names = new HashSet<>();
+        parameters.keySet().forEach(name -> names.add(name.toString()));
+        return names;
     }
 
     @Override
     public Map<String, String> getParameters() {
         HashMap<String, String> paramMap = new HashMap<>();
-        for (String name : parameters.keySet()) {
-            paramMap.put(name, HttpUtil.getParameter(parameters, name));
+        parameters.forEach((name, values) -> paramMap.put(name.toString(), values.get(0)));
+        return paramMap;
+    }
 
-        }
-        return Collections.unmodifiableMap(paramMap);
+    @Override
+    public Map<String, List<String>> getParametersValues() {
+        Map<String, List<String>> params = new HashMap<>();
+        parameters.forEach((name, values) -> params.put(name.toString(), new ArrayList<>(values)));
+        return params;
     }
 
     @Override

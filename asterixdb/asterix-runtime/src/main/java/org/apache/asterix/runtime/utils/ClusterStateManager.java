@@ -299,6 +299,8 @@ public class ClusterStateManager implements IClusterStateManager {
             }
         }
         clusterActiveLocations.removeAll(pendingRemoval);
+        // for operators attempting to access storage, order the nodes list similar to a nodegroup
+        Collections.sort(clusterActiveLocations);
         clusterPartitionConstraint =
                 new AlgebricksAbsolutePartitionConstraint(clusterActiveLocations.toArray(new String[] {}));
     }

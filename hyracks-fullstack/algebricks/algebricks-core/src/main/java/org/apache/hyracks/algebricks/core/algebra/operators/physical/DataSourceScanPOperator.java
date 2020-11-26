@@ -112,13 +112,14 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
 
         ITupleFilterFactory tupleFilterFactory = null;
         if (scan.getSelectCondition() != null) {
-            tupleFilterFactory = context.getMetadataProvider().createTupleFilterFactory(
-                    new IOperatorSchema[] { opSchema }, typeEnv, scan.getSelectCondition().getValue(), context);
+            tupleFilterFactory = mp.createTupleFilterFactory(new IOperatorSchema[] { opSchema }, typeEnv,
+                    scan.getSelectCondition().getValue(), context);
         }
 
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p = mp.getScannerRuntime(dataSource, vars, projectVars,
-                scan.isProjectPushed(), scan.getMinFilterVars(), scan.getMaxFilterVars(), tupleFilterFactory,
-                scan.getOutputLimit(), opSchema, typeEnv, context, builder.getJobSpec(), implConfig);
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p =
+                mp.getScannerRuntime(dataSource, vars, projectVars, scan.isProjectPushed(), scan.getMinFilterVars(),
+                        scan.getMaxFilterVars(), tupleFilterFactory, scan.getOutputLimit(), opSchema, typeEnv, context,
+                        builder.getJobSpec(), implConfig, scan.getProjectionInfo());
         IOperatorDescriptor opDesc = p.first;
         opDesc.setSourceLocation(scan.getSourceLocation());
         builder.contributeHyracksOperator(scan, opDesc);

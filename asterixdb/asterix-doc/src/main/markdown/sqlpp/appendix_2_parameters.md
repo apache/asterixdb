@@ -17,9 +17,10 @@
  ! under the License.
  !-->
 
-The SET statement can be used to override some cluster-wide configuration parameters for a specific request:
+The `SET` statement can be used to override some cluster-wide configuration parameters for a specific request:
 
-    SET <IDENTIFIER> <STRING_LITERAL>
+### SetStmnt
+**![](../images/diagrams/SetStmnt.png)**
 
 As parameter identifiers are qualified names (containing a '.') they have to be escaped using backticks (\`\`).
 Note that changing query parameters will not affect query correctness but only impact performance
@@ -46,8 +47,8 @@ There are three cases of the value *p* for compiler.parallelism:
 
     SET `compiler.parallelism` "16";
 
-    SELECT u.name AS uname, m.message AS message
-    FROM GleambookUsers u JOIN GleambookMessages m ON m.authorId = u.id;
+    SELECT c.name AS cname, o.orderno AS orderno
+    FROM customers c JOIN orders o ON c.custid = o.custid;
 
 ## <a id="Memory_parameters">Memory Parameters</a>
 In the system, each blocking runtime operator such as join, group-by and order-by
@@ -76,22 +77,22 @@ If there is no user-provided suffix, "B" is the default suffix. See the followin
 
     SET `compiler.groupmemory` "64MB";
 
-    SELECT msg.authorId, COUNT(*)
-    FROM GleambookMessages msg
-    GROUP BY msg.authorId;
+    SELECT c.custid, COUNT(*)
+    FROM customers c
+    GROUP BY c.custid;
 
 ##### Example
 
     SET `compiler.sortmemory` "67108864";
 
-    SELECT VALUE user
-    FROM GleambookUsers AS user
-    ORDER BY ARRAY_LENGTH(user.friendIds) DESC;
+    SELECT VALUE o
+    FROM orders AS o
+    ORDER BY ARRAY_LENGTH(o.items) DESC;
 
 ##### Example
 
     SET `compiler.joinmemory` "132000KB";
 
-    SELECT u.name AS uname, m.message AS message
-    FROM GleambookUsers u JOIN GleambookMessages m ON m.authorId = u.id;
+    SELECT c.name AS cname, o.ordeno AS orderno
+    FROM customers c JOIN orders o ON c.custid = o.custid;
 

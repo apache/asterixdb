@@ -28,6 +28,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexPageWriteCallback;
 import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
+import org.apache.hyracks.storage.common.buffercache.IRateLimiter;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -38,15 +39,21 @@ public class LSMIndexPageWriteCallbackFactory implements ILSMPageWriteCallbackFa
 
     protected transient int pagesPerForce;
 
+    protected transient IRateLimiter rateLimiter;
+
+    public LSMIndexPageWriteCallbackFactory() {
+    }
+
     @Override
     public void initialize(INCServiceContext ncCtx, IResource resource) throws HyracksDataException {
         INcApplicationContext appCtx = (INcApplicationContext) ncCtx.getApplicationContext();
         pagesPerForce = appCtx.getStorageProperties().getDiskForcePages();
+        rateLimiter = appCtx.getDiskWriteRateLimiterProvider().getRateLimiter(ncCtx, resource);
     }
 
     @Override
     public IPageWriteCallback createPageWriteCallback() throws HyracksDataException {
-        return new LSMIndexPageWriteCallback(pagesPerForce);
+        return new LSMIndexPageWriteCallback(rateLimiter, pagesPerForce);
     }
 
     @Override

@@ -75,6 +75,7 @@ public class NCQueryCancellationServlet extends AbstractServlet {
                 case SUCCESS:
                 case FAILED:
                 case NOT_FOUND:
+                case REJECTED:
                     response.setStatus(status.toHttpResponse());
                     break;
                 default:

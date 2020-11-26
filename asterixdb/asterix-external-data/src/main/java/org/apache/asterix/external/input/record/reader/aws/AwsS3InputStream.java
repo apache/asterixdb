@@ -28,59 +28,28 @@ import java.util.zip.GZIPInputStream;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.external.input.stream.AbstractMultipleInputStream;
+import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.util.LogRedactionUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 
-public class AwsS3InputStream extends AbstractMultipleInputStream {
-
-    private static final Logger LOGGER = LogManager.getLogger();
-
-    // Configuration
-    private final Map<String, String> configuration;
+public class AwsS3InputStream extends AbstractExternalInputStream {
 
     private final S3Client s3Client;
 
-    // File fields
-    private final List<String> filePaths;
-    private int nextFileIndex = 0;
-
     public AwsS3InputStream(Map<String, String> configuration, List<String> filePaths) throws HyracksDataException {
-        this.configuration = configuration;
-        this.filePaths = filePaths;
+        super(configuration, filePaths);
         this.s3Client = buildAwsS3Client(configuration);
     }
 
     @Override
-    protected boolean advance() throws IOException {
-        // No files to read for this partition
-        if (filePaths == null || filePaths.isEmpty()) {
-            return false;
-        }
-
-        // Finished reading all the files
-        if (nextFileIndex >= filePaths.size()) {
-            if (in != null) {
-                CleanupUtils.close(in, null);
-            }
-            return false;
-        }
-
-        // Close the current stream before going to the next one
-        if (in != null) {
-            CleanupUtils.close(in, null);
-        }
-
+    protected boolean getInputStream() throws IOException {
         String bucket = configuration.get(AwsS3.CONTAINER_NAME_FIELD_NAME);
         GetObjectRequest.Builder getObjectBuilder = GetObjectRequest.builder();
         GetObjectRequest getObjectRequest = getObjectBuilder.bucket(bucket).key(filePaths.get(nextFileIndex)).build();
@@ -92,8 +61,7 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
         } catch (NoSuchKeyException ex) {
             LOGGER.debug(() -> "Key " + LogRedactionUtil.userData(getObjectRequest.key()) + " was not found in bucket "
                     + getObjectRequest.bucket());
-            nextFileIndex++;
-            return advance();
+            return false;
         } catch (SdkException ex) {
             throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
         }
@@ -104,11 +72,6 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
             in = new GZIPInputStream(s3Client.getObject(getObjectRequest), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
         }
 
-        // Current file ready, point to the next file
-        nextFileIndex++;
-        if (notificationHandler != null) {
-            notificationHandler.notifyNewSource();
-        }
         return true;
     }
 
@@ -118,36 +81,5 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
         } catch (CompilationException ex) {
             throw HyracksDataException.create(ex);
         }
-    }
-
-    @Override
-    public boolean stop() {
-        return false;
-    }
-
-    @Override
-    public boolean handleException(Throwable th) {
-        return false;
-    }
-
-    @Override
-    public void close() throws IOException {
-        if (in != null) {
-            CleanupUtils.close(in, null);
-        }
-    }
-
-    @Override
-    public String getStreamName() {
-        return getStreamNameAt(nextFileIndex - 1);
-    }
-
-    @Override
-    public String getPreviousStreamName() {
-        return getStreamNameAt(nextFileIndex - 2);
-    }
-
-    private String getStreamNameAt(int fileIndex) {
-        return fileIndex < 0 || filePaths == null || filePaths.isEmpty() ? "" : filePaths.get(fileIndex);
     }
 }

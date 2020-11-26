@@ -500,6 +500,20 @@
 
   <supplement>
     <project>
+      <groupId>org.msgpack</groupId>
+      <artifactId>msgpack-core</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedNotice>0.8.20</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>0.8.20</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreNoticeOverride>0.8.20</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <!--  jbcrypt is under an ISC-style license with no NOTICE -->
+  <!--  see the URL noted in the supplement -->
+  <supplement>
+    <project>
       <groupId>org.mindrot</groupId>
       <artifactId>jbcrypt</artifactId>
       <licenses>
@@ -508,6 +522,125 @@
           <url>http://www.mindrot.org/files/jBCrypt/LICENSE</url>
         </license>
       </licenses>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>0.4</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.4</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>0.4</license.ignoreLicenseOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- Azure SDK for Java start -->
+  <!-- com.azure does not contain any embedded LICENSE or NOTICE file -->
+  <!-- see https://github.com/Azure/azure-sdk-for-java -->
+  <supplement>
+    <project>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-storage-blob</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>12.6.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>12.6.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>12.6.0</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>12.6.0</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <supplement>
+    <project>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-storage-common</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>12.6.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>12.6.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>12.6.0</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>12.6.0</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <supplement>
+    <project>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-core</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>1.4.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.4.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.4.0</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>1.4.0</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <supplement>
+    <project>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-core-http-netty</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>1.5.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.5.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.5.0</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>1.5.0</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+  <!-- Azure SDK for Java end -->
+
+  <!-- jackson-datatype-jsr contains embedded license but has no NOTICE -->
+  <!-- See https://github.com/FasterXML/jackson-modules-java8 -->
+  <supplement>
+    <project>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedNotice>2.10.1</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- com.fasterxml.woodstox contains embedded license but has no NOTICE -->
+  <!-- See https://github.com/FasterXML/woodstox -->
+  <supplement>
+    <project>
+      <groupId>com.fasterxml.woodstox</groupId>
+      <artifactId>woodstox-core</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedNotice>6.0.2</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- org.codehaus.woodstox contains embedded license but has no NOTICE -->
+  <!-- See https://github.com/FasterXML/stax2-api -->
+  <supplement>
+    <project>
+      <groupId>org.codehaus.woodstox</groupId>
+      <artifactId>stax2-api</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedNotice>4.2</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
+  <supplement>
+    <project>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-core</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>3.3.3.RELEASE</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>3.3.3.RELEASE</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
+  <supplement>
+    <project>
+      <groupId>io.projectreactor.netty</groupId>
+      <artifactId>reactor-netty</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>0.9.5.RELEASE</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.9.5.RELEASE</license.ignoreMissingEmbeddedNotice>
+      </properties>
     </project>
   </supplement>
 </supplementalDataModels>

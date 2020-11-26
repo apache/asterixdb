@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
- * Description     : Test push down limit into the primary index scan operator
+ * Description     : Test negative limit and offset values
  * Expected Result : Success
  */
 

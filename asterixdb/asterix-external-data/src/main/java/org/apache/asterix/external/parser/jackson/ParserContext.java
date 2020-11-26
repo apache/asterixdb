@@ -27,6 +27,8 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.builders.ListBuilderFactory;
 import org.apache.asterix.builders.RecordBuilderFactory;
+import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
+import org.apache.asterix.external.input.stream.StandardUTF8ToModifiedUTF8DataOutput;
 import org.apache.asterix.external.parser.AbstractNestedDataParser;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
@@ -39,6 +41,8 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.util.string.UTF8StringReader;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 
 /**
  * A state class that helps parsers of class {@link AbstractNestedDataParser} to maintain
@@ -54,7 +58,7 @@ public class ParserContext {
      * Parsing nested structure using temporary buffers is expensive.
      * Example:
      * {"a":{"b":{"c":{"d":5}}}}
-     *
+     * <p>
      * Scalar value 5 is written 4 times in tempBuffer("d") then tempBuffer("c") ... tempBuffer("a")
      */
     private final ObjectPool<IMutableValueStorage, ATypeTag> tempBufferPool;
@@ -63,8 +67,15 @@ public class ParserContext {
     private final ISerializerDeserializer<AString> stringSerDe;
     private final AMutableString aString;
 
-    @SuppressWarnings("unchecked")
+    //For parquet
+    private final StandardUTF8ToModifiedUTF8DataOutput modifiedUTF8DataOutput;
+
     public ParserContext() {
+        this(false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public ParserContext(boolean allocateModfiedUTF8Writer) {
         objectBuilderPool = new ObjectPool<>(new RecordBuilderFactory());
         arrayBuilderPool = new ObjectPool<>(new ListBuilderFactory(), ATypeTag.ARRAY);
         tempBufferPool = new ObjectPool<>(new AbvsBuilderFactory());
@@ -72,6 +83,11 @@ public class ParserContext {
         serializedFieldNames = new LRUMap<>(SERIALIZED_FIELDNAME_MAP_MAX_SIZE);
         stringSerDe = SerializerDeserializerProvider.INSTANCE.getAStringSerializerDeserializer();
         aString = new AMutableString("");
+        modifiedUTF8DataOutput =
+                allocateModfiedUTF8Writer
+                        ? new StandardUTF8ToModifiedUTF8DataOutput(
+                                new AStringSerializerDeserializer(new UTF8StringWriter(), new UTF8StringReader()))
+                        : null;
     }
 
     public IMutableValueStorage enterObject() {
@@ -138,6 +154,10 @@ public class ParserContext {
     public void exitCollection(IMutableValueStorage tempBuffer, IAsterixListBuilder builder) {
         tempBufferPool.recycle(tempBuffer);
         arrayBuilderPool.recycle(builder);
+    }
+
+    public StandardUTF8ToModifiedUTF8DataOutput getModifiedUTF8DataOutput() {
+        return modifiedUTF8DataOutput;
     }
 
 }

@@ -20,9 +20,11 @@
 package org.apache.asterix.runtime.evaluators.functions.utils;
 
 import java.io.DataOutput;
-import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.types.BuiltinType;
@@ -30,44 +32,42 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.data.std.util.DataUtils;
-import org.apache.hyracks.data.std.util.GrowableArray;
 
 public final class RandomHelper {
 
-    private final SecureRandom random = new SecureRandom();
+    private final SecureRandom random;
 
-    private final GrowableArray seed;
+    private double seed;
+
+    private boolean isFirst;
 
     private final AMutableDouble aDouble = new AMutableDouble(0);
 
     @SuppressWarnings("rawtypes")
-    private ISerializerDeserializer doubleSerde =
+    private final ISerializerDeserializer doubleSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
 
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final DataOutput dataOutput = resultStorage.getDataOutput();
 
-    public RandomHelper(boolean withSeed) {
-        seed = withSeed ? new GrowableArray(8) : null;
+    public RandomHelper(boolean withSeed) throws HyracksDataException {
+        if (withSeed) {
+            try {
+                random = SecureRandom.getInstance("SHA1PRNG");
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "random()");
+            }
+        } else {
+            random = new SecureRandom();
+        }
+        isFirst = true;
     }
 
-    public void setSeed(byte[] bytes, int offset, int length) throws HyracksDataException {
-        if (seed == null) {
-            throw new IllegalStateException();
-        }
-
-        boolean sameSeed =
-                seed.getLength() == length && DataUtils.equalsInRange(seed.getByteArray(), 0, bytes, offset, length);
-
-        if (!sameSeed) {
-            try {
-                seed.reset();
-                seed.append(bytes, offset, length);
-                random.setSeed(seed.getByteArray());
-            } catch (IOException e) {
-                throw HyracksDataException.create(e);
-            }
+    public void setSeed(double seedVal) throws HyracksDataException {
+        if (isFirst || seedVal != seed) {
+            seed = seedVal;
+            isFirst = false;
+            random.setSeed(Double.doubleToLongBits(seedVal));
         }
     }
 

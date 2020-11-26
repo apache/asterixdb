@@ -18,11 +18,11 @@
  */
 package org.apache.asterix.metadata.declared;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.metadata.IDatasetDetails;
@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
@@ -98,24 +99,21 @@ public class DatasetDataSource extends DataSource {
             List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars,
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
-            IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig)
-            throws AlgebricksException {
+            IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
+            IProjectionInfo<?> projectionInfo) throws AlgebricksException {
         switch (dataset.getDatasetType()) {
             case EXTERNAL:
-                if (tupleFilterFactory != null || outputLimit >= 0) {
-                    throw CompilationException.create(ErrorCode.COMPILATION_ILLEGAL_STATE,
-                            "Tuple filter and limit are not supported by ExternalDataSource");
-                }
                 Dataset externalDataset = ((DatasetDataSource) dataSource).getDataset();
                 String itemTypeName = externalDataset.getItemTypeName();
                 IAType itemType = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
                         externalDataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
 
                 ExternalDatasetDetails edd = (ExternalDatasetDetails) externalDataset.getDatasetDetails();
-                ITypedAdapterFactory adapterFactory =
-                        metadataProvider.getConfiguredAdapterFactory(externalDataset, edd.getAdapter(),
-                                edd.getProperties(), (ARecordType) itemType, null, context.getWarningCollector());
-                return metadataProvider.buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory);
+                Map<String, String> properties = addProjectionInfo(projectionInfo, edd.getProperties());
+                ITypedAdapterFactory adapterFactory = metadataProvider.getConfiguredAdapterFactory(externalDataset,
+                        edd.getAdapter(), properties, (ARecordType) itemType, null, context.getWarningCollector());
+                return metadataProvider.buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory,
+                        tupleFilterFactory, outputLimit);
             case INTERNAL:
                 DataSourceId id = getId();
                 DataverseName dataverseName = id.getDataverseName();
@@ -132,6 +130,17 @@ public class DatasetDataSource extends DataSource {
             default:
                 throw new AlgebricksException("Unknown datasource type");
         }
+    }
+
+    private Map<String, String> addProjectionInfo(IProjectionInfo<?> projectionInfo, Map<String, String> properties) {
+        Map<String, String> propertiesCopy = properties;
+        if (projectionInfo != null) {
+            //properties could be cached and reused, so we make a copy per query
+            propertiesCopy = new HashMap<>(properties);
+            ExternalDataProjectionInfo fieldNamesInfo = (ExternalDataProjectionInfo) projectionInfo;
+            fieldNamesInfo.addToProperties(propertiesCopy);
+        }
+        return propertiesCopy;
     }
 
     private int[] createFilterIndexes(List<LogicalVariable> filterVars, IOperatorSchema opSchema) {

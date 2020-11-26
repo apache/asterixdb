@@ -163,17 +163,18 @@ public class AggregationTest extends AbstractIntegrationTest {
         int tableSize = 8;
         long fileSize = frameLimits * spec.getFrameSize();
 
-        ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
-                keyFields, frameLimits, new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(3, false),
-                        new FloatSumFieldAggregatorFactory(5, false) }),
-                new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
-                        new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(2, false),
-                        new FloatSumFieldAggregatorFactory(3, false) }),
-                outputRec, outputRec, new HashSpillableTableFactory(
-                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
+        ExternalGroupOperatorDescriptor grouper =
+                new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize, keyFields, null, frameLimits,
+                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
+                        new UTF8StringNormalizedKeyComputerFactory(),
+                        new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(3, false),
+                                new FloatSumFieldAggregatorFactory(5, false) }),
+                        new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
+                                new IntSumFieldAggregatorFactory(1, false), new IntSumFieldAggregatorFactory(2, false),
+                                new FloatSumFieldAggregatorFactory(3, false) }),
+                        outputRec, outputRec, new HashSpillableTableFactory(
+                                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -253,7 +254,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         long fileSize = frameLimits * spec.getFrameSize();
 
         ExternalGroupOperatorDescriptor grouper =
-                new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize, keyFields, frameLimits,
+                new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize, keyFields, null, frameLimits,
                         new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
                         new UTF8StringNormalizedKeyComputerFactory(),
                         new MultiFieldsAggregatorFactory(new IFieldAggregateDescriptorFactory[] {
@@ -341,17 +342,18 @@ public class AggregationTest extends AbstractIntegrationTest {
         int tableSize = 8;
         long fileSize = frameLimits * spec.getFrameSize();
 
-        ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
-                keyFields, frameLimits, new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
-                new UTF8StringNormalizedKeyComputerFactory(),
-                new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new MinMaxStringFieldAggregatorFactory(15, true, true) }),
-                new MultiFieldsAggregatorFactory(
-                        new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
-                                new MinMaxStringFieldAggregatorFactory(2, true, true) }),
-                outputRec, outputRec, new HashSpillableTableFactory(
-                        new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
+        ExternalGroupOperatorDescriptor grouper =
+                new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize, keyFields, null, frameLimits,
+                        new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE },
+                        new UTF8StringNormalizedKeyComputerFactory(),
+                        new MultiFieldsAggregatorFactory(
+                                new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                        new MinMaxStringFieldAggregatorFactory(15, true, true) }),
+                        new MultiFieldsAggregatorFactory(
+                                new IFieldAggregateDescriptorFactory[] { new IntSumFieldAggregatorFactory(1, false),
+                                        new MinMaxStringFieldAggregatorFactory(2, true, true) }),
+                        outputRec, outputRec, new HashSpillableTableFactory(
+                                new IBinaryHashFunctionFamily[] { UTF8StringBinaryHashFunctionFamily.INSTANCE }));
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
@@ -432,7 +434,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         long fileSize = frameLimits * spec.getFrameSize();
 
         ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
-                keyFields, frameLimits,
+                keyFields, null, frameLimits,
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE,
                         UTF8StringBinaryComparatorFactory.INSTANCE },
                 new UTF8StringNormalizedKeyComputerFactory(),
@@ -527,7 +529,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         long fileSize = frameLimits * spec.getFrameSize();
 
         ExternalGroupOperatorDescriptor grouper =
-                new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize, keyFields, frameLimits,
+                new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize, keyFields, null, frameLimits,
                         new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE,
                                 UTF8StringBinaryComparatorFactory.INSTANCE },
                         new UTF8StringNormalizedKeyComputerFactory(),
@@ -624,7 +626,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         long fileSize = frameLimits * spec.getFrameSize();
 
         ExternalGroupOperatorDescriptor grouper = new ExternalGroupOperatorDescriptor(spec, tableSize, fileSize,
-                keyFields, frameLimits,
+                keyFields, null, frameLimits,
                 new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE,
                         UTF8StringBinaryComparatorFactory.INSTANCE },
                 new UTF8StringNormalizedKeyComputerFactory(),

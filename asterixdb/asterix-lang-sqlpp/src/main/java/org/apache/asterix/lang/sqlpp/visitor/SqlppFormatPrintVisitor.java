@@ -109,7 +109,7 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
 
     @Override
     public Void visit(NestClause nestClause, Integer step) throws CompilationException {
-        out.print(nestClause.getJoinType());
+        out.print(nestClause.getNestType());
         nestClause.getRightExpression().accept(this, step + 2);
         out.println(skip(step + 1) + " as ");
         nestClause.getRightVariable().accept(this, step + 2);
@@ -233,7 +233,7 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
 
     @Override
     public Void visit(UnnestClause unnestClause, Integer step) throws CompilationException {
-        out.print(unnestClause.getJoinType());
+        out.print(unnestClause.getUnnestType());
         unnestClause.getRightExpression().accept(this, step + 2);
         out.print(" as ");
         unnestClause.getRightVariable().accept(this, step + 2);

@@ -71,7 +71,7 @@ public class ChunkedResponse implements IServletResponse {
     private PrintWriter writer;
     private DefaultHttpResponse response;
     private boolean headerSent;
-    private ByteBuf error;
+    private ByteBuf errorBuf;
     private ChannelFuture future;
     private boolean done;
 
@@ -119,7 +119,7 @@ public class ChunkedResponse implements IServletResponse {
         } else {
             outputStream.close();
         }
-        if (error == null && response.status() == HttpResponseStatus.OK) {
+        if (errorBuf == null && response.status() == HttpResponseStatus.OK) {
             if (!done) {
                 respond(LastHttpContent.EMPTY_LAST_CONTENT);
             }
@@ -127,14 +127,14 @@ public class ChunkedResponse implements IServletResponse {
             // There was an error
             if (headerSent) {
                 LOGGER.log(Level.WARN, "Error after header write of chunked response");
-                if (error != null) {
-                    error.release();
+                if (errorBuf != null) {
+                    errorBuf.release();
                 }
                 future = ctx.channel().close().addListener(handler);
             } else {
                 // we didn't send anything to the user, we need to send an non-chunked error response
                 fullResponse(response.protocolVersion(), response.status(),
-                        error == null ? ctx.alloc().buffer(0, 0) : error, response.headers());
+                        errorBuf == null ? ctx.alloc().buffer(0, 0) : errorBuf, response.headers());
             }
         }
         done = true;
@@ -152,12 +152,13 @@ public class ChunkedResponse implements IServletResponse {
     }
 
     public void error(ByteBuf error) {
-        if (this.error == null) {
-            this.error = error;
-        } else {
-            this.error.capacity(this.error.capacity() + error.capacity());
-            this.error.writeBytes(error);
+        if (errorBuf == null) {
+            errorBuf = ctx.alloc().buffer(error.readableBytes());
         }
+        if (errorBuf.capacity() < this.errorBuf.capacity() + error.capacity()) {
+            errorBuf.capacity(this.errorBuf.capacity() + error.capacity());
+        }
+        errorBuf.writeBytes(error);
     }
 
     @Override

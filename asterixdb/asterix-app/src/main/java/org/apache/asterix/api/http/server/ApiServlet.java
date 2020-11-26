@@ -41,7 +41,6 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
-import org.apache.asterix.lang.aql.parser.TokenMgrError;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
@@ -73,17 +72,15 @@ public class ApiServlet extends AbstractServlet {
     public static final String HTML_STATEMENT_SEPARATOR = "<!-- BEGIN -->";
 
     private final ICcApplicationContext appCtx;
-    private final ILangCompilationProvider aqlCompilationProvider;
     private final ILangCompilationProvider sqlppCompilationProvider;
     private final IStatementExecutorFactory statementExectorFactory;
     private final IStorageComponentProvider componentProvider;
 
     public ApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx,
-            ILangCompilationProvider aqlCompilationProvider, ILangCompilationProvider sqlppCompilationProvider,
-            IStatementExecutorFactory statementExecutorFactory, IStorageComponentProvider componentProvider) {
+            ILangCompilationProvider sqlppCompilationProvider, IStatementExecutorFactory statementExecutorFactory,
+            IStorageComponentProvider componentProvider) {
         super(ctx, paths);
         this.appCtx = appCtx;
-        this.aqlCompilationProvider = aqlCompilationProvider;
         this.sqlppCompilationProvider = sqlppCompilationProvider;
         this.statementExectorFactory = statementExecutorFactory;
         this.componentProvider = componentProvider;
@@ -93,8 +90,7 @@ public class ApiServlet extends AbstractServlet {
     protected void post(IServletRequest request, IServletResponse response) {
         final IRequestReference requestReference = appCtx.getReceptionist().welcome(request);
         // Query language
-        ILangCompilationProvider compilationProvider = "AQL".equals(request.getParameter("query-language"))
-                ? aqlCompilationProvider : sqlppCompilationProvider;
+        ILangCompilationProvider compilationProvider = sqlppCompilationProvider;
         IParserFactory parserFactory = compilationProvider.getParserFactory();
 
         try {
@@ -161,7 +157,7 @@ public class ApiServlet extends AbstractServlet {
             duration = (endTime - startTime) / 1000.00;
             out.println(HTML_STATEMENT_SEPARATOR);
             out.println("<PRE>Duration of all jobs: " + duration + " sec</PRE>");
-        } catch (AsterixException | TokenMgrError | org.apache.asterix.lang.sqlpp.parser.TokenMgrError pe) {
+        } catch (AsterixException | org.apache.asterix.lang.sqlpp.parser.TokenMgrError pe) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.INFO, pe.toString(), pe);
             ResultUtil.webUIParseExceptionHandler(out, pe, query);
         } catch (Exception e) {

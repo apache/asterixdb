@@ -28,9 +28,12 @@ import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 
 public class JoinClause extends AbstractBinaryCorrelateWithConditionClause {
 
+    private final JoinType joinType;
+
     public JoinClause(JoinType joinType, Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar,
             Expression conditionExpr) {
-        super(joinType, rightExpr, rightVar, rightPosVar, conditionExpr);
+        super(rightExpr, rightVar, rightPosVar, conditionExpr);
+        this.joinType = joinType;
     }
 
     @Override
@@ -43,4 +46,24 @@ public class JoinClause extends AbstractBinaryCorrelateWithConditionClause {
         return ClauseType.JOIN_CLAUSE;
     }
 
+    public JoinType getJoinType() {
+        return joinType;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * super.hashCode() + joinType.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof JoinClause)) {
+            return false;
+        }
+        JoinClause target = (JoinClause) object;
+        return super.equals(target) && joinType.equals(target.getJoinType());
+    }
 }

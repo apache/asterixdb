@@ -21,6 +21,7 @@ package org.apache.asterix.external.library.adapter;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 
 class TestTypedFeedDataFlowController extends AbstractFeedDataFlowController {
     TestTypedFeedDataFlowController(IHyracksTaskContext ctx) {
@@ -33,7 +34,7 @@ class TestTypedFeedDataFlowController extends AbstractFeedDataFlowController {
     }
 
     @Override
-    public void start(IFrameWriter writer) {
+    public void start(IFrameWriter writer, ITupleFilter tupleFilter, long outputLimit) {
         throw new UnsupportedOperationException();
     }
 }

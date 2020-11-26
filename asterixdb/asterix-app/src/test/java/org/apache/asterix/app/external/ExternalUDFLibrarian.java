@@ -20,7 +20,7 @@ package org.apache.asterix.app.external;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.commons.io.IOUtils;
@@ -48,25 +48,15 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
 
     private HttpClient hc;
-    private String host;
-    private int port;
-
-    private ExternalUDFLibrarian(String host, int port) {
-        hc = new DefaultHttpClient();
-        this.host = host;
-        this.port = port;
-    }
 
     public ExternalUDFLibrarian() {
-        this("localhost", 19002);
+        hc = new DefaultHttpClient();
     }
 
     @Override
-    public void install(String dataverse, String libName, String libPath, Pair<String, String> credentials)
-            throws Exception {
-        URL url = new URL("http", host, port, "/admin/udf/" + dataverse + "/" + libName);
-        HttpHost h = new HttpHost(host, port, "http");
-        HttpPost post = new HttpPost(url.toString());
+    public void install(URI path, String libPath, Pair<String, String> credentials) throws Exception {
+        HttpHost h = new HttpHost(path.getHost(), path.getPort(), "http");
+        HttpPost post = new HttpPost(path);
         CredentialsProvider cp = new BasicCredentialsProvider();
         cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(credentials.first, credentials.second));
         HttpClientContext hcCtx = HttpClientContext.create();
@@ -86,18 +76,16 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
     }
 
     @Override
-    public void uninstall(String dataverse, String libName, Pair<String, String> credentials)
-            throws IOException, AsterixException {
-        URL url = new URL("http", host, port, "/admin/udf/" + dataverse + "/" + libName);
+    public void uninstall(URI path, Pair<String, String> credentials) throws IOException, AsterixException {
         CredentialsProvider cp = new BasicCredentialsProvider();
         cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(credentials.first, credentials.second));
         HttpClientContext hcCtx = HttpClientContext.create();
         hcCtx.setCredentialsProvider(cp);
-        HttpHost h = new HttpHost(host, port, "http");
+        HttpHost h = new HttpHost(path.getHost(), path.getPort(), "http");
         AuthCache ac = new BasicAuthCache();
         ac.put(h, new BasicScheme());
         hcCtx.setAuthCache(ac);
-        HttpDelete del = new HttpDelete(url.toString());
+        HttpDelete del = new HttpDelete(path);
         HttpResponse response = hc.execute(del, hcCtx);
         String resp = null;
         int respCode = response.getStatusLine().getStatusCode();

@@ -115,7 +115,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
 
     @Override
     public Void visit(NestClause nestClause, Integer step) throws CompilationException {
-        out.println(skip(step) + nestClause.getJoinType() + " NEST");
+        out.println(skip(step) + nestClause.getNestType() + " NEST");
         nestClause.getRightExpression().accept(this, step + 1);
         out.print(skip(step + 1) + "AS ");
         nestClause.getRightVariable().accept(this, 0);
@@ -229,7 +229,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
 
     @Override
     public Void visit(UnnestClause unnestClause, Integer step) throws CompilationException {
-        out.println(skip(step) + unnestClause.getJoinType() + " UNNEST");
+        out.println(skip(step) + unnestClause.getUnnestType() + " UNNEST");
         unnestClause.getRightExpression().accept(this, step + 1);
         out.print(skip(step + 1) + " AS ");
         unnestClause.getRightVariable().accept(this, 0);

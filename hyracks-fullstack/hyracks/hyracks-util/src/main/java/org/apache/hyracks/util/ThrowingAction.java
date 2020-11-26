@@ -21,4 +21,11 @@ package org.apache.hyracks.util;
 @FunctionalInterface
 public interface ThrowingAction {
     void run() throws Exception; // NOSONAR
+
+    static ComputingAction<Void> asComputingAction(ThrowingAction action) {
+        return () -> {
+            action.run();
+            return null;
+        };
+    }
 }

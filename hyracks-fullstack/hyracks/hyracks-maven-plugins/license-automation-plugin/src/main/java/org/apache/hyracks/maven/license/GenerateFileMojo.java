@@ -335,16 +335,18 @@ public class GenerateFileMojo extends LicenseMojo {
     }
 
     private void resolveNoticeFiles() throws MojoExecutionException, IOException {
-        // TODO(mblow): this will match *any* NOTICE[.txt] file located within the artifact- this seems way too liberal
+        // TODO(mblow): this will match *any* NOTICE[.(txt|md)] file located within the artifact-
+        // this seems way too liberal
         resolveArtifactFiles("NOTICE", IGNORE_MISSING_EMBEDDED_NOTICE, ALTERNATE_NOTICE_FILE,
-                entry -> entry.getName().matches("(.*/|^)" + "NOTICE" + "(.txt)?"), Project::setNoticeText,
+                entry -> entry.getName().matches("(.*/|^)" + "NOTICE" + "(.(txt|md))?"), Project::setNoticeText,
                 text -> stripFoundationAssertionFromNotices ? FOUNDATION_PATTERN.matcher(text).replaceAll("") : text);
     }
 
     private void resolveLicenseFiles() throws MojoExecutionException, IOException {
-        // TODO(mblow): this will match *any* LICENSE[.txt] file located within the artifact- this seems way too liberal
+        // TODO(mblow): this will match *any* LICENSE[.(txt|md)] file located within the artifact-
+        // this seems way too liberal
         resolveArtifactFiles("LICENSE", IGNORE_MISSING_EMBEDDED_LICENSE, ALTERNATE_LICENSE_FILE,
-                entry -> entry.getName().matches("(.*/|^)" + "LICENSE" + "(.txt)?"), Project::setLicenseText,
+                entry -> entry.getName().matches("(.*/|^)" + "LICENSE" + "(.(txt|md))?"), Project::setLicenseText,
                 UnaryOperator.identity());
     }
 

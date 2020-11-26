@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
@@ -49,16 +50,19 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
     // the maximum of number of results output by this operator
     private long outputLimit = -1;
 
+    private IProjectionInfo<?> projectionInfo;
+
     public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource) {
-        this(variables, dataSource, null, -1);
+        this(variables, dataSource, null, -1, null);
     }
 
     public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource,
-            Mutable<ILogicalExpression> selectCondition, long outputLimit) {
+            Mutable<ILogicalExpression> selectCondition, long outputLimit, IProjectionInfo projectionInfo) {
         super(variables, dataSource);
-        projectVars = new ArrayList<LogicalVariable>();
+        projectVars = new ArrayList<>();
         this.selectCondition = selectCondition;
         this.outputLimit = outputLimit;
+        this.projectionInfo = projectionInfo;
     }
 
     @Override
@@ -161,5 +165,13 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
 
     public void setOutputLimit(long outputLimit) {
         this.outputLimit = outputLimit;
+    }
+
+    public void setProjectionInfo(IProjectionInfo<?> projectionInfo) {
+        this.projectionInfo = projectionInfo;
+    }
+
+    public IProjectionInfo<?> getProjectionInfo() {
+        return projectionInfo;
     }
 }

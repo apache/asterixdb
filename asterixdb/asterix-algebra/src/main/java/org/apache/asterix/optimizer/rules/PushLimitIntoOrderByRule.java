@@ -116,6 +116,10 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
     }
 
     static Integer getOutputLimit(LimitOperator limitOp) {
+        if (!limitOp.hasMaxObjects()) {
+            // No limit
+            return null;
+        }
         // Currently, we support LIMIT with a constant value.
         ILogicalExpression maxObjectsExpr = limitOp.getMaxObjects().getValue();
         IAObject maxObjectsValue = ConstantExpressionUtil.getConstantIaObject(maxObjectsExpr, ATypeTag.INTEGER);
@@ -130,8 +134,8 @@ public class PushLimitIntoOrderByRule implements IAlgebraicRewriteRule {
         // Get the offset constant if there is one. If one presents, then topK = topK + offset.
         // This is because we can't apply offset to the external sort.
         // Final topK will be applied through LIMIT.
-        ILogicalExpression offsetExpr = limitOp.getOffset().getValue();
-        if (offsetExpr != null) {
+        if (limitOp.hasOffset()) {
+            ILogicalExpression offsetExpr = limitOp.getOffset().getValue();
             IAObject offsetValue = ConstantExpressionUtil.getConstantIaObject(offsetExpr, ATypeTag.INTEGER);
             if (offsetValue == null) {
                 return null;

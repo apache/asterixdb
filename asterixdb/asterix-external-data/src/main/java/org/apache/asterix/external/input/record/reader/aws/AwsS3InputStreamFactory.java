@@ -19,27 +19,20 @@
 package org.apache.asterix.external.input.record.reader.aws;
 
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.external.api.AsterixInputStream;
-import org.apache.asterix.external.api.IInputStreamFactory;
+import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
 import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -54,32 +47,13 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
-public class AwsS3InputStreamFactory implements IInputStreamFactory {
+public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory {
 
     private static final long serialVersionUID = 1L;
-
-    private Map<String, String> configuration;
-    private final List<PartitionWorkLoadBasedOnSize> partitionWorkLoadsBasedOnSize = new ArrayList<>();
-    private transient AlgebricksAbsolutePartitionConstraint partitionConstraint;
-
-    @Override
-    public DataSourceType getDataSourceType() {
-        return DataSourceType.STREAM;
-    }
-
-    @Override
-    public boolean isIndexible() {
-        return false;
-    }
 
     @Override
     public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition) throws HyracksDataException {
         return new AwsS3InputStream(configuration, partitionWorkLoadsBasedOnSize.get(partition).getFilePaths());
-    }
-
-    @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
-        return partitionConstraint;
     }
 
     @Override
@@ -93,44 +67,13 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
         List<S3Object> filesOnly = new ArrayList<>();
 
         // Ensure the validity of include/exclude
-        ExternalDataUtils.AwsS3.validateIncludeExclude(configuration);
-
-        // Get and compile the patterns for include/exclude if provided
-        List<Matcher> includeMatchers = new ArrayList<>();
-        List<Matcher> excludeMatchers = new ArrayList<>();
-        String pattern = null;
-        try {
-            for (Map.Entry<String, String> entry : configuration.entrySet()) {
-                if (entry.getKey().startsWith(KEY_INCLUDE)) {
-                    pattern = entry.getValue();
-                    includeMatchers.add(Pattern.compile(ExternalDataUtils.patternToRegex(pattern)).matcher(""));
-                } else if (entry.getKey().startsWith(KEY_EXCLUDE)) {
-                    pattern = entry.getValue();
-                    excludeMatchers.add(Pattern.compile(ExternalDataUtils.patternToRegex(pattern)).matcher(""));
-                }
-            }
-        } catch (PatternSyntaxException ex) {
-            throw new CompilationException(ErrorCode.INVALID_REGEX_PATTERN, pattern);
-        }
-
-        List<Matcher> matchersList;
-        BiPredicate<List<Matcher>, String> p;
-        if (!includeMatchers.isEmpty()) {
-            matchersList = includeMatchers;
-            p = (matchers, key) -> ExternalDataUtils.matchPatterns(matchers, key);
-        } else if (!excludeMatchers.isEmpty()) {
-            matchersList = excludeMatchers;
-            p = (matchers, key) -> !ExternalDataUtils.matchPatterns(matchers, key);
-        } else {
-            matchersList = Collections.emptyList();
-            p = (matchers, key) -> true;
-        }
+        ExternalDataUtils.validateIncludeExclude(configuration);
 
         S3Client s3Client = ExternalDataUtils.AwsS3.buildAwsS3Client(configuration);
 
         // Get all objects in a bucket and extract the paths to files
         ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(container);
-        ExternalDataUtils.AwsS3.setPrefix(configuration, listObjectsBuilder);
+        listObjectsBuilder.prefix(ExternalDataUtils.getPrefix(configuration));
 
         ListObjectsV2Response listObjectsResponse;
         boolean done = false;
@@ -147,7 +90,9 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
                 }
 
                 // Collect the paths to files only
-                collectAndFilterFiles(listObjectsResponse.contents(), p, matchersList, filesOnly);
+                IncludeExcludeMatcher includeExcludeMatcher = getIncludeExcludeMatchers();
+                collectAndFilterFiles(listObjectsResponse.contents(), includeExcludeMatcher.getPredicate(),
+                        includeExcludeMatcher.getMatchersList(), filesOnly);
 
                 // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
                 if (!listObjectsResponse.isTruncated()) {
@@ -222,54 +167,6 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
         for (S3Object object : fileObjects) {
             PartitionWorkLoadBasedOnSize smallest = getSmallestWorkLoad();
             smallest.addFilePath(object.key(), object.size());
-        }
-    }
-
-    /**
-     * Finds the smallest workload and returns it
-     *
-     * @return the smallest workload
-     */
-    private PartitionWorkLoadBasedOnSize getSmallestWorkLoad() {
-        PartitionWorkLoadBasedOnSize smallest = partitionWorkLoadsBasedOnSize.get(0);
-        for (PartitionWorkLoadBasedOnSize partition : partitionWorkLoadsBasedOnSize) {
-            // If the current total size is 0, add the file directly as this is a first time partition
-            if (partition.getTotalSize() == 0) {
-                smallest = partition;
-                break;
-            }
-            if (partition.getTotalSize() < smallest.getTotalSize()) {
-                smallest = partition;
-            }
-        }
-
-        return smallest;
-    }
-
-    private static class PartitionWorkLoadBasedOnSize implements Serializable {
-        private static final long serialVersionUID = 1L;
-        private final List<String> filePaths = new ArrayList<>();
-        private long totalSize = 0;
-
-        PartitionWorkLoadBasedOnSize() {
-        }
-
-        public List<String> getFilePaths() {
-            return filePaths;
-        }
-
-        public void addFilePath(String filePath, long size) {
-            this.filePaths.add(filePath);
-            this.totalSize += size;
-        }
-
-        public long getTotalSize() {
-            return totalSize;
-        }
-
-        @Override
-        public String toString() {
-            return "Files: " + filePaths.size() + ", Total Size: " + totalSize;
         }
     }
 }

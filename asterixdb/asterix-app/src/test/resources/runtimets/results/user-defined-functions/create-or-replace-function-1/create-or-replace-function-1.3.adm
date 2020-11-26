@@ -1,2 +1,8 @@
 { "Name": "f1", "Definition": "a - b" }
 { "Name": "f2", "Definition": "a * b" }
+{ "Name": "f3", "Definition": "string_join(args, \",\")" }
+{ "Name": "f4", "Definition": "string_join(args, \"/\")" }
+{ "Name": "f5", "Definition": "string_join(args, \".\")" }
+{ "Name": "f5", "Definition": "upper(a)" }
+{ "Name": "f6", "Definition": "string_join(args, \",\")" }
+{ "Name": "f6", "Definition": "lower(a)" }

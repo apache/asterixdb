@@ -18,20 +18,16 @@
  */
 package org.apache.asterix.common.annotations;
 
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 
-public class SkipSecondaryIndexSearchExpressionAnnotation extends AbstractExpressionAnnotation {
+public final class SkipSecondaryIndexSearchExpressionAnnotation implements IExpressionAnnotation {
 
     public static final String HINT_STRING = "skip-index";
+
     public static final SkipSecondaryIndexSearchExpressionAnnotation INSTANCE =
             new SkipSecondaryIndexSearchExpressionAnnotation();
 
-    @Override
-    public IExpressionAnnotation copy() {
-        SkipSecondaryIndexSearchExpressionAnnotation clone = new SkipSecondaryIndexSearchExpressionAnnotation();
-        clone.setObject(object);
-        return clone;
+    private SkipSecondaryIndexSearchExpressionAnnotation() {
     }
 
     @Override

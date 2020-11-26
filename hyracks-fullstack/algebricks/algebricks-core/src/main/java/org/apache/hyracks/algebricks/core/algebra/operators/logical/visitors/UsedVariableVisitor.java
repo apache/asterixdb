@@ -219,10 +219,11 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitLimitOperator(LimitOperator op, Void arg) {
-        op.getMaxObjects().getValue().getUsedVariables(usedVariables);
-        ILogicalExpression offsetExpr = op.getOffset().getValue();
-        if (offsetExpr != null) {
-            offsetExpr.getUsedVariables(usedVariables);
+        if (op.hasMaxObjects()) {
+            op.getMaxObjects().getValue().getUsedVariables(usedVariables);
+        }
+        if (op.hasOffset()) {
+            op.getOffset().getValue().getUsedVariables(usedVariables);
         }
         return null;
     }

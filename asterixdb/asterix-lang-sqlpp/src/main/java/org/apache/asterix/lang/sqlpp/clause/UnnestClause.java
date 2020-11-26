@@ -23,13 +23,16 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.asterix.lang.sqlpp.optype.JoinType;
+import org.apache.asterix.lang.sqlpp.optype.UnnestType;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 
 public class UnnestClause extends AbstractBinaryCorrelateClause {
 
-    public UnnestClause(JoinType joinType, Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar) {
-        super(joinType, rightExpr, rightVar, rightPosVar);
+    private final UnnestType unnestType;
+
+    public UnnestClause(UnnestType unnestType, Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar) {
+        super(rightExpr, rightVar, rightPosVar);
+        this.unnestType = unnestType;
     }
 
     @Override
@@ -42,4 +45,24 @@ public class UnnestClause extends AbstractBinaryCorrelateClause {
         return ClauseType.UNNEST_CLAUSE;
     }
 
+    public UnnestType getUnnestType() {
+        return unnestType;
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 * super.hashCode() + unnestType.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof UnnestClause)) {
+            return false;
+        }
+        UnnestClause target = (UnnestClause) object;
+        return super.equals(target) && unnestType.equals(target.getUnnestType());
+    }
 }

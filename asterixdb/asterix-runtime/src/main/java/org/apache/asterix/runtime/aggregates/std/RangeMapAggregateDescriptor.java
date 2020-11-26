@@ -55,6 +55,7 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.marshalling.DoubleArraySerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntArraySerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 
@@ -145,6 +146,8 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
         private final Comparator<List<byte[]>> comparator;
         private final int numOfPartitions;
         private final int numOrderByFields;
+        private final int[] splitPoints;
+        private final double[] percentages;
 
         @SuppressWarnings("unchecked")
         private RangeMapFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context, boolean[] ascending,
@@ -155,6 +158,8 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
             this.comparator = createComparator(ascending, argsTypes);
             this.numOfPartitions = numOfPartitions;
             this.numOrderByFields = numOrderByFields;
+            this.splitPoints = new int[numOfPartitions - 1];
+            this.percentages = new double[numOfPartitions - 1];
         }
 
         @Override
@@ -214,25 +219,17 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
                     }
                 } else {
                     finalSamples.sort(comparator);
-                    // divide the samples evenly and pick the boundaries as split points
-                    int nextSplitOffset = (int) Math.ceil(finalSamples.size() / (double) numOfPartitions);
-                    int nextSplitIndex = nextSplitOffset - 1;
-                    int endOffsetsCounter = 0;
-                    int numRequiredSplits = numOfPartitions - 1;
-                    endOffsets = new int[numRequiredSplits * numOrderByFields];
+                    calculateSplitIndexes();
+                    calculatePercentSplit();
+
                     List<byte[]> sample;
-                    for (int split = 1; split <= numRequiredSplits; split++) {
-                        // pick the split point from sorted samples (could be <3> or <4,"John"> if it's multi-column)
-                        sample = finalSamples.get(nextSplitIndex);
-                        for (int column = 0; column < sample.size(); column++) {
-                            allSplitValuesOut.write(sample.get(column));
+                    int endOffsetsCounter = 0;
+                    endOffsets = new int[splitPoints.length * numOrderByFields];
+                    for (int i = 0; i < splitPoints.length; i++) {
+                        sample = finalSamples.get(splitPoints[i]);
+                        for (byte[] column : sample) {
+                            allSplitValuesOut.write(column);
                             endOffsets[endOffsetsCounter++] = storage.getLength();
-                        }
-                        // go to the next split point
-                        nextSplitIndex += nextSplitOffset;
-                        // in case we go beyond the boundary of samples, we pick the last sample repeatedly
-                        if (nextSplitIndex >= finalSamples.size()) {
-                            nextSplitIndex = finalSamples.size() - 1;
                         }
                     }
                 }
@@ -240,6 +237,54 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
                 throw HyracksDataException.create(e);
             }
             serializeRangeMap(numOrderByFields, storage.getByteArray(), endOffsets, result);
+        }
+
+        private void calculateSplitIndexes() {
+            int nextSplitOffset = (int) Math.ceil(finalSamples.size() / (double) numOfPartitions);
+            int nextSplitIndex = nextSplitOffset - 1;
+
+            for (int split = 0; split < splitPoints.length; split++) {
+                splitPoints[split] = nextSplitIndex;
+                nextSplitIndex += nextSplitOffset;
+                // in case we go beyond the boundary of samples, we pick the last sample repeatedly
+                if (nextSplitIndex >= finalSamples.size()) {
+                    nextSplitIndex = finalSamples.size() - 1;
+                }
+            }
+        }
+
+        private void calculatePercentSplit() {
+            for (int i = 0; i < splitPoints.length; i++) {
+                List<byte[]> sampleAtSplit = finalSamples.get(splitPoints[i]);
+                int smallestIndexEqualToSample = splitPoints[i];
+                while (smallestIndexEqualToSample >= 0
+                        && comparator.compare(sampleAtSplit, finalSamples.get(smallestIndexEqualToSample)) == 0) {
+                    smallestIndexEqualToSample--;
+                }
+                smallestIndexEqualToSample++;
+
+                int largestSplitIncludingSample = i;
+                while (largestSplitIncludingSample < splitPoints.length && comparator.compare(sampleAtSplit,
+                        finalSamples.get(splitPoints[largestSplitIncludingSample])) == 0) {
+                    largestSplitIncludingSample++;
+                }
+                largestSplitIncludingSample--;
+
+                int largestIndexEqualToSample = splitPoints[largestSplitIncludingSample];
+                while (largestIndexEqualToSample < finalSamples.size()
+                        && comparator.compare(sampleAtSplit, finalSamples.get(largestIndexEqualToSample)) == 0) {
+                    largestIndexEqualToSample++;
+                }
+                largestIndexEqualToSample--;
+
+                double count = largestIndexEqualToSample - smallestIndexEqualToSample + 1;
+                double waterMark = smallestIndexEqualToSample - 1;
+                for (int j = i; j <= largestSplitIncludingSample; j++) {
+                    percentages[j] = ((splitPoints[j] - waterMark) * 100) / (count);
+                    waterMark = splitPoints[j];
+                }
+                i = largestSplitIncludingSample;
+            }
         }
 
         @Override
@@ -297,6 +342,7 @@ public class RangeMapAggregateDescriptor extends AbstractAggregateFunctionDynami
             IntegerSerializerDeserializer.write(numberFields, serRangeMap.getDataOutput());
             ByteArraySerializerDeserializer.write(splitValues, serRangeMap.getDataOutput());
             IntArraySerializerDeserializer.write(endOffsets, serRangeMap.getDataOutput());
+            DoubleArraySerializerDeserializer.write(percentages, serRangeMap.getDataOutput());
             binary.setValue(serRangeMap.getByteArray(), serRangeMap.getStartOffset(), serRangeMap.getLength());
             storage.reset();
             binarySerde.serialize(binary, storage.getDataOutput());

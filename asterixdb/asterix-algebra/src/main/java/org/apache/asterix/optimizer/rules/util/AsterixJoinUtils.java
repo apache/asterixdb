@@ -68,7 +68,7 @@ public class AsterixJoinUtils {
             return;
         }
         //Check RangeMap type
-        RangeMap rangeMap = (RangeMap) rangeAnnotation.getObject();
+        RangeMap rangeMap = rangeAnnotation.getRangeMap();
         if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize() && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
                 && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
             IWarningCollector warningCollector = context.getWarningCollector();

@@ -138,8 +138,10 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
 
     @Override
     public Void visit(LimitClause lc, Void arg) throws CompilationException {
-        lc.getLimitExpr().accept(this, arg);
-        if (lc.getOffset() != null) {
+        if (lc.hasLimitExpr()) {
+            lc.getLimitExpr().accept(this, arg);
+        }
+        if (lc.hasOffset()) {
             lc.getOffset().accept(this, arg);
         }
         return null;

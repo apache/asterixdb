@@ -205,7 +205,8 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
                 && op.getInputs().get(0).getValue().getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
             return false;
         }
-        if (((DataSource) op.getDataSource()).getDatasourceType() != DataSource.Type.INTERNAL_DATASET) {
+        byte datasourceType = ((DataSource) op.getDataSource()).getDatasourceType();
+        if (datasourceType != DataSource.Type.INTERNAL_DATASET && datasourceType != DataSource.Type.EXTERNAL_DATASET) {
             return false;
         }
         if (!op.getScanVariables().containsAll(selectedVariables)) {

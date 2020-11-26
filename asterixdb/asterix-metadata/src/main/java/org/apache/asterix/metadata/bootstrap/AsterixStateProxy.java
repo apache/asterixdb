@@ -49,7 +49,7 @@ public class AsterixStateProxy implements IAsterixStateProxy {
         if (networkSecurityManager.getConfiguration().isSslEnabled()) {
             final RMIServerFactory serverSocketFactory = new RMIServerFactory(networkSecurityManager);
             final RMIClientFactory clientSocketFactory =
-                    new RMIClientFactory(networkSecurityManager.getConfiguration().isSslEnabled());
+                    new RMIClientFactory(networkSecurityManager.getConfiguration());
             stub = (IAsterixStateProxy) UnicastRemoteObject.exportObject(cc, metadataCallbackPort, clientSocketFactory,
                     serverSocketFactory);
         } else {

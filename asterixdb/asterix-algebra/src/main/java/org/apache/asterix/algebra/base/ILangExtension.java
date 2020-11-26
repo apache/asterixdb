@@ -29,7 +29,6 @@ import org.apache.asterix.om.functions.IFunctionManager;
 public interface ILangExtension extends IExtension {
 
     public enum Language {
-        AQL,
         SQLPP
     }
 

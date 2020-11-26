@@ -30,6 +30,14 @@ public interface IPageWriteCallback {
     void initialize(IIndexBulkLoader bulkLoader);
 
     /**
+     * Notify that a page is about to be written
+     *
+     * @param page
+     * @throws HyracksDataException
+     */
+    void beforeWrite(ICachedPage page) throws HyracksDataException;
+
+    /**
      * Notify that a page has been written
      *
      * @param page

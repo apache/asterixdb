@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ACCOUNT_KEY;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ACCOUNT_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_BLOB_ENDPOINT;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ENDPOINT_SUFFIX;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
@@ -67,7 +71,15 @@ import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobItem;
+import com.azure.storage.blob.models.ListBlobsOptions;
+
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentials;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.regions.Region;
@@ -79,6 +91,7 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 public class ExternalDataUtils {
 
     private static final Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = new EnumMap<>(ATypeTag.class);
+
     static {
         valueParserFactoryMap.put(ATypeTag.INTEGER, IntegerParserFactory.INSTANCE);
         valueParserFactoryMap.put(ATypeTag.FLOAT, FloatParserFactory.INSTANCE);
@@ -390,12 +403,17 @@ public class ExternalDataUtils {
      * Prepares the configuration of the external data and its adapter by filling the information required by
      * adapters and parsers.
      *
-     * @param adapterName adapter name
+     * @param adapterName   adapter name
      * @param configuration external data configuration
      */
     public static void prepare(String adapterName, Map<String, String> configuration) {
         if (!configuration.containsKey(ExternalDataConstants.KEY_READER)) {
             configuration.put(ExternalDataConstants.KEY_READER, adapterName);
+        }
+        final String inputFormat = configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT);
+        if (ExternalDataConstants.INPUT_FORMAT_PARQUET.equals(inputFormat)) {
+            //Parquet supports binary-to-binary conversion. No parsing is required
+            configuration.put(ExternalDataConstants.KEY_FORMAT, ExternalDataConstants.FORMAT_NOOP);
         }
         if (!configuration.containsKey(ExternalDataConstants.KEY_PARSER)
                 && configuration.containsKey(ExternalDataConstants.KEY_FORMAT)) {
@@ -500,6 +518,9 @@ public class ExternalDataUtils {
             case ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3:
                 ExternalDataUtils.AwsS3.validateProperties(configuration, srcLoc, collector);
                 break;
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
+                ExternalDataUtils.Azure.validateProperties(configuration, srcLoc, collector);
+                break;
             default:
                 // Nothing needs to be done
                 break;
@@ -510,7 +531,6 @@ public class ExternalDataUtils {
      * Regex matches all the provided patterns against the provided path
      *
      * @param path path to check against
-     *
      * @return {@code true} if all patterns match, {@code false} otherwise
      */
     public static boolean matchPatterns(List<Matcher> matchers, String path) {
@@ -526,7 +546,6 @@ public class ExternalDataUtils {
      * Converts the wildcard to proper regex
      *
      * @param pattern wildcard pattern to convert
-     *
      * @return regex expression
      */
     public static String patternToRegex(String pattern) {
@@ -612,6 +631,71 @@ public class ExternalDataUtils {
         return result.toString();
     }
 
+    /**
+     * Adjusts the prefix (if needed) and returns it
+     *
+     * @param configuration configuration
+     */
+    public static String getPrefix(Map<String, String> configuration) {
+        String definition = configuration.get(ExternalDataConstants.AzureBlob.DEFINITION_FIELD_NAME);
+        if (definition != null && !definition.isEmpty()) {
+            return definition + (!definition.endsWith("/") ? "/" : "");
+        }
+        return "";
+    }
+
+    /**
+     * @param configuration configuration map
+     * @throws CompilationException Compilation exception
+     */
+    public static void validateIncludeExclude(Map<String, String> configuration) throws CompilationException {
+        // Ensure that include and exclude are not provided at the same time + ensure valid format or property
+        List<Map.Entry<String, String>> includes = new ArrayList<>();
+        List<Map.Entry<String, String>> excludes = new ArrayList<>();
+
+        // Accepted formats are include, include#1, include#2, ... etc, same for excludes
+        for (Map.Entry<String, String> entry : configuration.entrySet()) {
+            String key = entry.getKey();
+
+            if (key.equals(ExternalDataConstants.KEY_INCLUDE)) {
+                includes.add(entry);
+            } else if (key.equals(ExternalDataConstants.KEY_EXCLUDE)) {
+                excludes.add(entry);
+            } else if (key.startsWith(ExternalDataConstants.KEY_INCLUDE)
+                    || key.startsWith(ExternalDataConstants.KEY_EXCLUDE)) {
+
+                // Split by the "#", length should be 2, left should be include/exclude, right should be integer
+                String[] splits = key.split("#");
+
+                if (key.startsWith(ExternalDataConstants.KEY_INCLUDE) && splits.length == 2
+                        && splits[0].equals(ExternalDataConstants.KEY_INCLUDE)
+                        && NumberUtils.isIntegerNumericString(splits[1])) {
+                    includes.add(entry);
+                } else if (key.startsWith(ExternalDataConstants.KEY_EXCLUDE) && splits.length == 2
+                        && splits[0].equals(ExternalDataConstants.KEY_EXCLUDE)
+                        && NumberUtils.isIntegerNumericString(splits[1])) {
+                    excludes.add(entry);
+                } else {
+                    throw new CompilationException(ErrorCode.INVALID_PROPERTY_FORMAT, key);
+                }
+            }
+        }
+
+        // Ensure either include or exclude are provided, but not both of them
+        if (!includes.isEmpty() && !excludes.isEmpty()) {
+            throw new CompilationException(ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME,
+                    ExternalDataConstants.KEY_INCLUDE, ExternalDataConstants.KEY_EXCLUDE);
+        }
+    }
+
+    public static boolean supportsPushdown(Map<String, String> properties) {
+        //Currently, only Apache Parquet format is supported
+        return ExternalDataConstants.CLASS_NAME_PARQUET_INPUT_FORMAT
+                .equals(properties.get(ExternalDataConstants.KEY_INPUT_FORMAT))
+                || ExternalDataConstants.INPUT_FORMAT_PARQUET
+                        .equals(properties.get(ExternalDataConstants.KEY_INPUT_FORMAT));
+    }
+
     public static class AwsS3 {
         private AwsS3() {
             throw new AssertionError("do not instantiate");
@@ -628,13 +712,20 @@ public class ExternalDataUtils {
             // TODO(Hussain): Need to ensure that all required parameters are present in a previous step
             String accessKeyId = configuration.get(ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME);
             String secretAccessKey = configuration.get(ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME);
+            String sessionToken = configuration.get(ExternalDataConstants.AwsS3.SESSION_TOKEN_FIELD_NAME);
             String regionId = configuration.get(ExternalDataConstants.AwsS3.REGION_FIELD_NAME);
             String serviceEndpoint = configuration.get(ExternalDataConstants.AwsS3.SERVICE_END_POINT_FIELD_NAME);
 
             S3ClientBuilder builder = S3Client.builder();
 
             // Credentials
-            AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+            AwsCredentials credentials;
+            if (sessionToken != null) {
+                credentials = AwsSessionCredentials.create(accessKeyId, secretAccessKey, sessionToken);
+            } else {
+                credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+            }
+
             builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
 
             // Validate the region
@@ -667,23 +758,9 @@ public class ExternalDataUtils {
         }
 
         /**
-         * Sets the prefix for the list objects builder if it is available
-         *
-         * @param configuration configuration
-         * @param builder builder
-         */
-        public static void setPrefix(Map<String, String> configuration, ListObjectsV2Request.Builder builder) {
-            String definition = configuration.get(ExternalDataConstants.AwsS3.DEFINITION_FIELD_NAME);
-            if (definition != null) {
-                builder.prefix(definition + (!definition.isEmpty() && !definition.endsWith("/") ? "/" : ""));
-            }
-        }
-
-        /**
          * Validate external dataset properties
          *
          * @param configuration properties
-         *
          * @throws CompilationException Compilation exception
          */
         public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
@@ -702,7 +779,7 @@ public class ExternalDataUtils {
                 String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
                 s3Client = buildAwsS3Client(configuration);
                 ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder();
-                setPrefix(configuration, listObjectsBuilder);
+                listObjectsBuilder.prefix(getPrefix(configuration));
 
                 ListObjectsV2Response response =
                         s3Client.listObjectsV2(listObjectsBuilder.bucket(container).maxKeys(1).build());
@@ -726,49 +803,81 @@ public class ExternalDataUtils {
                 }
             }
         }
+    }
+
+    public static class Azure {
+        private Azure() {
+            throw new AssertionError("do not instantiate");
+        }
 
         /**
-         * @param configuration
-         * @throws CompilationException
+         * Builds the Azure storage account using the provided configuration
+         *
+         * @param configuration properties
+         * @return client
          */
-        public static void validateIncludeExclude(Map<String, String> configuration) throws CompilationException {
-            // Ensure that include and exclude are not provided at the same time + ensure valid format or property
-            List<Map.Entry<String, String>> includes = new ArrayList<>();
-            List<Map.Entry<String, String>> excludes = new ArrayList<>();
+        public static BlobServiceClient buildAzureClient(Map<String, String> configuration)
+                throws CompilationException {
+            // TODO(Hussain): Need to ensure that all required parameters are present in a previous step
+            String accountName = configuration.get(ExternalDataConstants.AzureBlob.ACCOUNT_NAME_FIELD_NAME);
+            String accountKey = configuration.get(ExternalDataConstants.AzureBlob.ACCOUNT_KEY_FIELD_NAME);
+            String blobEndpoint = configuration.get(ExternalDataConstants.AzureBlob.BLOB_ENDPOINT_FIELD_NAME);
+            String endpointSuffix = configuration.get(ExternalDataConstants.AzureBlob.ENDPOINT_SUFFIX_FIELD_NAME);
 
-            // Accepted formats are include, include#1, include#2, ... etc, same for excludes
-            for (Map.Entry<String, String> entry : configuration.entrySet()) {
-                String key = entry.getKey();
+            // format: name1=value1;name2=value2;....
+            // TODO(Hussain): This will be different when SAS (Shared Access Signature) is introduced
+            StringBuilder connectionString = new StringBuilder();
+            connectionString.append(CONNECTION_STRING_ACCOUNT_NAME).append("=").append(accountName).append(";");
+            connectionString.append(CONNECTION_STRING_ACCOUNT_KEY).append("=").append(accountKey).append(";");
+            connectionString.append(CONNECTION_STRING_BLOB_ENDPOINT).append("=").append(blobEndpoint).append(";");
 
-                if (key.equals(ExternalDataConstants.KEY_INCLUDE)) {
-                    includes.add(entry);
-                } else if (key.equals(ExternalDataConstants.KEY_EXCLUDE)) {
-                    excludes.add(entry);
-                } else if (key.startsWith(ExternalDataConstants.KEY_INCLUDE)
-                        || key.startsWith(ExternalDataConstants.KEY_EXCLUDE)) {
-
-                    // Split by the "#", length should be 2, left should be include/exclude, right should be integer
-                    String[] splits = key.split("#");
-
-                    if (key.startsWith(ExternalDataConstants.KEY_INCLUDE) && splits.length == 2
-                            && splits[0].equals(ExternalDataConstants.KEY_INCLUDE)
-                            && NumberUtils.isIntegerNumericString(splits[1])) {
-                        includes.add(entry);
-                    } else if (key.startsWith(ExternalDataConstants.KEY_EXCLUDE) && splits.length == 2
-                            && splits[0].equals(ExternalDataConstants.KEY_EXCLUDE)
-                            && NumberUtils.isIntegerNumericString(splits[1])) {
-                        excludes.add(entry);
-                    } else {
-                        throw new CompilationException(ErrorCode.INVALID_PROPERTY_FORMAT, key);
-                    }
-                }
+            if (endpointSuffix != null) {
+                connectionString.append(CONNECTION_STRING_ENDPOINT_SUFFIX).append("=").append(endpointSuffix)
+                        .append(";");
             }
 
-            // TODO: Should include/exclude be a common check or S3 specific?
-            // Ensure either include or exclude are provided, but not both of them
-            if (!includes.isEmpty() && !excludes.isEmpty()) {
-                throw new CompilationException(ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME,
-                        ExternalDataConstants.KEY_INCLUDE, ExternalDataConstants.KEY_EXCLUDE);
+            try {
+                return new BlobServiceClientBuilder().connectionString(connectionString.toString()).buildClient();
+            } catch (Exception ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+            }
+        }
+
+        /**
+         * Validate external dataset properties
+         *
+         * @param configuration properties
+         * @throws CompilationException Compilation exception
+         */
+        public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
+                IWarningCollector collector) throws CompilationException {
+
+            // check if the format property is present
+            if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+                throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
+            }
+
+            validateIncludeExclude(configuration);
+
+            // Check if the bucket is present
+            BlobServiceClient blobServiceClient;
+            try {
+                String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
+                blobServiceClient = buildAzureClient(configuration);
+                BlobContainerClient blobContainer = blobServiceClient.getBlobContainerClient(container);
+
+                // Get all objects in a container and extract the paths to files
+                ListBlobsOptions listBlobsOptions = new ListBlobsOptions();
+                listBlobsOptions.setPrefix(getPrefix(configuration));
+                Iterable<BlobItem> blobItems = blobContainer.listBlobs(listBlobsOptions, null);
+
+                if (!blobItems.iterator().hasNext() && collector.shouldWarn()) {
+                    Warning warning =
+                            WarningUtil.forAsterix(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                    collector.warn(warning);
+                }
+            } catch (Exception ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
             }
         }
     }

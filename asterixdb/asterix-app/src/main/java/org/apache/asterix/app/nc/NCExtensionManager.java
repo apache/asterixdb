@@ -27,7 +27,6 @@ import org.apache.asterix.common.api.ExtensionId;
 import org.apache.asterix.common.api.IExtension;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.compiler.provider.AqlCompilationProvider;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.metadata.api.IMetadataExtension;
@@ -44,7 +43,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class NCExtensionManager implements INCExtensionManager {
 
-    private final ILangCompilationProvider aqlCompilationProvider;
     private final ILangCompilationProvider sqlppCompilationProvider;
     private final MetadataTupleTranslatorProvider tupleTranslatorProvider;
     private final List<IMetadataExtension> mdExtensions;
@@ -76,7 +74,6 @@ public class NCExtensionManager implements INCExtensionManager {
                 switch (extension.getExtensionKind()) {
                     case LANG:
                         ILangExtension le = (ILangExtension) extension;
-                        aqlcp = ExtensionUtil.extendLangCompilationProvider(ILangExtension.Language.AQL, aqlcp, le);
                         sqlppcp =
                                 ExtensionUtil.extendLangCompilationProvider(ILangExtension.Language.SQLPP, sqlppcp, le);
                         break;
@@ -91,7 +88,6 @@ public class NCExtensionManager implements INCExtensionManager {
                 }
             }
         }
-        this.aqlCompilationProvider = aqlcp == null ? new AqlCompilationProvider() : aqlcp.second;
         this.sqlppCompilationProvider = sqlppcp == null ? new SqlppCompilationProvider() : sqlppcp.second;
         this.tupleTranslatorProvider = tupleTranslatorProviderExtension == null ? new MetadataTupleTranslatorProvider()
                 : tupleTranslatorProviderExtension.getMetadataTupleTranslatorProvider();
@@ -99,8 +95,6 @@ public class NCExtensionManager implements INCExtensionManager {
 
     public ILangCompilationProvider getCompilationProvider(ILangExtension.Language lang) {
         switch (lang) {
-            case AQL:
-                return aqlCompilationProvider;
             case SQLPP:
                 return sqlppCompilationProvider;
             default:

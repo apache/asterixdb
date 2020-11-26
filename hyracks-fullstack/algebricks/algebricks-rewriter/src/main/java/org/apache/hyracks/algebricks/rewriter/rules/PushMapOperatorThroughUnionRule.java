@@ -126,12 +126,12 @@ public abstract class PushMapOperatorThroughUnionRule implements IAlgebraicRewri
         for (LogicalVariable opProducedVar : opProducedVars) {
             LogicalVariable leftBranchProducedVar = leftBranchProducedVarMap.get(opProducedVar);
             if (leftBranchProducedVar == null) {
-                throw AlgebricksException.create(ErrorCode.COMPILATION_ILLEGAL_STATE, op.getSourceLocation(),
+                throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE, op.getSourceLocation(),
                         "Cannot find " + opProducedVar);
             }
             LogicalVariable rightBranchProducedVar = rightBranchProducedVarMap.get(opProducedVar);
             if (rightBranchProducedVar == null) {
-                throw AlgebricksException.create(ErrorCode.COMPILATION_ILLEGAL_STATE, op.getSourceLocation(),
+                throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE, op.getSourceLocation(),
                         "Cannot find " + opProducedVar);
             }
 

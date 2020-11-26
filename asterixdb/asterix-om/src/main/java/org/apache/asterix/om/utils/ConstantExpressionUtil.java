@@ -98,6 +98,10 @@ public class ConstantExpressionUtil {
         return getIntConstant(f.getArguments().get(index).getValue());
     }
 
+    public static Long getLongArgument(AbstractFunctionCallExpression f, int index) {
+        return getLongConstant(f.getArguments().get(index).getValue());
+    }
+
     public static String getStringArgument(AbstractFunctionCallExpression f, int index) {
         return getStringConstant(f.getArguments().get(index).getValue());
     }

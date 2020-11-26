@@ -37,6 +37,7 @@ import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.control.common.config.ConfigManager;
+import org.apache.hyracks.control.common.config.OptionTypes;
 import org.apache.hyracks.util.file.FileUtil;
 import org.ini4j.Ini;
 
@@ -78,7 +79,12 @@ public class CCConfig extends ControllerConfig {
         CONTROLLER_ID(SHORT, (short) 0x0000),
         KEY_STORE_PATH(STRING),
         TRUST_STORE_PATH(STRING),
-        KEY_STORE_PASSWORD(STRING);
+        KEY_STORE_PASSWORD(STRING),
+        CREDENTIAL_FILE(
+                OptionTypes.STRING,
+                (Function<IApplicationConfig, String>) appConfig -> FileUtil
+                        .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
+                ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd");
 
         private final IOptionType parser;
         private Object defaultValue;
@@ -198,6 +204,8 @@ public class CCConfig extends ControllerConfig {
                     return "A fully-qualified path to a trust store file that will be used for secured connections";
                 case KEY_STORE_PASSWORD:
                     return "The password to the provided key store";
+                case CREDENTIAL_FILE:
+                    return "Path to HTTP basic credentials";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -465,7 +473,12 @@ public class CCConfig extends ControllerConfig {
     }
 
     public void setTrustStorePath(String trustStorePath) {
+
         configManager.set(Option.TRUST_STORE_PATH, trustStorePath);
+    }
+
+    public String getCredentialFilePath() {
+        return getAppConfig().getString(Option.CREDENTIAL_FILE);
     }
 
 }

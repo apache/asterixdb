@@ -35,6 +35,8 @@ public interface ILibraryManager {
 
     FileReference getLibraryDir(DataverseName dataverseName, String libraryName) throws HyracksDataException;
 
+    FileReference getDistributionDir();
+
     void dropLibraryPath(FileReference fileRef) throws HyracksDataException;
 
     byte[] serializeLibraryDescriptor(LibraryDescriptor libraryDescriptor) throws HyracksDataException;

@@ -30,14 +30,16 @@ SQL was designed for interacting with the flat, schema-ified world of relational
 databases, while SQL++ generalizes SQL to also handle nested data formats (like JSON) and
 the schema-optional (or even schema-less) data models of modern NoSQL and BigData systems.
 
-In the context of Apache AsterixDB, the query language is intended for working with the Asterix Data Model
+In the context of Apache AsterixDB, SQL++ is intended for working with the Asterix Data Model
 ([ADM](../datamodel.html)), a data model based on a superset of JSON with an enriched and flexible type system.
 New AsterixDB users are encouraged to read and work through the (much friendlier) guide
 "[AsterixDB 101: An ADM and SQL++ Primer](primer-sqlpp.html)" before attempting to make use of this document.
 In addition, readers are advised to read through the [Asterix Data Model (ADM) reference guide](../datamodel.html)
-first as well, as an understanding of the data model is a prerequisite to understanding the query language.
+first as well, as an understanding of the data model is a prerequisite to understanding SQL++.
 
-In what follows, we detail the features of the query language in a grammar-guided manner.
+In what follows, we detail the features of the SQL++ language in a grammar-guided manner.
 We list and briefly explain each of the productions in the query grammar, offering examples
-(and results) for clarity.
+(and results) for clarity. In this manual, we will explain how to use the various features of SQL++
+using two datasets named `customers` and `orders`. Each dataset is a collection of objects.
+The contents of the example datasets can be found at the end of this manual in [Appendix 4](#Manual_data).
 

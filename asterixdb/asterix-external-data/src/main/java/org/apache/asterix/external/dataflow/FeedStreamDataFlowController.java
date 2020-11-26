@@ -18,12 +18,15 @@
  */
 package org.apache.asterix.external.dataflow;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 
 public class FeedStreamDataFlowController extends AbstractFeedDataFlowController {
 
@@ -39,7 +42,10 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
     }
 
     @Override
-    public void start(IFrameWriter writer) throws HyracksDataException {
+    public void start(IFrameWriter writer, ITupleFilter tupleFilter, long outputLimit) throws HyracksDataException {
+        if (tupleFilter != null || outputLimit >= 0) {
+            throw new RuntimeDataException(ErrorCode.DATAFLOW_ILLEGAL_STATE);
+        }
         try {
             tupleForwarder = new TupleForwarder(ctx, writer);
             while (true) {

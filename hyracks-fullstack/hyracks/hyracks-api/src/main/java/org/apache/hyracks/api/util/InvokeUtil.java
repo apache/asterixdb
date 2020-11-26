@@ -270,7 +270,7 @@ public class InvokeUtil {
             IDelay delay, IFailedAttemptCallback onFailure) throws HyracksDataException {
         Throwable failure;
         int attempt = 0;
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             attempt++;
             try {
                 return action.compute();
@@ -291,6 +291,7 @@ public class InvokeUtil {
                 }
             }
         }
+        throw HyracksDataException.create(new InterruptedException());
     }
 
     @FunctionalInterface

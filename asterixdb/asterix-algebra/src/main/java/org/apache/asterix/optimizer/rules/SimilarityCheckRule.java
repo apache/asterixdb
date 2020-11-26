@@ -325,7 +325,7 @@ public class SimilarityCheckRule implements IAlgebraicRewriteRule {
         }
         // Preserve all annotations.
         if (simCheckFuncExpr != null) {
-            simCheckFuncExpr.getAnnotations().putAll(funcExpr.getAnnotations());
+            funcExpr.copyAnnotationsInto(simCheckFuncExpr);
         }
         return simCheckFuncExpr;
     }
