@@ -159,6 +159,7 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
                 new MutableObject<>(new VariableReferenceExpression(rightInputVar)));
         ScalarFunctionCallExpression updatedJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
+//                        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(ABoolean.valueOf(true)))),
                         new MutableObject<>(tileIdEquiJoinCondition),
                         new MutableObject<>(referenceIdEquiJoinCondition),
                         new MutableObject<>(spatialJoinCondition)
@@ -172,15 +173,17 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
                                                  LogicalVariable inputVar) {
         LogicalVariable sideVar = context.newVar();
         VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
+        UnnestingFunctionCallExpression funcExpr = new UnnestingFunctionCallExpression(
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
+                new MutableObject<>(sideInputVar),
+                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
+                        new ARectangle(new APoint(MIN_X, MIN_Y), new APoint(MAX_X, MAX_Y))))),
+                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(NUM_ROWS)))),
+                new MutableObject<>(
+                        new ConstantExpression(new AsterixConstantValue(new AInt64(NUM_COLUMNS)))));
+        funcExpr.setSourceLocation(sideOp.getValue().getSourceLocation());
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar,
-                new MutableObject<>(new UnnestingFunctionCallExpression(
-                        BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
-                        new MutableObject<>(sideInputVar),
-                        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                                new ARectangle(new APoint(MIN_X, MIN_Y), new APoint(MAX_X, MAX_Y))))),
-                        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(NUM_ROWS)))),
-                        new MutableObject<>(
-                                new ConstantExpression(new AsterixConstantValue(new AInt64(NUM_COLUMNS)))))));
+                new MutableObject<>(funcExpr));
         sideUnnestOp.getInputs().add(new MutableObject<>(sideOp.getValue()));
         sideOp.setValue(sideUnnestOp);
         try {
