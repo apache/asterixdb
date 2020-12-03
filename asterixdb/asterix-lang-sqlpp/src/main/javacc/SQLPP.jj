@@ -56,10 +56,12 @@ import org.apache.asterix.common.annotations.FieldIntervalDataGen;
 import org.apache.asterix.common.annotations.FieldValFileDataGen;
 import org.apache.asterix.common.annotations.FieldValFileSameIndexDataGen;
 import org.apache.asterix.common.annotations.IRecordFieldDataGen;
+import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.InsertRandIntDataGen;
 import org.apache.asterix.common.annotations.ListDataGen;
 import org.apache.asterix.common.annotations.ListValFileDataGen;
 import org.apache.asterix.common.annotations.RangeAnnotation;
+import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
@@ -202,7 +204,6 @@ import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -368,6 +369,19 @@ class SQLPPParser extends ScopeChecker implements IParser {
                 return SQLPPParser.this.MultipartIdentifier();
             }
         });
+    }
+
+    private List<String> parseParenthesizedIdentifierList() throws CompilationException {
+        return parseImpl(new ParseFunction<List<String>>() {
+            @Override
+            public  List<String> parse() throws ParseException {
+                return SQLPPParser.this.ParenthesizedIdentifierList();
+            }
+        });
+    }
+
+    private static List<String> parseParenthesizedIdentifierList(String text) throws CompilationException {
+        return new SQLPPParser(text).parseParenthesizedIdentifierList();
     }
 
     @Override
@@ -564,6 +578,46 @@ class SQLPPParser extends ScopeChecker implements IParser {
         if (warningCollector.shouldWarn()) {
             warningCollector.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.UNEXPECTED_HINT, actualHint, expectedHints));
         }
+    }
+
+    private IExpressionAnnotation parseExpressionAnnotation(Token hintToken) throws SqlppParseException {
+      try {
+        switch (hintToken.hint) {
+          case HASH_BROADCAST_JOIN_HINT:
+            return new BroadcastExpressionAnnotation(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
+          case INDEXED_NESTED_LOOP_JOIN_HINT:
+            if (hintToken.hintParams == null) {
+              return IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX;
+            } else {
+              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
+              return IndexedNLJoinExpressionAnnotation.newInstance(indexNames);
+            }
+          case RANGE_HINT:
+            Expression rangeExpr = parseExpression(hintToken.hintParams);
+            RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
+            return new RangeAnnotation(rangeMap);
+          case SKIP_SECONDARY_INDEX_SEARCH_HINT:
+            if (hintToken.hintParams == null) {
+              return SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX;
+            } else {
+              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
+              return SkipSecondaryIndexSearchExpressionAnnotation.newInstance(indexNames);
+            }
+          case USE_SECONDARY_INDEX_SEARCH_HINT:
+            if (hintToken.hintParams == null) {
+              throw new SqlppParseException(getSourceLocation(hintToken), "Expected index name");
+            } else {
+              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
+              return SecondaryIndexSearchPreferenceAnnotation.newInstance(indexNames);
+            }
+          default:
+            throw new SqlppParseException(getSourceLocation(hintToken), "Unexpected hint " + hintToken.hint);
+        }
+      } catch (CompilationException e) {
+        SqlppParseException pe = new SqlppParseException(getSourceLocation(hintToken), e.getMessage());
+        pe.initCause(e);
+        throw pe;
+      }
     }
 
     private void ensureNoTypeDeclsInFunction(String fnName, List<Pair<VarIdentifier, TypeExpression>> paramList,
@@ -2382,8 +2436,10 @@ FunctionName FunctionName() throws ParseException:
 {
   // Note: there's a copy of this production in PrimaryExpr() (LOOKAHEAD for FunctionCallExpr())
   //       that copy must be kept in sync with this code
-  prefix = MultipartIdentifierWithHints(SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
-    SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.RANGE_HINT)
+  prefix = MultipartIdentifierWithHints(
+    SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT, SqlppHint.RANGE_HINT,
+    SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT
+  )
   (<SHARP> suffix = Identifier())?
   {
     FunctionName result = new FunctionName();
@@ -2443,6 +2499,21 @@ String Identifier() throws ParseException:
       return lit;
     }
   )
+}
+
+List<String> ParenthesizedIdentifierList() throws ParseException:
+{
+  List<String> list = new ArrayList<String>();
+  String ident = null;
+}
+{
+  <LEFTPAREN>
+  ident = Identifier() { list.add(ident); }
+  ( <COMMA> ident = Identifier() { list.add(ident); } )*
+  <RIGHTPAREN>
+  {
+    return list;
+  }
 }
 
 Pair<Integer, Pair<List<String>, IndexedTypeExpression>> OpenField() throws ParseException:
@@ -2763,22 +2834,13 @@ Expression RelExpr() throws ParseException:
     (
       LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> | <LG> |<SIMILAR> | (<NOT> { not = true; })? <IN>)
         {
-          Token hintToken = fetchHint(token, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
-            SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.HASH_BROADCAST_JOIN_HINT);
+          Token hintToken = fetchHint(token,
+            SqlppHint.HASH_BROADCAST_JOIN_HINT, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
+            SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT
+          );
           if (hintToken != null) {
-            switch (hintToken.hint) {
-              case INDEXED_NESTED_LOOP_JOIN_HINT:
-                annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
-                break;
-              case SKIP_SECONDARY_INDEX_SEARCH_HINT:
-                annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
-                break;
-              case HASH_BROADCAST_JOIN_HINT:
-                annotation = new BroadcastExpressionAnnotation(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
-                break;
-            }
+            annotation = parseExpressionAnnotation(hintToken);
           }
-
           String operator = token.image.toLowerCase();
           if (operator.equals("<>")){
               operator = "!=";
@@ -2826,17 +2888,12 @@ Expression BetweenExpr() throws ParseException:
       LOOKAHEAD(2)
       (<NOT> { not = true; })? <BETWEEN>
         {
-          Token hintToken = fetchHint(token, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
-            SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT);
+          Token hintToken = fetchHint(token,
+            SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT, SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT,
+            SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT
+          );
           if (hintToken != null) {
-            switch (hintToken.hint) {
-              case INDEXED_NESTED_LOOP_JOIN_HINT:
-                annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
-                break;
-              case SKIP_SECONDARY_INDEX_SEARCH_HINT:
-                annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
-                break;
-            }
+            annotation = parseExpressionAnnotation(hintToken);
           }
           String operator = token.image.toLowerCase();
           if(not){
@@ -3515,27 +3572,9 @@ Expression FunctionCallExpr() throws ParseException:
     } else {
       CallExpr callExpr = new CallExpr(signature, argList, filterExpr);
       if (funcName.hintToken != null) {
-        switch (funcName.hintToken.hint) {
-          case INDEXED_NESTED_LOOP_JOIN_HINT:
-            callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
-            break;
-          case SKIP_SECONDARY_INDEX_SEARCH_HINT:
-            callExpr.addHint(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE);
-            break;
-          case RANGE_HINT:
-            try {
-              Expression rangeExpr = parseExpression(funcName.hintToken.hintParams);
-              RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
-              RangeAnnotation rangeAnn = new RangeAnnotation(rangeMap);
-              callExpr.addHint(rangeAnn);
-            } catch (CompilationException e) {
-              {
-                  SqlppParseException e2 = new SqlppParseException(getSourceLocation(funcName.hintToken), e.getMessage());
-                  e2.initCause(e);
-                  throw e2;
-              }
-            }
-            break;
+        IExpressionAnnotation annotation = parseExpressionAnnotation(funcName.hintToken);
+        if (annotation != null) {
+          callExpr.addHint(annotation);
         }
       }
       FunctionMapUtil.normalizedListInputFunctions(callExpr);

@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
+import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -43,7 +43,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -170,9 +169,9 @@ public class DisjunctivePredicateToJoinRule implements IAlgebraicRewriteRule {
         scanVarRef.setSourceLocation(sourceLoc);
         eqExp.getArguments().add(new MutableObject<>(scanVarRef));
         eqExp.getArguments().add(new MutableObject<>(varEx.cloneExpression()));
-        if (!allAnnotations.contains(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE)) {
-            eqExp.putAnnotation(IndexedNLJoinExpressionAnnotation.INSTANCE);
-        }
+        // if allAnnotations contains SkipSecondaryIndexSearchExpressionAnnotation then it'll take precedence over
+        // IndexedNLJoinExpressionAnnotation and index will be skipped anyway
+        eqExp.putAnnotation(IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX);
         BroadcastExpressionAnnotation bcast =
                 new BroadcastExpressionAnnotation(BroadcastExpressionAnnotation.BroadcastSide.LEFT); // Broadcast the OR predicates branch.
         eqExp.putAnnotation(bcast);

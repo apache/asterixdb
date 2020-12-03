@@ -5881,6 +5881,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
+      <compilation-unit name="hints-indexnl-params">
+        <output-dir compare="Text">hints-indexnl-params</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join">
       <compilation-unit name="rtree-spatial-intersect-point_01">
         <output-dir compare="Text">rtree-spatial-intersect-point_01</output-dir>
       </compilation-unit>
@@ -6150,6 +6155,16 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="dataset-with-meta">
         <output-dir compare="Text">dataset-with-meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="hints-skip-index">
+        <output-dir compare="Text">hints-skip-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="hints-use-index">
+        <output-dir compare="Text">hints-use-index</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
@@ -14066,9 +14081,9 @@
         <output-dir compare="Text">inapplicable-hint-warning</output-dir>
         <expected-warn>HYR10006: Could not apply Group By hint: hash</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: indexnl. "hash" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "skip-index", "hash-bcast" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: auto. "indexnl", "skip-index" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "skip-index", "range" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: hash. "hash-bcast", "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: auto. "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "range", "skip-index", "use-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: hash. None expected at this location</expected-warn>
       </compilation-unit>
     </test-case>
@@ -14089,9 +14104,9 @@
       <compilation-unit name="unknown-hint-warning">
         <output-dir compare="Text">unknown-hint-warning</output-dir>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_groupby. "hash" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr. "indexnl", "skip-index", "hash-bcast" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: unknown_hint_between. "indexnl", "skip-index" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: unknown_hint_funcall. "indexnl", "skip-index", "range" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr. "hash-bcast", "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: unknown_hint_between. "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: unknown_hint_funcall. "indexnl", "range", "skip-index", "use-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_elsewhere. None expected at this location</expected-warn>
       </compilation-unit>
     </test-case>
