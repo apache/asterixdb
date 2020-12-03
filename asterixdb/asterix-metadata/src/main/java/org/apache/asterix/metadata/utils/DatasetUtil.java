@@ -20,6 +20,7 @@ package org.apache.asterix.metadata.utils;
 
 import java.io.DataOutput;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -289,6 +290,11 @@ public class DatasetUtil {
 
     public static JobSpecification dropDatasetJobSpec(Dataset dataset, MetadataProvider metadataProvider)
             throws AlgebricksException, ACIDException {
+        return dropDatasetJobSpec(dataset, metadataProvider, Collections.emptySet());
+    }
+
+    public static JobSpecification dropDatasetJobSpec(Dataset dataset, MetadataProvider metadataProvider,
+            Set<IndexDropOperatorDescriptor.DropOption> options) throws AlgebricksException, ACIDException {
         LOGGER.info("DROP DATASET: " + dataset);
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
@@ -298,7 +304,8 @@ public class DatasetUtil {
                 metadataProvider.getSplitProviderAndConstraints(dataset);
         IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
-        IndexDropOperatorDescriptor primaryBtreeDrop = new IndexDropOperatorDescriptor(specPrimary, indexHelperFactory);
+        IndexDropOperatorDescriptor primaryBtreeDrop =
+                new IndexDropOperatorDescriptor(specPrimary, indexHelperFactory, options);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
                 splitsAndConstraint.second);
         specPrimary.addRoot(primaryBtreeDrop);
