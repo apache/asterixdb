@@ -3,25 +3,25 @@
     -- STREAM_LIMIT  |UNPARTITIONED|
       -- STREAM_PROJECT  |PARTITIONED|
         -- ASSIGN  |PARTITIONED|
-          -- SORT_MERGE_EXCHANGE [$$51(DESC) ]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$55(DESC) ]  |PARTITIONED|
             -- STREAM_LIMIT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [topK: 3] [$$51(DESC)]  |PARTITIONED|
+                -- STABLE_SORT [topK: 3] [$$55(DESC)]  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- PRE_CLUSTERED_GROUP_BY[$$49]  |PARTITIONED|
+                    -- PRE_CLUSTERED_GROUP_BY[$$53]  |PARTITIONED|
                             {
                               -- AGGREGATE  |LOCAL|
                                 -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                                  -- MICRO_STABLE_SORT [$$45(ASC)]  |LOCAL|
+                                  -- MICRO_STABLE_SORT [$$49(ASC)]  |LOCAL|
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                             }
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- STABLE_SORT [$$49(ASC)]  |PARTITIONED|
-                          -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
+                        -- STABLE_SORT [$$53(ASC)]  |PARTITIONED|
+                          -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- ASSIGN  |PARTITIONED|
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                    -- DATASOURCE_SCAN (gby.Employee)  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

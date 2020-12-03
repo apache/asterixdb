@@ -38,10 +38,10 @@ public abstract class AbstractLogicalOperatorPrettyPrintVisitor<T> implements IL
         this.exprVisitor = exprVisitor;
     }
 
-    public static void printPhysicalOps(ILogicalPlan plan, AlgebricksStringBuilderWriter out, int indent)
-            throws AlgebricksException {
+    public static void printPhysicalOps(ILogicalPlan plan, AlgebricksStringBuilderWriter out, int indent,
+            boolean verbose) throws AlgebricksException {
         for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-            printPhysicalOperator((AbstractLogicalOperator) root.getValue(), indent, out);
+            printPhysicalOperator((AbstractLogicalOperator) root.getValue(), indent, out, verbose);
         }
     }
 
@@ -80,23 +80,23 @@ public abstract class AbstractLogicalOperatorPrettyPrintVisitor<T> implements IL
         return buffer;
     }
 
-    private static void printPhysicalOperator(AbstractLogicalOperator op, int indent, AlgebricksStringBuilderWriter out)
-            throws AlgebricksException {
+    private static void printPhysicalOperator(AbstractLogicalOperator op, int indent, AlgebricksStringBuilderWriter out,
+            boolean verbose) throws AlgebricksException {
         IPhysicalOperator pOp = op.getPhysicalOperator();
         pad(out, indent);
-        appendln(out, "-- " + pOp.toString() + "  |" + op.getExecutionMode() + "|");
+        appendln(out, "-- " + pOp.toString(verbose) + "  |" + op.getExecutionMode() + "|");
         if (op.hasNestedPlans()) {
             AbstractOperatorWithNestedPlans opNest = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : opNest.getNestedPlans()) {
                 pad(out, indent + 8);
                 appendln(out, "{");
-                printPhysicalOps(p, out, indent + 10);
+                printPhysicalOps(p, out, indent + 10, verbose);
                 pad(out, indent + 8);
                 appendln(out, "}");
             }
         }
         for (Mutable<ILogicalOperator> i : op.getInputs()) {
-            printPhysicalOperator((AbstractLogicalOperator) i.getValue(), indent + 2, out);
+            printPhysicalOperator((AbstractLogicalOperator) i.getValue(), indent + 2, out, verbose);
         }
     }
 }

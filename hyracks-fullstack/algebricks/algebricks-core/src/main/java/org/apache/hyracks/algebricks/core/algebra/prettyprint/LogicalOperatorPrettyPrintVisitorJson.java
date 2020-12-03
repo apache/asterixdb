@@ -191,7 +191,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeStringField("operatorId", idCounter.printOperatorId(op));
             IPhysicalOperator pOp = op.getPhysicalOperator();
             if (pOp != null) {
-                jsonGenerator.writeStringField("physical-operator", pOp.toString());
+                jsonGenerator.writeStringField("physical-operator", pOp.toString(false));
             }
             jsonGenerator.writeStringField("execution-mode", op.getExecutionMode().toString());
             if (printInputs && !op.getInputs().isEmpty()) {

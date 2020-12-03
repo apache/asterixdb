@@ -9,7 +9,7 @@
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- REPLICATE  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- PRE_CLUSTERED_GROUP_BY[$$121, $$122]  |PARTITIONED|
+                      -- PRE_CLUSTERED_GROUP_BY[$$130, $$131]  |PARTITIONED|
                               {
                                 -- AGGREGATE  |LOCAL|
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -19,9 +19,9 @@
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                               }
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- STABLE_SORT [$$121(ASC), $$122(ASC)]  |PARTITIONED|
-                            -- HASH_PARTITION_EXCHANGE [$$121, $$122]  |PARTITIONED|
-                              -- PRE_CLUSTERED_GROUP_BY[$$108, $$109]  |PARTITIONED|
+                          -- STABLE_SORT [$$130(ASC), $$131(ASC)]  |PARTITIONED|
+                            -- HASH_PARTITION_EXCHANGE [$$130, $$131]  |PARTITIONED|
+                              -- PRE_CLUSTERED_GROUP_BY[$$117, $$118]  |PARTITIONED|
                                       {
                                         -- AGGREGATE  |LOCAL|
                                           -- STREAM_SELECT  |LOCAL|
@@ -33,12 +33,12 @@
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                                       }
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- STABLE_SORT [$$108(ASC), $$109(ASC)]  |PARTITIONED|
+                                  -- STABLE_SORT [$$117(ASC), $$118(ASC)]  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- ASSIGN  |PARTITIONED|
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                            -- DATASOURCE_SCAN (tpch.LineItem)  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -49,7 +49,7 @@
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- REPLICATE  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- PRE_CLUSTERED_GROUP_BY[$$121, $$122]  |PARTITIONED|
+                                -- PRE_CLUSTERED_GROUP_BY[$$130, $$131]  |PARTITIONED|
                                         {
                                           -- AGGREGATE  |LOCAL|
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -59,9 +59,9 @@
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                                         }
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- STABLE_SORT [$$121(ASC), $$122(ASC)]  |PARTITIONED|
-                                      -- HASH_PARTITION_EXCHANGE [$$121, $$122]  |PARTITIONED|
-                                        -- PRE_CLUSTERED_GROUP_BY[$$108, $$109]  |PARTITIONED|
+                                    -- STABLE_SORT [$$130(ASC), $$131(ASC)]  |PARTITIONED|
+                                      -- HASH_PARTITION_EXCHANGE [$$130, $$131]  |PARTITIONED|
+                                        -- PRE_CLUSTERED_GROUP_BY[$$117, $$118]  |PARTITIONED|
                                                 {
                                                   -- AGGREGATE  |LOCAL|
                                                     -- STREAM_SELECT  |LOCAL|
@@ -73,11 +73,11 @@
                                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                 }
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- STABLE_SORT [$$108(ASC), $$109(ASC)]  |PARTITIONED|
+                                            -- STABLE_SORT [$$117(ASC), $$118(ASC)]  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 -- ASSIGN  |PARTITIONED|
                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      -- DATASOURCE_SCAN (tpch.LineItem)  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

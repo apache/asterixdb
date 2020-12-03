@@ -6,11 +6,11 @@
           -- STREAM_PROJECT  |PARTITIONED|
             -- ASSIGN  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH  |PARTITIONED|
+                -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$23(ASC)]  |PARTITIONED|
+                    -- STABLE_SORT [$$24(ASC)]  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                        -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.ngram_index)  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

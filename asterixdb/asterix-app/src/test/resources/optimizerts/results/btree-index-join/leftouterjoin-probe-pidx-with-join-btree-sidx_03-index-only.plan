@@ -2,15 +2,15 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$63(ASC), $$38(ASC) ]  |PARTITIONED|
-          -- STABLE_SORT [$$63(ASC), $$38(ASC)]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$65(ASC), $$40(ASC) ]  |PARTITIONED|
+          -- STABLE_SORT [$$65(ASC), $$40(ASC)]  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               -- STREAM_PROJECT  |PARTITIONED|
                 -- STREAM_SELECT  |PARTITIONED|
                   -- WINDOW_STREAM  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- STABLE_SORT [$$63(ASC), $$38(DESC)]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$63]  |PARTITIONED|
+                      -- STABLE_SORT [$$65(ASC), $$40(DESC)]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$65]  |PARTITIONED|
                           -- UNION_ALL  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
@@ -18,18 +18,18 @@
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ASSIGN  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- BTREE_SEARCH  |PARTITIONED|
+                                        -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- STREAM_PROJECT  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 -- SPLIT  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- BTREE_SEARCH  |PARTITIONED|
+                                                    -- BTREE_SEARCH (test.TweetMessages.msgCountBIx)  |PARTITIONED|
                                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                           -- ASSIGN  |PARTITIONED|
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              -- BTREE_SEARCH  |PARTITIONED|
+                                                              -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                   -- ASSIGN  |PARTITIONED|
                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
@@ -38,12 +38,12 @@
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- SPLIT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- BTREE_SEARCH  |PARTITIONED|
+                                      -- BTREE_SEARCH (test.TweetMessages.msgCountBIx)  |PARTITIONED|
                                         -- BROADCAST_EXCHANGE  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ASSIGN  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     -- ASSIGN  |PARTITIONED|
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

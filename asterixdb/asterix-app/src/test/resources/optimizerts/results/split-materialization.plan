@@ -2,8 +2,8 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$85(ASC), $$86(ASC) ]  |PARTITIONED|
-          -- STABLE_SORT [$$85(ASC), $$86(ASC)]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$91(ASC), $$92(ASC) ]  |PARTITIONED|
+          -- STABLE_SORT [$$91(ASC), $$92(ASC)]  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               -- NESTED_LOOP  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -16,7 +16,7 @@
                               -- STREAM_SELECT  |PARTITIONED|
                                 -- ASSIGN  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                    -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -26,6 +26,6 @@
                         -- STREAM_SELECT  |PARTITIONED|
                           -- ASSIGN  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN  |PARTITIONED|
+                              -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

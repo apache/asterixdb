@@ -4,28 +4,28 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- INTERVAL_MERGE_JOIN [$$30] [$$31]  |PARTITIONED|
+            -- INTERVAL_MERGE_JOIN [$$32] [$$33]  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [$$30(ASC)]  |PARTITIONED|
+                -- STABLE_SORT [$$32(ASC)]  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
-                      -- PARTIAL_BROADCAST_RANGE_INTERSECT_EXCHANGE [{$$34,$$35,ASC}] RANGE_MAP:{SPLIT:3}  |PARTITIONED|
+                      -- PARTIAL_BROADCAST_RANGE_INTERSECT_EXCHANGE [{$$36,$$37,ASC}] RANGE_MAP:{SPLIT:3}  |PARTITIONED|
                         -- ASSIGN  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                -- DATASOURCE_SCAN (TinyCollege.Staff)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [$$31(ASC)]  |PARTITIONED|
+                -- STABLE_SORT [$$33(ASC)]  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
-                      -- RANGE_PARTITION_EXCHANGE [$$36(ASC)] RANGE_MAP:{SPLIT:3}  |PARTITIONED|
+                      -- RANGE_PARTITION_EXCHANGE [$$38(ASC)] RANGE_MAP:{SPLIT:3}  |PARTITIONED|
                         -- ASSIGN  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                -- DATASOURCE_SCAN (TinyCollege.Students)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

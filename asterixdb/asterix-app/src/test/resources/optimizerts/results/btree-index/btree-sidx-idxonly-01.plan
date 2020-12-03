@@ -2,8 +2,8 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$19(ASC) ]  |PARTITIONED|
-          -- STABLE_SORT [$$19(ASC)]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
+          -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               -- UNION_ALL  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -11,11 +11,11 @@
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- ASSIGN  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- BTREE_SEARCH  |PARTITIONED|
+                          -- BTREE_SEARCH (test.MyData.MyData)  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- SPLIT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH  |PARTITIONED|
+                                  -- BTREE_SEARCH (test.MyData.btree_index_docid)  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- ASSIGN  |PARTITIONED|
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
@@ -24,7 +24,7 @@
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                       -- SPLIT  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- BTREE_SEARCH  |PARTITIONED|
+                          -- BTREE_SEARCH (test.MyData.btree_index_docid)  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- ASSIGN  |PARTITIONED|
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

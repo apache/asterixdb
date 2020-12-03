@@ -83,4 +83,12 @@ public interface IPhysicalOperator {
      * than recomputing it.
      */
     public boolean expensiveThanMaterialization();
+
+    /**
+     * Print the operator
+     *
+     * @param verbose in verbose mode physical operator is printed without corresponding logical operator
+     *                (for example, when running the optimizer tests)
+     */
+    public String toString(boolean verbose);
 }

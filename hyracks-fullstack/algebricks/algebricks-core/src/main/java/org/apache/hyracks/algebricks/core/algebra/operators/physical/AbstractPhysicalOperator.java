@@ -66,6 +66,11 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
     }
 
     @Override
+    public String toString(boolean verbose) {
+        return toString();
+    }
+
+    @Override
     public void setHostQueryContext(Object context) {
         this.hostQueryContext = context;
     }

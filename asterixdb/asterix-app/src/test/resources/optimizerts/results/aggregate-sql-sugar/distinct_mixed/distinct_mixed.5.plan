@@ -6,11 +6,11 @@
           -- NESTED_LOOP  |UNPARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
               -- AGGREGATE  |UNPARTITIONED|
-                -- SORT_MERGE_EXCHANGE [$$59(ASC) ]  |PARTITIONED|
+                -- SORT_MERGE_EXCHANGE [$$62(ASC) ]  |PARTITIONED|
                   -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- STABLE_SORT [$$59(ASC)]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$59]  |PARTITIONED|
+                      -- STABLE_SORT [$$62(ASC)]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$62]  |PARTITIONED|
                           -- NESTED_LOOP  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
@@ -19,7 +19,7 @@
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- REPLICATE  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                          -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                             -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -28,16 +28,16 @@
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- REPLICATE  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                        -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
               -- AGGREGATE  |UNPARTITIONED|
-                -- SORT_MERGE_EXCHANGE [$$48(ASC) ]  |PARTITIONED|
+                -- SORT_MERGE_EXCHANGE [$$51(ASC) ]  |PARTITIONED|
                   -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- STABLE_SORT [$$48(ASC)]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$48]  |PARTITIONED|
+                      -- STABLE_SORT [$$51(ASC)]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$51]  |PARTITIONED|
                           -- NESTED_LOOP  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
@@ -45,7 +45,7 @@
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- REPLICATE  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                        -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                             -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -55,6 +55,6 @@
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- REPLICATE  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                          -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
