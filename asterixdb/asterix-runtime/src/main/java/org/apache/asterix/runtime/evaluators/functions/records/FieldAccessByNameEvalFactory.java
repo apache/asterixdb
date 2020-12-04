@@ -24,11 +24,12 @@ import java.io.IOException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -45,15 +46,17 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
 
     private static final long serialVersionUID = 1L;
 
-    private IScalarEvaluatorFactory recordEvalFactory;
-    private IScalarEvaluatorFactory fldNameEvalFactory;
+    private final IScalarEvaluatorFactory recordEvalFactory;
+    private final IScalarEvaluatorFactory fldNameEvalFactory;
     private final SourceLocation sourceLoc;
+    private final FunctionIdentifier funID;
 
     public FieldAccessByNameEvalFactory(IScalarEvaluatorFactory recordEvalFactory,
-            IScalarEvaluatorFactory fldNameEvalFactory, SourceLocation sourceLoc) {
+            IScalarEvaluatorFactory fldNameEvalFactory, SourceLocation sourceLoc, FunctionIdentifier funID) {
         this.recordEvalFactory = recordEvalFactory;
         this.fldNameEvalFactory = fldNameEvalFactory;
         this.sourceLoc = sourceLoc;
+        this.funID = funID;
     }
 
     @Override
@@ -64,16 +67,13 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
                     BinaryHashFunctionFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryHashFunction();
             private final IBinaryComparator fieldNameComparator =
                     BinaryComparatorFactoryProvider.UTF8STRING_POINTABLE_INSTANCE.createBinaryComparator();
-            private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-            private DataOutput out = resultStorage.getDataOutput();
+            private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+            private final DataOutput out = resultStorage.getDataOutput();
 
-            private IPointable inputArg0 = new VoidPointable();
-            private IPointable inputArg1 = new VoidPointable();
-            private IScalarEvaluator eval0 = recordEvalFactory.createScalarEvaluator(ctx);
-            private IScalarEvaluator eval1 = fldNameEvalFactory.createScalarEvaluator(ctx);
-            private int fieldValueOffset;
-            private int fieldValueLength;
-            private ATypeTag fieldValueTypeTag;
+            private final IPointable inputArg0 = new VoidPointable();
+            private final IPointable inputArg1 = new VoidPointable();
+            private final IScalarEvaluator eval0 = recordEvalFactory.createScalarEvaluator(ctx);
+            private final IScalarEvaluator eval1 = fldNameEvalFactory.createScalarEvaluator(ctx);
 
             @Override
             public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -91,21 +91,33 @@ public class FieldAccessByNameEvalFactory implements IScalarEvaluatorFactory {
                     int serRecordLen = inputArg0.getLength();
 
                     if (serRecord[serRecordOffset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        throw new TypeMismatchException(sourceLoc, serRecord[serRecordOffset],
-                                ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
+                        ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funID, serRecord[serRecordOffset], 0,
+                                ATypeTag.OBJECT);
+                        out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+                        result.set(resultStorage);
+                        return;
                     }
                     byte[] serFldName = inputArg1.getByteArray();
                     int serFldNameOffset = inputArg1.getStartOffset();
-                    fieldValueOffset = ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, serRecordOffset,
-                            serRecordLen, serFldName, serFldNameOffset, fieldNameHashFunction, fieldNameComparator);
+                    if (serFldName[serFldNameOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                        ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funID, serFldName[serFldNameOffset], 1,
+                                ATypeTag.STRING);
+                        out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+                        result.set(resultStorage);
+                        return;
+                    }
+                    int fieldValueOffset =
+                            ARecordSerializerDeserializer.getFieldOffsetByName(serRecord, serRecordOffset, serRecordLen,
+                                    serFldName, serFldNameOffset, fieldNameHashFunction, fieldNameComparator);
                     if (fieldValueOffset < 0) {
                         out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
                         result.set(resultStorage);
                         return;
                     }
 
-                    fieldValueTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[fieldValueOffset]);
-                    fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, fieldValueOffset,
+                    ATypeTag fieldValueTypeTag =
+                            EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serRecord[fieldValueOffset]);
+                    int fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(serRecord, fieldValueOffset,
                             fieldValueTypeTag, true) + 1;
                     result.set(serRecord, fieldValueOffset, fieldValueLength);
                 } catch (IOException e) {

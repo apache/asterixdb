@@ -5639,7 +5639,7 @@
     <test-case FilePath="group-by">
       <compilation-unit name="sugar-01-negative">
         <output-dir compare="Text">core-01</output-dir>
-        <expected-error>ASX1091: Type mismatch: expected value of type object, but got the value of type array (in line 26, at column 38)</expected-error>
+        <expected-error>ASX0037: Type mismatch: expected value of type array or multiset, but got the value of type bigint (in line 26, at column 26)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
@@ -13375,6 +13375,11 @@
         <output-dir compare="Clean-JSON">issue-ASTERIXDB-1165</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="json">
+      <compilation-unit name="int01">
+        <output-dir compare="Clean-JSON">int01-cleanjson</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="materialization">
     <test-case FilePath="materialization">
@@ -13489,13 +13494,6 @@
     <test-case FilePath="json">
       <compilation-unit name="int01">
         <output-dir compare="Lossless-JSON">int01-losslessjson</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="cleanjson">
-    <test-case FilePath="json">
-      <compilation-unit name="int01">
-        <output-dir compare="Clean-JSON">int01-cleanjson</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -14159,8 +14157,8 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="fun_return_null/string_fun">
-    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+  <test-group name="fun_return_null_missing/string_fun">
+    <test-case FilePath="fun_return_null_missing/string_fun" check-warnings="true">
       <compilation-unit name="string_fun_001">
         <output-dir compare="Text">string_fun_001</output-dir>
         <expected-warn>Type mismatch: function trim expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 41, at column 1)</expected-warn>
@@ -14260,7 +14258,7 @@
         <expected-warn>Type mismatch: function ends-with expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 33, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+    <test-case FilePath="fun_return_null_missing/string_fun" check-warnings="true">
       <compilation-unit name="string_fun_002">
         <output-dir compare="Text">string_fun_002</output-dir>
         <expected-warn>Type mismatch: function rtrim expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 42, at column 1)</expected-warn>
@@ -14295,7 +14293,7 @@
         <expected-warn>Type mismatch: function regexp-position expects its 1st input parameter to be of type string, but the actual input type is integer (in line 50, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+    <test-case FilePath="fun_return_null_missing/string_fun" check-warnings="true">
       <compilation-unit name="string_fun_003">
         <output-dir compare="Text">string_fun_003</output-dir>
         <expected-warn>Invalid value: function repeat expects its 2nd input parameter to be an integer value, got 5.3 (in line 31, at column 1)</expected-warn>
@@ -14320,7 +14318,7 @@
         <expected-warn>Invalid value: function substring expects its 2nd input parameter to be an integer value, got Infinity (in line 34, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+    <test-case FilePath="fun_return_null_missing/string_fun" check-warnings="true">
       <compilation-unit name="string_fun_004">
         <output-dir compare="Text">string_fun_004</output-dir>
         <expected-warn>Type mismatch: function string-concat expects its 2nd input parameter to be of type string, but the actual input type is tinyint (in line 30, at column 1)</expected-warn>
@@ -14346,8 +14344,8 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="fun_return_null/numeric_fun" >
-    <test-case FilePath="fun_return_null/numeric_fun" check-warnings="true">
+  <test-group name="fun_return_null_missing/numeric_fun" >
+    <test-case FilePath="fun_return_null_missing/numeric_fun" check-warnings="true">
       <compilation-unit name="numeric_fun_001">
         <output-dir compare="Text">numeric_fun_001</output-dir>
         <expected-warn>Type mismatch: function abs expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
@@ -14424,7 +14422,7 @@
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fun_return_null/numeric_fun" check-warnings="true">
+    <test-case FilePath="fun_return_null_missing/numeric_fun" check-warnings="true">
       <compilation-unit name="numeric_fun_002">
         <output-dir compare="Text">numeric_fun_002</output-dir>
         <expected-warn>Type mismatch: function round expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
@@ -14451,7 +14449,7 @@
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fun_return_null/numeric_fun" check-warnings="true">
+    <test-case FilePath="fun_return_null_missing/numeric_fun" check-warnings="true">
       <compilation-unit name="numeric_fun_003">
         <output-dir compare="Text">numeric_fun_003</output-dir>
         <expected-warn>Type mismatch: function numeric-add expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
@@ -14492,6 +14490,15 @@
         <expected-warn>Type mismatch: function numeric-subtract expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
         <expected-warn>Type incompatibility: function numeric-add gets incompatible input values: datetime and string</expected-warn>
         <expected-warn>Type mismatch: function power expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fun_return_null_missing" check-warnings="true">
+      <compilation-unit name="field-access">
+        <output-dir compare="Text">field-access</output-dir>
+        <expected-warn>Type mismatch: function field-access-by-name expects its 1st input parameter to be of type object, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function field-access-by-name expects its 1st input parameter to be of type object, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function field-access-by-name expects its 1st input parameter to be of type object, but the actual input type is string</expected-warn>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
