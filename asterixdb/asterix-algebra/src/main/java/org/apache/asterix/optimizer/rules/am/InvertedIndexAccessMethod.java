@@ -20,6 +20,7 @@ package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -27,7 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
+import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -940,7 +941,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     @Override
     public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) throws AlgebricksException {
-        if (optFuncExpr.getFuncExpr().hasAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class)) {
+        if (AccessMethodUtils.skipSecondaryIndexRequestedByAnnotation(index, optFuncExpr)) {
             return false;
         }
 
@@ -1310,6 +1311,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             inferTypes(childOpRef.getValue(), context);
         }
         context.computeAndSetTypeEnvironmentForOperator(op);
+    }
+
+    @Override
+    public Collection<String> getSecondaryIndexPreferences(IOptimizableFuncExpr optFuncExpr) {
+        return AccessMethodUtils.getSecondaryIndexPreferences(optFuncExpr,
+                SecondaryIndexSearchPreferenceAnnotation.class);
     }
 
     @Override

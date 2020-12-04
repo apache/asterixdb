@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules.am;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.asterix.metadata.entities.Index;
@@ -115,6 +116,8 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
      * @throws AlgebricksException
      */
     public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) throws AlgebricksException;
+
+    public Collection<String> getSecondaryIndexPreferences(IOptimizableFuncExpr optFuncExpr);
 
     public String getName();
 

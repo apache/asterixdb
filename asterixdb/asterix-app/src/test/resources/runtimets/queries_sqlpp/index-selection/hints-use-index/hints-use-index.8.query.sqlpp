@@ -16,19 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.core.algebra.expressions;
 
-public final class IndexedNLJoinExpressionAnnotation implements IExpressionAnnotation {
+use test;
 
-    public static final String HINT_STRING = "indexnl";
+/*
+ * use-index hint. use specified indexes (idx_1k_2k, idx_2k_5k)
+ * explain plan -> intersection between idx_1k_2k and idx_2k_5k
+ */
 
-    public static final IndexedNLJoinExpressionAnnotation INSTANCE = new IndexedNLJoinExpressionAnnotation();
-
-    private IndexedNLJoinExpressionAnnotation() {
-    }
-
-    @Override
-    public String toString() {
-        return HINT_STRING;
-    }
-}
+select value unique1
+from tenk
+where
+  thousand /* +use-index(idx_1k_2k) */ = 0
+and
+  twothousand /* +use-index(idx_2k_5k) */ = 0
+order by unique1;

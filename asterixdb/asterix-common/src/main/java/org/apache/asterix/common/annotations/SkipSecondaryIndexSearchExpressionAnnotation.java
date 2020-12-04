@@ -18,20 +18,28 @@
  */
 package org.apache.asterix.common.annotations;
 
-import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
+import java.util.Collection;
 
-public final class SkipSecondaryIndexSearchExpressionAnnotation implements IExpressionAnnotation {
+public final class SkipSecondaryIndexSearchExpressionAnnotation extends AbstractExpressionAnnotationWithIndexNames {
 
     public static final String HINT_STRING = "skip-index";
 
-    public static final SkipSecondaryIndexSearchExpressionAnnotation INSTANCE =
-            new SkipSecondaryIndexSearchExpressionAnnotation();
+    public static final SkipSecondaryIndexSearchExpressionAnnotation INSTANCE_ANY_INDEX =
+            new SkipSecondaryIndexSearchExpressionAnnotation(null);
 
-    private SkipSecondaryIndexSearchExpressionAnnotation() {
+    private SkipSecondaryIndexSearchExpressionAnnotation(Collection<String> indexNames) {
+        super(indexNames);
+    }
+
+    public static SkipSecondaryIndexSearchExpressionAnnotation newInstance(Collection<String> indexNames) {
+        if (indexNames == null || indexNames.isEmpty()) {
+            throw new IllegalArgumentException();
+        }
+        return new SkipSecondaryIndexSearchExpressionAnnotation(indexNames);
     }
 
     @Override
     public String toString() {
-        return HINT_STRING;
+        return indexNames == null ? HINT_STRING : HINT_STRING + indexNames;
     }
 }

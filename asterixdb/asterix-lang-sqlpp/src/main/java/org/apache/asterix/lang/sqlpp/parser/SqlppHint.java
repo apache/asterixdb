@@ -41,6 +41,7 @@ public enum SqlppHint {
     LIST_VAL_FILE_HINT("list-val-file"),
     RANGE_HINT("range"),
     SKIP_SECONDARY_INDEX_SEARCH_HINT("skip-index"),
+    USE_SECONDARY_INDEX_SEARCH_HINT("use-index"),
     VAL_FILE_HINT("val-files"),
     VAL_FILE_SAME_INDEX_HINT("val-file-same-idx"),
     GEN_FIELDS_HINT("gen-fields"),
@@ -53,8 +54,7 @@ public enum SqlppHint {
     private final String id;
 
     SqlppHint(String id) {
-        Objects.requireNonNull(id);
-        this.id = id;
+        this.id = Objects.requireNonNull(id);
     }
 
     public String getIdentifier() {

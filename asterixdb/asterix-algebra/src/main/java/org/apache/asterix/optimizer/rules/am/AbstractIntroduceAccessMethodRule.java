@@ -20,6 +20,7 @@ package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -321,8 +322,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexExprAndVarIt =
                 analysisCtx.getIteratorForIndexExprsAndVars();
-        // Used to keep track of matched expressions (added for prefix search)
-        int numMatchedKeys = 0;
+        boolean hasIndexPreferences = false;
         ArrayList<Integer> matchedExpressions = new ArrayList<>();
         while (indexExprAndVarIt.hasNext()) {
             Map.Entry<Index, List<Pair<Integer, Integer>>> indexExprAndVarEntry = indexExprAndVarIt.next();
@@ -331,7 +331,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             boolean allUsed = true;
             int lastFieldMatched = -1;
             matchedExpressions.clear();
-            numMatchedKeys = 0;
+            // Used to keep track of matched expressions (added for prefix search)
+            int numMatchedKeys = 0;
 
             for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
                 List<String> keyField = index.getKeyFieldNames().get(i);
@@ -432,6 +433,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                             && optFuncExpr.getOperatorSubTree(exprAndVarIdx.second).hasDataSourceScan()) {
                         foundKeyField = true;
                         matchedExpressions.add(exprAndVarIdx.first);
+                        hasIndexPreferences =
+                                hasIndexPreferences || accessMethod.getSecondaryIndexPreferences(optFuncExpr) != null;
                     }
                 }
                 if (foundKeyField) {
@@ -466,7 +469,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     continue;
                 }
             }
-            analysisCtx.putNumberOfMatchedKeys(index, Integer.valueOf(numMatchedKeys));
+            analysisCtx.putNumberOfMatchedKeys(index, numMatchedKeys);
+        }
+
+        if (hasIndexPreferences) {
+            Collection<Index> preferredSecondaryIndexes = fetchSecondaryIndexPreferences(accessMethod, analysisCtx);
+            if (preferredSecondaryIndexes != null) {
+                // if we have preferred indexes then remove all non-preferred indexes
+                removeNonPreferredSecondaryIndexes(analysisCtx, preferredSecondaryIndexes);
+            }
         }
     }
 
@@ -481,6 +492,42 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         }
         return ATypeHierarchy.canPromote(Index.getNonNullableType(type1).first.getTypeTag(),
                 Index.getNonNullableType(type2).first.getTypeTag());
+    }
+
+    private Set<Index> fetchSecondaryIndexPreferences(IAccessMethod accessMethod,
+            AccessMethodAnalysisContext analysisCtx) {
+        Set<Index> preferredSecondaryIndexes = null;
+        for (Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexExprAndVarIt =
+                analysisCtx.getIteratorForIndexExprsAndVars(); indexExprAndVarIt.hasNext();) {
+            Map.Entry<Index, List<Pair<Integer, Integer>>> indexExprAndVarEntry = indexExprAndVarIt.next();
+            Index index = indexExprAndVarEntry.getKey();
+            if (index.isSecondaryIndex()) {
+                for (Pair<Integer, Integer> exprVarPair : indexExprAndVarEntry.getValue()) {
+                    IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprVarPair.first);
+                    Collection<String> preferredIndexNames = accessMethod.getSecondaryIndexPreferences(optFuncExpr);
+                    if (preferredIndexNames != null && preferredIndexNames.contains(index.getIndexName())) {
+                        if (preferredSecondaryIndexes == null) {
+                            preferredSecondaryIndexes = new HashSet<>();
+                        }
+                        preferredSecondaryIndexes.add(index);
+                        break;
+                    }
+                }
+            }
+        }
+        return preferredSecondaryIndexes;
+    }
+
+    private void removeNonPreferredSecondaryIndexes(AccessMethodAnalysisContext analysisCtx,
+            Collection<Index> preferredIndexes) {
+        for (Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexExprAndVarIt =
+                analysisCtx.getIteratorForIndexExprsAndVars(); indexExprAndVarIt.hasNext();) {
+            Map.Entry<Index, List<Pair<Integer, Integer>>> indexExprAndVarEntry = indexExprAndVarIt.next();
+            Index index = indexExprAndVarEntry.getKey();
+            if (index.isSecondaryIndex() && !preferredIndexes.contains(index)) {
+                indexExprAndVarIt.remove();
+            }
+        }
     }
 
     /**

@@ -20,6 +20,7 @@
 package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,6 +29,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.algebra.operators.physical.ExternalDataLookupPOperator;
+import org.apache.asterix.common.annotations.AbstractExpressionAnnotationWithIndexNames;
+import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -2658,5 +2661,17 @@ public class AccessMethodUtils {
             }
         }
         return null;
+    }
+
+    static boolean skipSecondaryIndexRequestedByAnnotation(Index index, IOptimizableFuncExpr optFuncExpr) {
+        SkipSecondaryIndexSearchExpressionAnnotation ann =
+                optFuncExpr.getFuncExpr().getAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class);
+        return ann != null && (ann.getIndexNames() == null || ann.getIndexNames().contains(index.getIndexName()));
+    }
+
+    static Collection<String> getSecondaryIndexPreferences(IOptimizableFuncExpr optFuncExpr,
+            Class<? extends AbstractExpressionAnnotationWithIndexNames> annClass) {
+        AbstractExpressionAnnotationWithIndexNames ann = optFuncExpr.getFuncExpr().getAnnotation(annClass);
+        return ann == null ? null : ann.getIndexNames();
     }
 }

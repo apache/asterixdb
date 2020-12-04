@@ -82,7 +82,7 @@ HavingClause ::= "HAVING" Expr
 
 GroupAsClause ::= "GROUP AS" Identifier
 
-Selection ::= WithClause? QueryBlock UnionOption* OrderByClause? ( LimitClause | | OffsetClause )?
+Selection ::= WithClause? QueryBlock UnionOption* OrderByClause? ( LimitClause | OffsetClause )?
 
 UnionOption ::= "UNION ALL" (QueryBlock | Subquery)
 
