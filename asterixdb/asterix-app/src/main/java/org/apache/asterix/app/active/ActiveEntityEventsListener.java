@@ -609,6 +609,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             suspendTask.get();
             LOGGER.log(level, "waiting for state to become SUSPENDED or TEMPORARILY_FAILED");
             subscriber.sync();
+            suspended = true;
         } catch (Exception e) {
             synchronized (this) {
                 if (LOGGER.isErrorEnabled()) {
