@@ -221,6 +221,7 @@ public class ErrorCode {
     public static final int UNSUPPORTED_GBY_OBY_SELECT_COMBO = 1129;
     public static final int ILLEGAL_RIGHT_OUTER_JOIN = 1130;
     public static final int SYNONYM_EXISTS = 1131;
+    public static final int INVALID_HINT = 1132;
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;
     public static final int UTIL_DATAFLOW_UTILS_TUPLE_TOO_LARGE = 3002;

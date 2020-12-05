@@ -5880,9 +5880,10 @@
         <output-dir compare="Text">btree-secondary-self-equi-join_01</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="index-join">
+    <test-case FilePath="index-join" check-warnings="true">
       <compilation-unit name="hints-indexnl-params">
         <output-dir compare="Text">hints-indexnl-params</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint indexnl. ASX1001: Syntax error: In line 1 >>(8, idx_tenk2_1k_2k)<< Encountered <INTEGER_LITERAL> "8" at column 2.  (in line 35, at column 21)]]></expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
@@ -6157,14 +6158,17 @@
         <output-dir compare="Text">dataset-with-meta</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="index-selection">
+    <test-case FilePath="index-selection" check-warnings="true">
       <compilation-unit name="hints-skip-index">
         <output-dir compare="Text">hints-skip-index</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint skip-index. ASX1001: Syntax error: In line 1 >>(13, idx_1k)<< Encountered <INTEGER_LITERAL> "13" at column 2.  (in line 32, at column 19)]]></expected-warn>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="index-selection">
+    <test-case FilePath="index-selection" check-warnings="true">
       <compilation-unit name="hints-use-index">
         <output-dir compare="Text">hints-use-index</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint use-index. ASX1001: Syntax error: In line 1 >>(18, idx_1k_2k)<< Encountered <INTEGER_LITERAL> "18" at column 2.  (in line 33, at column 15)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint use-index. ASX1001: Syntax error: In line 1 >>()<< Encountered ")" at column 2.  (in line 33, at column 15)]]></expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
