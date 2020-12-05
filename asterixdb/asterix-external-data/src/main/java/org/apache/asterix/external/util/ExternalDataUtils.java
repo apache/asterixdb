@@ -186,7 +186,7 @@ public class ExternalDataUtils {
     }
 
     public static DataverseName getDataverse(Map<String, String> configuration) {
-        return DataverseName.createFromCanonicalForm(configuration.get(ExternalDataConstants.KEY_DATAVERSE));
+        return DataverseName.createFromCanonicalForm(configuration.get(ExternalDataConstants.KEY_DATASET_DATAVERSE));
     }
 
     public static String getParserFactory(Map<String, String> configuration) {
@@ -311,7 +311,7 @@ public class ExternalDataUtils {
         if (!configuration.containsKey(ExternalDataConstants.KEY_IS_FEED)) {
             configuration.put(ExternalDataConstants.KEY_IS_FEED, ExternalDataConstants.TRUE);
         }
-        configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataverseName.getCanonicalForm());
+        configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE, dataverseName.getCanonicalForm());
         configuration.put(ExternalDataConstants.KEY_FEED_NAME, feedName);
     }
 
