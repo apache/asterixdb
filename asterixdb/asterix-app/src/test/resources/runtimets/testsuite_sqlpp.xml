@@ -4020,6 +4020,8 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create dataverse: asterix</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create dataverse: algebricks</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
