@@ -588,7 +588,9 @@ class SQLPPParser extends ScopeChecker implements IParser {
         }
     }
 
-    private IExpressionAnnotation parseExpressionAnnotation(Token hintToken) throws SqlppParseException {
+    private IExpressionAnnotation parseExpressionAnnotation(Token hintToken) {
+      // placeholder for the annotation that should be returned if this hint's parameters cannot be parsed
+      IExpressionAnnotation onParseErrorReturn = null;
       try {
         switch (hintToken.hint) {
           case HASH_BROADCAST_JOIN_HINT:
@@ -597,6 +599,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
             if (hintToken.hintParams == null) {
               return IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX;
             } else {
+              // if parameter parsing fails then return hint annotation without parameters
+              onParseErrorReturn = IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX;
               List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
               return IndexedNLJoinExpressionAnnotation.newInstance(indexNames);
             }
@@ -608,23 +612,33 @@ class SQLPPParser extends ScopeChecker implements IParser {
             if (hintToken.hintParams == null) {
               return SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX;
             } else {
+              // if parameter parsing fails then ignore this hint
               List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
               return SkipSecondaryIndexSearchExpressionAnnotation.newInstance(indexNames);
             }
           case USE_SECONDARY_INDEX_SEARCH_HINT:
             if (hintToken.hintParams == null) {
-              throw new SqlppParseException(getSourceLocation(hintToken), "Expected index name");
+              throw new SqlppParseException(getSourceLocation(hintToken), "Expected index name(s)");
             } else {
+              // if parameter parsing fails then ignore this hint
               List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
               return SecondaryIndexSearchPreferenceAnnotation.newInstance(indexNames);
             }
           default:
-            throw new SqlppParseException(getSourceLocation(hintToken), "Unexpected hint " + hintToken.hint);
+            throw new SqlppParseException(getSourceLocation(hintToken), "Unexpected hint");
         }
+      } catch (SqlppParseException e) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+              hintToken.hint.toString(), e.getMessage()));
+        }
+        return onParseErrorReturn;
       } catch (CompilationException e) {
-        SqlppParseException pe = new SqlppParseException(getSourceLocation(hintToken), e.getMessage());
-        pe.initCause(e);
-        throw pe;
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+              hintToken.hint.toString(), e.getMessage()));
+        }
+        return onParseErrorReturn;
       }
     }
 
