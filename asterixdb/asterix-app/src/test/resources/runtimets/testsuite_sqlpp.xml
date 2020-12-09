@@ -3018,7 +3018,7 @@
     <test-case FilePath="array_fun">
       <compilation-unit name="array_slice/array_slice_exception_result">
         <output-dir compare="Text">array_slice/array_slice_exception_result</output-dir>
-        <expected-error>ASX1081: Cannot find function with name TinySocial.array_slice</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature TinySocial.array_slice()</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="array_fun">
@@ -4020,6 +4020,7 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
         <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create dataverse: asterix</expected-error>
         <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create dataverse: algebricks</expected-error>
       </compilation-unit>
@@ -4029,6 +4030,7 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4036,6 +4038,7 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4050,6 +4053,7 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4064,6 +4068,7 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4071,6 +4076,7 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -11901,14 +11907,14 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-5">
         <output-dir compare="Text">bad-function-ddl-5</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist</expected-error>
-        <expected-error>ASX1081: Cannot find function with name experiments2.function_that_does_not_exist </expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.function_that_does_not_exist()</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments2.function_that_does_not_exist()</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-6">
         <output-dir compare="Text">bad-function-ddl-6</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.function_that_does_not_exist(2)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -11926,13 +11932,13 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-9">
         <output-dir compare="Text">bad-function-ddl-9</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.function_that_does_not_exist()</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-10">
         <output-dir compare="Text">bad-function-ddl-10</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.f0</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.f0(2)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12010,8 +12016,8 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-function-1">
         <output-dir compare="Text">drop-function-1</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.my_sum</expected-error>
-        <expected-error>ASX1081: Cannot find function with name experiments.my_sum_va</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.my_sum(2)</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.my_sum_va(2)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12058,7 +12064,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
-        <expected-error>ASX1081: Cannot find function with name test.printName</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature test.printName()</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12246,7 +12252,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="f01">
         <output-dir compare="Text">f01</output-dir>
-        <expected-error>ASX1081: Cannot find function with name test.tinyint</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature test.tinyint()</expected-error>
       </compilation-unit>
     </test-case>
     <!-- This test case is not valid anymore since we do not required "IMPORT_PRIVATE_FUNCTIONS" flag anymore -->
