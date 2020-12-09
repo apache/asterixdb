@@ -17,11 +17,27 @@
  * under the License.
  */
 
-USE gby;
+/*
+ * Description  : Test named statement parameters that have the same name as keywords (json encoded request)
+ * Expected Res : Success
+ * Date         : Dec 2020
+ */
 
-// Tests that a SQL++ core aggregate function, e.g., STRICT_AVG,
-// cannot be used like a SQL-92 sugar, e.g., AVG. Its input must be a collection.
-FROM Employee e
-GROUP BY e.deptno AS deptno GROUP AS g
-SELECT deptno AS deptno, STRICT_AVG(g[0].e.salary) AS avgpay,
-       (SELECT i.e.name AS name, i.e.salary AS salary FROM g AS i) AS workers;
+// requesttype=application/json
+
+// param $from:json="from"
+// param $select:json="select"
+
+{
+  "t1": {
+    "from": $from,
+    "select": $`select`
+  },
+
+  "t2": {
+    "from_type": is_string($from),
+    "select_type": is_string($`select`)
+  },
+
+  "t3": [ $from, $`select` ]
+}

@@ -17,11 +17,10 @@
  * under the License.
  */
 
-USE gby;
+/*
+ *  Description: tests reporting invalid argument type for field-access function
+ */
+// requesttype=application/json
+// param max-warnings:json=1000
 
-// Tests that a SQL++ core aggregate function, e.g., STRICT_AVG,
-// cannot be used like a SQL-92 sugar, e.g., AVG. Its input must be a collection.
-FROM Employee e
-GROUP BY e.deptno AS deptno GROUP AS g
-SELECT deptno AS deptno, STRICT_AVG(g[0].e.salary) AS avgpay,
-       (SELECT i.e.name AS name, i.e.salary AS salary FROM g AS i) AS workers;
+SELECT "x".y;

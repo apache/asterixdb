@@ -3530,18 +3530,10 @@ VariableExpr ExternalVariableRef() throws ParseException:
 }
 {
   (
-    (
-      <DOLLAR>
-      (
-        <INTEGER_LITERAL> { name = token.image; } |
-        <IDENTIFIER> { name = token.image; } |
-        name = QuotedString()
-      )
-    )
-    |
-    (
-      <QUES> { name = String.valueOf(++externalVarCounter); }
-    )
+      <DOLLAR_IDENTIFIER> { name = token.image.substring(1); }
+    | <DOLLAR_INTEGER_LITERAL> { name = token.image.substring(1); }
+    | <DOLLAR_QUOTED_STRING> { name = removeQuotesAndEscapes(token.image.substring(1)); }
+    | <QUES> { name = String.valueOf(++externalVarCounter); }
   )
   {
      String idName = SqlppVariableUtil.toExternalVariableName(name);
@@ -4761,6 +4753,7 @@ TOKEN [IGNORE_CASE]:
   | <EXCEPT : "except">
   | <EXISTS : "exists">
   | <EXTERNAL : "external">
+  | <FALSE : "false">
   | <FEED : "feed">
   | <FILTER : "filter">
   | <FLATTEN : "flatten">
@@ -4792,10 +4785,12 @@ TOKEN [IGNORE_CASE]:
   | <LIKE : "like">
   | <LIMIT : "limit">
   | <LOAD : "load">
+  | <MISSING : "missing">
   | <MOD : "mod">
   | <NODEGROUP : "nodegroup">
   | <NGRAM : "ngram">
   | <NOT : "not">
+  | <NULL : "null">
   | <OFFSET : "offset">
   | <ON : "on">
   | <OPEN : "open">
@@ -4825,8 +4820,9 @@ TOKEN [IGNORE_CASE]:
   | <SYNONYM : "synonym">
   | <TEMPORARY : "temporary"> // intentionally not used but reserved for future usage
   | <THEN : "then">
-  | <TYPE : "type">
   | <TO : "to">
+  | <TRUE : "true">
+  | <TYPE : "type">
   | <UNION : "union">
   | <UNKNOWN : "unknown">
   | <UNNEST : "unnest">
@@ -4860,7 +4856,6 @@ TOKEN :
   | <ATT : "@">
   | <COLON : ":">
   | <COMMA : ",">
-  | <DOLLAR: "$">
   | <DOT : ".">
   | <PERCENT: "%">
   | <QUES : "?">
@@ -4904,44 +4899,33 @@ TOKEN :
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-    <INTEGER_LITERAL : (<DIGIT>)+ >
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN [IGNORE_CASE]:
-{
-    <MISSING : "missing">
-  | <NULL : "null">
-  | <TRUE : "true">
-  | <FALSE : "false">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
     <#DIGIT : ["0" - "9"]>
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN:
 {
-    < DOUBLE_LITERAL: <DIGITS> ( "." <DIGITS> ) (("e"|"E") ("+"|"-")? <DIGITS>)?
+    <INTEGER_LITERAL : <DIGITS> >
+  | <DOUBLE_LITERAL: <DIGITS> ( "." <DIGITS> ) (("e"|"E") ("+"|"-")? <DIGITS>)?
                       | <DIGITS> (("e"|"E") ("+"|"-")? <DIGITS>)
                       | "." <DIGITS> (("e"|"E") ("+"|"-")? <DIGITS>)?
     >
-  | < FLOAT_LITERAL:  <DIGITS> ( "f" | "F" )
+  | <FLOAT_LITERAL:  <DIGITS> ( "f" | "F" )
                       | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
                       | "." <DIGITS> ( "f" | "F" )
     >
-  | <DIGITS : (<DIGIT>)+ >
+  | <#DIGITS : (<DIGIT>)+ >
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
     <#LETTER : ["A" - "Z", "a" - "z"]>
-  | <#IDENTIFIER_SPECIALCHARS_START : ["_"]>
-  | <#IDENTIFIER_SPECIALCHARS_REST : ["$"]>
+  | <#IDENTIFIER_START_SPECIALCHAR : ["_"]>
+  | <#IDENTIFIER_REST_SPECIALCHAR : ["$"]>
+  | <#IDENTIFIER_START : <LETTER> | <IDENTIFIER_START_SPECIALCHAR> >
+  | <#IDENTIFIER_REST  : <LETTER> | <DIGIT> | <IDENTIFIER_START_SPECIALCHAR> | <IDENTIFIER_REST_SPECIALCHAR> >
+  | <IDENTIFIER : <IDENTIFIER_START> (<IDENTIFIER_REST>)* >
 }
 
 <DEFAULT,IN_DBL_BRACE>
@@ -4992,8 +4976,9 @@ TOKEN :
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-    <IDENTIFIER : ( <LETTER> | <IDENTIFIER_SPECIALCHARS_START> )
-                  ( <LETTER> | <DIGIT> | <IDENTIFIER_SPECIALCHARS_START> | <IDENTIFIER_SPECIALCHARS_REST> )*>
+    <DOLLAR_INTEGER_LITERAL : "$" <INTEGER_LITERAL> >
+  | <DOLLAR_IDENTIFIER : "$" <IDENTIFIER> >
+  | <DOLLAR_QUOTED_STRING: "$" <QUOTED_STRING> >
 }
 
 <DEFAULT,IN_DBL_BRACE>
