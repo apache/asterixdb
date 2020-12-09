@@ -21,9 +21,9 @@ package org.apache.asterix.common.config;
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG;
+import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
-import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_INTEGER;
 
 import java.util.concurrent.TimeUnit;
 
@@ -51,7 +51,7 @@ public class ReplicationProperties extends AbstractProperties {
                 TimeUnit.SECONDS.toSeconds(30),
                 "The time in seconds to timeout waiting for master or replica to ack"),
         REPLICATION_ENABLED(BOOLEAN, false, "Whether or not data replication is enabled"),
-        REPLICATION_FACTOR(UNSIGNED_INTEGER, 2, "Number of replicas (backups) to maintain per master replica"),
+        REPLICATION_FACTOR(NONNEGATIVE_INTEGER, 2, "Number of replicas (backups) to maintain per master replica"),
         REPLICATION_STRATEGY(STRING, "none", "Replication strategy to choose");
 
         private final IOptionType type;
