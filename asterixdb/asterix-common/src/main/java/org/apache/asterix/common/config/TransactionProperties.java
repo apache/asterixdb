@@ -21,8 +21,8 @@ package org.apache.asterix.common.config;
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
-import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_INTEGER;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
 import java.util.Map;
@@ -59,9 +59,9 @@ public class TransactionProperties extends AbstractProperties {
                 120,
                 "The frequency (in seconds) the checkpoint thread should check to see if a checkpoint should be "
                         + "written"),
-        TXN_LOG_CHECKPOINT_HISTORY(UNSIGNED_INTEGER, 2, "The number of checkpoints to keep in the transaction log"),
+        TXN_LOG_CHECKPOINT_HISTORY(NONNEGATIVE_INTEGER, 2, "The number of checkpoints to keep in the transaction log"),
         TXN_LOCK_ESCALATIONTHRESHOLD(
-                UNSIGNED_INTEGER,
+                NONNEGATIVE_INTEGER,
                 1000,
                 "The maximum number of entity locks to obtain before upgrading to a dataset lock"),
         TXN_LOCK_SHRINKTIMER(
