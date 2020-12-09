@@ -17,4 +17,10 @@
  * under the License.
  */
 
-drop dataverse test if exists;
+/*
+ * Invalid dataverse name in CREATE TYPE -> Error
+ */
+
+create type ` invalid`.a as closed {
+  id: int
+};

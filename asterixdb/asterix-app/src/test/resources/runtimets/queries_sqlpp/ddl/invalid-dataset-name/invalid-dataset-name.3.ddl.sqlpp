@@ -17,4 +17,8 @@
  * under the License.
  */
 
-drop dataverse test if exists;
+/*
+ * Invalid dataverse name in CREATE DATASET -> Error
+ */
+
+create dataset ` invalid`.a(id int not unknown) primary key id;

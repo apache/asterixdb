@@ -31,8 +31,6 @@ create type Tweet as closed
   id: int64
 };
 
-create dataset Tweets0(Tweet) primary key id;
-
 create feed ` a` with {
  "adapter-name" : "socket_adapter",
  "sockets" : "127.0.0.1:10001",

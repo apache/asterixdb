@@ -39,6 +39,7 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
@@ -138,6 +139,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -1753,5 +1755,29 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public Set<Dataset> getAccessedDatasets() {
         return Collections.unmodifiableSet(txnAccessedDatasets);
+    }
+
+    public void validateDataverseName(DataverseName dataverseName, SourceLocation sourceLoc)
+            throws AlgebricksException {
+        for (String dvNamePart : dataverseName.getParts()) {
+            validateDatabaseObjectNameImpl(dvNamePart, sourceLoc);
+        }
+    }
+
+    public void validateDatabaseObjectName(DataverseName dataverseName, String objectName, SourceLocation sourceLoc)
+            throws AlgebricksException {
+        if (dataverseName != null) {
+            validateDataverseName(dataverseName, sourceLoc);
+        }
+        validateDatabaseObjectNameImpl(objectName, sourceLoc);
+    }
+
+    private void validateDatabaseObjectNameImpl(String name, SourceLocation sourceLoc) throws AlgebricksException {
+        if (name == null || name.isEmpty()) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, "<empty>");
+        }
+        if (Character.isWhitespace(name.codePointAt(0))) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, name);
+        }
     }
 }
