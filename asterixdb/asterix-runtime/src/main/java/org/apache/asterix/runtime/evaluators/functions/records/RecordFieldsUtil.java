@@ -58,16 +58,15 @@ public class RecordFieldsUtil {
     private final static AString nestedName = new AString("nested");
     private final static AString listName = new AString("list");
 
-    private IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool =
-            new ListObjectPool<IARecordBuilder, ATypeTag>(new RecordBuilderFactory());
-    private IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool =
-            new ListObjectPool<IAsterixListBuilder, ATypeTag>(new ListBuilderFactory());
-    private IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool =
-            new ListObjectPool<IMutableValueStorage, ATypeTag>(new AbvsBuilderFactory());
-    private IObjectPool<IPointable, ATypeTag> recordPointablePool =
-            new ListObjectPool<IPointable, ATypeTag>(ARecordPointable.ALLOCATOR);
-    private IObjectPool<IPointable, ATypeTag> listPointablePool =
-            new ListObjectPool<IPointable, ATypeTag>(AListPointable.ALLOCATOR);
+    private final IObjectPool<IARecordBuilder, ATypeTag> recordBuilderPool =
+            new ListObjectPool<>(new RecordBuilderFactory());
+    private final IObjectPool<IAsterixListBuilder, ATypeTag> listBuilderPool =
+            new ListObjectPool<>(new ListBuilderFactory());
+    private final IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool =
+            new ListObjectPool<>(new AbvsBuilderFactory());
+    private final IObjectPool<IPointable, ATypeTag> recordPointablePool =
+            new ListObjectPool<>(ARecordPointable.ALLOCATOR);
+    private final IObjectPool<IPointable, ATypeTag> listPointablePool = new ListObjectPool<>(AListPointable.ALLOCATOR);
 
     private final static AOrderedListType listType = new AOrderedListType(BuiltinType.ANY, "fields");
     //Better not be a static object.
@@ -114,15 +113,14 @@ public class RecordFieldsUtil {
             // write nested or list types
             if (tag == ATypeTag.SERIALIZED_RECORD_TYPE_TAG || tag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                     || tag == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                if (!recordAccessor.isClosedFieldNull(recType, i)) {
+                if (!recordAccessor.isClosedFieldNull(recType, i) && !recordAccessor.isClosedFieldMissing(recType, i)) {
                     IAType fieldType = recordAccessor.getClosedFieldType(recType, i);
                     ArrayBackedValueStorage tmpValue = getTempBuffer();
                     tmpValue.reset();
                     recordAccessor.getClosedFieldValue(recType, i, tmpValue.getDataOutput());
                     if (tag == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         addNestedField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
-                    } else if (tag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
-                            || tag == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                    } else {
                         addListField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
                     }
                 }
@@ -159,8 +157,7 @@ public class RecordFieldsUtil {
                 recordAccessor.getOpenFieldValue(recType, i, tmpValue.getDataOutput());
                 if (tag == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                     addNestedField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
-                } else if (tag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
-                        || tag == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
+                } else {
                     addListField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
                 }
             }
@@ -256,7 +253,7 @@ public class RecordFieldsUtil {
         ArrayBackedValueStorage itemValue = getTempBuffer();
         IARecordBuilder listRecordBuilder = getRecordBuilder();
 
-        AListPointable list = getListPointable();
+        AListPointable list = getListPointable(fieldType.getTypeTag());
         list.set(listArg);
 
         OrderedListBuilder innerListBuilder = getOrderedListBuilder();
@@ -274,6 +271,7 @@ public class RecordFieldsUtil {
 
             if (tagId == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                 ArrayBackedValueStorage tmpAbvs = getTempBuffer();
+                tmpAbvs.reset();
                 list.getItemValue(act, l, tmpAbvs.getDataOutput());
                 addNestedField(tmpAbvs, act.getItemType(), listRecordBuilder, level + 1);
             }
@@ -288,8 +286,8 @@ public class RecordFieldsUtil {
         return (ARecordPointable) recordPointablePool.allocate(ATypeTag.OBJECT);
     }
 
-    private AListPointable getListPointable() {
-        return (AListPointable) listPointablePool.allocate(ATypeTag.ARRAY);
+    private AListPointable getListPointable(ATypeTag tag) {
+        return (AListPointable) listPointablePool.allocate(tag);
     }
 
     private IARecordBuilder getRecordBuilder() {

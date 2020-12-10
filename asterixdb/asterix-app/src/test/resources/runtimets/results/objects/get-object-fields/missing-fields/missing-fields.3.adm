@@ -1,0 +1,3 @@
+[ { "field-name": "id", "field-type": "bigint", "is-open": false }, { "field-name": "f", "field-type": "object", "is-open": false } ]
+[ { "field-name": "id", "field-type": "bigint", "is-open": false }, { "field-name": "f", "field-type": "object", "is-open": false } ]
+[ { "field-name": "id", "field-type": "bigint", "is-open": false }, { "field-name": "f", "field-type": "object", "is-open": false, "nested": [ { "field-name": "inner_f", "field-type": "string", "is-open": false }, { "field-name": "inner_f2", "field-type": "object", "is-open": true, "nested": [ { "field-name": "f3", "field-type": "string", "is-open": true } ] } ] } ]
