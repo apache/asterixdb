@@ -21,7 +21,6 @@ package org.apache.hyracks.control.common.config;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -127,27 +126,7 @@ public class OptionTypes {
         }
     };
 
-    public static final IOptionType<Integer> INTEGER = new IOptionType<Integer>() {
-        @Override
-        public Integer parse(String s) {
-            return Integer.parseInt(s);
-        }
-
-        @Override
-        public Integer parse(JsonNode node) {
-            return node.isNull() ? null : node.asInt();
-        }
-
-        @Override
-        public Class<Integer> targetType() {
-            return Integer.class;
-        }
-
-        @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
-            node.put(fieldName, (int) value);
-        }
-    };
+    public static final IOptionType<Integer> INTEGER = new IntegerOptionType();
 
     public static final IOptionType<Double> DOUBLE = new IOptionType<Double>() {
         @Override
@@ -343,61 +322,57 @@ public class OptionTypes {
         }
     };
 
-    public static final IOptionType<Integer> UNSIGNED_INTEGER = new IOptionType<Integer>() {
-        @Override
-        public Integer parse(String s) {
-            return Integer.parseUnsignedInt(s);
-        }
+    public static final IOptionType<Integer> NONNEGATIVE_INTEGER = getRangedIntegerType(0, Integer.MAX_VALUE);
 
-        @Override
-        public Integer parse(JsonNode node) {
-            return node.isNull() ? null : parse(node.asText());
-        }
+    public static final IOptionType<Integer> POSITIVE_INTEGER = getRangedIntegerType(1, Integer.MAX_VALUE);
 
-        @Override
-        public Class<Integer> targetType() {
-            return Integer.class;
-        }
-
-        @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
-            node.put(fieldName, (int) value);
-        }
-    };
-
-    public static final IOptionType<Integer> POSITIVE_INTEGER = new IOptionType<Integer>() {
-        @Override
-        public Integer parse(String s) {
-            final int value = Integer.parseUnsignedInt(s);
-            if (value == 0) {
-                throw new IllegalArgumentException("Value must be greater than zero");
-            }
-            return value;
-        }
-
-        @Override
-        public Integer parse(JsonNode node) {
-            return node.isNull() ? null : parse(node.asText());
-        }
-
-        @Override
-        public Class<Integer> targetType() {
-            return Integer.class;
-        }
-
-        @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
-            node.put(fieldName, (int) value);
-        }
-    };
-
-    static Map<IOptionType, IOptionType> COLLECTION_TYPES;
-    static {
-        Map<IOptionType, IOptionType> collTypes = new HashMap<>();
-        collTypes.put(STRING_ARRAY, STRING);
-        COLLECTION_TYPES = Collections.unmodifiableMap(collTypes);
-    }
+    static final Map<IOptionType, IOptionType> COLLECTION_TYPES = Collections.singletonMap(STRING_ARRAY, STRING);
 
     private OptionTypes() {
+    }
+
+    public static IOptionType<Integer> getRangedIntegerType(final int minValueInclusive, final int maxValueInclusive) {
+        return new IntegerOptionType() {
+            @Override
+            public Integer parse(String value) {
+                int intValue = super.parse(value);
+                if (intValue < minValueInclusive || intValue > maxValueInclusive) {
+                    if (maxValueInclusive == Integer.MAX_VALUE) {
+                        if (minValueInclusive == 0) {
+                            throw new IllegalArgumentException(
+                                    "integer value must not be negative, but was " + intValue);
+                        } else if (minValueInclusive == 1) {
+                            throw new IllegalArgumentException(
+                                    "integer value must be greater than zero, but was " + intValue);
+                        }
+                    }
+                    throw new IllegalArgumentException("integer value must be between " + minValueInclusive + "-"
+                            + maxValueInclusive + " (inclusive)");
+                }
+                return intValue;
+            }
+        };
+    }
+
+    public static class IntegerOptionType implements IOptionType<Integer> {
+        @Override
+        public Integer parse(String s) {
+            return Integer.parseInt(s);
+        }
+
+        @Override
+        public Integer parse(JsonNode node) {
+            return node.isNull() ? null : node.asInt();
+        }
+
+        @Override
+        public Class<Integer> targetType() {
+            return Integer.class;
+        }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (int) value);
+        }
     }
 }

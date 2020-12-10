@@ -19,9 +19,9 @@
 package org.apache.asterix.common.config;
 
 import static org.apache.hyracks.control.common.config.OptionTypes.LEVEL;
+import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
-import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_INTEGER;
 
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
@@ -32,11 +32,11 @@ import org.apache.logging.log4j.Level;
 public class ExternalProperties extends AbstractProperties {
 
     public enum Option implements IOption {
-        WEB_PORT(UNSIGNED_INTEGER, 19001, "The listen port of the legacy query interface"),
-        WEB_QUERYINTERFACE_PORT(UNSIGNED_INTEGER, 19006, "The listen port of the query web interface"),
-        API_PORT(UNSIGNED_INTEGER, 19002, "The listen port of the API server"),
-        ACTIVE_PORT(UNSIGNED_INTEGER, 19003, "The listen port of the active server"),
-        NC_API_PORT(UNSIGNED_INTEGER, 19004, "The listen port of the node controller API server"),
+        WEB_PORT(NONNEGATIVE_INTEGER, 19001, "The listen port of the legacy query interface"),
+        WEB_QUERYINTERFACE_PORT(NONNEGATIVE_INTEGER, 19006, "The listen port of the query web interface"),
+        API_PORT(NONNEGATIVE_INTEGER, 19002, "The listen port of the API server"),
+        ACTIVE_PORT(NONNEGATIVE_INTEGER, 19003, "The listen port of the active server"),
+        NC_API_PORT(NONNEGATIVE_INTEGER, 19004, "The listen port of the node controller API server"),
         LOG_LEVEL(LEVEL, Level.WARN, "The logging level for master and slave processes"),
         MAX_WAIT_ACTIVE_CLUSTER(
                 POSITIVE_INTEGER,
@@ -46,10 +46,10 @@ public class ExternalProperties extends AbstractProperties {
         CC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the cluster controller process by managix"),
         NC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the node controller process(es) by managix"),
         MAX_WEB_REQUEST_SIZE(
-                UNSIGNED_INTEGER,
+                NONNEGATIVE_INTEGER,
                 StorageUtil.getIntSizeInBytes(200, StorageUtil.StorageUnit.MEGABYTE),
                 "The maximum accepted web request size in bytes"),
-        REQUESTS_ARCHIVE_SIZE(UNSIGNED_INTEGER, 50, "The maximum number of archived requests to maintain");
+        REQUESTS_ARCHIVE_SIZE(NONNEGATIVE_INTEGER, 50, "The maximum number of archived requests to maintain");
 
         private final IOptionType type;
         private final Object defaultValue;
