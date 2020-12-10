@@ -185,7 +185,7 @@ public class ExternalDataUtils {
         }
     }
 
-    public static DataverseName getDataverse(Map<String, String> configuration) {
+    public static DataverseName getDatasetDataverse(Map<String, String> configuration) {
         return DataverseName.createFromCanonicalForm(configuration.get(ExternalDataConstants.KEY_DATASET_DATAVERSE));
     }
 

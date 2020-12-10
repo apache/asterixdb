@@ -57,11 +57,11 @@
       <output-dir compare="Text">documentation-example</output-dir>
     </compilation-unit>
   </test-case>
-  <!--test-case FilePath="objects/get-object-fields">
+  <test-case FilePath="objects/get-object-fields">
       <compilation-unit name="tiny-social-example">
           <output-dir compare="Text">tiny-social-example</output-dir>
       </compilation-unit>
-  </test-case!-->
+  </test-case>
   <test-case FilePath="objects/get-object-fields">
     <compilation-unit name="tiny-social-example-no-complex-types">
       <output-dir compare="Text">tiny-social-example-no-complex-types</output-dir>
@@ -75,6 +75,11 @@
   <test-case FilePath="objects/get-object-fields">
     <compilation-unit name="tiny-social-example-only-records">
       <output-dir compare="Text">tiny-social-example-only-records</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects/get-object-fields">
+    <compilation-unit name="missing-fields">
+      <output-dir compare="Text">missing-fields</output-dir>
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects/get-object-field-value">
