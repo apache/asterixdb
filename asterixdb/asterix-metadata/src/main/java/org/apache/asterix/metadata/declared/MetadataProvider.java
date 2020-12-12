@@ -20,6 +20,7 @@ package org.apache.asterix.metadata.declared;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1759,8 +1760,17 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public void validateDataverseName(DataverseName dataverseName, SourceLocation sourceLoc)
             throws AlgebricksException {
+        int totalLengthUTF8 = 0;
         for (String dvNamePart : dataverseName.getParts()) {
             validateDatabaseObjectNameImpl(dvNamePart, sourceLoc);
+            int lengthUTF8 = dvNamePart.getBytes(StandardCharsets.UTF_8).length;
+            if (lengthUTF8 > MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8) {
+                throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, dvNamePart);
+            }
+            totalLengthUTF8 += lengthUTF8;
+        }
+        if (totalLengthUTF8 > MetadataConstants.DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, dataverseName.toString());
         }
     }
 
