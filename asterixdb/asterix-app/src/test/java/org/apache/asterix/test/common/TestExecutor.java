@@ -215,6 +215,7 @@ public class TestExecutor {
     protected IExternalUDFLibrarian librarian;
     private Map<File, TestLoop> testLoops = new HashMap<>();
     private double timeoutMultiplier = 1;
+    protected int loopIteration;
 
     public TestExecutor() {
         this(Inet4Address.getLoopbackAddress().getHostAddress(), 19002);
@@ -1272,6 +1273,9 @@ public class TestExecutor {
                                     throw new IllegalArgumentException("duration cannot be exceed 1d");
                                 }
                                 break;
+                            case "":
+                                // ignore blank lines;
+                                break;
                             default:
                                 throw new IllegalArgumentException("unknown directive: " + command[0]);
                         }
@@ -1756,7 +1760,7 @@ public class TestExecutor {
             String name = m.group("name");
             param.setName(name);
             String value = m.group("value");
-            param.setValue(value);
+            param.setValue(value.replace("\\n", "\n"));
             String type = m.group("type");
             if (type != null) {
                 try {
@@ -1896,6 +1900,7 @@ public class TestExecutor {
             }
             List<TestFileContext> expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
             int[] savedQueryCounts = new int[numOfFiles + testFileCtxs.size()];
+            loopIteration = 0;
             for (ListIterator<TestFileContext> iter = testFileCtxs.listIterator(); iter.hasNext();) {
                 TestFileContext ctx = iter.next();
                 savedQueryCounts[numOfFiles] = queryCount.getValue();
@@ -1903,9 +1908,14 @@ public class TestExecutor {
                 final File testFile = ctx.getFile();
                 final String statement = readTestFile(testFile);
                 try {
+                    boolean loopCmd = testFile.getName().endsWith(".loop.cmd");
                     if (!testFile.getName().startsWith(DIAGNOSE)) {
                         executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
                                 queryCount, expectedResultFileCtxs, testFile, actualPath, expectedWarnings);
+                    }
+                    if (loopCmd) {
+                        // this was a loop file and we have exited the loop; reset the loop iteration
+                        loopIteration = 0;
                     }
                 } catch (TestLoop loop) {
                     // rewind the iterator until we find our target
@@ -1917,6 +1927,7 @@ public class TestExecutor {
                         numOfFiles--;
                         queryCount.setValue(savedQueryCounts[numOfFiles]);
                     }
+                    loopIteration++;
                 } catch (Exception e) {
                     numOfErrors++;
                     boolean unexpected = isUnExpected(e, expectedErrors, numOfErrors, queryCount,

@@ -66,10 +66,23 @@ public class NetworkUtil {
         return builderFrom(host).build();
     }
 
+    /**
+     * @param host the host for this uri
+     * @param path the path for this uri: this value is expected to be unescaped and may contain non ASCII characters
+     * @return
+     * @throws URISyntaxException
+     */
     public static URI toUri(HttpHost host, String path) throws URISyntaxException {
         return builderFrom(host).setPath(path).build();
     }
 
+    /**
+     * @param uri the uri to append to
+     * @param pathSegments the path segments to append to the supplied uri: the segments are expected to be
+     *                     unescaped and may contain non ASCII characters
+     * @return the new uri i.e. original uri with appended path segment(s)
+     * @throws URISyntaxException
+     */
     public static URI appendUriPath(URI uri, String... pathSegments) throws URISyntaxException {
         URIBuilder builder = new URIBuilder(uri);
         List<String> path = builder.getPathSegments();
