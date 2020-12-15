@@ -605,10 +605,6 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName) throws AlgebricksException {
-        dropDataset(txnId, dataverseName, datasetName, false);
-    }
-
     public void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName, boolean force)
             throws AlgebricksException {
         if (!force) {

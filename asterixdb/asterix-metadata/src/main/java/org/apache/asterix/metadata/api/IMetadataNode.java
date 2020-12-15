@@ -217,11 +217,13 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Name of dataverse which holds the given dataset.
      * @param datasetName
      *            Name of dataset to delete.
+     * @param force
+     *            If true, forces drop the dataset. Setting it to true could make the metadata inconsistent.
      * @throws AlgebricksException
      *             For example, if the dataset and/or dataverse does not exist.
      * @throws RemoteException
      */
-    void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName)
+    void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName, boolean force)
             throws AlgebricksException, RemoteException;
 
     /**

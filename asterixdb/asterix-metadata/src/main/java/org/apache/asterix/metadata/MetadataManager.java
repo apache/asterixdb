@@ -260,10 +260,10 @@ public abstract class MetadataManager implements IMetadataManager {
     }
 
     @Override
-    public void dropDataset(MetadataTransactionContext ctx, DataverseName dataverseName, String datasetName)
-            throws AlgebricksException {
+    public void dropDataset(MetadataTransactionContext ctx, DataverseName dataverseName, String datasetName,
+            boolean force) throws AlgebricksException {
         try {
-            metadataNode.dropDataset(ctx.getTxnId(), dataverseName, datasetName);
+            metadataNode.dropDataset(ctx.getTxnId(), dataverseName, datasetName, force);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
