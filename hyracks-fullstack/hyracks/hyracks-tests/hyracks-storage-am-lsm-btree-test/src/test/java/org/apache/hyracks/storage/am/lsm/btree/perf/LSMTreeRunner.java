@@ -121,7 +121,7 @@ public class LSMTreeRunner implements IExperimentRunner {
             public void schedulerFailed(ILSMIOOperationScheduler scheduler, Throwable failure) {
                 ExitUtil.exit(ExitUtil.EC_IO_SCHEDULER_FAILED);
             }
-        });
+        }, Integer.MAX_VALUE, Integer.MAX_VALUE);
 
         lsmtree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, bufferCache, typeTraits,
                 cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, new NoMergePolicy(),

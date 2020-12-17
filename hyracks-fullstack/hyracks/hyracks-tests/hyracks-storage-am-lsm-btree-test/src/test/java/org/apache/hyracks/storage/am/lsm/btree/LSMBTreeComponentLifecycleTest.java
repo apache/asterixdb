@@ -250,7 +250,8 @@ public class LSMBTreeComponentLifecycleTest {
                     public void operationFailed(ILSMIOOperation operation, Throwable failure) {
                         LOGGER.log(Level.ERROR, "Operation {} failed", operation, failure);
                     }
-                }), new EncapsulatingIoCallbackFactory(harness.getIOOperationCallbackFactory(), NoOpTestCallback.get(),
+                }, Integer.MAX_VALUE, Integer.MAX_VALUE),
+                new EncapsulatingIoCallbackFactory(harness.getIOOperationCallbackFactory(), NoOpTestCallback.get(),
                         NoOpTestCallback.get(), new ITestOpCallback<ILSMIOOperation>() {
                             @Override
                             public void before(ILSMIOOperation t) throws HyracksDataException {

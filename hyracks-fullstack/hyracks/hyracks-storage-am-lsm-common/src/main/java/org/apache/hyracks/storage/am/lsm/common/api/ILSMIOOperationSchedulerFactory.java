@@ -21,7 +21,8 @@ package org.apache.hyracks.storage.am.lsm.common.api;
 import java.util.concurrent.ThreadFactory;
 
 public interface ILSMIOOperationSchedulerFactory {
-    ILSMIOOperationScheduler createIoScheduler(ThreadFactory threadFactory, IIoOperationFailedCallback callback);
+    ILSMIOOperationScheduler createIoScheduler(ThreadFactory threadFactory, IIoOperationFailedCallback callback,
+            int maxNumRunningFlushes, int maxNumScheduledMerges, int maxNumRunningMerges);
 
     String getName();
 }

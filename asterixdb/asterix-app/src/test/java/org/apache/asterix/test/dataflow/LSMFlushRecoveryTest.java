@@ -173,7 +173,7 @@ public class LSMFlushRecoveryTest {
                     public void operationFailed(ILSMIOOperation operation, Throwable t) {
                         LOGGER.warn("IO Operation failed", t);
                     }
-                }));
+                }, Integer.MAX_VALUE, Integer.MAX_VALUE));
         dsLifecycleMgr = ncAppCtx.getDatasetLifecycleManager();
     }
 
