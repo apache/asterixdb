@@ -12847,6 +12847,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="leftouterjoin">
+      <compilation-unit name="loj-03-no-listify">
+        <output-dir compare="Text">loj-03-no-listify</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
       <compilation-unit name="query_issue658">
         <output-dir compare="Text">query_issue658</output-dir>
       </compilation-unit>
