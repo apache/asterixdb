@@ -60,6 +60,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
+import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
@@ -491,6 +492,12 @@ public class MetadataBootstrap {
             for (Dataset dataset : datasets) {
                 recoverDataset(mdTxnCtx, dataset);
             }
+
+            List<Library> libraries =
+                    MetadataManager.INSTANCE.getDataverseLibraries(mdTxnCtx, dataverse.getDataverseName());
+            for (Library library : libraries) {
+                recoverLibrary(mdTxnCtx, library);
+            }
         }
     }
 
@@ -498,7 +505,7 @@ public class MetadataBootstrap {
             throws AlgebricksException {
         if (dataset.getPendingOp() != MetadataUtil.PENDING_NO_OP) {
             // drop pending dataset
-            MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataset.getDataverseName(), dataset.getDatasetName());
+            MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataset.getDataverseName(), dataset.getDatasetName(), true);
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(
                         "Dropped a pending dataset: " + dataset.getDataverseName() + "." + dataset.getDatasetName());
@@ -531,6 +538,17 @@ public class MetadataBootstrap {
                                 + dataset.getDatasetName() + "." + file.getFileNumber());
                     }
                 }
+            }
+        }
+    }
+
+    private static void recoverLibrary(MetadataTransactionContext mdTxnCtx, Library library)
+            throws AlgebricksException {
+        if (library.getPendingOp() != MetadataUtil.PENDING_NO_OP) {
+            // drop pending library
+            MetadataManager.INSTANCE.dropLibrary(mdTxnCtx, library.getDataverseName(), library.getName());
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Dropped a pending library: " + library.getDataverseName() + "." + library.getName());
             }
         }
     }

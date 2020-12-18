@@ -90,6 +90,7 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -269,7 +270,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         SessionOutput sessionOutput = createSessionOutput(httpWriter);
         ResponsePrinter responsePrinter = new ResponsePrinter(sessionOutput);
         ResultDelivery delivery = ResultDelivery.IMMEDIATE;
-        QueryServiceRequestParameters param = newRequestParameters();
+        QueryServiceRequestParameters param = newQueryRequestParameters();
         RequestExecutionState executionState = newRequestExecutionState();
         try {
             // buffer the output until we are ready to set the status of the response message correctly
@@ -411,9 +412,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         int stmtCategoryRestriction = org.apache.asterix.app.translator.RequestParameters
                 .getStatementCategoryRestrictionMask(param.isReadOnly());
         IRequestParameters requestParameters =
-                new org.apache.asterix.app.translator.RequestParameters(requestReference, statementsText,
-                        getResultSet(), resultProperties, stats, statementProperties, null, param.getClientContextID(),
-                        optionalParameters, stmtParams, param.isMultiStatement(), stmtCategoryRestriction);
+                newRequestParameters(param, requestReference, statementsText, getResultSet(), resultProperties, stats,
+                        statementProperties, optionalParameters, stmtParams, stmtCategoryRestriction);
         translator.compileAndExecute(getHyracksClientConnection(), requestParameters);
         executionState.end();
         translator.getWarnings(warnings, maxWarnings - warnings.size());
@@ -492,8 +492,17 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         responsePrinter.addResultPrinter(new ErrorsPrinter(Collections.singletonList(executionError)));
     }
 
-    protected QueryServiceRequestParameters newRequestParameters() {
+    protected QueryServiceRequestParameters newQueryRequestParameters() {
         return new QueryServiceRequestParameters();
+    }
+
+    protected IRequestParameters newRequestParameters(QueryServiceRequestParameters param,
+            IRequestReference requestReference, String statementsText, IResultSet resultSet,
+            ResultProperties resultProperties, Stats stats, IStatementExecutor.StatementProperties statementProperties,
+            Map<String, String> optionalParameters, Map<String, IAObject> stmtParams, int stmtCategoryRestriction) {
+        return new RequestParameters(requestReference, statementsText, resultSet, resultProperties, stats,
+                statementProperties, null, param.getClientContextID(), optionalParameters, stmtParams,
+                param.isMultiStatement(), stmtCategoryRestriction);
     }
 
     protected static boolean isPrintingProfile(IStatementExecutor.Stats stats) {
