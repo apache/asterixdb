@@ -18,10 +18,11 @@
  */
 package org.apache.asterix.transaction.management.service.locking;
 
+import static org.apache.asterix.transaction.management.service.locking.ConcurrentLockManager.NILL;
+
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.asterix.common.transactions.ITransactionContext;
 
@@ -33,25 +34,25 @@ import org.apache.asterix.common.transactions.ITransactionContext;
  * @see ConcurrentLockManager
  */
 class ResourceGroup {
-    private ReentrantReadWriteLock latch;
-    private Condition condition;
-    AtomicLong firstResourceIndex;
+    private final ReentrantLock latch;
+    private final Condition condition;
+    volatile long firstResourceIndex;
 
     ResourceGroup() {
-        latch = new ReentrantReadWriteLock();
-        condition = latch.writeLock().newCondition();
-        firstResourceIndex = new AtomicLong(-1);
+        latch = new ReentrantLock();
+        condition = latch.newCondition();
+        firstResourceIndex = NILL;
     }
 
     void getLatch() {
         log("latch");
-        latch.writeLock().lock();
+        latch.lock();
     }
 
     boolean tryLatch(long timeout, TimeUnit unit) throws InterruptedException {
         log("tryLatch");
         try {
-            return latch.writeLock().tryLock(timeout, unit);
+            return latch.tryLock(timeout, unit);
         } catch (InterruptedException e) {
             ConcurrentLockManager.LOGGER.trace("interrupted while wating on ResourceGroup");
             throw e;
@@ -60,7 +61,7 @@ class ResourceGroup {
 
     void releaseLatch() {
         log("release");
-        latch.writeLock().unlock();
+        latch.unlock();
     }
 
     boolean hasWaiters() {
@@ -89,7 +90,7 @@ class ResourceGroup {
     }
 
     public String toString() {
-        return "{ id : " + hashCode() + ", first : " + TypeUtil.Global.toString(firstResourceIndex.get()) + ", "
+        return "{ id : " + hashCode() + ", first : " + TypeUtil.Global.toString(firstResourceIndex) + ", "
                 + "waiters : " + (hasWaiters() ? "true" : "false") + " }";
     }
 }

@@ -49,13 +49,13 @@ public class ResourceTablePrinter implements TablePrinter {
         int i = 0;
         long res = -1;
         while (res == -1 && i < table.size) {
-            res = table.get(i++).firstResourceIndex.get();
+            res = table.get(i++).firstResourceIndex;
         }
         while (i < table.size) {
             sb = appendResource(sb, res);
             res = resArenaMgr.getNext(res);
             while (res == -1 && i < table.size) {
-                res = table.get(i++).firstResourceIndex.get();
+                res = table.get(i++).firstResourceIndex;
             }
             if (res == -1) {
                 sb.append("\n");
