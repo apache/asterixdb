@@ -150,8 +150,7 @@ public class StartTasksWork extends AbstractWork {
                 LOGGER.trace("Initializing {} -> {} for {}", taId, han, jobId);
                 final int partition = tid.getPartition();
                 List<IConnectorDescriptor> inputs = ac.getActivityInputMap().get(aid);
-                task = null;
-                task = new Task(joblet, flags, taId, han.getClass().getName(), ncs.getExecutor(), ncs,
+                task = new Task(joblet, flags, taId, han.getDisplayName(), ncs.getExecutor(), ncs,
                         createInputChannels(td, inputs));
                 IOperatorNodePushable operator = han.createPushRuntime(task, rdp, partition, td.getPartitionCount());
                 List<IPartitionCollector> collectors = new ArrayList<>();
@@ -185,7 +184,7 @@ public class StartTasksWork extends AbstractWork {
                     }
                 }
 
-                task.setTaskRuntime(collectors.toArray(new IPartitionCollector[collectors.size()]), operator);
+                task.setTaskRuntime(collectors.toArray(new IPartitionCollector[0]), operator);
                 joblet.addTask(task);
                 task.start();
                 taskIndex++;

@@ -19,14 +19,30 @@
 package org.apache.hyracks.api.dataflow;
 
 import java.io.Serializable;
+import java.util.regex.Pattern;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IActivity extends Serializable {
-    public ActivityId getActivityId();
+    ActivityId getActivityId();
 
-    public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
-            IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException;
+    IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx, IRecordDescriptorProvider recordDescProvider,
+            int partition, int nPartitions) throws HyracksDataException;
+
+    default String getDisplayName() {
+        return DisplayNameHelper.toDisplayName(getClass().getName());
+    }
+
+    class DisplayNameHelper {
+        static final Pattern PREFIX_PATTERN = Pattern.compile("\\B\\w+(\\.[a-z])");
+
+        private DisplayNameHelper() {
+        }
+
+        static String toDisplayName(String className) {
+            return PREFIX_PATTERN.matcher(className).replaceAll("$1");
+        }
+    }
 }
