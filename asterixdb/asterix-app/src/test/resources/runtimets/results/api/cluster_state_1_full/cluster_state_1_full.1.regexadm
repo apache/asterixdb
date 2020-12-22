@@ -47,7 +47,7 @@
     "txn\.job\.recovery\.memorysize" : 67108864,
     "txn\.lock\.escalationthreshold" : 1000,
     "txn\.lock\.shrinktimer" : 5000,
-    "txn\.lock\.table\.size" : 1000,
+    "txn\.lock\.table\.size" : 1009,
     "txn\.lock\.timeout\.sweepthreshold" : 10000,
     "txn\.lock\.timeout\.waitthreshold" : 60000,
     "txn\.log\.buffer\.numpages" : 8,

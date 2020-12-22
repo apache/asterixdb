@@ -43,9 +43,9 @@ public class StorageProperties extends AbstractProperties {
     public enum Option implements IOption {
         STORAGE_BUFFERCACHE_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         // By default, uses 1/4 of the maximum heap size for read cache, i.e., disk buffer cache.
-        STORAGE_BUFFERCACHE_SIZE(LONG_BYTE_UNIT, Runtime.getRuntime().maxMemory() / 4),
+        STORAGE_BUFFERCACHE_SIZE(LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
         STORAGE_BUFFERCACHE_MAXOPENFILES(NONNEGATIVE_INTEGER, Integer.MAX_VALUE),
-        STORAGE_MEMORYCOMPONENT_GLOBALBUDGET(LONG_BYTE_UNIT, Runtime.getRuntime().maxMemory() / 4),
+        STORAGE_MEMORYCOMPONENT_GLOBALBUDGET(LONG_BYTE_UNIT, MAX_HEAP_BYTES / 4),
         STORAGE_MEMORYCOMPONENT_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(POSITIVE_INTEGER, 2),
         STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD(DOUBLE, 0.9d),
@@ -132,6 +132,7 @@ public class StorageProperties extends AbstractProperties {
         }
     }
 
+    public static final long MAX_HEAP_BYTES = Runtime.getRuntime().maxMemory();
     private static final int SYSTEM_RESERVED_DATASETS = 0;
 
     public StorageProperties(PropertiesAccessor accessor) {
@@ -184,13 +185,12 @@ public class StorageProperties extends AbstractProperties {
     }
 
     public long getJobExecutionMemoryBudget() {
-        final long jobExecutionMemory =
-                Runtime.getRuntime().maxMemory() - getBufferCacheSize() - getMemoryComponentGlobalBudget();
+        final long jobExecutionMemory = MAX_HEAP_BYTES - getBufferCacheSize() - getMemoryComponentGlobalBudget();
         if (jobExecutionMemory <= 0) {
             final String msg = String.format(
                     "Invalid node memory configuration, more memory budgeted than available in JVM. Runtime max memory:"
                             + " (%d), Buffer cache memory (%d), memory component global budget (%d)",
-                    Runtime.getRuntime().maxMemory(), getBufferCacheSize(), getMemoryComponentGlobalBudget());
+                    MAX_HEAP_BYTES, getBufferCacheSize(), getMemoryComponentGlobalBudget());
             throw new IllegalStateException(msg);
         }
         return jobExecutionMemory;

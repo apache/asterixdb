@@ -28,9 +28,8 @@ package org.apache.asterix.transaction.management.service.locking;
  */
 
 class ResourceGroupTable {
-    public final int size;
-
-    private ResourceGroup[] table;
+    final int size;
+    private final ResourceGroup[] table;
 
     public ResourceGroupTable(int size) {
         this.size = size;
@@ -42,10 +41,7 @@ class ResourceGroupTable {
 
     ResourceGroup get(int dId, int entityHashValue) {
         // TODO ensure good properties of hash function
-        int h = Math.abs(dId ^ entityHashValue);
-        if (h < 0)
-            h = 0;
-        return table[h % size];
+        return table[Math.abs(dId ^ entityHashValue) % size];
     }
 
     ResourceGroup get(int i) {

@@ -27,7 +27,9 @@ import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
@@ -73,7 +75,13 @@ public class TransactionProperties extends AbstractProperties {
                 POSITIVE_INTEGER,
                 10000,
                 "Interval (in milliseconds) for checking lock " + "timeout"),
-        TXN_LOCK_TABLE_SIZE(POSITIVE_INTEGER, 1024 * 1024, "The number of slots in the lock table."),
+        TXN_LOCK_TABLE_SIZE(
+                POSITIVE_INTEGER,
+                TXN_LOCK_TABLE_SIZE_DEFAULT,
+                "The number of slots in the lock table (should be a prime number)",
+                "for JVM max heaps < 8 GB, 1009, otherwise 1048583: (e.g. " + TXN_LOCK_TABLE_SIZE_DEFAULT
+                        + " for the current max heap of "
+                        + StorageUtil.toHumanReadableSize(StorageProperties.MAX_HEAP_BYTES) + ")"),
         TXN_COMMITPROFILER_ENABLED(BOOLEAN, false, "Enable output of commit profiler logs"),
         TXN_COMMITPROFILER_REPORTINTERVAL(POSITIVE_INTEGER, 5, "Interval (in seconds) to report commit profiler logs"),
         TXN_JOB_RECOVERY_MEMORYSIZE(
@@ -84,11 +92,17 @@ public class TransactionProperties extends AbstractProperties {
         private final IOptionType type;
         private final Object defaultValue;
         private final String description;
+        private final String usageOverride;
 
         Option(IOptionType type, Object defaultValue, String description) {
+            this(type, defaultValue, description, null);
+        }
+
+        Option(IOptionType type, Object defaultValue, String description, String usageOverride) {
             this.type = type;
             this.defaultValue = defaultValue;
             this.description = description;
+            this.usageOverride = usageOverride;
         }
 
         @Override
@@ -110,7 +124,15 @@ public class TransactionProperties extends AbstractProperties {
         public Object defaultValue() {
             return defaultValue;
         }
+
+        @Override
+        public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
+            return usageOverride;
+        }
     }
+
+    private static final int TXN_LOCK_TABLE_SIZE_DEFAULT =
+            StorageProperties.MAX_HEAP_BYTES < StorageUtil.getByteValue("8GB") ? 1009 : 1048583;
 
     public static final String TXN_LOG_PARTITIONSIZE_KEY = Option.TXN_LOG_PARTITIONSIZE.ini();
 
