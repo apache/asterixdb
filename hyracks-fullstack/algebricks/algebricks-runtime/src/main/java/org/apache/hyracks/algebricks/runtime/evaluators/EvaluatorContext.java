@@ -46,6 +46,12 @@ public final class EvaluatorContext implements IEvaluatorContext {
         this.warningCollector = Objects.requireNonNull(warningCollector);
     }
 
+    public EvaluatorContext(IHyracksTaskContext taskContext, IWarningCollector warningCollector) {
+        this.taskContext = Objects.requireNonNull(taskContext);
+        this.serviceContext = Objects.requireNonNull(taskContext.getJobletContext().getServiceContext());
+        this.warningCollector = Objects.requireNonNull(warningCollector);
+    }
+
     @Override
     public IServiceContext getServiceContext() {
         return serviceContext;

@@ -34,6 +34,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -110,7 +111,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
         protected ArrayTupleBuilder missingTupleBuilder;
 
         public StreamSelectRuntime(IHyracksTaskContext ctx, IBinaryBooleanInspector bbi) {
-            this.ctx = new EvaluatorContext(ctx);
+            this.ctx = new EvaluatorContext(ctx, initWarningCollector(ctx));
             this.bbi = bbi;
         }
 
@@ -164,6 +165,10 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
                     appendField(tAccess, t, i);
                 }
             }
+        }
+
+        protected IWarningCollector initWarningCollector(IHyracksTaskContext ctx) {
+            return ctx.getWarningCollector();
         }
     }
 
