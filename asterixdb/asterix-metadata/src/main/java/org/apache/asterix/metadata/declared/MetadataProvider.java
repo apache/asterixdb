@@ -22,14 +22,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -171,7 +168,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final IFunctionManager functionManager;
     private final LockList locks;
     private final Map<String, Object> config;
-    private final Set<Dataset> txnAccessedDatasets;
 
     private Dataverse defaultDataverse;
     private MetadataTransactionContext mdTxnCtx;
@@ -201,7 +197,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         functionManager = ((IFunctionExtensionManager) appCtx.getExtensionManager()).getFunctionManager();
         locks = new LockList();
         config = new HashMap<>();
-        txnAccessedDatasets = new HashSet<>();
     }
 
     @SuppressWarnings("unchecked")
@@ -262,7 +257,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public void setMetadataTxnContext(MetadataTransactionContext mdTxnCtx) {
         this.mdTxnCtx = mdTxnCtx;
-        txnAccessedDatasets.clear();
     }
 
     public MetadataTransactionContext getMetadataTxnContext() {
@@ -1748,14 +1742,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public ICompressionManager getCompressionManager() {
         return appCtx.getCompressionManager();
-    }
-
-    public void addAccessedDataset(Dataset dataset) {
-        txnAccessedDatasets.add(dataset);
-    }
-
-    public Set<Dataset> getAccessedDatasets() {
-        return Collections.unmodifiableSet(txnAccessedDatasets);
     }
 
     public void validateDataverseName(DataverseName dataverseName, SourceLocation sourceLoc)
