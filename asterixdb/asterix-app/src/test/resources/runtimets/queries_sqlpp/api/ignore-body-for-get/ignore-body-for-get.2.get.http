@@ -17,10 +17,10 @@
  * under the License.
  */
 /*
- * Description: testing passing a query statement using GET
- * Result: success
+ * Description: testing that body of GET requests are ignored
+ * Result: failure (missing the required "statement" parameter since it will be ignored)
  */
--- extractresult=true
-# param statement=FROM Metadata.`Dataverse` v WHERE v.DataverseName = 'Metadata' SELECT VALUE v.DataverseName
-# param readonly=true
+// statuscode 400
+-- requesttype=application/x-www-form-urlencoded
 /query/service
+--body={"statement": "SELECT 1;"}

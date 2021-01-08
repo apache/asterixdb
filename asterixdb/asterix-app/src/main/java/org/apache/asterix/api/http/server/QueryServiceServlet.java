@@ -135,12 +135,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     @Override
-    protected void get(IServletRequest request, IServletResponse response) throws IOException {
+    protected final void get(IServletRequest request, IServletResponse response) throws IOException {
         handleRequest(request, response, true);
     }
 
     @Override
-    protected void post(IServletRequest request, IServletResponse response) throws IOException {
+    protected final void post(IServletRequest request, IServletResponse response) throws IOException {
         handleRequest(request, response, false);
     }
 
