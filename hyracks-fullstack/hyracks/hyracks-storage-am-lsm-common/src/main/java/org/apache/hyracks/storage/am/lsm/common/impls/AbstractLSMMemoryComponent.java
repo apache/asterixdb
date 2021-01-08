@@ -35,6 +35,7 @@ import org.apache.logging.log4j.Logger;
 public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent implements ILSMMemoryComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    protected final AtomicBoolean allocated;
     private final IVirtualBufferCache vbc;
     private final AtomicBoolean isModified;
     private int writerCount;
@@ -48,6 +49,7 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
         writerCount = 0;
         state = ComponentState.INACTIVE;
         isModified = new AtomicBoolean();
+        allocated = new AtomicBoolean();
         metadata = new MemoryComponentMetadata();
     }
 
@@ -80,6 +82,9 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
 
     private void activate() throws HyracksDataException {
         if (state == ComponentState.INACTIVE) {
+            if (!allocated.get()) {
+                doAllocate();
+            }
             state = ComponentState.READABLE_WRITABLE;
             lsmIndex.getIOOperationCallback().recycled(this);
         }
@@ -247,10 +252,11 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
 
     @Override
     public void cleanup() throws HyracksDataException {
-        getIndex().deactivate();
-        getIndex().destroy();
-        getIndex().create();
-        getIndex().activate();
+        if (allocated.get()) {
+            getIndex().deactivate();
+            getIndex().destroy();
+            allocated.set(false);
+        }
     }
 
     @Override
@@ -286,6 +292,7 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
             created = true;
             getIndex().activate();
             activated = true;
+            allocated.set(true);
         } finally {
             if (created && !activated) {
                 getIndex().destroy();
@@ -305,8 +312,11 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
     }
 
     protected void doDeallocate() throws HyracksDataException {
-        getIndex().deactivate();
-        getIndex().destroy();
+        if (allocated.get()) {
+            getIndex().deactivate();
+            getIndex().destroy();
+            allocated.set(false);
+        }
         componentId = null;
     }
 
