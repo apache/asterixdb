@@ -31,7 +31,7 @@ public class AsterixExtractFunctionsFromJoinConditionRule extends ExtractFunctio
 
     @Override
     protected boolean isComparisonFunction(FunctionIdentifier fi) {
-        return BuiltinFunctions.isSimilarityFunction(fi);
+        return BuiltinFunctions.isSimilarityFunction(fi) || BuiltinFunctions.isSpatialFilterFunction(fi);
     }
 
 }
