@@ -132,6 +132,11 @@
         <expected-error>TYPE_DECL statement is not supported in read-only mode</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="ignore-body-for-get">
+        <output-dir compare="Text">ignore-body-for-get</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="flwor">
     <test-case FilePath="flwor">

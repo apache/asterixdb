@@ -20,5 +20,5 @@
  * Description: testing passing a non-query statement using GET
  * Result: failure
  */
+# param statement=CREATE DATAVERSE dv1
 /query/service
---body={"statement": "CREATE DATAVERSE dv1;"}

@@ -20,5 +20,6 @@
  * Description: testing passing a non-query statement using GET
  * Result: failure
  */
+# param statement=CREATE TYPE t1 AS {id: int}
+# param readonly=true
 /query/service
---body={"statement": "CREATE TYPE t1 AS {id: int};", "readonly": true}

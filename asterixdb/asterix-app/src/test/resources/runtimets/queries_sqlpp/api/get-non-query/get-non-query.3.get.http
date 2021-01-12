@@ -20,5 +20,6 @@
  * Description: testing passing a non-query statement using GET
  * Result: failure
  */
+# param statement=CREATE FUNCTION foo(){1}
+# param readonly=false
 /query/service
---body={"statement": "CREATE FUNCTION foo(){1};", "readonly": false}

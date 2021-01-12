@@ -52,6 +52,7 @@ import io.netty.handler.codec.http.DefaultHttpResponse;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpHeaderValues;
+import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpScheme;
 import io.netty.util.AsciiString;
@@ -70,7 +71,8 @@ public class HttpUtil {
     public static IServletRequest toServletRequest(ChannelHandlerContext ctx, FullHttpRequest request,
             HttpScheme scheme) {
         return ContentType.APPLICATION_X_WWW_FORM_URLENCODED.equals(getContentTypeOnly(request))
-                ? FormUrlEncodedRequest.create(ctx, request, scheme) : BaseRequest.create(ctx, request, scheme);
+                && !HttpMethod.GET.equals(request.method()) ? FormUrlEncodedRequest.create(ctx, request, scheme)
+                        : BaseRequest.create(ctx, request, scheme);
     }
 
     public static String getContentTypeOnly(IServletRequest request) {
