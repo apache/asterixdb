@@ -25,14 +25,19 @@ import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.storage.common.LocalResource;
 
+@SuppressWarnings("squid:S2160") // don't override equals
 public class DatasetResourceReference extends ResourceReference {
 
-    private int datasetId;
-    private int partitionId;
-    private long resourceId;
+    private final int datasetId;
+    private final int partitionId;
+    private final long resourceId;
 
-    private DatasetResourceReference() {
-        super();
+    private DatasetResourceReference(LocalResource localResource) {
+        super(Paths.get(localResource.getPath(), StorageConstants.METADATA_FILE_NAME).toString());
+        final DatasetLocalResource dsResource = (DatasetLocalResource) localResource.getResource();
+        datasetId = dsResource.getDatasetId();
+        partitionId = dsResource.getPartition();
+        resourceId = localResource.getId();
     }
 
     public static DatasetResourceReference of(LocalResource localResource) {
@@ -53,39 +58,6 @@ public class DatasetResourceReference extends ResourceReference {
     }
 
     private static DatasetResourceReference parse(LocalResource localResource) {
-        final DatasetResourceReference datasetResourceReference = new DatasetResourceReference();
-        final String filePath = Paths.get(localResource.getPath(), StorageConstants.METADATA_FILE_NAME).toString();
-        parse(datasetResourceReference, filePath);
-        assignIds(localResource, datasetResourceReference);
-        return datasetResourceReference;
-    }
-
-    private static void assignIds(LocalResource localResource, DatasetResourceReference lrr) {
-        final DatasetLocalResource dsResource = (DatasetLocalResource) localResource.getResource();
-        lrr.datasetId = dsResource.getDatasetId();
-        lrr.partitionId = dsResource.getPartition();
-        lrr.resourceId = localResource.getId();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o instanceof ResourceReference) {
-            ResourceReference that = (ResourceReference) o;
-            return getRelativePath().toString().equals(that.getRelativePath().toString());
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return getRelativePath().toString().hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return getRelativePath().toString();
+        return new DatasetResourceReference(localResource);
     }
 }
