@@ -304,15 +304,17 @@ public class ExternalDataConstants {
             throw new AssertionError("do not instantiate");
         }
 
+        public static final String CONTAINER_NAME_FIELD_NAME = "container";
+        public static final String DEFINITION_FIELD_NAME = "definition";
+        public static final String CONNECTION_STRING_FIELD_NAME = "connectionString";
         public static final String ACCOUNT_NAME_FIELD_NAME = "accountName";
         public static final String ACCOUNT_KEY_FIELD_NAME = "accountKey";
         public static final String SHARED_ACCESS_SIGNATURE_FIELD_NAME = "sharedAccessSignature";
-        public static final String CONTAINER_NAME_FIELD_NAME = "container";
-        public static final String DEFINITION_FIELD_NAME = "definition";
         public static final String BLOB_ENDPOINT_FIELD_NAME = "blobEndpoint";
         public static final String ENDPOINT_SUFFIX_FIELD_NAME = "endpointSuffix";
 
         // Connection string requires PascalCase (MyFieldFormat)
+        public static final String CONNECTION_STRING_CONNECTION_STRING = "ConnectionString";
         public static final String CONNECTION_STRING_ACCOUNT_NAME = "AccountName";
         public static final String CONNECTION_STRING_ACCOUNT_KEY = "AccountKey";
         public static final String CONNECTION_STRING_SHARED_ACCESS_SIGNATURE = "SharedAccessSignature";

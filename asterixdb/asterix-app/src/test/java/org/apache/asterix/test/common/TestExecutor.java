@@ -2068,26 +2068,44 @@ public class TestExecutor {
     }
 
     protected String applyExternalDatasetSubstitution(String str, List<Placeholder> placeholders) {
+        // This replaces the full template of parameters depending on the adapter type
         for (Placeholder placeholder : placeholders) {
+            // For adapter placeholder, it means we have a template to replace
             if (placeholder.getName().equals("adapter")) {
                 str = str.replace("%adapter%", placeholder.getValue());
 
                 // Early terminate if there are no template place holders to replace
                 if (noTemplateRequired(str)) {
-                    return str;
+                    continue;
                 }
 
                 if (placeholder.getValue().equalsIgnoreCase("S3")) {
-                    return applyS3Substitution(str, placeholders);
+                    str = applyS3Substitution(str, placeholders);
                 } else if (placeholder.getValue().equalsIgnoreCase("AzureBlob")) {
-                    return applyAzureSubstitution(str, placeholders);
-                } else {
-                    return str;
+                    str = applyAzureSubstitution(str, placeholders);
                 }
+            } else {
+                // Any other place holders, just replace with the value
+                str = str.replace("%" + placeholder.getName() + "%", placeholder.getValue());
             }
         }
 
+        // This replaces specific external dataset placeholders
+        str = str.replace(TestConstants.AZURE_CONNECTION_STRING_ACCOUNT_KEY_PLACEHOLDER,
+                TestConstants.AZURE_CONNECTION_STRING_ACCOUNT_KEY);
+        str = str.replace(TestConstants.AZURE_CONNECTION_STRING_SAS_TOKEN_PLACEHOLDER,
+                TestConstants.AZURE_CONNECTION_STRING_SAS_TOKEN);
+        str = str.replace(TestConstants.AZURE_ACCOUNT_NAME_PLACEHOLDER,
+                TestConstants.AZURE_AZURITE_ACCOUNT_NAME_DEFAULT);
+        str = str.replace(TestConstants.AZURE_ACCOUNT_KEY_PLACEHOLDER, TestConstants.AZURE_AZURITE_ACCOUNT_KEY_DEFAULT);
+        str = str.replace(TestConstants.AZURE_SAS_TOKEN_PLACEHOLDER, TestConstants.sasToken);
+        str = replaceExternalEndpoint(str);
+
         return str;
+    }
+
+    protected String replaceExternalEndpoint(String str) {
+        return str.replace(TestConstants.AZURE_BLOB_ENDPOINT_PLACEHOLDER, TestConstants.AZURE_BLOB_ENDPOINT_DEFAULT);
     }
 
     protected boolean noTemplateRequired(String str) {

@@ -18,6 +18,62 @@
  ! under the License.
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
+  <test-group name="authentication">
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
+      <compilation-unit name="valid-auth-methods">
+        <placeholder name="azureblob-credentialsname" value="accountKey" />
+        <placeholder name="azureblob-credentialsvalue" value="%azureblob-accountkey%" />
+        <output-dir compare="Text">valid-auth-methods</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
+      <compilation-unit name="valid-auth-methods">
+        <placeholder name="azureblob-credentialsname" value="sharedAccessSignature" />
+        <placeholder name="azureblob-credentialsvalue" value="%azureblob-sas%" />
+        <output-dir compare="Text">valid-auth-methods</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
+      <compilation-unit name="valid-auth-methods">
+        <placeholder name="azureblob-credentialsname" value="connectionString" />
+        <placeholder name="azureblob-credentialsvalue" value="%azureblob-connectionstringaccountkey%" />
+        <output-dir compare="Text">valid-auth-methods</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
+      <compilation-unit name="valid-auth-methods">
+        <placeholder name="azureblob-credentialsname" value="connectionString" />
+        <placeholder name="azureblob-credentialsvalue" value="%azureblob-connectionstringsas%" />
+        <output-dir compare="Text">valid-auth-methods</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
+      <compilation-unit name="invalid-auth-methods">
+        <placeholder name="azureblob-credentialsname-1" value="accountKey" />
+        <placeholder name="azureblob-credentialsvalue-1" value="%azureblob-accountkey%" />
+        <placeholder name="azureblob-credentialsname-2" value="connectionString" />
+        <placeholder name="azureblob-credentialsvalue-2" value="%azureblob-connectionstringaccountkey%" />
+        <output-dir compare="Text">invalid-auth-methods</output-dir>
+        <expected-error>ASX1133: Only a single authentication method is allowed: connectionString, accountName &amp; accountKey, or accountName &amp; sharedAccessSignature</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
+      <compilation-unit name="invalid-auth-methods">
+        <placeholder name="azureblob-credentialsname-1" value="sharedAccessSignature" />
+        <placeholder name="azureblob-credentialsvalue-1" value="%azureblob-sas%" />
+        <placeholder name="azureblob-credentialsname-2" value="connectionString" />
+        <placeholder name="azureblob-credentialsvalue-2" value="%azureblob-connectionstringaccountkey%" />
+        <output-dir compare="Text">invalid-auth-methods</output-dir>
+        <expected-error>ASX1133: Only a single authentication method is allowed: connectionString, accountName &amp; accountKey, or accountName &amp; sharedAccessSignature</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
+      <compilation-unit name="invalid-no-auth">
+        <output-dir compare="Text">invalid-no-auth</output-dir>
+        <expected-error>ASX1134: No authentication parameters provided</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="external-dataset">
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/json/json">
