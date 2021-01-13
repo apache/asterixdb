@@ -80,7 +80,7 @@ public class IntervalJoinUtils {
         return fexp.getAnnotation(RangeAnnotation.class);
     }
 
-    protected static void setSortMergeIntervalJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
+    public static void setSortMergeIntervalJoinOp(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, IOptimizationContext context,
             IntervalPartitions intervalPartitions) throws CompilationException {
         IIntervalJoinUtilFactory mjcf = createIntervalJoinCheckerFactory(fi, intervalPartitions.getRangeMap());
@@ -93,7 +93,7 @@ public class IntervalJoinUtils {
      * Certain Relations not yet supported as seen below. Will default to regular join.
      * Inserts partition sort key.
      */
-    protected static IntervalPartitions createIntervalPartitions(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
+    public static IntervalPartitions createIntervalPartitions(AbstractBinaryJoinOperator op, FunctionIdentifier fi,
             List<LogicalVariable> sideLeft, List<LogicalVariable> sideRight, RangeMap rangeMap,
             IOptimizationContext context, int left, int right) throws AlgebricksException {
 

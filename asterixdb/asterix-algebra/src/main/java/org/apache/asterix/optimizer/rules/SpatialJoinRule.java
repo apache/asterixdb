@@ -18,6 +18,11 @@
  */
 package org.apache.asterix.optimizer.rules;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +32,8 @@ import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.base.ARectangle;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.optimizer.rules.util.IntervalJoinUtils;
+import org.apache.asterix.optimizer.rules.util.IntervalPartitions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -46,6 +53,9 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -60,6 +70,9 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
     private static final double MAX_Y = 90.0;
     private static final int NUM_ROWS = 50;
     private static final int NUM_COLUMNS = 50;
+
+    private final Integer64SerializerDeserializer integerSerde = Integer64SerializerDeserializer.INSTANCE;
+    private static final int INTEGER_LENGTH = Long.BYTES;
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -165,10 +178,23 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         joinConditionRef.setValue(updatedJoinCondition);
 
         // Force the query plan to use Interval merge join
-        //        IntervalMergeJoinPOperator imjo = new IntervalMergeJoinPOperator(joinOp.getJoinKind(),
-        //                AbstractJoinPOperator.JoinPartitioningType.BROADCAST, leftTileIdVar, rightTileIdVar,
-        //                context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf, intervalPartitions);
-        //        op.setPhysicalOperator(imjo);
+        List<LogicalVariable> sideLeft = new ArrayList<>(1);
+        sideLeft.add(leftInputVar);
+        List<LogicalVariable> sideRight = new ArrayList<>(1);
+        sideRight.add(rightInputVar);
+        Long[] integers = new Long[2];
+        integers[0] = Long.valueOf(0);
+        integers[1] = Long.valueOf(NUM_ROWS * NUM_COLUMNS - 1);
+        RangeMap rangeMap = null;
+        try {
+            rangeMap = getIntegerRangeMap(integers);
+        } catch (HyracksDataException e) {
+            e.printStackTrace();
+        }
+        IntervalPartitions intervalPartitions = IntervalJoinUtils.createIntervalPartitions(joinOp,
+                funcExpr.getFunctionIdentifier(), sideLeft, sideRight, rangeMap, context, LEFT, RIGHT);
+        IntervalJoinUtils.setSortMergeIntervalJoinOp(joinOp, funcExpr.getFunctionIdentifier(), sideLeft, sideRight,
+                context, intervalPartitions);
 
         return true;
     }
@@ -195,5 +221,27 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
             e.printStackTrace();
         }
         return sideVar;
+    }
+
+    private RangeMap getIntegerRangeMap(Long[] integers) throws HyracksDataException {
+        int[] offsets = new int[integers.length];
+        for (int i = 0; i < integers.length; ++i) {
+            offsets[i] = (i + 1) * INTEGER_LENGTH;
+        }
+        return new RangeMap(1, getIntegerBytes(integers), offsets, null);
+    }
+
+    private byte[] getIntegerBytes(Long[] integers) throws HyracksDataException {
+        try {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            DataOutput dos = new DataOutputStream(bos);
+            for (int i = 0; i < integers.length; ++i) {
+                integerSerde.serialize(integers[i], dos);
+            }
+            bos.close();
+            return bos.toByteArray();
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 }
