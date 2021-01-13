@@ -159,7 +159,6 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         if (dataset == null) {
             throw createUnresolvableError(dataverseName, datasetName, sourceLoc);
         }
-        metadataProvider.addAccessedDataset(dataset);
         List<Expression> argList = new ArrayList<>(2);
         argList.add(new LiteralExpr(new StringLiteral(dataset.getDataverseName().getCanonicalForm())));
         argList.add(new LiteralExpr(new StringLiteral(dataset.getDatasetName())));

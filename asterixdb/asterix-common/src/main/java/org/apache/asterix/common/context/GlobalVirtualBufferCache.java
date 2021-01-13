@@ -199,7 +199,11 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
 
     @Override
     public boolean isFull() {
-        return vbc.isFull();
+        boolean full = vbc.isFull();
+        if (full) {
+            checkAndNotifyFlushThread();
+        }
+        return full;
     }
 
     @Override

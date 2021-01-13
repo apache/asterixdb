@@ -51,6 +51,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 
+import io.netty.handler.codec.http.HttpMethod;
+
 public class QueryServiceRequestParameters {
 
     public enum Parameter {
@@ -375,32 +377,36 @@ public class QueryServiceRequestParameters {
             throws IOException {
         setHost(servlet.host(request));
         setPath(servlet.servletPath(request));
-        String contentType = HttpUtil.getContentTypeOnly(request);
         setOptionalParams(optionalParams);
         try {
-            if (HttpUtil.ContentType.APPLICATION_JSON.equals(contentType)) {
-                setParamFromJSON(request, optionalParams);
+            if (useRequestParameters(request)) {
+                setFromRequestParameters(request);
             } else {
-                setParamFromRequest(request, optionalParams);
+                setFromRequestBody(request);
             }
         } catch (JsonParseException | JsonMappingException e) {
             throw new RuntimeDataException(ErrorCode.INVALID_REQ_JSON_VAL);
         }
     }
 
-    private void setParamFromJSON(IServletRequest request, Map<String, String> optionalParameters) throws IOException {
+    private boolean useRequestParameters(IServletRequest request) {
+        String contentType = HttpUtil.getContentTypeOnly(request);
+        HttpMethod method = request.getHttpRequest().method();
+        return HttpMethod.GET.equals(method) || !HttpUtil.ContentType.APPLICATION_JSON.equals(contentType);
+    }
+
+    private void setFromRequestBody(IServletRequest request) throws IOException {
         JsonNode jsonRequest = OBJECT_MAPPER.readTree(HttpUtil.getRequestBody(request));
         setParams(jsonRequest, request.getHeader(HttpHeaders.ACCEPT), QueryServiceRequestParameters::getParameter);
         setStatementParams(getOptStatementParameters(jsonRequest, jsonRequest.fieldNames(), JsonNode::get, v -> v));
-        setJsonOptionalParameters(jsonRequest, optionalParameters);
+        setExtraParams(jsonRequest);
     }
 
-    private void setParamFromRequest(IServletRequest request, Map<String, String> optionalParameters)
-            throws IOException {
+    private void setFromRequestParameters(IServletRequest request) throws IOException {
         setParams(request, request.getHeader(HttpHeaders.ACCEPT), IServletRequest::getParameter);
         setStatementParams(getOptStatementParameters(request, request.getParameterNames().iterator(),
                 IServletRequest::getParameter, OBJECT_MAPPER::readTree));
-        setOptionalParameters(request, optionalParameters);
+        setExtraParams(request);
     }
 
     private <Req> void setParams(Req req, String acceptHeader, BiFunction<Req, String, String> valGetter)
@@ -431,13 +437,11 @@ public class QueryServiceRequestParameters {
         setSignature(parseBoolean(req, Parameter.SIGNATURE.str(), valGetter, isSignature()));
     }
 
-    protected void setJsonOptionalParameters(JsonNode jsonRequest, Map<String, String> optionalParameters)
-            throws HyracksDataException {
+    protected void setExtraParams(JsonNode jsonRequest) throws HyracksDataException {
         // allows extensions to set extra parameters
     }
 
-    protected void setOptionalParameters(IServletRequest request, Map<String, String> optionalParameters)
-            throws HyracksDataException {
+    protected void setExtraParams(IServletRequest request) throws HyracksDataException {
         // allows extensions to set extra parameters
     }
 
