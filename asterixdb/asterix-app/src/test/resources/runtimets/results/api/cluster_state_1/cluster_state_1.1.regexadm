@@ -18,6 +18,8 @@
     "compiler\.sort\.parallel" : false,
     "compiler\.sort\.samples" : 100,
     "compiler\.sortmemory" : 327680,
+    "compiler\.subplan\.merge" : true,
+    "compiler\.subplan\.nestedpushdown" : true,
     "compiler\.textsearchmemory" : 163840,
     "compiler\.windowmemory" : 196608,
     "default\.dir" : "target/io/dir/asterixdb",

@@ -30,4 +30,6 @@ public class AlgebricksConfig {
     public static final boolean INDEX_ONLY_DEFAULT = true;
     public static final boolean SANITYCHECK_DEFAULT = false;
     public static final boolean EXTERNAL_FIELD_PUSHDOWN_DEFAULT = false;
+    public static final boolean SUBPLAN_MERGE_DEFAULT = true;
+    public static final boolean SUBPLAN_NESTEDPUSHDOWN_DEFAULT = true;
 }

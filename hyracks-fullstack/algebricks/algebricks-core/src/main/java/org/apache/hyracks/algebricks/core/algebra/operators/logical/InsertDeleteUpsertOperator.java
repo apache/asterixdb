@@ -102,25 +102,22 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
     }
 
     public void getProducedVariables(Collection<LogicalVariable> producedVariables) {
-        if (upsertIndicatorVar != null) {
+        if (operation == Kind.UPSERT) {
             producedVariables.add(upsertIndicatorVar);
-        }
-        if (prevRecordVar != null) {
             producedVariables.add(prevRecordVar);
-        }
-        if (prevAdditionalNonFilteringVars != null) {
-            producedVariables.addAll(prevAdditionalNonFilteringVars);
-        }
-        if (prevFilterVar != null) {
-            producedVariables.add(prevFilterVar);
+            if (prevAdditionalNonFilteringVars != null) {
+                producedVariables.addAll(prevAdditionalNonFilteringVars);
+            }
+            if (prevFilterVar != null) {
+                producedVariables.add(prevFilterVar);
+            }
         }
     }
 
     @Override
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform transform)
             throws AlgebricksException {
-        boolean changed = false;
-        changed = transform.transform(payloadExpr);
+        boolean changed = transform.transform(payloadExpr);
         for (Mutable<ILogicalExpression> e : primaryKeyExprs) {
             changed |= transform.transform(e);
         }
@@ -151,8 +148,7 @@ public class InsertDeleteUpsertOperator extends AbstractLogicalOperator {
     public VariablePropagationPolicy getVariablePropagationPolicy() {
         return new VariablePropagationPolicy() {
             @Override
-            public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
-                    throws AlgebricksException {
+            public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources) {
                 if (operation == Kind.UPSERT) {
                     target.addVariable(upsertIndicatorVar);
                     target.addVariable(prevRecordVar);

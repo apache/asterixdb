@@ -169,7 +169,7 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
                         target.addVariable(p.first);
                     } else {
                         if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                            throw new AlgebricksException("hash group-by expects variable references.");
+                            throw new AlgebricksException("group-by expects variable references.");
                         }
                         VariableReferenceExpression v = (VariableReferenceExpression) expr;
                         target.addVariable(v.getVariableReference());
@@ -178,7 +178,7 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
                 for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
                     ILogicalExpression expr = p.second.getValue();
                     if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                        throw new AlgebricksException("pre-sorted group-by expects variable references.");
+                        throw new AlgebricksException("group-by expects variable references.");
                     }
                     VariableReferenceExpression v = (VariableReferenceExpression) expr;
                     LogicalVariable decor = v.getVariableReference();
@@ -241,6 +241,7 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
                     env.setVarType(v1, env2.getVarType(v1));
                 }
             } else {
+                // TODO (dmitry): this needs to be revisited
                 VariableReferenceExpression vre = (VariableReferenceExpression) p.second.getValue();
                 LogicalVariable v2 = vre.getVariableReference();
                 env.setVarType(v2, env2.getVarType(v2));
@@ -251,6 +252,7 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
             if (p.first != null) {
                 env.setVarType(p.first, env2.getType(expr));
             } else {
+                // TODO (dmitry): this needs to be revisited
                 VariableReferenceExpression vre = (VariableReferenceExpression) p.second.getValue();
                 LogicalVariable v2 = vre.getVariableReference();
                 env.setVarType(v2, env2.getVarType(v2));

@@ -291,6 +291,10 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         if (op.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
             return changedAndVarMap;
         }
+        SubplanOperator subplanOp = (SubplanOperator) op;
+        if (subplanOp.getNumberOfRoots() != 1) {
+            return changedAndVarMap;
+        }
 
         /**
          * Apply the special join-based rewriting.

@@ -86,6 +86,12 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
                 b = true;
             }
         }
+        // Filtering
+        if (filterExpr != null) {
+            if (visitor.transform(filterExpr)) {
+                b = true;
+            }
+        }
         // Additional Filtering <For upsert>
         if (additionalFilteringExpressions != null) {
             for (int i = 0; i < additionalFilteringExpressions.size(); i++) {
@@ -94,12 +100,10 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
                 }
             }
         }
-
         // Upsert indicator var <For upsert>
         if (upsertIndicatorExpr != null && visitor.transform(upsertIndicatorExpr)) {
             b = true;
         }
-
         // Old secondary <For upsert>
         if (prevSecondaryKeyExprs != null) {
             for (int i = 0; i < prevSecondaryKeyExprs.size(); i++) {

@@ -10313,6 +10313,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="subquery">
+      <compilation-unit name="in_let">
+        <output-dir compare="Text">in_let</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
       <compilation-unit name="not_exists">
         <output-dir compare="Text">not_exists</output-dir>
       </compilation-unit>

@@ -76,10 +76,6 @@ public abstract class AbstractReplicateOperator extends AbstractLogicalOperator 
         schema = new ArrayList<LogicalVariable>(inputs.get(0).getValue().getSchema());
     }
 
-    public void substituteVar(LogicalVariable v1, LogicalVariable v2) {
-        // do nothing
-    }
-
     public int getOutputArity() {
         return outputArity;
     }

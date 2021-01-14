@@ -155,20 +155,12 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     }
 
     public ILogicalOperator deepCopy(ILogicalOperator op) throws AlgebricksException {
-        // The deep copy call outside this visitor always has a null argument.
-        return deepCopy(op, null);
-    }
-
-    private ILogicalOperator deepCopy(ILogicalOperator op, ILogicalOperator arg) throws AlgebricksException {
-        if (op == null) {
-            return null;
-        }
         if (reuseFreeVars) {
             // If the reuseFreeVars flag is set, we collect all free variables in the
             // given operator subtree and do not re-map them in the deep-copied plan.
             OperatorPropertiesUtil.getFreeVariablesInSelfOrDesc((AbstractLogicalOperator) op, freeVars);
         }
-        ILogicalOperator opCopy = op.accept(this, arg);
+        ILogicalOperator opCopy = deepCopyOperator(op, null);
         if (typeContext != null) {
             OperatorManipulationUtil.computeTypeEnvironmentBottomUp(opCopy, typeContext);
         }
@@ -184,9 +176,13 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         }
     }
 
+    private ILogicalOperator deepCopyOperator(ILogicalOperator op, ILogicalOperator arg) throws AlgebricksException {
+        return op != null ? op.accept(this, arg) : null;
+    }
+
     private Mutable<ILogicalOperator> deepCopyOperatorReference(Mutable<ILogicalOperator> opRef, ILogicalOperator arg)
             throws AlgebricksException {
-        return new MutableObject<>(deepCopy(opRef.getValue(), arg));
+        return new MutableObject<>(deepCopyOperator(opRef.getValue(), arg));
     }
 
     private List<Mutable<ILogicalOperator>> deepCopyOperatorReferenceList(List<Mutable<ILogicalOperator>> list,

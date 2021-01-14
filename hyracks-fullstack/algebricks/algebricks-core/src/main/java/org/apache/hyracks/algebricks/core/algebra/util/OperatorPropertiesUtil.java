@@ -285,13 +285,11 @@ public class OperatorPropertiesUtil {
     }
 
     public static boolean isCardinalityExactOne(ILogicalOperator operator) throws AlgebricksException {
-        CardinalityInferenceVisitor visitor = new CardinalityInferenceVisitor();
-        return operator.accept(visitor, null) == 1L;
+        return CardinalityInferenceVisitor.isCardinalityExactOne(operator);
     }
 
     public static boolean isCardinalityZeroOrOne(ILogicalOperator operator) throws AlgebricksException {
-        CardinalityInferenceVisitor visitor = new CardinalityInferenceVisitor();
-        return operator.accept(visitor, null) <= 1;
+        return CardinalityInferenceVisitor.isCardinalityZeroOrOne(operator);
     }
 
     /**

@@ -26,7 +26,6 @@ import java.util.Set;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -110,21 +109,25 @@ public class NestedSubplanToJoinRule implements IAlgebraicRewriteRule {
              * Expends the input and roots into a DAG of nested loop joins.
              * Though joins should be left-outer joins, a left-outer join with condition TRUE is equivalent to an inner join.
              **/
-            Mutable<ILogicalExpression> expr = new MutableObject<ILogicalExpression>(ConstantExpression.TRUE);
             Mutable<ILogicalOperator> nestedRootRef = nestedRoots.get(0);
-            InnerJoinOperator join =
-                    new InnerJoinOperator(expr, new MutableObject<ILogicalOperator>(subplanInput), nestedRootRef);
+            InnerJoinOperator join = new InnerJoinOperator(new MutableObject<>(ConstantExpression.TRUE),
+                    new MutableObject<>(subplanInput), nestedRootRef);
             join.setSourceLocation(sourceLoc);
 
             /** rewrite the nested tuple source to be empty tuple source */
             rewriteNestedTupleSource(nestedRootRef, context);
+            context.computeAndSetTypeEnvironmentForOperator(join);
 
             for (int i = 1; i < nestedRoots.size(); i++) {
-                join = new InnerJoinOperator(expr, new MutableObject<ILogicalOperator>(join), nestedRoots.get(i));
+                nestedRootRef = nestedRoots.get(i);
+                join = new InnerJoinOperator(new MutableObject<>(ConstantExpression.TRUE), new MutableObject<>(join),
+                        nestedRootRef);
                 join.setSourceLocation(sourceLoc);
+                rewriteNestedTupleSource(nestedRootRef, context);
+                context.computeAndSetTypeEnvironmentForOperator(join);
             }
             op1.getInputs().get(index).setValue(join);
-            context.computeAndSetTypeEnvironmentForOperator(join);
+
             rewritten = true;
         }
         return rewritten;
