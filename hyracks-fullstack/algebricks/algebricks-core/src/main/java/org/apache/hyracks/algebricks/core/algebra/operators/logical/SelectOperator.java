@@ -113,7 +113,7 @@ public class SelectOperator extends AbstractLogicalOperator {
                 ILogicalExpression a2 = f2.getArguments().get(0).getValue();
                 if (a2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                     LogicalVariable var = ((VariableReferenceExpression) a2).getVariableReference();
-                    env.getNonNullVariables().add(var);
+                    env.getNonMissableVariables().add(var);
                 }
             }
         }

@@ -31,21 +31,22 @@ public abstract class TypePropagationPolicy {
 
         @Override
         public Object getVarType(LogicalVariable var, IMissableTypeComputer ntc,
-                List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists,
-                ITypeEnvPointer... typeEnvs) throws AlgebricksException {
+                List<LogicalVariable> nonMissableVariableList,
+                List<List<LogicalVariable>> correlatedMissableVariableLists, ITypeEnvPointer... typeEnvs)
+                throws AlgebricksException {
             for (ITypeEnvPointer p : typeEnvs) {
                 IVariableTypeEnvironment env = p.getTypeEnv();
                 if (env == null) {
                     throw new AlgebricksException(
                             "Null environment for pointer " + p + " in getVarType for var=" + var);
                 }
-                Object t = env.getVarType(var, nonNullVariableList, correlatedNullableVariableLists);
+                Object t = env.getVarType(var, nonMissableVariableList, correlatedMissableVariableLists);
                 if (t != null) {
                     if (ntc != null && ntc.canBeMissing(t)) {
-                        for (List<LogicalVariable> list : correlatedNullableVariableLists) {
+                        for (List<LogicalVariable> list : correlatedMissableVariableLists) {
                             if (list.contains(var)) {
                                 for (LogicalVariable v : list) {
-                                    if (nonNullVariableList.contains(v)) {
+                                    if (nonMissableVariableList.contains(v)) {
                                         return ntc.getNonOptionalType(t);
                                     }
                                 }
@@ -63,16 +64,17 @@ public abstract class TypePropagationPolicy {
 
         @Override
         public Object getVarType(LogicalVariable var, IMissableTypeComputer ntc,
-                List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists,
-                ITypeEnvPointer... typeEnvs) throws AlgebricksException {
+                List<LogicalVariable> nonMissableVariableList,
+                List<List<LogicalVariable>> correlatedMissableVariableLists, ITypeEnvPointer... typeEnvs)
+                throws AlgebricksException {
             int n = typeEnvs.length;
             // Searches from the inner branch to the outer branch.
             // TODO(buyingyi): A split operator could lead to the case that the type for a variable could be
             // found in both inner and outer branches. Fix computeOutputTypeEnvironment() in ProjectOperator
             // and investigate why many test queries fail if only live variables' types are propagated.
             for (int i = n - 1; i >= 0; i--) {
-                Object t =
-                        typeEnvs[i].getTypeEnv().getVarType(var, nonNullVariableList, correlatedNullableVariableLists);
+                Object t = typeEnvs[i].getTypeEnv().getVarType(var, nonMissableVariableList,
+                        correlatedMissableVariableLists);
                 if (t == null) {
                     continue;
                 }
@@ -82,7 +84,7 @@ public abstract class TypePropagationPolicy {
 
                 // inner branch
                 boolean nonMissingVarIsProduced = false;
-                for (LogicalVariable v : nonNullVariableList) {
+                for (LogicalVariable v : nonMissableVariableList) {
                     boolean toBreak = false;
                     if (v == var) {
                         nonMissingVarIsProduced = true;
@@ -106,6 +108,6 @@ public abstract class TypePropagationPolicy {
     };
 
     public abstract Object getVarType(LogicalVariable var, IMissableTypeComputer ntc,
-            List<LogicalVariable> nonNullVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists,
+            List<LogicalVariable> nonMissableVariableList, List<List<LogicalVariable>> correlatedMissableVariableLists,
             ITypeEnvPointer... typeEnvs) throws AlgebricksException;
 }

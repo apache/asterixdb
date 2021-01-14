@@ -169,8 +169,9 @@ public class SubstituteVariableVisitor
         if (!producedVarFound) {
             substInNestedPlans(op, pair.first, pair.second);
         }
-        // always call substProducedVarInTypeEnvironment() because GroupByOperator.computeOutputTypeEnvironment()
-        // adds used vars into output type environment in some cases.
+        // GROUP BY operator may add its used variables
+        // to its own output type environment as produced variables
+        // therefore we need perform variable substitution in its own type environment
         // TODO (dmitry): this needs to be revisited
         substProducedVarInTypeEnvironment(op, pair);
         return null;
@@ -187,6 +188,10 @@ public class SubstituteVariableVisitor
     public Void visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
         substUsedVariablesInExpr(op.getCondition(), pair.first, pair.second);
+        // LEFT OUTER JOIN operator adds its right branch variables
+        // to its own output type environment as 'correlatedMissableVariables'
+        // therefore we need perform variable substitution in its own type environment
+        substProducedVarInTypeEnvironment(op, pair);
         return null;
     }
 
@@ -245,8 +250,13 @@ public class SubstituteVariableVisitor
     }
 
     @Override
-    public Void visitSelectOperator(SelectOperator op, Pair<LogicalVariable, LogicalVariable> pair) {
+    public Void visitSelectOperator(SelectOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
         substUsedVariablesInExpr(op.getCondition(), pair.first, pair.second);
+        // SELECT operator may add its used variable
+        // to its own output type environment as 'nonMissableVariable' (not(is-missing($used_var))
+        // therefore we need perform variable substitution in its own type environment
+        substProducedVarInTypeEnvironment(op, pair);
         return null;
     }
 
