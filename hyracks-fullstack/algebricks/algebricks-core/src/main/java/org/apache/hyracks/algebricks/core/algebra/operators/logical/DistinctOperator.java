@@ -52,8 +52,8 @@ public class DistinctOperator extends AbstractLogicalOperator {
 
     @Override
     public void recomputeSchema() {
-        schema = new ArrayList<LogicalVariable>();
-        schema.addAll(this.getDistinctByVarList());
+        schema = new ArrayList<>();
+        schema.addAll(getDistinctByVarList());
         List<LogicalVariable> inputSchema = inputs.get(0).getValue().getSchema();
         for (LogicalVariable var : inputSchema) {
             if (!schema.contains(var)) {
@@ -66,13 +66,12 @@ public class DistinctOperator extends AbstractLogicalOperator {
     public VariablePropagationPolicy getVariablePropagationPolicy() {
         return new VariablePropagationPolicy() {
             @Override
-            public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
-                    throws AlgebricksException {
-                /** make sure distinct key vars laid-out first */
+            public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources) {
+                /* make sure distinct key vars laid-out first */
                 for (LogicalVariable keyVar : getDistinctByVarList()) {
                     target.addVariable(keyVar);
                 }
-                /** add other source vars */
+                /* add other source vars */
                 for (IOperatorSchema srcSchema : sources) {
                     for (LogicalVariable srcVar : srcSchema)
                         if (target.findVariable(srcVar) < 0) {
@@ -105,7 +104,7 @@ public class DistinctOperator extends AbstractLogicalOperator {
     }
 
     public List<LogicalVariable> getDistinctByVarList() {
-        List<LogicalVariable> varList = new ArrayList<LogicalVariable>(expressions.size());
+        List<LogicalVariable> varList = new ArrayList<>(expressions.size());
         for (Mutable<ILogicalExpression> eRef : expressions) {
             ILogicalExpression e = eRef.getValue();
             if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
@@ -121,7 +120,7 @@ public class DistinctOperator extends AbstractLogicalOperator {
             ILogicalExpression e = eRef.getValue();
             if (e.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                 VariableReferenceExpression v = (VariableReferenceExpression) e;
-                if (v.getVariableReference() == var) {
+                if (v.getVariableReference().equals(var)) {
                     return true;
                 }
             }

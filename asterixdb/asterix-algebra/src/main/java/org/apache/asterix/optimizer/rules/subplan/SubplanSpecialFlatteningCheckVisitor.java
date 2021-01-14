@@ -220,7 +220,7 @@ class SubplanSpecialFlatteningCheckVisitor implements IQueryOperatorVisitor<Bool
 
     @Override
     public Boolean visitDistinctOperator(DistinctOperator op, Void arg) throws AlgebricksException {
-        return visitInputs(op);
+        return visitTupleDiscardingOperator(op);
     }
 
     @Override

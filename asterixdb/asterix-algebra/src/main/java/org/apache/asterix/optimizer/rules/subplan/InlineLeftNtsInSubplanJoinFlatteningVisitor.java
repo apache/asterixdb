@@ -361,10 +361,11 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
         if (!rewritten || !underJoin) {
             return op;
         }
-        List<LogicalVariable> distinctVarList = op.getDistinctByVarList();
         for (LogicalVariable keyVar : liveVarsFromSubplanInput) {
-            if (!distinctVarList.contains(keyVar)) {
-                distinctVarList.add(keyVar);
+            if (!op.isDistinctByVar(keyVar)) {
+                VariableReferenceExpression keyVarRef = new VariableReferenceExpression(keyVar);
+                keyVarRef.setSourceLocation(op.getSourceLocation());
+                op.getExpressions().add(new MutableObject<>(keyVarRef));
             }
         }
         context.computeAndSetTypeEnvironmentForOperator(op);

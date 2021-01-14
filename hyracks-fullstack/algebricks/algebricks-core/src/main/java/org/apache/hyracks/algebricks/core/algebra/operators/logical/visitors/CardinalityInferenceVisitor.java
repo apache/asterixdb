@@ -244,6 +244,8 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
 
     @Override
     public Long visitDistinctOperator(DistinctOperator op, Void arg) throws AlgebricksException {
+        // DISTINCT cannot reduce cardinality from ONE to ZERO_OR_ONE, or from ONE_GROUP to ZERO_OR_ONE_GROUP
+        // therefore we don't need to call adjustCardinalityForTupleReductionOperator() here.
         return op.getInputs().get(0).getValue().accept(this, arg);
     }
 
