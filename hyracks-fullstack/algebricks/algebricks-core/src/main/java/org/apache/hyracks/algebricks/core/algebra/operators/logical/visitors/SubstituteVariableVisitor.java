@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -69,6 +70,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
@@ -103,18 +105,19 @@ public class SubstituteVariableVisitor
         boolean producedVarFound =
                 substAssignVariables(op.getVariables(), op.getExpressions(), pair.first, pair.second);
         if (producedVarFound) {
-            substProducedVarInTypeEnvironment(op, pair);
-        } else {
             // Substitute variables stored in ordering property
             if (op.getExplicitOrderingProperty() != null) {
                 List<OrderColumn> orderColumns = op.getExplicitOrderingProperty().getOrderColumns();
-                for (int i = 0; i < orderColumns.size(); i++) {
-                    OrderColumn oc = orderColumns.get(i);
-                    if (oc.getColumn().equals(pair.first)) {
-                        orderColumns.set(i, new OrderColumn(pair.second, oc.getOrder()));
-                    }
+                List<OrderColumn> newOrderColumns = new ArrayList<>(orderColumns.size());
+                for (OrderColumn oc : orderColumns) {
+                    LogicalVariable columnVar = oc.getColumn();
+                    LogicalVariable newColumnVar = columnVar.equals(pair.first) ? pair.second : columnVar;
+                    newOrderColumns.add(new OrderColumn(newColumnVar, oc.getOrder()));
                 }
+                op.setExplicitOrderingProperty(new LocalOrderProperty(newOrderColumns));
             }
+
+            substProducedVarInTypeEnvironment(op, pair);
         }
         return null;
     }
