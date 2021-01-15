@@ -28,6 +28,7 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -263,7 +264,10 @@ public class HttpServerTest {
         WebManager webMgr = new WebManager();
         final HttpServerConfig config = HttpServerConfigBuilder.custom().setThreadCount(numExecutors)
                 .setRequestQueueSize(serverQueueSize).build();
-        HttpServer server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), PORT, config);
+        List<InetSocketAddress> addresses = new ArrayList<>();
+        addresses.add(new InetSocketAddress(PORT));
+        addresses.add(new InetSocketAddress(PORT + 1));
+        HttpServer server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), addresses, config, null);
         ChattyServlet servlet = new ChattyServlet(server.ctx(), new String[] { PATH });
         server.addServlet(servlet);
         webMgr.add(server);
@@ -276,12 +280,12 @@ public class HttpServerTest {
             }
             Assert.assertEquals(numRequests, SUCCESS_COUNT.get());
             // close the channel
-            Field channelField = server.getClass().getDeclaredField("channel");
+            Field channelField = server.getClass().getDeclaredField("channels");
             channelField.setAccessible(true);
             Field recoveryThreadField = server.getClass().getDeclaredField("recoveryThread");
             recoveryThreadField.setAccessible(true);
-            Channel channel = (Channel) channelField.get(server);
-            channel.close();
+            List<Channel> channels = (ArrayList<Channel>) channelField.get(server);
+            channels.get(0).close();
             Thread.sleep(1000);
             final int sleeps = 10;
             for (int i = 0; i < sleeps; i++) {
@@ -403,6 +407,43 @@ public class HttpServerTest {
                 final String responseBody = EntityUtils.toString(response.getEntity());
                 Assert.assertEquals(response.getStatusLine().getStatusCode(), HttpResponseStatus.OK.code());
                 Assert.assertEquals(responseBody, requestBody);
+            }
+        } finally {
+            webMgr.stop();
+        }
+    }
+
+    @Test
+    public void multiAddressServerTest() throws Exception {
+        final WebManager webMgr = new WebManager();
+        final HttpServerConfig config =
+                HttpServerConfigBuilder.custom().setThreadCount(16).setRequestQueueSize(16).build();
+        List<Integer> ports = Arrays.asList(PORT, PORT + 1);
+        List<InetSocketAddress> addresses = new ArrayList<>();
+        for (Integer port : ports) {
+            addresses.add(new InetSocketAddress(port));
+        }
+        HttpServer server = new HttpServer(webMgr.getBosses(), webMgr.getWorkers(), addresses, config, null);
+        EchoServlet servlet = new EchoServlet(server.ctx(), PATH);
+        server.addServlet(servlet);
+        webMgr.add(server);
+        webMgr.start();
+        try {
+            for (Integer port : ports) {
+                try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                    final URI uri = new URI(HttpServerTest.PROTOCOL, null, HttpServerTest.HOST, port,
+                            HttpServerTest.PATH, null, null);
+                    final HttpPost postRequest = new HttpPost(uri);
+                    final String requestBody = "test";
+                    final StringEntity chunkedEntity = new StringEntity(requestBody);
+                    chunkedEntity.setChunked(true);
+                    postRequest.setEntity(chunkedEntity);
+                    try (CloseableHttpResponse response = httpClient.execute(postRequest)) {
+                        final String responseBody = EntityUtils.toString(response.getEntity());
+                        Assert.assertEquals(response.getStatusLine().getStatusCode(), HttpResponseStatus.OK.code());
+                        Assert.assertEquals(responseBody, requestBody);
+                    }
+                }
             }
         } finally {
             webMgr.stop();
