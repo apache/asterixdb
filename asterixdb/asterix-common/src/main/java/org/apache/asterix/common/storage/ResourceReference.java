@@ -28,15 +28,29 @@ import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReferenc
 
 public class ResourceReference {
 
-    protected String root;
-    protected String partition;
-    protected String dataverse; // == DataverseName.getCanonicalForm()
-    protected String dataset;
-    protected String rebalance;
-    protected String index;
-    protected String name;
+    protected final String root;
+    protected final String partition;
+    protected final String dataverse; // == DataverseName.getCanonicalForm()
+    protected final String dataset;
+    protected final String rebalance;
+    protected final String index;
+    protected final String name;
+    private volatile Path relativePath;
 
-    protected ResourceReference() {
+    protected ResourceReference(String path) {
+        // format: root/partition/dataverse/dataset/rebalanceCount/index/fileName
+        final String[] tokens = StringUtils.split(path, File.separatorChar);
+        if (tokens.length < 6) {
+            throw new IllegalStateException("Unrecognized path structure: " + path);
+        }
+        int offset = tokens.length;
+        name = tokens[--offset];
+        index = tokens[--offset];
+        rebalance = tokens[--offset];
+        dataset = tokens[--offset];
+        dataverse = tokens[--offset]; //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
+        partition = tokens[--offset];
+        root = tokens[--offset];
     }
 
     public static ResourceReference ofIndex(String indexPath) {
@@ -44,9 +58,7 @@ public class ResourceReference {
     }
 
     public static ResourceReference of(String localResourcePath) {
-        ResourceReference lrr = new ResourceReference();
-        parse(lrr, localResourcePath);
-        return lrr;
+        return new ResourceReference(localResourcePath);
     }
 
     public String getPartition() {
@@ -74,7 +86,10 @@ public class ResourceReference {
     }
 
     public Path getRelativePath() {
-        return Paths.get(root, partition, dataverse, dataset, rebalance, index);
+        if (relativePath == null) {
+            relativePath = Paths.get(root, partition, dataverse, dataset, rebalance, index);
+        }
+        return relativePath;
     }
 
     public ResourceReference getDatasetReference() {
@@ -84,22 +99,6 @@ public class ResourceReference {
 
     public Path getFileRelativePath() {
         return Paths.get(root, partition, dataverse, dataset, rebalance, index, name);
-    }
-
-    protected static void parse(ResourceReference ref, String path) {
-        // format: root/partition/dataverse/dataset/rebalanceCount/index/fileName
-        final String[] tokens = StringUtils.split(path, File.separatorChar);
-        if (tokens.length < 6) {
-            throw new IllegalStateException("Unrecognized path structure: " + path);
-        }
-        int offset = tokens.length;
-        ref.name = tokens[--offset];
-        ref.index = tokens[--offset];
-        ref.rebalance = tokens[--offset];
-        ref.dataset = tokens[--offset];
-        ref.dataverse = tokens[--offset]; //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
-        ref.partition = tokens[--offset];
-        ref.root = tokens[--offset];
     }
 
     public int getPartitionNum() {
@@ -113,14 +112,14 @@ public class ResourceReference {
         }
         if (o instanceof ResourceReference) {
             ResourceReference that = (ResourceReference) o;
-            return getRelativePath().toString().equals(that.getRelativePath().toString());
+            return getRelativePath().equals(that.getRelativePath());
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return getRelativePath().toString().hashCode();
+        return getRelativePath().hashCode();
     }
 
     @Override

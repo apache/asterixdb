@@ -63,6 +63,14 @@ public abstract class AbstractOperatorWithNestedPlans extends AbstractLogicalOpe
         return allRoots;
     }
 
+    public int getNumberOfRoots() {
+        int n = 0;
+        for (ILogicalPlan p : nestedPlans) {
+            n += p.getRoots().size();
+        }
+        return n;
+    }
+
     //
     // @Override
     // public void computeConstraintsAndEquivClasses() {
@@ -123,5 +131,4 @@ public abstract class AbstractOperatorWithNestedPlans extends AbstractLogicalOpe
     public abstract void getUsedVariablesExceptNestedPlans(Collection<LogicalVariable> vars);
 
     public abstract void getProducedVariablesExceptNestedPlans(Collection<LogicalVariable> vars);
-
 }

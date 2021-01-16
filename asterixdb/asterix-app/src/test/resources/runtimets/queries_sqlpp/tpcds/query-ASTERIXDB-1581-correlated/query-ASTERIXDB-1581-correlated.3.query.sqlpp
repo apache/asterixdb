@@ -19,6 +19,9 @@
 
 use tpcds;
 
+--- test with subplan into subplan pushdown disabled
+set `compiler.subplan.merge` "false";
+
 // The case expression contains correlated subqueries.
 select case when (select value count(ss)
                   from store_sales ss

@@ -88,9 +88,12 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
     private static final long ONE = 1L;
     private static final long ZERO_OR_ONE_GROUP = 2L;
     private static final long ONE_GROUP = 3L;
-    private static final long UNKNOWN = 1000L;
+    private static final long UNKNOWN = 100L; // so it fits into the auto-boxing cache
 
     private final Set<LogicalVariable> keyVariables = new HashSet<>();
+
+    private CardinalityInferenceVisitor() {
+    }
 
     @Override
     public Long visitAggregateOperator(AggregateOperator op, Void arg) throws AlgebricksException {
@@ -244,6 +247,8 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
 
     @Override
     public Long visitDistinctOperator(DistinctOperator op, Void arg) throws AlgebricksException {
+        // DISTINCT cannot reduce cardinality from ONE to ZERO_OR_ONE, or from ONE_GROUP to ZERO_OR_ONE_GROUP
+        // therefore we don't need to call adjustCardinalityForTupleReductionOperator() here.
         return op.getInputs().get(0).getValue().accept(this, arg);
     }
 
@@ -384,4 +389,15 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
         return inputCardinality;
     }
 
+    public static boolean isCardinalityExactOne(ILogicalOperator operator) throws AlgebricksException {
+        CardinalityInferenceVisitor visitor = new CardinalityInferenceVisitor();
+        long cardinality = operator.accept(visitor, null);
+        return cardinality == ONE;
+    }
+
+    public static boolean isCardinalityZeroOrOne(ILogicalOperator operator) throws AlgebricksException {
+        CardinalityInferenceVisitor visitor = new CardinalityInferenceVisitor();
+        long cardinality = operator.accept(visitor, null);
+        return cardinality == ZERO_OR_ONE || cardinality == ONE;
+    }
 }

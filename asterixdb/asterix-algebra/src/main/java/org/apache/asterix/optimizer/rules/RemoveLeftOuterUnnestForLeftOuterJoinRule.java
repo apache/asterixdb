@@ -91,7 +91,8 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
         Triple<Boolean, ILogicalExpression, ILogicalExpression> checkGbyResult =
                 checkUnnestAndGby(outerUnnest, gbyOperator);
         // The argument for listify and not(is-missing(...)) check should be variables.
-        if (!isVariableReference(checkGbyResult.second) || !isVariableReference(checkGbyResult.third)) {
+        if (!checkGbyResult.first || checkGbyResult.second == null || !isVariableReference(checkGbyResult.second)
+                || checkGbyResult.third == null || !isVariableReference(checkGbyResult.third)) {
             return false;
         }
 

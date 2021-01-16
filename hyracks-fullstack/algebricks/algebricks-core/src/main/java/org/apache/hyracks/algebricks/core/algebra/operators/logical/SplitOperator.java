@@ -18,7 +18,6 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
@@ -76,10 +75,4 @@ public class SplitOperator extends AbstractReplicateOperator {
     public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
         return visitor.transform(branchingExpression);
     }
-
-    @Override
-    public void substituteVar(LogicalVariable v1, LogicalVariable v2) {
-        getBranchingExpression().getValue().substituteVar(v1, v2);
-    }
-
 }

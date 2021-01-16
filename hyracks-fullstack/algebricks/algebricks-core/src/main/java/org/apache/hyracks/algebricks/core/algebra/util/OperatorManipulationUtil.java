@@ -218,8 +218,14 @@ public class OperatorManipulationUtil {
 
     public static Pair<ILogicalOperator, Map<LogicalVariable, LogicalVariable>> deepCopyWithNewVars(
             ILogicalOperator root, IOptimizationContext ctx) throws AlgebricksException {
+        return deepCopyWithNewVars(root, ctx, true);
+    }
+
+    public static Pair<ILogicalOperator, Map<LogicalVariable, LogicalVariable>> deepCopyWithNewVars(
+            ILogicalOperator root, IOptimizationContext ctx, boolean computeTypeEnvironment)
+            throws AlgebricksException {
         LogicalOperatorDeepCopyWithNewVariablesVisitor deepCopyVisitor =
-                new LogicalOperatorDeepCopyWithNewVariablesVisitor(ctx, ctx, true);
+                new LogicalOperatorDeepCopyWithNewVariablesVisitor(ctx, computeTypeEnvironment ? ctx : null, true);
         ILogicalOperator newRoot = deepCopyVisitor.deepCopy(root);
         return new Pair<>(newRoot, deepCopyVisitor.getInputToOutputVariableMapping());
     }

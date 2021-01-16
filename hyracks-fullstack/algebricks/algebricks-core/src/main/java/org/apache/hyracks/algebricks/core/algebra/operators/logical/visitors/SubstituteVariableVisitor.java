@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -69,6 +70,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
+import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
@@ -76,8 +78,10 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 public class SubstituteVariableVisitor
         implements ILogicalOperatorVisitor<Void, Pair<LogicalVariable, LogicalVariable>> {
 
-    private final boolean goThroughNts;
     private final ITypingContext ctx;
+
+    //TODO(dmitry):unused -> remove
+    private final boolean goThroughNts;
 
     public SubstituteVariableVisitor(boolean goThroughNts, ITypingContext ctx) {
         this.goThroughNts = goThroughNts;
@@ -87,111 +91,125 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitAggregateOperator(AggregateOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        substAssignVariables(op.getVariables(), op.getExpressions(), pair);
-        substVarTypes(op, pair);
+        boolean producedVarFound =
+                substAssignVariables(op.getVariables(), op.getExpressions(), pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        }
         return null;
     }
 
     @Override
     public Void visitAssignOperator(AssignOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        substAssignVariables(op.getVariables(), op.getExpressions(), pair);
-        // Substitute variables stored in ordering property
-        if (op.getExplicitOrderingProperty() != null) {
-            List<OrderColumn> orderColumns = op.getExplicitOrderingProperty().getOrderColumns();
-            for (int i = 0; i < orderColumns.size(); i++) {
-                OrderColumn oc = orderColumns.get(i);
-                if (oc.getColumn().equals(pair.first)) {
-                    orderColumns.set(i, new OrderColumn(pair.second, oc.getOrder()));
+        boolean producedVarFound =
+                substAssignVariables(op.getVariables(), op.getExpressions(), pair.first, pair.second);
+        if (producedVarFound) {
+            // Substitute variables stored in ordering property
+            if (op.getExplicitOrderingProperty() != null) {
+                List<OrderColumn> orderColumns = op.getExplicitOrderingProperty().getOrderColumns();
+                List<OrderColumn> newOrderColumns = new ArrayList<>(orderColumns.size());
+                for (OrderColumn oc : orderColumns) {
+                    LogicalVariable columnVar = oc.getColumn();
+                    LogicalVariable newColumnVar = columnVar.equals(pair.first) ? pair.second : columnVar;
+                    newOrderColumns.add(new OrderColumn(newColumnVar, oc.getOrder()));
                 }
+                op.setExplicitOrderingProperty(new LocalOrderProperty(newOrderColumns));
             }
+
+            substProducedVarInTypeEnvironment(op, pair);
         }
-        substVarTypes(op, pair);
         return null;
     }
 
     @Override
     public Void visitDataScanOperator(DataSourceScanOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        List<LogicalVariable> variables = op.getVariables();
-        for (int i = 0; i < variables.size(); i++) {
-            if (variables.get(i) == pair.first) {
-                variables.set(i, pair.second);
-                return null;
+        boolean producedVarFound = substProducedVariables(op.getVariables(), pair.first, pair.second);
+        if (!producedVarFound) {
+            if (op.isProjectPushed()) {
+                producedVarFound = substProducedVariables(op.getProjectVariables(), pair.first, pair.second);
             }
         }
-        if (op.getSelectCondition() != null) {
-            op.getSelectCondition().getValue().substituteVar(pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        } else {
+            substUsedVariablesInExpr(op.getSelectCondition(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getAdditionalFilteringExpressions(), pair.first, pair.second);
+            substUsedVariables(op.getMinFilterVars(), pair.first, pair.second);
+            substUsedVariables(op.getMaxFilterVars(), pair.first, pair.second);
         }
-        substVarTypes(op, pair);
         return null;
     }
 
     @Override
     public Void visitDistinctOperator(DistinctOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        for (Mutable<ILogicalExpression> eRef : op.getExpressions()) {
-            eRef.getValue().substituteVar(pair.first, pair.second);
-        }
-        substVarTypes(op, pair);
+        substUsedVariablesInExpr(op.getExpressions(), pair.first, pair.second);
         return null;
     }
 
     @Override
     public Void visitEmptyTupleSourceOperator(EmptyTupleSourceOperator op,
             Pair<LogicalVariable, LogicalVariable> pair) {
-        // does not use any variable
+        // does not produce/use any variables
         return null;
     }
 
     @Override
     public Void visitExchangeOperator(ExchangeOperator op, Pair<LogicalVariable, LogicalVariable> pair) {
-        // does not use any variable
+        // does not produce/use any variables
         return null;
     }
 
     @Override
     public Void visitGroupByOperator(GroupByOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        subst(pair.first, pair.second, op.getGroupByList());
-        subst(pair.first, pair.second, op.getDecorList());
-        substInNestedPlans(pair.first, pair.second, op);
-        substVarTypes(op, pair);
+        boolean producedVarFound = substGbyVariables(op.getGroupByList(), pair.first, pair.second);
+        if (!producedVarFound) {
+            producedVarFound = substGbyVariables(op.getDecorList(), pair.first, pair.second);
+        }
+        if (!producedVarFound) {
+            substInNestedPlans(op, pair.first, pair.second);
+        }
+        // GROUP BY operator may add its used variables
+        // to its own output type environment as produced variables
+        // therefore we need perform variable substitution in its own type environment
+        // TODO (dmitry): this needs to be revisited
+        substProducedVarInTypeEnvironment(op, pair);
         return null;
     }
 
     @Override
     public Void visitInnerJoinOperator(InnerJoinOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        op.getCondition().getValue().substituteVar(pair.first, pair.second);
-        substVarTypes(op, pair);
+        substUsedVariablesInExpr(op.getCondition(), pair.first, pair.second);
         return null;
     }
 
     @Override
     public Void visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        op.getCondition().getValue().substituteVar(pair.first, pair.second);
-        substVarTypes(op, pair);
+        substUsedVariablesInExpr(op.getCondition(), pair.first, pair.second);
+        // LEFT OUTER JOIN operator adds its right branch variables
+        // to its own output type environment as 'correlatedMissableVariables'
+        // therefore we need perform variable substitution in its own type environment
+        substProducedVarInTypeEnvironment(op, pair);
         return null;
     }
 
     @Override
     public Void visitLimitOperator(LimitOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        if (op.hasMaxObjects()) {
-            op.getMaxObjects().getValue().substituteVar(pair.first, pair.second);
-        }
-        if (op.hasOffset()) {
-            op.getOffset().getValue().substituteVar(pair.first, pair.second);
-        }
-        substVarTypes(op, pair);
+        substUsedVariablesInExpr(op.getMaxObjects(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getOffset(), pair.first, pair.second);
         return null;
     }
 
     @Override
     public Void visitNestedTupleSourceOperator(NestedTupleSourceOperator op,
             Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
+        // does not produce/use any variables
         return null;
     }
 
@@ -199,88 +217,87 @@ public class SubstituteVariableVisitor
     public Void visitOrderOperator(OrderOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
         for (Pair<IOrder, Mutable<ILogicalExpression>> oe : op.getOrderExpressions()) {
-            oe.second.getValue().substituteVar(pair.first, pair.second);
+            substUsedVariablesInExpr(oe.second, pair.first, pair.second);
         }
-        substVarTypes(op, pair);
         return null;
     }
 
     @Override
     public Void visitProjectOperator(ProjectOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        List<LogicalVariable> usedVariables = op.getVariables();
-        int n = usedVariables.size();
-        for (int i = 0; i < n; i++) {
-            LogicalVariable v = usedVariables.get(i);
-            if (v.equals(pair.first)) {
-                usedVariables.set(i, pair.second);
-            }
-        }
-        substVarTypes(op, pair);
+        substUsedVariables(op.getVariables(), pair.first, pair.second);
         return null;
     }
 
     @Override
     public Void visitRunningAggregateOperator(RunningAggregateOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        substAssignVariables(op.getVariables(), op.getExpressions(), pair);
-        substVarTypes(op, pair);
+        boolean producedVarFound =
+                substAssignVariables(op.getVariables(), op.getExpressions(), pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        }
         return null;
     }
 
     @Override
     public Void visitScriptOperator(ScriptOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        substInArray(op.getInputVariables(), pair.first, pair.second);
-        substInArray(op.getOutputVariables(), pair.first, pair.second);
-        substVarTypes(op, pair);
+        boolean producedVarFound = substProducedVariables(op.getOutputVariables(), pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        } else {
+            substUsedVariables(op.getInputVariables(), pair.first, pair.second);
+        }
         return null;
     }
 
     @Override
-    public Void visitSelectOperator(SelectOperator op, Pair<LogicalVariable, LogicalVariable> pair) {
-        op.getCondition().getValue().substituteVar(pair.first, pair.second);
+    public Void visitSelectOperator(SelectOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        substUsedVariablesInExpr(op.getCondition(), pair.first, pair.second);
+        // SELECT operator may add its used variable
+        // to its own output type environment as 'nonMissableVariable' (not(is-missing($used_var))
+        // therefore we need perform variable substitution in its own type environment
+        substProducedVarInTypeEnvironment(op, pair);
         return null;
     }
 
     @Override
     public Void visitSubplanOperator(SubplanOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        substInNestedPlans(pair.first, pair.second, op);
+        substInNestedPlans(op, pair.first, pair.second);
+        // do not call substProducedVarInTypeEnvironment() because the variables are produced by nested plans
         return null;
     }
 
     @Override
     public Void visitUnionOperator(UnionAllOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap = op.getVariableMappings();
-        for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
-            if (t.first.equals(pair.first)) {
-                t.first = pair.second;
-            }
-            if (t.second.equals(pair.first)) {
-                t.second = pair.second;
-            }
-            if (t.third.equals(pair.first)) {
-                t.third = pair.second;
-            }
+        boolean producedVarFound = substUnionAllVariables(op.getVariableMappings(), pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
         }
-        substVarTypes(op, pair);
         return null;
     }
 
     @Override
     public Void visitIntersectOperator(IntersectOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        boolean hasExtraVars = op.hasExtraVariables();
-        substInArray(op.getOutputCompareVariables(), pair.first, pair.second);
-        if (hasExtraVars) {
-            substInArray(op.getOutputExtraVariables(), pair.first, pair.second);
+        boolean producedVarFound = substProducedVariables(op.getOutputCompareVariables(), pair.first, pair.second);
+        if (!producedVarFound) {
+            if (op.hasExtraVariables()) {
+                producedVarFound = substProducedVariables(op.getOutputExtraVariables(), pair.first, pair.second);
+            }
         }
-        for (int i = 0, n = op.getNumInput(); i < n; i++) {
-            substInArray(op.getInputCompareVariables(i), pair.first, pair.second);
-            if (hasExtraVars) {
-                substInArray(op.getInputExtraVariables(i), pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        } else {
+            for (int i = 0, n = op.getNumInput(); i < n; i++) {
+                substUsedVariables(op.getInputCompareVariables(i), pair.first, pair.second);
+                if (op.hasExtraVariables()) {
+                    substUsedVariables(op.getInputExtraVariables(i), pair.first, pair.second);
+                }
             }
         }
         return null;
@@ -289,9 +306,11 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        substituteVarsForAbstractUnnestMapOp(op, pair);
-        if (op.getSelectCondition() != null) {
-            op.getSelectCondition().getValue().substituteVar(pair.first, pair.second);
+        boolean producedVarFound = substituteVarsForAbstractUnnestMapOp(op, pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        } else {
+            substUsedVariablesInExpr(op.getSelectCondition(), pair.first, pair.second);
         }
         return null;
     }
@@ -299,81 +318,290 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op,
             Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
-        substituteVarsForAbstractUnnestMapOp(op, pair);
+        boolean producedVarFound = substituteVarsForAbstractUnnestMapOp(op, pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        }
         return null;
     }
 
-    private void substituteVarsForAbstractUnnestMapOp(AbstractUnnestMapOperator op,
-            Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
-        List<LogicalVariable> variables = op.getVariables();
-        for (int i = 0; i < variables.size(); i++) {
-            if (variables.get(i) == pair.first) {
-                variables.set(i, pair.second);
-                return;
-            }
+    private boolean substituteVarsForAbstractUnnestMapOp(AbstractUnnestMapOperator op, LogicalVariable v1,
+            LogicalVariable v2) {
+        boolean producedVarFound = substProducedVariables(op.getVariables(), v1, v2);
+        if (!producedVarFound) {
+            substUsedVariablesInExpr(op.getExpressionRef(), v1, v2);
+            substUsedVariablesInExpr(op.getAdditionalFilteringExpressions(), v1, v2);
+            substUsedVariables(op.getMinFilterVars(), v1, v2);
+            substUsedVariables(op.getMaxFilterVars(), v1, v2);
         }
-        op.getExpressionRef().getValue().substituteVar(pair.first, pair.second);
-        substVarTypes(op, pair);
+        return producedVarFound;
     }
 
     @Override
     public Void visitUnnestOperator(UnnestOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        return visitUnnestNonMapOperator(op, pair);
+        boolean producedVarFound = substituteVarsForAbstractUnnestNonMapOp(op, pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        boolean producedVarFound = substituteVarsForAbstractUnnestNonMapOp(op, pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        }
+        return null;
+    }
+
+    private boolean substituteVarsForAbstractUnnestNonMapOp(AbstractUnnestNonMapOperator op, LogicalVariable v1,
+            LogicalVariable v2) {
+        boolean producedVarFound = substProducedVariables(op.getVariables(), v1, v2);
+        if (!producedVarFound) {
+            if (op.hasPositionalVariable() && op.getPositionalVariable().equals(v1)) {
+                op.setPositionalVariable(v2);
+                producedVarFound = true;
+            }
+        }
+        if (!producedVarFound) {
+            substUsedVariablesInExpr(op.getExpressionRef(), v1, v2);
+        }
+        return producedVarFound;
     }
 
     @Override
     public Void visitWriteOperator(WriteOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        for (Mutable<ILogicalExpression> e : op.getExpressions()) {
-            e.getValue().substituteVar(pair.first, pair.second);
-        }
-        substVarTypes(op, pair);
+        substUsedVariablesInExpr(op.getExpressions(), pair.first, pair.second);
         return null;
     }
 
     @Override
     public Void visitDistributeResultOperator(DistributeResultOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        for (Mutable<ILogicalExpression> e : op.getExpressions()) {
-            e.getValue().substituteVar(pair.first, pair.second);
-        }
-        substVarTypes(op, pair);
+        substUsedVariablesInExpr(op.getExpressions(), pair.first, pair.second);
         return null;
     }
 
     @Override
     public Void visitWriteResultOperator(WriteResultOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        op.getPayloadExpression().getValue().substituteVar(pair.first, pair.second);
-        for (Mutable<ILogicalExpression> e : op.getKeyExpressions()) {
-            e.getValue().substituteVar(pair.first, pair.second);
-        }
-        substVarTypes(op, pair);
+        substUsedVariablesInExpr(op.getPayloadExpression(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getKeyExpressions(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getAdditionalFilteringExpressions(), pair.first, pair.second);
         return null;
     }
 
-    private void subst(LogicalVariable v1, LogicalVariable v2,
-            List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> varExprPairList) {
-        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : varExprPairList) {
+    @Override
+    public Void visitReplicateOperator(ReplicateOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        // does not produce/use any variables
+        return null;
+    }
+
+    @Override
+    public Void visitSplitOperator(SplitOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        substUsedVariablesInExpr(op.getBranchingExpression(), pair.first, pair.second);
+        return null;
+    }
+
+    @Override
+    public Void visitMaterializeOperator(MaterializeOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        // does not produce/use any variables
+        return null;
+    }
+
+    @Override
+    public Void visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op,
+            Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
+        boolean producedVarFound = false;
+        if (op.getOperation() == InsertDeleteUpsertOperator.Kind.UPSERT) {
+            if (op.getUpsertIndicatorVar() != null && op.getUpsertIndicatorVar().equals(pair.first)) {
+                op.setUpsertIndicatorVar(pair.second);
+                producedVarFound = true;
+            } else if (op.getBeforeOpRecordVar() != null && op.getBeforeOpRecordVar().equals(pair.first)) {
+                op.setPrevRecordVar(pair.second);
+                producedVarFound = true;
+            } else if (op.getBeforeOpFilterVar() != null && op.getBeforeOpFilterVar().equals(pair.first)) {
+                op.setPrevFilterVar(pair.second);
+                producedVarFound = true;
+            } else {
+                producedVarFound =
+                        substProducedVariables(op.getBeforeOpAdditionalNonFilteringVars(), pair.first, pair.second);
+            }
+        }
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        } else {
+            substUsedVariablesInExpr(op.getPayloadExpression(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getPrimaryKeyExpressions(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getAdditionalFilteringExpressions(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getAdditionalNonFilteringExpressions(), pair.first, pair.second);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op,
+            Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
+        substUsedVariablesInExpr(op.getPrimaryKeyExpressions(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getSecondaryKeyExpressions(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getFilterExpression(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getAdditionalFilteringExpressions(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getUpsertIndicatorExpr(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getPrevSecondaryKeyExprs(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getPrevAdditionalFilteringExpression(), pair.first, pair.second);
+        return null;
+    }
+
+    @Override
+    public Void visitTokenizeOperator(TokenizeOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        boolean producedVarFound = substProducedVariables(op.getTokenizeVars(), pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        } else {
+            substUsedVariablesInExpr(op.getPrimaryKeyExpressions(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getSecondaryKeyExpressions(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getFilterExpression(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getAdditionalFilteringExpressions(), pair.first, pair.second);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitForwardOperator(ForwardOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        substUsedVariablesInExpr(op.getSideDataExpression(), pair.first, pair.second);
+        return null;
+    }
+
+    @Override
+    public Void visitSinkOperator(SinkOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        // does not produce/use any variables
+        return null;
+    }
+
+    @Override
+    public Void visitDelegateOperator(DelegateOperator op, Pair<LogicalVariable, LogicalVariable> arg)
+            throws AlgebricksException {
+        // does not produce/use any variables
+        return null;
+    }
+
+    @Override
+    public Void visitWindowOperator(WindowOperator op, Pair<LogicalVariable, LogicalVariable> pair)
+            throws AlgebricksException {
+        boolean producedVarFound =
+                substAssignVariables(op.getVariables(), op.getExpressions(), pair.first, pair.second);
+        if (producedVarFound) {
+            substProducedVarInTypeEnvironment(op, pair);
+        } else {
+            substUsedVariablesInExpr(op.getPartitionExpressions(), pair.first, pair.second);
+            for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
+                substUsedVariablesInExpr(p.second, pair.first, pair.second);
+            }
+            for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getFrameValueExpressions()) {
+                substUsedVariablesInExpr(p.second, pair.first, pair.second);
+            }
+            substUsedVariablesInExpr(op.getFrameStartExpressions(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getFrameStartValidationExpressions(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getFrameEndExpressions(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getFrameEndValidationExpressions(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getFrameExcludeExpressions(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getFrameExcludeUnaryExpression(), pair.first, pair.second);
+            substUsedVariablesInExpr(op.getFrameOffsetExpression(), pair.first, pair.second);
+            substInNestedPlans(op, pair.first, pair.second);
+        }
+        return null;
+    }
+
+    private void substUsedVariablesInExpr(Mutable<ILogicalExpression> exprRef, LogicalVariable v1, LogicalVariable v2) {
+        if (exprRef != null && exprRef.getValue() != null) {
+            exprRef.getValue().substituteVar(v1, v2);
+        }
+    }
+
+    private void substUsedVariablesInExpr(List<Mutable<ILogicalExpression>> expressions, LogicalVariable v1,
+            LogicalVariable v2) {
+        if (expressions != null) {
+            for (Mutable<ILogicalExpression> exprRef : expressions) {
+                substUsedVariablesInExpr(exprRef, v1, v2);
+            }
+        }
+    }
+
+    private void substUsedVariables(List<LogicalVariable> variables, LogicalVariable v1, LogicalVariable v2) {
+        if (variables != null) {
+            for (int i = 0, n = variables.size(); i < n; i++) {
+                if (variables.get(i).equals(v1)) {
+                    variables.set(i, v2);
+                }
+            }
+        }
+    }
+
+    private boolean substProducedVariables(List<LogicalVariable> variables, LogicalVariable v1, LogicalVariable v2) {
+        if (variables != null) {
+            for (int i = 0, n = variables.size(); i < n; i++) {
+                if (variables.get(i).equals(v1)) {
+                    variables.set(i, v2);
+                    return true; // found produced var
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean substAssignVariables(List<LogicalVariable> variables, List<Mutable<ILogicalExpression>> expressions,
+            LogicalVariable v1, LogicalVariable v2) {
+        for (int i = 0, n = variables.size(); i < n; i++) {
+            if (variables.get(i).equals(v1)) {
+                variables.set(i, v2);
+                return true; // found produced var
+            } else {
+                expressions.get(i).getValue().substituteVar(v1, v2);
+            }
+        }
+        return false;
+    }
+
+    private boolean substGbyVariables(List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyPairList,
+            LogicalVariable v1, LogicalVariable v2) {
+        for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gbyPairList) {
             if (ve.first != null && ve.first.equals(v1)) {
                 ve.first = v2;
-                return;
+                return true; // found produced var
             }
             ve.second.getValue().substituteVar(v1, v2);
         }
+        return false;
     }
 
-    private void substInArray(List<LogicalVariable> varArray, LogicalVariable v1, LogicalVariable v2) {
-        for (int i = 0; i < varArray.size(); i++) {
-            LogicalVariable v = varArray.get(i);
-            if (v == v1) {
-                varArray.set(i, v2);
+    private boolean substUnionAllVariables(List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varMap,
+            LogicalVariable v1, LogicalVariable v2) {
+        for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> t : varMap) {
+            if (t.first.equals(v1)) {
+                t.first = v2;
+            }
+            if (t.second.equals(v1)) {
+                t.second = v2;
+            }
+            if (t.third.equals(v1)) {
+                t.third = v2;
+                return true; // found produced var
             }
         }
+        return false;
     }
 
-    private void substInNestedPlans(LogicalVariable v1, LogicalVariable v2, AbstractOperatorWithNestedPlans op)
+    private void substInNestedPlans(AbstractOperatorWithNestedPlans op, LogicalVariable v1, LogicalVariable v2)
             throws AlgebricksException {
         for (ILogicalPlan p : op.getNestedPlans()) {
             for (Mutable<ILogicalOperator> r : p.getRoots()) {
@@ -382,164 +610,14 @@ public class SubstituteVariableVisitor
         }
     }
 
-    private void substAssignVariables(List<LogicalVariable> variables, List<Mutable<ILogicalExpression>> expressions,
-            Pair<LogicalVariable, LogicalVariable> pair) {
-        int n = variables.size();
-        for (int i = 0; i < n; i++) {
-            if (variables.get(i).equals(pair.first)) {
-                variables.set(i, pair.second);
-            } else {
-                expressions.get(i).getValue().substituteVar(pair.first, pair.second);
-            }
-        }
-    }
-
-    @Override
-    public Void visitReplicateOperator(ReplicateOperator op, Pair<LogicalVariable, LogicalVariable> arg)
-            throws AlgebricksException {
-        op.substituteVar(arg.first, arg.second);
-        return null;
-    }
-
-    @Override
-    public Void visitSplitOperator(SplitOperator op, Pair<LogicalVariable, LogicalVariable> arg)
-            throws AlgebricksException {
-        op.substituteVar(arg.first, arg.second);
-        return null;
-    }
-
-    @Override
-    public Void visitMaterializeOperator(MaterializeOperator op, Pair<LogicalVariable, LogicalVariable> arg)
-            throws AlgebricksException {
-        return null;
-    }
-
-    @Override
-    public Void visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op,
-            Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
-        op.getPayloadExpression().getValue().substituteVar(pair.first, pair.second);
-        for (Mutable<ILogicalExpression> e : op.getPrimaryKeyExpressions()) {
-            e.getValue().substituteVar(pair.first, pair.second);
-        }
-        substVarTypes(op, pair);
-        return null;
-    }
-
-    @Override
-    public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op,
-            Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
-        for (Mutable<ILogicalExpression> e : op.getPrimaryKeyExpressions()) {
-            e.getValue().substituteVar(pair.first, pair.second);
-        }
-        for (Mutable<ILogicalExpression> e : op.getSecondaryKeyExpressions()) {
-            e.getValue().substituteVar(pair.first, pair.second);
-        }
-        substVarTypes(op, pair);
-        return null;
-    }
-
-    @Override
-    public Void visitTokenizeOperator(TokenizeOperator op, Pair<LogicalVariable, LogicalVariable> pair)
-            throws AlgebricksException {
-        for (Mutable<ILogicalExpression> e : op.getPrimaryKeyExpressions()) {
-            e.getValue().substituteVar(pair.first, pair.second);
-        }
-        for (Mutable<ILogicalExpression> e : op.getSecondaryKeyExpressions()) {
-            e.getValue().substituteVar(pair.first, pair.second);
-        }
-        substVarTypes(op, pair);
-        return null;
-    }
-
-    @Override
-    public Void visitForwardOperator(ForwardOperator op, Pair<LogicalVariable, LogicalVariable> arg)
-            throws AlgebricksException {
-        op.getSideDataExpression().getValue().substituteVar(arg.first, arg.second);
-        substVarTypes(op, arg);
-        return null;
-    }
-
-    @Override
-    public Void visitSinkOperator(SinkOperator op, Pair<LogicalVariable, LogicalVariable> pair)
-            throws AlgebricksException {
-        return null;
-    }
-
-    private void substVarTypes(ILogicalOperator op, Pair<LogicalVariable, LogicalVariable> arg)
+    private void substProducedVarInTypeEnvironment(ILogicalOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
         if (ctx == null) {
             return;
         }
         IVariableTypeEnvironment env = ctx.getOutputTypeEnvironment(op);
         if (env != null) {
-            env.substituteProducedVariable(arg.first, arg.second);
+            env.substituteProducedVariable(pair.first, pair.second);
         }
-    }
-
-    @Override
-    public Void visitDelegateOperator(DelegateOperator op, Pair<LogicalVariable, LogicalVariable> arg)
-            throws AlgebricksException {
-        return null;
-    }
-
-    @Override
-    public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Pair<LogicalVariable, LogicalVariable> pair)
-            throws AlgebricksException {
-        return visitUnnestNonMapOperator(op, pair);
-    }
-
-    private Void visitUnnestNonMapOperator(AbstractUnnestNonMapOperator op, Pair<LogicalVariable, LogicalVariable> pair)
-            throws AlgebricksException {
-        List<LogicalVariable> variables = op.getVariables();
-        for (int i = 0; i < variables.size(); i++) {
-            if (variables.get(i) == pair.first) {
-                variables.set(i, pair.second);
-                return null;
-            }
-        }
-        op.getExpressionRef().getValue().substituteVar(pair.first, pair.second);
-        substVarTypes(op, pair);
-        return null;
-    }
-
-    @Override
-    public Void visitWindowOperator(WindowOperator op, Pair<LogicalVariable, LogicalVariable> pair)
-            throws AlgebricksException {
-        for (Mutable<ILogicalExpression> expr : op.getPartitionExpressions()) {
-            expr.getValue().substituteVar(pair.first, pair.second);
-        }
-        for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getOrderExpressions()) {
-            p.second.getValue().substituteVar(pair.first, pair.second);
-        }
-        for (Pair<IOrder, Mutable<ILogicalExpression>> p : op.getFrameValueExpressions()) {
-            p.second.getValue().substituteVar(pair.first, pair.second);
-        }
-        for (Mutable<ILogicalExpression> expr : op.getFrameStartExpressions()) {
-            expr.getValue().substituteVar(pair.first, pair.second);
-        }
-        for (Mutable<ILogicalExpression> expr : op.getFrameStartValidationExpressions()) {
-            expr.getValue().substituteVar(pair.first, pair.second);
-        }
-        for (Mutable<ILogicalExpression> expr : op.getFrameEndExpressions()) {
-            expr.getValue().substituteVar(pair.first, pair.second);
-        }
-        for (Mutable<ILogicalExpression> expr : op.getFrameEndValidationExpressions()) {
-            expr.getValue().substituteVar(pair.first, pair.second);
-        }
-        for (Mutable<ILogicalExpression> expr : op.getFrameExcludeExpressions()) {
-            expr.getValue().substituteVar(pair.first, pair.second);
-        }
-        ILogicalExpression frameExcludeUnaryExpr = op.getFrameExcludeUnaryExpression().getValue();
-        if (frameExcludeUnaryExpr != null) {
-            frameExcludeUnaryExpr.substituteVar(pair.first, pair.second);
-        }
-        ILogicalExpression frameOffsetExpr = op.getFrameOffsetExpression().getValue();
-        if (frameOffsetExpr != null) {
-            frameOffsetExpr.substituteVar(pair.first, pair.second);
-        }
-        substAssignVariables(op.getVariables(), op.getExpressions(), pair);
-        substInNestedPlans(pair.first, pair.second, op);
-        substVarTypes(op, pair);
-        return null;
     }
 }
