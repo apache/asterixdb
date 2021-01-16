@@ -29,7 +29,7 @@ drop dataset test if exists;
 CREATE EXTERNAL DATASET test(test) USING AZUREBLOB (
 ("accountName"="%azureblob-accountname%"),
 ("%azureblob-credentialsname%"="%azureblob-credentialsvalue%"),
-("blobEndpoint"="%azureblob-blobendpoint%"),
+("blobEndpoint"="%azureblob-endpoint%"),
 ("container"="playground"),
 ("definition"="json-data/reviews/single-line/json"),
 ("format"="json")

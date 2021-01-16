@@ -31,7 +31,7 @@ CREATE EXTERNAL DATASET test(test) USING AZUREBLOB (
 ("accountName"="%azureblob-accountname%"),
 ("%azureblob-credentialsname-1%"="%azureblob-credentialsvalue-1%"),
 ("%azureblob-credentialsname-2%"="%azureblob-credentialsvalue-2%"),
-("blobEndpoint"="%azureblob-blobendpoint%"),
+("blobEndpoint"="%azureblob-endpoint%"),
 ("container"="playground"),
 ("definition"="json-data/reviews/single-line/json"),
 ("format"="json")

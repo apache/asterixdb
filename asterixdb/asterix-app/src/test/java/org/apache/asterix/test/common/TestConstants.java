@@ -50,7 +50,7 @@ public class TestConstants {
     public static String sasToken = "";
 
     // blob endpoint
-    public static final String AZURE_BLOB_ENDPOINT_PLACEHOLDER = "%azureblob-blobendpoint%";
+    public static final String AZURE_BLOB_ENDPOINT_PLACEHOLDER = "%azureblob-endpoint%";
     public static final String AZURE_BLOB_ENDPOINT_DEFAULT =
             "http://localhost:20000/" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT;
 
