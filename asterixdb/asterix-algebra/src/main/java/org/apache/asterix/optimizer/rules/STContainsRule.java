@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules;
 
+import java.util.List;
+
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -25,8 +27,8 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -36,8 +38,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.util.List;
 
 public class STContainsRule implements IAlgebraicRewriteRule {
 
@@ -94,7 +94,7 @@ public class STContainsRule implements IAlgebraicRewriteRule {
         // Gets both input branches of the spatial join.
         Mutable<ILogicalOperator> leftOp = joinOp.getInputs().get(LEFT);
         Mutable<ILogicalOperator> rightOp = joinOp.getInputs().get(RIGHT);
-        
+
         // Extract left and right variable of the predicate
         LogicalVariable inputVar0 = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
         LogicalVariable inputVar1 = ((VariableReferenceExpression) rightOperatingExpr).getVariableReference();
@@ -111,30 +111,26 @@ public class STContainsRule implements IAlgebraicRewriteRule {
             rightInputVar = inputVar0;
         }*/
 
-        ScalarFunctionCallExpression left = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
-                new MutableObject<>(new VariableReferenceExpression(inputVar0)));
+        ScalarFunctionCallExpression left =
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
+                        new MutableObject<>(new VariableReferenceExpression(inputVar0)));
 
-
-        ScalarFunctionCallExpression right = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
-                new MutableObject<>(new VariableReferenceExpression(inputVar1)));
-
+        ScalarFunctionCallExpression right =
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
+                        new MutableObject<>(new VariableReferenceExpression(inputVar1)));
 
         ScalarFunctionCallExpression spatialIntersect = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
-                new MutableObject<>(left),
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT), new MutableObject<>(left),
                 new MutableObject<>(right));
 
-        ScalarFunctionCallExpression stContains = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_CONTAINS),
-                new MutableObject<>(new VariableReferenceExpression(inputVar0)),
-                new MutableObject<>(new VariableReferenceExpression(inputVar1)));
+        ScalarFunctionCallExpression stContains =
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_CONTAINS),
+                        new MutableObject<>(new VariableReferenceExpression(inputVar0)),
+                        new MutableObject<>(new VariableReferenceExpression(inputVar1)));
 
         ScalarFunctionCallExpression updatedJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
-                        new MutableObject<>(spatialIntersect),
-                        new MutableObject<>(stContains));
+                        new MutableObject<>(spatialIntersect), new MutableObject<>(stContains));
 
         joinConditionRef.setValue(updatedJoinCondition);
 

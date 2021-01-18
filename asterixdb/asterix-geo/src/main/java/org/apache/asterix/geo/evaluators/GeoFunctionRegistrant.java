@@ -53,6 +53,7 @@ import org.apache.asterix.geo.evaluators.functions.STIsRingDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STIsSimpleDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STLengthDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STLineFromMultiPointDescriptor;
+import org.apache.asterix.geo.evaluators.functions.STMBRDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STMDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STMakeEnvelopeDescriptorSRID;
 import org.apache.asterix.geo.evaluators.functions.STMakePoint3DDescriptor;
@@ -81,7 +82,6 @@ import org.apache.asterix.geo.evaluators.functions.STYMinDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STZDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STZMaxDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STZMinDescriptor;
-import org.apache.asterix.geo.evaluators.functions.STMBRDescriptor;
 import org.apache.asterix.om.functions.IFunctionCollection;
 import org.apache.asterix.om.functions.IFunctionRegistrant;
 

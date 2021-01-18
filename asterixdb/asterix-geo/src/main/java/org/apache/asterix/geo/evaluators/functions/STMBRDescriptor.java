@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
-import com.esri.core.geometry.Envelope;
-import com.esri.core.geometry.ogc.OGCGeometry;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.AMutableRectangle;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -28,10 +26,12 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+import com.esri.core.geometry.Envelope;
+import com.esri.core.geometry.ogc.OGCGeometry;
+
 public class STMBRDescriptor extends AbstractSTSingleGeometryDescriptor {
 
     private static final long serialVersionUID = 1L;
-
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
@@ -43,14 +43,14 @@ public class STMBRDescriptor extends AbstractSTSingleGeometryDescriptor {
     @Override
     protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
 
-            AMutableRectangle aRectangle = new AMutableRectangle(null, null);
-            AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
-            Envelope env = new Envelope();
-            geometry.getEsriGeometry().queryEnvelope(env);
-            aPoint[0].setValue(env.getXMin(), env.getYMin());
-            aPoint[1].setValue(env.getXMax(), env.getYMax());
-            aRectangle.setValue(aPoint[0], aPoint[1]);
-            return aRectangle;
+        AMutableRectangle aRectangle = new AMutableRectangle(null, null);
+        AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
+        Envelope env = new Envelope();
+        geometry.getEsriGeometry().queryEnvelope(env);
+        aPoint[0].setValue(env.getXMin(), env.getYMin());
+        aPoint[1].setValue(env.getXMax(), env.getYMax());
+        aRectangle.setValue(aPoint[0], aPoint[1]);
+        return aRectangle;
     }
 
     @Override

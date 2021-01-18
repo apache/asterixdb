@@ -123,9 +123,9 @@ public abstract class AbstractSTSingleGeometryDescriptor extends AbstractScalarF
                 } else if (finalResult instanceof OGCGeometry) {
                     out.writeByte(ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
                     AGeometrySerializerDeserializer.INSTANCE.serialize(new AGeometry((OGCGeometry) finalResult), out);
-                }
-                else if(finalResult instanceof AMutableRectangle) {
-                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ARECTANGLE).serialize(finalResult, out);
+                } else if (finalResult instanceof AMutableRectangle) {
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ARECTANGLE)
+                            .serialize(finalResult, out);
                 }
             } catch (IOException e) {
                 throw HyracksDataException.create(e);

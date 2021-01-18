@@ -106,7 +106,6 @@ public class STMakeEnvelopeDescriptorSRID extends AbstractGetValDescriptor {
 
             resultStorage.reset();
 
-
             eval0.evaluate(tuple, inputArg0);
             byte[] data0 = inputArg0.getByteArray();
             int offset0 = inputArg0.getStartOffset();

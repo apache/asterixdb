@@ -91,24 +91,21 @@ public class STIntersectsRule implements IAlgebraicRewriteRule {
         }
 
         LOGGER.info("st_intersect is called");
-        
+
         // Extract left and right variable of the predicate
         LogicalVariable inputVar0 = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
         LogicalVariable inputVar1 = ((VariableReferenceExpression) rightOperatingExpr).getVariableReference();
 
+        ScalarFunctionCallExpression left =
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
+                        new MutableObject<>(new VariableReferenceExpression(inputVar0)));
 
-        ScalarFunctionCallExpression left = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
-                new MutableObject<>(new VariableReferenceExpression(inputVar0)));
-
-        ScalarFunctionCallExpression right = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
-                new MutableObject<>(new VariableReferenceExpression(inputVar1)));
-
+        ScalarFunctionCallExpression right =
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
+                        new MutableObject<>(new VariableReferenceExpression(inputVar1)));
 
         ScalarFunctionCallExpression spatialIntersect = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
-                new MutableObject<>(left),
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT), new MutableObject<>(left),
                 new MutableObject<>(right));
 
         ScalarFunctionCallExpression stIntersect = new ScalarFunctionCallExpression(
@@ -118,8 +115,7 @@ public class STIntersectsRule implements IAlgebraicRewriteRule {
 
         ScalarFunctionCallExpression updatedJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
-                        new MutableObject<>(spatialIntersect),
-                        new MutableObject<>(stIntersect));
+                        new MutableObject<>(spatialIntersect), new MutableObject<>(stIntersect));
 
         joinConditionRef.setValue(updatedJoinCondition);
 

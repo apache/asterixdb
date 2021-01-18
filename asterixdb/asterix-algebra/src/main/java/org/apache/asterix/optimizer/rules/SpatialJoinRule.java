@@ -178,24 +178,24 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         joinConditionRef.setValue(updatedJoinCondition);
 
         // Force the query plan to use Interval merge join
-        List<LogicalVariable> sideLeft = new ArrayList<>(1);
-        sideLeft.add(leftInputVar);
-        List<LogicalVariable> sideRight = new ArrayList<>(1);
-        sideRight.add(rightInputVar);
-        Long[] integers = new Long[3];
-        integers[0] = Long.valueOf(500);
-        integers[1] = Long.valueOf(1000);
-        integers[2] = Long.valueOf(NUM_ROWS * NUM_COLUMNS - 1);
-        RangeMap rangeMap = null;
-        try {
-            rangeMap = getIntegerRangeMap(integers);
-        } catch (HyracksDataException e) {
-            e.printStackTrace();
-        }
-        IntervalPartitions intervalPartitions = IntervalJoinUtils.createIntervalPartitions(joinOp,
-                funcExpr.getFunctionIdentifier(), sideLeft, sideRight, rangeMap, context, LEFT, RIGHT);
-        IntervalJoinUtils.setSortMergeIntervalJoinOp(joinOp, funcExpr.getFunctionIdentifier(), sideLeft, sideRight,
-                context, intervalPartitions);
+//        List<LogicalVariable> sideLeft = new ArrayList<>(1);
+//        sideLeft.add(leftInputVar);
+//        List<LogicalVariable> sideRight = new ArrayList<>(1);
+//        sideRight.add(rightInputVar);
+//        Long[] integers = new Long[3];
+//        integers[0] = Long.valueOf(500);
+//        integers[1] = Long.valueOf(1000);
+//        integers[2] = Long.valueOf(NUM_ROWS * NUM_COLUMNS - 1);
+//        RangeMap rangeMap = null;
+//        try {
+//            rangeMap = getIntegerRangeMap(integers);
+//        } catch (HyracksDataException e) {
+//            e.printStackTrace();
+//        }
+//        IntervalPartitions intervalPartitions = IntervalJoinUtils.createIntervalPartitions(joinOp,
+//                funcExpr.getFunctionIdentifier(), sideLeft, sideRight, rangeMap, context, LEFT, RIGHT);
+//        IntervalJoinUtils.setSortMergeIntervalJoinOp(joinOp, funcExpr.getFunctionIdentifier(), sideLeft, sideRight,
+//                context, intervalPartitions);
 
         return true;
     }

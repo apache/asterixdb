@@ -1380,8 +1380,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier ST_POLYGONIZE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-polygonize", 1);
 
-    public static final FunctionIdentifier ST_MBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-mbr", 1);
+    public static final FunctionIdentifier ST_MBR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-mbr", 1);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR =
