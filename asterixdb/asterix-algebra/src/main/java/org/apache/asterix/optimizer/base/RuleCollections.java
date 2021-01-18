@@ -96,6 +96,8 @@ import org.apache.asterix.optimizer.rules.am.IntroduceSelectAccessMethodRule;
 import org.apache.asterix.optimizer.rules.subplan.AsterixMoveFreeVariableOperatorOutOfSubplanRule;
 import org.apache.asterix.optimizer.rules.subplan.InlineSubplanInputForNestedTupleSourceRule;
 import org.apache.asterix.optimizer.rules.temporal.TranslateIntervalExpressionRule;
+import org.apache.asterix.optimizer.rules.STIntersectsRule;
+import org.apache.asterix.optimizer.rules.STContainsRule;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -419,5 +421,17 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> spatialJoin = new LinkedList<>();
         spatialJoin.add(new SpatialJoinRule());
         return spatialJoin;
+    }
+
+    public static final List<IAlgebraicRewriteRule> buildSTIntersectsRuleTestCollection() {
+        List<IAlgebraicRewriteRule> STIntersect = new LinkedList<>();
+        STIntersect.add(new STIntersectsRule());
+        return STIntersect;
+    }
+
+    public static final List<IAlgebraicRewriteRule> buildSTContainsRuleTestCollection() {
+        List<IAlgebraicRewriteRule> STContains = new LinkedList<>();
+        STContains.add(new STContainsRule());
+        return STContains;
     }
 }

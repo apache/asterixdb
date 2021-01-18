@@ -81,6 +81,7 @@ import org.apache.asterix.geo.evaluators.functions.STYMinDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STZDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STZMaxDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STZMinDescriptor;
+import org.apache.asterix.geo.evaluators.functions.STMBRDescriptor;
 import org.apache.asterix.om.functions.IFunctionCollection;
 import org.apache.asterix.om.functions.IFunctionRegistrant;
 
@@ -153,5 +154,8 @@ public class GeoFunctionRegistrant implements IFunctionRegistrant {
         fc.add(STIntersectionDescriptor.FACTORY);
         fc.add(STSymDifferenceDescriptor.FACTORY);
         fc.add(STPolygonizeDescriptor.FACTORY);
+
+        fc.add(STMBRDescriptor.FACTORY);
+
     }
 }
