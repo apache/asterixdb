@@ -25,70 +25,7 @@ import java.util.List;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.optimizer.rules.AddEquivalenceClassForRecordConstructorRule;
-import org.apache.asterix.optimizer.rules.AsterixConsolidateWindowOperatorsRule;
-import org.apache.asterix.optimizer.rules.AsterixExtractFunctionsFromJoinConditionRule;
-import org.apache.asterix.optimizer.rules.AsterixInlineVariablesRule;
-import org.apache.asterix.optimizer.rules.AsterixIntroduceGroupByCombinerRule;
-import org.apache.asterix.optimizer.rules.AsterixPushMapOperatorThroughUnionRule;
-import org.apache.asterix.optimizer.rules.ByNameToByIndexFieldAccessRule;
-import org.apache.asterix.optimizer.rules.CancelUnnestSingletonListRule;
-import org.apache.asterix.optimizer.rules.CancelUnnestWithNestedListifyRule;
-import org.apache.asterix.optimizer.rules.CheckFilterExpressionTypeRule;
-import org.apache.asterix.optimizer.rules.CheckFullParallelSortRule;
-import org.apache.asterix.optimizer.rules.CheckInsertUpsertReturningRule;
-import org.apache.asterix.optimizer.rules.ConstantFoldingRule;
-import org.apache.asterix.optimizer.rules.CountVarToCountOneRule;
-import org.apache.asterix.optimizer.rules.DisjunctivePredicateToJoinRule;
-import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
-import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
-import org.apache.asterix.optimizer.rules.ExtractWindowExpressionsRule;
-import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
-import org.apache.asterix.optimizer.rules.FindDataSourcesRule;
-import org.apache.asterix.optimizer.rules.FixReplicateOperatorOutputsRule;
-import org.apache.asterix.optimizer.rules.FullTextContainsParameterCheckRule;
-import org.apache.asterix.optimizer.rules.FuzzyEqRule;
-import org.apache.asterix.optimizer.rules.InjectTypeCastForFunctionArgumentsRule;
-import org.apache.asterix.optimizer.rules.InjectTypeCastForUnionRule;
-import org.apache.asterix.optimizer.rules.InlineUnnestFunctionRule;
-import org.apache.asterix.optimizer.rules.IntroduceAutogenerateIDRule;
-import org.apache.asterix.optimizer.rules.IntroduceDynamicTypeCastForExternalFunctionRule;
-import org.apache.asterix.optimizer.rules.IntroduceDynamicTypeCastRule;
-import org.apache.asterix.optimizer.rules.IntroduceEnforcedListTypeRule;
-import org.apache.asterix.optimizer.rules.IntroduceMaterializationForInsertWithSelfScanRule;
-import org.apache.asterix.optimizer.rules.IntroduceRandomPartitioningFeedComputationRule;
-import org.apache.asterix.optimizer.rules.IntroduceRapidFrameFlushProjectAssignRule;
-import org.apache.asterix.optimizer.rules.IntroduceSecondaryIndexInsertDeleteRule;
-import org.apache.asterix.optimizer.rules.IntroduceStaticTypeCastForInsertRule;
-import org.apache.asterix.optimizer.rules.IntroduceUnnestForCollectionToSequenceRule;
-import org.apache.asterix.optimizer.rules.ListifyUnnestingFunctionRule;
-import org.apache.asterix.optimizer.rules.LoadRecordFieldsRule;
-import org.apache.asterix.optimizer.rules.MetaFunctionToMetaVariableRule;
-import org.apache.asterix.optimizer.rules.NestGroupByRule;
-import org.apache.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
-import org.apache.asterix.optimizer.rules.PushAggregateIntoNestedSubplanRule;
-import org.apache.asterix.optimizer.rules.PushFieldAccessRule;
-import org.apache.asterix.optimizer.rules.PushFieldAccessToExternalDataScanRule;
-import org.apache.asterix.optimizer.rules.PushGroupByThroughProduct;
-import org.apache.asterix.optimizer.rules.PushLimitIntoOrderByRule;
-import org.apache.asterix.optimizer.rules.PushLimitIntoPrimarySearchRule;
-import org.apache.asterix.optimizer.rules.PushProperJoinThroughProduct;
-import org.apache.asterix.optimizer.rules.PushSimilarityFunctionsBelowJoin;
-import org.apache.asterix.optimizer.rules.RemoveDuplicateFieldsRule;
-import org.apache.asterix.optimizer.rules.RemoveLeftOuterUnnestForLeftOuterJoinRule;
-import org.apache.asterix.optimizer.rules.RemoveRedundantListifyRule;
-import org.apache.asterix.optimizer.rules.RemoveRedundantSelectRule;
-import org.apache.asterix.optimizer.rules.RemoveSortInFeedIngestionRule;
-import org.apache.asterix.optimizer.rules.RemoveUnusedOneToOneEquiJoinRule;
-import org.apache.asterix.optimizer.rules.RewriteDistinctAggregateRule;
-import org.apache.asterix.optimizer.rules.SetAsterixMemoryRequirementsRule;
-import org.apache.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
-import org.apache.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
-import org.apache.asterix.optimizer.rules.SetupCommitExtensionOpRule;
-import org.apache.asterix.optimizer.rules.SimilarityCheckRule;
-import org.apache.asterix.optimizer.rules.SpatialJoinRule;
-import org.apache.asterix.optimizer.rules.SweepIllegalNonfunctionalFunctions;
-import org.apache.asterix.optimizer.rules.UnnestToDataScanRule;
+import org.apache.asterix.optimizer.rules.*;
 import org.apache.asterix.optimizer.rules.am.IntroduceJoinAccessMethodRule;
 import org.apache.asterix.optimizer.rules.am.IntroduceLSMComponentFilterRule;
 import org.apache.asterix.optimizer.rules.am.IntroducePrimaryIndexForAggregationRule;
@@ -419,5 +356,17 @@ public final class RuleCollections {
         List<IAlgebraicRewriteRule> spatialJoin = new LinkedList<>();
         spatialJoin.add(new SpatialJoinRule());
         return spatialJoin;
+    }
+
+    public static final List<IAlgebraicRewriteRule> buildSTIntersectsRuleTestCollection() {
+        List<IAlgebraicRewriteRule> STIntersect = new LinkedList<>();
+        STIntersect.add(new STIntersectsRule());
+        return STIntersect;
+    }
+
+    public static final List<IAlgebraicRewriteRule> buildSTContainsRuleTestCollection() {
+        List<IAlgebraicRewriteRule> STContains = new LinkedList<>();
+        STContains.add(new STContainsRule());
+        return STContains;
     }
 }

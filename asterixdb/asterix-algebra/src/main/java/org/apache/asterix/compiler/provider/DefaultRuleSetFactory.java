@@ -66,6 +66,8 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
         defaultLogicalRewrites
                 .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection(appCtx)));
+        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildSTIntersectsRuleTestCollection()));
+        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildSTContainsRuleTestCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildSpatialJoinRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildDataExchangeRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection()));
