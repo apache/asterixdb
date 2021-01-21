@@ -73,6 +73,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     private final List<ILSMIndex> primaryIndexes = new ArrayList<>();
 
     private final Set<ILSMIndex> flushingIndexes = Collections.synchronizedSet(new HashSet<>());
+    private final Set<ILSMMemoryComponent> flushingComponents = Collections.synchronizedSet(new HashSet<>());
     private volatile int flushPtr;
 
     private final int filteredMemoryComponentMaxNumPages;
@@ -164,6 +165,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
 
     @Override
     public void flushed(ILSMMemoryComponent memoryComponent) throws HyracksDataException {
+        flushingComponents.remove(memoryComponent);
         if (flushingIndexes.remove(memoryComponent.getLsmIndex())) {
             LOGGER.info("Completed flushing {}.", memoryComponent.getIndex());
             // After the flush operation is completed, we may have 2 cases:
@@ -208,8 +210,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
 
     @Override
     public boolean isFull(ILSMMemoryComponent memoryComponent) {
-        return flushingIndexes.contains(memoryComponent.getLsmIndex())
-                || isFilteredMemoryComponentFull(memoryComponent);
+        return flushingComponents.contains(memoryComponent) || isFilteredMemoryComponentFull(memoryComponent);
     }
 
     private boolean isFilteredMemoryComponentFull(ILSMMemoryComponent memoryComponent) {
@@ -508,7 +509,6 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
                                 // future writers
                                 memoryComponent.setUnwritable();
                             }
-
                             opTracker.setFlushOnExit(true);
                             opTracker.flushIfNeeded();
                             // If the flush cannot be scheduled at this time, then there must be active writers.
@@ -522,6 +522,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
                         if ((flushable || opTracker.isFlushLogCreated()) && !isMetadataIndex(primaryIndex)) {
                             // global vbc cannot wait on metadata indexes because metadata indexes support full
                             // ACID transactions. Waiting on metadata indexes can introduce deadlocks.
+                            flushingComponents.add(primaryIndex.getCurrentMemoryComponent());
                             return primaryIndex;
                         }
                     }
