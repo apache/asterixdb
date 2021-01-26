@@ -174,8 +174,8 @@
         <!-- guava is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
         <!-- see https://github.com/google/guava/blob/v18.0/COPYING -->
         <!-- see https://github.com/google/guava/tree/v28.[012]/COPYING -->
-        <license.ignoreMissingEmbeddedNotice>18.0,28.0-jre,28.1-jre,28.2-jre</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreMissingEmbeddedLicense>18.0,28.0-jre,28.1-jre,28.2-jre</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>18.0,28.0-jre,28.1-jre,28.2-jre,30.1-jre</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>18.0,28.0-jre,28.1-jre,28.2-jre,30.1-jre</license.ignoreMissingEmbeddedLicense>
       </properties>
     </project>
   </supplement>
@@ -229,7 +229,7 @@
       <artifactId>jackson-annotations</artifactId>
       <properties>
         <!-- jackson-annotations does not provide an embedded NOTICE file -->
-        <license.ignoreMissingEmbeddedNotice>2.8.4,2.9.7,2.9.10,2.10.0,2.10.3</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>2.8.4,2.9.7,2.9.10,2.10.0,2.10.3,2.12.1</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
