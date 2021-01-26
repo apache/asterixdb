@@ -414,9 +414,9 @@ public class IOManager implements IIOManager {
     }
 
     public IODeviceHandle getDevice(String fullPath) {
-        Path full = Paths.get(fullPath);
+        Path full = Paths.get(fullPath).normalize();
         for (IODeviceHandle d : ioDevices) {
-            if (full.startsWith(Paths.get(d.getMount().getAbsolutePath()))) {
+            if (full.startsWith(Paths.get(d.getMount().getAbsolutePath()).normalize())) {
                 return d;
             }
         }
