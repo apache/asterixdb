@@ -662,8 +662,8 @@ Grouping is especially important when manipulating hierarchies like the ones tha
 ### OrdinaryGroupingSet
 **![](../images/diagrams/OrdinaryGroupingSet.png)**
 
-### GroupByExprPair
-**![](../images/diagrams/GroupByExprPair.png)**
+### NamedExpr
+**![](../images/diagrams/NamedExpr.png)**
 
 ---
 
