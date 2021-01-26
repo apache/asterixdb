@@ -1133,17 +1133,6 @@ CreateIndexStatement PrimaryIndexSpecification(Token startStmtToken) throws Pars
   }
 }
 
-String CompactionPolicy() throws ParseException :
-{
-  String compactionPolicy = null;
-}
-{
-  compactionPolicy = Identifier()
-    {
-      return compactionPolicy;
-    }
-}
-
 String FilterField() throws ParseException :
 {
   String filterField = null;
@@ -4729,7 +4718,7 @@ TOKEN [IGNORE_CASE]:
   | <CASE : "case">
   | <CLOSED : "closed">
   | <CREATE : "create">
-  | <COMPACTION : "compaction">
+  | <COMPACTION : "compaction"> // no longer used
   | <COMPACT : "compact">
   | <CONNECT : "connect">
   | <CORRELATE : "correlate">

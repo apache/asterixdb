@@ -29,6 +29,8 @@ import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,6 +41,7 @@ import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.test.common.TestConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
@@ -64,6 +67,10 @@ import org.junit.runners.Parameterized.Parameters;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.common.sas.AccountSasPermission;
+import com.azure.storage.common.sas.AccountSasResourceType;
+import com.azure.storage.common.sas.AccountSasService;
+import com.azure.storage.common.sas.AccountSasSignatureValues;
 
 @Ignore
 @RunWith(Parameterized.class)
@@ -164,10 +171,21 @@ public class AzureBlobStorageExternalDatasetTest {
         blobServiceClient = new BlobServiceClientBuilder().connectionString(connectionString).buildClient();
         LOGGER.info("Azurite Blob Service client created successfully");
 
+        // Generate the SAS token for the SAS test cases
+        TestConstants.sasToken = generateSasToken();
+
         // Create the container and upload some json files
         PREPARE_PLAYGROUND_CONTAINER.run();
         PREPARE_FIXED_DATA_CONTAINER.run();
         PREPARE_MIXED_DATA_CONTAINER.run();
+    }
+
+    private static String generateSasToken() {
+        OffsetDateTime expiry = OffsetDateTime.now().plus(1, ChronoUnit.YEARS);
+        AccountSasService service = AccountSasService.parse("b");
+        AccountSasPermission permission = AccountSasPermission.parse("acdlpruw");
+        AccountSasResourceType type = AccountSasResourceType.parse("cos");
+        return blobServiceClient.generateAccountSas(new AccountSasSignatureValues(expiry, permission, service, type));
     }
 
     /**

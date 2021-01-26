@@ -18,10 +18,17 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_KEY_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_NAME_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.BLOB_ENDPOINT_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ACCOUNT_KEY;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ACCOUNT_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_BLOB_ENDPOINT;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ENDPOINT_SUFFIX;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_SHARED_ACCESS_SIGNATURE;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ENDPOINT_SUFFIX_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
@@ -819,25 +826,70 @@ public class ExternalDataUtils {
         public static BlobServiceClient buildAzureClient(Map<String, String> configuration)
                 throws CompilationException {
             // TODO(Hussain): Need to ensure that all required parameters are present in a previous step
-            String accountName = configuration.get(ExternalDataConstants.AzureBlob.ACCOUNT_NAME_FIELD_NAME);
-            String accountKey = configuration.get(ExternalDataConstants.AzureBlob.ACCOUNT_KEY_FIELD_NAME);
-            String blobEndpoint = configuration.get(ExternalDataConstants.AzureBlob.BLOB_ENDPOINT_FIELD_NAME);
-            String endpointSuffix = configuration.get(ExternalDataConstants.AzureBlob.ENDPOINT_SUFFIX_FIELD_NAME);
+            String connectionString = configuration.get(CONNECTION_STRING_FIELD_NAME);
+            String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
+            String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
+            String sharedAccessSignature = configuration.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
+            String blobEndpoint = configuration.get(BLOB_ENDPOINT_FIELD_NAME);
+            String endpointSuffix = configuration.get(ENDPOINT_SUFFIX_FIELD_NAME);
 
-            // format: name1=value1;name2=value2;....
-            // TODO(Hussain): This will be different when SAS (Shared Access Signature) is introduced
-            StringBuilder connectionString = new StringBuilder();
-            connectionString.append(CONNECTION_STRING_ACCOUNT_NAME).append("=").append(accountName).append(";");
-            connectionString.append(CONNECTION_STRING_ACCOUNT_KEY).append("=").append(accountKey).append(";");
-            connectionString.append(CONNECTION_STRING_BLOB_ENDPOINT).append("=").append(blobEndpoint).append(";");
+            // Constructor the connection string
+            // Connection string format: name1=value1;name2=value2;....
+            StringBuilder connectionStringBuilder = new StringBuilder();
+            BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
 
-            if (endpointSuffix != null) {
-                connectionString.append(CONNECTION_STRING_ENDPOINT_SUFFIX).append("=").append(endpointSuffix)
+            boolean authMethodFound = false;
+
+            if (connectionString != null) {
+                // connection string
+                authMethodFound = true;
+                connectionStringBuilder.append(connectionString).append(";");
+            }
+
+            if (accountName != null && accountKey != null) {
+                if (authMethodFound) {
+                    throw new CompilationException(ErrorCode.ONLY_SINGLE_AUTHENTICATION_IS_ALLOWED);
+                }
+                authMethodFound = true;
+                // account name + account key
+                connectionStringBuilder.append(CONNECTION_STRING_ACCOUNT_NAME).append("=").append(accountName)
+                        .append(";").append(CONNECTION_STRING_ACCOUNT_KEY).append("=").append(accountKey).append(";");
+            }
+
+            if (accountName != null && sharedAccessSignature != null) {
+                if (authMethodFound) {
+                    throw new CompilationException(ErrorCode.ONLY_SINGLE_AUTHENTICATION_IS_ALLOWED);
+                }
+                authMethodFound = true;
+                // account name + shared access token
+                connectionStringBuilder.append(CONNECTION_STRING_ACCOUNT_NAME).append("=").append(accountName)
+                        .append(";").append(CONNECTION_STRING_SHARED_ACCESS_SIGNATURE).append("=")
+                        .append(sharedAccessSignature).append(";");
+            }
+
+            if (!authMethodFound) {
+                throw new CompilationException(ErrorCode.NO_AUTH_METHOD_PROVIDED);
+            }
+
+            // Add blobEndpoint and endpointSuffix if present, adjust any '/' as needed
+            if (blobEndpoint != null) {
+                connectionStringBuilder.append(CONNECTION_STRING_BLOB_ENDPOINT).append("=").append(blobEndpoint)
                         .append(";");
+                if (endpointSuffix != null) {
+                    String endpointSuffixUpdated;
+                    if (blobEndpoint.endsWith("/")) {
+                        endpointSuffixUpdated =
+                                endpointSuffix.startsWith("/") ? endpointSuffix.substring(1) : endpointSuffix;
+                    } else {
+                        endpointSuffixUpdated = endpointSuffix.startsWith("/") ? endpointSuffix : "/" + endpointSuffix;
+                    }
+                    connectionStringBuilder.append(CONNECTION_STRING_ENDPOINT_SUFFIX).append("=")
+                            .append(endpointSuffixUpdated).append(";");
+                }
             }
 
             try {
-                return new BlobServiceClientBuilder().connectionString(connectionString.toString()).buildClient();
+                return builder.connectionString(connectionStringBuilder.toString()).buildClient();
             } catch (Exception ex) {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
             }
@@ -876,6 +928,8 @@ public class ExternalDataUtils {
                             WarningUtil.forAsterix(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
                     collector.warn(warning);
                 }
+            } catch (CompilationException ex) {
+                throw ex;
             } catch (Exception ex) {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
             }

@@ -227,6 +227,8 @@ public class ErrorCode {
     public static final int FULL_TEXT_CONFIG_ALREADY_EXISTS = 1135;
     public static final int FULL_TEXT_FILTER_ALREADY_EXISTS = 1136;
     public static final int FULL_TEXT_CONFIG_NOT_FOUND = 1137;
+    public static final int ONLY_SINGLE_AUTHENTICATION_IS_ALLOWED = 1138;
+    public static final int NO_AUTH_METHOD_PROVIDED = 1139;
 
     // Feed errors
     public static final int DATAFLOW_ILLEGAL_STATE = 3001;

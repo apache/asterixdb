@@ -23,6 +23,8 @@
 ### SelectClause
 **![](../images/diagrams/SelectClause.png)**
 
+### Projection
+**![](../images/diagrams/Projection.png)**
 
 ##### Synonyms for `VALUE`: `ELEMENT`, `RAW`
 ---
@@ -322,6 +324,8 @@ Result:
 ### JoinStep
 **![](../images/diagrams/JoinStep.png)**
 
+### UnnestStep
+**![](../images/diagrams/UnnestStep.png)**
 
 ##### Synonyms for `UNNEST`: `CORRELATE`, `FLATTEN`
 ---
@@ -652,6 +656,14 @@ Grouping is especially important when manipulating hierarchies like the ones tha
 ### GroupByClause
 **![](../images/diagrams/GroupByClause.png)**
 
+### GroupingElement
+**![](../images/diagrams/GroupingElement.png)**
+
+### OrdinaryGroupingSet
+**![](../images/diagrams/OrdinaryGroupingSet.png)**
+
+### NamedExpr
+**![](../images/diagrams/NamedExpr.png)**
 
 ---
 

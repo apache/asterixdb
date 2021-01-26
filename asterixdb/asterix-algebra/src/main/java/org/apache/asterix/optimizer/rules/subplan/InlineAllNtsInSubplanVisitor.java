@@ -655,7 +655,17 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
 
     @Override
     public ILogicalOperator visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
-        return visitSingleInputOperator(op);
+        visitSingleInputOperator(op);
+        List<LogicalVariable> partitionByVars = op.getPartitionVarList();
+        for (LogicalVariable keyVar : correlatedKeyVars) {
+            if (!partitionByVars.contains(keyVar)) {
+                VariableReferenceExpression keyVarRef = new VariableReferenceExpression(keyVar);
+                keyVarRef.setSourceLocation(op.getSourceLocation());
+                op.getPartitionExpressions().add(new MutableObject<>(keyVarRef));
+            }
+        }
+        context.computeAndSetTypeEnvironmentForOperator(op);
+        return op;
     }
 
     /**
