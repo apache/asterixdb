@@ -652,6 +652,14 @@ Grouping is especially important when manipulating hierarchies like the ones tha
 ### GroupByClause
 **![](../images/diagrams/GroupByClause.png)**
 
+### GroupingElement
+**![](../images/diagrams/GroupingElement.png)**
+
+### OrdinaryGroupingSet
+**![](../images/diagrams/OrdinaryGroupingSet.png)**
+
+### GroupByExprPair
+**![](../images/diagrams/GroupByExprPair.png)**
 
 ---
 

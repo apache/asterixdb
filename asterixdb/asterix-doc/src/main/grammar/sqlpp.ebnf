@@ -76,11 +76,21 @@ LetClause ::= "LET" Variable "=" Expr ("," Variable "=" Expr)*
 
 WhereClause ::= "WHERE" Expr
 
-GroupByClause ::= "GROUP BY" Expr ("AS"? Identifier)? ( "," Expr ("AS"? Identifier)?)* GroupAsClause?
+GroupByClause ::= "GROUP BY" GroupingElement ("," GroupingElement)* GroupAsClause?
 
-HavingClause ::= "HAVING" Expr
+GroupingElement ::=  GroupByExprPair
+              | ( "(" GroupByExprPair ( "," GroupByExprPair )* ")")
+              | ( "GROUPING" "SETS" "(" GroupingElement ("," GroupingElement)* ")" )
+              | ( ( "ROLLUP" | "CUBE" ) "(" OrdinaryGroupingSet ( "," OrdinaryGroupingSet )* ")" )
+              | ( "(" ")" )
+
+OrdinaryGroupingSet ::= GroupByExprPair | ( "(" GroupByExprPair ( "," GroupByExprPair )* ")")
+
+GroupByExprPair ::= Expr ("AS"? Identifier)?
 
 GroupAsClause ::= "GROUP AS" Identifier
+
+HavingClause ::= "HAVING" Expr
 
 Selection ::= WithClause? QueryBlock UnionOption* OrderByClause? ( LimitClause | OffsetClause )?
 
