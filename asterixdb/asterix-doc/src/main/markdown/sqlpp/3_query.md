@@ -23,6 +23,8 @@
 ### SelectClause
 **![](../images/diagrams/SelectClause.png)**
 
+### Projection
+**![](../images/diagrams/Projection.png)**
 
 ##### Synonyms for `VALUE`: `ELEMENT`, `RAW`
 ---
@@ -322,6 +324,8 @@ Result:
 ### JoinStep
 **![](../images/diagrams/JoinStep.png)**
 
+### UnnestStep
+**![](../images/diagrams/UnnestStep.png)**
 
 ##### Synonyms for `UNNEST`: `CORRELATE`, `FLATTEN`
 ---

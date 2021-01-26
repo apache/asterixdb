@@ -400,6 +400,8 @@ expression with the given parameter bindings; the parameter value bindings can t
 Note that Window functions, and aggregate functions used as window functions, have a more complex syntax.
 Window function calls are described in the section on [Window Queries](#Over_clauses).
 
+Also note that FILTER expressions can only be specified when calling [Aggregation Pseudo-Functions](#Aggregation_PseudoFunctions). 
+
 The following example is a function call expression whose value is 8.
 
 ##### Example

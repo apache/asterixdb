@@ -5,8 +5,7 @@ OperatorExpr ::= PathExpr
                  | OperatorExpr Operator OperatorExpr?
                  | OperatorExpr "BETWEEN" OperatorExpr "AND" OperatorExpr
 
-QuantifiedExpr::= ( "SOME" | "EVERY" ) Variable "IN" Expr ( "," Variable "in" Expr )*
-                         "SATISFIES" Expr ("END")?
+QuantifiedExpr::= ( "SOME" | "EVERY" ) Variable "IN" Expr ( "," Variable "IN" Expr )* "SATISFIES" Expr ("END")?
 
 PathExpr ::= PrimaryExpr ("." Identifier | "[" Expr (":" (Expr)? )? "]")*
 
@@ -35,13 +34,13 @@ FunctionCall ::= OrdinaryFunctionCall | AggregateFunctionCall | WindowFunctionCa
 
 OrdinaryFunctionCall ::= Identifier "(" Expr ("," Expr)* ")"
 
-AggregateFunctionCall ::= Identifier "(" ("DISTINCT")? Expr ")"
+AggregateFunctionCall ::= Identifier "(" ("DISTINCT")? Expr ")" ("FILTER" "(" "WHERE" Expr ")")?
 
 CaseExpr ::= SimpleCaseExpr | SearchedCaseExpr
 
 SimpleCaseExpr ::= "CASE" Expr ("WHEN" Expr "THEN" Expr)+ ("ELSE" Expr)? "END"
 
-SearchedCaseExpr ::= "CASE"("WHEN" Expr "THEN" Expr)+ ("ELSE" Expr)? "END"
+SearchedCaseExpr ::= "CASE" ("WHEN" Expr "THEN" Expr)+ ("ELSE" Expr)? "END"
 
 Constructor ::= ObjectConstructor | ArrayConstructor | MultisetConstructor
 
@@ -53,24 +52,26 @@ MultisetConstructor ::= "{{" Expr ("," Expr)* "}}"
 
 Query ::= (Expr | Selection) ";"
 
-Selection ::= WithClause? QueryBlock UnionOption* OrderByClause? LimitClause?
+Selection ::= WithClause? QueryBlock UnionOption* OrderByClause? ( LimitClause | OffsetClause )?
 
-QueryBlock ::=  SelectClause StreamGenerator?
-               |StreamGenerator SelectClause
+QueryBlock ::= SelectClause StreamGenerator?
+             | StreamGenerator SelectClause
 
 StreamGenerator::= FromClause LetClause? WhereClause? (GroupByClause LetClause? HavingClause?)?
 
-SelectClause ::= "SELECT" ("DISTINCT" | "ALL")? "VALUE" Expr
-               | "SELECT" ("DISTINCT" | "ALL")? ((Expr ("AS"? Identifier)?) | "*" | Identifier "." "*") ("," ((Expr ("AS"? Identifier)?) | "*" | Identifier "." "*"))*
+SelectClause ::= "SELECT" ("DISTINCT" | "ALL")? ( "VALUE" Expr | Projection ("," Projection)*)
+
+Projection ::= (Expr ("AS"? Identifier)?) | (VariableRef "." "*") | "*"
 
 FromClause ::= "FROM" FromTerm ("," FromTerm)*
 
-FromTerm ::= NamedExpr JoinStep*
+FromTerm ::= NamedExpr (JoinStep | UnnestStep)*
 
-NamedExpr ::= Expr
-             |Expr "AS"? Variable
+NamedExpr ::= Expr ("AS"? Variable)?
 
-JoinStep ::= ("INNER" | ("LEFT" "OUTER"?))? ("JOIN" NamedExpr "ON" Expr | "UNNEST" NamedExpr)
+JoinStep ::= ("INNER" | ( ( "LEFT" | "RIGHT" ) "OUTER"?))? "JOIN" NamedExpr "ON" Expr
+
+UnnestStep ::= ("INNER" | ( "LEFT" "OUTER"?))? "UNNEST" NamedExpr
 
 LetClause ::= "LET" Variable "=" Expr ("," Variable "=" Expr)*
 
@@ -86,9 +87,9 @@ GroupingElement ::=  GroupByExprPair
 
 OrdinaryGroupingSet ::= GroupByExprPair | ( "(" GroupByExprPair ( "," GroupByExprPair )* ")")
 
-GroupByExprPair ::= Expr ("AS"? Identifier)?
+GroupByExprPair ::= Expr ("AS"? Variable)?
 
-GroupAsClause ::= "GROUP AS" Identifier
+GroupAsClause ::= "GROUP AS" Variable
 
 HavingClause ::= "HAVING" Expr
 
@@ -96,11 +97,9 @@ Selection ::= WithClause? QueryBlock UnionOption* OrderByClause? ( LimitClause |
 
 UnionOption ::= "UNION ALL" (QueryBlock | Subquery)
 
-WithClause ::= "WITH" Identifier "AS" Expr
-                       ("," Identifier "AS" Expr)*
+WithClause ::= "WITH" Variable "AS" Expr ("," Variable "AS" Expr)*
 
-OrderbyClause ::= "ORDER BY" Expr ( "ASC" | "DESC" )?
-                       ( "," Expr ( "ASC" | "DESC" )? )*
+OrderbyClause ::= "ORDER BY" Expr ( "ASC" | "DESC" )? ( "," Expr ( "ASC" | "DESC" )? )*
 
 LimitClause ::= "LIMIT" Expr OffsetClause?
 
@@ -110,8 +109,7 @@ Subquery ::= "(" Selection ")"
 
 WindowFunctionCall ::= WindowFunctionType "(" WindowFunctionArguments ")" WindowFunctionOptions? "OVER" (Variable "AS")? "(" WindowDefinition")"
 
-WindowFunctionType ::= AggregateFunction
-                     | WindowFunction
+WindowFunctionType ::= AggregateFunction | WindowFunction
 
 WindowFunctionArguments ::=  ( ("DISTINCT")? Expr | (Expr ("," Expr ("," Expr)? )? )? )
 
@@ -126,11 +124,10 @@ WindowOrderClause ::= "ORDER" "BY" Expr ("ASC"|"DESC")? ("," Expr ("ASC" | "DESC
 WindowFrameClause ::= ("ROWS" | "RANGE" | "GROUPS") WindowFrameExtent
 
 WindowFrameExtent ::= ( ( "UNBOUNDED" | Expr ) "PRECEDING" | "CURRENT" "ROW" ) |
-"BETWEEN"( "UNBOUNDED" "PRECEDING" | "CURRENT" "ROW" | Expr ( "PRECEDING" | "FOLLOWING" ) )
-"AND" ( "UNBOUNDED" "FOLLOWING" | "CURRENT" "ROW" | Expr ( "PRECEDING" | "FOLLOWING" ) )
+      "BETWEEN" ( "UNBOUNDED" "PRECEDING" | "CURRENT" "ROW" | Expr ( "PRECEDING" | "FOLLOWING" ) )
+      "AND" ( "UNBOUNDED" "FOLLOWING" | "CURRENT" "ROW" | Expr ( "PRECEDING" | "FOLLOWING" ) )
 
-WindowFrameExclusion ::= "EXCLUDE" ( "CURRENT" "ROW" | "GROUP" | "TIES" |
-"NO" "OTHERS" )
+WindowFrameExclusion ::= "EXCLUDE" ( "CURRENT" "ROW" | "GROUP" | "TIES" | "NO" "OTHERS" )
 
 Stmnt::= (SingleStmnt ";")+ "EOF"
 
@@ -146,10 +143,6 @@ SingleStmnt ::= UseStmnt
                |DeleteStmnt
 
 UseStmnt ::= "USE" Identifier
-
-FunctionDeclaration ::= "DELCARE" "FUNCTION" Identifier ParameterList "{" Expr "}"
-
-ParameterList ::= "(" ("VARIABLE" ("," "VARIABLE")*)?")"
 
 CreateStmnt ::= CreateDataverse
               | CreateType
@@ -232,10 +225,12 @@ IndexType ::= "BTREE"
 
 CreateSynonym ::= "CREATE" "SYNONYM" QualifiedName "FOR" QualifiedName ("IF" "NOT" "EXISTS")?
 
-CreateFunction ::= "CREATE" ("OR" "REPLACE")? "FUNCTION" QualifiedName ("IF" "NOT" "EXISTS")? FunctionParameters
-                  ( ("{" Expr "}") | ExternalFunctionDef)
+FunctionDeclaration ::= "DECLARE" "FUNCTION" Identifier "(" ( (Variable ("," Variable)*) | "..." )? ")" "{" Expr "}"
 
-FunctionParameters ::= "(" ("VARIABLE" (":" TypeExpr)? ("," "VARIABLE" (":" TypeExpr)? )* )? ")"
+CreateFunction ::= "CREATE" ("OR" "REPLACE")? "FUNCTION" QualifiedName ("IF" "NOT" "EXISTS")? "(" FunctionParameters? ")"
+                  ( ("{" Expr "}") | ExternalFunctionDef )
+
+FunctionParameters ::=  ( Variable ((":")? TypeExpr)? ("," Variable ((":")? TypeExpr)? )* ) | "..."
 
 ExternalFunctionDef ::= ("RETURNS" TypeExpr)? "AS" StringLiteral ("," StringLiteral )* "AT" QualifiedName ("WITH" ObjectConstructor)?
 
@@ -244,7 +239,7 @@ DropStmnt ::= "DROP" ("DATAVERSE" Identifier
                      | "INDEX" DoubleQualifiedName
                      | "FUNCTION" FunctionSignature ) ("IF" "EXISTS")?
 
-FunctionSignature ::= QualifiedName ( FunctionParameters | ( "(" IntegerLiteral ")" ) | ("@" IntegerLiteral) )
+FunctionSignature ::= QualifiedName ( ( "(" ( FunctionParameters? | IntegerLiteral ) ")" ) | ("@" IntegerLiteral) )
 
 LoadStmnt ::= "LOAD" "DATASET" QualifiedName "USING" AdapterName Configuration ("PRE-SORTED")?
 
@@ -255,11 +250,3 @@ UpsertStmnt ::= "UPSERT" "INTO" QualifiedName Query
 DeleteStmnt ::= "DELETE" "FROM" QualifiedName (("AS")? Variable)? ("WHERE" Expr)?
 
 SetStmnt ::= "SET" Identifier StringLiteral
-
-
-
-
-
-
-
-

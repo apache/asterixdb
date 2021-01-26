@@ -51,9 +51,6 @@ The function named in the `DECLARE FUNCTION` statement is accessible only in the
 ### FunctionDeclaration
 **![](../images/diagrams/FunctionDeclaration.png)**
 
-### ParameterList
-**![](../images/diagrams/ParameterList.png)**
-
 ---
 The following is a simple example of a temporary function definition and its use.
 
@@ -512,6 +509,15 @@ The following is an example of CREATE FUNCTION statement that replaces an existi
          FROM GleambookUsers u
          WHERE u.id = userId)[0]
      };
+
+The following is an example of CREATE FUNCTION statement that introduces a function with a variable number of arguments.
+The arguments are accessible in the function body via `args` array parameter.
+
+##### Example
+
+    CREATE FUNCTION strJoin(...) {
+        string_join(args, ",")
+    };
 
 External functions can also be loaded into Libraries via the [UDF API](../udf.html). Given
 an already loaded library `pylib`, a function `sentiment` mapping to a Python method `sent_model.sentiment` in `sentiment_mod`
