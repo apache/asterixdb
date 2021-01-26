@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -50,7 +51,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.NestedLoopJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SpatialJoinPOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -192,35 +192,14 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
                         new MutableObject<>(referenceIdEquiJoinCondition));
         joinConditionRef.setValue(updatedJoinCondition);
 
+        List<LogicalVariable> keysLeftBranch = new ArrayList<>();
+        keysLeftBranch.add(leftTileIdVar);
+        keysLeftBranch.add(leftInputVar);
+        List<LogicalVariable> keysRightBranch = new ArrayList<>();
+        keysRightBranch.add(rightTileIdVar);
+        keysRightBranch.add(rightInputVar);
         joinOp.setPhysicalOperator(new SpatialJoinPOperator(joinOp.getJoinKind(),
-                AbstractJoinPOperator.JoinPartitioningType.BROADCAST));
-
-        // This one uses HYBRID_HASH_JOIN: tile1 == tile2
-        // Force the planner to use BNLJ:
-
-        //        ScalarFunctionCallExpression spatialJoinCondition = new ScalarFunctionCallExpression(
-        //                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.INTERVAL_OVERLAPS), // TODO: change to SPATIAL_INTERSECTS
-        //                new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
-        //                new MutableObject<>(new VariableReferenceExpression(rightInputVar)));
-        //        joinConditionRef.setValue(spatialJoinCondition);
-
-        // Force the query plan to use Interval merge join
-        //        List<LogicalVariable> sideLeft = new ArrayList<>(1);
-        //        sideLeft.add(leftInputVar);
-        //        List<LogicalVariable> sideRight = new ArrayList<>(1);
-        //        sideRight.add(rightInputVar);
-        //        Long[] integers = new Long[1];
-        //        integers[0] = Long.valueOf(-100);
-        //        RangeMap rangeMap = null;
-        //        try {
-        //            rangeMap = getIntegerRangeMap(integers);
-        //        } catch (HyracksDataException e) {
-        //            e.printStackTrace();
-        //        }
-        //        IntervalPartitions intervalPartitions = IntervalJoinUtils.createIntervalPartitions(joinOp,
-        //                funcExpr.getFunctionIdentifier(), sideLeft, sideRight, rangeMap, context, LEFT, RIGHT);
-        //        IntervalJoinUtils.setSortMergeIntervalJoinOp(joinOp, funcExpr.getFunctionIdentifier(), sideLeft, sideRight,
-        //                context, intervalPartitions);
+                AbstractJoinPOperator.JoinPartitioningType.PAIRWISE, keysLeftBranch, keysRightBranch));
 
         context.addToDontApplySet(this, op);
         return true;
