@@ -63,6 +63,6 @@ public class FieldAccessNestedDescriptor extends AbstractScalarFunctionDynamicDe
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
-        return new FieldAccessNestedEvalFactory(args[0], recType, fldName, sourceLoc);
+        return new FieldAccessNestedEvalFactory(args[0], recType, fldName, sourceLoc, getIdentifier());
     }
 }

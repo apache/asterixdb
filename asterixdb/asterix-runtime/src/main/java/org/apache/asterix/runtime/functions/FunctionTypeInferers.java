@@ -163,7 +163,7 @@ public final class FunctionTypeInferers {
         public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
                 CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
-            IAType t = (IAType) context.getType(fce.getArguments().get(0).getValue());
+            // arg 1 should always be a constant array of strings
             AOrderedList fieldPath =
                     (AOrderedList) (((AsterixConstantValue) ((ConstantExpression) fce.getArguments().get(1).getValue())
                             .getValue()).getObject());
@@ -171,17 +171,13 @@ public final class FunctionTypeInferers {
             for (int i = 0; i < fieldPath.size(); i++) {
                 listFieldPath.add(((AString) fieldPath.getItem(i)).getStringValue());
             }
-
-            // TODO(ali): I guess this may not work as well if t happens to be UNION(record), not sure if it ever does
+            IAType t = TypeComputeUtils.getActualType((IAType) context.getType(fce.getArguments().get(0).getValue()));
             switch (t.getTypeTag()) {
                 case OBJECT:
                     fd.setImmutableStates(t, listFieldPath);
                     break;
-                case ANY:
-                    fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE, listFieldPath);
-                    break;
                 default:
-                    fd.setImmutableStates(null, listFieldPath);
+                    fd.setImmutableStates(RecordUtil.FULLY_OPEN_RECORD_TYPE, listFieldPath);
                     break;
             }
         }
