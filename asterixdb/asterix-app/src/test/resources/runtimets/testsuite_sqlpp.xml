@@ -4107,6 +4107,11 @@
         <output-dir compare="Text">create_dataset_with_filter_on_meta</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="index-bad-fields">
+        <output-dir compare="Text">index-bad-fields</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="dml">
     <test-case FilePath="dml">
