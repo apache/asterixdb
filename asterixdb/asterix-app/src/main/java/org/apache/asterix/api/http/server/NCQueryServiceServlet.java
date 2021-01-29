@@ -85,11 +85,9 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             long timeout = param.getTimeout();
             int stmtCategoryRestrictionMask = org.apache.asterix.app.translator.RequestParameters
                     .getStatementCategoryRestrictionMask(param.isReadOnly());
-            ExecuteStatementRequestMessage requestMsg = new ExecuteStatementRequestMessage(ncCtx.getNodeId(),
-                    responseFuture.getFutureId(), queryLanguage, statementsText, sessionOutput.config(),
-                    resultProperties.getNcToCcResultProperties(), param.getClientContextID(), handleUrl,
-                    optionalParameters, statementParameters, param.isMultiStatement(), param.getProfileType(),
-                    stmtCategoryRestrictionMask, requestReference);
+            ExecuteStatementRequestMessage requestMsg = createRequestMessage(requestReference, statementsText,
+                    sessionOutput, resultProperties, param, optionalParameters, statementParameters, ncCtx,
+                    responseFuture, queryLanguage, handleUrl, stmtCategoryRestrictionMask, false);
             executionState.start();
             ncMb.sendMessageToPrimaryCC(requestMsg);
             try {
@@ -129,6 +127,19 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         }
         warnings.addAll(responseMsg.getWarnings());
         buildResponseResults(responsePrinter, sessionOutput, responseMsg.getExecutionPlans(), warnings);
+    }
+
+    protected ExecuteStatementRequestMessage createRequestMessage(IRequestReference requestReference,
+            String statementsText, SessionOutput sessionOutput, ResultProperties resultProperties,
+            QueryServiceRequestParameters param, Map<String, String> optionalParameters,
+            Map<String, byte[]> statementParameters, INCServiceContext ncCtx, MessageFuture responseFuture,
+            ILangExtension.Language queryLanguage, String handleUrl, int stmtCategoryRestrictionMask,
+            boolean forceDropDataset) {
+        return new ExecuteStatementRequestMessage(ncCtx.getNodeId(), responseFuture.getFutureId(), queryLanguage,
+                statementsText, sessionOutput.config(), resultProperties.getNcToCcResultProperties(),
+                param.getClientContextID(), handleUrl, optionalParameters, statementParameters,
+                param.isMultiStatement(), param.getProfileType(), stmtCategoryRestrictionMask, requestReference,
+                forceDropDataset);
     }
 
     private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String uuid, String clientContextID,

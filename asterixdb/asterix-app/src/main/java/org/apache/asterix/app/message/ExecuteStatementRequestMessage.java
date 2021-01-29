@@ -65,8 +65,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class ExecuteStatementRequestMessage implements ICcAddressedMessage {
-    private static final long serialVersionUID = 1L;
+public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
+    private static final long serialVersionUID = 2L;
     private static final Logger LOGGER = LogManager.getLogger();
     //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2062
     public static final long DEFAULT_NC_TIMEOUT_MILLIS = TimeUnit.MILLISECONDS.toMillis(Long.MAX_VALUE);
@@ -86,12 +86,13 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
     private final int statementCategoryRestrictionMask;
     private final ProfileType profileType;
     private final IRequestReference requestReference;
+    private final boolean forceDropDataset;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
             String clientContextID, String handleUrl, Map<String, String> optionalParameters,
             Map<String, byte[]> statementParameters, boolean multiStatement, ProfileType profileType,
-            int statementCategoryRestrictionMask, IRequestReference requestReference) {
+            int statementCategoryRestrictionMask, IRequestReference requestReference, boolean forceDropDataset) {
         this.requestNodeId = requestNodeId;
         this.requestMessageId = requestMessageId;
         this.lang = lang;
@@ -106,6 +107,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
         this.statementCategoryRestrictionMask = statementCategoryRestrictionMask;
         this.profileType = profileType;
         this.requestReference = requestReference;
+        this.forceDropDataset = forceDropDataset;
     }
 
     @Override
@@ -150,7 +152,7 @@ public final class ExecuteStatementRequestMessage implements ICcAddressedMessage
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
             final IRequestParameters requestParameters = new RequestParameters(requestReference, statementsText, null,
                     resultProperties, stats, statementProperties, outMetadata, clientContextID, optionalParameters,
-                    stmtParams, multiStatement, statementCategoryRestrictionMask);
+                    stmtParams, multiStatement, statementCategoryRestrictionMask, forceDropDataset);
             translator.compileAndExecute(ccApp.getHcc(), requestParameters);
             translator.getWarnings(warnings, maxWarnings - warnings.size());
             stats.updateTotalWarningsCount(parserTotalWarningsCount);
