@@ -205,6 +205,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
@@ -326,7 +327,6 @@ class SQLPPParser extends ScopeChecker implements IParser {
     public SQLPPParser(String s) {
         this(new StringReader(s));
         super.setInput(s);
-        token_source.hintCollector = hintCollector;
     }
 
     public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException, CompilationException {
@@ -408,6 +408,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private <T> T parseImpl(ParseFunction<T> parseFunction) throws CompilationException {
         warningCollector.clear();
         hintCollector.clear();
+        token_source.hintCollector = hintCollector;
         try {
             return parseFunction.parse();
         } catch (SqlppParseException e) {
@@ -427,6 +428,11 @@ class SQLPPParser extends ScopeChecker implements IParser {
     @FunctionalInterface
     private interface ParseFunction<T> {
         T parse() throws ParseException;
+    }
+
+    @Override
+    public void getWarnings(IWarningCollector outWarningCollector) {
+        warningCollector.getWarnings(outWarningCollector);
     }
 
     @Override

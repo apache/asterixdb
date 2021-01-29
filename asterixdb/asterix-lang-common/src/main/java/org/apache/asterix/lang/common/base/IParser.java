@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 
 public interface IParser {
@@ -35,6 +36,12 @@ public interface IParser {
     List<String> parseMultipartIdentifier() throws CompilationException;
 
     FunctionDecl parseFunctionBody(FunctionSignature signature, List<String> paramNames) throws CompilationException;
+
+    /**
+     * Gets the warnings generated during parsing
+     */
+    default void getWarnings(IWarningCollector outWarningCollector) {
+    }
 
     /**
      * Gets the warnings generated during parsing up to the max number argument.
