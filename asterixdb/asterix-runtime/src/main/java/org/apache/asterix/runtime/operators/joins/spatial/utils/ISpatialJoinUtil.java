@@ -35,7 +35,7 @@ public interface ISpatialJoinUtil {
      * @throws HyracksDataException
      */
     boolean checkToSaveInMemory(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
-            IFrameTupleAccessor probeAccessor, int probeTupleIndex);
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) throws HyracksDataException;
 
     /**
      * Check to see if the right tuple should be removed from memory during the merge join.
@@ -48,7 +48,7 @@ public interface ISpatialJoinUtil {
      * @throws HyracksDataException
      */
     boolean checkToRemoveInMemory(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
-            IFrameTupleAccessor probeAccessor, int probeTupleIndex);
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) throws HyracksDataException;
 
     /**
      * Check to see if tuples match join condition
@@ -71,9 +71,8 @@ public interface ISpatialJoinUtil {
      * @param rectBuild
      * @param rectProbe
      * @return boolean
-     * @throws HyracksDataException
      */
-    boolean compareRectangle(ARectangle rectBuild, ARectangle rectProbe) throws HyracksDataException;
+    boolean compareRectangle(ARectangle rectBuild, ARectangle rectProbe);
 
     /**
      * Check to see if the left tuple should stop checking for matches.
@@ -85,7 +84,7 @@ public interface ISpatialJoinUtil {
      * @throws HyracksDataException
      */
     boolean checkForEarlyExit(IFrameTupleAccessor buildAccessor, int buildTupleIndex, IFrameTupleAccessor probeAccessor,
-            int probeTupleIndex);
+            int probeTupleIndex) throws HyracksDataException;
 
     /**
      * Check if next tuple should be loaded into memory.
@@ -97,5 +96,5 @@ public interface ISpatialJoinUtil {
      * @throws HyracksDataException
      */
     boolean checkToLoadNextProbeTuple(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
-            IFrameTupleAccessor probeAccessor, int probeTupleIndex);
+            IFrameTupleAccessor probeAccessor, int probeTupleIndex) throws HyracksDataException;
 }

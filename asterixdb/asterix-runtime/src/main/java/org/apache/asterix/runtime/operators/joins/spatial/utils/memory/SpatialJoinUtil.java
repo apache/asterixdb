@@ -18,28 +18,60 @@
  */
 package org.apache.asterix.runtime.operators.joins.spatial.utils.memory;
 
+import org.apache.asterix.dataflow.data.nontagged.Coordinate;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.base.ARectangle;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SpatialJoinUtil {
 
     private SpatialJoinUtil() {
     }
 
-    public static ARectangle getRectangle(IFrameTupleAccessor accessor, int tupleId, int fieldId) {
-        return new ARectangle(new APoint(0, 0), new APoint(0, 0));
+    public static ARectangle getRectangle(IFrameTupleAccessor accessor, int tupleId, int fieldId) throws HyracksDataException {
+        int start = getFieldOffset(accessor, tupleId, fieldId);
+        double xmin = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
+                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+        double ymin = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
+                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
+        double xmax = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
+                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+        double ymax = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
+                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
+        return new ARectangle(new APoint(xmin, ymin), new APoint(xmax, ymax));
     }
 
     public static int getTileId(IFrameTupleAccessor accessor, int tupleId, int fieldId) {
-        return 0;
+        int start = getFieldOffset(accessor, tupleId, fieldId);
+        int tileId = AInt32SerializerDeserializer.getInt(accessor.getBuffer().array(), start);
+        return tileId;
     }
 
-    public static double getRectangleXmin(IFrameTupleAccessor accessor, int tupleId, int fieldId) {
-        return 0;
+    public static double getRectangleXmin(IFrameTupleAccessor accessor, int tupleId, int fieldId) throws HyracksDataException {
+        int start = getFieldOffset(accessor, tupleId, fieldId);
+        double xmin = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
+                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+        return xmin;
     }
 
-    public static double getRectangleXmax(IFrameTupleAccessor accessor, int tupleId, int fieldId) {
-        return 0;
+    public static double getRectangleXmax(IFrameTupleAccessor accessor, int tupleId, int fieldId) throws HyracksDataException {
+        int start = getFieldOffset(accessor, tupleId, fieldId);
+        double xmax = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
+                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+        return xmax;
+    }
+
+    public static int getFieldOffset(IFrameTupleAccessor accessor, int tupleId, int fieldId) {
+        return getFieldOffsetWithTag(accessor, tupleId, fieldId) + 1;
+    }
+
+    public static int getFieldOffsetWithTag(IFrameTupleAccessor accessor, int tupleId, int fieldId) {
+        int start = accessor.getTupleStartOffset(tupleId) + accessor.getFieldSlotsLength()
+                + accessor.getFieldStartOffset(tupleId, fieldId);
+        return start;
     }
 }

@@ -31,6 +31,16 @@ public class SpatialLogic {
     }
 
     public boolean intersects(ARectangle rect1, ARectangle rect2) {
+        // If one rectangle is on left side of other
+        if ((rect1.getP1().getX() > rect2.getP2().getX()) || (rect2.getP1().getX() > rect1.getP2().getX())) {
+            return false;
+        }
+
+        // If one rectangle is above other
+        if ((rect1.getP1().getY() > rect2.getP2().getY()) || (rect2.getP1().getY() > rect1.getP2().getY())) {
+            return false;
+        }
+
         return true;
     }
 }

@@ -53,12 +53,12 @@ public class SpatialSideTuple {
                 ist.cursor.getTupleId());
     }
 
-    public boolean removeFromMemory(SpatialSideTuple ist) {
+    public boolean removeFromMemory(SpatialSideTuple ist) throws HyracksDataException {
         return imjc.checkToRemoveInMemory(cursor.getAccessor(), cursor.getTupleId(), ist.cursor.getAccessor(),
                 ist.cursor.getTupleId());
     }
 
-    public boolean checkForEarlyExit(SpatialSideTuple ist) {
+    public boolean checkForEarlyExit(SpatialSideTuple ist) throws HyracksDataException {
         return imjc.checkForEarlyExit(cursor.getAccessor(), cursor.getTupleId(), ist.cursor.getAccessor(),
                 ist.cursor.getTupleId());
     }

@@ -129,16 +129,18 @@ public class SpatialJoinPOperator extends AbstractJoinPOperator {
 
         List<ILocalStructuralProperty> localProperties1 = new ArrayList<>();
         List<OrderColumn> orderColumns1 = new ArrayList<OrderColumn>();
-        for (LogicalVariable var : keysLeftBranch) {
-            orderColumns1.add(new OrderColumn(var, OrderOperator.IOrder.OrderKind.ASC));
-        }
+//        for (LogicalVariable var : keysLeftBranch) {
+//            orderColumns1.add(new OrderColumn(var, OrderOperator.IOrder.OrderKind.ASC));
+//        }
+        orderColumns1.add(new OrderColumn(keysLeftBranch.get(1), OrderOperator.IOrder.OrderKind.ASC));
         localProperties1.add(new LocalOrderProperty(orderColumns1));
 
         List<ILocalStructuralProperty> localProperties2 = new ArrayList<>();
         List<OrderColumn> orderColumns2 = new ArrayList<OrderColumn>();
-        for (LogicalVariable var : keysRightBranch) {
-            orderColumns2.add(new OrderColumn(var, OrderOperator.IOrder.OrderKind.ASC));
-        }
+//        for (LogicalVariable var : keysRightBranch) {
+//            orderColumns2.add(new OrderColumn(var, OrderOperator.IOrder.OrderKind.ASC));
+//        }
+        orderColumns2.add(new OrderColumn(keysRightBranch.get(1), OrderOperator.IOrder.OrderKind.ASC));
         localProperties2.add(new LocalOrderProperty(orderColumns2));
 
         StructuralPropertiesVector[] pv = new StructuralPropertiesVector[2];
