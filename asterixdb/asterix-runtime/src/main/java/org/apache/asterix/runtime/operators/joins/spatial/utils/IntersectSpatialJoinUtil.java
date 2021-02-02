@@ -31,9 +31,6 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
 
     protected final SpatialLogic sl = new SpatialLogic();
 
-    protected ARectangle rectBuild = null;
-    protected ARectangle rectProbe = null;
-
     public IntersectSpatialJoinUtil(int[] idBuild, int[] idProbe) {
         this.idBuild = idBuild;
         this.idProbe = idProbe;
@@ -45,20 +42,10 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
     @Override
     public boolean checkToSaveInMemory(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
             IFrameTupleAccessor probeAccessor, int probeTupleIndex) throws HyracksDataException {
-        int buildTileId = SpatialJoinUtil.getTileId(buildAccessor, buildTupleIndex, idBuild[0]);
-        int probeTileId = SpatialJoinUtil.getTileId(probeAccessor, probeTupleIndex, idProbe[0]);
         double buildXmin = SpatialJoinUtil.getRectangleXmin(buildAccessor, buildTupleIndex, idBuild[1]);
-        double probeXmin = SpatialJoinUtil.getRectangleXmin(probeAccessor, probeTupleIndex, idProbe[1]);
-        double buildXmax = SpatialJoinUtil.getRectangleXmax(buildAccessor, buildTupleIndex, idBuild[1]);
         double probeXmax = SpatialJoinUtil.getRectangleXmax(probeAccessor, probeTupleIndex, idProbe[1]);
 
         return buildXmin < probeXmax;
-
-//        if (buildTileId == probeTileId) {
-//            return buildXmin <= probeXmin;
-//        } else {
-//            return buildTileId < probeTileId;
-//        }
     }
 
     /**
@@ -67,20 +54,10 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
     @Override
     public boolean checkToRemoveInMemory(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
             IFrameTupleAccessor probeAccessor, int probeTupleIndex) throws HyracksDataException {
-        int buildTileId = SpatialJoinUtil.getTileId(buildAccessor, buildTupleIndex, idBuild[0]);
-        int probeTileId = SpatialJoinUtil.getTileId(probeAccessor, probeTupleIndex, idProbe[0]);
         double buildXmin = SpatialJoinUtil.getRectangleXmin(buildAccessor, buildTupleIndex, idBuild[1]);
-        double probeXmin = SpatialJoinUtil.getRectangleXmin(probeAccessor, probeTupleIndex, idProbe[1]);
-        double buildXmax = SpatialJoinUtil.getRectangleXmax(buildAccessor, buildTupleIndex, idBuild[1]);
         double probeXmax = SpatialJoinUtil.getRectangleXmax(probeAccessor, probeTupleIndex, idProbe[1]);
 
         return buildXmin >= probeXmax;
-
-//        if (buildTileId == probeTileId) {
-//            return buildXmin > probeXmin;
-//        } else {
-//            return buildTileId > probeTileId;
-//        }
     }
 
     @Override
@@ -88,11 +65,10 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
             IFrameTupleAccessor probeAccessor, int probeTupleIndex) throws HyracksDataException {
         int buildTileId = SpatialJoinUtil.getTileId(buildAccessor, buildTupleIndex, idBuild[0]);
         int probeTileId = SpatialJoinUtil.getTileId(probeAccessor, probeTupleIndex, idProbe[0]);
-        rectBuild = SpatialJoinUtil.getRectangle(buildAccessor, buildTupleIndex, idBuild[1]);
-        rectProbe = SpatialJoinUtil.getRectangle(probeAccessor, probeTupleIndex, idProbe[1]);
-//        return compareRectangle(rectBuild, rectProbe);
+        ARectangle rectBuild = SpatialJoinUtil.getRectangle(buildAccessor, buildTupleIndex, idBuild[1]);
+        ARectangle rectProbe = SpatialJoinUtil.getRectangle(probeAccessor, probeTupleIndex, idProbe[1]);
+
         if (buildTileId == probeTileId) {
-//            return true;
             return compareRectangle(rectBuild, rectProbe);
         }
         else {
@@ -106,20 +82,10 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
     @Override
     public boolean checkForEarlyExit(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
             IFrameTupleAccessor probeAccessor, int probeTupleIndex) throws HyracksDataException {
-        int buildTileId = SpatialJoinUtil.getTileId(buildAccessor, buildTupleIndex, idBuild[0]);
-        int probeTileId = SpatialJoinUtil.getTileId(probeAccessor, probeTupleIndex, idProbe[0]);
-        double buildXmin = SpatialJoinUtil.getRectangleXmin(buildAccessor, buildTupleIndex, idBuild[1]);
         double probeXmin = SpatialJoinUtil.getRectangleXmin(probeAccessor, probeTupleIndex, idProbe[1]);
         double buildXmax = SpatialJoinUtil.getRectangleXmax(buildAccessor, buildTupleIndex, idBuild[1]);
-        double probeXmax = SpatialJoinUtil.getRectangleXmax(probeAccessor, probeTupleIndex, idProbe[1]);
 
         return buildXmax < probeXmin;
-
-//        if (buildTileId == probeTileId) {
-//            return buildXmax < probeXmin;
-//        } else {
-//            return true;
-//        }
     }
 
     @Override
@@ -130,18 +96,9 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
     @Override
     public boolean checkToLoadNextProbeTuple(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
             IFrameTupleAccessor probeAccessor, int probeTupleIndex) throws HyracksDataException {
-        int buildTileId = SpatialJoinUtil.getTileId(buildAccessor, buildTupleIndex, idBuild[0]);
-        int probeTileId = SpatialJoinUtil.getTileId(probeAccessor, probeTupleIndex, idProbe[0]);
-        double buildXmin = SpatialJoinUtil.getRectangleXmin(buildAccessor, buildTupleIndex, idBuild[1]);
         double probeXmin = SpatialJoinUtil.getRectangleXmin(probeAccessor, probeTupleIndex, idProbe[1]);
         double buildXmax = SpatialJoinUtil.getRectangleXmax(buildAccessor, buildTupleIndex, idBuild[1]);
-        double probeXmax = SpatialJoinUtil.getRectangleXmax(probeAccessor, probeTupleIndex, idProbe[1]);
 
         return buildXmax > probeXmin;
-//        if (buildTileId == probeTileId) {
-//            return buildXmax >= probeXmin;
-//        } else {
-//            return false;
-//        }
     }
 }
