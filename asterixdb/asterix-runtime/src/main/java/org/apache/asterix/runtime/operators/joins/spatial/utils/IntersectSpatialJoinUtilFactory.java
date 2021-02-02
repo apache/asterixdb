@@ -18,13 +18,13 @@
  */
 package org.apache.asterix.runtime.operators.joins.spatial.utils;
 
-import java.io.Serializable;
-
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface ISpatialJoinUtilFactory extends Serializable {
-
-    ISpatialJoinUtil createSpatialJoinUtil(int[] buildKey, int[] probeKey, IHyracksTaskContext ctx, int nPartitions)
-            throws HyracksDataException;
+public class IntersectSpatialJoinUtilFactory implements ISpatialJoinUtilFactory {
+    @Override
+    public ISpatialJoinUtil createSpatialJoinUtil(int[] buildKeys, int[] probeKeys, IHyracksTaskContext ctx,
+            int nPartitions) throws HyracksDataException {
+        return new IntersectSpatialJoinUtil(buildKeys, probeKeys);
+    }
 }

@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.runtime.operators.joins.spatial.utils;
 
-import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
+import org.apache.asterix.om.base.ARectangle;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -68,12 +68,12 @@ public interface ISpatialJoinUtil {
      * Check to see if the interval matches the join condition.
      * The check is true if it matches.
      *
-     * @param ipBuild
-     * @param ipProbe
+     * @param rectBuild
+     * @param rectProbe
      * @return boolean
      * @throws HyracksDataException
      */
-    boolean compareInterval(AIntervalPointable ipBuild, AIntervalPointable ipProbe) throws HyracksDataException;
+    boolean compareRectangle(ARectangle rectBuild, ARectangle rectProbe) throws HyracksDataException;
 
     /**
      * Check to see if the left tuple should stop checking for matches.

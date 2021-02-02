@@ -18,33 +18,26 @@
  */
 package org.apache.asterix.runtime.operators.joins.spatial.utils.memory;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
 import org.apache.asterix.runtime.operators.joins.interval.utils.memory.ITupleCursor;
-import org.apache.asterix.runtime.operators.joins.interval.utils.memory.IntervalJoinUtil;
 import org.apache.asterix.runtime.operators.joins.spatial.utils.ISpatialJoinUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SpatialSideTuple {
     // Tuple access
-    int fieldId;
+    int[] fieldId;
     ITupleCursor cursor;
-
-    long start;
-    long end;
 
     // Join details
     final ISpatialJoinUtil imjc;
 
-    public SpatialSideTuple(ISpatialJoinUtil imjc, ITupleCursor cursor, int fieldId) {
+    public SpatialSideTuple(ISpatialJoinUtil imjc, ITupleCursor cursor, int[] fieldId) {
         this.imjc = imjc;
         this.cursor = cursor;
         this.fieldId = fieldId;
     }
 
     public void loadTuple() {
-        int offset = IntervalJoinUtil.getIntervalOffset(cursor.getAccessor(), cursor.getTupleId(), fieldId);
-        start = AIntervalSerializerDeserializer.getIntervalStart(cursor.getAccessor().getBuffer().array(), offset);
-        end = AIntervalSerializerDeserializer.getIntervalEnd(cursor.getAccessor().getBuffer().array(), offset);
+
     }
 
     public int getTupleIndex() {
@@ -53,14 +46,6 @@ public class SpatialSideTuple {
 
     public ITupleCursor getCursor() {
         return cursor;
-    }
-
-    public long getStart() {
-        return start;
-    }
-
-    public long getEnd() {
-        return end;
     }
 
     public boolean compareJoin(SpatialSideTuple ist) throws HyracksDataException {

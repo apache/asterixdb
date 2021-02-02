@@ -16,15 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.operators.joins.spatial.utils;
+package org.apache.asterix.runtime.evaluators.functions.spatial;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
+import org.apache.asterix.om.base.ARectangle;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
-public class SpatialJoinUtilFactory implements ISpatialJoinUtilFactory {
-    @Override
-    public ISpatialJoinUtil createSpatialJoinUtil(int buildKey, int probeKey, IHyracksTaskContext ctx, int nPartitions)
-            throws HyracksDataException {
-        return new SpatialJoinUtil(buildKey, probeKey);
+public class SpatialLogic {
+
+    public SpatialLogic() {
+
+    }
+
+    public boolean intersects(ARectangle rect1, ARectangle rect2) {
+        return true;
     }
 }

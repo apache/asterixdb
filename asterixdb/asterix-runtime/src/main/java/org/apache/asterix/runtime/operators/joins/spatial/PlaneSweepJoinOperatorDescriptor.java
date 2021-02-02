@@ -45,17 +45,17 @@ public class PlaneSweepJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
     private static final int JOIN_BUILD_ACTIVITY_ID = 0;
     private static final int JOIN_PROBE_ACTIVITY_ID = 1;
-    private final int buildKey;
-    private final int probeKey;
+    private final int[] buildKeys;
+    private final int[] probeKeys;
     private final int memoryForJoin;
     private final ISpatialJoinUtilFactory imjcf;
 
-    public PlaneSweepJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memoryForJoin, int[] buildKey,
+    public PlaneSweepJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memoryForJoin, int[] buildKeys,
             int[] probeKeys, RecordDescriptor recordDescriptor, ISpatialJoinUtilFactory imjcf) {
         super(spec, 2, 1);
         outRecDescs[0] = recordDescriptor;
-        this.buildKey = buildKey[0];
-        this.probeKey = probeKeys[0];
+        this.buildKeys = buildKeys;
+        this.probeKeys = probeKeys;
         this.memoryForJoin = memoryForJoin;
         this.imjcf = imjcf;
     }
@@ -109,9 +109,9 @@ public class PlaneSweepJoinOperatorDescriptor extends AbstractOperatorDescriptor
                     state = new JoinCacheTaskState(ctx.getJobletContext().getJobId(),
                             new TaskId(getActivityId(), partition));
 
-                    ISpatialJoinUtil imjc = imjcf.createSpatialJoinUtil(buildKey, probeKey, ctx, nPartitions);
+                    ISpatialJoinUtil imjc = imjcf.createSpatialJoinUtil(buildKeys, probeKeys, ctx, nPartitions);
 
-                    state.joiner = new SpatialJoiner(ctx, memoryForJoin, imjc, buildKey, probeKey, rd0, rd1);
+                    state.joiner = new SpatialJoiner(ctx, memoryForJoin, imjc, buildKeys, probeKeys, rd0, rd1);
                 }
 
                 @Override

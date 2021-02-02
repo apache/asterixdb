@@ -34,7 +34,7 @@ import org.apache.asterix.om.base.ARectangle;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.runtime.operators.joins.spatial.utils.ISpatialJoinUtilFactory;
-import org.apache.asterix.runtime.operators.joins.spatial.utils.SpatialJoinUtilFactory;
+import org.apache.asterix.runtime.operators.joins.spatial.utils.IntersectSpatialJoinUtilFactory;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -200,7 +200,7 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         List<LogicalVariable> keysRightBranch = new ArrayList<>();
         keysRightBranch.add(rightTileIdVar);
         keysRightBranch.add(rightInputVar);
-        ISpatialJoinUtilFactory mjcf = new SpatialJoinUtilFactory();
+        ISpatialJoinUtilFactory mjcf = new IntersectSpatialJoinUtilFactory();
         joinOp.setPhysicalOperator(new SpatialJoinPOperator(joinOp.getJoinKind(),
                 AbstractJoinPOperator.JoinPartitioningType.PAIRWISE, keysLeftBranch, keysRightBranch,
                 context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf));

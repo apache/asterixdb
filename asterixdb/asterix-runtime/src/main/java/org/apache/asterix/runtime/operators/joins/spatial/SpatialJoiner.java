@@ -64,8 +64,8 @@ public class SpatialJoiner {
     protected final FrameTupleAppender resultAppender;
     protected final FrameTupleCursor[] inputCursor;
 
-    public SpatialJoiner(IHyracksTaskContext ctx, int memorySize, ISpatialJoinUtil mjc, int buildKeys, int probeKeys,
-            RecordDescriptor buildRd, RecordDescriptor probeRd) throws HyracksDataException {
+    public SpatialJoiner(IHyracksTaskContext ctx, int memorySize, ISpatialJoinUtil mjc, int[] buildKeys,
+            int[] probeKeys, RecordDescriptor buildRd, RecordDescriptor probeRd) throws HyracksDataException {
         this.mjc = mjc;
 
         // Memory (probe buffer)
