@@ -27,11 +27,14 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.asterix.algebra.operators.physical.SpatialJoinPOperator;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.base.ARectangle;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.runtime.operators.joins.spatial.utils.ISpatialJoinUtilFactory;
+import org.apache.asterix.runtime.operators.joins.spatial.utils.SpatialJoinUtilFactory;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -51,7 +54,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.SpatialJoinPOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
@@ -198,8 +200,10 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         List<LogicalVariable> keysRightBranch = new ArrayList<>();
         keysRightBranch.add(rightTileIdVar);
         keysRightBranch.add(rightInputVar);
+        ISpatialJoinUtilFactory mjcf = new SpatialJoinUtilFactory();
         joinOp.setPhysicalOperator(new SpatialJoinPOperator(joinOp.getJoinKind(),
-                AbstractJoinPOperator.JoinPartitioningType.PAIRWISE, keysLeftBranch, keysRightBranch));
+                AbstractJoinPOperator.JoinPartitioningType.PAIRWISE, keysLeftBranch, keysRightBranch,
+                context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf));
 
         context.addToDontApplySet(this, op);
         return true;

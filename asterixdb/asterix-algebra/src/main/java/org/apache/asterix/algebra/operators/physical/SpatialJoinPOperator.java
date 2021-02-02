@@ -16,32 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.core.algebra.operators.physical;
+package org.apache.asterix.algebra.operators.physical;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
+import org.apache.asterix.runtime.operators.joins.spatial.PlaneSweepJoinOperatorDescriptor;
+import org.apache.asterix.runtime.operators.joins.spatial.utils.ISpatialJoinUtilFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
-import org.apache.hyracks.algebricks.core.algebra.properties.LocalGroupingProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
@@ -50,14 +48,9 @@ import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitione
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.evaluators.TuplePairEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
-import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
-import org.apache.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
-import org.apache.hyracks.dataflow.std.join.NestedLoopJoinOperatorDescriptor;
 
 /**
  * The right input is broadcast and the left input can be partitioned in any way.
@@ -67,11 +60,17 @@ public class SpatialJoinPOperator extends AbstractJoinPOperator {
     private final List<LogicalVariable> keysLeftBranch;
     private final List<LogicalVariable> keysRightBranch;
 
+    protected final ISpatialJoinUtilFactory mjcf;
+    private final int memSizeInFrames;
+
     public SpatialJoinPOperator(JoinKind kind, JoinPartitioningType partitioningType,
-            List<LogicalVariable> keysLeftBranch, List<LogicalVariable> keysRightBranch) {
+            List<LogicalVariable> keysLeftBranch, List<LogicalVariable> keysRightBranch, int memSizeInFrames,
+            ISpatialJoinUtilFactory mjcf) {
         super(kind, partitioningType);
         this.keysLeftBranch = keysLeftBranch;
         this.keysRightBranch = keysRightBranch;
+        this.mjcf = mjcf;
+        this.memSizeInFrames = memSizeInFrames;
     }
 
     public List<LogicalVariable> getKeysLeftBranch() {
@@ -123,21 +122,21 @@ public class SpatialJoinPOperator extends AbstractJoinPOperator {
         keysLeftBranchTileId.add(keysLeftBranch.get(0));
         List<LogicalVariable> keysRightBranchTileId = new ArrayList<>();
         keysRightBranchTileId.add(keysRightBranch.get(0));
-        IPartitioningProperty pp1 =
-                new UnorderedPartitionedProperty(new ListSet<>(keysLeftBranchTileId), context.getComputationNodeDomain());
-        IPartitioningProperty pp2 =
-                new UnorderedPartitionedProperty(new ListSet<>(keysRightBranchTileId), context.getComputationNodeDomain());
+        IPartitioningProperty pp1 = new UnorderedPartitionedProperty(new ListSet<>(keysLeftBranchTileId),
+                context.getComputationNodeDomain());
+        IPartitioningProperty pp2 = new UnorderedPartitionedProperty(new ListSet<>(keysRightBranchTileId),
+                context.getComputationNodeDomain());
 
         List<ILocalStructuralProperty> localProperties1 = new ArrayList<>();
         List<OrderColumn> orderColumns1 = new ArrayList<OrderColumn>();
-        for (LogicalVariable var: keysLeftBranch) {
+        for (LogicalVariable var : keysLeftBranch) {
             orderColumns1.add(new OrderColumn(var, OrderOperator.IOrder.OrderKind.ASC));
         }
         localProperties1.add(new LocalOrderProperty(orderColumns1));
 
         List<ILocalStructuralProperty> localProperties2 = new ArrayList<>();
         List<OrderColumn> orderColumns2 = new ArrayList<OrderColumn>();
-        for (LogicalVariable var: keysRightBranch) {
+        for (LogicalVariable var : keysRightBranch) {
             orderColumns2.add(new OrderColumn(var, OrderOperator.IOrder.OrderKind.ASC));
         }
         localProperties2.add(new LocalOrderProperty(orderColumns2));
@@ -155,47 +154,64 @@ public class SpatialJoinPOperator extends AbstractJoinPOperator {
     public void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context, ILogicalOperator op,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
-        AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op;
-        RecordDescriptor recDescriptor =
-                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
-        IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
-        conditionInputSchemas[0] = propagatedSchema;
-        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
-        IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(join.getCondition().getValue(),
-                context.getTypeEnvironment(op), conditionInputSchemas, context);
-        ITuplePairComparatorFactory comparatorFactory =
-                new TuplePairEvaluatorFactory(cond, false, context.getBinaryBooleanInspectorFactory());
+        int[] keysBuild = JobGenHelper.variablesToFieldIndexes(keysLeftBranch, inputSchemas[0]);
+        int[] keysProbe = JobGenHelper.variablesToFieldIndexes(keysRightBranch, inputSchemas[1]);
+
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        IOperatorDescriptor opDesc;
+        RecordDescriptor recordDescriptor =
+                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
 
-        int memSize = localMemoryRequirements.getMemoryBudgetInFrames();
-        switch (kind) {
-            case INNER:
-                opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, false,
-                        null);
-                break;
-            case LEFT_OUTER:
-                IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
-                for (int j = 0; j < nonMatchWriterFactories.length; j++) {
-                    nonMatchWriterFactories[j] = context.getMissingWriterFactory();
-                }
-                opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, true,
-                        nonMatchWriterFactories);
-                break;
-            default:
-                throw new NotImplementedException();
-        }
-
-        opDesc.setSourceLocation(join.getSourceLocation());
-        contributeOpDesc(builder, join, opDesc);
+        IOperatorDescriptor opDesc = new PlaneSweepJoinOperatorDescriptor(spec, memSizeInFrames, keysBuild, keysProbe,
+                recordDescriptor, mjcf);
+        contributeOpDesc(builder, (AbstractLogicalOperator) op, opDesc);
 
         ILogicalOperator src1 = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src1, 0, op, 0);
         ILogicalOperator src2 = op.getInputs().get(1).getValue();
         builder.contributeGraphEdge(src2, 0, op, 1);
+
+        //        AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op;
+        //        RecordDescriptor recDescriptor =
+        //                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
+        //        IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
+        //        conditionInputSchemas[0] = propagatedSchema;
+        //        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
+        //        IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(join.getCondition().getValue(),
+        //                context.getTypeEnvironment(op), conditionInputSchemas, context);
+        //        ITuplePairComparatorFactory comparatorFactory =
+        //                new TuplePairEvaluatorFactory(cond, false, context.getBinaryBooleanInspectorFactory());
+        //        IOperatorDescriptorRegistry spec = builder.getJobSpec();
+        //        IOperatorDescriptor opDesc;
+        //
+        //        int memSize = localMemoryRequirements.getMemoryBudgetInFrames();
+        //        switch (kind) {
+        //            case INNER:
+        //                opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, false,
+        //                        null);
+        //                break;
+        //            case LEFT_OUTER:
+        //                IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
+        //                for (int j = 0; j < nonMatchWriterFactories.length; j++) {
+        //                    nonMatchWriterFactories[j] = context.getMissingWriterFactory();
+        //                }
+        //                opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, true,
+        //                        nonMatchWriterFactories);
+        //                break;
+        //            default:
+        //                throw new NotImplementedException();
+        //        }
+        //
+        //        opDesc.setSourceLocation(join.getSourceLocation());
+        //        contributeOpDesc(builder, join, opDesc);
+        //
+        //        ILogicalOperator src1 = op.getInputs().get(0).getValue();
+        //        builder.contributeGraphEdge(src1, 0, op, 0);
+        //        ILogicalOperator src2 = op.getInputs().get(1).getValue();
+        //        builder.contributeGraphEdge(src2, 0, op, 1);
     }
 
-    protected List<ILocalStructuralProperty> deliveredLocalProperties(ILogicalOperator op, IOptimizationContext context) {
+    protected List<ILocalStructuralProperty> deliveredLocalProperties(ILogicalOperator op,
+            IOptimizationContext context) {
         AbstractLogicalOperator op0 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         IPhysicalPropertiesVector pv0 = op0.getPhysicalOperator().getDeliveredProperties();
         List<ILocalStructuralProperty> lp0 = pv0.getLocalProperties();
