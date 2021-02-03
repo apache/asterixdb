@@ -25,12 +25,15 @@ import java.util.List;
 import org.apache.asterix.runtime.operators.joins.spatial.PlaneSweepJoinOperatorDescriptor;
 import org.apache.asterix.runtime.operators.joins.spatial.utils.ISpatialJoinUtilFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
@@ -48,9 +51,14 @@ import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitione
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.evaluators.TuplePairEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
+import org.apache.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
+import org.apache.hyracks.dataflow.std.join.NestedLoopJoinOperatorDescriptor;
 
 /**
  * The right input is broadcast and the left input can be partitioned in any way.
@@ -129,20 +137,16 @@ public class SpatialJoinPOperator extends AbstractJoinPOperator {
 
         List<ILocalStructuralProperty> localProperties1 = new ArrayList<>();
         List<OrderColumn> orderColumns1 = new ArrayList<OrderColumn>();
-//        for (LogicalVariable var : keysLeftBranch) {
-//            orderColumns1.add(new OrderColumn(var, OrderOperator.IOrder.OrderKind.ASC));
-//        }
-        orderColumns1.add(new OrderColumn(keysLeftBranch.get(0), OrderOperator.IOrder.OrderKind.ASC));
-        orderColumns1.add(new OrderColumn(keysLeftBranch.get(1), OrderOperator.IOrder.OrderKind.ASC));
+        for (LogicalVariable var : keysLeftBranch) {
+            orderColumns1.add(new OrderColumn(var, OrderOperator.IOrder.OrderKind.ASC));
+        }
         localProperties1.add(new LocalOrderProperty(orderColumns1));
 
         List<ILocalStructuralProperty> localProperties2 = new ArrayList<>();
         List<OrderColumn> orderColumns2 = new ArrayList<OrderColumn>();
-//        for (LogicalVariable var : keysRightBranch) {
-//            orderColumns2.add(new OrderColumn(var, OrderOperator.IOrder.OrderKind.ASC));
-//        }
-        orderColumns2.add(new OrderColumn(keysRightBranch.get(0), OrderOperator.IOrder.OrderKind.ASC));
-        orderColumns2.add(new OrderColumn(keysRightBranch.get(1), OrderOperator.IOrder.OrderKind.ASC));
+        for (LogicalVariable var : keysRightBranch) {
+            orderColumns2.add(new OrderColumn(var, OrderOperator.IOrder.OrderKind.ASC));
+        }
 
         localProperties2.add(new LocalOrderProperty(orderColumns2));
 
@@ -175,44 +179,44 @@ public class SpatialJoinPOperator extends AbstractJoinPOperator {
         ILogicalOperator src2 = op.getInputs().get(1).getValue();
         builder.contributeGraphEdge(src2, 0, op, 1);
 
-        //        AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op;
-        //        RecordDescriptor recDescriptor =
-        //                JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
-        //        IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
-        //        conditionInputSchemas[0] = propagatedSchema;
-        //        IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
-        //        IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(join.getCondition().getValue(),
-        //                context.getTypeEnvironment(op), conditionInputSchemas, context);
-        //        ITuplePairComparatorFactory comparatorFactory =
-        //                new TuplePairEvaluatorFactory(cond, false, context.getBinaryBooleanInspectorFactory());
-        //        IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        //        IOperatorDescriptor opDesc;
-        //
-        //        int memSize = localMemoryRequirements.getMemoryBudgetInFrames();
-        //        switch (kind) {
-        //            case INNER:
-        //                opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, false,
-        //                        null);
-        //                break;
-        //            case LEFT_OUTER:
-        //                IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
-        //                for (int j = 0; j < nonMatchWriterFactories.length; j++) {
-        //                    nonMatchWriterFactories[j] = context.getMissingWriterFactory();
-        //                }
-        //                opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, true,
-        //                        nonMatchWriterFactories);
-        //                break;
-        //            default:
-        //                throw new NotImplementedException();
-        //        }
-        //
-        //        opDesc.setSourceLocation(join.getSourceLocation());
-        //        contributeOpDesc(builder, join, opDesc);
-        //
-        //        ILogicalOperator src1 = op.getInputs().get(0).getValue();
-        //        builder.contributeGraphEdge(src1, 0, op, 0);
-        //        ILogicalOperator src2 = op.getInputs().get(1).getValue();
-        //        builder.contributeGraphEdge(src2, 0, op, 1);
+//                AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op;
+//                RecordDescriptor recDescriptor =
+//                        JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
+//                IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
+//                conditionInputSchemas[0] = propagatedSchema;
+//                IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
+//                IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(join.getCondition().getValue(),
+//                        context.getTypeEnvironment(op), conditionInputSchemas, context);
+//                ITuplePairComparatorFactory comparatorFactory =
+//                        new TuplePairEvaluatorFactory(cond, false, context.getBinaryBooleanInspectorFactory());
+//                IOperatorDescriptorRegistry spec = builder.getJobSpec();
+//                IOperatorDescriptor opDesc;
+//
+//                int memSize = localMemoryRequirements.getMemoryBudgetInFrames();
+//                switch (kind) {
+//                    case INNER:
+//                        opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, false,
+//                                null);
+//                        break;
+//                    case LEFT_OUTER:
+//                        IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
+//                        for (int j = 0; j < nonMatchWriterFactories.length; j++) {
+//                            nonMatchWriterFactories[j] = context.getMissingWriterFactory();
+//                        }
+//                        opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, true,
+//                                nonMatchWriterFactories);
+//                        break;
+//                    default:
+//                        throw new NotImplementedException();
+//                }
+//
+//                opDesc.setSourceLocation(join.getSourceLocation());
+//                contributeOpDesc(builder, join, opDesc);
+//
+//                ILogicalOperator src1 = op.getInputs().get(0).getValue();
+//                builder.contributeGraphEdge(src1, 0, op, 0);
+//                ILogicalOperator src2 = op.getInputs().get(1).getValue();
+//                builder.contributeGraphEdge(src2, 0, op, 1);
     }
 
     protected List<ILocalStructuralProperty> deliveredLocalProperties(ILogicalOperator op,
