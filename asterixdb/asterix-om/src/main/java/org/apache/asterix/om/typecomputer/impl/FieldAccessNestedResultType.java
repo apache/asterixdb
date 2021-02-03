@@ -25,7 +25,6 @@ import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
@@ -37,41 +36,11 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class FieldAccessNestedResultType extends AbstractResultTypeComputer {
     public static final FieldAccessNestedResultType INSTANCE = new FieldAccessNestedResultType();
 
     private FieldAccessNestedResultType() {
-    }
-
-    @Override
-    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
-            throws AlgebricksException {
-        ATypeTag actualTypeTag = type.getTypeTag();
-        if (argIndex == 0 && actualTypeTag != ATypeTag.OBJECT) {
-            throw new TypeMismatchException(sourceLoc, actualTypeTag, ATypeTag.OBJECT);
-        }
-        if (argIndex == 1) {
-            switch (actualTypeTag) {
-                case STRING:
-                    break;
-                case ARRAY:
-                    checkOrderedList(type, sourceLoc);
-                    break;
-                default:
-                    throw new TypeMismatchException(sourceLoc, actualTypeTag, ATypeTag.STRING, ATypeTag.ARRAY);
-            }
-        }
-    }
-
-    private void checkOrderedList(IAType type, SourceLocation sourceLoc) throws AlgebricksException {
-        AOrderedListType listType = (AOrderedListType) type;
-        ATypeTag itemTypeTag = listType.getItemType().getTypeTag();
-        if (itemTypeTag != ATypeTag.STRING && itemTypeTag != ATypeTag.ANY) {
-            throw new TypeMismatchException(sourceLoc, itemTypeTag, ATypeTag.STRING, ATypeTag.ANY);
-        }
     }
 
     @Override
@@ -88,12 +57,15 @@ public class FieldAccessNestedResultType extends AbstractResultTypeComputer {
         ConstantExpression ce = (ConstantExpression) arg1;
         IAObject v = ((AsterixConstantValue) ce.getValue()).getObject();
         List<String> fieldPath = new ArrayList<>();
-        if (v.getType().getTypeTag() == ATypeTag.ARRAY) {
+        ATypeTag tag = v.getType().getTypeTag();
+        if (tag == ATypeTag.ARRAY && ((AOrderedListType) v.getType()).getItemType().getTypeTag() == ATypeTag.STRING) {
             for (int i = 0; i < ((AOrderedList) v).size(); i++) {
                 fieldPath.add(((AString) ((AOrderedList) v).getItem(i)).getStringValue());
             }
-        } else {
+        } else if (tag == ATypeTag.STRING) {
             fieldPath.add(((AString) v).getStringValue());
+        } else {
+            return BuiltinType.ANY;
         }
         ARecordType recType = (ARecordType) firstArgType;
         IAType fieldType = recType.getSubFieldType(fieldPath);

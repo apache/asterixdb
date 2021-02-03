@@ -27,6 +27,7 @@ import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class FunctionParser {
 
@@ -40,14 +41,19 @@ public class FunctionParser {
         return parserFactory.getLanguage();
     }
 
-    public FunctionDecl getFunctionDecl(Function function) throws CompilationException {
+    public FunctionDecl getFunctionDecl(Function function, IWarningCollector warningCollector)
+            throws CompilationException {
         if (!function.getLanguage().equals(getLanguage())) {
             throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_FUNCTION_LANGUAGE, getLanguage(),
                     function.getLanguage());
         }
         IParser parser = parserFactory.createParser(new StringReader(function.getFunctionBody()));
         try {
-            return parser.parseFunctionBody(function.getSignature(), function.getParameterNames());
+            FunctionDecl functionDecl = parser.parseFunctionBody(function.getSignature(), function.getParameterNames());
+            if (warningCollector != null) {
+                parser.getWarnings(warningCollector);
+            }
+            return functionDecl;
         } catch (CompilationException e) {
             throw new CompilationException(ErrorCode.COMPILATION_BAD_FUNCTION_DEFINITION, e, function.getSignature(),
                     e.getMessage());

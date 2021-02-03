@@ -58,6 +58,7 @@ import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class FunctionUtil {
@@ -206,12 +207,13 @@ public class FunctionUtil {
      *            for collecting function calls in the <code>expression</code>
      * @param functionParser,
      *            for parsing stored functions in the string represetnation.
-     * @param defaultDataverse
+     * @param warningCollector
+     *            for reporting warnings encountered during parsing
      * @throws CompilationException
      */
     public static List<FunctionDecl> retrieveUsedStoredFunctions(MetadataProvider metadataProvider,
             Expression expression, List<FunctionSignature> declaredFunctions, List<FunctionDecl> inputFunctionDecls,
-            IFunctionCollector functionCollector, FunctionParser functionParser, DataverseName defaultDataverse)
+            IFunctionCollector functionCollector, FunctionParser functionParser, IWarningCollector warningCollector)
             throws CompilationException {
         if (expression == null) {
             return Collections.emptyList();
@@ -246,7 +248,7 @@ public class FunctionUtil {
                 continue;
             }
 
-            FunctionDecl functionDecl = functionParser.getFunctionDecl(function);
+            FunctionDecl functionDecl = functionParser.getFunctionDecl(function, warningCollector);
             if (functionDecls.contains(functionDecl)) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, functionCall.getSourceLocation(),
                         "Recursive invocation " + functionDecls.get(functionDecls.size() - 1).getSignature() + " <==> "
@@ -254,7 +256,7 @@ public class FunctionUtil {
             }
             functionDecls.add(functionDecl);
             functionDecls = retrieveUsedStoredFunctions(metadataProvider, functionDecl.getFuncBody(), declaredFunctions,
-                    functionDecls, functionCollector, functionParser, function.getDataverseName());
+                    functionDecls, functionCollector, functionParser, warningCollector);
         }
         return functionDecls;
     }

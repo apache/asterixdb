@@ -98,11 +98,14 @@ public class GetRecordFieldValueEvalFactory implements IScalarEvaluatorFactory {
                     byte[] serFldName = inputArg1.getByteArray();
                     int serFldNameOffset = inputArg1.getStartOffset();
                     int serFldNameLen = inputArg1.getLength();
+                    if (serFldName[serFldNameOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                        throw new TypeMismatchException(sourceLoc, BuiltinFunctions.GET_RECORD_FIELD_VALUE, 0,
+                                serFldName[serFldNameOffset], ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                    }
 
                     byte[] serRecord = inputArg0.getByteArray();
                     int serRecordOffset = inputArg0.getStartOffset();
                     int serRecordLen = inputArg0.getLength();
-
                     if (serRecord[serRecordOffset] != ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         throw new TypeMismatchException(sourceLoc, BuiltinFunctions.GET_RECORD_FIELD_VALUE, 0,
                                 serRecord[serRecordOffset], ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
