@@ -47,13 +47,11 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
         double buildXmin = SpatialJoinUtil.getRectangleXmin(buildAccessor, buildTupleIndex, idBuild[1]);
         double probeXmax = SpatialJoinUtil.getRectangleXmax(probeAccessor, probeTupleIndex, idProbe[1]);
 
-        if (buildTileId <= probeTileId) {
-            return true;
+        if (buildTileId == probeTileId) {
+            return buildXmin < probeXmax;
         } else {
             return false;
         }
-//        return buildTileId == probeTileId;
-//        return buildXmin < probeXmax;
     }
 
     /**
@@ -70,11 +68,8 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
         if (buildTileId != probeTileId) {
             return true;
         } else {
-            return false;
+            return buildXmin >= probeXmax;
         }
-
-//        return buildTileId != probeTileId;
-//        return buildXmin >= probeXmax;
     }
 
     @Override
@@ -87,8 +82,7 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
 
         if (buildTileId == probeTileId) {
             return compareRectangle(rectBuild, rectProbe);
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -104,13 +98,11 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
         double probeXmin = SpatialJoinUtil.getRectangleXmin(probeAccessor, probeTupleIndex, idProbe[1]);
         double buildXmax = SpatialJoinUtil.getRectangleXmax(buildAccessor, buildTupleIndex, idBuild[1]);
 
-        return buildTileId != probeTileId;
-//        return buildXmax < probeXmin;
-//        if (buildTileId != probeTileId) {
-//            return true;
-//        } else {
-//            return buildXmax < probeXmin;
-//        }
+        if (buildTileId != probeTileId) {
+            return true;
+        } else {
+            return buildXmax < probeXmin;
+        }
     }
 
     @Override
@@ -126,7 +118,9 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
         double probeXmin = SpatialJoinUtil.getRectangleXmin(probeAccessor, probeTupleIndex, idProbe[1]);
         double buildXmax = SpatialJoinUtil.getRectangleXmax(buildAccessor, buildTupleIndex, idBuild[1]);
 
+        if (buildTileId == probeTileId) {
+            return buildXmax > probeXmin;
+        }
         return buildTileId >= probeTileId;
-//        return buildXmax > probeXmin;
     }
 }

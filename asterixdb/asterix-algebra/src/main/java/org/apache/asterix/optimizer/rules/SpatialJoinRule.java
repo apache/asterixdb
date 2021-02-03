@@ -70,8 +70,8 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
     private static final double MIN_Y = -83.0;
     private static final double MAX_X = 180.0;
     private static final double MAX_Y = 90.0;
-    private static final int NUM_ROWS = 3;
-    private static final int NUM_COLUMNS = 3;
+    private static final int NUM_ROWS = 10;
+    private static final int NUM_COLUMNS = 10;
 
     private final Integer64SerializerDeserializer integerSerde = Integer64SerializerDeserializer.INSTANCE;
     private static final int INTEGER_LENGTH = Long.BYTES;
