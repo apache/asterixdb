@@ -1,0 +1,109 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpcds;
+
+WITH
+ssr AS (
+  SELECT  s.s_store_id AS store_id,
+          SUM(ss.ss_ext_sales_price) AS sales,
+          SUM(COALESCE(sr.sr_return_amt, 0.0)) AS returns,
+          SUM(ss.ss_net_profit - COALESCE(sr.sr_net_loss, 0.0)) AS profit
+  FROM store_sales ss
+    LEFT OUTER JOIN store_returns sr ON (ss.ss_item_sk = sr.sr_item_sk AND ss.ss_ticket_number = sr.sr_ticket_number),
+    date_dim d, store s, item i, promotion p
+  WHERE ss.ss_sold_date_sk = d.d_date_sk
+    AND date(d.d_date) BETWEEN date('1998-01-01') AND (date('1998-01-01') + duration('P5Y'))
+    AND ss.ss_store_sk = s.s_store_sk
+    AND ss.ss_item_sk = i.i_item_sk
+    AND i.i_current_price > 1
+    AND ss.ss_promo_sk = p.p_promo_sk
+    AND p.p_channel_tv = 'N'
+ GROUP BY s.s_store_id
+),
+
+csr AS (
+  SELECT  cp.cp_catalog_page_id AS catalog_page_id,
+          SUM(cs.cs_ext_sales_price) AS sales,
+          SUM(COALESCE(cr.cr_return_amount, 0.0)) AS returns,
+          SUM(cs.cs_net_profit - COALESCE(cr.cr_net_loss, 0.0)) AS profit
+  FROM catalog_sales cs
+    LEFT OUTER JOIN catalog_returns cr ON (cs.cs_item_sk = cr.cr_item_sk AND cs.cs_order_number = cr.cr_order_number),
+    date_dim d, catalog_page cp, item i, promotion p
+  WHERE cs.cs_sold_date_sk = d.d_date_sk
+    AND date(d.d_date) BETWEEN date('1998-01-01') AND (date('1998-01-01') + duration('P5Y'))
+    AND cs.cs_catalog_page_sk = cp.cp_catalog_page_sk
+    AND cs.cs_item_sk = i.i_item_sk
+    AND i.i_current_price > 1
+    AND cs.cs_promo_sk = p.p_promo_sk
+    AND p.p_channel_tv = 'N'
+  GROUP BY cp.cp_catalog_page_id
+),
+
+wsr AS (
+  SELECT  web.web_site_id,
+          SUM(ws.ws_ext_sales_price) AS sales,
+          SUM(COALESCE(wr.wr_return_amt, 0.0)) AS returns,
+          SUM(ws.ws_net_profit - COALESCE(wr.wr_net_loss, 0.0)) AS profit
+  FROM web_sales ws
+    LEFT OUTER JOIN web_returns wr ON (ws.ws_item_sk = wr.wr_item_sk AND ws.ws_order_number = wr.wr_order_number),
+    date_dim d, web_site web, item i, promotion p
+  WHERE ws.ws_sold_date_sk = d.d_date_sk
+    AND date(d.d_date) BETWEEN date('1998-01-01') AND (date('1998-01-01') + duration('P5Y'))
+    AND ws.ws_web_site_sk = web.web_site_sk
+    AND ws.ws_item_sk = i.i_item_sk
+    AND i.i_current_price > 1
+    AND ws.ws_promo_sk = p.p_promo_sk
+    AND p.p_channel_tv = 'N'
+  GROUP BY web.web_site_id
+)
+
+SELECT  channel, id,
+        ROUND(SUM(sales), 2) AS sales,
+        ROUND(SUM(returns), 2) AS returns,
+        ROUND(SUM(profit), 2) AS profit
+FROM (
+  SELECT  'store channel' AS channel,
+          'store' || store_id AS id,
+          sales,
+          returns,
+          profit
+ FROM ssr
+
+ UNION ALL
+
+ SELECT 'catalog channel' AS channel,
+        'catalog_page' || catalog_page_id AS id,
+        sales,
+        returns,
+        profit
+ FROM csr
+
+ UNION ALL
+
+ SELECT 'web channel' AS channel,
+        'web_site' || web_site_id AS id,
+        ROUND(sales, 2) AS sales,
+        ROUND(returns, 2) AS returns,
+        ROUND(profit, 2) AS profit
+ FROM wsr
+) x
+GROUP BY ROLLUP (channel, id)
+ORDER BY channel, id
+LIMIT 100;

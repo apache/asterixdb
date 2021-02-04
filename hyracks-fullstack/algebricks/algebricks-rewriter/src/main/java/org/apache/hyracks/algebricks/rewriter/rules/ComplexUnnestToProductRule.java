@@ -86,9 +86,8 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
         // The last operator must be an unnest or join.
         AbstractLogicalOperator unnestOrJoin = (AbstractLogicalOperator) outerOps.get(outerOps.size() - 1);
 
-        ILogicalOperator outerRoot = null;
-        ILogicalOperator innerRoot = null;
-        EmptyTupleSourceOperator ets = new EmptyTupleSourceOperator();
+        ILogicalOperator outerRoot;
+        ILogicalOperator innerRoot;
         // If we found a join, simply use it as the outer root.
         if (unnestOrJoin.getOperatorTag() != LogicalOperatorTag.INNERJOIN
                 && unnestOrJoin.getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
@@ -110,6 +109,7 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
                 return false;
             }
         }
+        EmptyTupleSourceOperator ets = new EmptyTupleSourceOperator();
         innerRoot = buildOperatorChain(innerOps, ets, context);
         context.computeAndSetTypeEnvironmentForOperator(innerRoot);
         outerRoot = buildOperatorChain(outerOps, null, context);
@@ -213,6 +213,10 @@ public class ComplexUnnestToProductRule implements IAlgebraicRewriteRule {
                 }
             }
             default: {
+                if (op.getInputs().size() > 1) {
+                    return false;
+                }
+
                 // The inner is trivially independent.
                 if (!belowSecondUnnest && innerUsedVars.isEmpty()) {
                     outerOps.add(op);

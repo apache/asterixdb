@@ -10585,6 +10585,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
+      <compilation-unit name="q05">
+        <output-dir compare="Text">q05</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="q07">
         <output-dir compare="Text">q07</output-dir>
       </compilation-unit>
@@ -10605,6 +10610,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
+      <compilation-unit name="q18">
+        <output-dir compare="Text">q18</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="q19">
         <output-dir compare="Text">q19</output-dir>
       </compilation-unit>
@@ -10617,6 +10627,11 @@
     <test-case FilePath="tpcds">
       <compilation-unit name="q21">
         <output-dir compare="Text">q21</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="q22">
+        <output-dir compare="Text">q22</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
@@ -10640,6 +10655,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
+      <compilation-unit name="q27">
+        <output-dir compare="Text">q27</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="q29">
         <output-dir compare="Text">q29</output-dir>
       </compilation-unit>
@@ -10657,6 +10677,11 @@
     <test-case FilePath="tpcds">
       <compilation-unit name="q34">
         <output-dir compare="Text">q34</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="q36">
+        <output-dir compare="Text">q36</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
@@ -10730,8 +10755,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
+      <compilation-unit name="q67">
+        <output-dir compare="Text">q67</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="q68">
         <output-dir compare="Text">q68</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="q70">
+        <output-dir compare="Text">q70</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
@@ -10740,8 +10775,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
+      <compilation-unit name="q77">
+        <output-dir compare="Text">q77</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="q79">
         <output-dir compare="Text">q79</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="q80">
+        <output-dir compare="Text">q80</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
@@ -10757,6 +10802,11 @@
     <test-case FilePath="tpcds">
       <compilation-unit name="q85">
         <output-dir compare="Text">q85</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="q86">
+        <output-dir compare="Text">q86</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">

@@ -1,0 +1,5 @@
+{ "i_item_id": null, "ca_country": null, "ca_state": null, "ca_county": null, "agg1": 94.0, "agg2": 105.88, "agg3": 0.0, "agg4": 530.82, "agg5": 889.24, "agg6": null, "agg7": 0.0 }
+{ "i_item_id": "AAAAAAAAEAAAAAAA", "ca_country": null, "ca_state": null, "ca_county": null, "agg1": 94.0, "agg2": 105.88, "agg3": 0.0, "agg4": 530.82, "agg5": 889.24, "agg6": null, "agg7": 0.0 }
+{ "i_item_id": "AAAAAAAAEAAAAAAA", "ca_country": "United States", "ca_state": null, "ca_county": null, "agg1": 94.0, "agg2": 105.88, "agg3": 0.0, "agg4": 530.82, "agg5": 889.24, "agg6": null, "agg7": 0.0 }
+{ "i_item_id": "AAAAAAAAEAAAAAAA", "ca_country": "United States", "ca_state": "WA", "ca_county": null, "agg1": 94.0, "agg2": 105.88, "agg3": 0.0, "agg4": 530.82, "agg5": 889.24, "agg6": null, "agg7": 0.0 }
+{ "i_item_id": "AAAAAAAAEAAAAAAA", "ca_country": "United States", "ca_state": "WA", "ca_county": "Bledsoe County", "agg1": 94.0, "agg2": 105.88, "agg3": 0.0, "agg4": 530.82, "agg5": 889.24, "agg6": null, "agg7": 0.0 }

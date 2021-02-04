@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -167,7 +168,7 @@ public class VariableUtilities {
             boolean goThroughNts, ITypingContext ctx) throws AlgebricksException {
         ILogicalOperatorVisitor<Void, Pair<LogicalVariable, LogicalVariable>> visitor =
                 new SubstituteVariableVisitor(goThroughNts, ctx);
-        op.accept(visitor, new Pair<LogicalVariable, LogicalVariable>(v1, v2));
+        op.accept(visitor, new Pair<>(Objects.requireNonNull(v1), Objects.requireNonNull(v2)));
     }
 
     public static <T> boolean varListEqualUnordered(List<T> var, List<T> varArg) {

@@ -39,7 +39,7 @@ WITH
     cs.cs_item_sk = i.i_item_sk
     AND cs.cs_sold_date_sk = d.d_date_sk
     AND cc.cc_call_center_sk = cs.cs_call_center_sk
-    /*AND ( d.d_year = 2000 OR ( d.d_year = 2000 - 1 AND d.d_moy = 12 ) OR ( d.d_year = 2000 + 1 AND d.d_moy = 1 ) )*/
+    /*AND ( d.d_year = 2001 OR ( d.d_year = 2001 - 1 AND d.d_moy = 12 ) OR ( d.d_year = 2001 + 1 AND d.d_moy = 1 ) )*/
   GROUP BY
     i.i_category,
     i.i_brand,
@@ -75,7 +75,7 @@ WITH
 SELECT v2.*
 FROM v2
 WHERE
-  d_year = 2000 AND
+  d_year = 2001 AND
   avg_monthly_sales > 0
   /*AND CASE WHEN avg_monthly_sales > 0 THEN ABS(sum_sales - avg_monthly_sales) / avg_monthly_sales ELSE NULL END > 0.1*/
 ORDER BY
