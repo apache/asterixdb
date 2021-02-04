@@ -20,6 +20,7 @@ package org.apache.hyracks.ipc.sockets;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
 
 import javax.net.ssl.SSLEngine;
@@ -142,6 +143,9 @@ public class SslSocketChannel implements ISocketChannel {
         while (src.hasRemaining()) {
             // chunk src to encrypted ssl records of pocket size
             outEncryptedData.clear();
+            if (!socketChannel.isConnected()) {
+                throw new ClosedChannelException();
+            }
             final SSLEngineResult result = engine.wrap(src, outEncryptedData);
             switch (result.getStatus()) {
                 case OK:
@@ -186,8 +190,11 @@ public class SslSocketChannel implements ISocketChannel {
     public synchronized void close() throws IOException {
         if (socketChannel.isOpen()) {
             engine.closeOutbound();
-            new SslHandshake(this).handshake();
-            socketChannel.close();
+            try {
+                new SslHandshake(this).handshake();
+            } finally {
+                socketChannel.close();
+            }
         }
     }
 
