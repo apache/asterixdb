@@ -50,8 +50,11 @@ import org.apache.hyracks.api.util.CleanupUtils;
 
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class AwsS3InputStreamFactory implements IInputStreamFactory {
@@ -88,10 +91,6 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
         this.configuration = configuration;
         ICcApplicationContext ccApplicationContext = (ICcApplicationContext) ctx.getApplicationContext();
 
-        String container = configuration.get(AwsS3.CONTAINER_NAME_FIELD_NAME);
-
-        List<S3Object> filesOnly = new ArrayList<>();
-
         // Ensure the validity of include/exclude
         ExternalDataUtils.AwsS3.validateIncludeExclude(configuration);
 
@@ -126,35 +125,24 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
             p = (matchers, key) -> true;
         }
 
+        // Get all objects in a bucket and extract the paths to files
+        List<S3Object> filesOnly;
+        String container = configuration.get(AwsS3.CONTAINER_NAME_FIELD_NAME);
         S3Client s3Client = ExternalDataUtils.AwsS3.buildAwsS3Client(configuration);
 
-        // Get all objects in a bucket and extract the paths to files
-        ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(container);
-        ExternalDataUtils.AwsS3.setPrefix(configuration, listObjectsBuilder);
-
-        ListObjectsV2Response listObjectsResponse;
-        boolean done = false;
-        String newMarker = null;
-
         try {
-            while (!done) {
-                // List the objects from the start, or from the last marker in case of truncated result
-                if (newMarker == null) {
-                    listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.build());
+            filesOnly = listS3Objects(s3Client, container, matchersList, p);
+        } catch (S3Exception ex) {
+            // New API is not implemented, try falling back to old API
+            try {
+                // For error code, see https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
+                if (ex.awsErrorDetails().errorCode().equals("NotImplemented")) {
+                    filesOnly = oldApiListS3Objects(s3Client, container, matchersList, p);
                 } else {
-                    listObjectsResponse =
-                            s3Client.listObjectsV2(listObjectsBuilder.continuationToken(newMarker).build());
+                    throw ex;
                 }
-
-                // Collect the paths to files only
-                collectAndFilterFiles(listObjectsResponse.contents(), p, matchersList, filesOnly);
-
-                // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
-                if (!listObjectsResponse.isTruncated()) {
-                    done = true;
-                } else {
-                    newMarker = listObjectsResponse.nextContinuationToken();
-                }
+            } catch (SdkException ex2) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex2.getMessage());
             }
         } catch (SdkException ex) {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
@@ -176,6 +164,84 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
 
         // Distribute work load amongst the partitions
         distributeWorkLoad(filesOnly, partitionsCount);
+    }
+
+    /**
+     * Uses the latest API to retrieve the objects from the storage.
+     *
+     * @param s3Client S3 client
+     * @param container container name
+     * @param matchersList include/exclude matchers to apply
+     * @param predicate predicate to use for comparison
+     */
+    private List<S3Object> listS3Objects(S3Client s3Client, String container, List<Matcher> matchersList,
+            BiPredicate<List<Matcher>, String> predicate) {
+        String newMarker = null;
+        List<S3Object> filesOnly = new ArrayList<>();
+
+        ListObjectsV2Response listObjectsResponse;
+        ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(container);
+        listObjectsBuilder.prefix(ExternalDataUtils.getPrefix(configuration));
+
+        while (true) {
+            // List the objects from the start, or from the last marker in case of truncated result
+            if (newMarker == null) {
+                listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.build());
+            } else {
+                listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.continuationToken(newMarker).build());
+            }
+
+            // Collect the paths to files only
+            collectAndFilterFiles(listObjectsResponse.contents(), predicate, matchersList, filesOnly);
+
+            // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
+            if (!listObjectsResponse.isTruncated()) {
+                break;
+            } else {
+                newMarker = listObjectsResponse.nextContinuationToken();
+            }
+        }
+
+        return filesOnly;
+    }
+
+    /**
+     * Uses the old API (in case the new API is not implemented) to retrieve the objects from the storage
+     *
+     * @param s3Client S3 client
+     * @param container container name
+     * @param matchersList include/exclude matchers to apply
+     * @param predicate predicate to use for comparison
+     */
+    private List<S3Object> oldApiListS3Objects(S3Client s3Client, String container, List<Matcher> matchersList,
+            BiPredicate<List<Matcher>, String> predicate) {
+        String newMarker = null;
+        List<S3Object> filesOnly = new ArrayList<>();
+
+        ListObjectsResponse listObjectsResponse;
+        ListObjectsRequest.Builder listObjectsBuilder = ListObjectsRequest.builder().bucket(container);
+        listObjectsBuilder.prefix(ExternalDataUtils.getPrefix(configuration));
+
+        while (true) {
+            // List the objects from the start, or from the last marker in case of truncated result
+            if (newMarker == null) {
+                listObjectsResponse = s3Client.listObjects(listObjectsBuilder.build());
+            } else {
+                listObjectsResponse = s3Client.listObjects(listObjectsBuilder.marker(newMarker).build());
+            }
+
+            // Collect the paths to files only
+            collectAndFilterFiles(listObjectsResponse.contents(), predicate, matchersList, filesOnly);
+
+            // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
+            if (!listObjectsResponse.isTruncated()) {
+                break;
+            } else {
+                newMarker = listObjectsResponse.nextMarker();
+            }
+        }
+
+        return filesOnly;
     }
 
     /**
