@@ -62,6 +62,7 @@ create  index msgNgramIx  on TweetMessages (nested.`message-text`) type ngram (3
 
 write output to asterix_nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-edit-distance-check_idx_01.adm";
 set `compiler.sort.parallel` "true";
+set `compiler.internal.sanitycheck` "false";
 
 select element {'tweet':{'id':t1.nested.tweetid,'topics':t1.nested.`message-text`},'similar-tweets':(
         select element {'id':t2.nested.tweetid,'topics':t2.nested.`message-text`}

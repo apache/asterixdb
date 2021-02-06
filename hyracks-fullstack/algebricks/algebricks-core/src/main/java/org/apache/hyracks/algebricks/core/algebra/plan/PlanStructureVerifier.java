@@ -213,8 +213,7 @@ public final class PlanStructureVerifier {
         VariableUtilities.getUsedVariables(op, tmpVarSet1);
         if (!tmpVarSet1.isEmpty()) {
             ensureUsedVarsAreDefined(op, tmpVarSet1);
-            //TODO(dmitry): disabled for now
-            //ensureProducedVarsDisjointFromUsedVars(op, tmpVarSet1);
+            ensureProducedVarsDisjointFromUsedVars(op, tmpVarSet1);
         }
     }
 
