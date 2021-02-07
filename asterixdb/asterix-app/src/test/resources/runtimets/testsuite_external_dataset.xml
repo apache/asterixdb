@@ -119,6 +119,11 @@
         <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/non-s3-region">
+        <output-dir compare="Text">aws/s3/non-s3-region</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="include-exclude">
     <test-case FilePath="external-dataset">

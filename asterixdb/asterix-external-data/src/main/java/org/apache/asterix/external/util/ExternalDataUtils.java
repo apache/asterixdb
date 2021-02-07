@@ -32,7 +32,6 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -628,17 +627,7 @@ public class ExternalDataUtils {
             // Credentials
             AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
             builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
-
-            // Validate the region
-            List<Region> supportedRegions = S3Client.serviceMetadata().regions();
-            Optional<Region> selectedRegion =
-                    supportedRegions.stream().filter(region -> region.id().equalsIgnoreCase(regionId)).findFirst();
-
-            if (!selectedRegion.isPresent()) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR,
-                        String.format("region %s is not supported", regionId));
-            }
-            builder.region(selectedRegion.get());
+            builder.region(Region.of(regionId));
 
             // Validate the service endpoint if present
             if (serviceEndpoint != null) {
