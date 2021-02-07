@@ -44,8 +44,9 @@ public class PhysicalOptimizationConfig {
     private static final String EXTERNAL_FIELD_PUSHDOWN = "EXTERNAL_FIELD_PUSHDOWN";
     private static final String SUBPLAN_MERGE = "SUBPLAN_MERGE";
     private static final String SUBPLAN_NESTEDPUSHDOWN = "SUBPLAN_NESTEDPUSHDOWN";
+    private static final String MIN_MEMORY_ALLOCATION = "MIN_MEMORY_ALLOCATION";
 
-    private Properties properties = new Properties();
+    private final Properties properties = new Properties();
 
     public PhysicalOptimizationConfig() {
         int frameSize = 32768;
@@ -215,6 +216,14 @@ public class PhysicalOptimizationConfig {
 
     public void setSubplanNestedPushdown(boolean value) {
         setBoolean(SUBPLAN_NESTEDPUSHDOWN, value);
+    }
+
+    public boolean getMinMemoryAllocation() {
+        return getBoolean(MIN_MEMORY_ALLOCATION, AlgebricksConfig.MIN_MEMORY_ALLOCATION_DEFAULT);
+    }
+
+    public void setMinMemoryAllocation(boolean value) {
+        setBoolean(MIN_MEMORY_ALLOCATION, value);
     }
 
     private void setInt(String property, int value) {

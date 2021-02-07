@@ -52,6 +52,9 @@ public final class SetAsterixMemoryRequirementsRule extends SetMemoryRequirement
     }
 
     private boolean forceMinMemoryBudget(AsterixOptimizationContext context) {
+        if (!context.getPhysicalOptimizationConfig().getMinMemoryAllocation()) {
+            return false;
+        }
         Int2ObjectMap<Set<DataSource>> dataSourceMap = context.getDataSourceMap();
         if (dataSourceMap.isEmpty()) {
             return false;

@@ -42,6 +42,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -161,6 +163,7 @@ public class TestExecutor {
     private static final Pattern HANDLE_VARIABLE_PATTERN = Pattern.compile("handlevariable=(\\w+)");
     private static final Pattern RESULT_VARIABLE_PATTERN = Pattern.compile("resultvariable=(\\w+)");
     private static final Pattern COMPARE_UNORDERED_ARRAY_PATTERN = Pattern.compile("compareunorderedarray=(\\w+)");
+    private static final Pattern BODY_REF_PATTERN = Pattern.compile("bodyref=(.*)", Pattern.MULTILINE);
     private static final Pattern MACRO_PARAM_PATTERN =
             Pattern.compile("macro (?<name>[\\w-$]+)=(?<value>.*)", Pattern.MULTILINE);
 
@@ -1329,12 +1332,16 @@ public class TestExecutor {
         final String trimmedPathAndQuery = stripAllComments(statement).trim();
         final String variablesReplaced = replaceVarRef(trimmedPathAndQuery, variableCtx);
         final List<Parameter> params = extractParameters(statement);
-        final Optional<String> body = extractBody(statement);
+        Optional<String> body = extractBody(statement);
         final Predicate<Integer> statusCodePredicate = extractStatusCodePredicate(statement);
         final boolean extracResult = isExtracResult(statement);
         final boolean extractStatus = isExtractStatus(statement);
         final String mimeReqType = extractHttpRequestType(statement);
+        final String saveResponseVar = getResultVariable(statement);
         ContentType contentType = mimeReqType != null ? ContentType.create(mimeReqType, UTF_8) : TEXT_PLAIN_UTF8;
+        if (!body.isPresent()) {
+            body = getBodyFromReference(statement, variableCtx);
+        }
         InputStream resultStream;
         if ("http".equals(extension)) {
             resultStream = executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate, body, contentType);
@@ -1356,6 +1363,8 @@ public class TestExecutor {
             } else {
                 throw new Exception("no handle for test " + testFile.toString());
             }
+        } else if (saveResponseVar != null) {
+            variableCtx.put(saveResponseVar, IOUtils.toString(resultStream, UTF_8));
         } else {
             if (expectedResultFile == null) {
                 if (testFile.getName().startsWith(DIAGNOSE)) {
@@ -1687,6 +1696,27 @@ public class TestExecutor {
     protected static String getResultVariable(String statement) {
         final Matcher resultVariableMatcher = RESULT_VARIABLE_PATTERN.matcher(statement);
         return resultVariableMatcher.find() ? resultVariableMatcher.group(1) : null;
+    }
+
+    protected static Optional<String> getBodyFromReference(String statement, Map<String, Object> varMap)
+            throws IOException {
+        Optional<String> bodyRef = findPattern(statement, BODY_REF_PATTERN);
+        if (!bodyRef.isPresent()) {
+            return Optional.empty();
+        }
+        String bodyReference = bodyRef.get();
+        String body = (String) varMap.get(bodyReference);
+        if (body != null) {
+            return Optional.of(body);
+        }
+        try (Stream<String> stream = Files.lines(Paths.get(bodyReference), UTF_8)) {
+            return Optional.of(stream.collect(Collectors.joining()));
+        }
+    }
+
+    protected static Optional<String> findPattern(String statement, Pattern pattern) {
+        final Matcher matcher = pattern.matcher(statement);
+        return matcher.find() ? Optional.of(matcher.group(1)) : Optional.empty();
     }
 
     protected static boolean getCompareUnorderedArray(String statement) {
