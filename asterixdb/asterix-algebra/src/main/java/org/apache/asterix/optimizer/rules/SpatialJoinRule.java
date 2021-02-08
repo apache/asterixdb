@@ -90,6 +90,7 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
             return false;
         }
 
+        SpatialJoinAnnotation spatialJoinAnn = null;
         List<Mutable<ILogicalExpression>> conditionExprs = new ArrayList<>();
         AbstractFunctionCallExpression spatialJoinFuncExpr = null;
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) joinCondition;
@@ -107,6 +108,9 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
                     spatialFunctionCallExists = true;
                 } else {
                     conditionExprs.add(exp);
+                    if (funcCallExp.getFunctionIdentifier().equals(BuiltinFunctions.ST_INTERSECTS)) {
+                        spatialJoinAnn = funcCallExp.getAnnotation(SpatialJoinAnnotation.class);
+                    }
                 }
             }
 
@@ -115,11 +119,11 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
             }
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
             spatialJoinFuncExpr = funcExpr;
+            spatialJoinAnn = spatialJoinFuncExpr.getAnnotation(SpatialJoinAnnotation.class);
         } else {
             return false;
         }
 
-        SpatialJoinAnnotation spatialJoinAnn = spatialJoinFuncExpr.getAnnotation(SpatialJoinAnnotation.class);
         if (spatialJoinAnn == null) {
             spatialJoinAnn = new SpatialJoinAnnotation(-180.0, -83.0, 180, 90.0, 10, 10);
         }
@@ -187,12 +191,12 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
                         new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
                         new MutableObject<>(referenceTileId));
-        ScalarFunctionCallExpression spatialJoinCondition = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
-                new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
-                new MutableObject<>(new VariableReferenceExpression(rightInputVar)));
+//        ScalarFunctionCallExpression spatialJoinCondition = new ScalarFunctionCallExpression(
+//                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
+//                new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
+//                new MutableObject<>(new VariableReferenceExpression(rightInputVar)));
 
-        conditionExprs.add(new MutableObject<>(spatialJoinCondition));
+        conditionExprs.add(new MutableObject<>(spatialJoinFuncExpr));
         conditionExprs.add(new MutableObject<>(tileIdEquiJoinCondition));
         conditionExprs.add(new MutableObject<>(referenceIdEquiJoinCondition));
 

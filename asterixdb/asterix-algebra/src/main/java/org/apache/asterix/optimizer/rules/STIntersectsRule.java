@@ -70,13 +70,13 @@ public class STIntersectsRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) joinCondition;
-        if (!funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.ST_INTERSECTS)) {
+        AbstractFunctionCallExpression stIntersectFuncExpr = (AbstractFunctionCallExpression) joinCondition;
+        if (!stIntersectFuncExpr.getFunctionIdentifier().equals(BuiltinFunctions.ST_INTERSECTS)) {
             return false;
         }
 
         // Extracts ST_INTERSECTS function's arguments
-        List<Mutable<ILogicalExpression>> inputExprs = funcExpr.getArguments();
+        List<Mutable<ILogicalExpression>> inputExprs = stIntersectFuncExpr.getArguments();
         if (inputExprs.size() != 2) {
             return false;
         }
@@ -108,14 +108,9 @@ public class STIntersectsRule implements IAlgebraicRewriteRule {
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT), new MutableObject<>(left),
                 new MutableObject<>(right));
 
-        ScalarFunctionCallExpression stIntersect = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_INTERSECTS),
-                new MutableObject<>(new VariableReferenceExpression(inputVar0)),
-                new MutableObject<>(new VariableReferenceExpression(inputVar1)));
-
         ScalarFunctionCallExpression updatedJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
-                        new MutableObject<>(spatialIntersect), new MutableObject<>(stIntersect));
+                        new MutableObject<>(spatialIntersect), new MutableObject<>(stIntersectFuncExpr));
 
         joinConditionRef.setValue(updatedJoinCondition);
 

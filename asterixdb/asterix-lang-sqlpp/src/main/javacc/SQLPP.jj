@@ -3542,7 +3542,7 @@ Expression FunctionCallExpr() throws ParseException:
               String[] splits = funcName.hintToken.hintParams != null ? funcName.hintToken.hintParams.split("\\s+") : null;
               double minX = Double.parseDouble(splits[0]);
               double minY = Double.parseDouble(splits[1]);
-              double maxX = Double.parseDouble(splits[2]);
+              double maxX = Double.parseDhistoouble(splits[2]);
               double maxY = Double.parseDouble(splits[3]);
               int numRows = Integer.parseInt(splits[4]);
               int numColumns = Integer.parseInt(splits[5]);
