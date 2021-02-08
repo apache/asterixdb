@@ -44,7 +44,8 @@ public final class SpatialJoinAnnotation implements IExpressionAnnotation {
 
     @Override
     public String toString() {
-        return String.format("%s:%f,%f,%f,%f,%d,%d", HINT_STRING, getMinX(), getMinY(), getMaxX(), getMaxY(), getNumRows(), getNumColumns());
+        return String.format("%s:%f,%f,%f,%f,%d,%d", HINT_STRING, getMinX(), getMinY(), getMaxX(), getMaxY(),
+                getNumRows(), getNumColumns());
     }
 
     public double getMinX() {
