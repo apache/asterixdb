@@ -32,16 +32,17 @@ public class SpatialJoinUtil {
     private SpatialJoinUtil() {
     }
 
-    public static ARectangle getRectangle(IFrameTupleAccessor accessor, int tupleId, int fieldId) throws HyracksDataException {
+    public static ARectangle getRectangle(IFrameTupleAccessor accessor, int tupleId, int fieldId)
+            throws HyracksDataException {
         int start = getFieldOffset(accessor, tupleId, fieldId);
-        double xmin = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
-                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
-        double ymin = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
-                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
-        double xmax = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
-                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-        double ymax = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
-                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
+        double xmin = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(),
+                start + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+        double ymin = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(),
+                start + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
+        double xmax = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(),
+                start + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+        double ymax = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(),
+                start + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
         return new ARectangle(new APoint(xmin, ymin), new APoint(xmax, ymax));
     }
 
@@ -51,17 +52,19 @@ public class SpatialJoinUtil {
         return tileId;
     }
 
-    public static double getRectangleXmin(IFrameTupleAccessor accessor, int tupleId, int fieldId) throws HyracksDataException {
+    public static double getRectangleXmin(IFrameTupleAccessor accessor, int tupleId, int fieldId)
+            throws HyracksDataException {
         int start = getFieldOffset(accessor, tupleId, fieldId);
-        double xmin = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
-                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+        double xmin = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(),
+                start + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
         return xmin;
     }
 
-    public static double getRectangleXmax(IFrameTupleAccessor accessor, int tupleId, int fieldId) throws HyracksDataException {
+    public static double getRectangleXmax(IFrameTupleAccessor accessor, int tupleId, int fieldId)
+            throws HyracksDataException {
         int start = getFieldOffset(accessor, tupleId, fieldId);
-        double xmax = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(), start
-                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+        double xmax = ADoubleSerializerDeserializer.getDouble(accessor.getBuffer().array(),
+                start + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
         return xmax;
     }
 

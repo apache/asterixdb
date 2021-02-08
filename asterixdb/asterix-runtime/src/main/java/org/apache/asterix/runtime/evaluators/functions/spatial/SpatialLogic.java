@@ -18,11 +18,7 @@
  */
 package org.apache.asterix.runtime.evaluators.functions.spatial;
 
-import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.om.base.ARectangle;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class SpatialLogic {
 
