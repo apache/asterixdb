@@ -170,45 +170,6 @@ public class SpatialJoinPOperator extends AbstractJoinPOperator {
         builder.contributeGraphEdge(src1, 0, op, 0);
         ILogicalOperator src2 = op.getInputs().get(1).getValue();
         builder.contributeGraphEdge(src2, 0, op, 1);
-
-        //                AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op;
-        //                RecordDescriptor recDescriptor =
-        //                        JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
-        //                IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
-        //                conditionInputSchemas[0] = propagatedSchema;
-        //                IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
-        //                IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(join.getCondition().getValue(),
-        //                        context.getTypeEnvironment(op), conditionInputSchemas, context);
-        //                ITuplePairComparatorFactory comparatorFactory =
-        //                        new TuplePairEvaluatorFactory(cond, false, context.getBinaryBooleanInspectorFactory());
-        //                IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        //                IOperatorDescriptor opDesc;
-        //
-        //                int memSize = localMemoryRequirements.getMemoryBudgetInFrames();
-        //                switch (kind) {
-        //                    case INNER:
-        //                        opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, false,
-        //                                null);
-        //                        break;
-        //                    case LEFT_OUTER:
-        //                        IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[inputSchemas[1].getSize()];
-        //                        for (int j = 0; j < nonMatchWriterFactories.length; j++) {
-        //                            nonMatchWriterFactories[j] = context.getMissingWriterFactory();
-        //                        }
-        //                        opDesc = new NestedLoopJoinOperatorDescriptor(spec, comparatorFactory, recDescriptor, memSize, true,
-        //                                nonMatchWriterFactories);
-        //                        break;
-        //                    default:
-        //                        throw new NotImplementedException();
-        //                }
-        //
-        //                opDesc.setSourceLocation(join.getSourceLocation());
-        //                contributeOpDesc(builder, join, opDesc);
-        //
-        //                ILogicalOperator src1 = op.getInputs().get(0).getValue();
-        //                builder.contributeGraphEdge(src1, 0, op, 0);
-        //                ILogicalOperator src2 = op.getInputs().get(1).getValue();
-        //                builder.contributeGraphEdge(src2, 0, op, 1);
     }
 
     protected List<ILocalStructuralProperty> deliveredLocalProperties(ILogicalOperator op,

@@ -100,15 +100,27 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        AbstractFunctionCallExpression spatialJoinFuncExpr;
+        List<Mutable<ILogicalExpression>> conditionExprs = new ArrayList<>();
+        AbstractFunctionCallExpression spatialJoinFuncExpr = null;
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) joinCondition;
         if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.AND)) {
             List<Mutable<ILogicalExpression>> inputExprs = funcExpr.getArguments();
-            if (inputExprs.size() != 2) {
+            if (inputExprs.size() == 0) {
                 return false;
             }
-            spatialJoinFuncExpr = (AbstractFunctionCallExpression) inputExprs.get(0).getValue();
-            if (!spatialJoinFuncExpr.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
+
+            boolean spatialFunctionCallExists = false;
+            for(Mutable<ILogicalExpression> exp: inputExprs) {
+                AbstractFunctionCallExpression funcCallExp = (AbstractFunctionCallExpression) exp.getValue();
+                if (funcCallExp.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
+                    spatialJoinFuncExpr = funcCallExp;
+                    spatialFunctionCallExists = true;
+                } else {
+                    conditionExprs.add(exp);
+                }
+            }
+
+            if (!spatialFunctionCallExists) {
                 return false;
             }
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
@@ -138,7 +150,6 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
         }
 
         LOGGER.info("spatial-intersect is called");
-        //        return false;
 
         // Gets both input branches of the spatial join.
         Mutable<ILogicalOperator> leftOp = joinOp.getInputs().get(LEFT);
@@ -171,7 +182,8 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
                         new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
                         new MutableObject<>(new VariableReferenceExpression(rightInputVar)),
                         new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()), new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
+                                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                                        new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
                         new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
                         new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
 
@@ -188,10 +200,13 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
                 new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
                 new MutableObject<>(new VariableReferenceExpression(rightInputVar)));
+
+        conditionExprs.add(new MutableObject<>(spatialJoinCondition));
+        conditionExprs.add(new MutableObject<>(tileIdEquiJoinCondition));
+        conditionExprs.add(new MutableObject<>(referenceIdEquiJoinCondition));
+
         ScalarFunctionCallExpression updatedJoinCondition =
-                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
-                        new MutableObject<>(spatialJoinCondition), new MutableObject<>(tileIdEquiJoinCondition),
-                        new MutableObject<>(referenceIdEquiJoinCondition));
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND), conditionExprs);
         joinConditionRef.setValue(updatedJoinCondition);
 
         List<LogicalVariable> keysLeftBranch = new ArrayList<>();
@@ -218,7 +233,8 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
                         BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
                         new MutableObject<>(sideInputVar),
                         new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()), new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
+                                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                                        new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
                         new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
                         new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
         funcExpr.setSourceLocation(sideOp.getValue().getSourceLocation());
@@ -231,27 +247,5 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
             e.printStackTrace();
         }
         return sideVar;
-    }
-
-    private RangeMap getIntegerRangeMap(Long[] integers) throws HyracksDataException {
-        int[] offsets = new int[integers.length];
-        for (int i = 0; i < integers.length; ++i) {
-            offsets[i] = (i + 1) * INTEGER_LENGTH;
-        }
-        return new RangeMap(1, getIntegerBytes(integers), offsets, null);
-    }
-
-    private byte[] getIntegerBytes(Long[] integers) throws HyracksDataException {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            DataOutput dos = new DataOutputStream(bos);
-            for (int i = 0; i < integers.length; ++i) {
-                integerSerde.serialize(integers[i], dos);
-            }
-            bos.close();
-            return bos.toByteArray();
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
-        }
     }
 }
