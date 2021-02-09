@@ -43,7 +43,6 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -92,8 +91,12 @@ import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Response;
 
 public class ExternalDataUtils {
 
@@ -523,7 +526,7 @@ public class ExternalDataUtils {
 
         switch (type) {
             case ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3:
-                ExternalDataUtils.AwsS3.validateProperties(configuration, srcLoc, collector);
+                AwsS3.validateProperties(configuration, srcLoc, collector);
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
                 ExternalDataUtils.Azure.validateProperties(configuration, srcLoc, collector);
@@ -644,7 +647,7 @@ public class ExternalDataUtils {
      * @param configuration configuration
      */
     public static String getPrefix(Map<String, String> configuration) {
-        String definition = configuration.get(ExternalDataConstants.AzureBlob.DEFINITION_FIELD_NAME);
+        String definition = configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
         if (definition != null && !definition.isEmpty()) {
             return definition + (!definition.endsWith("/") ? "/" : "");
         }
@@ -734,17 +737,7 @@ public class ExternalDataUtils {
             }
 
             builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
-
-            // Validate the region
-            List<Region> supportedRegions = S3Client.serviceMetadata().regions();
-            Optional<Region> selectedRegion =
-                    supportedRegions.stream().filter(region -> region.id().equalsIgnoreCase(regionId)).findFirst();
-
-            if (!selectedRegion.isPresent()) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR,
-                        String.format("region %s is not supported", regionId));
-            }
-            builder.region(selectedRegion.get());
+            builder.region(Region.of(regionId));
 
             // Validate the service endpoint if present
             if (serviceEndpoint != null) {
@@ -781,26 +774,26 @@ public class ExternalDataUtils {
             validateIncludeExclude(configuration);
 
             // Check if the bucket is present
-            S3Client s3Client = null;
+            S3Client s3Client = buildAwsS3Client(configuration);;
+            S3Response response;
+            boolean useOldApi = false;
+            String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
+            String prefix = getPrefix(configuration);
+
             try {
-                String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
-                s3Client = buildAwsS3Client(configuration);
-                ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder();
-                listObjectsBuilder.prefix(getPrefix(configuration));
-
-                ListObjectsV2Response response =
-                        s3Client.listObjectsV2(listObjectsBuilder.bucket(container).maxKeys(1).build());
-
-                if (response.contents().isEmpty() && collector.shouldWarn()) {
-                    Warning warning =
-                            WarningUtil.forAsterix(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
-                    collector.warn(warning);
-                }
-
-                // Returns 200 only in case the bucket exists, however, otherwise, throws an exception. However, to
-                // ensure coverage, check if the result is successful as well and not only catch exceptions
-                if (!response.sdkHttpResponse().isSuccessful()) {
-                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, container);
+                response = isBucketEmpty(s3Client, container, prefix, false);
+            } catch (S3Exception ex) {
+                // Method not implemented, try falling back to old API
+                try {
+                    // For error code, see https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
+                    if (ex.awsErrorDetails().errorCode().equals("NotImplemented")) {
+                        useOldApi = true;
+                        response = isBucketEmpty(s3Client, container, prefix, true);
+                    } else {
+                        throw ex;
+                    }
+                } catch (SdkException ex2) {
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex2.getMessage());
                 }
             } catch (SdkException ex) {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
@@ -809,6 +802,44 @@ public class ExternalDataUtils {
                     CleanupUtils.close(s3Client, null);
                 }
             }
+
+            boolean isEmpty = useOldApi ? ((ListObjectsResponse) response).contents().isEmpty()
+                    : ((ListObjectsV2Response) response).contents().isEmpty();
+            if (isEmpty && collector.shouldWarn()) {
+                Warning warning =
+                        WarningUtil.forAsterix(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                collector.warn(warning);
+            }
+
+            // Returns 200 only in case the bucket exists, otherwise, throws an exception. However, to
+            // ensure coverage, check if the result is successful as well and not only catch exceptions
+            if (!response.sdkHttpResponse().isSuccessful()) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, container);
+            }
+        }
+
+        /**
+         * Checks for a single object in the specified bucket to determine if the bucket is empty or not.
+         *
+         * @param s3Client s3 client
+         * @param container the container name
+         * @param prefix Prefix to be used
+         * @param useOldApi flag whether to use the old API or not
+         *
+         * @return returns the S3 response
+         */
+        private static S3Response isBucketEmpty(S3Client s3Client, String container, String prefix, boolean useOldApi) {
+            S3Response response;
+            if (useOldApi) {
+                ListObjectsRequest.Builder listObjectsBuilder = ListObjectsRequest.builder();
+                listObjectsBuilder.prefix(prefix);
+                response = s3Client.listObjects(listObjectsBuilder.bucket(container).maxKeys(1).build());
+            } else {
+                ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder();
+                listObjectsBuilder.prefix(prefix);
+                response = s3Client.listObjectsV2(listObjectsBuilder.bucket(container).maxKeys(1).build());
+            }
+            return response;
         }
     }
 

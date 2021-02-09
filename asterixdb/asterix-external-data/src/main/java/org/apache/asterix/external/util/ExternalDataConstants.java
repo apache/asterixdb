@@ -285,6 +285,8 @@ public class ExternalDataConstants {
     public static final String EMPTY_FIELD = "empty value";
     public static final String INVALID_VAL = "invalid value";
 
+    public static final String DEFINITION_FIELD_NAME = "definition";
+
     public static class AwsS3 {
         private AwsS3() {
             throw new AssertionError("do not instantiate");
@@ -295,7 +297,6 @@ public class ExternalDataConstants {
         public static final String SECRET_ACCESS_KEY_FIELD_NAME = "secretAccessKey";
         public static final String SESSION_TOKEN_FIELD_NAME = "sessionToken";
         public static final String CONTAINER_NAME_FIELD_NAME = "container";
-        public static final String DEFINITION_FIELD_NAME = "definition";
         public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";
     }
 

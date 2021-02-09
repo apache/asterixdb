@@ -201,7 +201,7 @@ public class LogManagerTest {
         return txnCtx;
     }
 
-    private static void prepareNextLogFile(LogManager logManager) throws Exception {
+    public static void prepareNextLogFile(LogManager logManager) throws Exception {
         Method ensureLastPageFlushed;
         Method prepareNextLogFile;
         String targetMethod = null;
