@@ -239,6 +239,8 @@ public class HttpUtil {
         public static final String IMG_PNG = "image/png";
         public static final String TEXT_HTML = "text/html";
         public static final String TEXT_PLAIN = "text/plain";
+        public static final String APPLICATION_ZIP = "application/zip";
+        public static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
 
         private ContentType() {
         }

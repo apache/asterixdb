@@ -31,9 +31,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class LibraryDescriptor implements IJsonSerializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private static final String FIELD_LANGUAGE = "lang";
+    private static final String FIELD_HASH = "hash";
 
     public static final String FILE_EXT_ZIP = "zip";
 
@@ -44,23 +45,32 @@ public class LibraryDescriptor implements IJsonSerializable {
      */
     private final ExternalFunctionLanguage lang;
 
-    public LibraryDescriptor(ExternalFunctionLanguage language) {
+    private final String hash;
+
+    public LibraryDescriptor(ExternalFunctionLanguage language, String hash) {
         this.lang = language;
+        this.hash = hash;
     }
 
     public ExternalFunctionLanguage getLanguage() {
         return lang;
     }
 
+    public String getHash() {
+        return hash;
+    }
+
     public JsonNode toJson(IPersistedResourceRegistry registry) {
         ObjectNode jsonNode = registry.getClassIdentifier(LibraryDescriptor.class, serialVersionUID);
         jsonNode.put(FIELD_LANGUAGE, lang.name());
+        jsonNode.put(FIELD_HASH, hash);
         return jsonNode;
     }
 
     public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
         String langText = json.get(FIELD_LANGUAGE).asText();
         ExternalFunctionLanguage lang = ExternalFunctionLanguage.valueOf(langText);
-        return new LibraryDescriptor(lang);
+        String hash = json.get(FIELD_HASH).asText();
+        return new LibraryDescriptor(lang, hash);
     }
 }

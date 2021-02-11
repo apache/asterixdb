@@ -18,14 +18,20 @@
  */
 package org.apache.asterix.app.replication;
 
+import static org.apache.asterix.api.http.server.ServletConstants.SYS_AUTH_HEADER;
+import static org.apache.asterix.common.config.ExternalProperties.Option.NC_API_PORT;
 import static org.apache.hyracks.api.exceptions.ErrorCode.NODE_FAILED;
 
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,6 +40,7 @@ import org.apache.asterix.app.nc.task.CheckpointTask;
 import org.apache.asterix.app.nc.task.ExportMetadataNodeTask;
 import org.apache.asterix.app.nc.task.LocalRecoveryTask;
 import org.apache.asterix.app.nc.task.MetadataBootstrapTask;
+import org.apache.asterix.app.nc.task.RetrieveLibrariesTask;
 import org.apache.asterix.app.nc.task.StartLifecycleComponentsTask;
 import org.apache.asterix.app.nc.task.StartReplicationServiceTask;
 import org.apache.asterix.app.nc.task.UpdateNodeStatusTask;
@@ -42,6 +49,7 @@ import org.apache.asterix.app.replication.message.MetadataNodeResponseMessage;
 import org.apache.asterix.app.replication.message.NCLifecycleTaskReportMessage;
 import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.app.replication.message.RegistrationTasksResponseMessage;
+import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
@@ -53,13 +61,19 @@ import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.replication.messaging.ReplicaFailedMessage;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
+import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.control.IGatekeeper;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import io.netty.handler.codec.http.HttpScheme;
 
 public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
 
@@ -70,12 +84,14 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     protected final ICCMessageBroker messageBroker;
     private final boolean replicationEnabled;
     private final IGatekeeper gatekeeper;
+    Map<String, Map<String, Object>> nodeSecretsMap;
 
     public NcLifecycleCoordinator(ICCServiceContext serviceCtx, boolean replicationEnabled) {
         this.messageBroker = (ICCMessageBroker) serviceCtx.getMessageBroker();
         this.replicationEnabled = replicationEnabled;
         this.gatekeeper =
                 ((ClusterControllerService) serviceCtx.getControllerService()).getApplication().getGatekeeper();
+        this.nodeSecretsMap = new HashMap<>();
     }
 
     @Override
@@ -121,6 +137,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
 
     private void process(RegistrationTasksRequestMessage msg) throws HyracksDataException {
         final String nodeId = msg.getNodeId();
+        nodeSecretsMap.put(nodeId, msg.getSecrets());
         List<INCLifecycleTask> tasks = buildNCRegTasks(msg.getNodeId(), msg.getNodeStatus(), msg.getState());
         RegistrationTasksResponseMessage response = new RegistrationTasksResponseMessage(nodeId, tasks);
         try {
@@ -193,12 +210,12 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         }
     }
 
-    protected List<INCLifecycleTask> buildIdleNcRegTasks(String nodeId, boolean metadataNode, SystemState state) {
+    protected List<INCLifecycleTask> buildIdleNcRegTasks(String newNodeId, boolean metadataNode, SystemState state) {
         final List<INCLifecycleTask> tasks = new ArrayList<>();
         tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING));
         if (state == SystemState.CORRUPTED) {
             // need to perform local recovery for node partitions
-            LocalRecoveryTask rt = new LocalRecoveryTask(Arrays.stream(clusterManager.getNodePartitions(nodeId))
+            LocalRecoveryTask rt = new LocalRecoveryTask(Arrays.stream(clusterManager.getNodePartitions(newNodeId))
                     .map(ClusterPartition::getPartitionId).collect(Collectors.toSet()));
             tasks.add(rt);
         }
@@ -210,6 +227,16 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         }
         tasks.add(new CheckpointTask());
         tasks.add(new StartLifecycleComponentsTask());
+        if (isLibraryFetchEnabled() && clusterManager.getState() == ClusterState.ACTIVE) {
+            Set<String> nodes = clusterManager.getParticipantNodes(true);
+            if (nodes.size() > 0) {
+                try {
+                    tasks.add(nodesToLibraryTask(newNodeId, nodes));
+                } catch (HyracksDataException e) {
+                    LOGGER.error("Could not construct library recovery task", e);
+                }
+            }
+        }
         if (metadataNode) {
             tasks.add(new ExportMetadataNodeTask(true));
             tasks.add(new BindMetadataNodeTask());
@@ -227,6 +254,23 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         }
     }
 
+    protected String getNCAuthToken(String node) {
+        return (String) nodeSecretsMap.get(node).get(SYS_AUTH_HEADER);
+    }
+
+    protected URI constructNCRecoveryUri(String nodeId) throws HyracksDataException {
+        Map<IOption, Object> nodeConfig = clusterManager.getNcConfiguration().get(nodeId);
+        String host = (String) nodeConfig.get(NCConfig.Option.PUBLIC_ADDRESS);
+        int port = (Integer) nodeConfig.get(NC_API_PORT);
+        URIBuilder builder = new URIBuilder().setScheme(HttpScheme.HTTP.toString()).setHost(host).setPort(port);
+        try {
+            return builder.build();
+        } catch (URISyntaxException e) {
+            LOGGER.error("Could not find URL for NC recovery", e);
+            throw HyracksDataException.create(e);
+        }
+    }
+
     private void requestMetadataNodeTakeover(String node) throws HyracksDataException {
         MetadataNodeRequestMessage msg =
                 new MetadataNodeRequestMessage(true, clusterManager.getMetadataPartition().getPartitionId());
@@ -235,6 +279,23 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    protected RetrieveLibrariesTask nodesToLibraryTask(String newNodeId, Set<String> referenceNodes)
+            throws HyracksDataException {
+        List<Pair<URI, String>> referenceNodeLocAndAuth = new ArrayList<>();
+        for (String node : referenceNodes) {
+            referenceNodeLocAndAuth.add(new Pair<>(constructNCRecoveryUri(node), getNCAuthToken(node)));
+        }
+        return getRetrieveLibrariesTask(referenceNodeLocAndAuth);
+    }
+
+    protected RetrieveLibrariesTask getRetrieveLibrariesTask(List<Pair<URI, String>> referenceNodeLocAndAuth) {
+        return new RetrieveLibrariesTask(referenceNodeLocAndAuth);
+    }
+
+    protected boolean isLibraryFetchEnabled() {
+        return true;
     }
 
     private void notifyFailedReplica(IClusterStateManager clusterManager, String nodeID,

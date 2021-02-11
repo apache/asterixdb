@@ -75,6 +75,7 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_IS_PRIMARY = "IsPrimary";
     public static final String FIELD_NAME_KIND = "Kind";
     public static final String FIELD_NAME_LANGUAGE = "Language";
+    public static final String FIELD_NAME_HASH = "MD5Hash";
     public static final String FIELD_NAME_LIBRARY_DATAVERSE_NAME = "LibraryDataverseName";
     public static final String FIELD_NAME_LIBRARY_NAME = "LibraryName";
     public static final String FIELD_NAME_LAST_REFRESH_TIME = "LastRefreshTime";

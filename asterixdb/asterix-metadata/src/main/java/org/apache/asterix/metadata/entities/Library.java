@@ -29,12 +29,14 @@ public class Library implements IMetadataEntity<Library> {
     private final DataverseName dataverse;
     private final String name;
     private final String language;
+    private final String hash;
     private final int pendingOp;
 
-    public Library(DataverseName dataverseName, String libraryName, String language, int pendingOp) {
+    public Library(DataverseName dataverseName, String libraryName, String language, String hash, int pendingOp) {
         this.dataverse = dataverseName;
         this.name = libraryName;
         this.language = language;
+        this.hash = hash;
         this.pendingOp = pendingOp;
     }
 
@@ -48,6 +50,10 @@ public class Library implements IMetadataEntity<Library> {
 
     public String getLanguage() {
         return language;
+    }
+
+    public String getHash() {
+        return hash;
     }
 
     public int getPendingOp() {
