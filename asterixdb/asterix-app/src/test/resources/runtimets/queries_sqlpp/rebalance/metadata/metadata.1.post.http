@@ -17,4 +17,8 @@
  * under the License.
  */
 
-/admin/rebalance?dataverseName=Metadata&datasetName=Dataset&nodes=asterix_nc1
+# param dataverseName=Metadata
+# param datasetName=Dataset
+# param targetNode=asterix_nc1
+
+/admin/rebalance

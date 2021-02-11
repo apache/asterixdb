@@ -17,4 +17,10 @@
  * under the License.
  */
 
-/admin/rebalance?dataverseName=tpch&datasetName=LineItem&nodes=asterix_nc2%2Casterix_nc1&force=false
+# param dataverseName=tpch
+# param datasetName=LineItem
+# param targetNode=asterix_nc2
+# param targetNode=asterix_nc1
+# param force=false
+
+/admin/rebalance

@@ -16,4 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/admin/cluster/metadataNode?node=asterix_nc2
+# param node=asterix_nc2
+
+/admin/cluster/metadataNode

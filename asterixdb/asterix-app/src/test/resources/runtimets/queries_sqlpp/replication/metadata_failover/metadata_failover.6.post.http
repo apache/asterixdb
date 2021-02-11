@@ -16,4 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/admin/cluster/partition/master?partition=0&node=asterix_nc2
+# param partition=0
+# param node=asterix_nc2
+
+/admin/cluster/partition/master

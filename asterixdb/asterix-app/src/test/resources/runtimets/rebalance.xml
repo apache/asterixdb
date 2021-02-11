@@ -28,7 +28,7 @@
         <output-dir compare="Text">empty_location</output-dir>
         <expected-error>HTTP operation failed:
 STATUS LINE: HTTP/1.1 400 Bad Request
-ERROR_BODY: {"results":"target nodes should not be empty"}</expected-error>
+ERROR_BODY: {"results":"at least one targetNode must be specified"}</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="rebalance">

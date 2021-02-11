@@ -17,4 +17,6 @@
  * under the License.
  */
 
-/admin/rebalance?nodes=asterix_nc1
+# param targetNode=asterix_nc1
+
+/admin/rebalance

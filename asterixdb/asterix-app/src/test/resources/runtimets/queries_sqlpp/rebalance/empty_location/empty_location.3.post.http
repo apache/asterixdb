@@ -17,4 +17,7 @@
  * under the License.
  */
 
-/admin/rebalance?dataverseName=tpch&datasetName=LineItem&nodes=
+# param dataverseName=tpch
+# param datasetName=LineItem
+
+/admin/rebalance
