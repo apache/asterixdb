@@ -179,7 +179,7 @@ public class ActiveManager {
                 try {
                     stopIfRunning(runtime, content.getTimeout(), content.getUnit());
                 } catch (Throwable th) {
-                    LOGGER.warn("Failed to stop runtime: {}", runtimeId, th);
+                    LOGGER.fatal("Failed to stop runtime: {}", runtimeId, th);
                     ExitUtil.halt(ExitUtil.EC_UNCAUGHT_THROWABLE);
                 }
             });
