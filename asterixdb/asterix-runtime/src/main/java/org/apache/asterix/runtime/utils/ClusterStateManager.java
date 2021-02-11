@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.utils;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,6 +50,7 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.application.ConfigManagerApplicationConfig;
 import org.apache.hyracks.control.common.config.ConfigManager;
 import org.apache.hyracks.control.common.controllers.NCConfig;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -91,13 +93,13 @@ public class ClusterStateManager implements IClusterStateManager {
 
     @Override
     public synchronized void notifyNodeFailure(String nodeId) throws HyracksException {
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Removing configuration parameters for node id " + nodeId);
-        }
+        LOGGER.info("Removing configuration parameters for node id {}", nodeId);
         failedNodes.add(nodeId);
+        // before removing the node config, get its replica location
+        InetSocketAddress replicaAddress = getReplicaLocation(this, nodeId);
         ncConfigMap.remove(nodeId);
         pendingRemoval.remove(nodeId);
-        lifecycleCoordinator.notifyNodeFailure(nodeId);
+        lifecycleCoordinator.notifyNodeFailure(nodeId, replicaAddress);
     }
 
     @Override
@@ -496,4 +498,17 @@ public class ClusterStateManager implements IClusterStateManager {
         });
     }
 
+    private static InetSocketAddress getReplicaLocation(IClusterStateManager csm, String nodeId) {
+        final Map<IOption, Object> ncConfig = csm.getActiveNcConfiguration().get(nodeId);
+        if (ncConfig == null) {
+            return null;
+        }
+        Object destIP = ncConfig.get(NCConfig.Option.REPLICATION_PUBLIC_ADDRESS);
+        Object destPort = ncConfig.get(NCConfig.Option.REPLICATION_PUBLIC_PORT);
+        if (destIP == null || destPort == null) {
+            return null;
+        }
+        String replicaLocation = NetworkUtil.toHostPort(String.valueOf(destIP), String.valueOf(destPort));
+        return NetworkUtil.parseInetSocketAddress(replicaLocation);
+    }
 }

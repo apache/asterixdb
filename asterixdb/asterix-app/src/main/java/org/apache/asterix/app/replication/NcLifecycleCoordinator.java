@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.app.replication;
 
+import static org.apache.hyracks.api.exceptions.ErrorCode.NODE_FAILED;
+
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,6 +52,7 @@ import org.apache.asterix.common.replication.INCLifecycleMessage;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.metadata.MetadataManager;
+import org.apache.asterix.replication.messaging.ReplicaFailedMessage;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.control.IGatekeeper;
@@ -80,11 +84,14 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     }
 
     @Override
-    public void notifyNodeFailure(String nodeId) throws HyracksDataException {
+    public void notifyNodeFailure(String nodeId, InetSocketAddress replicaAddress) throws HyracksDataException {
         pendingStartupCompletionNodes.remove(nodeId);
         clusterManager.updateNodeState(nodeId, false, null);
         if (nodeId.equals(metadataNodeId)) {
             clusterManager.updateMetadataNode(metadataNodeId, false);
+        }
+        if (replicaAddress != null) {
+            notifyFailedReplica(clusterManager, nodeId, replicaAddress);
         }
         clusterManager.refreshState();
     }
@@ -227,6 +234,21 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             messageBroker.sendApplicationMessageToNC(msg, node);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
+        }
+    }
+
+    private void notifyFailedReplica(IClusterStateManager clusterManager, String nodeID,
+            InetSocketAddress replicaAddress) {
+        LOGGER.info("notify replica failure of nodeId {} at {}", nodeID, replicaAddress);
+        Set<String> ncs = clusterManager.getParticipantNodes(true);
+        ReplicaFailedMessage message =
+                new ReplicaFailedMessage(replicaAddress, HyracksDataException.create(NODE_FAILED, nodeID));
+        for (String nodeId : ncs) {
+            try {
+                messageBroker.sendApplicationMessageToNC(message, nodeId);
+            } catch (Exception e) {
+                LOGGER.info("failed to notify replica failure to node {}", nodeID);
+            }
         }
     }
 }
