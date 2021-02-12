@@ -35,66 +35,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class OptionTypes {
 
-    public static final IOptionType<Integer> INTEGER_BYTE_UNIT = new IOptionType<Integer>() {
-        @Override
-        public Integer parse(String s) {
-            if (s == null) {
-                return null;
-            }
-            long result1 = StorageUtil.getByteValue(s);
-            if (result1 > Integer.MAX_VALUE || result1 < Integer.MIN_VALUE) {
-                throw new IllegalArgumentException("The given value: " + result1 + " is not within the int range.");
-            }
-            return (int) result1;
-        }
+    public static final IOptionType<Integer> INTEGER_BYTE_UNIT = new IntegerByteUnit();
+    public static final IOptionType<Integer> POSITIVE_INTEGER_BYTE_UNIT = new IntegerByteUnit(1, Integer.MAX_VALUE);
 
-        @Override
-        public Integer parse(JsonNode node) {
-            return node.isNull() ? null : parse(node.asText());
-        }
-
-        @Override
-        public Class<Integer> targetType() {
-            return Integer.class;
-        }
-
-        @Override
-        public String serializeToHumanReadable(Object value) {
-            return value + " (" + StorageUtil.toHumanReadableSize((int) value) + ")";
-        }
-
-        @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
-            node.put(fieldName, (int) value);
-        }
-    };
-
-    public static final IOptionType<Long> LONG_BYTE_UNIT = new IOptionType<Long>() {
-        @Override
-        public Long parse(String s) {
-            return s == null ? null : StorageUtil.getByteValue(s);
-        }
-
-        @Override
-        public Long parse(JsonNode node) {
-            return node.isNull() ? null : parse(node.asText());
-        }
-
-        @Override
-        public Class<Long> targetType() {
-            return Long.class;
-        }
-
-        @Override
-        public String serializeToHumanReadable(Object value) {
-            return value + " (" + StorageUtil.toHumanReadableSize((long) value) + ")";
-        }
-
-        @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
-            node.put(fieldName, (long) value);
-        }
-    };
+    public static final IOptionType<Long> LONG_BYTE_UNIT = new LongByteUnit();
+    public static final IOptionType<Long> POSITIVE_LONG_BYTE_UNIT = new LongByteUnit(1, Long.MAX_VALUE);
 
     public static final IOptionType<Short> SHORT = new IOptionType<Short>() {
         @Override
@@ -172,27 +117,7 @@ public class OptionTypes {
         }
     };
 
-    public static final IOptionType<Long> LONG = new IOptionType<Long>() {
-        @Override
-        public Long parse(String s) {
-            return Long.parseLong(s);
-        }
-
-        @Override
-        public Long parse(JsonNode node) {
-            return node.isNull() ? null : node.asLong();
-        }
-
-        @Override
-        public Class<Long> targetType() {
-            return Long.class;
-        }
-
-        @Override
-        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
-            node.put(fieldName, (long) value);
-        }
-    };
+    public static final IOptionType<Long> LONG = new LongOptionType();
 
     public static final IOptionType<Boolean> BOOLEAN = new IOptionType<Boolean>() {
         @Override
@@ -269,7 +194,7 @@ public class OptionTypes {
             List<String> strings = new ArrayList<>();
             if (node instanceof ArrayNode) {
                 node.elements().forEachRemaining(n -> strings.add(n.asText()));
-                return strings.toArray(new String[strings.size()]);
+                return strings.toArray(new String[0]);
             } else {
                 return parse(node.asText());
             }
@@ -332,26 +257,7 @@ public class OptionTypes {
     }
 
     public static IOptionType<Integer> getRangedIntegerType(final int minValueInclusive, final int maxValueInclusive) {
-        return new IntegerOptionType() {
-            @Override
-            public Integer parse(String value) {
-                int intValue = super.parse(value);
-                if (intValue < minValueInclusive || intValue > maxValueInclusive) {
-                    if (maxValueInclusive == Integer.MAX_VALUE) {
-                        if (minValueInclusive == 0) {
-                            throw new IllegalArgumentException(
-                                    "integer value must not be negative, but was " + intValue);
-                        } else if (minValueInclusive == 1) {
-                            throw new IllegalArgumentException(
-                                    "integer value must be greater than zero, but was " + intValue);
-                        }
-                    }
-                    throw new IllegalArgumentException("integer value must be between " + minValueInclusive + "-"
-                            + maxValueInclusive + " (inclusive)");
-                }
-                return intValue;
-            }
-        };
+        return new RangedIntegerOptionType(minValueInclusive, maxValueInclusive);
     }
 
     public static class IntegerOptionType implements IOptionType<Integer> {
@@ -373,6 +279,156 @@ public class OptionTypes {
         @Override
         public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
             node.put(fieldName, (int) value);
+        }
+    }
+
+    private static class RangedIntegerOptionType extends IntegerOptionType {
+        private final int minValue;
+        private final int maxValue;
+
+        RangedIntegerOptionType(int minValue, int maxValue) {
+            this.minValue = minValue;
+            this.maxValue = maxValue;
+        }
+
+        @Override
+        public Integer parse(String value) {
+            int intValue = super.parse(value);
+            rangeCheck(intValue);
+            return intValue;
+        }
+
+        void rangeCheck(long intValue) {
+            if (intValue < minValue || intValue > maxValue) {
+                if (maxValue == Integer.MAX_VALUE) {
+                    if (minValue == 0) {
+                        throw new IllegalArgumentException("integer value must not be negative, but was " + intValue);
+                    } else if (minValue == 1) {
+                        throw new IllegalArgumentException(
+                                "integer value must be greater than zero, but was " + intValue);
+                    }
+                }
+                throw new IllegalArgumentException(
+                        "integer value must be between " + minValue + "-" + maxValue + " (inclusive)");
+            }
+        }
+    }
+
+    private static class IntegerByteUnit extends RangedIntegerOptionType {
+
+        IntegerByteUnit() {
+            this(Integer.MIN_VALUE, Integer.MAX_VALUE);
+        }
+
+        IntegerByteUnit(int minValue, int maxValue) {
+            super(minValue, maxValue);
+        }
+
+        @Override
+        public Integer parse(String s) {
+            if (s == null) {
+                return null;
+            }
+            long result = StorageUtil.getByteValue(s);
+            rangeCheck(result);
+            return (int) result;
+        }
+
+        @Override
+        public Integer parse(JsonNode node) {
+            // TODO: we accept human readable sizes from json- why not emit human readable sizes?
+            return node.isNull() ? null : parse(node.asText());
+        }
+
+        @Override
+        public String serializeToHumanReadable(Object value) {
+            return value + " (" + StorageUtil.toHumanReadableSize((int) value) + ")";
+        }
+    }
+
+    private static class RangedLongOptionType extends LongOptionType {
+        private final long minValue;
+        private final long maxValue;
+
+        RangedLongOptionType(long minValue, long maxValue) {
+            this.minValue = minValue;
+            this.maxValue = maxValue;
+        }
+
+        @Override
+        public Long parse(String value) {
+            long longValue = super.parse(value);
+            rangeCheck(longValue);
+            return longValue;
+        }
+
+        void rangeCheck(long longValue) {
+            if (longValue < minValue || longValue > maxValue) {
+                if (maxValue == Long.MAX_VALUE) {
+                    if (minValue == 0) {
+                        throw new IllegalArgumentException("long value must not be negative, but was " + longValue);
+                    } else if (minValue == 1) {
+                        throw new IllegalArgumentException(
+                                "long value must be greater than zero, but was " + longValue);
+                    }
+                }
+                throw new IllegalArgumentException(
+                        "long value must be between " + minValue + "-" + maxValue + " (inclusive)");
+            }
+        }
+    }
+
+    private static class LongByteUnit extends RangedLongOptionType {
+
+        LongByteUnit() {
+            this(Long.MIN_VALUE, Long.MAX_VALUE);
+        }
+
+        LongByteUnit(long minValue, long maxValue) {
+            super(minValue, maxValue);
+        }
+
+        @Override
+        public Long parse(String s) {
+            if (s == null) {
+                return null;
+            }
+            long result = StorageUtil.getByteValue(s);
+            rangeCheck(result);
+            return result;
+        }
+
+        @Override
+        public Long parse(JsonNode node) {
+            // TODO: we accept human readable sizes from json- why not emit human readable sizes?
+            return node.isNull() ? null : parse(node.asText());
+        }
+
+        @Override
+        public String serializeToHumanReadable(Object value) {
+            return value + " (" + StorageUtil.toHumanReadableSize((long) value) + ")";
+        }
+    }
+
+    private static class LongOptionType implements IOptionType<Long> {
+        @Override
+        public Long parse(String s) {
+            return Long.parseLong(s);
+        }
+
+        @Override
+        public Long parse(JsonNode node) {
+            return node.isNull() ? null : node.asLong();
+        }
+
+        @Override
+        public Class<Long> targetType() {
+            return Long.class;
+        }
+
+        @Override
+        public void serializeJSONField(String fieldName, Object value, ObjectNode node) {
+            node.put(fieldName, (long) value);
         }
     }
 }

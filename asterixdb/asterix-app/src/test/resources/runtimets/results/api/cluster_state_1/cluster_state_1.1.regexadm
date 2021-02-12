@@ -14,6 +14,7 @@
     "compiler\.indexonly" : true,
     "compiler\.internal\.sanitycheck" : true,
     "compiler\.joinmemory" : 262144,
+    "compiler\.min\.memory\.allocation" : true,
     "compiler\.parallelism" : 0,
     "compiler\.sort\.parallel" : false,
     "compiler\.sort\.samples" : 100,

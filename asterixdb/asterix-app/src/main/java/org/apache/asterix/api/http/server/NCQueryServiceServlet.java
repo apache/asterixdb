@@ -68,7 +68,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
     }
 
     @Override
-    protected void executeStatement(IRequestReference requestReference, String statementsText,
+    protected void executeStatement(IServletRequest request, IRequestReference requestReference, String statementsText,
             SessionOutput sessionOutput, ResultProperties resultProperties,
             IStatementExecutor.StatementProperties statementProperties, IStatementExecutor.Stats stats,
             QueryServiceRequestParameters param, RequestExecutionState executionState,
@@ -85,7 +85,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             long timeout = param.getTimeout();
             int stmtCategoryRestrictionMask = org.apache.asterix.app.translator.RequestParameters
                     .getStatementCategoryRestrictionMask(param.isReadOnly());
-            ExecuteStatementRequestMessage requestMsg = createRequestMessage(requestReference, statementsText,
+            ExecuteStatementRequestMessage requestMsg = createRequestMessage(request, requestReference, statementsText,
                     sessionOutput, resultProperties, param, optionalParameters, statementParameters, ncCtx,
                     responseFuture, queryLanguage, handleUrl, stmtCategoryRestrictionMask, false);
             executionState.start();
@@ -129,12 +129,12 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         buildResponseResults(responsePrinter, sessionOutput, responseMsg.getExecutionPlans(), warnings);
     }
 
-    protected ExecuteStatementRequestMessage createRequestMessage(IRequestReference requestReference,
-            String statementsText, SessionOutput sessionOutput, ResultProperties resultProperties,
-            QueryServiceRequestParameters param, Map<String, String> optionalParameters,
-            Map<String, byte[]> statementParameters, INCServiceContext ncCtx, MessageFuture responseFuture,
-            ILangExtension.Language queryLanguage, String handleUrl, int stmtCategoryRestrictionMask,
-            boolean forceDropDataset) {
+    protected ExecuteStatementRequestMessage createRequestMessage(IServletRequest request,
+            IRequestReference requestReference, String statementsText, SessionOutput sessionOutput,
+            ResultProperties resultProperties, QueryServiceRequestParameters param,
+            Map<String, String> optionalParameters, Map<String, byte[]> statementParameters, INCServiceContext ncCtx,
+            MessageFuture responseFuture, ILangExtension.Language queryLanguage, String handleUrl,
+            int stmtCategoryRestrictionMask, boolean forceDropDataset) {
         return new ExecuteStatementRequestMessage(ncCtx.getNodeId(), responseFuture.getFutureId(), queryLanguage,
                 statementsText, sessionOutput.config(), resultProperties.getNcToCcResultProperties(),
                 param.getClientContextID(), handleUrl, optionalParameters, statementParameters,

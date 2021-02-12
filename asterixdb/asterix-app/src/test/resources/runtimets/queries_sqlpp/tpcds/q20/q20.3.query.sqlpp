@@ -35,7 +35,7 @@ WHERE
   cs.cs_item_sk = i.i_item_sk
   AND i.i_category IN ['Home', 'Men', 'Women']
   AND cs.cs_sold_date_sk = d.d_date_sk
-  AND date(d.d_date) BETWEEN date('1999-01-01') AND (date('1999-01-01') + duration('P1Y'))
+  AND date(d.d_date) BETWEEN date('1999-01-01') AND (date('1999-01-01') + duration('P3Y'))
 GROUP BY
   i.i_item_id,
   i.i_item_desc,

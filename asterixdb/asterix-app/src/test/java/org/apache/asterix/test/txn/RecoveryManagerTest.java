@@ -22,7 +22,9 @@ import java.io.File;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.TestDataUtil;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
+import org.apache.asterix.transaction.management.service.logging.LogManager;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -101,5 +103,21 @@ public class RecoveryManagerTest {
         integrationUtil.init(false, TEST_CONFIG_FILE_PATH);
         final long countAfterRecovery = TestDataUtil.getDatasetCount(datasetName);
         Assert.assertEquals(countBeforeRecovery, countAfterRecovery);
+    }
+
+    @Test
+    public void recoveryWithEmptyLogFile() throws Exception {
+        String datasetName = "ds";
+        TestDataUtil.createIdOnlyDataset(datasetName);
+        TestDataUtil.upsertData(datasetName, 10);
+        final INcApplicationContext ncAppCtx = (INcApplicationContext) integrationUtil.ncs[0].getApplicationContext();
+        final LogManager logManager = (LogManager) ncAppCtx.getTransactionSubsystem().getLogManager();
+        // do ungraceful shutdown to enforce recovery
+        integrationUtil.deinit(false);
+        // create empty txn log file
+        LogManagerTest.prepareNextLogFile(logManager);
+        // ensure recovery completes
+        integrationUtil.init(false, TEST_CONFIG_FILE_PATH);
+        TestDataUtil.upsertData(datasetName, 10);
     }
 }

@@ -21,13 +21,20 @@ package org.apache.hyracks.algebricks.core.algebra.plan;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -35,7 +42,10 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
@@ -60,6 +70,13 @@ public final class PlanStructureVerifier {
 
     private static final String ERROR_MESSAGE_TEMPLATE_4 = "missing schema in %s";
 
+    private static final String ERROR_MESSAGE_TEMPLATE_5 =
+            "produced variables %s that intersect used variables %s on %s in %s";
+
+    private static final String ERROR_MESSAGE_TEMPLATE_6 = "undefined used variables %s in %s";
+
+    public static final Comparator<LogicalVariable> VARIABLE_CMP = Comparator.comparing(LogicalVariable::toString);
+
     private final ExpressionReferenceVerifierVisitor exprVisitor = new ExpressionReferenceVerifierVisitor();
 
     private final Map<Mutable<ILogicalOperator>, ILogicalOperator> opRefMap = new IdentityHashMap<>();
@@ -71,6 +88,10 @@ public final class PlanStructureVerifier {
     private final Map<ILogicalExpression, ILogicalOperator> exprMap = new IdentityHashMap<>();
 
     private final Deque<Pair<Mutable<ILogicalOperator>, ILogicalOperator>> workQueue = new ArrayDeque<>();
+
+    private final Set<LogicalVariable> tmpVarSet1 = new HashSet<>();
+
+    private final Set<LogicalVariable> tmpVarSet2 = new HashSet<>();
 
     private final IPlanPrettyPrinter prettyPrinter;
 
@@ -155,14 +176,9 @@ public final class PlanStructureVerifier {
         exprVisitor.setOperator(op);
         op.acceptExpressionTransform(exprVisitor);
 
-        if (ensureTypeEnv && typeEnvProvider.getOutputTypeEnvironment(op) == null) {
-            throw new AlgebricksException(
-                    String.format(ERROR_MESSAGE_TEMPLATE_3, PlanStabilityVerifier.printOperator(op, prettyPrinter)));
-        }
-        if (ensureSchema && op.getSchema() == null) {
-            throw new AlgebricksException(
-                    String.format(ERROR_MESSAGE_TEMPLATE_4, PlanStabilityVerifier.printOperator(op, prettyPrinter)));
-        }
+        checkOperatorTypeEnvironment(op);
+        checkOperatorSchema(op);
+        checkOperatorVariables(op);
 
         List<Mutable<ILogicalOperator>> children = op.getInputs();
         if (op instanceof AbstractOperatorWithNestedPlans) {
@@ -172,6 +188,77 @@ public final class PlanStructureVerifier {
             }
         }
         return children;
+    }
+
+    private void checkOperatorTypeEnvironment(ILogicalOperator op) throws AlgebricksException {
+        if (ensureTypeEnv && typeEnvProvider.getOutputTypeEnvironment(op) == null) {
+            throw new AlgebricksException(
+                    String.format(ERROR_MESSAGE_TEMPLATE_3, PlanStabilityVerifier.printOperator(op, prettyPrinter)));
+        }
+    }
+
+    private void checkOperatorSchema(ILogicalOperator op) throws AlgebricksException {
+        if (ensureSchema && op.getSchema() == null) {
+            throw new AlgebricksException(
+                    String.format(ERROR_MESSAGE_TEMPLATE_4, PlanStabilityVerifier.printOperator(op, prettyPrinter)));
+        }
+    }
+
+    private void checkOperatorVariables(ILogicalOperator op) throws AlgebricksException {
+        if (op instanceof AbstractOperatorWithNestedPlans) {
+            return;
+        }
+
+        tmpVarSet1.clear();
+        VariableUtilities.getUsedVariables(op, tmpVarSet1);
+        if (!tmpVarSet1.isEmpty()) {
+            ensureUsedVarsAreDefined(op, tmpVarSet1);
+            ensureProducedVarsDisjointFromUsedVars(op, tmpVarSet1);
+        }
+    }
+
+    private void ensureUsedVarsAreDefined(ILogicalOperator op, Collection<LogicalVariable> usedVars)
+            throws AlgebricksException {
+        if (!ensureTypeEnv) {
+            return;
+        }
+
+        tmpVarSet2.clear();
+        tmpVarSet2.addAll(usedVars);
+        Set<LogicalVariable> usedVarsCopy = tmpVarSet2;
+
+        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
+            ILogicalOperator childOp = childRef.getValue();
+            IVariableTypeEnvironment childOpTypeEnv = typeEnvProvider.getOutputTypeEnvironment(childOp);
+            if (childOpTypeEnv == null) {
+                throw new AlgebricksException(String.format(ERROR_MESSAGE_TEMPLATE_3,
+                        PlanStabilityVerifier.printOperator(childOp, prettyPrinter)));
+            }
+            for (Iterator<LogicalVariable> i = usedVarsCopy.iterator(); i.hasNext();) {
+                LogicalVariable usedVar = i.next();
+                if (childOpTypeEnv.getVarType(usedVar) != null) {
+                    i.remove();
+                }
+            }
+        }
+        if (!usedVarsCopy.isEmpty()) {
+            throw new AlgebricksException(String.format(ERROR_MESSAGE_TEMPLATE_6, sorted(usedVarsCopy, VARIABLE_CMP),
+                    PlanStabilityVerifier.printOperator(op, prettyPrinter)));
+        }
+    }
+
+    private void ensureProducedVarsDisjointFromUsedVars(ILogicalOperator op, Set<LogicalVariable> usedVars)
+            throws AlgebricksException {
+        tmpVarSet2.clear();
+        VariableUtilities.getProducedVariables(op, tmpVarSet2);
+        Set<LogicalVariable> producedVars = tmpVarSet2;
+
+        Collection<LogicalVariable> intersection = CollectionUtils.intersection(producedVars, usedVars);
+        if (!intersection.isEmpty()) {
+            throw new AlgebricksException(String.format(ERROR_MESSAGE_TEMPLATE_5, sorted(producedVars, VARIABLE_CMP),
+                    sorted(usedVars, VARIABLE_CMP), sorted(intersection, VARIABLE_CMP),
+                    PlanStabilityVerifier.printOperator(op, prettyPrinter)));
+        }
     }
 
     private void raiseException(String sharedReferenceKind, String sharedEntity, ILogicalOperator firstOp,
@@ -186,6 +273,10 @@ public final class PlanStructureVerifier {
                     PlanStabilityVerifier.printOperator(secondOp, prettyPrinter));
         }
         throw new AlgebricksException(errorMessage);
+    }
+
+    private <T> List<T> sorted(Collection<T> inColl, Comparator<T> comparator) {
+        return inColl.stream().sorted(comparator).collect(Collectors.toList());
     }
 
     private final class ExpressionReferenceVerifierVisitor implements ILogicalExpressionReferenceTransform {

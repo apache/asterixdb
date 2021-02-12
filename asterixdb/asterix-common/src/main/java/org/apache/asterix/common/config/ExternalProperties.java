@@ -21,6 +21,7 @@ package org.apache.asterix.common.config;
 import static org.apache.hyracks.control.common.config.OptionTypes.LEVEL;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 
 import org.apache.hyracks.api.config.IOption;
@@ -46,7 +47,7 @@ public class ExternalProperties extends AbstractProperties {
         CC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the cluster controller process by managix"),
         NC_JAVA_OPTS(STRING, "-Xmx1024m", "The JVM options passed to the node controller process(es) by managix"),
         MAX_WEB_REQUEST_SIZE(
-                NONNEGATIVE_INTEGER,
+                POSITIVE_INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(200, StorageUtil.StorageUnit.MEGABYTE),
                 "The maximum accepted web request size in bytes"),
         REQUESTS_ARCHIVE_SIZE(NONNEGATIVE_INTEGER, 50, "The maximum number of archived requests to maintain");

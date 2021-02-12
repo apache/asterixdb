@@ -113,10 +113,10 @@ public class PartitionReplica implements IPartitionReplica {
 
     public synchronized void close() {
         try {
-            if (sc != null) {
+            if (NetworkingUtil.isHealthy(sc)) {
                 sendGoodBye();
-                NetworkUtil.closeQuietly(sc);
             }
+            NetworkUtil.closeQuietly(sc);
         } finally {
             sc = null;
         }

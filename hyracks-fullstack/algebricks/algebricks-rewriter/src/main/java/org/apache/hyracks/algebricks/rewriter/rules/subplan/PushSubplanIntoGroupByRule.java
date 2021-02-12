@@ -166,7 +166,10 @@ public class PushSubplanIntoGroupByRule implements IAlgebraicRewriteRule {
                     loop_dest_op_nested_plans: for (ILogicalPlan originalDestOpNestedPlan : destOp.getNestedPlans()) {
                         for (Mutable<ILogicalOperator> originalDestOpNestedPlanRootRef : originalDestOpNestedPlan
                                 .getRoots()) {
-                            if (downToNts(originalDestOpNestedPlanRootRef) == null) {
+                            boolean nestedPlanShapeOk = originalDestOpNestedPlanRootRef.getValue()
+                                    .getOperatorTag() == LogicalOperatorTag.AGGREGATE
+                                    && downToNts(originalDestOpNestedPlanRootRef) != null;
+                            if (!nestedPlanShapeOk) {
                                 continue;
                             }
 

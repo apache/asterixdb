@@ -1,0 +1,61 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpcds;
+
+SELECT
+    ROUND(SUM(ss1.ss_net_profit), 2) AS total_sum,
+    s1.s_state,
+    s1.s_county,
+    GROUPING(s1.s_state) + GROUPING(s1.s_county) AS lochierarchy,
+    RANK() OVER (
+        PARTITION BY
+          GROUPING(s1.s_state) + GROUPING(s1.s_county),
+          CASE WHEN GROUPING(s1.s_county) = 0 THEN s1.s_state END
+        ORDER BY
+          SUM(ss1.ss_net_profit) DESC
+    ) AS rank_within_parent
+FROM
+    store_sales ss1, date_dim d1, store s1
+WHERE d1.d_month_seq BETWEEN 1000 AND 2000
+  AND d1.d_date_sk = ss1.ss_sold_date_sk
+  AND s1.s_store_sk  = ss1.ss_store_sk
+  AND s1.s_state IN (
+    SELECT VALUE s_state
+    FROM (
+      SELECT
+        s.s_state AS s_state,
+        RANK() OVER (
+          PARTITION BY s.s_state
+          ORDER BY SUM(ss.ss_net_profit) DESC
+        ) AS ranking
+      FROM store_sales ss, store s, date_dim d
+      WHERE d.d_month_seq BETWEEN 1000 AND 2000
+        AND d.d_date_sk = ss.ss_sold_date_sk
+        AND s.s_store_sk  = ss.ss_store_sk
+      GROUP BY s.s_state
+    ) tmp1
+    WHERE ranking <= 5
+  )
+GROUP BY ROLLUP(s1.s_state, s1.s_county)
+ORDER BY
+  lochierarchy DESC,
+  CASE WHEN lochierarchy = 0 THEN s1.s_state END,
+  rank_within_parent
+LIMIT 100;

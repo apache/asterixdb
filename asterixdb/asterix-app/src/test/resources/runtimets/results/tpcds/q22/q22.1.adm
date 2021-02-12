@@ -1,0 +1,21 @@
+{ "i_product_name": "pri", "i_brand": null, "i_class": null, "i_category": null, "qoh": 24.0 }
+{ "i_product_name": "pri", "i_brand": "brandbrand #4", "i_class": null, "i_category": null, "qoh": 24.0 }
+{ "i_product_name": "pri", "i_brand": "brandbrand #4", "i_class": "decor", "i_category": null, "qoh": 24.0 }
+{ "i_product_name": "pri", "i_brand": "brandbrand #4", "i_class": "decor", "i_category": "Home", "qoh": 24.0 }
+{ "i_product_name": "anti", "i_brand": null, "i_class": null, "i_category": null, "qoh": 200.0 }
+{ "i_product_name": "anti", "i_brand": "importoimporto #2", "i_class": null, "i_category": null, "qoh": 200.0 }
+{ "i_product_name": "anti", "i_brand": "importoimporto #2", "i_class": "shirts", "i_category": null, "qoh": 200.0 }
+{ "i_product_name": "anti", "i_brand": "importoimporto #2", "i_class": "shirts", "i_category": "Men", "qoh": 200.0 }
+{ "i_product_name": "ought", "i_brand": null, "i_class": null, "i_category": null, "qoh": 405.0 }
+{ "i_product_name": "ought", "i_brand": "exportischolar #2", "i_class": null, "i_category": null, "qoh": 405.0 }
+{ "i_product_name": "ought", "i_brand": "exportischolar #2", "i_class": "pop", "i_category": null, "qoh": 405.0 }
+{ "i_product_name": "ought", "i_brand": "exportischolar #2", "i_class": "pop", "i_category": "Music", "qoh": 405.0 }
+{ "i_product_name": null, "i_brand": null, "i_class": null, "i_category": null, "qoh": 441.6 }
+{ "i_product_name": "n st", "i_brand": null, "i_class": null, "i_category": null, "qoh": 745.0 }
+{ "i_product_name": "n st", "i_brand": "edu packamalg #2", "i_class": null, "i_category": null, "qoh": 745.0 }
+{ "i_product_name": "n st", "i_brand": "edu packamalg #2", "i_class": "swimwear", "i_category": null, "qoh": 745.0 }
+{ "i_product_name": "n st", "i_brand": "edu packamalg #2", "i_class": "swimwear", "i_category": "Women", "qoh": 745.0 }
+{ "i_product_name": "barought", "i_brand": null, "i_class": null, "i_category": null, "qoh": 834.0 }
+{ "i_product_name": "barought", "i_brand": "namelessunivamalg #11", "i_class": null, "i_category": null, "qoh": 834.0 }
+{ "i_product_name": "barought", "i_brand": "namelessunivamalg #11", "i_class": "scanners", "i_category": null, "qoh": 834.0 }
+{ "i_product_name": "barought", "i_brand": "namelessunivamalg #11", "i_class": "scanners", "i_category": "Electronics", "qoh": 834.0 }

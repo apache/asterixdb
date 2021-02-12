@@ -43,7 +43,7 @@ FROM
       date_dim d
     WHERE
       wr.wr_return_amt > 100
-      AND ws.ws_net_profit > 1
+      /* AND ws.ws_net_profit > 1 */
       AND ws.ws_net_paid > 0
       AND ws.ws_quantity > 0
       AND ws.ws_sold_date_sk = d.d_date_sk
@@ -80,11 +80,11 @@ FROM
       date_dim d
     WHERE
       cr.cr_return_amount > 100
-      AND cs.cs_net_profit > 1
+      /* AND cs.cs_net_profit > 1 */
       AND cs.cs_net_paid > 0
       AND cs.cs_quantity > 0
       AND cs.cs_sold_date_sk = d.d_date_sk
-      /*AND d.d_year = 1999 AND d.d_moy = 12*/
+      /* AND d.d_year = 1999 AND d.d_moy = 12 */
     GROUP BY
       cs.cs_item_sk
     ) in_cat
@@ -117,11 +117,11 @@ FROM
       date_dim d
     WHERE
       sr.sr_return_amt > 100
-      AND sts.ss_net_profit > 1
+      /* AND sts.ss_net_profit > 1 */
       AND sts.ss_net_paid > 0
       AND sts.ss_quantity > 0
       AND sts.ss_sold_date_sk = d.d_date_sk
-      /*AND d.d_year = 1999 AND d.d_moy = 12*/
+      /* AND d.d_year = 1999 AND d.d_moy = 12 */
     GROUP BY
       sts.ss_item_sk
     ) in_store

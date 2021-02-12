@@ -1,0 +1,13 @@
+{ "i_item_id": null, "s_state": null, "g_state": 1, "agg1": 97.4, "agg2": 14.92, "agg3": 4.6, "agg4": 7.32 }
+{ "i_item_id": "AAAAAAAAABAAAAAA", "s_state": null, "g_state": 1, "agg1": 108.0, "agg2": 5.34, "agg3": 0.0, "agg4": 3.52 }
+{ "i_item_id": "AAAAAAAAABAAAAAA", "s_state": "TN", "g_state": 0, "agg1": 108.0, "agg2": 5.34, "agg3": 0.0, "agg4": 3.52 }
+{ "i_item_id": "AAAAAAAACAAAAAAA", "s_state": null, "g_state": 1, "agg1": 2.0, "agg2": 101.17, "agg3": 46.03, "agg4": 41.47 }
+{ "i_item_id": "AAAAAAAACAAAAAAA", "s_state": "TN", "g_state": 0, "agg1": 2.0, "agg2": 101.17, "agg3": 46.03, "agg4": 41.47 }
+{ "i_item_id": "AAAAAAAADBAAAAAA", "s_state": null, "g_state": 1, "agg1": 108.0, "agg2": 5.34, "agg3": 0.0, "agg4": 3.52 }
+{ "i_item_id": "AAAAAAAADBAAAAAA", "s_state": "TN", "g_state": 0, "agg1": 108.0, "agg2": 5.34, "agg3": 0.0, "agg4": 3.52 }
+{ "i_item_id": "AAAAAAAAEBAAAAAA", "s_state": null, "g_state": 1, "agg1": 108.0, "agg2": 5.34, "agg3": 0.0, "agg4": 3.52 }
+{ "i_item_id": "AAAAAAAAEBAAAAAA", "s_state": "TN", "g_state": 0, "agg1": 108.0, "agg2": 5.34, "agg3": 0.0, "agg4": 3.52 }
+{ "i_item_id": "AAAAAAAAGBAAAAAA", "s_state": null, "g_state": 1, "agg1": 108.0, "agg2": 5.34, "agg3": 0.0, "agg4": 3.52 }
+{ "i_item_id": "AAAAAAAAGBAAAAAA", "s_state": "TN", "g_state": 0, "agg1": 108.0, "agg2": 5.34, "agg3": 0.0, "agg4": 3.52 }
+{ "i_item_id": "AAAAAAAAKAAAAAAA", "s_state": null, "g_state": 1, "agg1": 108.0, "agg2": 5.34, "agg3": 0.0, "agg4": 3.52 }
+{ "i_item_id": "AAAAAAAAKAAAAAAA", "s_state": "TN", "g_state": 0, "agg1": 108.0, "agg2": 5.34, "agg3": 0.0, "agg4": 3.52 }

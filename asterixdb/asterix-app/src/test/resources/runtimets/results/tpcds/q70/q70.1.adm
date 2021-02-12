@@ -1,0 +1,3 @@
+{ "total_sum": -3169.6, "s_state": null, "s_county": null, "lochierarchy": 2, "rank_within_parent": 1 }
+{ "total_sum": -3169.6, "s_state": "TN", "s_county": null, "lochierarchy": 1, "rank_within_parent": 1 }
+{ "total_sum": -3169.6, "s_state": "TN", "s_county": "Williamson County", "lochierarchy": 0, "rank_within_parent": 1 }

@@ -1,0 +1,13 @@
+{ "channel": null, "id": null, "sales": 62214.72, "returns": 4839.2, "profit": -26998.14 }
+{ "channel": "catalog channel", "id": null, "sales": 34305.02, "returns": 2157.76, "profit": 1953.48 }
+{ "channel": "catalog channel", "id": "catalog_pageAAAAAAAABAAAAAAA", "sales": 20382.0, "returns": 0.0, "profit": 6726.16 }
+{ "channel": "catalog channel", "id": "catalog_pageAAAAAAAAGODAAAAA", "sales": 2799.03, "returns": 2157.76, "profit": -5865.59 }
+{ "channel": "catalog channel", "id": "catalog_pageAAAAAAAAHGFBAAAA", "sales": 6573.16, "returns": 0.0, "profit": -680.23 }
+{ "channel": "catalog channel", "id": "catalog_pageAAAAAAAAKKPAAAAA", "sales": 1362.3, "returns": 0.0, "profit": 337.82 }
+{ "channel": "catalog channel", "id": "catalog_pageAAAAAAAAPNHAAAAA", "sales": 3188.53, "returns": 0.0, "profit": 1435.32 }
+{ "channel": "store channel", "id": null, "sales": 25741.42, "returns": 2681.44, "profit": -28056.09 }
+{ "channel": "store channel", "id": "storeAAAAAAAABAAAAAAA", "sales": 14371.21, "returns": 37.23, "profit": -10319.54 }
+{ "channel": "store channel", "id": "storeAAAAAAAACAAAAAAA", "sales": 8398.66, "returns": 2416.84, "profit": -15384.3 }
+{ "channel": "store channel", "id": "storeAAAAAAAAEAAAAAAA", "sales": 2971.55, "returns": 227.37, "profit": -2352.25 }
+{ "channel": "web channel", "id": null, "sales": 2168.28, "returns": 0.0, "profit": -895.53 }
+{ "channel": "web channel", "id": "web_siteAAAAAAAAEAAAAAAA", "sales": 2168.28, "returns": 0.0, "profit": -895.53 }

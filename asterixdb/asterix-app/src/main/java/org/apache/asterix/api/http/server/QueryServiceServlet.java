@@ -301,9 +301,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 IStatementExecutor.StatementProperties statementProperties =
                         new IStatementExecutor.StatementProperties();
                 response.setStatus(HttpResponseStatus.OK);
-                executeStatement(requestRef, statementsText, sessionOutput, resultProperties, statementProperties,
-                        stats, param, executionState, param.getOptionalParams(), statementParams, responsePrinter,
-                        warnings);
+                executeStatement(request, requestRef, statementsText, sessionOutput, resultProperties,
+                        statementProperties, stats, param, executionState, param.getOptionalParams(), statementParams,
+                        responsePrinter, warnings);
                 executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
             }
             errorCount = 0;
@@ -386,7 +386,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         return new ResultUtil.ParseOnlyResult(extVars);
     }
 
-    protected void executeStatement(IRequestReference requestReference, String statementsText,
+    protected void executeStatement(IServletRequest request, IRequestReference requestReference, String statementsText,
             SessionOutput sessionOutput, ResultProperties resultProperties,
             IStatementExecutor.StatementProperties statementProperties, Stats stats,
             QueryServiceRequestParameters param, RequestExecutionState executionState,

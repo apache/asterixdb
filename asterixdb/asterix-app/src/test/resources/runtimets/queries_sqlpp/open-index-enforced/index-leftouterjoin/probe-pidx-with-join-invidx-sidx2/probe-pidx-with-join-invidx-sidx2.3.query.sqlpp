@@ -25,6 +25,7 @@
 
 use test;
 
+set `compiler.internal.sanitycheck` "false";
 
 select element {'tweet':{'id':t1.tweetid,'topics':t1.`message-text`},'similar-tweets':(
         select element {'id':t2.tweetid,'topics':t2.`message-text`}

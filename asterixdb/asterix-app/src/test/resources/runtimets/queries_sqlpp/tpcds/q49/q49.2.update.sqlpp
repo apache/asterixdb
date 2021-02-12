@@ -19,16 +19,16 @@
 
 use tpcds;
 
-load dataset catalog_returns using localfs ((`path`=`asterix_nc1://data/tpcds/catalog_returns.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset catalog_returns using localfs ((`path`=`asterix_nc1://data/tpcds/catalog_returns.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset catalog_sales using localfs ((`path`=`asterix_nc1://data/tpcds/catalog_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset catalog_sales using localfs ((`path`=`asterix_nc1://data/tpcds/catalog_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset date_dim using localfs ((`path`=`asterix_nc1://data/tpcds/date_dim.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset date_dim using localfs ((`path`=`asterix_nc1://data/tpcds/date_dim.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset store_returns using localfs ((`path`=`asterix_nc1://data/tpcds/store_returns.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset store_returns using localfs ((`path`=`asterix_nc1://data/tpcds/store_returns.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset store_sales using localfs ((`path`=`asterix_nc1://data/tpcds/store_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset store_sales using localfs ((`path`=`asterix_nc1://data/tpcds/store_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset web_returns using localfs ((`path`=`asterix_nc1://data/tpcds/web_returns.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset web_returns using localfs ((`path`=`asterix_nc1://data/tpcds/web_returns.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));
 
-load dataset web_sales using localfs ((`path`=`asterix_nc1://data/tpcds/web_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`));
+load dataset web_sales using localfs ((`path`=`asterix_nc1://data/tpcds/web_sales.csv`),(`format`=`delimited-text`),(`delimiter`=`|`),(`null`=``));

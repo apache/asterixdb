@@ -1,0 +1,7 @@
+{ "two": null, "two_plus_four": null, "grp_two": 1, "grp_two_plus_four": 1, "agg_sum": 45000 }
+{ "two": 0, "two_plus_four": null, "grp_two": 0, "grp_two_plus_four": 1, "agg_sum": 20000 }
+{ "two": 0, "two_plus_four": 0, "grp_two": 0, "grp_two_plus_four": 0, "agg_sum": 10000 }
+{ "two": 0, "two_plus_four": 2, "grp_two": 0, "grp_two_plus_four": 0, "agg_sum": 10000 }
+{ "two": 1, "two_plus_four": null, "grp_two": 0, "grp_two_plus_four": 1, "agg_sum": 25000 }
+{ "two": 1, "two_plus_four": 2, "grp_two": 0, "grp_two_plus_four": 0, "agg_sum": 12500 }
+{ "two": 1, "two_plus_four": 4, "grp_two": 0, "grp_two_plus_four": 0, "agg_sum": 12500 }

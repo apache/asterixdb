@@ -143,6 +143,11 @@
         <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="non-s3-region">
+        <output-dir compare="Text">non-s3-region</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-dataset/common">
       <compilation-unit name="query-with-limit-plan">
         <placeholder name="adapter" value="S3" />

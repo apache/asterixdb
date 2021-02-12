@@ -1,0 +1,41 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpcds;
+
+SELECT  i.i_item_id,
+        s.s_state, GROUPING(s.s_state) g_state,
+        ROUND(AVG(ss.ss_quantity), 2) agg1,
+        ROUND(AVG(ss.ss_list_price), 2) agg2,
+        ROUND(AVG(ss.ss_coupon_amt), 2) agg3,
+        ROUND(AVG(ss.ss_sales_price), 2) agg4
+FROM  store_sales ss, customer_demographics cd, date_dim d, store s, item i
+WHERE ss.ss_sold_date_sk = d.d_date_sk
+  AND ss.ss_item_sk = i.i_item_sk
+  AND ss.ss_store_sk = s.s_store_sk
+  AND ss.ss_cdemo_sk = cd.cd_demo_sk
+  AND cd.cd_gender = 'M'
+  AND cd.cd_marital_status = 'M'
+  AND cd.cd_education_status = 'Primary'
+  AND d.d_year = 1999
+  AND s.s_state IN ['TN','TN']
+GROUP BY ROLLUP (i.i_item_id, s.s_state)
+ORDER BY i.i_item_id, s.s_state
+LIMIT 100;
+
