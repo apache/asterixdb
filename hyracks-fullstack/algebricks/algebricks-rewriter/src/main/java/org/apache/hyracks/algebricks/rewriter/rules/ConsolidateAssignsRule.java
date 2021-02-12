@@ -35,6 +35,12 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class ConsolidateAssignsRule implements IAlgebraicRewriteRule {
 
+    private final boolean recomputeSchema;
+
+    public ConsolidateAssignsRule(boolean recomputeSchema) {
+        this.recomputeSchema = recomputeSchema;
+    }
+
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
@@ -76,6 +82,9 @@ public class ConsolidateAssignsRule implements IAlgebraicRewriteRule {
         asgnInpList.clear();
         asgnInpList.add(botOpRef);
         context.computeAndSetTypeEnvironmentForOperator(assign1);
+        if (recomputeSchema) {
+            assign1.recomputeSchema();
+        }
         return true;
     }
 

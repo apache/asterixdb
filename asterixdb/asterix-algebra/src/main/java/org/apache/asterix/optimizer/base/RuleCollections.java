@@ -40,6 +40,7 @@ import org.apache.asterix.optimizer.rules.CheckInsertUpsertReturningRule;
 import org.apache.asterix.optimizer.rules.ConstantFoldingRule;
 import org.apache.asterix.optimizer.rules.CountVarToCountOneRule;
 import org.apache.asterix.optimizer.rules.DisjunctivePredicateToJoinRule;
+import org.apache.asterix.optimizer.rules.ExtractBatchableExternalFunctionCallsRule;
 import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractWindowExpressionsRule;
@@ -284,7 +285,7 @@ public final class RuleCollections {
     public static final List<IAlgebraicRewriteRule> buildConsolidationRuleCollection() {
         List<IAlgebraicRewriteRule> consolidation = new LinkedList<>();
         consolidation.add(new ConsolidateSelectsRule());
-        consolidation.add(new ConsolidateAssignsRule());
+        consolidation.add(new ConsolidateAssignsRule(false));
         consolidation.add(new InlineAssignIntoAggregateRule());
         consolidation.add(new RewriteDistinctAggregateRule());
         // The following rule should run after RewriteDistinctAggregateRule
@@ -353,6 +354,7 @@ public final class RuleCollections {
     public static final List<IAlgebraicRewriteRule> buildPhysicalRewritesAllLevelsRuleCollection() {
         List<IAlgebraicRewriteRule> physicalRewritesAllLevels = new LinkedList<>();
         physicalRewritesAllLevels.add(new PullSelectOutOfEqJoin());
+        physicalRewritesAllLevels.add(new ExtractBatchableExternalFunctionCallsRule());
         //Turned off the following rule for now not to change OptimizerTest results.
         physicalRewritesAllLevels.add(new SetupCommitExtensionOpRule());
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
@@ -369,7 +371,7 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new IntroduceMaterializationForInsertWithSelfScanRule());
         physicalRewritesAllLevels.add(new InlineSingleReferenceVariablesRule());
         physicalRewritesAllLevels.add(new RemoveUnusedAssignAndAggregateRule());
-        physicalRewritesAllLevels.add(new ConsolidateAssignsRule());
+        physicalRewritesAllLevels.add(new ConsolidateAssignsRule(true));
         // After adding projects, we may need need to set physical operators again.
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
         return physicalRewritesAllLevels;

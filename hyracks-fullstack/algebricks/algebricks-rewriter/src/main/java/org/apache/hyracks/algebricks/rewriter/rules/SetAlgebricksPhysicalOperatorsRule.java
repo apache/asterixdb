@@ -190,7 +190,7 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
         }
 
         @Override
-        public IPhysicalOperator visitAssignOperator(AssignOperator op, Boolean topLevelOp) {
+        public IPhysicalOperator visitAssignOperator(AssignOperator op, Boolean topLevelOp) throws AlgebricksException {
             return new AssignPOperator();
         }
 

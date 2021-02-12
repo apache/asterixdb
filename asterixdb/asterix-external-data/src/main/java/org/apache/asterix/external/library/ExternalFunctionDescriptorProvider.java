@@ -18,15 +18,30 @@
  */
 package org.apache.asterix.external.library;
 
+import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.om.functions.IExternalFunctionDescriptor;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 
 public class ExternalFunctionDescriptorProvider {
 
-    public static IFunctionDescriptor getExternalFunctionDescriptor(IExternalFunctionInfo finfo)
+    public static IExternalFunctionDescriptor resolveExternalFunction(AbstractFunctionCallExpression expr,
+            IVariableTypeEnvironment inputTypeEnv, JobGenContext context) throws AlgebricksException {
+        IExternalFunctionDescriptor fd = getExternalFunctionDescriptor((IExternalFunctionInfo) expr.getFunctionInfo());
+        CompilerProperties props = ((IApplicationContext) context.getAppContext()).getCompilerProperties();
+        FunctionTypeInferers.SET_ARGUMENTS_TYPE.infer(expr, fd, inputTypeEnv, props);
+        fd.setSourceLocation(expr.getSourceLocation());
+        return fd;
+    }
+
+    private static IExternalFunctionDescriptor getExternalFunctionDescriptor(IExternalFunctionInfo finfo)
             throws AlgebricksException {
         switch (finfo.getKind()) {
             case SCALAR:
