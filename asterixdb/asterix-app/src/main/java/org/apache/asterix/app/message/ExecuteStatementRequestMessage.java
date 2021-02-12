@@ -72,8 +72,8 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
     public static final long DEFAULT_NC_TIMEOUT_MILLIS = TimeUnit.MILLISECONDS.toMillis(Long.MAX_VALUE);
     //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2063
     public static final long DEFAULT_QUERY_CANCELLATION_WAIT_MILLIS = TimeUnit.MINUTES.toMillis(1);
-    private final String requestNodeId;
-    private final long requestMessageId;
+    protected final String requestNodeId;
+    protected final long requestMessageId;
     private final ILangExtension.Language lang;
     private final String statementsText;
     private final SessionConfig sessionConfig;
@@ -178,6 +178,11 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
         }
     }
 
+    protected CCMessageBroker getMessageBroker(ICcApplicationContext ccAppCtx) {
+        ICCServiceContext ccSrvContext = ccAppCtx.getServiceContext();
+        return (CCMessageBroker) ccSrvContext.getMessageBroker();
+    }
+
     static RuntimeDataException getRejectionReason(ClusterControllerService ccSrv, String requestNodeId) {
         if (ccSrv.getNodeManager().getNodeControllerState(requestNodeId) == null) {
             return new RuntimeDataException(ErrorCode.REJECT_NODE_UNREGISTERED);
@@ -191,7 +196,7 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
         return null;
     }
 
-    static void sendRejection(RuntimeDataException reason, CCMessageBroker messageBroker, long requestMessageId,
+    protected static void sendRejection(Exception reason, CCMessageBroker messageBroker, long requestMessageId,
             String requestNodeId) {
         ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
         responseMsg.setError(reason);
