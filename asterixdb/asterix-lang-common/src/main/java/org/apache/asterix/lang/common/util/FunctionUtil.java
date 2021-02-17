@@ -35,6 +35,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
+import org.apache.asterix.lang.common.expression.AbstractCallExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.TypeExpression;
@@ -105,7 +106,7 @@ public class FunctionUtil {
 
     @FunctionalInterface
     public interface IFunctionCollector {
-        Set<CallExpr> getFunctionCalls(Expression expression) throws CompilationException;
+        Set<AbstractCallExpression> getFunctionCalls(Expression expression) throws CompilationException;
     }
 
     public static FunctionSignature resolveFunctionCall(FunctionSignature fs, SourceLocation sourceLoc,
@@ -220,61 +221,82 @@ public class FunctionUtil {
         }
         List<FunctionDecl> functionDecls =
                 inputFunctionDecls == null ? new ArrayList<>() : new ArrayList<>(inputFunctionDecls);
-        Set<CallExpr> functionCalls = functionCollector.getFunctionCalls(expression);
+        Set<AbstractCallExpression> functionCalls = functionCollector.getFunctionCalls(expression);
         Set<FunctionSignature> functionSignatures = new HashSet<>();
-        for (CallExpr functionCall : functionCalls) {
-            FunctionSignature fs = functionCall.getFunctionSignature();
-            if (fs.getDataverseName() == null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, functionCall.getSourceLocation(),
-                        fs);
-            }
-            if (!functionSignatures.add(fs)) {
-                // already seen this signature
-                continue;
-            }
-            if (declaredFunctions != null && declaredFunctions.contains(fs)) {
-                continue;
-            }
-            Function function;
-            try {
-                function = metadataProvider.lookupUserDefinedFunction(fs);
-            } catch (AlgebricksException e) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, functionCall.getSourceLocation(),
-                        e.toString());
-            }
-            if (function == null || !functionParser.getLanguage().equals(function.getLanguage())) {
-                // the function is either unknown, builtin, or in a different language.
-                // either way we ignore it here because it will be handled by the function inlining rule later
-                continue;
-            }
+        for (AbstractCallExpression functionCall : functionCalls) {
+            switch (functionCall.getKind()) {
+                case CALL_EXPRESSION:
+                    FunctionSignature fs = functionCall.getFunctionSignature();
+                    if (fs.getDataverseName() == null) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                functionCall.getSourceLocation(), fs);
+                    }
+                    if (!functionSignatures.add(fs)) {
+                        // already seen this signature
+                        continue;
+                    }
+                    if (declaredFunctions != null && declaredFunctions.contains(fs)) {
+                        continue;
+                    }
+                    Function function;
+                    try {
+                        function = metadataProvider.lookupUserDefinedFunction(fs);
+                    } catch (AlgebricksException e) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, functionCall.getSourceLocation(),
+                                e.toString());
+                    }
+                    if (function == null || !functionParser.getLanguage().equals(function.getLanguage())) {
+                        // the function is either unknown, builtin, or in a different language.
+                        // either way we ignore it here because it will be handled by the function inlining rule later
+                        continue;
+                    }
 
-            FunctionDecl functionDecl = functionParser.getFunctionDecl(function, warningCollector);
-            if (functionDecls.contains(functionDecl)) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, functionCall.getSourceLocation(),
-                        "Recursive invocation " + functionDecls.get(functionDecls.size() - 1).getSignature() + " <==> "
-                                + functionDecl.getSignature());
+                    FunctionDecl functionDecl = functionParser.getFunctionDecl(function, warningCollector);
+                    if (functionDecls.contains(functionDecl)) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, functionCall.getSourceLocation(),
+                                "Recursive invocation " + functionDecls.get(functionDecls.size() - 1).getSignature()
+                                        + " <==> " + functionDecl.getSignature());
+                    }
+                    functionDecls.add(functionDecl);
+                    functionDecls = retrieveUsedStoredFunctions(metadataProvider, functionDecl.getFuncBody(),
+                            declaredFunctions, functionDecls, functionCollector, functionParser, warningCollector);
+                    break;
+                case WINDOW_EXPRESSION:
+                    // there cannot be used-defined window functions
+                    break;
+                default:
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, expression.getSourceLocation(),
+                            functionCall.getFunctionSignature().toString(false));
             }
-            functionDecls.add(functionDecl);
-            functionDecls = retrieveUsedStoredFunctions(metadataProvider, functionDecl.getFuncBody(), declaredFunctions,
-                    functionDecls, functionCollector, functionParser, warningCollector);
         }
         return functionDecls;
     }
 
     public static List<List<Triple<DataverseName, String, String>>> getFunctionDependencies(IQueryRewriter rewriter,
-            Expression expression, MetadataProvider metadataProvider) throws CompilationException {
-        Set<CallExpr> functionCalls = rewriter.getFunctionCalls(expression);
+            Expression expression) throws CompilationException {
+        Set<AbstractCallExpression> functionCalls = rewriter.getFunctionCalls(expression);
         //Get the List of used functions and used datasets
         List<Triple<DataverseName, String, String>> datasourceDependencies = new ArrayList<>();
         List<Triple<DataverseName, String, String>> functionDependencies = new ArrayList<>();
-        for (CallExpr functionCall : functionCalls) {
-            FunctionSignature signature = functionCall.getFunctionSignature();
-            if (isBuiltinDatasetFunction(signature)) {
-                Pair<DataverseName, String> datasetReference = parseDatasetFunctionArguments(functionCall);
-                datasourceDependencies.add(new Triple<>(datasetReference.first, datasetReference.second, null));
-            } else if (BuiltinFunctions.getBuiltinFunctionInfo(signature.createFunctionIdentifier()) == null) {
-                functionDependencies.add(new Triple<>(signature.getDataverseName(), signature.getName(),
-                        Integer.toString(signature.getArity())));
+        for (AbstractCallExpression functionCall : functionCalls) {
+            switch (functionCall.getKind()) {
+                case CALL_EXPRESSION:
+                    FunctionSignature signature = functionCall.getFunctionSignature();
+                    if (isBuiltinDatasetFunction(signature)) {
+                        Pair<DataverseName, String> datasetReference =
+                                parseDatasetFunctionArguments((CallExpr) functionCall);
+                        datasourceDependencies.add(new Triple<>(datasetReference.first, datasetReference.second, null));
+                    } else if (BuiltinFunctions.getBuiltinFunctionInfo(signature.createFunctionIdentifier()) == null) {
+                        functionDependencies.add(new Triple<>(signature.getDataverseName(), signature.getName(),
+                                Integer.toString(signature.getArity())));
+                    }
+                    break;
+                case WINDOW_EXPRESSION:
+                    // there cannot be used-defined window functions
+                    break;
+                default:
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, expression.getSourceLocation(),
+                            functionCall.getFunctionSignature().toString(false));
             }
         }
         List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>(3);
