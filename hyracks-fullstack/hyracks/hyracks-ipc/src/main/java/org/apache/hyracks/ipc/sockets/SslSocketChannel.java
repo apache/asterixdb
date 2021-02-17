@@ -233,8 +233,11 @@ public class SslSocketChannel implements ISocketChannel {
 
     private void handleEndOfStreamQuietly() {
         try {
-            engine.closeInbound();
-            close();
+            try {
+                engine.closeInbound();
+            } finally {
+                close();
+            }
         } catch (Exception e) {
             LOGGER.warn("failed to close socket gracefully", e);
         }
