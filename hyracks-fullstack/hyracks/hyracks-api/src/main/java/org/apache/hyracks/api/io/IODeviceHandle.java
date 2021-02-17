@@ -20,6 +20,7 @@ package org.apache.hyracks.api.io;
 
 import java.io.File;
 import java.io.Serializable;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,7 +81,7 @@ public class IODeviceHandle implements Serializable {
     public static List<IODeviceHandle> getDevices(String[] ioDevices) {
         List<IODeviceHandle> devices = new ArrayList<>();
         for (String ioDevice : ioDevices) {
-            String devPath = ioDevice.trim();
+            String devPath = Paths.get(ioDevice.trim()).toAbsolutePath().normalize().toString();
             devices.add(new IODeviceHandle(new File(devPath), "."));
         }
         return devices;

@@ -43,6 +43,14 @@ public class FileUtil {
         return joinPath(File.separatorChar, elements);
     }
 
+    public static String joinPathUnix(String... elements) {
+        return joinPath('/', elements);
+    }
+
+    public static String joinPathWindows(String... elements) {
+        return joinPath('\\', elements);
+    }
+
     public static void forceMkdirs(File dir) throws IOException {
         File canonicalDir = dir.getCanonicalFile();
         try {

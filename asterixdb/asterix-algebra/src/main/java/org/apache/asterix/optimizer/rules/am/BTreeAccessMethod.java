@@ -22,13 +22,16 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
+import org.apache.asterix.common.annotations.AbstractExpressionAnnotationWithIndexNames;
+import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
+import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -56,7 +59,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -982,12 +984,30 @@ public class BTreeAccessMethod implements IAccessMethod {
                 return false;
             }
         }
-        if (!index.isPrimaryIndex()
-                && optFuncExpr.getFuncExpr().hasAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class)) {
+        if (!index.isPrimaryIndex() && AccessMethodUtils.skipSecondaryIndexRequestedByAnnotation(index, optFuncExpr)) {
             return false;
         }
         // No additional analysis required for BTrees.
         return true;
+    }
+
+    @Override
+    public Collection<String> getSecondaryIndexPreferences(IOptimizableFuncExpr optFuncExpr) {
+        // If we are optimizing a join, check for the indexed nested-loop join hint.
+        Class<? extends AbstractExpressionAnnotationWithIndexNames> annotationClass;
+        if (optFuncExpr.getNumLogicalVars() == 2) {
+            if (optFuncExpr.getOperatorSubTree(0) == optFuncExpr.getOperatorSubTree(1)) {
+                // We are in the select case
+                annotationClass = SecondaryIndexSearchPreferenceAnnotation.class;
+            } else {
+                // We are in the join case
+                annotationClass = IndexedNLJoinExpressionAnnotation.class;
+            }
+        } else {
+            // We are in the select case
+            annotationClass = SecondaryIndexSearchPreferenceAnnotation.class;
+        }
+        return AccessMethodUtils.getSecondaryIndexPreferences(optFuncExpr, annotationClass);
     }
 
     @Override

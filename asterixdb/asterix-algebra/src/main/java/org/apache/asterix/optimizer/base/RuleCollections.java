@@ -46,7 +46,7 @@ import org.apache.asterix.optimizer.rules.ExtractWindowExpressionsRule;
 import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import org.apache.asterix.optimizer.rules.FindDataSourcesRule;
 import org.apache.asterix.optimizer.rules.FixReplicateOperatorOutputsRule;
-import org.apache.asterix.optimizer.rules.FullTextContainsParameterCheckRule;
+import org.apache.asterix.optimizer.rules.FullTextContainsParameterCheckAndSetRule;
 import org.apache.asterix.optimizer.rules.FuzzyEqRule;
 import org.apache.asterix.optimizer.rules.InjectTypeCastForFunctionArgumentsRule;
 import org.apache.asterix.optimizer.rules.InjectTypeCastForUnionRule;
@@ -179,7 +179,7 @@ public final class RuleCollections {
     }
 
     public static final List<IAlgebraicRewriteRule> buildFulltextContainsRuleCollection() {
-        return Collections.singletonList(new FullTextContainsParameterCheckRule());
+        return Collections.singletonList(new FullTextContainsParameterCheckAndSetRule());
     }
 
     public static final List<IAlgebraicRewriteRule> buildNormalizationRuleCollection(ICcApplicationContext appCtx) {

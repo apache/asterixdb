@@ -55,8 +55,8 @@ create  index ngram_index  on CSX (authors) type ngram (3);
 
 write output to asterix_nc1:"rttest/inverted-index-join-noeqjoin_ngram-fuzzyeq-edit-distance.adm";
 set `simfunction` `edit-distance`;
-
 set `simthreshold` `3`;
+set `compiler.internal.sanitycheck` "false";
 
 select element {'aauthors':a.authors,'bauthors':b.authors}
 from  DBLP as a,

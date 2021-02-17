@@ -21,5 +21,6 @@
  * Result: success
  */
 -- extractresult=true
+# param statement=FROM Metadata.`Dataverse` v WHERE v.DataverseName = 'Metadata' SELECT VALUE v.DataverseName
+# param readonly=false
 /query/service
---body={"statement": "FROM Metadata.`Dataverse` v WHERE v.DataverseName = 'Metadata' SELECT VALUE v.DataverseName;", "readonly": false}

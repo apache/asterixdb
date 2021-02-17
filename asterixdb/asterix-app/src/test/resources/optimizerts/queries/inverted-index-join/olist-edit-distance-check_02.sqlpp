@@ -56,6 +56,8 @@ create  dataset Customers2(CustomerType) primary key cid;
 create  index interests_index  on Customers2 (interests) type keyword;
 
 write output to asterix_nc1:"rttest/inverted-index-join_olist-edit-distance-check_02.adm";
+set `compiler.internal.sanitycheck` "false";
+
 select element {'arec':a,'brec':b}
 from  Customers as a,
       Customers2 as b

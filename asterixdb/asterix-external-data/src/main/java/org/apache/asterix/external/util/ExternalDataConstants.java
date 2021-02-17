@@ -36,7 +36,7 @@ public class ExternalDataConstants {
     // used to specify the stream factory for an adapter that has a stream data source
     public static final String KEY_STREAM = "stream";
     // used to specify the dataverse of the adapter
-    public static final String KEY_DATAVERSE = "dataverse";
+    public static final String KEY_DATASET_DATAVERSE = "dataset-dataverse";
     // used to specify the socket addresses when reading data from sockets
     public static final String KEY_SOCKETS = "sockets";
     // specify whether the socket address points to an NC or an IP
@@ -285,6 +285,8 @@ public class ExternalDataConstants {
     public static final String EMPTY_FIELD = "empty value";
     public static final String INVALID_VAL = "invalid value";
 
+    public static final String DEFINITION_FIELD_NAME = "definition";
+
     public static class AwsS3 {
         private AwsS3() {
             throw new AssertionError("do not instantiate");
@@ -295,7 +297,6 @@ public class ExternalDataConstants {
         public static final String SECRET_ACCESS_KEY_FIELD_NAME = "secretAccessKey";
         public static final String SESSION_TOKEN_FIELD_NAME = "sessionToken";
         public static final String CONTAINER_NAME_FIELD_NAME = "container";
-        public static final String DEFINITION_FIELD_NAME = "definition";
         public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";
     }
 
@@ -304,15 +305,17 @@ public class ExternalDataConstants {
             throw new AssertionError("do not instantiate");
         }
 
+        public static final String CONTAINER_NAME_FIELD_NAME = "container";
+        public static final String DEFINITION_FIELD_NAME = "definition";
+        public static final String CONNECTION_STRING_FIELD_NAME = "connectionString";
         public static final String ACCOUNT_NAME_FIELD_NAME = "accountName";
         public static final String ACCOUNT_KEY_FIELD_NAME = "accountKey";
         public static final String SHARED_ACCESS_SIGNATURE_FIELD_NAME = "sharedAccessSignature";
-        public static final String CONTAINER_NAME_FIELD_NAME = "container";
-        public static final String DEFINITION_FIELD_NAME = "definition";
         public static final String BLOB_ENDPOINT_FIELD_NAME = "blobEndpoint";
         public static final String ENDPOINT_SUFFIX_FIELD_NAME = "endpointSuffix";
 
         // Connection string requires PascalCase (MyFieldFormat)
+        public static final String CONNECTION_STRING_CONNECTION_STRING = "ConnectionString";
         public static final String CONNECTION_STRING_ACCOUNT_NAME = "AccountName";
         public static final String CONNECTION_STRING_ACCOUNT_KEY = "AccountKey";
         public static final String CONNECTION_STRING_SHARED_ACCESS_SIGNATURE = "SharedAccessSignature";

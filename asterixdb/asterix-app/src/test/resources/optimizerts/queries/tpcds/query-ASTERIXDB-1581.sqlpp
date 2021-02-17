@@ -80,6 +80,9 @@ primary key ss_item_sk, ss_ticket_number;
 create dataset item (item_type)
 primary key i_item_sk;
 
+--- test with subplan into subplan pushdown disabled
+set `compiler.subplan.merge` "false";
+
 select case when (select value count(ss)
                   from store_sales ss
                   where ss_quantity >= 1 and ss_quantity <= 20)[0] < 25437

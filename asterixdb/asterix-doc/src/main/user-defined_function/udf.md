@@ -19,7 +19,7 @@
 
 ## <a name="introduction">Introduction</a>
 
-Apache AsterixDB supports three languages for writing user-defined functions (UDFs): SQL++, Java and Python
+Apache AsterixDB supports three languages for writing user-defined functions (UDFs): SQL++, Java and Python.
 A user can encapsulate data processing logic into a UDF and invoke it
 later repeatedly. For SQL++ functions, a user can refer to [SQL++ Functions](sqlpp/manual.html#Functions)
 for their usages. This document will focus on UDFs in languages other than SQL++
@@ -50,7 +50,7 @@ Now,restart the cluster if it was already started to allow the Cluster Controlle
 ## <a name="installingUDF">Installing a Java UDF Library</a>
 
 To install a UDF package to the cluster, we need to send a Multipart Form-data HTTP request to the `/admin/udf` endpoint
-of the CC at the normal API port (`19002` by default). The request should use HTTP Basic authentication. This means your
+of the CC at the normal API port (`19004` by default). The request should use HTTP Basic authentication. This means your
 credentials will *not* be obfuscated or encrypted *in any way*, so submit to this endpoint over localhost or a network
 where you know your traffic is safe from eavesdropping. Any suitable tool will do, but for the example here I will use
 `curl` which is widely available.
@@ -60,18 +60,24 @@ For example, to install a library with the following criteria:
 * `udfs` dataverse name
 * with a new Library name of `testlib`
 * from `lib.zip` in the present working directory
-* to the cluster at `localhost` with API port `19002`
+* to the cluster at `localhost` with API port `19004` of the Asterix CC
 * with credentials being a username and password of `admin:admin`
 
 we would execute
 
-    curl -v -u admin:admin -X POST -F 'data=@./lib.zip' localhost:19002/admin/udf/udfs/testlib
+    curl -v -u admin:admin -X POST -F 'data=@./lib.zip' localhost:19004/admin/udf/udfs/testlib
 
 Any response other than `200` indicates an error in deployment.
 
 In the AsterixDB source release, we provide several sample UDFs that you can try out.
 You need to build the AsterixDB source to get the compiled UDF package. It can be found under
-the `asterixdb-external` sub-project. Assuming that these UDFs have been installed into the `testlib` library in`udfs` dataverse,
+the `asterix-external-data` sub-project under the path
+`asterixdb/asterix-external-data/src/test/java/org/apache/asterix/external/library`.
+After compilation, the UDFs will be packed in a zip file at
+`asterixdb/asterix-external-data/target/asterix-external-data-$VERSION-testlib.zip`
+which you can use to upload to the AsterixDB cluster.
+
+Assuming that these UDFs have been installed into the `testlib` library in`udfs` dataverse,
 here is an example that uses the sample UDF `mysum` to compute the sum of two input integers.
 
     USE udfs;

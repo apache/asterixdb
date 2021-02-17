@@ -191,10 +191,10 @@ public class SpatialJoinRule implements IAlgebraicRewriteRule {
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
                         new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
                         new MutableObject<>(referenceTileId));
-//        ScalarFunctionCallExpression spatialJoinCondition = new ScalarFunctionCallExpression(
-//                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
-//                new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
-//                new MutableObject<>(new VariableReferenceExpression(rightInputVar)));
+        //        ScalarFunctionCallExpression spatialJoinCondition = new ScalarFunctionCallExpression(
+        //                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
+        //                new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
+        //                new MutableObject<>(new VariableReferenceExpression(rightInputVar)));
 
         conditionExprs.add(new MutableObject<>(spatialJoinFuncExpr));
         conditionExprs.add(new MutableObject<>(tileIdEquiJoinCondition));

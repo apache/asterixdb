@@ -4,27 +4,27 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- PRE_CLUSTERED_GROUP_BY[$$43, $$44]  |PARTITIONED|
+            -- PRE_CLUSTERED_GROUP_BY[$$46, $$47]  |PARTITIONED|
                     {
                       -- AGGREGATE  |LOCAL|
                         -- STREAM_SELECT  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                     }
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [$$43(ASC), $$44(ASC)]  |PARTITIONED|
-                  -- HASH_PARTITION_EXCHANGE [$$43, $$44]  |PARTITIONED|
+                -- STABLE_SORT [$$46(ASC), $$47(ASC)]  |PARTITIONED|
+                  -- HASH_PARTITION_EXCHANGE [$$46, $$47]  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- HYBRID_HASH_JOIN [$$47, $$43, $$51][$$48, $$45, $$46]  |PARTITIONED|
-                          -- HASH_PARTITION_EXCHANGE [$$43, $$51]  |PARTITIONED|
+                        -- HYBRID_HASH_JOIN [$$50, $$46, $$54][$$51, $$48, $$49]  |PARTITIONED|
+                          -- HASH_PARTITION_EXCHANGE [$$46, $$54]  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                -- DATASOURCE_SCAN (`loj-super-key_01`.LineItems)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                -- DATASOURCE_SCAN (`loj-super-key_01`.PartSupp)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

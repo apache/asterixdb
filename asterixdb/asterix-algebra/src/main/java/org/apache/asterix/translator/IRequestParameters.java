@@ -67,4 +67,10 @@ public interface IRequestParameters extends ICommonRequestParameters {
      *   {@code 0} if all categories are allowed
      */
     int getStatementCategoryRestrictionMask();
+
+    /**
+     * @return true if DROP DATASET statements in the request should force drop datasets which could make the metadata
+     * inconsistent.
+     */
+    boolean isForceDropDataset();
 }

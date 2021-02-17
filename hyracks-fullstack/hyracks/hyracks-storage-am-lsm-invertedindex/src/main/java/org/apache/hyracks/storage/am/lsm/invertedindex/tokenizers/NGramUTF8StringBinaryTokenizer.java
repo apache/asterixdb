@@ -19,6 +19,7 @@
 
 package org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers;
 
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.TokenizerCategory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.TokenizerInfo.TokenizerType;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
@@ -135,5 +136,10 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
     @Override
     public TokenizerType getTokenizerType() {
         return TokenizerType.STRING;
+    }
+
+    @Override
+    public TokenizerCategory getTokenizerCategory() {
+        return TokenizerCategory.NGRAM;
     }
 }

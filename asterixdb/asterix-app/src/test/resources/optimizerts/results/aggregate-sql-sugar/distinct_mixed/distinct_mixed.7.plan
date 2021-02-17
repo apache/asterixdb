@@ -8,11 +8,11 @@
               -- NESTED_LOOP  |UNPARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
                   -- AGGREGATE  |UNPARTITIONED|
-                    -- SORT_MERGE_EXCHANGE [$$82(ASC) ]  |PARTITIONED|
+                    -- SORT_MERGE_EXCHANGE [$$86(ASC) ]  |PARTITIONED|
                       -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- STABLE_SORT [$$82(ASC)]  |PARTITIONED|
-                            -- HASH_PARTITION_EXCHANGE [$$82]  |PARTITIONED|
+                          -- STABLE_SORT [$$86(ASC)]  |PARTITIONED|
+                            -- HASH_PARTITION_EXCHANGE [$$86]  |PARTITIONED|
                               -- NESTED_LOOP  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- NESTED_LOOP  |PARTITIONED|
@@ -23,7 +23,7 @@
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- REPLICATE  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -33,7 +33,7 @@
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- REPLICATE  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -43,7 +43,7 @@
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- REPLICATE  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                              -- DATASOURCE_SCAN (test.d3)  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -65,7 +65,7 @@
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   -- REPLICATE  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -76,7 +76,7 @@
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- REPLICATE  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -89,16 +89,16 @@
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- REPLICATE  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                -- DATASOURCE_SCAN (test.d3)  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
               -- AGGREGATE  |UNPARTITIONED|
-                -- SORT_MERGE_EXCHANGE [$$67(ASC) ]  |PARTITIONED|
+                -- SORT_MERGE_EXCHANGE [$$71(ASC) ]  |PARTITIONED|
                   -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- STABLE_SORT [$$67(ASC)]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$67]  |PARTITIONED|
+                      -- STABLE_SORT [$$71(ASC)]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$71]  |PARTITIONED|
                           -- NESTED_LOOP  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- NESTED_LOOP  |PARTITIONED|
@@ -110,7 +110,7 @@
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- REPLICATE  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -123,7 +123,7 @@
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 -- REPLICATE  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                    -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                             -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -134,6 +134,6 @@
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- REPLICATE  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                            -- DATASOURCE_SCAN (test.d3)  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

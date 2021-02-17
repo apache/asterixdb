@@ -3,25 +3,25 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SORT_MERGE_EXCHANGE [$$47(ASC), $$48(ASC) ]  |PARTITIONED|
-            -- STABLE_SORT [$$47(ASC), $$48(ASC)]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$50(ASC), $$51(ASC) ]  |PARTITIONED|
+            -- STABLE_SORT [$$50(ASC), $$51(ASC)]  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- HYBRID_HASH_JOIN [$$47][$$51]  |PARTITIONED|
-                      -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
+                    -- HYBRID_HASH_JOIN [$$50][$$54]  |PARTITIONED|
+                      -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- HYBRID_HASH_JOIN [$$48, $$47][$$50, $$49]  |PARTITIONED|
+                            -- HYBRID_HASH_JOIN [$$51, $$50][$$53, $$52]  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                -- DATASOURCE_SCAN (tpcds.catalog_sales)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                -- DATASOURCE_SCAN (tpcds.catalog_returns)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN  |PARTITIONED|
+                        -- DATASOURCE_SCAN (tpcds.item)  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

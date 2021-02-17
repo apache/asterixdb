@@ -42,6 +42,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -161,6 +163,7 @@ public class TestExecutor {
     private static final Pattern HANDLE_VARIABLE_PATTERN = Pattern.compile("handlevariable=(\\w+)");
     private static final Pattern RESULT_VARIABLE_PATTERN = Pattern.compile("resultvariable=(\\w+)");
     private static final Pattern COMPARE_UNORDERED_ARRAY_PATTERN = Pattern.compile("compareunorderedarray=(\\w+)");
+    private static final Pattern BODY_REF_PATTERN = Pattern.compile("bodyref=(.*)", Pattern.MULTILINE);
     private static final Pattern MACRO_PARAM_PATTERN =
             Pattern.compile("macro (?<name>[\\w-$]+)=(?<value>.*)", Pattern.MULTILINE);
 
@@ -215,6 +218,7 @@ public class TestExecutor {
     protected IExternalUDFLibrarian librarian;
     private Map<File, TestLoop> testLoops = new HashMap<>();
     private double timeoutMultiplier = 1;
+    protected int loopIteration;
 
     public TestExecutor() {
         this(Inet4Address.getLoopbackAddress().getHostAddress(), 19002);
@@ -1272,6 +1276,9 @@ public class TestExecutor {
                                     throw new IllegalArgumentException("duration cannot be exceed 1d");
                                 }
                                 break;
+                            case "":
+                                // ignore blank lines;
+                                break;
                             default:
                                 throw new IllegalArgumentException("unknown directive: " + command[0]);
                         }
@@ -1325,12 +1332,16 @@ public class TestExecutor {
         final String trimmedPathAndQuery = stripAllComments(statement).trim();
         final String variablesReplaced = replaceVarRef(trimmedPathAndQuery, variableCtx);
         final List<Parameter> params = extractParameters(statement);
-        final Optional<String> body = extractBody(statement);
+        Optional<String> body = extractBody(statement);
         final Predicate<Integer> statusCodePredicate = extractStatusCodePredicate(statement);
         final boolean extracResult = isExtracResult(statement);
         final boolean extractStatus = isExtractStatus(statement);
         final String mimeReqType = extractHttpRequestType(statement);
+        final String saveResponseVar = getResultVariable(statement);
         ContentType contentType = mimeReqType != null ? ContentType.create(mimeReqType, UTF_8) : TEXT_PLAIN_UTF8;
+        if (!body.isPresent()) {
+            body = getBodyFromReference(statement, variableCtx);
+        }
         InputStream resultStream;
         if ("http".equals(extension)) {
             resultStream = executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate, body, contentType);
@@ -1352,6 +1363,8 @@ public class TestExecutor {
             } else {
                 throw new Exception("no handle for test " + testFile.toString());
             }
+        } else if (saveResponseVar != null) {
+            variableCtx.put(saveResponseVar, IOUtils.toString(resultStream, UTF_8));
         } else {
             if (expectedResultFile == null) {
                 if (testFile.getName().startsWith(DIAGNOSE)) {
@@ -1685,6 +1698,27 @@ public class TestExecutor {
         return resultVariableMatcher.find() ? resultVariableMatcher.group(1) : null;
     }
 
+    protected static Optional<String> getBodyFromReference(String statement, Map<String, Object> varMap)
+            throws IOException {
+        Optional<String> bodyRef = findPattern(statement, BODY_REF_PATTERN);
+        if (!bodyRef.isPresent()) {
+            return Optional.empty();
+        }
+        String bodyReference = bodyRef.get();
+        String body = (String) varMap.get(bodyReference);
+        if (body != null) {
+            return Optional.of(body);
+        }
+        try (Stream<String> stream = Files.lines(Paths.get(bodyReference), UTF_8)) {
+            return Optional.of(stream.collect(Collectors.joining()));
+        }
+    }
+
+    protected static Optional<String> findPattern(String statement, Pattern pattern) {
+        final Matcher matcher = pattern.matcher(statement);
+        return matcher.find() ? Optional.of(matcher.group(1)) : Optional.empty();
+    }
+
     protected static boolean getCompareUnorderedArray(String statement) {
         final Matcher matcher = COMPARE_UNORDERED_ARRAY_PATTERN.matcher(statement);
         return matcher.find() && Boolean.parseBoolean(matcher.group(1));
@@ -1756,7 +1790,7 @@ public class TestExecutor {
             String name = m.group("name");
             param.setName(name);
             String value = m.group("value");
-            param.setValue(value);
+            param.setValue(value.replace("\\n", "\n"));
             String type = m.group("type");
             if (type != null) {
                 try {
@@ -1896,6 +1930,7 @@ public class TestExecutor {
             }
             List<TestFileContext> expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
             int[] savedQueryCounts = new int[numOfFiles + testFileCtxs.size()];
+            loopIteration = 0;
             for (ListIterator<TestFileContext> iter = testFileCtxs.listIterator(); iter.hasNext();) {
                 TestFileContext ctx = iter.next();
                 savedQueryCounts[numOfFiles] = queryCount.getValue();
@@ -1903,9 +1938,14 @@ public class TestExecutor {
                 final File testFile = ctx.getFile();
                 final String statement = readTestFile(testFile);
                 try {
+                    boolean loopCmd = testFile.getName().endsWith(".loop.cmd");
                     if (!testFile.getName().startsWith(DIAGNOSE)) {
                         executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
                                 queryCount, expectedResultFileCtxs, testFile, actualPath, expectedWarnings);
+                    }
+                    if (loopCmd) {
+                        // this was a loop file and we have exited the loop; reset the loop iteration
+                        loopIteration = 0;
                     }
                 } catch (TestLoop loop) {
                     // rewind the iterator until we find our target
@@ -1917,6 +1957,7 @@ public class TestExecutor {
                         numOfFiles--;
                         queryCount.setValue(savedQueryCounts[numOfFiles]);
                     }
+                    loopIteration++;
                 } catch (Exception e) {
                     numOfErrors++;
                     boolean unexpected = isUnExpected(e, expectedErrors, numOfErrors, queryCount,
@@ -2057,26 +2098,44 @@ public class TestExecutor {
     }
 
     protected String applyExternalDatasetSubstitution(String str, List<Placeholder> placeholders) {
+        // This replaces the full template of parameters depending on the adapter type
         for (Placeholder placeholder : placeholders) {
+            // For adapter placeholder, it means we have a template to replace
             if (placeholder.getName().equals("adapter")) {
                 str = str.replace("%adapter%", placeholder.getValue());
 
                 // Early terminate if there are no template place holders to replace
                 if (noTemplateRequired(str)) {
-                    return str;
+                    continue;
                 }
 
                 if (placeholder.getValue().equalsIgnoreCase("S3")) {
-                    return applyS3Substitution(str, placeholders);
+                    str = applyS3Substitution(str, placeholders);
                 } else if (placeholder.getValue().equalsIgnoreCase("AzureBlob")) {
-                    return applyAzureSubstitution(str, placeholders);
-                } else {
-                    return str;
+                    str = applyAzureSubstitution(str, placeholders);
                 }
+            } else {
+                // Any other place holders, just replace with the value
+                str = str.replace("%" + placeholder.getName() + "%", placeholder.getValue());
             }
         }
 
+        // This replaces specific external dataset placeholders
+        str = str.replace(TestConstants.AZURE_CONNECTION_STRING_ACCOUNT_KEY_PLACEHOLDER,
+                TestConstants.AZURE_CONNECTION_STRING_ACCOUNT_KEY);
+        str = str.replace(TestConstants.AZURE_CONNECTION_STRING_SAS_TOKEN_PLACEHOLDER,
+                TestConstants.AZURE_CONNECTION_STRING_SAS_TOKEN);
+        str = str.replace(TestConstants.AZURE_ACCOUNT_NAME_PLACEHOLDER,
+                TestConstants.AZURE_AZURITE_ACCOUNT_NAME_DEFAULT);
+        str = str.replace(TestConstants.AZURE_ACCOUNT_KEY_PLACEHOLDER, TestConstants.AZURE_AZURITE_ACCOUNT_KEY_DEFAULT);
+        str = str.replace(TestConstants.AZURE_SAS_TOKEN_PLACEHOLDER, TestConstants.sasToken);
+        str = replaceExternalEndpoint(str);
+
         return str;
+    }
+
+    protected String replaceExternalEndpoint(String str) {
+        return str.replace(TestConstants.AZURE_BLOB_ENDPOINT_PLACEHOLDER, TestConstants.AZURE_BLOB_ENDPOINT_DEFAULT);
     }
 
     protected boolean noTemplateRequired(String str) {

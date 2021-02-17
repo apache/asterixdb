@@ -4,7 +4,7 @@
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH  |PARTITIONED|
+            -- BTREE_SEARCH (tpcds.item.item)  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 -- ASSIGN  |PARTITIONED|
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
@@ -64,7 +64,7 @@
                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                           -- STREAM_PROJECT  |PARTITIONED|
                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                              -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -92,7 +92,7 @@
                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                               -- STREAM_PROJECT  |PARTITIONED|
                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                                  -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -112,7 +112,7 @@
                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                      -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |LOCAL|
@@ -156,7 +156,7 @@
                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                                      -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -179,7 +179,7 @@
                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                                      -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -199,6 +199,6 @@
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                      -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

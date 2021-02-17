@@ -1,0 +1,10 @@
+{ "total_sum": 6620.01, "i_category": null, "i_class": null, "lochierarchy": 2, "rank_within_parent": 1 }
+{ "total_sum": 2650.56, "i_category": "Books", "i_class": null, "lochierarchy": 1, "rank_within_parent": 1 }
+{ "total_sum": 2568.02, "i_category": "Electronics", "i_class": null, "lochierarchy": 1, "rank_within_parent": 2 }
+{ "total_sum": 1219.57, "i_category": "Children", "i_class": null, "lochierarchy": 1, "rank_within_parent": 3 }
+{ "total_sum": 181.86, "i_category": "Home", "i_class": null, "lochierarchy": 1, "rank_within_parent": 4 }
+{ "total_sum": 2650.56, "i_category": "Books", "i_class": "history", "lochierarchy": 0, "rank_within_parent": 1 }
+{ "total_sum": 1219.57, "i_category": "Children", "i_class": "newborn", "lochierarchy": 0, "rank_within_parent": 1 }
+{ "total_sum": 2180.16, "i_category": "Electronics", "i_class": "musical", "lochierarchy": 0, "rank_within_parent": 1 }
+{ "total_sum": 387.86, "i_category": "Electronics", "i_class": "karoke", "lochierarchy": 0, "rank_within_parent": 2 }
+{ "total_sum": 181.86, "i_category": "Home", "i_class": "decor", "lochierarchy": 0, "rank_within_parent": 1 }

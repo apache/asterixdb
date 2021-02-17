@@ -14,9 +14,6 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -46,21 +43,14 @@ public class LeftOuterUnnestOperator extends AbstractUnnestNonMapOperator {
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         PropagatingTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
+
+        // The produced variables of the this operator are missable because of the left outer semantics.
         Object t = env.getType(expression.getValue());
-        // For the variables from the inner branch, the output type is the union
-        // of (original type + missing).
         env.setVarType(variables.get(0), ctx.getMissableTypeComputer().makeMissableType(t));
         if (positionalVariable != null) {
             env.setVarType(positionalVariable, ctx.getMissableTypeComputer().makeMissableType(positionalVariableType));
         }
 
-        // The produced variables of the this operator are missable because of the left outer semantics.
-        List<LogicalVariable> missableVars = new ArrayList<>();
-        missableVars.add(variables.get(0));
-        if (positionalVariable != null) {
-            missableVars.add(positionalVariable);
-        }
-        env.getCorrelatedMissableVariableLists().add(missableVars);
         return env;
     }
 

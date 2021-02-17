@@ -83,7 +83,19 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_EXTERNAL_FIELD_PUSHDOWN(
                 BOOLEAN,
                 AlgebricksConfig.EXTERNAL_FIELD_PUSHDOWN_DEFAULT,
-                "Enable pushdown of field accesses to the external dataset data-scan operator");
+                "Enable pushdown of field accesses to the external dataset data-scan operator"),
+        COMPILER_SUBPLAN_MERGE(
+                BOOLEAN,
+                AlgebricksConfig.SUBPLAN_MERGE_DEFAULT,
+                "Enable merging subplans with other subplans"),
+        COMPILER_SUBPLAN_NESTEDPUSHDOWN(
+                BOOLEAN,
+                AlgebricksConfig.SUBPLAN_NESTEDPUSHDOWN_DEFAULT,
+                "When merging subplans into groupby/suplan allow nesting of subplans"),
+        COMPILER_MIN_MEMORY_ALLOCATION(
+                BOOLEAN,
+                AlgebricksConfig.MIN_MEMORY_ALLOCATION_DEFAULT,
+                "Enable/disable allocating minimum budget for certain queries");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -138,6 +150,12 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_EXTERNAL_FIELD_PUSHDOWN_KEY = Option.COMPILER_EXTERNAL_FIELD_PUSHDOWN.ini();
 
+    public static final String COMPILER_SUBPLAN_MERGE_KEY = Option.COMPILER_SUBPLAN_MERGE.ini();
+
+    public static final String COMPILER_SUBPLAN_NESTEDPUSHDOWN_KEY = Option.COMPILER_SUBPLAN_NESTEDPUSHDOWN.ini();
+
+    public static final String COMPILER_MIN_MEMORY_ALLOCATION_KEY = Option.COMPILER_MIN_MEMORY_ALLOCATION.ini();
+
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
     public CompilerProperties(PropertiesAccessor accessor) {
@@ -190,5 +208,17 @@ public class CompilerProperties extends AbstractProperties {
 
     public boolean isFieldAccessPushdown() {
         return accessor.getBoolean(Option.COMPILER_EXTERNAL_FIELD_PUSHDOWN);
+    }
+
+    public boolean getSubplanMerge() {
+        return accessor.getBoolean(Option.COMPILER_SUBPLAN_MERGE);
+    }
+
+    public boolean getSubplanNestedPushdown() {
+        return accessor.getBoolean(Option.COMPILER_SUBPLAN_NESTEDPUSHDOWN);
+    }
+
+    public boolean getMinMemoryAllocation() {
+        return accessor.getBoolean(Option.COMPILER_MIN_MEMORY_ALLOCATION);
     }
 }

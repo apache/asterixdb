@@ -1,0 +1,2 @@
+{ "DataverseName": "MyDataVerse", "FullTextFilterName": "my_first_stopword_filter", "FullTextFilterType": "Stopwords", "StopwordList": [ "a", "an", "the" ] }
+{ "DataverseName": "MyDataVerse", "FullTextFilterName": "my_second_stopword_filter", "FullTextFilterType": "Stopwords", "StopwordList": [ "xxx", "yyy", "zzz" ] }

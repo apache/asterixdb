@@ -36,6 +36,8 @@ import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
+import org.apache.asterix.metadata.entities.FullTextConfigMetadataEntity;
+import org.apache.asterix.metadata.entities.FullTextFilterMetadataEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Library;
@@ -217,11 +219,13 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Name of dataverse which holds the given dataset.
      * @param datasetName
      *            Name of dataset to delete.
+     * @param force
+     *            If true, forces drop the dataset. Setting it to true could make the metadata inconsistent.
      * @throws AlgebricksException
      *             For example, if the dataset and/or dataverse does not exist.
      * @throws RemoteException
      */
-    void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName)
+    void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName, boolean force)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -444,6 +448,80 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws RemoteException
      */
     void addFunction(TxnId txnId, Function function) throws AlgebricksException, RemoteException;
+
+    /**
+     * @param txnId
+     *            Metadata transaction id of an active metadata transaction.
+     * @param filterMetadataEntity
+     *            the full-text filter metadata entity to be added
+     * @throws AlgebricksException
+     *              For example, if the filter with the same name in the same dataverse already exists
+     */
+    void addFullTextFilter(TxnId txnId, FullTextFilterMetadataEntity filterMetadataEntity)
+            throws RemoteException, AlgebricksException;
+
+    /**
+     * @param txnId
+     *            Metadata transaction id of an active metadata transaction.
+     * @param dataverseName
+     *            the name of the dataverse where the full-text filter belongs
+     * @param filterName
+     *            the name of the full-text filter to be fetched
+     * @throws AlgebricksException
+     *              For example, if the filter doesn't exist
+     */
+    FullTextFilterMetadataEntity getFullTextFilter(TxnId txnId, DataverseName dataverseName, String filterName)
+            throws RemoteException, AlgebricksException;
+
+    /**
+     * @param txnId
+     *            Metadata transaction id of an active metadata transaction.
+     * @param dataverseName
+     *            the name of the dataverse where the full-text filter belongs
+     * @param filterName
+     *            the name of the full-text filter to be dropped
+     * @throws AlgebricksException
+     *              For example, if ifExists is set to false and the filter doesn't exist
+     */
+    void dropFullTextFilter(TxnId txnId, DataverseName dataverseName, String filterName)
+            throws RemoteException, AlgebricksException;
+
+    /**
+     * @param txnId
+     *            Metadata transaction id of an active metadata transaction.
+     * @param configMetadataEntity
+     *            the full-text config descriptor to be added
+     * @throws AlgebricksException
+     *              For example, if the config with the same name in the same dataverse already exists
+     */
+    void addFullTextConfig(TxnId txnId, FullTextConfigMetadataEntity configMetadataEntity)
+            throws AlgebricksException, RemoteException;
+
+    /**
+     * @param txnId
+     *            Metadata transaction id of an active metadata transaction.
+     * @param dataverseName
+     *            the name of the dataverse where the full-text filter belongs
+     * @param configName
+     *            the name of the full-text config to be fetched
+     * @throws AlgebricksException
+     *              For example, if the full-text config doesn't exist
+     */
+    FullTextConfigMetadataEntity getFullTextConfig(TxnId txnId, DataverseName dataverseName, String configName)
+            throws AlgebricksException, RemoteException;
+
+    /**
+     * @param txnId
+     *            Metadata transaction id of an active metadata transaction.
+     * @param dataverseName
+     *            the name of the dataverse where the full-text filter belongs
+     * @param configName
+     *            the name of the full-text config to be dropped
+     * @throws AlgebricksException
+     *              For example, if ifExists is set to false and the config doesn't exist
+     */
+    void dropFullTextConfig(TxnId txnId, DataverseName dataverseName, String configName)
+            throws RemoteException, AlgebricksException;
 
     /**
      * @param txnId

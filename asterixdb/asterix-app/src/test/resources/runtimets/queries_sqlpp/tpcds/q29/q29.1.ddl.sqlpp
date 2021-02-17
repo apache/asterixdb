@@ -114,6 +114,8 @@ create type tpcds.catalog_sales_type as
   cs_ship_hdemo_sk:          bigint?,
   cs_ship_addr_sk:           bigint?,
   cs_call_center_sk:         bigint?,
+  /* TODO(dmitry): removed until we get better data
+  cs_catalog_page_sk:        bigint?, */
   cs_ship_mode_sk:           bigint?,
   cs_warehouse_sk:           bigint?,
   cs_item_sk:                bigint,

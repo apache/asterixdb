@@ -1,0 +1,115 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpcds;
+
+WITH
+ss AS (
+  SELECT s.s_store_sk,
+         SUM(ss.ss_ext_sales_price) AS sales,
+         SUM(ss.ss_net_profit) AS profit
+  FROM store_sales ss, date_dim d, store s
+  WHERE ss.ss_sold_date_sk = d.d_date_sk
+    AND date(d.d_date) BETWEEN date('1999-01-01') AND (date('1999-01-01') + duration('P1Y'))
+    AND ss.ss_store_sk = s.s_store_sk
+  GROUP BY s.s_store_sk
+),
+sr AS (
+  SELECT s.s_store_sk,
+         SUM(sr.sr_return_amt) AS returns,
+         SUM(sr.sr_net_loss) AS profit_loss
+  FROM store_returns sr, date_dim d, store s
+  WHERE sr.sr_returned_date_sk = d.d_date_sk
+    AND date(d.d_date) BETWEEN date('1999-01-01') AND (date('1999-01-01') + duration('P1Y'))
+    AND sr.sr_store_sk = s.s_store_sk
+ GROUP BY s.s_store_sk
+),
+cs AS (
+  SELECT cs.cs_call_center_sk,
+        SUM(cs.cs_ext_sales_price) AS sales,
+        SUM(cs.cs_net_profit) AS profit
+  FROM catalog_sales cs, date_dim d
+  WHERE cs.cs_sold_date_sk = d.d_date_sk
+    AND date(d.d_date) BETWEEN date('1999-01-01') AND (date('1999-01-01') + duration('P1Y'))
+  GROUP BY cs.cs_call_center_sk
+),
+cr AS (
+  SELECT cr.cr_call_center_sk,
+         SUM(cr.cr_return_amount) AS returns,
+         SUM(cr.cr_net_loss) AS profit_loss
+  FROM catalog_returns cr, date_dim d
+  WHERE cr.cr_returned_date_sk = d.d_date_sk
+    AND date(d.d_date) BETWEEN date('1999-01-01') AND (date('1999-01-01') + duration('P1Y'))
+  GROUP by cr.cr_call_center_sk
+),
+ws AS (
+  SELECT wp.wp_web_page_sk,
+        SUM(ws.ws_ext_sales_price) AS sales,
+        SUM(ws.ws_net_profit) AS profit
+  FROM web_sales ws, date_dim d, web_page wp
+  WHERE ws.ws_sold_date_sk = d.d_date_sk
+    AND date(d.d_date) BETWEEN date('1999-01-01') AND (date('1999-01-01') + duration('P1Y'))
+    AND ws.ws_web_page_sk = wp.wp_web_page_sk
+ GROUP BY wp.wp_web_page_sk
+),
+wr AS (
+  SELECT wp.wp_web_page_sk,
+        SUM(wr.wr_return_amt) AS returns,
+        SUM(wr.wr_net_loss) AS profit_loss
+  FROM web_returns wr, date_dim d, web_page wp
+  WHERE wr.wr_returned_date_sk = d.d_date_sk
+    AND date(d.d_date) BETWEEN date('1999-01-01') AND (date('1999-01-01') + duration('P1Y'))
+    AND wr.wr_web_page_sk = wp.wp_web_page_sk
+  GROUP BY wp.wp_web_page_sk
+)
+
+SELECT  channel,
+        id,
+        ROUND(SUM(sales), 2) AS sales,
+        ROUND(SUM(returns), 2) AS returns,
+        ROUND(SUM(profit), 2) AS profit
+FROM (
+  SELECT 'store channel' AS channel,
+    ss.s_store_sk AS id,
+    ss.sales,
+    COALESCE(sr.returns, 0.0) AS returns,
+    (ss.profit - COALESCE(sr.profit_loss, 0.0)) AS profit
+  FROM ss LEFT JOIN sr ON ss.s_store_sk = sr.s_store_sk
+
+  UNION ALL
+
+  SELECT 'catalog channel' AS channel,
+        cs.cs_call_center_sk AS id,
+        cs.sales,
+        cr.returns,
+        (cs.profit - cr.profit_loss) AS profit
+  FROM cs LEFT JOIN cr ON cs.cs_call_center_sk = cr.cr_call_center_sk
+
+  UNION ALL
+
+  SELECT 'web channel' AS channel,
+         ws.wp_web_page_sk AS id,
+         ROUND(ws.sales, 2) AS sales,
+         ROUND(COALESCE(wr.returns, 0.0), 2) AS returns,
+         ROUND(ws.profit - COALESCE(wr.profit_loss, 0.0), 2) AS profit
+  FROM ws LEFT JOIN wr ON ws.wp_web_page_sk = wr.wp_web_page_sk
+) x
+GROUP BY ROLLUP(channel, id)
+ORDER BY channel, id
+LIMIT 100;

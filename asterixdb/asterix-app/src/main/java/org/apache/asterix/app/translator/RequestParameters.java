@@ -58,6 +58,7 @@ public class RequestParameters implements IRequestParameters {
     private final boolean multiStatement;
     private final int statementCategoryRestrictionMask;
     private final String statement;
+    private final boolean forceDropDataset;
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
@@ -72,6 +73,16 @@ public class RequestParameters implements IRequestParameters {
             IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
             Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement,
             int statementCategoryRestrictionMask) {
+        this(requestReference, statement, resultSet, resultProperties, stats, statementProperties, outMetadata,
+                clientContextId, optionalParameters, statementParameters, multiStatement,
+                statementCategoryRestrictionMask, false);
+    }
+
+    public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
+            ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
+            IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
+            Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement,
+            int statementCategoryRestrictionMask, boolean forceDropDataset) {
         this.requestReference = requestReference;
         this.statement = statement;
         this.resultSet = resultSet;
@@ -84,6 +95,7 @@ public class RequestParameters implements IRequestParameters {
         this.statementParameters = statementParameters;
         this.multiStatement = multiStatement;
         this.statementCategoryRestrictionMask = statementCategoryRestrictionMask;
+        this.forceDropDataset = forceDropDataset;
     }
 
     @Override
@@ -124,6 +136,11 @@ public class RequestParameters implements IRequestParameters {
     @Override
     public boolean isMultiStatement() {
         return multiStatement;
+    }
+
+    @Override
+    public boolean isForceDropDataset() {
+        return forceDropDataset;
     }
 
     @Override

@@ -73,7 +73,7 @@ public class IndexTupleTranslatorTest {
             Index index = new Index(dvTest, "d1", "i1", IndexType.BTREE,
                     Collections.singletonList(Collections.singletonList("row_id")),
                     indicator == null ? null : Collections.singletonList(indicator),
-                    Collections.singletonList(BuiltinType.AINT64), -1, false, false, false, 0);
+                    Collections.singletonList(BuiltinType.AINT64), -1, null, false, false, false, 0);
 
             MetadataNode mockMetadataNode = mock(MetadataNode.class);
             when(mockMetadataNode.getDatatype(any(), any(DataverseName.class), anyString())).thenReturn(new Datatype(

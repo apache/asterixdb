@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
-import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_INTEGER;
 
 import java.util.List;
 import java.util.Map;
@@ -37,8 +37,8 @@ public class MetadataProperties extends AbstractProperties {
     public enum Option implements IOption {
         METADATA_NODE(STRING, null),
         METADATA_REGISTRATION_TIMEOUT_SECS(POSITIVE_INTEGER, 60),
-        METADATA_LISTEN_PORT(UNSIGNED_INTEGER, 0),
-        METADATA_CALLBACK_PORT(UNSIGNED_INTEGER, 0);
+        METADATA_LISTEN_PORT(NONNEGATIVE_INTEGER, 0),
+        METADATA_CALLBACK_PORT(NONNEGATIVE_INTEGER, 0);
 
         private final IOptionType type;
         private final Object defaultValue;

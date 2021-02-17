@@ -34,6 +34,8 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
         EXTENSION,
         FEED_POLICY,
         FUNCTION,
+        FULL_TEXT_CONFIG,
+        FULL_TEXT_FILTER,
         LIBRARY,
         ADAPTER,
         MERGE_POLICY,
@@ -106,6 +108,14 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
 
     static MetadataLockKey createFunctionLockKey(DataverseName dataverseName, String functionName) {
         return new MetadataLockKey(EntityKind.FUNCTION, null, dataverseName, functionName);
+    }
+
+    static MetadataLockKey createFullTextConfigLockKey(DataverseName dataverseName, String fullTextConfigName) {
+        return new MetadataLockKey(EntityKind.FULL_TEXT_CONFIG, null, dataverseName, fullTextConfigName);
+    }
+
+    static MetadataLockKey createFullTextFilterLockKey(DataverseName dataverseName, String fullTextFilterName) {
+        return new MetadataLockKey(EntityKind.FULL_TEXT_FILTER, null, dataverseName, fullTextFilterName);
     }
 
     static MetadataLockKey createLibraryLockKey(DataverseName dataverseName, String libraryName) {

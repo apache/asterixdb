@@ -23,13 +23,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 import org.apache.asterix.algebra.base.OperatorAnnotation;
-import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -77,20 +76,19 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
             return false;
         }
         boolean changed = false;
-        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-        for (Mutable<ILogicalExpression> funcArgRef : funcExpr.getArguments()) {
+        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
+        for (Mutable<ILogicalExpression> funcArgRef : fce.getArguments()) {
             if (rewriteExpressionReference(op, funcArgRef, context)) {
                 changed = true;
             }
         }
-        AbstractFunctionCallExpression fce = (AbstractFunctionCallExpression) expr;
         if (fce.getFunctionIdentifier() != BuiltinFunctions.FIELD_ACCESS_BY_NAME) {
             return changed;
         }
         changed |= extractFirstArg(fce, op, context);
         IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op.getInputs().get(0).getValue());
         IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
-        changed |= rewriteFieldAccess(exprRef, fce, getActualType(t));
+        changed |= rewriteFieldAccess(exprRef, fce, TypeComputeUtils.getActualType(t));
         return changed;
     }
 
@@ -117,7 +115,7 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
 
     // Rewrites field-access-by-name into field-access-by-index if possible.
     private boolean rewriteFieldAccess(Mutable<ILogicalExpression> exprRef, AbstractFunctionCallExpression fce,
-            IAType t) throws AlgebricksException {
+            IAType t) {
         if (t.getTypeTag() != ATypeTag.OBJECT) {
             return false;
         }
@@ -129,20 +127,6 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
         return changed;
     }
 
-    // Gets the actual type of a given type.
-    private IAType getActualType(IAType t) throws AlgebricksException {
-        switch (t.getTypeTag()) {
-            case ANY:
-            case OBJECT:
-                return t;
-            case UNION:
-                return ((AUnionType) t).getActualType();
-            default:
-                throw new AlgebricksException("Cannot call field-access on data of type " + t);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
     private static ILogicalExpression createFieldAccessByIndex(ARecordType recType,
             AbstractFunctionCallExpression fce) {
         String s = ConstantExpressionUtil.getStringArgument(fce, 1);
@@ -154,7 +138,8 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
             return null;
         }
         ScalarFunctionCallExpression faExpr = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX), fce.getArguments().get(0),
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
+                fce.getArguments().get(0),
                 new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(k)))));
         faExpr.setSourceLocation(fce.getSourceLocation());
         return faExpr;

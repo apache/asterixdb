@@ -26,6 +26,9 @@ import org.apache.asterix.common.metadata.DataverseName;
  */
 public class MetadataConstants {
 
+    public static final int DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 = 255;
+    public static final int DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8 = 1023;
+
     // Name of the dataverse the metadata lives in.
     public static final DataverseName METADATA_DATAVERSE_NAME = DataverseName.createBuiltinDataverseName("Metadata");
     // Name of the node group where metadata is stored on.
@@ -46,6 +49,8 @@ public class MetadataConstants {
     public static final String COMPACTION_POLICY_DATASET_NAME = "CompactionPolicy";
     public static final String EXTERNAL_FILE_DATASET_NAME = "ExternalFile";
     public static final String SYNONYM_DATASET_NAME = "Synonym";
+    public static final String FULL_TEXT_CONFIG_DATASET_NAME = "FullTextConfig";
+    public static final String FULL_TEXT_FILTER_DATASET_NAME = "FullTextFilter";
 
     private MetadataConstants() {
     }

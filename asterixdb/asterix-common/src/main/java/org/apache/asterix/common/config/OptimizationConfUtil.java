@@ -66,6 +66,12 @@ public class OptimizationConfUtil {
                 compilerProperties.isSanityCheck());
         boolean externalFieldPushdown = getBoolean(querySpecificConfig,
                 CompilerProperties.COMPILER_EXTERNAL_FIELD_PUSHDOWN_KEY, compilerProperties.isFieldAccessPushdown());
+        boolean subplanMerge = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_SUBPLAN_MERGE_KEY,
+                compilerProperties.getSubplanMerge());
+        boolean subplanNestedPushdown = getBoolean(querySpecificConfig,
+                CompilerProperties.COMPILER_SUBPLAN_NESTEDPUSHDOWN_KEY, compilerProperties.getSubplanNestedPushdown());
+        boolean minMemoryAllocation = getBoolean(querySpecificConfig,
+                CompilerProperties.COMPILER_MIN_MEMORY_ALLOCATION_KEY, compilerProperties.getMinMemoryAllocation());
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -79,6 +85,9 @@ public class OptimizationConfUtil {
         physOptConf.setIndexOnly(indexOnly);
         physOptConf.setSanityCheckEnabled(sanityCheck);
         physOptConf.setExternalFieldPushdown(externalFieldPushdown);
+        physOptConf.setSubplanMerge(subplanMerge);
+        physOptConf.setSubplanNestedPushdown(subplanNestedPushdown);
+        physOptConf.setMinMemoryAllocation(minMemoryAllocation);
         return physOptConf;
     }
 

@@ -3,13 +3,13 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- SORT_MERGE_EXCHANGE [$$x(ASC) ]  |PARTITIONED|
-          -- SORT_GROUP_BY[$$93]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$96]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- HASH_PARTITION_EXCHANGE [$$93]  |PARTITIONED|
-              -- SORT_GROUP_BY[$$81]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$96]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$84]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
@@ -19,6 +19,6 @@
                     -- ASSIGN  |PARTITIONED|
                       -- STREAM_PROJECT  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN  |PARTITIONED|
+                          -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

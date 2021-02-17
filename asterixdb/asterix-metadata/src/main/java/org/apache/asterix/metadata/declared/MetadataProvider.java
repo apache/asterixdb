@@ -20,15 +20,13 @@ package org.apache.asterix.metadata.declared;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -39,6 +37,7 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
@@ -81,12 +80,15 @@ import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
+import org.apache.asterix.metadata.entities.FullTextConfigMetadataEntity;
+import org.apache.asterix.metadata.entities.FullTextFilterMetadataEntity;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.FullTextUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -138,6 +140,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -156,6 +159,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeBatchPointSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.IFullTextConfigEvaluatorFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.common.IStorageManager;
@@ -168,7 +172,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final IFunctionManager functionManager;
     private final LockList locks;
     private final Map<String, Object> config;
-    private final Set<Dataset> txnAccessedDatasets;
 
     private Dataverse defaultDataverse;
     private MetadataTransactionContext mdTxnCtx;
@@ -198,7 +201,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         functionManager = ((IFunctionExtensionManager) appCtx.getExtensionManager()).getFunctionManager();
         locks = new LockList();
         config = new HashMap<>();
-        txnAccessedDatasets = new HashSet<>();
     }
 
     @SuppressWarnings("unchecked")
@@ -259,7 +261,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public void setMetadataTxnContext(MetadataTransactionContext mdTxnCtx) {
         this.mdTxnCtx = mdTxnCtx;
-        txnAccessedDatasets.clear();
     }
 
     public MetadataTransactionContext getMetadataTxnContext() {
@@ -443,6 +444,16 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public Synonym findSynonym(DataverseName dataverseName, String synonymName) throws AlgebricksException {
         return MetadataManagerUtil.findSynonym(mdTxnCtx, dataverseName, synonymName);
+    }
+
+    public FullTextConfigMetadataEntity findFullTextConfig(DataverseName dataverseName, String ftConfigName)
+            throws AlgebricksException {
+        return MetadataManagerUtil.findFullTextConfigDescriptor(mdTxnCtx, dataverseName, ftConfigName);
+    }
+
+    public FullTextFilterMetadataEntity findFullTextFilter(DataverseName dataverseName, String ftFilterName)
+            throws AlgebricksException {
+        return MetadataManagerUtil.findFullTextFilterDescriptor(mdTxnCtx, dataverseName, ftFilterName);
     }
 
     @Override
@@ -839,7 +850,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             Map<String, String> configuration, ARecordType itemType, ARecordType metaType,
             IWarningCollector warningCollector) throws AlgebricksException {
         try {
-            configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataset.getDataverseName().getCanonicalForm());
+            configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE,
+                    dataset.getDataverseName().getCanonicalForm());
             ITypedAdapterFactory adapterFactory =
                     AdapterFactoryProvider.getAdapterFactory(getApplicationContext().getServiceContext(), adapterName,
                             configuration, itemType, metaType, warningCollector);
@@ -1646,6 +1658,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
             IBinaryTokenizerFactory tokenizerFactory = NonTaggedFormatUtil.getBinaryTokenizerFactory(
                     secondaryKeyType.getTypeTag(), indexType, secondaryIndex.getGramLength());
+            IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory =
+                    FullTextUtil.fetchFilterAndCreateConfigEvaluator(this, secondaryIndex.getDataverseName(),
+                            secondaryIndex.getFullTextConfigName());
 
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                     getSplitProviderAndConstraints(dataset, secondaryIndex.getIndexName());
@@ -1687,8 +1702,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 keyFields[k] = k;
             }
 
-            tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec, tokenKeyPairRecDesc, tokenizerFactory, docField,
-                    keyFields, isPartitioned, true, false, MissingWriterFactory.INSTANCE);
+            tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec, tokenKeyPairRecDesc, tokenizerFactory,
+                    fullTextConfigEvaluatorFactory, docField, keyFields, isPartitioned, true, false,
+                    MissingWriterFactory.INSTANCE);
             return new Pair<>(tokenizerOp, splitsAndConstraint.second);
         } catch (Exception e) {
             throw new AlgebricksException(e);
@@ -1746,11 +1762,36 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return appCtx.getCompressionManager();
     }
 
-    public void addAccessedDataset(Dataset dataset) {
-        txnAccessedDatasets.add(dataset);
+    public void validateDataverseName(DataverseName dataverseName, SourceLocation sourceLoc)
+            throws AlgebricksException {
+        int totalLengthUTF8 = 0;
+        for (String dvNamePart : dataverseName.getParts()) {
+            validateDatabaseObjectNameImpl(dvNamePart, sourceLoc);
+            int lengthUTF8 = dvNamePart.getBytes(StandardCharsets.UTF_8).length;
+            if (lengthUTF8 > MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8) {
+                throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, dvNamePart);
+            }
+            totalLengthUTF8 += lengthUTF8;
+        }
+        if (totalLengthUTF8 > MetadataConstants.DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, dataverseName.toString());
+        }
     }
 
-    public Set<Dataset> getAccessedDatasets() {
-        return Collections.unmodifiableSet(txnAccessedDatasets);
+    public void validateDatabaseObjectName(DataverseName dataverseName, String objectName, SourceLocation sourceLoc)
+            throws AlgebricksException {
+        if (dataverseName != null) {
+            validateDataverseName(dataverseName, sourceLoc);
+        }
+        validateDatabaseObjectNameImpl(objectName, sourceLoc);
+    }
+
+    private void validateDatabaseObjectNameImpl(String name, SourceLocation sourceLoc) throws AlgebricksException {
+        if (name == null || name.isEmpty()) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, "<empty>");
+        }
+        if (Character.isWhitespace(name.codePointAt(0))) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, name);
+        }
     }
 }

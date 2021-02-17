@@ -67,8 +67,8 @@ public class LeftOuterJoinOperator extends AbstractBinaryJoinOperator {
         PropagatingTypeEnvironment env =
                 new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMissableTypeComputer(),
                         ctx.getMetadataProvider(), TypePropagationPolicy.LEFT_OUTER, envPointers);
-        List<LogicalVariable> liveVars = new ArrayList<LogicalVariable>();
-        VariableUtilities.getLiveVariables(inputs.get(1).getValue(), liveVars); // live variables from outer branch can be null together
+        List<LogicalVariable> liveVars = new ArrayList<>();
+        VariableUtilities.getLiveVariables(inputs.get(1).getValue(), liveVars); // live variables from right branch can be MISSING together
         env.getCorrelatedMissableVariableLists().add(liveVars);
         return env;
     }

@@ -54,6 +54,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
+import com.google.common.base.Strings;
+
 /**
  * Translates an Index metadata entity to an ITupleReference and vice versa.
  */
@@ -64,6 +66,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
     // Field name of open field.
     public static final String GRAM_LENGTH_FIELD_NAME = "GramLength";
+    public static final String FULL_TEXT_CONFIG_FIELD_NAME = "FullTextConfig";
     public static final String INDEX_SEARCHKEY_TYPE_FIELD_NAME = "SearchKeyType";
     public static final String INDEX_ISENFORCED_FIELD_NAME = "IsEnforced";
     public static final String INDEX_SEARCHKEY_SOURCE_INDICATOR_FIELD_NAME = "SearchKeySourceIndicator";
@@ -156,6 +159,12 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             gramLength = ((AInt32) indexRecord.getValueByPos(gramLenPos)).getIntegerValue();
         }
 
+        String fullTextConfig = null;
+        int fullTextConfigPos = indexRecord.getType().getFieldIndex(FULL_TEXT_CONFIG_FIELD_NAME);
+        if (fullTextConfigPos >= 0) {
+            fullTextConfig = ((AString) indexRecord.getValueByPos(fullTextConfigPos)).getStringValue();
+        }
+
         // Read a field-source-indicator field.
         List<Integer> keyFieldSourceIndicator = new ArrayList<>();
         int keyFieldSourceIndicatorIndex =
@@ -190,7 +199,8 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
 
         return new Index(dataverseName, datasetName, indexName, indexStructure, searchKey, keyFieldSourceIndicator,
-                searchKeyType, gramLength, isOverridingKeyTypes, isEnforcingKeys, isPrimaryIndex, pendingOp);
+                searchKeyType, gramLength, fullTextConfig, isOverridingKeyTypes, isEnforcingKeys, isPrimaryIndex,
+                pendingOp);
     }
 
     @Override
@@ -292,6 +302,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
      */
     protected void writeOpenFields(Index index) throws HyracksDataException {
         writeGramLength(index);
+        writeFullTextConfig(index);
         writeSearchKeyType(index);
         writeEnforced(index);
         writeSearchKeySourceIndicator(index);
@@ -304,6 +315,20 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             aString.setValue(GRAM_LENGTH_FIELD_NAME);
             stringSerde.serialize(aString, nameValue.getDataOutput());
             int32Serde.serialize(new AInt32(index.getGramLength()), fieldValue.getDataOutput());
+            recordBuilder.addField(nameValue, fieldValue);
+        }
+    }
+
+    private void writeFullTextConfig(Index index) throws HyracksDataException {
+        if (!Strings.isNullOrEmpty(index.getFullTextConfigName())) {
+            nameValue.reset();
+            aString.setValue(FULL_TEXT_CONFIG_FIELD_NAME);
+            stringSerde.serialize(aString, nameValue.getDataOutput());
+
+            fieldValue.reset();
+            aString.setValue(index.getFullTextConfigName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+
             recordBuilder.addField(nameValue, fieldValue);
         }
     }

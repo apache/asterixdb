@@ -334,8 +334,8 @@ import org.apache.asterix.runtime.evaluators.functions.CreateUUIDDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.DecodeDataverseDisplayNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.DecodeDataverseNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.DeepEqualityDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.FullTextContainsDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.FullTextContainsWithoutOptionDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.FullTextContainsFunctionDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.FullTextContainsWithoutOptionFunctionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetItemDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetJobParameterByNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.GetTypeDescriptor;
@@ -1085,8 +1085,8 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ReferenceTileDescriptor.FACTORY);
 
         // full-text function
-        fc.add(FullTextContainsDescriptor.FACTORY);
-        fc.add(FullTextContainsWithoutOptionDescriptor.FACTORY);
+        fc.add(FullTextContainsFunctionDescriptor.FACTORY);
+        fc.add(FullTextContainsWithoutOptionFunctionDescriptor.FACTORY);
 
         // Record functions.
         fc.add(GetRecordFieldsDescriptor.FACTORY);

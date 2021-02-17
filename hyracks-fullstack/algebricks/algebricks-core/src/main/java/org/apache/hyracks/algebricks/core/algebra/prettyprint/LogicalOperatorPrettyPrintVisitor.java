@@ -115,7 +115,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         if (pOp != null) {
             buffer.append("\n");
             pad(buffer, indent);
-            appendln(buffer, "-- " + pOp.toString() + "  |" + op.getExecutionMode() + "|");
+            appendln(buffer, "-- " + pOp.toString(false) + "  |" + op.getExecutionMode() + "|");
         } else {
             appendln(buffer, " -- |" + op.getExecutionMode() + "|");
         }

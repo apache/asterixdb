@@ -24,7 +24,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
+import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -227,12 +229,14 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
 
     private void fillPKVars(DataSourceScanOperator dataScan, List<LogicalVariable> pkVars) {
         pkVars.clear();
-        DatasetDataSource datasetDataSource = (DatasetDataSource) dataScan.getDataSource();
-        pkVars.clear();
-        if (datasetDataSource.getDataset().getDatasetDetails() instanceof InternalDatasetDetails) {
-            int numPKs = datasetDataSource.getDataset().getPrimaryKeys().size();
-            for (int i = 0; i < numPKs; i++) {
-                pkVars.add(dataScan.getVariables().get(i));
+        DataSource dataSource = (DataSource) dataScan.getDataSource();
+        if (dataSource.getDatasourceType() == DataSource.Type.INTERNAL_DATASET) {
+            Dataset dataset = ((DatasetDataSource) dataSource).getDataset();
+            if (dataset.getDatasetDetails() instanceof InternalDatasetDetails) {
+                int numPKs = dataset.getPrimaryKeys().size();
+                for (int i = 0; i < numPKs; i++) {
+                    pkVars.add(dataScan.getVariables().get(i));
+                }
             }
         }
     }

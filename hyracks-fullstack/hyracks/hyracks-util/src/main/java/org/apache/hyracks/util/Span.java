@@ -70,20 +70,12 @@ public class Span {
         }
 
         @Override
-        public void loopUntilExhausted(ThrowingAction action) throws Exception {
-            super.loopUntilExhausted(action);
-        }
-
-        @Override
-        public void loopUntilExhausted(ThrowingAction action, long delay, TimeUnit delayUnit) throws Exception {
-            super.loopUntilExhausted(action, delay, delayUnit);
-        }
-
-        @Override
         public String toString() {
-            return "<INFINITY>";
+            return "<INFINITE>";
         }
     };
+
+    public static final Span ELAPSED = start(0, TimeUnit.NANOSECONDS);
 
     private final long spanNanos;
     private volatile long startNanos;

@@ -25,6 +25,8 @@
 ### UseStmnt
 **![](../images/diagrams/UseStmnt.png)**
 
+### DataverseName
+**![](../images/diagrams/DataverseName.png)**
 
 ---
 
@@ -36,11 +38,12 @@ As an example, the following statement sets the default dataverse to be `Commerc
 	USE Commerce;
 
 ### <a id="Sets"> Set Statement</a>
+
 The `SET` statement can be used to override certain configuration parameters. More information about `SET` can be found in [Appendix 2](#Performance_tuning).
 
 ### <a id="Functions"> Function Declaration</a>
 
-When writing a complex query, it can sometimes be helpful to define one or more auxiliary functions that each address a sub-piece of the overall query. 
+When writing a complex query, it can sometimes be helpful to define one or more auxiliary functions that each address a sub-piece of the overall query.
 
 The `DECLARE FUNCTION` statement supports the creation of such helper functions.
 In general, the function body (expression) can be any legal query expression.
@@ -51,10 +54,8 @@ The function named in the `DECLARE FUNCTION` statement is accessible only in the
 ### FunctionDeclaration
 **![](../images/diagrams/FunctionDeclaration.png)**
 
-### ParameterList
-**![](../images/diagrams/ParameterList.png)**
-
 ---
+
 The following is a simple example of a temporary function definition and its use.
 
 ##### Example
@@ -79,6 +80,9 @@ For our sample data set, this returns:
 ### CreateStmnt
 **![](../images/diagrams/CreateStmnt.png)**
 
+### DataverseName
+**![](../images/diagrams/DataverseName.png)**
+
 ### QualifiedName
 **![](../images/diagrams/QualifiedName.png)**
 
@@ -97,6 +101,7 @@ It can be used to create new dataverses, datatypes, datasets, indexes, and user-
 **![](../images/diagrams/CreateDataverse.png)**
 
 ---
+
 The `CREATE DATAVERSE` statement is used to create new dataverses.
 To ease the authoring of reusable query scripts, an optional `IF NOT EXISTS` clause is included to allow
 creation to be requested either unconditionally or only if the dataverse does not already exist.
@@ -109,6 +114,7 @@ The following example creates a new dataverse named `Commerce` if one does not a
     CREATE DATAVERSE Commerce IF NOT EXISTS;
 
 #### <a id="Types"> Create Type </a>
+
 ---
 ### CreateType
 **![](../images/diagrams/CreateType.png)**
@@ -128,8 +134,8 @@ The following example creates a new dataverse named `Commerce` if one does not a
 ### MultisetTypeDef
 **![](../images/diagrams/MultisetTypeDef.png)**
 
-### TypeRef
-**![](../images/diagrams/TypeRef.png)**
+### TypeReference
+**![](../images/diagrams/TypeReference.png)**
 
 ---
 
@@ -143,7 +149,7 @@ Instances of an open object type may carry additional fields, and open is the de
 
 The following example creates three new object type called `addressType` ,  `customerType` and `itemType`.
 Their fields are essentially traditional typed name/value pairs (much like SQL fields).
-Since it is defined as (defaulting to) being an open type, instances will be permitted to contain more than what is specified in the type definition. Indeed many of the customer objects contain a rating as well, however this is not necessary for the customer object to be created. As can be seen in the sample data, customers can exist without ratings or with part (or all) of the address missing. 
+Since it is defined as (defaulting to) being an open type, instances will be permitted to contain more than what is specified in the type definition. Indeed many of the customer objects contain a rating as well, however this is not necessary for the customer object to be created. As can be seen in the sample data, customers can exist without ratings or with part (or all) of the address missing.
 
 ##### Example
 
@@ -178,7 +184,7 @@ Note that the type of the `itemno` in this example is UUID. This field type can 
 
 The next example creates a new object type, closed this time, called `orderType`.
 Instances of this closed type will not be permitted to have extra fields,
-although the `ship_date` field is marked as optional and may thus be `NULL` or `MISSING` in legal instances of the type. The items field is an array of instances of another object type, `itemType`. 
+although the `ship_date` field is marked as optional and may thus be `NULL` or `MISSING` in legal instances of the type. The items field is an array of instances of another object type, `itemType`.
 
 ##### Example
 
@@ -202,6 +208,21 @@ although the `ship_date` field is marked as optional and may thus be `NULL` or `
 ### CreateExternalDataset
 **![](../images/diagrams/CreateExternalDataset.png)**
 
+### DatasetTypeDef
+**![](../images/diagrams/DatasetTypeDef.png)**
+
+### DatasetFieldDef
+**![](../images/diagrams/DatasetFieldDef.png)**
+
+### TypeReference
+**![](../images/diagrams/TypeReference.png)**
+
+### PrimaryKey
+**![](../images/diagrams/PrimaryKey.png)**
+
+### NestedField
+**![](../images/diagrams/NestedField.png)**
+
 ### AdapterName
 **![](../images/diagrams/AdapterName.png)**
 
@@ -213,15 +234,6 @@ although the `ship_date` field is marked as optional and may thus be `NULL` or `
 
 ### Properties
 **![](../images/diagrams/Properties.png)**
-
-### PrimaryKey
-**![](../images/diagrams/PrimaryKey.png)**
-
-### NestedField
-**![](../images/diagrams/NestedField.png)**
-
-### CompactionPolicy
-**![](../images/diagrams/CompactionPolicy.png)**
 
 ---
 
@@ -262,8 +274,8 @@ making it possible to query "legacy" file data (for example, Hive data) without 
 When defining an External dataset, an appropriate adapter type must be selected for the desired external data.
 (See the [Guide to External Data](../aql/externaldata.html) for more information on the available adapters.)
 
-The following example creates an Internal dataset for storing FacefookUserType objects.
-It specifies that their id field is their primary key.
+The following example creates an Internal dataset for storing `customerType` objects.
+It specifies that their `custid` field is their primary key.
 
 #### Example
 
@@ -277,6 +289,12 @@ Note that the `itemno` field's declared type must be UUID in this case.
 #### Example
 
     CREATE DATASET MyItems(itemType) PRIMARY KEY itemno AUTOGENERATED;
+
+Alternatively the dataset object type can be specified using inline type definition syntax.
+
+#### Example
+
+    CREATE DATASET MyItems(itemno INT NOT UNKNOWN, qty INT NOT UNKNOWN, price INT NOT UNKNOWN) PRIMARY KEY itemno AUTOGENERATED;
 
 The next example creates an External dataset for querying LineItemType objects.
 The choice of the `hdfs` adapter means that this dataset's data actually resides in HDFS.
@@ -312,7 +330,6 @@ the URL and path needed to locate the data in HDFS and a description of the data
 
 ### IndexType
 **![](../images/diagrams/IndexType.png)**
-
 
 ---
 
@@ -440,7 +457,6 @@ The primary-key index can be identified by the fact that the `SearchKey` field i
 ### CreateSynonym
 **![](../images/diagrams/CreateSynonym.png)**
 
-
 ---
 
 The `CREATE SYNONYM` statement creates a synonym for a given dataset.
@@ -455,7 +471,7 @@ The target dataset does not need to exist when the synonym is created.
 
     SELECT * FROM customersSynonym;
 
-More information on how synonyms are resolved can be found in the appendix section on Variable Resolution.
+More information on how synonyms are resolved can be found in the [Appendix 3. Variable Bindings and Name Resolution](#Variable_bindings_and_name_resolution).
 
 #### <a id="Create_function">Create Function</a>
 
@@ -469,8 +485,11 @@ The body of a function can be any query expression involving the function's para
 ### FunctionParameters
 **![](../images/diagrams/FunctionParameters.png)**
 
+### ExternalFunctionDef
+**![](../images/diagrams/ExternalFunctionDef.png)**
 
 ---
+
 The following is an example of a `CREATE FUNCTION` statement which is similar to our earlier `DECLARE FUNCTION` example.
 
 It differs from that example in that it results in a function that is persistently registered by name in the specified dataverse (the current dataverse being used, if not otherwise specified).
@@ -493,14 +512,22 @@ The following is an example of CREATE FUNCTION statement that replaces an existi
          WHERE u.id = userId)[0]
      };
 
+The following is an example of CREATE FUNCTION statement that introduces a function with a variable number of arguments.
+The arguments are accessible in the function body via `args` array parameter.
+
+##### Example
+
+    CREATE FUNCTION strJoin(...) {
+        string_join(args, ",")
+    };
+
 External functions can also be loaded into Libraries via the [UDF API](../udf.html). Given
 an already loaded library `pylib`, a function `sentiment` mapping to a Python method `sent_model.sentiment` in `sentiment_mod`
 would be as follows
 
 ##### Example
 
-    CREATE FUNCTION sentiment(a)
-      AS "sentiment_mod", "sent_model.sentiment" AT pylib;
+    CREATE FUNCTION sentiment(a) AS "sentiment_mod", "sent_model.sentiment" AT pylib;
 
 ### <a id="Removal">Drop Statement</a>
 
@@ -508,8 +535,20 @@ would be as follows
 ### DropStmnt
 **![](../images/diagrams/DropStmnt.png)**
 
+### DataverseName
+**![](../images/diagrams/DataverseName.png)**
+
+### QualifiedName
+**![](../images/diagrams/QualifiedName.png)**
+
+### DoubleQualifiedName
+**![](../images/diagrams/DoubleQualifiedName.png)**
+
 ### FunctionSignature
 **![](../images/diagrams/FunctionSignature.png)**
+
+### FunctionParameters
+**![](../images/diagrams/FunctionParameters.png)**
 
 ---
 
@@ -537,13 +576,16 @@ if one is specified by fully qualifying the artifact name in the `DROP` statemen
 When specifying an index to drop, the index name must be qualified by the dataset that it indexes.
 When specifying a function to drop, since the query language allows functions to be overloaded by their number of arguments,
 the identifying name of the function to be dropped must explicitly include that information.
-(`nameSearch@1` above denotes the 1-argument function named nameSearch in the current dataverse.)
+(`nameSearch@1` above denotes the 1-argument function named `nameSearch` in the current dataverse.)
 
 ### <a id="Load_statement">Load Statement</a>
 
 ---
 ### LoadStmnt
 **![](../images/diagrams/LoadStmnt.png)**
+
+### AdapterName
+**![](../images/diagrams/AdapterName.png)**
 
 ### Configuration
 **![](../images/diagrams/Configuration.png)**
@@ -575,7 +617,6 @@ The following example shows how to bulk load the `customers` dataset from an ext
 ---
 ### InsertStmnt
 **![](../images/diagrams/InsertStmnt.png)**
-
 
 ---
 
@@ -625,12 +666,13 @@ The following example illustrates a query-based upsert operation.
     UPSERT INTO custCopy (SELECT VALUE c FROM customers c)
 
 ### <a id="Deletes">Delete Statement</a>
+
 ---
 ### DeleteStmnt
 **![](../images/diagrams/DeleteStmnt.png)**
 
-
 ---
+
 The `DELETE` statement is used to delete data from a target dataset.
 The data to be deleted is identified by a boolean expression involving the variable bound to the target dataset in the `DELETE` statement.
 
@@ -650,5 +692,3 @@ The following examples illustrate single-object deletions.
 ##### Example
 
     DELETE FROM customers WHERE custid = "C47";
-
-

@@ -132,6 +132,11 @@
         <expected-error>TYPE_DECL statement is not supported in read-only mode</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="ignore-body-for-get">
+        <output-dir compare="Text">ignore-body-for-get</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="flwor">
     <test-case FilePath="flwor">
@@ -3018,7 +3023,7 @@
     <test-case FilePath="array_fun">
       <compilation-unit name="array_slice/array_slice_exception_result">
         <output-dir compare="Text">array_slice/array_slice_exception_result</output-dir>
-        <expected-error>ASX1081: Cannot find function with name TinySocial.array_slice</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature TinySocial.array_slice()</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="array_fun">
@@ -4020,6 +4025,9 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create dataverse: asterix</expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create dataverse: algebricks</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4027,6 +4035,7 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4034,6 +4043,7 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4048,6 +4058,7 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4062,6 +4073,7 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4069,6 +4081,7 @@
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4092,6 +4105,11 @@
     <test-case FilePath="ddl">
       <compilation-unit name="create_dataset_with_filter_on_meta">
         <output-dir compare="Text">create_dataset_with_filter_on_meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="index-bad-fields">
+        <output-dir compare="Text">index-bad-fields</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -5481,6 +5499,11 @@
         <output-dir compare="Text">fulltext-index-large-data</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="fulltext">
+      <compilation-unit name="stopwords-full-text-filter-1">
+        <output-dir compare="Text">stopwords-full-text-filter-1</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="global-aggregate">
     <test-case FilePath="global-aggregate">
@@ -5639,7 +5662,7 @@
     <test-case FilePath="group-by">
       <compilation-unit name="sugar-01-negative">
         <output-dir compare="Text">core-01</output-dir>
-        <expected-error>ASX1091: Type mismatch: expected value of type object, but got the value of type array (in line 26, at column 38)</expected-error>
+        <expected-error>ASX0037: Type mismatch: expected value of type array or multiset, but got the value of type bigint (in line 26, at column 26)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
@@ -5878,6 +5901,12 @@
     <test-case FilePath="index-join">
       <compilation-unit name="btree-secondary-self-equi-join_01">
         <output-dir compare="Text">btree-secondary-self-equi-join_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-join" check-warnings="true">
+      <compilation-unit name="hints-indexnl-params">
+        <output-dir compare="Text">hints-indexnl-params</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint indexnl. ASX1001: Syntax error: In line 1 >>(8, idx_tenk2_1k_2k)<< Encountered <INTEGER_LITERAL> "8" at column 2.  (in line 35, at column 21)]]></expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-join">
@@ -6150,6 +6179,19 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="dataset-with-meta">
         <output-dir compare="Text">dataset-with-meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection" check-warnings="true">
+      <compilation-unit name="hints-skip-index">
+        <output-dir compare="Text">hints-skip-index</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint skip-index. ASX1001: Syntax error: In line 1 >>(13, idx_1k)<< Encountered <INTEGER_LITERAL> "13" at column 2.  (in line 32, at column 19)]]></expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection" check-warnings="true">
+      <compilation-unit name="hints-use-index">
+        <output-dir compare="Text">hints-use-index</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint use-index. ASX1001: Syntax error: In line 1 >>(18, idx_1k_2k)<< Encountered <INTEGER_LITERAL> "18" at column 2.  (in line 33, at column 15)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint use-index. ASX1001: Syntax error: In line 1 >>()<< Encountered ")" at column 2.  (in line 33, at column 15)]]></expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
@@ -10281,6 +10323,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="subquery">
+      <compilation-unit name="in_let">
+        <output-dir compare="Text">in_let</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
       <compilation-unit name="not_exists">
         <output-dir compare="Text">not_exists</output-dir>
       </compilation-unit>
@@ -10366,6 +10413,11 @@
     <test-case FilePath="subquery">
       <compilation-unit name="query-ASTERIXDB-1674">
         <output-dir compare="Text">query-ASTERIXDB-1674</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-2815">
+        <output-dir compare="Text">query-ASTERIXDB-2815</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -10538,6 +10590,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
+      <compilation-unit name="q05">
+        <output-dir compare="Text">q05</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="q07">
         <output-dir compare="Text">q07</output-dir>
       </compilation-unit>
@@ -10558,6 +10615,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
+      <compilation-unit name="q18">
+        <output-dir compare="Text">q18</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="q19">
         <output-dir compare="Text">q19</output-dir>
       </compilation-unit>
@@ -10570,6 +10632,11 @@
     <test-case FilePath="tpcds">
       <compilation-unit name="q21">
         <output-dir compare="Text">q21</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="q22">
+        <output-dir compare="Text">q22</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
@@ -10593,6 +10660,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
+      <compilation-unit name="q27">
+        <output-dir compare="Text">q27</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="q29">
         <output-dir compare="Text">q29</output-dir>
       </compilation-unit>
@@ -10610,6 +10682,11 @@
     <test-case FilePath="tpcds">
       <compilation-unit name="q34">
         <output-dir compare="Text">q34</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="q36">
+        <output-dir compare="Text">q36</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
@@ -10683,8 +10760,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
+      <compilation-unit name="q67">
+        <output-dir compare="Text">q67</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="q68">
         <output-dir compare="Text">q68</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="q70">
+        <output-dir compare="Text">q70</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
@@ -10693,8 +10780,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
+      <compilation-unit name="q77">
+        <output-dir compare="Text">q77</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
       <compilation-unit name="q79">
         <output-dir compare="Text">q79</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="q80">
+        <output-dir compare="Text">q80</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
@@ -10710,6 +10807,11 @@
     <test-case FilePath="tpcds">
       <compilation-unit name="q85">
         <output-dir compare="Text">q85</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpcds">
+      <compilation-unit name="q86">
+        <output-dir compare="Text">q86</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="tpcds">
@@ -11875,14 +11977,14 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-5">
         <output-dir compare="Text">bad-function-ddl-5</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist</expected-error>
-        <expected-error>ASX1081: Cannot find function with name experiments2.function_that_does_not_exist </expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.function_that_does_not_exist()</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments2.function_that_does_not_exist()</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-6">
         <output-dir compare="Text">bad-function-ddl-6</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.function_that_does_not_exist(2)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -11900,13 +12002,13 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-9">
         <output-dir compare="Text">bad-function-ddl-9</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.function_that_does_not_exist</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.function_that_does_not_exist()</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-10">
         <output-dir compare="Text">bad-function-ddl-10</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.f0</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.f0(2)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -11984,8 +12086,8 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-function-1">
         <output-dir compare="Text">drop-function-1</output-dir>
-        <expected-error>ASX1081: Cannot find function with name experiments.my_sum</expected-error>
-        <expected-error>ASX1081: Cannot find function with name experiments.my_sum_va</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.my_sum(2)</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature experiments.my_sum_va(2)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12032,7 +12134,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-issue455">
         <output-dir compare="Text">query-issue455</output-dir>
-        <expected-error>ASX1081: Cannot find function with name test.printName</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature test.printName()</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12220,7 +12322,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="f01">
         <output-dir compare="Text">f01</output-dir>
-        <expected-error>ASX1081: Cannot find function with name test.tinyint</expected-error>
+        <expected-error>ASX1081: Cannot find function with signature test.tinyint()</expected-error>
       </compilation-unit>
     </test-case>
     <!-- This test case is not valid anymore since we do not required "IMPORT_PRIVATE_FUNCTIONS" flag anymore -->
@@ -12820,6 +12922,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="leftouterjoin">
+      <compilation-unit name="loj-03-no-listify">
+        <output-dir compare="Text">loj-03-no-listify</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
       <compilation-unit name="query_issue658">
         <output-dir compare="Text">query_issue658</output-dir>
       </compilation-unit>
@@ -13356,6 +13463,11 @@
         <output-dir compare="Clean-JSON">issue-ASTERIXDB-1165</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="json">
+      <compilation-unit name="int01">
+        <output-dir compare="Clean-JSON">int01-cleanjson</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="materialization">
     <test-case FilePath="materialization">
@@ -13470,13 +13582,6 @@
     <test-case FilePath="json">
       <compilation-unit name="int01">
         <output-dir compare="Lossless-JSON">int01-losslessjson</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="cleanjson">
-    <test-case FilePath="json">
-      <compilation-unit name="int01">
-        <output-dir compare="Clean-JSON">int01-cleanjson</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -14066,9 +14171,9 @@
         <output-dir compare="Text">inapplicable-hint-warning</output-dir>
         <expected-warn>HYR10006: Could not apply Group By hint: hash</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: indexnl. "hash" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "skip-index", "hash-bcast" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: auto. "indexnl", "skip-index" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "skip-index", "range" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: hash. "hash-bcast", "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: auto. "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "range", "skip-index", "use-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: hash. None expected at this location</expected-warn>
       </compilation-unit>
     </test-case>
@@ -14089,10 +14194,12 @@
       <compilation-unit name="unknown-hint-warning">
         <output-dir compare="Text">unknown-hint-warning</output-dir>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_groupby. "hash" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr. "indexnl", "skip-index", "hash-bcast" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: unknown_hint_between. "indexnl", "skip-index" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: unknown_hint_funcall. "indexnl", "skip-index", "range" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr. "hash-bcast", "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: unknown_hint_between. "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: unknown_hint_funcall. "indexnl", "range", "skip-index", "use-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_elsewhere. None expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr_6. "hash-bcast", "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr_6. "hash-bcast", "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="warnings">
@@ -14140,8 +14247,8 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="fun_return_null/string_fun">
-    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+  <test-group name="fun_return_null_missing/string_fun">
+    <test-case FilePath="fun_return_null_missing/string_fun" check-warnings="true">
       <compilation-unit name="string_fun_001">
         <output-dir compare="Text">string_fun_001</output-dir>
         <expected-warn>Type mismatch: function trim expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 41, at column 1)</expected-warn>
@@ -14241,7 +14348,7 @@
         <expected-warn>Type mismatch: function ends-with expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 33, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+    <test-case FilePath="fun_return_null_missing/string_fun" check-warnings="true">
       <compilation-unit name="string_fun_002">
         <output-dir compare="Text">string_fun_002</output-dir>
         <expected-warn>Type mismatch: function rtrim expects its 1st input parameter to be of type string, but the actual input type is bigint (in line 42, at column 1)</expected-warn>
@@ -14276,7 +14383,7 @@
         <expected-warn>Type mismatch: function regexp-position expects its 1st input parameter to be of type string, but the actual input type is integer (in line 50, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+    <test-case FilePath="fun_return_null_missing/string_fun" check-warnings="true">
       <compilation-unit name="string_fun_003">
         <output-dir compare="Text">string_fun_003</output-dir>
         <expected-warn>Invalid value: function repeat expects its 2nd input parameter to be an integer value, got 5.3 (in line 31, at column 1)</expected-warn>
@@ -14301,7 +14408,7 @@
         <expected-warn>Invalid value: function substring expects its 2nd input parameter to be an integer value, got Infinity (in line 34, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fun_return_null/string_fun" check-warnings="true">
+    <test-case FilePath="fun_return_null_missing/string_fun" check-warnings="true">
       <compilation-unit name="string_fun_004">
         <output-dir compare="Text">string_fun_004</output-dir>
         <expected-warn>Type mismatch: function string-concat expects its 2nd input parameter to be of type string, but the actual input type is tinyint (in line 30, at column 1)</expected-warn>
@@ -14327,8 +14434,8 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="fun_return_null/numeric_fun" >
-    <test-case FilePath="fun_return_null/numeric_fun" check-warnings="true">
+  <test-group name="fun_return_null_missing/numeric_fun" >
+    <test-case FilePath="fun_return_null_missing/numeric_fun" check-warnings="true">
       <compilation-unit name="numeric_fun_001">
         <output-dir compare="Text">numeric_fun_001</output-dir>
         <expected-warn>Type mismatch: function abs expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
@@ -14405,7 +14512,7 @@
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fun_return_null/numeric_fun" check-warnings="true">
+    <test-case FilePath="fun_return_null_missing/numeric_fun" check-warnings="true">
       <compilation-unit name="numeric_fun_002">
         <output-dir compare="Text">numeric_fun_002</output-dir>
         <expected-warn>Type mismatch: function round expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float or double, but the actual input type is string</expected-warn>
@@ -14432,7 +14539,7 @@
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="fun_return_null/numeric_fun" check-warnings="true">
+    <test-case FilePath="fun_return_null_missing/numeric_fun" check-warnings="true">
       <compilation-unit name="numeric_fun_003">
         <output-dir compare="Text">numeric_fun_003</output-dir>
         <expected-warn>Type mismatch: function numeric-add expects its 2nd input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
@@ -14473,6 +14580,15 @@
         <expected-warn>Type mismatch: function numeric-subtract expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
         <expected-warn>Type incompatibility: function numeric-add gets incompatible input values: datetime and string</expected-warn>
         <expected-warn>Type mismatch: function power expects its 1st input parameter to be of type tinyint, smallint, integer, bigint, float, double, date, time, datetime, duration, yearmonthduration or daytimeduration, but the actual input type is string</expected-warn>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="fun_return_null_missing" check-warnings="true">
+      <compilation-unit name="field-access">
+        <output-dir compare="Text">field-access</output-dir>
+        <expected-warn>Type mismatch: function field-access-by-name expects its 1st input parameter to be of type object, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function field-access-by-name expects its 1st input parameter to be of type object, but the actual input type is string</expected-warn>
+        <expected-warn>Type mismatch: function field-access-by-name expects its 1st input parameter to be of type object, but the actual input type is string</expected-warn>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

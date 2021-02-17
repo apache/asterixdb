@@ -6,6 +6,6 @@
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
             -- AGGREGATE  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH  |PARTITIONED|
+                -- BTREE_SEARCH (test.ds.primary_idx_ds)  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -21,13 +21,15 @@ package org.apache.asterix.common.config;
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
-import static org.apache.hyracks.control.common.config.OptionTypes.UNSIGNED_INTEGER;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
@@ -59,9 +61,9 @@ public class TransactionProperties extends AbstractProperties {
                 120,
                 "The frequency (in seconds) the checkpoint thread should check to see if a checkpoint should be "
                         + "written"),
-        TXN_LOG_CHECKPOINT_HISTORY(UNSIGNED_INTEGER, 2, "The number of checkpoints to keep in the transaction log"),
+        TXN_LOG_CHECKPOINT_HISTORY(NONNEGATIVE_INTEGER, 2, "The number of checkpoints to keep in the transaction log"),
         TXN_LOCK_ESCALATIONTHRESHOLD(
-                UNSIGNED_INTEGER,
+                NONNEGATIVE_INTEGER,
                 1000,
                 "The maximum number of entity locks to obtain before upgrading to a dataset lock"),
         TXN_LOCK_SHRINKTIMER(
@@ -73,7 +75,13 @@ public class TransactionProperties extends AbstractProperties {
                 POSITIVE_INTEGER,
                 10000,
                 "Interval (in milliseconds) for checking lock " + "timeout"),
-        TXN_LOCK_TABLE_SIZE(POSITIVE_INTEGER, 1024 * 1024, "The number of slots in the lock table."),
+        TXN_LOCK_TABLE_SIZE(
+                POSITIVE_INTEGER,
+                TXN_LOCK_TABLE_SIZE_DEFAULT,
+                "The number of slots in the lock table (should be a prime number)",
+                "for JVM max heaps < 8 GB, 1009, otherwise 1048583: (e.g. " + TXN_LOCK_TABLE_SIZE_DEFAULT
+                        + " for the current max heap of "
+                        + StorageUtil.toHumanReadableSize(StorageProperties.MAX_HEAP_BYTES) + ")"),
         TXN_COMMITPROFILER_ENABLED(BOOLEAN, false, "Enable output of commit profiler logs"),
         TXN_COMMITPROFILER_REPORTINTERVAL(POSITIVE_INTEGER, 5, "Interval (in seconds) to report commit profiler logs"),
         TXN_JOB_RECOVERY_MEMORYSIZE(
@@ -84,11 +92,17 @@ public class TransactionProperties extends AbstractProperties {
         private final IOptionType type;
         private final Object defaultValue;
         private final String description;
+        private final String usageOverride;
 
         Option(IOptionType type, Object defaultValue, String description) {
+            this(type, defaultValue, description, null);
+        }
+
+        Option(IOptionType type, Object defaultValue, String description, String usageOverride) {
             this.type = type;
             this.defaultValue = defaultValue;
             this.description = description;
+            this.usageOverride = usageOverride;
         }
 
         @Override
@@ -110,7 +124,15 @@ public class TransactionProperties extends AbstractProperties {
         public Object defaultValue() {
             return defaultValue;
         }
+
+        @Override
+        public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
+            return usageOverride;
+        }
     }
+
+    private static final int TXN_LOCK_TABLE_SIZE_DEFAULT =
+            StorageProperties.MAX_HEAP_BYTES < StorageUtil.getByteValue("8GB") ? 1009 : 1048583;
 
     public static final String TXN_LOG_PARTITIONSIZE_KEY = Option.TXN_LOG_PARTITIONSIZE.ini();
 

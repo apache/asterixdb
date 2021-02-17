@@ -42,14 +42,12 @@ The following matrix is a quick "SQL-92 compatibility cheat sheet" for SQL++.
 The following SQL-92 features are not implemented yet. However, SQL++ does not conflict with these features:
 
   * CROSS JOIN, NATURAL JOIN, UNION JOIN
-  * RIGHT and FULL OUTER JOIN
+  * FULL OUTER JOIN
   * INTERSECT, EXCEPT, UNION with set semantics
   * CAST expression
-  * COALESCE expression
   * ALL and SOME predicates for linking to subqueries
   * UNIQUE predicate (tests a collection for duplicates)
   * MATCH predicate (tests for referential integrity)
   * Row and Table constructors
   * Preserved order for expressions in a SELECT list
-
 

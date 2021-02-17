@@ -1,0 +1,1 @@
+{ "t1": { "from": "from", "select": "select" }, "t2": { "from_type": true, "select_type": true }, "t3": [ "from", "select" ] }

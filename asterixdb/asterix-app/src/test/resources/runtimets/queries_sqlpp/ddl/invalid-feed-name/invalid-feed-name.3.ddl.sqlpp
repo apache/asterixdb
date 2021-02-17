@@ -17,4 +17,24 @@
  * under the License.
  */
 
+/*
+ * Invalid dataverse name in CREATE FEED -> Error
+ */
+
 drop dataverse test if exists;
+create dataverse test;
+
+use test;
+
+create type Tweet as closed
+{
+  id: int64
+};
+
+create feed ` invalid`.a with {
+ "adapter-name" : "socket_adapter",
+ "sockets" : "127.0.0.1:10001",
+ "address-type" : "IP",
+ "type-name" : "Tweet",
+ "format" : "adm"
+};

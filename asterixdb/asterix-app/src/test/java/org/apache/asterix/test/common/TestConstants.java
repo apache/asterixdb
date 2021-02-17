@@ -36,14 +36,37 @@ public class TestConstants {
             + "\"),\n" + "(\"serviceEndpoint\"=\"" + S3_SERVICE_ENDPOINT_DEFAULT + "\")";
 
     // Azure blob storage constants and place holders
-    public static final String AZURE_ACCOUNT_NAME_PLACEHOLDER = "%accountName%";
+    // account name
+    public static final String AZURE_ACCOUNT_NAME_PLACEHOLDER = "%azureblob-accountname%";
     public static final String AZURE_AZURITE_ACCOUNT_NAME_DEFAULT = "devstoreaccount1";
-    public static final String AZURE_ACCOUNT_KEY_PLACEHOLDER = "%accountKey%";
+
+    // account key
+    public static final String AZURE_ACCOUNT_KEY_PLACEHOLDER = "%azureblob-accountkey%";
     public static final String AZURE_AZURITE_ACCOUNT_KEY_DEFAULT =
-            "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsu" + "Fq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
-    public static final String AZURE_BLOB_ENDPOINT_PLACEHOLDER = "%blobEndpoint%";
+            "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
+
+    // SAS token: this is generated and assigned at runtime at the start of the test
+    public static final String AZURE_SAS_TOKEN_PLACEHOLDER = "%azureblob-sas%";
+    public static String sasToken = "";
+
+    // blob endpoint
+    public static final String AZURE_BLOB_ENDPOINT_PLACEHOLDER = "%azureblob-endpoint%";
     public static final String AZURE_BLOB_ENDPOINT_DEFAULT =
             "http://localhost:20000/" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT;
+
+    // connection string with account name & account key
+    public static final String AZURE_CONNECTION_STRING_ACCOUNT_KEY_PLACEHOLDER =
+            "%azureblob-connectionstringaccountkey%";
+    public static final String AZURE_CONNECTION_STRING_ACCOUNT_KEY = "AccountName=" + AZURE_ACCOUNT_NAME_PLACEHOLDER
+            + ";AccountKey=" + AZURE_ACCOUNT_KEY_PLACEHOLDER + ";BlobEndpoint=" + AZURE_BLOB_ENDPOINT_PLACEHOLDER;
+
+    // connection string with account name & sas token
+    public static final String AZURE_CONNECTION_STRING_SAS_TOKEN_PLACEHOLDER = "%azureblob-connectionstringsas%";
+    public static final String AZURE_CONNECTION_STRING_SAS_TOKEN =
+            "AccountName=" + AZURE_ACCOUNT_NAME_PLACEHOLDER + ";SharedAccessSignature=" + AZURE_SAS_TOKEN_PLACEHOLDER
+                    + ";BlobEndpoint=" + AZURE_BLOB_ENDPOINT_PLACEHOLDER;
+
+    // azure template and default template
     public static final String AZURE_TEMPLATE = "(\"accountName\"=\"" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT + "\"),\n"
             + "(\"accountKey\"=\"" + AZURE_AZURITE_ACCOUNT_KEY_DEFAULT + "\"),\n" + "(\"blobEndpoint\"=\""
             + AZURE_BLOB_ENDPOINT_PLACEHOLDER + "\")";

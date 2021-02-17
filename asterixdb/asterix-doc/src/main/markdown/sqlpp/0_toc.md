@@ -33,7 +33,7 @@
            * [Identifiers and Variable References](#Variable_references)
 		   * [Parameter References](#Parameter_references)
            * [Parenthesized Expressions](#Parenthesized_expressions)
-           * [Function calls](#Function_call_expressions)
+           * [Function Calls](#Function_call_expressions)
            * [Case Expressions](#Case_expressions)
            * [Constructors](#Constructors)
 * [3. Queries](#Queries)

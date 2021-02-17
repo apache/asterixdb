@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.replication;
 
+import java.net.InetSocketAddress;
+
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -35,9 +37,10 @@ public interface INcLifecycleCoordinator {
      * Defines the logic of a {@link INcLifecycleCoordinator} when a node leaves the cluster.
      *
      * @param nodeId
+     * @param replicaAddress
      * @throws HyracksDataException
      */
-    void notifyNodeFailure(String nodeId) throws HyracksDataException;
+    void notifyNodeFailure(String nodeId, InetSocketAddress replicaAddress) throws HyracksDataException;
 
     /**
      * Binds the coordinator to {@code cluserManager}.

@@ -92,8 +92,7 @@ public class MoveFreeVariableOperatorOutOfSubplanRule extends AbstractDecorrelat
                     ILogicalOperator childOp = childOpRef.getValue();
 
                     // Try to move operators that only uses free variables out of the subplan.
-                    if (movableOperator(currentOp.getOperatorTag())
-                            && independentOperator(currentOp, liveVarsBeforeSubplan)
+                    if (movableOperator(currentOp, liveVarsBeforeSubplan)
                             && producedVariablesCanbePropagated(currentOp)) {
                         extractOperator(subplanOp, inputOp, currentOpRef);
                         inputOp = currentOp;
@@ -109,12 +108,17 @@ public class MoveFreeVariableOperatorOutOfSubplanRule extends AbstractDecorrelat
         return changed;
     }
 
-    // Checks whether the current operator is independent of the nested input pipeline in the subplan.
-    private boolean independentOperator(ILogicalOperator op, Set<LogicalVariable> liveVarsBeforeSubplan)
+    private boolean movableOperator(ILogicalOperator op, Set<LogicalVariable> liveVarsBeforeSubplan)
             throws AlgebricksException {
+        if (!movableOperatorKind(op.getOperatorTag())) {
+            return false;
+        }
+
+        // Checks whether the current operator is independent of the nested input pipeline in the subplan.
         Set<LogicalVariable> usedVars = new HashSet<>();
         VariableUtilities.getUsedVariables(op, usedVars);
-        return liveVarsBeforeSubplan.containsAll(usedVars);
+        boolean independent = liveVarsBeforeSubplan.containsAll(usedVars);
+        return independent && movableIndependentOperator(op, usedVars);
     }
 
     // Checks whether there is a variable killing operator in the nested pipeline
@@ -152,7 +156,11 @@ public class MoveFreeVariableOperatorOutOfSubplanRule extends AbstractDecorrelat
         currentOp.getInputs().get(0).setValue(inputOp);
     }
 
-    protected boolean movableOperator(LogicalOperatorTag operatorTag) {
-        return (operatorTag == LogicalOperatorTag.ASSIGN || operatorTag == LogicalOperatorTag.SUBPLAN);
+    protected boolean movableOperatorKind(LogicalOperatorTag operatorTag) {
+        return operatorTag == LogicalOperatorTag.ASSIGN || operatorTag == LogicalOperatorTag.SUBPLAN;
+    }
+
+    protected boolean movableIndependentOperator(ILogicalOperator op, Set<LogicalVariable> usedVars) {
+        return true;
     }
 }

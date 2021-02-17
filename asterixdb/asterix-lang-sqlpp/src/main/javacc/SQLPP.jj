@@ -56,12 +56,13 @@ import org.apache.asterix.common.annotations.FieldIntervalDataGen;
 import org.apache.asterix.common.annotations.FieldValFileDataGen;
 import org.apache.asterix.common.annotations.FieldValFileSameIndexDataGen;
 import org.apache.asterix.common.annotations.IRecordFieldDataGen;
+import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.InsertRandIntDataGen;
 import org.apache.asterix.common.annotations.ListDataGen;
 import org.apache.asterix.common.annotations.ListValFileDataGen;
 import org.apache.asterix.common.annotations.RangeAnnotation;
+import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
-import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -132,6 +133,8 @@ import org.apache.asterix.lang.common.statement.CreateFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateIndexStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
+import org.apache.asterix.lang.common.statement.CreateFullTextFilterStatement;
+import org.apache.asterix.lang.common.statement.CreateFullTextConfigStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -144,6 +147,8 @@ import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.FunctionDropStatement;
 import org.apache.asterix.lang.common.statement.IndexDropStatement;
+import org.apache.asterix.lang.common.statement.FullTextFilterDropStatement;
+import org.apache.asterix.lang.common.statement.FullTextConfigDropStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.InternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.LoadStatement;
@@ -203,8 +208,8 @@ import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
-import org.apache.hyracks.algebricks.core.algebra.expressions.IndexedNLJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
@@ -238,6 +243,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String UNBOUNDED = "UNBOUNDED";
     private static final String REPLACE = "REPLACE";
     private static final String RETURNS = "RETURNS";
+    private static final String CONFIG = "CONFIG";
+
 
     private static final String INT_TYPE_NAME = "int";
     private static final String UDF_VARARGS_PARAM_NAME = "args"; // Note: this value is stored in the function metadata
@@ -258,10 +265,12 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static class IndexParams {
       public IndexType type;
       public int gramLength;
+      public String fullTextConfig;
 
-      public IndexParams(IndexType type, int gramLength) {
+      public IndexParams(IndexType type, int gramLength, String fullTextConfig) {
         this.type = type;
         this.gramLength = gramLength;
+        this.fullTextConfig = fullTextConfig;
       }
     };
 
@@ -326,7 +335,6 @@ class SQLPPParser extends ScopeChecker implements IParser {
     public SQLPPParser(String s) {
         this(new StringReader(s));
         super.setInput(s);
-        token_source.hintCollector = hintCollector;
     }
 
     public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException, CompilationException {
@@ -371,6 +379,19 @@ class SQLPPParser extends ScopeChecker implements IParser {
         });
     }
 
+    private List<String> parseParenthesizedIdentifierList() throws CompilationException {
+        return parseImpl(new ParseFunction<List<String>>() {
+            @Override
+            public  List<String> parse() throws ParseException {
+                return SQLPPParser.this.ParenthesizedIdentifierList();
+            }
+        });
+    }
+
+    private static List<String> parseParenthesizedIdentifierList(String text) throws CompilationException {
+        return new SQLPPParser(text).parseParenthesizedIdentifierList();
+    }
+
     @Override
     public FunctionDecl parseFunctionBody(FunctionSignature signature, List<String> paramNames)
       throws CompilationException {
@@ -395,6 +416,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private <T> T parseImpl(ParseFunction<T> parseFunction) throws CompilationException {
         warningCollector.clear();
         hintCollector.clear();
+        token_source.hintCollector = hintCollector;
         try {
             return parseFunction.parse();
         } catch (SqlppParseException e) {
@@ -414,6 +436,11 @@ class SQLPPParser extends ScopeChecker implements IParser {
     @FunctionalInterface
     private interface ParseFunction<T> {
         T parse() throws ParseException;
+    }
+
+    @Override
+    public void getWarnings(IWarningCollector outWarningCollector) {
+        warningCollector.getWarnings(outWarningCollector);
     }
 
     @Override
@@ -567,6 +594,60 @@ class SQLPPParser extends ScopeChecker implements IParser {
         }
     }
 
+    private IExpressionAnnotation parseExpressionAnnotation(Token hintToken) {
+      // placeholder for the annotation that should be returned if this hint's parameters cannot be parsed
+      IExpressionAnnotation onParseErrorReturn = null;
+      try {
+        switch (hintToken.hint) {
+          case HASH_BROADCAST_JOIN_HINT:
+            return new BroadcastExpressionAnnotation(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
+          case INDEXED_NESTED_LOOP_JOIN_HINT:
+            if (hintToken.hintParams == null) {
+              return IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX;
+            } else {
+              // if parameter parsing fails then return hint annotation without parameters
+              onParseErrorReturn = IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX;
+              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
+              return IndexedNLJoinExpressionAnnotation.newInstance(indexNames);
+            }
+          case RANGE_HINT:
+            Expression rangeExpr = parseExpression(hintToken.hintParams);
+            RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
+            return new RangeAnnotation(rangeMap);
+          case SKIP_SECONDARY_INDEX_SEARCH_HINT:
+            if (hintToken.hintParams == null) {
+              return SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX;
+            } else {
+              // if parameter parsing fails then ignore this hint
+              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
+              return SkipSecondaryIndexSearchExpressionAnnotation.newInstance(indexNames);
+            }
+          case USE_SECONDARY_INDEX_SEARCH_HINT:
+            if (hintToken.hintParams == null) {
+              throw new SqlppParseException(getSourceLocation(hintToken), "Expected index name(s)");
+            } else {
+              // if parameter parsing fails then ignore this hint
+              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
+              return SecondaryIndexSearchPreferenceAnnotation.newInstance(indexNames);
+            }
+          default:
+            throw new SqlppParseException(getSourceLocation(hintToken), "Unexpected hint");
+        }
+      } catch (SqlppParseException e) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+              hintToken.hint.toString(), e.getMessage()));
+        }
+        return onParseErrorReturn;
+      } catch (CompilationException e) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+              hintToken.hint.toString(), e.getMessage()));
+        }
+        return onParseErrorReturn;
+      }
+    }
+
     private void ensureNoTypeDeclsInFunction(String fnName, List<Pair<VarIdentifier, TypeExpression>> paramList,
       TypeExpression returnType, Token startToken) throws SqlppParseException {
       for (Pair<VarIdentifier, TypeExpression> p : paramList) {
@@ -694,6 +775,7 @@ Statement CreateStatement() throws ParseException:
     | stmt = CreateSynonymStatement(startToken)
     | stmt = CreateFeedStatement(startToken)
     | stmt = CreateFeedPolicyStatement(startToken)
+    | stmt = CreateFullTextStatement(startToken)
   )
   {
     return stmt;
@@ -1028,6 +1110,7 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
     if (indexType != null) {
       stmt.setIndexType(indexType.type);
       stmt.setGramLength(indexType.gramLength);
+      stmt.setFullTextConfigName(indexType.fullTextConfig);
     }
     stmt.setEnforced(enforced);
     return addSourceLocation(stmt, startStmtToken);
@@ -1056,17 +1139,6 @@ CreateIndexStatement PrimaryIndexSpecification(Token startStmtToken) throws Pars
   }
 }
 
-String CompactionPolicy() throws ParseException :
-{
-  String compactionPolicy = null;
-}
-{
-  compactionPolicy = Identifier()
-    {
-      return compactionPolicy;
-    }
-}
-
 String FilterField() throws ParseException :
 {
   String filterField = null;
@@ -1082,6 +1154,7 @@ IndexParams IndexType() throws ParseException:
 {
   IndexType type = null;
   int gramLength = 0;
+  String fullTextConfig = null;
 }
 {
   (<BTREE>
@@ -1096,10 +1169,18 @@ IndexParams IndexType() throws ParseException:
     {
       type = IndexType.LENGTH_PARTITIONED_WORD_INVIX;
     }
-  |<FULLTEXT>
+  | <FULLTEXT>
     {
       type = IndexType.SINGLE_PARTITION_WORD_INVIX;
     }
+    // For now we don't allow inverted index creation using a full-text config in another data verse.
+    // We may want to support corss-dataverse full-text config access later
+    // If so, replace the Identifier() with QualifiedName() to get the dataverse name
+    ( <USING> Identifier()
+      {
+        fullTextConfig = token.image;
+      }
+    )?
   | <NGRAM> <LEFTPAREN> <INTEGER_LITERAL>
     {
       type = IndexType.LENGTH_PARTITIONED_NGRAM_INVIX;
@@ -1107,7 +1188,7 @@ IndexParams IndexType() throws ParseException:
     }
   <RIGHTPAREN>)
     {
-      return new IndexParams(type, gramLength);
+      return new IndexParams(type, gramLength, fullTextConfig);
     }
 }
 
@@ -1419,6 +1500,69 @@ CreateFeedPolicyStatement FeedPolicySpecification(Token startStmtToken) throws P
   }
 }
 
+Statement CreateFullTextStatement(Token startStmtToken) throws ParseException:
+{
+  Statement stmt = null;
+}
+{
+  (
+    <FULLTEXT>
+    (
+      <FILTER> stmt = CreateFullTextFilterSpec(startStmtToken)
+      | (<IDENTIFIER> { expectToken(CONFIG); } stmt = CreateFullTextConfigSpec(startStmtToken))
+    )
+  )
+  {
+    return stmt;
+  }
+}
+
+CreateFullTextFilterStatement CreateFullTextFilterSpec(Token startStmtToken) throws ParseException:
+{
+  CreateFullTextFilterStatement stmt = null;
+  Pair<DataverseName,Identifier> nameComponents = null;
+  boolean ifNotExists = false;
+  RecordConstructor expr = null;
+}
+{
+  (
+    nameComponents = QualifiedName() ifNotExists = IfNotExists()
+    <AS>
+    expr = RecordConstructor()
+  )
+  {
+    try {
+      stmt = new CreateFullTextFilterStatement(nameComponents.first, nameComponents.second.getValue(), ifNotExists, expr);
+      return addSourceLocation(stmt, startStmtToken);
+    } catch (CompilationException e) {
+       throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
+    }
+  }
+}
+
+CreateFullTextConfigStatement CreateFullTextConfigSpec(Token startStmtToken) throws ParseException:
+{
+  CreateFullTextConfigStatement stmt = null;
+  Pair<DataverseName,Identifier> nameComponents = null;
+  boolean ifNotExists = false;
+  RecordConstructor expr = null;
+}
+{
+  (
+    nameComponents = QualifiedName() ifNotExists = IfNotExists()
+    <AS>
+    expr = RecordConstructor()
+  )
+  {
+    try {
+      stmt = new CreateFullTextConfigStatement(nameComponents.first, nameComponents.second.getValue(), ifNotExists, expr);
+      return addSourceLocation(stmt, startStmtToken);
+    } catch (CompilationException e) {
+       throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
+    }
+  }
+}
+
 CreateSynonymStatement CreateSynonymStatement(Token startStmtToken) throws ParseException:
 {
   CreateSynonymStatement stmt = null;
@@ -1570,6 +1714,7 @@ Statement DropStatement() throws ParseException:
     | stmt = DropFeedStatement(startToken)
     | stmt = DropFeedPolicyStatement(startToken)
     | stmt = DropSynonymStatement(startToken)
+    | stmt = DropFullTextStatement(startToken)
   )
   {
     return stmt;
@@ -1623,6 +1768,50 @@ IndexDropStatement DropIndexSpecification(Token startStmtToken) throws ParseExce
     return addSourceLocation(stmt, startStmtToken);
   }
 }
+
+Statement DropFullTextStatement(Token startStmtToken) throws ParseException:
+{
+  Statement stmt = null;
+}
+{
+  <FULLTEXT>
+  (
+    <FILTER> stmt = DropFullTextFilterSpec(startStmtToken)
+     | (<IDENTIFIER> { expectToken(CONFIG); } stmt = DropFullTextConfigSpec(startStmtToken))
+  )
+  {
+    return stmt;
+  }
+}
+
+FullTextFilterDropStatement DropFullTextFilterSpec(Token startStmtToken) throws ParseException:
+{
+  FullTextFilterDropStatement stmt = null;
+  Pair<DataverseName,Identifier> nameComponents = null;
+  boolean ifExists = false;
+}
+{
+  nameComponents = QualifiedName() ifExists = IfExists()
+  {
+    stmt = new FullTextFilterDropStatement(nameComponents.first, nameComponents.second.getValue(), ifExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
+}
+
+FullTextConfigDropStatement DropFullTextConfigSpec(Token startStmtToken) throws ParseException:
+{
+  FullTextConfigDropStatement stmt = null;
+  Pair<DataverseName,Identifier> nameComponents = null;
+  boolean ifExists = false;
+}
+{
+  nameComponents = QualifiedName() ifExists = IfExists()
+  {
+    stmt = new FullTextConfigDropStatement(nameComponents.first, nameComponents.second.getValue(), ifExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
+}
+
 
 NodeGroupDropStatement DropNodeGroupStatement(Token startStmtToken) throws ParseException:
 {
@@ -2383,8 +2572,10 @@ FunctionName FunctionName() throws ParseException:
 {
   // Note: there's a copy of this production in PrimaryExpr() (LOOKAHEAD for FunctionCallExpr())
   //       that copy must be kept in sync with this code
-  prefix = MultipartIdentifierWithHints(SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
-    SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.RANGE_HINT, SqlppHint.SPATIAL_JOIN_HINT)
+  prefix = MultipartIdentifierWithHints(
+    SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT, SqlppHint.RANGE_HINT,
+    SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT
+  )
   (<SHARP> suffix = Identifier())?
   {
     FunctionName result = new FunctionName();
@@ -2444,6 +2635,21 @@ String Identifier() throws ParseException:
       return lit;
     }
   )
+}
+
+List<String> ParenthesizedIdentifierList() throws ParseException:
+{
+  List<String> list = new ArrayList<String>();
+  String ident = null;
+}
+{
+  <LEFTPAREN>
+  ident = Identifier() { list.add(ident); }
+  ( <COMMA> ident = Identifier() { list.add(ident); } )*
+  <RIGHTPAREN>
+  {
+    return list;
+  }
 }
 
 Pair<Integer, Pair<List<String>, IndexedTypeExpression>> OpenField() throws ParseException:
@@ -2764,22 +2970,13 @@ Expression RelExpr() throws ParseException:
     (
       LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> | <LG> |<SIMILAR> | (<NOT> { not = true; })? <IN>)
         {
-          Token hintToken = fetchHint(token, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
-            SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.HASH_BROADCAST_JOIN_HINT);
+          Token hintToken = fetchHint(token,
+            SqlppHint.HASH_BROADCAST_JOIN_HINT, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
+            SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT
+          );
           if (hintToken != null) {
-            switch (hintToken.hint) {
-              case INDEXED_NESTED_LOOP_JOIN_HINT:
-                annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
-                break;
-              case SKIP_SECONDARY_INDEX_SEARCH_HINT:
-                annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
-                break;
-              case HASH_BROADCAST_JOIN_HINT:
-                annotation = new BroadcastExpressionAnnotation(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
-                break;
-            }
+            annotation = parseExpressionAnnotation(hintToken);
           }
-
           String operator = token.image.toLowerCase();
           if (operator.equals("<>")){
               operator = "!=";
@@ -2827,17 +3024,12 @@ Expression BetweenExpr() throws ParseException:
       LOOKAHEAD(2)
       (<NOT> { not = true; })? <BETWEEN>
         {
-          Token hintToken = fetchHint(token, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
-            SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT);
+          Token hintToken = fetchHint(token,
+            SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT, SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT,
+            SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT
+          );
           if (hintToken != null) {
-            switch (hintToken.hint) {
-              case INDEXED_NESTED_LOOP_JOIN_HINT:
-                annotation = IndexedNLJoinExpressionAnnotation.INSTANCE;
-                break;
-              case SKIP_SECONDARY_INDEX_SEARCH_HINT:
-                annotation = SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE;
-                break;
-            }
+            annotation = parseExpressionAnnotation(hintToken);
           }
           String operator = token.image.toLowerCase();
           if(not){
@@ -3333,18 +3525,10 @@ VariableExpr ExternalVariableRef() throws ParseException:
 }
 {
   (
-    (
-      <DOLLAR>
-      (
-        <INTEGER_LITERAL> { name = token.image; } |
-        <IDENTIFIER> { name = token.image; } |
-        name = QuotedString()
-      )
-    )
-    |
-    (
-      <QUES> { name = String.valueOf(++externalVarCounter); }
-    )
+      <DOLLAR_IDENTIFIER> { name = token.image.substring(1); }
+    | <DOLLAR_INTEGER_LITERAL> { name = token.image.substring(1); }
+    | <DOLLAR_QUOTED_STRING> { name = removeQuotesAndEscapes(token.image.substring(1)); }
+    | <QUES> { name = String.valueOf(++externalVarCounter); }
   )
   {
      String idName = SqlppVariableUtil.toExternalVariableName(name);
@@ -3516,46 +3700,9 @@ Expression FunctionCallExpr() throws ParseException:
     } else {
       CallExpr callExpr = new CallExpr(signature, argList, filterExpr);
       if (funcName.hintToken != null) {
-        switch (funcName.hintToken.hint) {
-          case INDEXED_NESTED_LOOP_JOIN_HINT:
-            callExpr.addHint(IndexedNLJoinExpressionAnnotation.INSTANCE);
-            break;
-          case SKIP_SECONDARY_INDEX_SEARCH_HINT:
-            callExpr.addHint(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE);
-            break;
-          case RANGE_HINT:
-            try {
-              Expression rangeExpr = parseExpression(funcName.hintToken.hintParams);
-              RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
-              RangeAnnotation rangeAnn = new RangeAnnotation(rangeMap);
-              callExpr.addHint(rangeAnn);
-            } catch (CompilationException e) {
-              {
-                  SqlppParseException e2 = new SqlppParseException(getSourceLocation(funcName.hintToken), e.getMessage());
-                  e2.initCause(e);
-                  throw e2;
-              }
-            }
-            break;
-          case SPATIAL_JOIN_HINT:
-            try {
-              String[] splits = funcName.hintToken.hintParams != null ? funcName.hintToken.hintParams.split("\\s+") : null;
-              double minX = Double.parseDouble(splits[0]);
-              double minY = Double.parseDouble(splits[1]);
-              double maxX = Double.parseDouble(splits[2]);
-              double maxY = Double.parseDouble(splits[3]);
-              int numRows = Integer.parseInt(splits[4]);
-              int numColumns = Integer.parseInt(splits[5]);
-              SpatialJoinAnnotation spatialJoinAnn = new SpatialJoinAnnotation(minX, minY, maxX, maxY, numRows, numColumns);
-              callExpr.addHint(spatialJoinAnn);
-            } catch (Exception e) {
-              {
-                  SqlppParseException e2 = new SqlppParseException(getSourceLocation(funcName.hintToken), e.getMessage());
-                  e2.initCause(e);
-                  throw e2;
-              }
-            }
-            break;
+        IExpressionAnnotation annotation = parseExpressionAnnotation(funcName.hintToken);
+        if (annotation != null) {
+          callExpr.addHint(annotation);
         }
       }
       FunctionMapUtil.normalizedListInputFunctions(callExpr);
@@ -4577,7 +4724,7 @@ TOKEN [IGNORE_CASE]:
   | <CASE : "case">
   | <CLOSED : "closed">
   | <CREATE : "create">
-  | <COMPACTION : "compaction">
+  | <COMPACTION : "compaction"> // no longer used
   | <COMPACT : "compact">
   | <CONNECT : "connect">
   | <CORRELATE : "correlate">
@@ -4601,6 +4748,7 @@ TOKEN [IGNORE_CASE]:
   | <EXCEPT : "except">
   | <EXISTS : "exists">
   | <EXTERNAL : "external">
+  | <FALSE : "false">
   | <FEED : "feed">
   | <FILTER : "filter">
   | <FLATTEN : "flatten">
@@ -4632,10 +4780,12 @@ TOKEN [IGNORE_CASE]:
   | <LIKE : "like">
   | <LIMIT : "limit">
   | <LOAD : "load">
+  | <MISSING : "missing">
   | <MOD : "mod">
   | <NODEGROUP : "nodegroup">
   | <NGRAM : "ngram">
   | <NOT : "not">
+  | <NULL : "null">
   | <OFFSET : "offset">
   | <ON : "on">
   | <OPEN : "open">
@@ -4665,8 +4815,9 @@ TOKEN [IGNORE_CASE]:
   | <SYNONYM : "synonym">
   | <TEMPORARY : "temporary"> // intentionally not used but reserved for future usage
   | <THEN : "then">
-  | <TYPE : "type">
   | <TO : "to">
+  | <TRUE : "true">
+  | <TYPE : "type">
   | <UNION : "union">
   | <UNKNOWN : "unknown">
   | <UNNEST : "unnest">
@@ -4700,7 +4851,6 @@ TOKEN :
   | <ATT : "@">
   | <COLON : ":">
   | <COMMA : ",">
-  | <DOLLAR: "$">
   | <DOT : ".">
   | <PERCENT: "%">
   | <QUES : "?">
@@ -4744,44 +4894,33 @@ TOKEN :
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-    <INTEGER_LITERAL : (<DIGIT>)+ >
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN [IGNORE_CASE]:
-{
-    <MISSING : "missing">
-  | <NULL : "null">
-  | <TRUE : "true">
-  | <FALSE : "false">
-}
-
-<DEFAULT,IN_DBL_BRACE>
-TOKEN :
-{
     <#DIGIT : ["0" - "9"]>
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN:
 {
-    < DOUBLE_LITERAL: <DIGITS> ( "." <DIGITS> ) (("e"|"E") ("+"|"-")? <DIGITS>)?
+    <INTEGER_LITERAL : <DIGITS> >
+  | <DOUBLE_LITERAL: <DIGITS> ( "." <DIGITS> ) (("e"|"E") ("+"|"-")? <DIGITS>)?
                       | <DIGITS> (("e"|"E") ("+"|"-")? <DIGITS>)
                       | "." <DIGITS> (("e"|"E") ("+"|"-")? <DIGITS>)?
     >
-  | < FLOAT_LITERAL:  <DIGITS> ( "f" | "F" )
+  | <FLOAT_LITERAL:  <DIGITS> ( "f" | "F" )
                       | <DIGITS> ( "." <DIGITS> ( "f" | "F" ) )?
                       | "." <DIGITS> ( "f" | "F" )
     >
-  | <DIGITS : (<DIGIT>)+ >
+  | <#DIGITS : (<DIGIT>)+ >
 }
 
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
     <#LETTER : ["A" - "Z", "a" - "z"]>
-  | <#IDENTIFIER_SPECIALCHARS_START : ["_"]>
-  | <#IDENTIFIER_SPECIALCHARS_REST : ["$"]>
+  | <#IDENTIFIER_START_SPECIALCHAR : ["_"]>
+  | <#IDENTIFIER_REST_SPECIALCHAR : ["$"]>
+  | <#IDENTIFIER_START : <LETTER> | <IDENTIFIER_START_SPECIALCHAR> >
+  | <#IDENTIFIER_REST  : <LETTER> | <DIGIT> | <IDENTIFIER_START_SPECIALCHAR> | <IDENTIFIER_REST_SPECIALCHAR> >
+  | <IDENTIFIER : <IDENTIFIER_START> (<IDENTIFIER_REST>)* >
 }
 
 <DEFAULT,IN_DBL_BRACE>
@@ -4832,8 +4971,9 @@ TOKEN :
 <DEFAULT,IN_DBL_BRACE>
 TOKEN :
 {
-    <IDENTIFIER : ( <LETTER> | <IDENTIFIER_SPECIALCHARS_START> )
-                  ( <LETTER> | <DIGIT> | <IDENTIFIER_SPECIALCHARS_START> | <IDENTIFIER_SPECIALCHARS_REST> )*>
+    <DOLLAR_INTEGER_LITERAL : "$" <INTEGER_LITERAL> >
+  | <DOLLAR_IDENTIFIER : "$" <IDENTIFIER> >
+  | <DOLLAR_QUOTED_STRING: "$" <QUOTED_STRING> >
 }
 
 <DEFAULT,IN_DBL_BRACE>

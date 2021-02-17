@@ -9,12 +9,12 @@
                 -- ASSIGN  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- HYBRID_HASH_JOIN [$$91][$$92]  |PARTITIONED|
+                      -- HYBRID_HASH_JOIN [$$85][$$86]  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH  |PARTITIONED|
+                                -- BTREE_SEARCH (test.tenk.tenk)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- ASSIGN  |PARTITIONED|
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
@@ -22,7 +22,7 @@
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH  |PARTITIONED|
+                                -- BTREE_SEARCH (test.tenk.tenk)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- ASSIGN  |PARTITIONED|
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

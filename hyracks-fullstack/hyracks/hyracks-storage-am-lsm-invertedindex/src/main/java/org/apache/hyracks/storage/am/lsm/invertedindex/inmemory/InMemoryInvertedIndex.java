@@ -35,6 +35,7 @@ import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.IFullTextConfigEvaluatorFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
@@ -50,6 +51,7 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
     protected final ITypeTraits[] invListTypeTraits;
     protected final IBinaryComparatorFactory[] invListCmpFactories;
     protected final IBinaryTokenizerFactory tokenizerFactory;
+    protected final IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory;
 
     protected final ITypeTraits[] btreeTypeTraits;
     protected final IBinaryComparatorFactory[] btreeCmpFactories;
@@ -57,12 +59,14 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
     public InMemoryInvertedIndex(IBufferCache virtualBufferCache, IPageManager virtualFreePageManager,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
-            IBinaryTokenizerFactory tokenizerFactory, FileReference btreeFileRef) throws HyracksDataException {
+            IBinaryTokenizerFactory tokenizerFactory, IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory,
+            FileReference btreeFileRef) throws HyracksDataException {
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         this.invListTypeTraits = invListTypeTraits;
         this.invListCmpFactories = invListCmpFactories;
         this.tokenizerFactory = tokenizerFactory;
+        this.fullTextConfigEvaluatorFactory = fullTextConfigEvaluatorFactory;
         // BTree tuples: <tokens, inverted-list elements>.
         int numBTreeFields = tokenTypeTraits.length + invListTypeTraits.length;
         btreeTypeTraits = new ITypeTraits[numBTreeFields];
@@ -174,7 +178,8 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
     @Override
     public InMemoryInvertedIndexAccessor createAccessor(IIndexAccessParameters iap) throws HyracksDataException {
         return new InMemoryInvertedIndexAccessor(this,
-                new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory),
+                new InMemoryInvertedIndexOpContext(btree, tokenCmpFactories, tokenizerFactory,
+                        fullTextConfigEvaluatorFactory),
                 (IHyracksTaskContext) iap.getParameters().get(HyracksConstants.HYRACKS_TASK_CONTEXT));
     }
 

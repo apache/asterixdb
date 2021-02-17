@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.IFullTextConfigEvaluator;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IToken;
 
@@ -32,28 +33,33 @@ public class PartitionedInvertedIndexTokenizingTupleIterator extends InvertedInd
     protected short numTokens = 0;
 
     public PartitionedInvertedIndexTokenizingTupleIterator(int tokensFieldCount, int invListFieldCount,
-            IBinaryTokenizer tokenizer) {
-        super(tokensFieldCount, invListFieldCount, tokenizer);
+            IBinaryTokenizer tokenizer, IFullTextConfigEvaluator fullTextConfigEvaluator) {
+        super(tokensFieldCount, invListFieldCount, tokenizer, fullTextConfigEvaluator);
     }
 
+    @Override
     public void reset(ITupleReference inputTuple) {
         super.reset(inputTuple);
         // Run through the tokenizer once to get the total number of tokens.
         numTokens = 0;
-        while (tokenizer.hasNext()) {
-            tokenizer.next();
+        while (fullTextConfigEvaluator.hasNext()) {
+            fullTextConfigEvaluator.next();
             numTokens++;
         }
         super.reset(inputTuple);
     }
 
+    @Override
     public void next() throws HyracksDataException {
-        tokenizer.next();
-        IToken token = tokenizer.getToken();
+        fullTextConfigEvaluator.next();
+        IToken token = fullTextConfigEvaluator.getToken();
+
         tupleBuilder.reset();
         try {
             // Add token field.
             token.serializeToken(tupleBuilder.getFieldData());
+
+            // Different from super.next(): here we write the numTokens
             tupleBuilder.addFieldEndOffset();
             // Add field with number of tokens.
             tupleBuilder.getDataOutput().writeShort(numTokens);
@@ -61,6 +67,7 @@ public class PartitionedInvertedIndexTokenizingTupleIterator extends InvertedInd
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+
         // Add inverted-list element fields.
         for (int i = 0; i < invListFieldCount; i++) {
             tupleBuilder.addField(inputTuple.getFieldData(i + 1), inputTuple.getFieldStart(i + 1),

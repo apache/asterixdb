@@ -155,6 +155,66 @@ public interface IMetadataLockManager {
             throws AlgebricksException;
 
     /**
+     * Acquire read lock on the full-text config
+     *
+     * @param locks
+     *            the lock list to add the new lock to
+     * @param dataverseName
+     *            the dataverse name
+     * @param fullTextConfigName
+     *            the name of the full-text config in the given dataverse
+     * @throws AlgebricksException
+     *             if lock couldn't be acquired
+     */
+    void acquireFullTextConfigReadLock(LockList locks, DataverseName dataverseName, String fullTextConfigName)
+            throws AlgebricksException;
+
+    /**
+     * Acquire write lock on the full-text config
+     *
+     * @param locks
+     *            the lock list to add the new lock to
+     * @param dataverseName
+     *            the dataverse name
+     * @param fullTextConfigName
+     *            the name of the full-text config in the given dataverse
+     * @throws AlgebricksException
+     *             if lock couldn't be acquired
+     */
+    void acquireFullTextConfigWriteLock(LockList locks, DataverseName dataverseName, String fullTextConfigName)
+            throws AlgebricksException;
+
+    /**
+     * Acquire read lock on the full-text filter
+     *
+     * @param locks
+     *            the lock list to add the new lock to
+     * @param dataverseName
+     *            the dataverse name
+     * @param fullTextFilterName
+     *            the name of the full-text filter in the given dataverse
+     * @throws AlgebricksException
+     *             if lock couldn't be acquired
+     */
+    void acquireFullTextFilterReadLock(LockList locks, DataverseName dataverseName, String fullTextFilterName)
+            throws AlgebricksException;
+
+    /**
+     * Acquire write lock on the full-text filter
+     *
+     * @param locks
+     *            the lock list to add the new lock to
+     * @param dataverseName
+     *            the dataverse name
+     * @param fullTextFilterName
+     *            the name of the full-text filter in the given dataverse
+     * @throws AlgebricksException
+     *             if lock couldn't be acquired
+     */
+    void acquireFullTextFilterWriteLock(LockList locks, DataverseName dataverseName, String fullTextFilterName)
+            throws AlgebricksException;
+
+    /**
      * Acquire read lock on the library
      *
      * @param locks

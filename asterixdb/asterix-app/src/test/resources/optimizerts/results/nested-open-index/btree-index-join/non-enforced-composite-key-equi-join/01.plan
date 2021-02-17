@@ -4,18 +4,18 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- HYBRID_HASH_JOIN [$$31][$$32]  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$31]  |PARTITIONED|
+            -- HYBRID_HASH_JOIN [$$33][$$34]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$33]  |PARTITIONED|
                 -- ASSIGN  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN  |PARTITIONED|
+                      -- DATASOURCE_SCAN (test.ds1)  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$32]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
                 -- ASSIGN  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN  |PARTITIONED|
+                      -- DATASOURCE_SCAN (test.ds2)  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

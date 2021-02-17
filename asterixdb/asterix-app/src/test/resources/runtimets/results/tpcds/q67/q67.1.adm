@@ -1,0 +1,47 @@
+{ "i_category": null, "i_class": null, "i_brand": null, "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 6144.62 }
+{ "i_category": "Home", "i_class": null, "i_brand": null, "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 699.3 }
+{ "i_category": "Home", "i_class": "decor", "i_brand": null, "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 699.3 }
+{ "i_category": "Home", "i_class": "decor", "i_brand": "brandbrand #4", "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 699.3 }
+{ "i_category": "Home", "i_class": "decor", "i_brand": "brandbrand #4", "i_product_name": "pri", "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 699.3 }
+{ "i_category": "Home", "i_class": "decor", "i_brand": "brandbrand #4", "i_product_name": "pri", "d_year": 1998, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 699.3 }
+{ "i_category": "Home", "i_class": "decor", "i_brand": "brandbrand #4", "i_product_name": "pri", "d_year": 1998, "d_qoy": 1, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 699.3 }
+{ "i_category": "Home", "i_class": "decor", "i_brand": "brandbrand #4", "i_product_name": "pri", "d_year": 1998, "d_qoy": 1, "d_moy": 12, "s_store_id": null, "rk": 1, "sumsales": 699.3 }
+{ "i_category": "Home", "i_class": "decor", "i_brand": "brandbrand #4", "i_product_name": "pri", "d_year": 1998, "d_qoy": 1, "d_moy": 12, "s_store_id": "AAAAAAAACAAAAAAA", "rk": 1, "sumsales": 699.3 }
+{ "i_category": "Jewelry", "i_class": null, "i_brand": null, "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 3735.3 }
+{ "i_category": "Jewelry", "i_class": "costume", "i_brand": null, "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 9, "sumsales": 251.94 }
+{ "i_category": "Jewelry", "i_class": "costume", "i_brand": "importobrand #6", "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 9, "sumsales": 251.94 }
+{ "i_category": "Jewelry", "i_class": "costume", "i_brand": "importobrand #6", "i_product_name": "priought", "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 9, "sumsales": 251.94 }
+{ "i_category": "Jewelry", "i_class": "costume", "i_brand": "importobrand #6", "i_product_name": "priought", "d_year": 1998, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 9, "sumsales": 251.94 }
+{ "i_category": "Jewelry", "i_class": "costume", "i_brand": "importobrand #6", "i_product_name": "priought", "d_year": 1998, "d_qoy": 1, "d_moy": null, "s_store_id": null, "rk": 9, "sumsales": 251.94 }
+{ "i_category": "Jewelry", "i_class": "costume", "i_brand": "importobrand #6", "i_product_name": "priought", "d_year": 1998, "d_qoy": 1, "d_moy": 12, "s_store_id": null, "rk": 9, "sumsales": 251.94 }
+{ "i_category": "Jewelry", "i_class": "costume", "i_brand": "importobrand #6", "i_product_name": "priought", "d_year": 1998, "d_qoy": 1, "d_moy": 12, "s_store_id": "AAAAAAAAEAAAAAAA", "rk": 9, "sumsales": 251.94 }
+{ "i_category": "Jewelry", "i_class": "estate", "i_brand": null, "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 2, "sumsales": 3483.36 }
+{ "i_category": "Jewelry", "i_class": "estate", "i_brand": "edu packbrand #4", "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 2, "sumsales": 3483.36 }
+{ "i_category": "Jewelry", "i_class": "estate", "i_brand": "edu packbrand #4", "i_product_name": "oughtought", "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 2, "sumsales": 3483.36 }
+{ "i_category": "Jewelry", "i_class": "estate", "i_brand": "edu packbrand #4", "i_product_name": "oughtought", "d_year": 2001, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 2, "sumsales": 3483.36 }
+{ "i_category": "Jewelry", "i_class": "estate", "i_brand": "edu packbrand #4", "i_product_name": "oughtought", "d_year": 2001, "d_qoy": 1, "d_moy": null, "s_store_id": null, "rk": 2, "sumsales": 3483.36 }
+{ "i_category": "Jewelry", "i_class": "estate", "i_brand": "edu packbrand #4", "i_product_name": "oughtought", "d_year": 2001, "d_qoy": 1, "d_moy": 12, "s_store_id": null, "rk": 2, "sumsales": 3483.36 }
+{ "i_category": "Jewelry", "i_class": "estate", "i_brand": "edu packbrand #4", "i_product_name": "oughtought", "d_year": 2001, "d_qoy": 1, "d_moy": 12, "s_store_id": "AAAAAAAACAAAAAAA", "rk": 2, "sumsales": 3483.36 }
+{ "i_category": "Men", "i_class": null, "i_brand": null, "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 1685.62 }
+{ "i_category": "Men", "i_class": "pants", "i_brand": null, "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 2, "sumsales": 1678.32 }
+{ "i_category": "Men", "i_class": "pants", "i_brand": "exportiimporto #1", "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 2, "sumsales": 1678.32 }
+{ "i_category": "Men", "i_class": "pants", "i_brand": "exportiimporto #1", "i_product_name": "cally", "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 2, "sumsales": 1678.32 }
+{ "i_category": "Men", "i_class": "pants", "i_brand": "exportiimporto #1", "i_product_name": "cally", "d_year": 1999, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 2, "sumsales": 1678.32 }
+{ "i_category": "Men", "i_class": "pants", "i_brand": "exportiimporto #1", "i_product_name": "cally", "d_year": 1999, "d_qoy": 1, "d_moy": null, "s_store_id": null, "rk": 2, "sumsales": 1678.32 }
+{ "i_category": "Men", "i_class": "pants", "i_brand": "exportiimporto #1", "i_product_name": "cally", "d_year": 1999, "d_qoy": 1, "d_moy": 11, "s_store_id": null, "rk": 2, "sumsales": 1678.32 }
+{ "i_category": "Men", "i_class": "pants", "i_brand": "exportiimporto #1", "i_product_name": "cally", "d_year": 1999, "d_qoy": 1, "d_moy": 11, "s_store_id": "AAAAAAAACAAAAAAA", "rk": 2, "sumsales": 1678.32 }
+{ "i_category": "Men", "i_class": "shirts", "i_brand": null, "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 9, "sumsales": 7.3 }
+{ "i_category": "Men", "i_class": "shirts", "i_brand": "importoimporto #2", "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 9, "sumsales": 7.3 }
+{ "i_category": "Men", "i_class": "shirts", "i_brand": "importoimporto #2", "i_product_name": "anti", "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 9, "sumsales": 7.3 }
+{ "i_category": "Men", "i_class": "shirts", "i_brand": "importoimporto #2", "i_product_name": "anti", "d_year": 1999, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 9, "sumsales": 7.3 }
+{ "i_category": "Men", "i_class": "shirts", "i_brand": "importoimporto #2", "i_product_name": "anti", "d_year": 1999, "d_qoy": 1, "d_moy": null, "s_store_id": null, "rk": 9, "sumsales": 7.3 }
+{ "i_category": "Men", "i_class": "shirts", "i_brand": "importoimporto #2", "i_product_name": "anti", "d_year": 1999, "d_qoy": 1, "d_moy": 11, "s_store_id": null, "rk": 9, "sumsales": 7.3 }
+{ "i_category": "Men", "i_class": "shirts", "i_brand": "importoimporto #2", "i_product_name": "anti", "d_year": 1999, "d_qoy": 1, "d_moy": 11, "s_store_id": "AAAAAAAAEAAAAAAA", "rk": 9, "sumsales": 7.3 }
+{ "i_category": "Women", "i_class": null, "i_brand": null, "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 24.4 }
+{ "i_category": "Women", "i_class": "Jewelry", "i_brand": null, "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 24.4 }
+{ "i_category": "Women", "i_class": "Jewelry", "i_brand": "importoexporti #1", "i_product_name": null, "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 24.4 }
+{ "i_category": "Women", "i_class": "Jewelry", "i_brand": "importoexporti #1", "i_product_name": "ese", "d_year": null, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 24.4 }
+{ "i_category": "Women", "i_class": "Jewelry", "i_brand": "importoexporti #1", "i_product_name": "ese", "d_year": 1998, "d_qoy": null, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 24.4 }
+{ "i_category": "Women", "i_class": "Jewelry", "i_brand": "importoexporti #1", "i_product_name": "ese", "d_year": 1998, "d_qoy": 1, "d_moy": null, "s_store_id": null, "rk": 1, "sumsales": 24.4 }
+{ "i_category": "Women", "i_class": "Jewelry", "i_brand": "importoexporti #1", "i_product_name": "ese", "d_year": 1998, "d_qoy": 1, "d_moy": 12, "s_store_id": null, "rk": 1, "sumsales": 24.4 }
+{ "i_category": "Women", "i_class": "Jewelry", "i_brand": "importoexporti #1", "i_product_name": "ese", "d_year": 1998, "d_qoy": 1, "d_moy": 12, "s_store_id": "AAAAAAAAEAAAAAAA", "rk": 1, "sumsales": 24.4 }

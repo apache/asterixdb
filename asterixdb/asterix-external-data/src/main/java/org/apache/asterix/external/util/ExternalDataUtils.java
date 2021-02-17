@@ -18,10 +18,17 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_KEY_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_NAME_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.BLOB_ENDPOINT_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ACCOUNT_KEY;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ACCOUNT_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_BLOB_ENDPOINT;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ENDPOINT_SUFFIX;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_SHARED_ACCESS_SIGNATURE;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ENDPOINT_SUFFIX_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
@@ -36,7 +43,6 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.regex.Matcher;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -85,8 +91,12 @@ import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Response;
 
 public class ExternalDataUtils {
 
@@ -185,8 +195,8 @@ public class ExternalDataUtils {
         }
     }
 
-    public static DataverseName getDataverse(Map<String, String> configuration) {
-        return DataverseName.createFromCanonicalForm(configuration.get(ExternalDataConstants.KEY_DATAVERSE));
+    public static DataverseName getDatasetDataverse(Map<String, String> configuration) {
+        return DataverseName.createFromCanonicalForm(configuration.get(ExternalDataConstants.KEY_DATASET_DATAVERSE));
     }
 
     public static String getParserFactory(Map<String, String> configuration) {
@@ -311,7 +321,7 @@ public class ExternalDataUtils {
         if (!configuration.containsKey(ExternalDataConstants.KEY_IS_FEED)) {
             configuration.put(ExternalDataConstants.KEY_IS_FEED, ExternalDataConstants.TRUE);
         }
-        configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataverseName.getCanonicalForm());
+        configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE, dataverseName.getCanonicalForm());
         configuration.put(ExternalDataConstants.KEY_FEED_NAME, feedName);
     }
 
@@ -516,7 +526,7 @@ public class ExternalDataUtils {
 
         switch (type) {
             case ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3:
-                ExternalDataUtils.AwsS3.validateProperties(configuration, srcLoc, collector);
+                AwsS3.validateProperties(configuration, srcLoc, collector);
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
                 ExternalDataUtils.Azure.validateProperties(configuration, srcLoc, collector);
@@ -637,7 +647,7 @@ public class ExternalDataUtils {
      * @param configuration configuration
      */
     public static String getPrefix(Map<String, String> configuration) {
-        String definition = configuration.get(ExternalDataConstants.AzureBlob.DEFINITION_FIELD_NAME);
+        String definition = configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
         if (definition != null && !definition.isEmpty()) {
             return definition + (!definition.endsWith("/") ? "/" : "");
         }
@@ -727,17 +737,7 @@ public class ExternalDataUtils {
             }
 
             builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
-
-            // Validate the region
-            List<Region> supportedRegions = S3Client.serviceMetadata().regions();
-            Optional<Region> selectedRegion =
-                    supportedRegions.stream().filter(region -> region.id().equalsIgnoreCase(regionId)).findFirst();
-
-            if (!selectedRegion.isPresent()) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR,
-                        String.format("region %s is not supported", regionId));
-            }
-            builder.region(selectedRegion.get());
+            builder.region(Region.of(regionId));
 
             // Validate the service endpoint if present
             if (serviceEndpoint != null) {
@@ -774,26 +774,26 @@ public class ExternalDataUtils {
             validateIncludeExclude(configuration);
 
             // Check if the bucket is present
-            S3Client s3Client = null;
+            S3Client s3Client = buildAwsS3Client(configuration);;
+            S3Response response;
+            boolean useOldApi = false;
+            String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
+            String prefix = getPrefix(configuration);
+
             try {
-                String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
-                s3Client = buildAwsS3Client(configuration);
-                ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder();
-                listObjectsBuilder.prefix(getPrefix(configuration));
-
-                ListObjectsV2Response response =
-                        s3Client.listObjectsV2(listObjectsBuilder.bucket(container).maxKeys(1).build());
-
-                if (response.contents().isEmpty() && collector.shouldWarn()) {
-                    Warning warning =
-                            WarningUtil.forAsterix(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
-                    collector.warn(warning);
-                }
-
-                // Returns 200 only in case the bucket exists, however, otherwise, throws an exception. However, to
-                // ensure coverage, check if the result is successful as well and not only catch exceptions
-                if (!response.sdkHttpResponse().isSuccessful()) {
-                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, container);
+                response = isBucketEmpty(s3Client, container, prefix, false);
+            } catch (S3Exception ex) {
+                // Method not implemented, try falling back to old API
+                try {
+                    // For error code, see https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
+                    if (ex.awsErrorDetails().errorCode().equals("NotImplemented")) {
+                        useOldApi = true;
+                        response = isBucketEmpty(s3Client, container, prefix, true);
+                    } else {
+                        throw ex;
+                    }
+                } catch (SdkException ex2) {
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex2.getMessage());
                 }
             } catch (SdkException ex) {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
@@ -802,6 +802,44 @@ public class ExternalDataUtils {
                     CleanupUtils.close(s3Client, null);
                 }
             }
+
+            boolean isEmpty = useOldApi ? ((ListObjectsResponse) response).contents().isEmpty()
+                    : ((ListObjectsV2Response) response).contents().isEmpty();
+            if (isEmpty && collector.shouldWarn()) {
+                Warning warning =
+                        WarningUtil.forAsterix(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                collector.warn(warning);
+            }
+
+            // Returns 200 only in case the bucket exists, otherwise, throws an exception. However, to
+            // ensure coverage, check if the result is successful as well and not only catch exceptions
+            if (!response.sdkHttpResponse().isSuccessful()) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, container);
+            }
+        }
+
+        /**
+         * Checks for a single object in the specified bucket to determine if the bucket is empty or not.
+         *
+         * @param s3Client s3 client
+         * @param container the container name
+         * @param prefix Prefix to be used
+         * @param useOldApi flag whether to use the old API or not
+         *
+         * @return returns the S3 response
+         */
+        private static S3Response isBucketEmpty(S3Client s3Client, String container, String prefix, boolean useOldApi) {
+            S3Response response;
+            if (useOldApi) {
+                ListObjectsRequest.Builder listObjectsBuilder = ListObjectsRequest.builder();
+                listObjectsBuilder.prefix(prefix);
+                response = s3Client.listObjects(listObjectsBuilder.bucket(container).maxKeys(1).build());
+            } else {
+                ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder();
+                listObjectsBuilder.prefix(prefix);
+                response = s3Client.listObjectsV2(listObjectsBuilder.bucket(container).maxKeys(1).build());
+            }
+            return response;
         }
     }
 
@@ -819,25 +857,70 @@ public class ExternalDataUtils {
         public static BlobServiceClient buildAzureClient(Map<String, String> configuration)
                 throws CompilationException {
             // TODO(Hussain): Need to ensure that all required parameters are present in a previous step
-            String accountName = configuration.get(ExternalDataConstants.AzureBlob.ACCOUNT_NAME_FIELD_NAME);
-            String accountKey = configuration.get(ExternalDataConstants.AzureBlob.ACCOUNT_KEY_FIELD_NAME);
-            String blobEndpoint = configuration.get(ExternalDataConstants.AzureBlob.BLOB_ENDPOINT_FIELD_NAME);
-            String endpointSuffix = configuration.get(ExternalDataConstants.AzureBlob.ENDPOINT_SUFFIX_FIELD_NAME);
+            String connectionString = configuration.get(CONNECTION_STRING_FIELD_NAME);
+            String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
+            String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
+            String sharedAccessSignature = configuration.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
+            String blobEndpoint = configuration.get(BLOB_ENDPOINT_FIELD_NAME);
+            String endpointSuffix = configuration.get(ENDPOINT_SUFFIX_FIELD_NAME);
 
-            // format: name1=value1;name2=value2;....
-            // TODO(Hussain): This will be different when SAS (Shared Access Signature) is introduced
-            StringBuilder connectionString = new StringBuilder();
-            connectionString.append(CONNECTION_STRING_ACCOUNT_NAME).append("=").append(accountName).append(";");
-            connectionString.append(CONNECTION_STRING_ACCOUNT_KEY).append("=").append(accountKey).append(";");
-            connectionString.append(CONNECTION_STRING_BLOB_ENDPOINT).append("=").append(blobEndpoint).append(";");
+            // Constructor the connection string
+            // Connection string format: name1=value1;name2=value2;....
+            StringBuilder connectionStringBuilder = new StringBuilder();
+            BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
 
-            if (endpointSuffix != null) {
-                connectionString.append(CONNECTION_STRING_ENDPOINT_SUFFIX).append("=").append(endpointSuffix)
+            boolean authMethodFound = false;
+
+            if (connectionString != null) {
+                // connection string
+                authMethodFound = true;
+                connectionStringBuilder.append(connectionString).append(";");
+            }
+
+            if (accountName != null && accountKey != null) {
+                if (authMethodFound) {
+                    throw new CompilationException(ErrorCode.ONLY_SINGLE_AUTHENTICATION_IS_ALLOWED);
+                }
+                authMethodFound = true;
+                // account name + account key
+                connectionStringBuilder.append(CONNECTION_STRING_ACCOUNT_NAME).append("=").append(accountName)
+                        .append(";").append(CONNECTION_STRING_ACCOUNT_KEY).append("=").append(accountKey).append(";");
+            }
+
+            if (accountName != null && sharedAccessSignature != null) {
+                if (authMethodFound) {
+                    throw new CompilationException(ErrorCode.ONLY_SINGLE_AUTHENTICATION_IS_ALLOWED);
+                }
+                authMethodFound = true;
+                // account name + shared access token
+                connectionStringBuilder.append(CONNECTION_STRING_ACCOUNT_NAME).append("=").append(accountName)
+                        .append(";").append(CONNECTION_STRING_SHARED_ACCESS_SIGNATURE).append("=")
+                        .append(sharedAccessSignature).append(";");
+            }
+
+            if (!authMethodFound) {
+                throw new CompilationException(ErrorCode.NO_AUTH_METHOD_PROVIDED);
+            }
+
+            // Add blobEndpoint and endpointSuffix if present, adjust any '/' as needed
+            if (blobEndpoint != null) {
+                connectionStringBuilder.append(CONNECTION_STRING_BLOB_ENDPOINT).append("=").append(blobEndpoint)
                         .append(";");
+                if (endpointSuffix != null) {
+                    String endpointSuffixUpdated;
+                    if (blobEndpoint.endsWith("/")) {
+                        endpointSuffixUpdated =
+                                endpointSuffix.startsWith("/") ? endpointSuffix.substring(1) : endpointSuffix;
+                    } else {
+                        endpointSuffixUpdated = endpointSuffix.startsWith("/") ? endpointSuffix : "/" + endpointSuffix;
+                    }
+                    connectionStringBuilder.append(CONNECTION_STRING_ENDPOINT_SUFFIX).append("=")
+                            .append(endpointSuffixUpdated).append(";");
+                }
             }
 
             try {
-                return new BlobServiceClientBuilder().connectionString(connectionString.toString()).buildClient();
+                return builder.connectionString(connectionStringBuilder.toString()).buildClient();
             } catch (Exception ex) {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
             }
@@ -876,6 +959,8 @@ public class ExternalDataUtils {
                             WarningUtil.forAsterix(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
                     collector.warn(warning);
                 }
+            } catch (CompilationException ex) {
+                throw ex;
             } catch (Exception ex) {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
             }

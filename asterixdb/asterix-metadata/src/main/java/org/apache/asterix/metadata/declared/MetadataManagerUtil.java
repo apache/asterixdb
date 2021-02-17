@@ -34,6 +34,8 @@ import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
+import org.apache.asterix.metadata.entities.FullTextConfigMetadataEntity;
+import org.apache.asterix.metadata.entities.FullTextFilterMetadataEntity;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.entities.Synonym;
@@ -43,6 +45,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
+
+import com.google.common.base.Strings;
 
 public class MetadataManagerUtil {
 
@@ -146,6 +150,21 @@ public class MetadataManagerUtil {
     public static Synonym findSynonym(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
             String synonymName) throws AlgebricksException {
         return MetadataManager.INSTANCE.getSynonym(mdTxnCtx, dataverseName, synonymName);
+    }
+
+    public static FullTextConfigMetadataEntity findFullTextConfigDescriptor(MetadataTransactionContext mdTxnCtx,
+            DataverseName dataverseName, String ftConfigName) throws AlgebricksException {
+        // If the config name is null, then the default config will be returned
+        if (Strings.isNullOrEmpty(ftConfigName)) {
+            return FullTextConfigMetadataEntity.getDefaultFullTextConfigMetadataEntity();
+        }
+
+        return MetadataManager.INSTANCE.getFullTextConfig(mdTxnCtx, dataverseName, ftConfigName);
+    }
+
+    public static FullTextFilterMetadataEntity findFullTextFilterDescriptor(MetadataTransactionContext mdTxnCtx,
+            DataverseName dataverseName, String ftFilterName) throws AlgebricksException {
+        return MetadataManager.INSTANCE.getFullTextFilter(mdTxnCtx, dataverseName, ftFilterName);
     }
 
     public static List<Index> getDatasetIndexes(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,

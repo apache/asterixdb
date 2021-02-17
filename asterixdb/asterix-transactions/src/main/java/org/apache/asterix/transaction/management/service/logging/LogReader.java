@@ -163,7 +163,7 @@ public class LogReader implements ILogReader {
      */
     private boolean refillLogReadBuffer() {
         try {
-            if (readLSN % logFileSize == logFile.size()) {
+            if (logFile.size() > 0 && readLSN % logFileSize == logFile.size()) {
                 readLSN += logFileSize - (readLSN % logFileSize);
                 getLogFile();
             }

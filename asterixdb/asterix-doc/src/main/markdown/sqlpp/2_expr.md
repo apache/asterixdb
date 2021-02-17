@@ -190,8 +190,8 @@ The following table demonstrates the results of `NOT` on all possible inputs.
 
 ### QuantifiedExpr
 **![](../images/diagrams/QuantifiedExpr.png)**
-##### Synonym for `SOME`: `ANY` 
- 
+##### Synonym for `SOME`: `ANY`
+
 ---
 
 Quantified expressions are used for expressing existential or universal predicates involving the elements of a collection.
@@ -207,7 +207,7 @@ Otherwise, a type error will be raised if the first expression in a quantified e
 ##### Examples
 
     EVERY x IN [ 1, 2, 3 ] SATISFIES x < 3		Returns FALSE
-    SOME x IN [ 1, 2, 3 ] SATISFIES x < 3		Returns TRUE	
+    SOME x IN [ 1, 2, 3 ] SATISFIES x < 3		Returns TRUE
 
 
 ## <a id="Path_expressions">Path Expressions</a>
@@ -242,7 +242,7 @@ and also a composition thereof.
     ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array						Returns [["a", "b", "c"]]
 
     (["a", "b", "c"])[2]										Returns ["c"]
-    
+
     (["a", "b", "c"])[-1]										Returns ["c"]
 
     ({"name": "MyABCs", "array": [ "a", "b", "c"]}).array[2]					Returns ["c"]
@@ -250,7 +250,7 @@ and also a composition thereof.
     (["a", "b", "c"])[0:2]										Returns [["a", "b"]]
 
     (["a", "b", "c"])[0:]										Returns [["a", "b", "c"]]
-    
+
     (["a", "b", "c"])[-2:-1]									Returns [["b"]]
 
 
@@ -279,7 +279,7 @@ array, or multiset of data model instances).
 
 The simplest kind of expression is a literal that directly represents a value in JSON format. Here are some examples:
 
-  
+
 
 	-42
 	"Hello"
@@ -287,18 +287,18 @@ The simplest kind of expression is a literal that directly represents a value in
 	false
 	null
 
- 
+
 Numeric literals may include a sign and an optional decimal point. They may also be written in exponential notation, like this:
 
-  
+
 	5e2
 	-4.73E-2
 
-  
+
 
 String literals may be enclosed in either single quotes or double quotes. Inside a string literal, the delimiter character for that string must be "escaped" by a backward slash, as in these examples:
 
-  
+
 
 	"I read \"War and Peace\" today."
 	'I don\'t believe everything I read.'
@@ -321,7 +321,7 @@ The table below shows how to escape characters in SQL++
 
 ### <a id="Variable_references">Identifiers and Variable References</a>
 
- 
+
 Like SQL, SQL++ makes use of a language construct called an *identifier*. An identifier starts with an alphabetic character or the underscore character _ , and contains only case-sensitive alphabetic characters, numeric digits, or the special characters _ and $. It is also possible for an identifier to include other special characters, or to be the same as a reserved word, by enclosing the identifier in back-ticks (it's then called a *delimited identifier*). Identifiers are used in variable names and in certain other places in SQL++ syntax, such as in path expressions, which we'll discuss soon. Here are some examples of identifiers:
 
 	X
@@ -330,7 +330,7 @@ Like SQL, SQL++ makes use of a language construct called an *identifier*. An ide
 	`spaces in here`
 	`@&#`
 
- 
+
 A very simple kind of SQL++ expression is a variable, which is simply an identifier. As in SQL, a variable can be bound to a value, which may be an input dataset, some intermediate result during processing of a query, or the final result of a query. We'll learn more about variables when we discuss queries.
 
 Note that the SQL++ rules for delimiting strings and identifiers are different from the SQL rules. In SQL, strings are always enclosed in single quotes, and double quotes are used for delimited identifiers.
@@ -390,6 +390,9 @@ The following expression evaluates to the value 2.
 ### AggregateFunctionCall
 **![](../images/diagrams/AggregateFunctionCall.png)**
 
+### DataverseName
+**![](../images/diagrams/DataverseName.png)**
+
 ---
 
 Functions are included in SQL++, like most languages, as a way to package useful functionality or to
@@ -399,6 +402,8 @@ expression with the given parameter bindings; the parameter value bindings can t
 
 Note that Window functions, and aggregate functions used as window functions, have a more complex syntax.
 Window function calls are described in the section on [Window Queries](#Over_clauses).
+
+Also note that FILTER expressions can only be specified when calling [Aggregation Pseudo-Functions](#Aggregation_PseudoFunctions).
 
 The following example is a function call expression whose value is 8.
 
@@ -453,16 +458,16 @@ The following example illustrates the form of a case expression.
 Structured JSON values can be represented by constructors, as in these examples:
 
 	An object: { "name": "Bill", "age": 42 }
-	An array: [ 1, 2, "Hello", null ]  
-  
+	An array: [ 1, 2, "Hello", null ]
+
 In a constructed object, the names of the fields must be strings (either literal strings or computed strings), and an object may not contain any duplicate names. Of course, structured literals can be nested, as in this example:
 
-  
+
 
 	[ {"name": "Bill",
 	   "address":
 	      {"street": "25 Main St.",
-	       "city": "Cincinnati, OH"  
+	       "city": "Cincinnati, OH"
 	      }
 	  },
 	  {"name": "Mary",
@@ -473,33 +478,33 @@ In a constructed object, the names of the fields must be strings (either literal
 	   }
 	]
 
-  
+
 
 The array items in an array constructor, and the field-names and field-values in an object constructor, may be represented by expressions. For example, suppose that the variables firstname, lastname, salary, and bonus are bound to appropriate values. Then structured values might be constructed by the following expressions:
 
-  
+
 
 An object:
 
-	{ 
-	  "name": firstname || " " || lastname,  
-	  "income": salary + bonus  
+	{
+	  "name": firstname || " " || lastname,
+	  "income": salary + bonus
 	}
 
-  
+
 An array:
 
 	["1984", lastname, salary + bonus, null]
 
 
 If only one expression is specified instead of the field-name/field-value pair in an object constructor then this
-expression is supposed to provide the field value. The field name is then automatically generated based on the 
+expression is supposed to provide the field value. The field name is then automatically generated based on the
 kind of the value expression as in Q2.1:
 
   * If it is a variable reference expression then the generated field name is the name of that variable.
   * If it is a field access expression then the generated field name is the last identifier in that expression.
   * For all other cases, a compilation error will be raised.
- 
+
 
 ##### Example
 (Q2.1)

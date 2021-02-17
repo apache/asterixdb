@@ -1,4 +1,5 @@
 DataverseUse test
+Set compiler.internal.sanitycheck=false
 Query:
 SELECT ELEMENT [
 RecordConstructor [

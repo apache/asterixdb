@@ -1,0 +1,50 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+insert into RawTweet ([
+  { "id" : 1, "full_text": "text_1" }, -- total evidence : 2
+  { "id" : 2, "full_text": "text_2" }, -- total evidence : 4 (*) -- satisfies the query
+  { "id" : 3, "full_text": "text_3" }, -- total evidence : 0
+  { "id" : 4, "full_text": "text_4" }, -- total evidence : 6 (*) -- satisfies the query
+  { "id" : 5, "full_text": "text_5" }  -- total evidence : 1
+  ]);
+
+insert into Verification ([
+  { "ver_id" : 1001, "tweet_id": 1, "evidence": [ 2001, 2002 ] },
+  { "ver_id" : 1002, "tweet_id": 2, "evidence": [ 2003, 2004 ] },
+  { "ver_id" : 1003, "tweet_id": 2, "evidence": [ 2009, 2010 ] },
+  { "ver_id" : 1004, "tweet_id": 4, "evidence": [ 2004, 2005, 2006 ] },
+  { "ver_id" : 1005, "tweet_id": 4, "evidence": [ 2007, 2008, 2009 ] },
+  { "ver_id" : 1006, "tweet_id": 5, "evidence": [ 2001 ] }
+]);
+
+insert into Evidence ([
+  { "ev_id" : 2001, "url": "http://example.org/2001" },
+  { "ev_id" : 2002, "url": "http://example.org/2002" },
+  { "ev_id" : 2003, "url": "http://example.org/2003" },
+  { "ev_id" : 2004, "url": "http://example.org/2004" },
+  { "ev_id" : 2005, "url": "http://example.org/2005" },
+  { "ev_id" : 2006, "url": "http://example.org/2006" },
+  { "ev_id" : 2007, "url": "http://example.org/2007" },
+  { "ev_id" : 2008, "url": "http://example.org/2008" },
+  { "ev_id" : 2009, "url": "http://example.org/2009" },
+  { "ev_id" : 2010, "url": "http://example.org/2010" }
+]);
