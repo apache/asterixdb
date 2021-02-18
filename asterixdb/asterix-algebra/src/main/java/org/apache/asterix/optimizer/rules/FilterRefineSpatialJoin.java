@@ -36,12 +36,9 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-public class STIntersectsRule implements IAlgebraicRewriteRule {
+public class FilterRefineSpatialJoin implements IAlgebraicRewriteRule {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final int LEFT = 0;
     private static final int RIGHT = 1;
 
@@ -54,14 +51,13 @@ public class STIntersectsRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        // Current operator should be a join.
+
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         if (op.getOperatorTag() != LogicalOperatorTag.INNERJOIN
                 && op.getOperatorTag() != LogicalOperatorTag.LEFTOUTERJOIN) {
             return false;
         }
 
-        // Finds ST_INTERSECTS function in the join condition.
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) op;
         Mutable<ILogicalExpression> joinConditionRef = joinOp.getCondition();
         ILogicalExpression joinCondition = joinConditionRef.getValue();
@@ -70,13 +66,12 @@ public class STIntersectsRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        AbstractFunctionCallExpression stIntersectFuncExpr = (AbstractFunctionCallExpression) joinCondition;
-        if (!stIntersectFuncExpr.getFunctionIdentifier().equals(BuiltinFunctions.ST_INTERSECTS)) {
+        AbstractFunctionCallExpression STFuncExpr = (AbstractFunctionCallExpression) joinCondition;
+        if (!BuiltinFunctions.isSTFilterRefineFunction(STFuncExpr.getFunctionIdentifier())) {
             return false;
         }
 
-        // Extracts ST_INTERSECTS function's arguments
-        List<Mutable<ILogicalExpression>> inputExprs = stIntersectFuncExpr.getArguments();
+        List<Mutable<ILogicalExpression>> inputExprs = STFuncExpr.getArguments();
         if (inputExprs.size() != 2) {
             return false;
         }
@@ -84,15 +79,11 @@ public class STIntersectsRule implements IAlgebraicRewriteRule {
         ILogicalExpression leftOperatingExpr = inputExprs.get(LEFT).getValue();
         ILogicalExpression rightOperatingExpr = inputExprs.get(RIGHT).getValue();
 
-        // left and right expressions should be variables.
         if (leftOperatingExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE
                 || rightOperatingExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
             return false;
         }
 
-        LOGGER.info("st_intersect is called");
-
-        // Extract left and right variable of the predicate
         LogicalVariable inputVar0 = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
         LogicalVariable inputVar1 = ((VariableReferenceExpression) rightOperatingExpr).getVariableReference();
 
@@ -110,7 +101,7 @@ public class STIntersectsRule implements IAlgebraicRewriteRule {
 
         ScalarFunctionCallExpression updatedJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
-                        new MutableObject<>(spatialIntersect), new MutableObject<>(stIntersectFuncExpr));
+                        new MutableObject<>(spatialIntersect), new MutableObject<>(STFuncExpr));
 
         joinConditionRef.setValue(updatedJoinCondition);
 

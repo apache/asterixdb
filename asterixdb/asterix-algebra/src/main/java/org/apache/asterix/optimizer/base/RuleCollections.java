@@ -44,6 +44,8 @@ import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractWindowExpressionsRule;
 import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
+import org.apache.asterix.optimizer.rules.FilterRefineSpatialDistanceJoin;
+import org.apache.asterix.optimizer.rules.FilterRefineSpatialJoin;
 import org.apache.asterix.optimizer.rules.FindDataSourcesRule;
 import org.apache.asterix.optimizer.rules.FixReplicateOperatorOutputsRule;
 import org.apache.asterix.optimizer.rules.FullTextContainsParameterCheckAndSetRule;
@@ -81,8 +83,6 @@ import org.apache.asterix.optimizer.rules.RemoveRedundantSelectRule;
 import org.apache.asterix.optimizer.rules.RemoveSortInFeedIngestionRule;
 import org.apache.asterix.optimizer.rules.RemoveUnusedOneToOneEquiJoinRule;
 import org.apache.asterix.optimizer.rules.RewriteDistinctAggregateRule;
-import org.apache.asterix.optimizer.rules.STContainsRule;
-import org.apache.asterix.optimizer.rules.STIntersectsRule;
 import org.apache.asterix.optimizer.rules.SetAsterixMemoryRequirementsRule;
 import org.apache.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import org.apache.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
@@ -423,15 +423,15 @@ public final class RuleCollections {
         return spatialJoin;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildSTIntersectsRuleTestCollection() {
-        List<IAlgebraicRewriteRule> STIntersect = new LinkedList<>();
-        STIntersect.add(new STIntersectsRule());
-        return STIntersect;
+    public static final List<IAlgebraicRewriteRule> buildSTFilterRefineSpatialJoinCollection() {
+        List<IAlgebraicRewriteRule> FilterRefineSpatialJoin = new LinkedList<>();
+        FilterRefineSpatialJoin.add(new FilterRefineSpatialJoin());
+        return FilterRefineSpatialJoin;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildSTContainsRuleTestCollection() {
-        List<IAlgebraicRewriteRule> STContains = new LinkedList<>();
-        STContains.add(new STContainsRule());
-        return STContains;
+    public static final List<IAlgebraicRewriteRule> buildSTFilterRefineSpatialDistanceJoinCollection() {
+        List<IAlgebraicRewriteRule> FilterRefineSpatialDistanceJoin = new LinkedList<>();
+        FilterRefineSpatialDistanceJoin.add(new FilterRefineSpatialDistanceJoin());
+        return FilterRefineSpatialDistanceJoin;
     }
 }

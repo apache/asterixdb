@@ -1381,6 +1381,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-polygonize", 1);
 
     public static final FunctionIdentifier ST_MBR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-mbr", 1);
+    public static final FunctionIdentifier ST_MBR_OFFSET =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-mbr-offset", 2);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR =
@@ -2216,6 +2218,7 @@ public class BuiltinFunctions {
         addFunction(ST_POLYGONIZE, AGeometryTypeComputer.INSTANCE, true);
 
         addFunction(ST_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addFunction(ST_MBR_OFFSET, ARectangleTypeComputer.INSTANCE, true);
 
         // Binary functions
         addFunction(BINARY_HEX_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE, true);
@@ -3293,5 +3296,24 @@ public class BuiltinFunctions {
 
     public static boolean isSimilarityFunction(FunctionIdentifier fi) {
         return similarityFunctions.contains(fi);
+    }
+
+    private static final Map<FunctionIdentifier, STFilterRefineFunctionKind> stFilterRefineFunctions = new HashMap<>();
+
+    public enum STFilterRefineFunctionKind {
+        STFR
+    }
+
+    static {
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_INTERSECTS, STFilterRefineFunctionKind.STFR);
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_OVERLAPS, STFilterRefineFunctionKind.STFR);
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_TOUCHES, STFilterRefineFunctionKind.STFR);
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_CONTAINS, STFilterRefineFunctionKind.STFR);
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_CROSSES, STFilterRefineFunctionKind.STFR);
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_WITHIN, STFilterRefineFunctionKind.STFR);
+    }
+
+    public static boolean isSTFilterRefineFunction(FunctionIdentifier fi) {
+        return stFilterRefineFunctions.get(fi) != null;
     }
 }
