@@ -18,14 +18,12 @@
  */
 package org.apache.asterix.api.http.server;
 
-import static org.apache.asterix.common.exceptions.ErrorCode.ASTERIX;
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_JSON_VAL;
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_PARAM_VAL;
 import static org.apache.asterix.common.exceptions.ErrorCode.NO_STATEMENT_PROVIDED;
 import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_BAD_CLUSTER_STATE;
 import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_NODE_UNREGISTERED;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUEST_TIMEOUT;
-import static org.apache.hyracks.api.exceptions.ErrorCode.HYRACKS;
 import static org.apache.hyracks.api.exceptions.ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY;
 
 import java.io.IOException;
@@ -436,29 +434,22 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
         } else if (t instanceof HyracksException) {
             HyracksException he = (HyracksException) t;
-            switch (he.getComponent() + he.getErrorCode()) {
-                case ASTERIX + REQUEST_TIMEOUT:
-                    LOGGER.info(() -> "handleException: request execution timed out: "
-                            + LogRedactionUtil.userData(param.toString()));
-                    executionState.setStatus(ResultStatus.TIMEOUT, HttpResponseStatus.OK);
-                    break;
-                case ASTERIX + REJECT_BAD_CLUSTER_STATE:
-                case ASTERIX + REJECT_NODE_UNREGISTERED:
-                    LOGGER.warn(() -> "handleException: " + he.getMessage() + ": "
-                            + LogRedactionUtil.userData(param.toString()));
-                    executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.SERVICE_UNAVAILABLE);
-                    break;
-                case ASTERIX + INVALID_REQ_PARAM_VAL:
-                case ASTERIX + INVALID_REQ_JSON_VAL:
-                case ASTERIX + NO_STATEMENT_PROVIDED:
-                case HYRACKS + JOB_REQUIREMENTS_EXCEED_CAPACITY:
-                    executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
-                    break;
-                default:
-                    LOGGER.warn(() -> "handleException: unexpected exception " + he.getMessage() + ": "
-                            + LogRedactionUtil.userData(param.toString()), he);
-                    executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
-                    break;
+            // TODO(mblow): reconsolidate
+            if (he.matchesAny(INVALID_REQ_PARAM_VAL, INVALID_REQ_JSON_VAL, NO_STATEMENT_PROVIDED,
+                    JOB_REQUIREMENTS_EXCEED_CAPACITY)) {
+                executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
+            } else if (he.matches(REQUEST_TIMEOUT)) {
+                LOGGER.info(() -> "handleException: request execution timed out: "
+                        + LogRedactionUtil.userData(param.toString()));
+                executionState.setStatus(ResultStatus.TIMEOUT, HttpResponseStatus.OK);
+            } else if (he.matchesAny(REJECT_BAD_CLUSTER_STATE, REJECT_NODE_UNREGISTERED)) {
+                LOGGER.warn(() -> "handleException: " + he.getMessage() + ": "
+                        + LogRedactionUtil.userData(param.toString()));
+                executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.SERVICE_UNAVAILABLE);
+            } else {
+                LOGGER.warn(() -> "handleException: unexpected exception " + he.getMessage() + ": "
+                        + LogRedactionUtil.userData(param.toString()), he);
+                executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
             }
         } else {
             LOGGER.warn(() -> "handleException: unexpected exception: " + LogRedactionUtil.userData(param.toString()),

@@ -118,7 +118,7 @@ public abstract class OrderedIndexExamplesTest {
             try {
                 indexAccessor.insert(tuple);
             } catch (HyracksDataException e) {
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw e;
                 }
             }
@@ -285,7 +285,7 @@ public abstract class OrderedIndexExamplesTest {
             try {
                 indexAccessor.insert(tuple);
             } catch (HyracksDataException e) {
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw e;
                 }
             }
@@ -373,7 +373,7 @@ public abstract class OrderedIndexExamplesTest {
             try {
                 indexAccessor.insert(tuple);
             } catch (HyracksDataException e) {
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw e;
                 }
             }
@@ -470,7 +470,7 @@ public abstract class OrderedIndexExamplesTest {
                     indexAccessor.insert(tuple);
                     insDone++;
                 } catch (HyracksDataException e) {
-                    if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                         throw e;
                     }
                 }
@@ -492,7 +492,7 @@ public abstract class OrderedIndexExamplesTest {
                     indexAccessor.delete(tuple);
                     delDone++;
                 } catch (HyracksDataException e) {
-                    if (e.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                    if (!e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                         throw e;
                     }
                 }
@@ -574,7 +574,7 @@ public abstract class OrderedIndexExamplesTest {
             try {
                 indexAccessor.insert(tuple);
             } catch (HyracksDataException e) {
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw e;
                 }
             }
@@ -742,8 +742,8 @@ public abstract class OrderedIndexExamplesTest {
                 try {
                     bulkLoader.add(tuple);
                 } catch (HyracksDataException e) {
-                    if (e.getErrorCode() == ErrorCode.UNSORTED_LOAD_INPUT || e.getErrorCode() == ErrorCode.DUPLICATE_KEY
-                            || e.getErrorCode() == ErrorCode.DUPLICATE_LOAD_INPUT) {
+                    if (e.matchesAny(ErrorCode.UNSORTED_LOAD_INPUT, ErrorCode.DUPLICATE_KEY,
+                            ErrorCode.DUPLICATE_LOAD_INPUT)) {
                         if (j != i) {
                             fail("Unexpected exception: " + e.getMessage());
                         }

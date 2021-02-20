@@ -48,6 +48,7 @@ import org.apache.http.ParseException;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksAppendable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -190,12 +191,16 @@ public class ResultUtil {
 
     public static Throwable getRootCause(Throwable cause) {
         Throwable currentCause = cause;
+        Throwable rootFormattedEx = cause instanceof IFormattedException ? cause : null;
         Throwable nextCause = cause.getCause();
         while (nextCause != null && nextCause != currentCause) {
             currentCause = nextCause;
+            if (currentCause instanceof IFormattedException) {
+                rootFormattedEx = currentCause;
+            }
             nextCause = nextCause.getCause();
         }
-        return currentCause;
+        return rootFormattedEx != null ? rootFormattedEx : currentCause;
     }
 
     /**

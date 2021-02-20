@@ -41,13 +41,25 @@ public class Warning implements Serializable {
         this.message = message;
     }
 
+    /**
+     * @deprecated use {@link Warning#of(SourceLocation, IError, Serializable...)}
+     */
+    @Deprecated
     public static Warning of(String component, SourceLocation srcLocation, int code, String message) {
         return new Warning(component, srcLocation, code, message);
     }
 
-    public static Warning forHyracks(SourceLocation srcLocation, int code, Serializable... params) {
-        return Warning.of(ErrorCode.HYRACKS, srcLocation, code, ErrorMessageUtil.formatMessage(ErrorCode.HYRACKS, code,
-                ErrorCode.getErrorMessage(code), srcLocation, params));
+    /**
+     * @deprecated call {@link Warning#of(SourceLocation, IError, Serializable...)} directly
+     */
+    @Deprecated
+    public static Warning forHyracks(SourceLocation srcLocation, ErrorCode code, Serializable... params) {
+        return of(srcLocation, code, params);
+    }
+
+    public static Warning of(SourceLocation srcLocation, IError code, Serializable... params) {
+        return new Warning(code.component(), srcLocation, code.intValue(), ErrorMessageUtil
+                .formatMessage(code.component(), code.intValue(), code.errorMessage(), srcLocation, params));
     }
 
     public String getComponent() {

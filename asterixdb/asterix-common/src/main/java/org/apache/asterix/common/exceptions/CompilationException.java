@@ -27,20 +27,28 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class CompilationException extends AlgebricksException {
     private static final long serialVersionUID = 1L;
 
-    public CompilationException(int errorCode, SourceLocation sourceLoc, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), sourceLoc, params);
+    public static CompilationException create(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
+        return new CompilationException(error, sourceLoc, params);
     }
 
-    public CompilationException(int errorCode, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
+    public static CompilationException create(ErrorCode error, Serializable... params) {
+        return create(error, null, params);
     }
 
-    public CompilationException(int errorCode, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), cause, sourceLoc, params);
+    public CompilationException(ErrorCode error, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        super(error, cause, sourceLoc, params);
     }
 
-    public CompilationException(int errorCode, Throwable cause, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), cause, params);
+    public CompilationException(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
+        this(error, null, sourceLoc, params);
+    }
+
+    public CompilationException(ErrorCode error, Serializable... params) {
+        this(error, null, null, params);
+    }
+
+    public CompilationException(ErrorCode errorCode, Throwable cause, Serializable... params) {
+        this(errorCode, cause, null, params);
     }
 
     /**
@@ -56,7 +64,7 @@ public class CompilationException extends AlgebricksException {
     /**
      * @deprecated (Don't use this and provide an error code. This exists for the current exceptions and
      *             those exceptions need to adopt error code as well.)
-     * @param message
+     * @param cause
      */
     @Deprecated
     public CompilationException(Throwable cause) {

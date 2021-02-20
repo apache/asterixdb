@@ -122,7 +122,7 @@ public class NodeManagerTest {
         try {
             nodeManager.addNode(NODE1, ncState1);
         } catch (HyracksException e) {
-            invalidNetworkAddress = e.getErrorCode() == ErrorCode.INVALID_NETWORK_ADDRESS;
+            invalidNetworkAddress = e.matches(ErrorCode.INVALID_NETWORK_ADDRESS);
         }
         Assert.assertTrue(invalidNetworkAddress);
 
@@ -150,7 +150,7 @@ public class NodeManagerTest {
         try {
             nodeManager.addNode(null, null);
         } catch (HyracksException e) {
-            invalidParameter = e.getErrorCode() == ErrorCode.INVALID_INPUT_PARAMETER;
+            invalidParameter = e.matches(ErrorCode.INVALID_INPUT_PARAMETER);
         }
         Assert.assertTrue(invalidParameter);
 
@@ -205,14 +205,14 @@ public class NodeManagerTest {
         try {
             capacity.getMemoryByteSize(nodeId);
         } catch (HyracksException e) {
-            nodeNotExist = e.getErrorCode() == ErrorCode.NO_SUCH_NODE;
+            nodeNotExist = e.matches(ErrorCode.NO_SUCH_NODE);
         }
         Assert.assertTrue(nodeNotExist);
         nodeNotExist = false;
         try {
             capacity.getCores(nodeId);
         } catch (HyracksException e) {
-            nodeNotExist = e.getErrorCode() == ErrorCode.NO_SUCH_NODE;
+            nodeNotExist = e.matches(ErrorCode.NO_SUCH_NODE);
         }
         Assert.assertTrue(nodeNotExist);
     }
@@ -230,7 +230,7 @@ public class NodeManagerTest {
         try {
             nodeManager.addNode(NODE2, ncState2);
         } catch (HyracksException e) {
-            nodeNotExist = e.getErrorCode() == ErrorCode.NO_SUCH_NODE;
+            nodeNotExist = e.matches(ErrorCode.NO_SUCH_NODE);
         }
         Assert.assertTrue(nodeNotExist);
         Assert.assertTrue(nodeManager.getIpAddressNodeNameMap().size() == 1);

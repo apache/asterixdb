@@ -20,7 +20,6 @@
 package org.apache.asterix.test.active;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.ACTIVE_ENTITY_NOT_RUNNING;
-import static org.apache.asterix.common.exceptions.ErrorCode.ASTERIX;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -63,8 +62,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class ActiveStatsTest {
 
     protected boolean cleanUp = true;
-    private static String EXPECTED_STATS = "\"Mock stats\"";
-    private static String CONF_PATH = "src/main/resources/cc.conf";
+    private static final String EXPECTED_STATS = "\"Mock stats\"";
+    private static final String CONF_PATH = "src/main/resources/cc.conf";
 
     @Before
     public void setUp() throws Exception {
@@ -124,7 +123,7 @@ public class ActiveStatsTest {
             Assert.fail("expected exception on refresh stats on not-started job");
         } catch (HyracksDataException e) {
             Assert.assertTrue("incorrect exception thrown (expected: ACTIVE_ENTITY_NOT_RUNNING, was: " + e,
-                    e.matches(ASTERIX, ACTIVE_ENTITY_NOT_RUNNING));
+                    e.matches(ACTIVE_ENTITY_NOT_RUNNING));
         }
         requestedStats = eventsListener.getStats();
         Assert.assertTrue(requestedStats.contains("N/A"));
@@ -140,7 +139,7 @@ public class ActiveStatsTest {
             eventsListener.refreshStats(1000);
         } catch (HyracksDataException e) {
             Assert.assertTrue("incorrect exception thrown (expected: ACTIVE_ENTITY_NOT_RUNNING, was: " + e,
-                    e.matches(ASTERIX, ACTIVE_ENTITY_NOT_RUNNING));
+                    e.matches(ACTIVE_ENTITY_NOT_RUNNING));
         }
         Assert.assertTrue(requestedStats.contains("N/A"));
         // Fake partition message and notify eventListener
@@ -172,7 +171,7 @@ public class ActiveStatsTest {
             expectedException = e;
         }
         Assert.assertNotNull(expectedException);
-        Assert.assertEquals(ErrorCode.ACTIVE_MANAGER_INVALID_RUNTIME, expectedException.getErrorCode());
+        Assert.assertTrue(expectedException.matches(ErrorCode.ACTIVE_MANAGER_INVALID_RUNTIME));
     }
 
 }

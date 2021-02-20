@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ATypeTag;
@@ -164,9 +165,9 @@ public class AdmObjectNode implements IAdmNode {
     public static String getString(AdmObjectNode openFields, String field) throws HyracksDataException {
         IAdmNode node = openFields.get(field);
         if (node == null) {
-            throw HyracksDataException.create(ErrorCode.FIELD_NOT_FOUND, field);
+            throw new RuntimeDataException(ErrorCode.FIELD_NOT_FOUND, field);
         } else if (node.getType() != ATypeTag.STRING) {
-            throw HyracksDataException.create(ErrorCode.FIELD_NOT_OF_TYPE, field, ATypeTag.STRING, node.getType());
+            throw new RuntimeDataException(ErrorCode.FIELD_NOT_OF_TYPE, field, ATypeTag.STRING, node.getType());
         }
         return ((AdmStringNode) node).get();
     }

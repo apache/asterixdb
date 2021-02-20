@@ -424,7 +424,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         try {
             clauses = parser.Clauses();
         } catch (ParseException e) {
-            throw CompilationException.create(ErrorCode.COMPILATION_TRANSLATION_ERROR, e);
+            throw CompilationException.create(ErrorCode.COMPILATION_TRANSLATION_ERROR, String.valueOf(e), e);
         }
 
         // Step 4. The essential substitution with translator.
@@ -432,7 +432,7 @@ public class FuzzyJoinRule implements IAlgebraicRewriteRule {
         try {
             plan = translator.translate(clauses);
         } catch (CompilationException e) {
-            throw CompilationException.create(ErrorCode.COMPILATION_TRANSLATION_ERROR, e);
+            throw CompilationException.create(ErrorCode.COMPILATION_TRANSLATION_ERROR, String.valueOf(e), e);
         }
         context.setVarCounter(counter.get());
 

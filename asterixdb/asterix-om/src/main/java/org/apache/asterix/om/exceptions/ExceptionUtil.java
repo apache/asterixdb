@@ -136,7 +136,7 @@ public final class ExceptionUtil {
     }
 
     private static void warnInvalidValue(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid,
-            int argIdx, double argValue, int errorCode) {
+            int argIdx, double argValue, ErrorCode errorCode) {
         IWarningCollector warningCollector = ctx.getWarningCollector();
         if (warningCollector.shouldWarn()) {
             warningCollector.warn(WarningUtil.forAsterix(srcLoc, errorCode, fid.getName(), indexToPosition(argIdx),

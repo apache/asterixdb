@@ -47,14 +47,14 @@ public class ClusterCapacityTest {
         try {
             capacity.getMemoryByteSize(nodeId);
         } catch (HyracksException e) {
-            nodeNotExist = e.getErrorCode() == ErrorCode.NO_SUCH_NODE;
+            nodeNotExist = e.matches(ErrorCode.NO_SUCH_NODE);
         }
         Assert.assertTrue(nodeNotExist);
         nodeNotExist = false;
         try {
             capacity.getCores(nodeId);
         } catch (HyracksException e) {
-            nodeNotExist = e.getErrorCode() == ErrorCode.NO_SUCH_NODE;
+            nodeNotExist = e.matches(ErrorCode.NO_SUCH_NODE);
         }
         Assert.assertTrue(nodeNotExist);
 
@@ -70,14 +70,14 @@ public class ClusterCapacityTest {
         try {
             capacity.getMemoryByteSize(nodeId);
         } catch (HyracksException e) {
-            nodeNotExist = e.getErrorCode() == ErrorCode.NO_SUCH_NODE;
+            nodeNotExist = e.matches(ErrorCode.NO_SUCH_NODE);
         }
         Assert.assertTrue(nodeNotExist);
         nodeNotExist = false;
         try {
             capacity.getCores(nodeId);
         } catch (HyracksException e) {
-            nodeNotExist = e.getErrorCode() == ErrorCode.NO_SUCH_NODE;
+            nodeNotExist = e.matches(ErrorCode.NO_SUCH_NODE);
         }
         Assert.assertTrue(nodeNotExist);
     }

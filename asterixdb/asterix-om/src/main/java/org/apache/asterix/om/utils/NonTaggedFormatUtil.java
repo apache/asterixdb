@@ -20,6 +20,7 @@ package org.apache.asterix.om.utils;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AIntervalSerializerDeserializer;
@@ -114,7 +115,7 @@ public final class NonTaggedFormatUtil {
             case ANY:
                 ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(serNonTaggedAObject[offset]);
                 if (tag == ATypeTag.ANY) {
-                    throw HyracksDataException.create(ErrorCode.FIELD_SHOULD_BE_TYPED);
+                    throw new RuntimeDataException(ErrorCode.FIELD_SHOULD_BE_TYPED);
                 }
                 return getFieldValueLength(serNonTaggedAObject, offset, tag, true) + 1;
             case MISSING:

@@ -65,7 +65,7 @@ public class ExceptionUtils {
                     newExceptions.add(e);
                 }
             } else {
-                newExceptions.add(new HyracksDataException(ErrorCode.HYRACKS, ErrorCode.FAILURE_ON_NODE, e, nodeId));
+                newExceptions.add(HyracksDataException.create(ErrorCode.FAILURE_ON_NODE, e, nodeId));
             }
         }
         exceptions.clear();

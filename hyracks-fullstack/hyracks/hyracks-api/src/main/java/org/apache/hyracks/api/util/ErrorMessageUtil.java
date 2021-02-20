@@ -22,11 +22,13 @@ package org.apache.hyracks.api.util;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.hyracks.api.exceptions.IError;
 import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.logging.log4j.Level;
@@ -110,8 +112,10 @@ public class ErrorMessageUtil {
             return fmt.out().toString();
         } catch (Exception e) {
             // Do not throw further exceptions during exception processing.
-            LOGGER.log(Level.WARN, e.getLocalizedMessage(), e);
-            return e.getMessage();
+            final String paramsString = Arrays.toString(params);
+            LOGGER.log(Level.WARN, "error formatting {}{}: message {} params {}", component, errorCode, message,
+                    paramsString, e);
+            return message + "; " + paramsString;
         }
     }
 
@@ -120,5 +124,20 @@ public class ErrorMessageUtil {
             return t.getMessage();
         }
         return String.valueOf(t);
+    }
+
+    public static String[] defineMessageEnumOrdinalMap(IError[] values, String resourcePath) {
+        String[] enumMessages = new String[values.length];
+        try (InputStream resourceStream = values[0].getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+            Map<Integer, String> errorMessageMap = loadErrorMap(resourceStream);
+            for (IError error : values) {
+                enumMessages[((Enum) error).ordinal()] = errorMessageMap.computeIfAbsent(error.intValue(), intValue -> {
+                    throw new IllegalStateException("error message missing for " + error + " (" + intValue + ")");
+                });
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+        return enumMessages;
     }
 }

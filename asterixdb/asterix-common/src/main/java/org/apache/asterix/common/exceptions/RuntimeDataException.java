@@ -27,19 +27,25 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class RuntimeDataException extends HyracksDataException {
     private static final long serialVersionUID = 1L;
 
-    public RuntimeDataException(int errorCode, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
+    public static RuntimeDataException create(ErrorCode error, Serializable... params) {
+        return new RuntimeDataException(error, params);
     }
 
-    public RuntimeDataException(int errorCode, SourceLocation sourceLoc, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), null, sourceLoc, params);
+    public RuntimeDataException(ErrorCode errorCode, Throwable cause, SourceLocation sourceLoc,
+            Serializable... params) {
+        super(errorCode, cause, sourceLoc, params);
     }
 
-    public RuntimeDataException(int errorCode, Throwable cause, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), cause, params);
+    public RuntimeDataException(ErrorCode errorCode, Serializable... params) {
+        this(errorCode, null, null, params);
     }
 
-    public RuntimeDataException(int errorCode, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), cause, sourceLoc, params);
+    public RuntimeDataException(ErrorCode errorCode, SourceLocation sourceLoc, Serializable... params) {
+        this(errorCode, null, sourceLoc, params);
     }
+
+    public RuntimeDataException(ErrorCode errorCode, Throwable cause, Serializable... params) {
+        this(errorCode, cause, null, params);
+    }
+
 }

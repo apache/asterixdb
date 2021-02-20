@@ -16,19 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.test;
+package org.apache.hyracks.api.exceptions;
 
-import org.apache.hyracks.api.exceptions.ErrorCode;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.junit.Assert;
-import org.junit.Test;
+/**
+ * A type-safe error, consisting of a string-based component, integer value, and error message
+ * @since 0.3.5.1
+ */
+public interface IError {
+    String component();
 
-public class HyracksDataExceptionTest {
+    int intValue();
 
-    @Test
-    public void returnedMessageWithComponentTest() {
-        HyracksDataException cause = HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE, 3);
-        HyracksDataException causeWithNodeId = HyracksDataException.create(cause, "nc1");
-        Assert.assertEquals(cause.getMessage(), causeWithNodeId.getMessage());
-    }
+    String errorMessage();
 }

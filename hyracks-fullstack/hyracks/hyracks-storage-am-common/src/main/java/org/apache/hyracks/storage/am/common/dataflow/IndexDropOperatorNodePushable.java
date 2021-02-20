@@ -96,11 +96,11 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
     }
 
     private boolean isIgnorable(HyracksDataException e) {
-        return e.getErrorCode() == INDEX_DOES_NOT_EXIST && options.contains(IF_EXISTS);
+        return e.matches(INDEX_DOES_NOT_EXIST) && options.contains(IF_EXISTS);
     }
 
     private boolean canRetry(HyracksDataException e) throws HyracksDataException {
-        if (e.getErrorCode() == CANNOT_DROP_IN_USE_INDEX && options.contains(WAIT_ON_IN_USE)) {
+        if (e.matches(CANNOT_DROP_IN_USE_INDEX) && options.contains(WAIT_ON_IN_USE)) {
             if (maxWaitTimeMillis <= 0) {
                 return false;
             }
