@@ -116,7 +116,7 @@ public class AsterixJoinUtils {
                         spatialFunctionCallExists = true;
                     } else {
                         conditionExprs.add(exp);
-                        if (funcCallExp.getFunctionIdentifier().equals(BuiltinFunctions.ST_INTERSECTS)) {
+                        if (BuiltinFunctions.isSTFilterRefineFunction(funcCallExp.getFunctionIdentifier())) {
                             spatialJoinAnn = funcCallExp.getAnnotation(SpatialJoinAnnotation.class);
                         }
                     }
@@ -134,7 +134,9 @@ public class AsterixJoinUtils {
             }
 
             if (spatialJoinAnn == null) {
-                spatialJoinAnn = new SpatialJoinAnnotation(-180.0, -83.0, 180, 90.0, 10, 10);
+//                spatialJoinAnn = new SpatialJoinAnnotation(-180.0, -83.0, 180, 90.0, 10, 10);
+                // Spatial annotation is mandatory to apply spatial join optimal rules
+                return;
             }
 
             // Extracts spatial intersect function's arguments
