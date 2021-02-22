@@ -752,7 +752,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         return new RangePartitionExchangePOperator(partitioningColumns, targetDomain, rangeMapKey);
     }
 
-    private static ReplicateOperator createReplicateOperator(Mutable<ILogicalOperator> inputOperator,
+    public static ReplicateOperator createReplicateOperator(Mutable<ILogicalOperator> inputOperator,
             IOptimizationContext context, SourceLocation sourceLocation) throws AlgebricksException {
         ReplicateOperator replicateOperator = new ReplicateOperator(2);
         replicateOperator.setPhysicalOperator(new ReplicatePOperator());
@@ -839,7 +839,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
      * @return an aggregate operator with the specified information
      * @throws AlgebricksException when there is error setting the type environment of the newly created aggregate op
      */
-    private static AggregateOperator createAggregate(List<LogicalVariable> resultVariables, boolean isGlobal,
+    public static AggregateOperator createAggregate(List<LogicalVariable> resultVariables, boolean isGlobal,
             List<Mutable<ILogicalExpression>> expressions, MutableObject<ILogicalOperator> inputOperator,
             IOptimizationContext context, SourceLocation sourceLocation) throws AlgebricksException {
         AggregateOperator aggregateOperator = new AggregateOperator(resultVariables, expressions);
@@ -857,7 +857,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         return aggregateOperator;
     }
 
-    private static ExchangeOperator createOneToOneExchangeOp(MutableObject<ILogicalOperator> inputOperator,
+    public static ExchangeOperator createOneToOneExchangeOp(MutableObject<ILogicalOperator> inputOperator,
             IOptimizationContext context) throws AlgebricksException {
         ExchangeOperator exchangeOperator = new ExchangeOperator();
         exchangeOperator.setPhysicalOperator(new OneToOneExchangePOperator());
