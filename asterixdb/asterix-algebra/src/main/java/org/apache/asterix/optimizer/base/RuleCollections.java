@@ -375,6 +375,8 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new ConsolidateAssignsRule());
         // After adding projects, we may need need to set physical operators again.
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
+        // Optimized spatial join's query plan produces more join conditions, so we need to pull out these conditions
+        physicalRewritesAllLevels.add(new PullSelectOutOfEqJoin());
         return physicalRewritesAllLevels;
     }
 
