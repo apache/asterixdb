@@ -71,15 +71,68 @@ public class AsterixJoinUtils {
         List<LogicalVariable> varsLeft = op.getInputs().get(LEFT).getValue().getSchema();
         List<LogicalVariable> varsRight = op.getInputs().get(RIGHT).getValue().getSchema();
 
-        // Check if the join condition contains spatial join
-        SpatialJoinAnnotation spatialJoinAnn = null;
-        AbstractFunctionCallExpression spatialJoinFuncExpr = null;
-        List<Mutable<ILogicalExpression>> conditionExprs = new ArrayList<>();
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) conditionLE;
-        if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
+        FunctionIdentifier fi =
+            IntervalJoinUtils.isIntervalJoinCondition(funcExpr, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
+        if (fi != null) {
+            // Existing workflow for interval merge join
+            RangeAnnotation rangeAnnotation = IntervalJoinUtils.findRangeAnnotation(funcExpr);
+            if (rangeAnnotation == null) {
+                return;
+            }
+            //Check RangeMap type
+            RangeMap rangeMap = rangeAnnotation.getRangeMap();
+            if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize() && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
+                && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
+                IWarningCollector warningCollector = context.getWarningCollector();
+                if (warningCollector.shouldWarn()) {
+                    warningCollector.warn(Warning.forHyracks(op.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
+                        "Date, DateTime, and Time are only range hints types supported for interval joins"));
+                }
+                return;
+            }
+            IntervalPartitions intervalPartitions =
+                IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft, sideRight, rangeMap, context, LEFT, RIGHT);
+            IntervalJoinUtils.setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, context, intervalPartitions);
+        } else {
+            // Check if the join condition contains spatial join
             Mutable<ILogicalExpression> joinConditionRef = op.getCondition();
-            spatialJoinFuncExpr = funcExpr;
-            spatialJoinAnn = spatialJoinFuncExpr.getAnnotation(SpatialJoinAnnotation.class);
+            SpatialJoinAnnotation spatialJoinAnn = null;
+            AbstractFunctionCallExpression spatialJoinFuncExpr = null;
+            List<Mutable<ILogicalExpression>> conditionExprs = new ArrayList<>();
+
+            if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.AND)) {
+                // Join condition contains multiple conditions along with spatial_intersect
+                List<Mutable<ILogicalExpression>> inputExprs = funcExpr.getArguments();
+                if (inputExprs.size() == 0) {
+                    return;
+                }
+
+                boolean spatialFunctionCallExists = false;
+                for (Mutable<ILogicalExpression> exp : inputExprs) {
+                    AbstractFunctionCallExpression funcCallExp = (AbstractFunctionCallExpression) exp.getValue();
+                    if (funcCallExp.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
+                        spatialJoinFuncExpr = funcCallExp;
+                        spatialFunctionCallExists = true;
+                    } else {
+                        conditionExprs.add(exp);
+                        if (funcCallExp.getFunctionIdentifier().equals(BuiltinFunctions.ST_INTERSECTS)) {
+                            spatialJoinAnn = funcCallExp.getAnnotation(SpatialJoinAnnotation.class);
+                        }
+                    }
+                }
+
+                if (!spatialFunctionCallExists) {
+                    return;
+                }
+            } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
+                // Join condition is spatial_intersect only
+                spatialJoinFuncExpr = funcExpr;
+                spatialJoinAnn = spatialJoinFuncExpr.getAnnotation(SpatialJoinAnnotation.class);
+            } else {
+                return;
+            }
+
             if (spatialJoinAnn == null) {
                 spatialJoinAnn = new SpatialJoinAnnotation(-180.0, -83.0, 180, 90.0, 10, 10);
             }
@@ -149,32 +202,6 @@ public class AsterixJoinUtils {
             keysRightBranch.add(rightTileIdVar);
             keysRightBranch.add(rightInputVar);
             SpatialJoinUtils.setSpatialJoinOp(op, keysLeftBranch, keysRightBranch, context);
-        } else {
-            // Existing workflow for interval merge join
-            AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) conditionLE;
-            FunctionIdentifier fi =
-                IntervalJoinUtils.isIntervalJoinCondition(fexp, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
-            if (fi == null) {
-                return;
-            }
-            RangeAnnotation rangeAnnotation = IntervalJoinUtils.findRangeAnnotation(fexp);
-            if (rangeAnnotation == null) {
-                return;
-            }
-            //Check RangeMap type
-            RangeMap rangeMap = rangeAnnotation.getRangeMap();
-            if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize() && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
-                && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
-                IWarningCollector warningCollector = context.getWarningCollector();
-                if (warningCollector.shouldWarn()) {
-                    warningCollector.warn(Warning.forHyracks(op.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
-                        "Date, DateTime, and Time are only range hints types supported for interval joins"));
-                }
-                return;
-            }
-            IntervalPartitions intervalPartitions =
-                IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft, sideRight, rangeMap, context, LEFT, RIGHT);
-            IntervalJoinUtils.setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, context, intervalPartitions);
         }
     }
 }
