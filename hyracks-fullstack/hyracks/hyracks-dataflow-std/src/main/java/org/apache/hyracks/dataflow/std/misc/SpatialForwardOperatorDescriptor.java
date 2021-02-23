@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.dataflow.std.misc;
 
+import java.nio.ByteBuffer;
+
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -33,8 +35,6 @@ import org.apache.hyracks.dataflow.std.base.AbstractForwardOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
-import java.nio.ByteBuffer;
-
 public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
@@ -44,7 +44,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
      * @param outputRecordDescriptor the output schema of this operator.
      */
     public SpatialForwardOperatorDescriptor(IOperatorDescriptorRegistry spec, String sideDataKey,
-                                         RecordDescriptor outputRecordDescriptor) {
+            RecordDescriptor outputRecordDescriptor) {
         super(spec, sideDataKey, outputRecordDescriptor);
     }
 
@@ -78,8 +78,8 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
-                                                       IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
-            throws HyracksDataException {
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
+                throws HyracksDataException {
             return new ForwardDataActivityNodePushable(ctx, partition);
         }
     }

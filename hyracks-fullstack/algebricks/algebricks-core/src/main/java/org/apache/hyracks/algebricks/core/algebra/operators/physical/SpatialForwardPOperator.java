@@ -26,7 +26,9 @@ import org.apache.hyracks.dataflow.std.misc.SpatialForwardOperatorDescriptor;
 
 public class SpatialForwardPOperator extends AbstractForwardPOperator {
     @Override
-    public AbstractForwardOperatorDescriptor getOperatorDescriptor(IHyracksJobBuilder builder, ForwardOperator forwardOp, RecordDescriptor dataInputDescriptor) {
-        return new SpatialForwardOperatorDescriptor(builder.getJobSpec(), forwardOp.getSideDataKey(), dataInputDescriptor);
+    public AbstractForwardOperatorDescriptor getOperatorDescriptor(IHyracksJobBuilder builder,
+            ForwardOperator forwardOp, RecordDescriptor dataInputDescriptor) {
+        return new SpatialForwardOperatorDescriptor(builder.getJobSpec(), forwardOp.getSideDataKey(),
+                dataInputDescriptor);
     }
 }

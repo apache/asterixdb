@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules.util;
 
+import java.util.List;
+
 import org.apache.asterix.algebra.operators.physical.SpatialJoinPOperator;
 import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
 import org.apache.asterix.om.base.AInt64;
@@ -40,30 +42,29 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
 
-import java.util.List;
-
 public class SpatialJoinUtils {
-    public static void setSpatialJoinOp(AbstractBinaryJoinOperator op, List<LogicalVariable> keysLeftBranch, List<LogicalVariable> keysRightBranch, IOptimizationContext context) {
+    public static void setSpatialJoinOp(AbstractBinaryJoinOperator op, List<LogicalVariable> keysLeftBranch,
+            List<LogicalVariable> keysRightBranch, IOptimizationContext context) {
         ISpatialJoinUtilFactory mjcf = new IntersectSpatialJoinUtilFactory();
         op.setPhysicalOperator(new SpatialJoinPOperator(op.getJoinKind(),
-            AbstractJoinPOperator.JoinPartitioningType.PAIRWISE, keysLeftBranch, keysRightBranch,
-            context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf));
+                AbstractJoinPOperator.JoinPartitioningType.PAIRWISE, keysLeftBranch, keysRightBranch,
+                context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), mjcf));
     }
 
     public static LogicalVariable injectUnnestOperator(IOptimizationContext context, Mutable<ILogicalOperator> sideOp,
-                                                 LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn) {
+            LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn) {
         LogicalVariable sideVar = context.newVar();
         VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
         UnnestingFunctionCallExpression funcExpr = new UnnestingFunctionCallExpression(
-            BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
-            new MutableObject<>(sideInputVar),
-            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-                    new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
-            new MutableObject<>(
-                new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
-            new MutableObject<>(
-                new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
+                new MutableObject<>(sideInputVar),
+                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
+                        new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                                new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
+                new MutableObject<>(
+                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
+                new MutableObject<>(
+                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
         funcExpr.setSourceLocation(sideOp.getValue().getSourceLocation());
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar, new MutableObject<>(funcExpr));
         sideUnnestOp.getInputs().add(new MutableObject<>(sideOp.getValue()));

@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.optimizer.rules.util;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import org.apache.asterix.common.annotations.RangeAnnotation;
 import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
 import org.apache.asterix.om.base.AInt64;
@@ -47,9 +51,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.SortForwardPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SpatialForwardPOperator;
-import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -57,10 +59,6 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 
 public class AsterixJoinUtils {
 
@@ -86,8 +84,8 @@ public class AsterixJoinUtils {
         List<LogicalVariable> varsRight = op.getInputs().get(RIGHT).getValue().getSchema();
 
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) conditionLE;
-        FunctionIdentifier fi =
-            IntervalJoinUtils.isIntervalJoinCondition(funcExpr, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
+        FunctionIdentifier fi = IntervalJoinUtils.isIntervalJoinCondition(funcExpr, varsLeft, varsRight, sideLeft,
+                sideRight, LEFT, RIGHT);
         if (fi != null) {
             // Existing workflow for interval merge join
             RangeAnnotation rangeAnnotation = IntervalJoinUtils.findRangeAnnotation(funcExpr);
@@ -96,17 +94,18 @@ public class AsterixJoinUtils {
             }
             //Check RangeMap type
             RangeMap rangeMap = rangeAnnotation.getRangeMap();
-            if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize() && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
-                && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
+            if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize()
+                    && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
+                    && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
                 IWarningCollector warningCollector = context.getWarningCollector();
                 if (warningCollector.shouldWarn()) {
                     warningCollector.warn(Warning.forHyracks(op.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
-                        "Date, DateTime, and Time are only range hints types supported for interval joins"));
+                            "Date, DateTime, and Time are only range hints types supported for interval joins"));
                 }
                 return;
             }
-            IntervalPartitions intervalPartitions =
-                IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft, sideRight, rangeMap, context, LEFT, RIGHT);
+            IntervalPartitions intervalPartitions = IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft,
+                    sideRight, rangeMap, context, LEFT, RIGHT);
             IntervalJoinUtils.setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, context, intervalPartitions);
         } else {
             // Check if the join condition contains spatial join
@@ -148,7 +147,6 @@ public class AsterixJoinUtils {
             }
 
             if (spatialJoinAnn == null) {
-//                spatialJoinAnn = new SpatialJoinAnnotation(-180.0, -83.0, 180, 90.0, 10, 10);
                 // Spatial annotation is mandatory to apply spatial join optimal rules
                 return;
             }
@@ -164,7 +162,7 @@ public class AsterixJoinUtils {
 
             // left and right expressions should be variables.
             if (leftOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT
-                || rightOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+                    || rightOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
                 return;
             }
 
@@ -177,13 +175,16 @@ public class AsterixJoinUtils {
 
             // #1. create the replicate operator and add it above the source op feeding parent operator
             // Left
-            ReplicateOperator leftReplicateOp = EnforceStructuralPropertiesRule.createReplicateOperator(leftOp, context, srcLoc);
+            ReplicateOperator leftReplicateOp =
+                    EnforceStructuralPropertiesRule.createReplicateOperator(leftOp, context, srcLoc);
 
             // these two exchange ops are needed so that the parents of replicate stay the same during later optimizations.
             // This is because replicate operator has references to its parents. If any later optimizations add new parents,
             // then replicate would still point to the old ones.
-            ExchangeOperator exchToLocalAgg = EnforceStructuralPropertiesRule.createOneToOneExchangeOp(new MutableObject<>(leftReplicateOp), context);
-            ExchangeOperator exchToForward = EnforceStructuralPropertiesRule.createOneToOneExchangeOp(new MutableObject<>(leftReplicateOp), context);
+            ExchangeOperator exchToLocalAgg = EnforceStructuralPropertiesRule
+                    .createOneToOneExchangeOp(new MutableObject<>(leftReplicateOp), context);
+            ExchangeOperator exchToForward = EnforceStructuralPropertiesRule
+                    .createOneToOneExchangeOp(new MutableObject<>(leftReplicateOp), context);
             MutableObject<ILogicalOperator> exchToAggRef = new MutableObject<>(exchToLocalAgg);
             MutableObject<ILogicalOperator> exchToForwardRef = new MutableObject<>(exchToForward);
 
@@ -196,14 +197,15 @@ public class AsterixJoinUtils {
             // #2. create the aggregate operators and their sampling functions
             List<LogicalVariable> aggResultVar = new ArrayList<>(1);
             List<Mutable<ILogicalExpression>> aggFunc = new ArrayList<>(1);
-//            createAggregateFunction(context, aggResultVar, aggFunc, srcLoc);
+            //            createAggregateFunction(context, aggResultVar, aggFunc, srcLoc);
             IFunctionInfo countFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.COUNT);
             List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
             AggregateFunctionCallExpression countExpr = new AggregateFunctionCallExpression(countFunc, false, fields);
             countExpr.setSourceLocation(srcLoc);
             aggResultVar.add(context.newVar());
             aggFunc.add(new MutableObject<>(countExpr));
-            AggregateOperator aggOp = EnforceStructuralPropertiesRule.createAggregate(aggResultVar, true, aggFunc, exchToAggRef, context, srcLoc);
+            AggregateOperator aggOp = EnforceStructuralPropertiesRule.createAggregate(aggResultVar, true, aggFunc,
+                    exchToAggRef, context, srcLoc);
             MutableObject<ILogicalOperator> agg = new MutableObject<>(aggOp);
 
             // #3. create the forward operator
@@ -218,7 +220,7 @@ public class AsterixJoinUtils {
             context.computeAndSetTypeEnvironmentForOperator(op);
 
             // Right
-//            ReplicateOperator rightReplicateOp = EnforceStructuralPropertiesRule.createReplicateOperator(rightOp, context, srcLoc);
+            //            ReplicateOperator rightReplicateOp = EnforceStructuralPropertiesRule.createReplicateOperator(rightOp, context, srcLoc);
 
             // Extract left and right variable of the predicate
             LogicalVariable leftInputVar = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
@@ -226,38 +228,40 @@ public class AsterixJoinUtils {
 
             // Inject unnest operator to the left and right branch of the join operator
             leftOp = op.getInputs().get(LEFT);
-            LogicalVariable leftTileIdVar = SpatialJoinUtils.injectUnnestOperator(context, leftOp, leftInputVar, spatialJoinAnn);
-            LogicalVariable rightTileIdVar = SpatialJoinUtils.injectUnnestOperator(context, rightOp, rightInputVar, spatialJoinAnn);
+            LogicalVariable leftTileIdVar =
+                    SpatialJoinUtils.injectUnnestOperator(context, leftOp, leftInputVar, spatialJoinAnn);
+            LogicalVariable rightTileIdVar =
+                    SpatialJoinUtils.injectUnnestOperator(context, rightOp, rightInputVar, spatialJoinAnn);
 
             // Compute reference tile ID
             ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.REFERENCE_TILE),
-                new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
-                new MutableObject<>(new VariableReferenceExpression(rightInputVar)),
-                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                    new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-                        new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
-                new MutableObject<>(
-                    new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
-                new MutableObject<>(
-                    new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
+                    BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.REFERENCE_TILE),
+                    new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
+                    new MutableObject<>(new VariableReferenceExpression(rightInputVar)),
+                    new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
+                            new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                                    new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
+                    new MutableObject<>(
+                            new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
+                    new MutableObject<>(new ConstantExpression(
+                            new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
 
             // Update the join conditions with the tile Id equality condition
             ScalarFunctionCallExpression tileIdEquiJoinCondition =
-                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
-                    new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
-                    new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
+                    new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
+                            new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
+                            new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
             ScalarFunctionCallExpression referenceIdEquiJoinCondition =
-                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
-                    new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
-                    new MutableObject<>(referenceTileId));
+                    new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
+                            new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
+                            new MutableObject<>(referenceTileId));
 
             conditionExprs.add(new MutableObject<>(tileIdEquiJoinCondition));
             conditionExprs.add(new MutableObject<>(spatialJoinFuncExpr));
             conditionExprs.add(new MutableObject<>(referenceIdEquiJoinCondition));
 
             ScalarFunctionCallExpression updatedJoinCondition = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND), conditionExprs);
+                    BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND), conditionExprs);
             joinConditionRef.setValue(updatedJoinCondition);
 
             List<LogicalVariable> keysLeftBranch = new ArrayList<>();
@@ -270,19 +274,20 @@ public class AsterixJoinUtils {
         }
     }
 
-    private static void createAggregateFunction(IOptimizationContext context, List<LogicalVariable> globalResultVariable,
-                                                List<Mutable<ILogicalExpression>> globalAggFunction, SourceLocation sourceLocation) {
-//        IFunctionInfo countFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.COUNT);
-//        List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
-//        AggregateFunctionCallExpression countExpr = new AggregateFunctionCallExpression(countFunc, false, fields);
-//        countExpr.setSourceLocation(sourceLocation);
-//        globalResultVariable.add(context.newVar());
-//        globalAggFunction.add(new MutableObject<>(countExpr));
+    private static void createAggregateFunction(IOptimizationContext context,
+            List<LogicalVariable> globalResultVariable, List<Mutable<ILogicalExpression>> globalAggFunction,
+            SourceLocation sourceLocation) {
+        //        IFunctionInfo countFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.COUNT);
+        //        List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
+        //        AggregateFunctionCallExpression countExpr = new AggregateFunctionCallExpression(countFunc, false, fields);
+        //        countExpr.setSourceLocation(sourceLocation);
+        //        globalResultVariable.add(context.newVar());
+        //        globalAggFunction.add(new MutableObject<>(countExpr));
     }
 
     private static ForwardOperator createForward(String aggKey, LogicalVariable aggVariable,
-                                                 MutableObject<ILogicalOperator> exchangeOpFromReplicate, MutableObject<ILogicalOperator> aggInput,
-                                                 IOptimizationContext context, SourceLocation sourceLoc) throws AlgebricksException {
+            MutableObject<ILogicalOperator> exchangeOpFromReplicate, MutableObject<ILogicalOperator> aggInput,
+            IOptimizationContext context, SourceLocation sourceLoc) throws AlgebricksException {
         AbstractLogicalExpression aggExpression = new VariableReferenceExpression(aggVariable, sourceLoc);
         ForwardOperator forwardOperator = new ForwardOperator(aggKey, new MutableObject<>(aggExpression));
         forwardOperator.setSourceLocation(sourceLoc);
