@@ -155,7 +155,7 @@ public class CancelJobTest extends AbstractMultiNCIntegrationTest {
             exceptionMatched = true;
             Assert.assertTrue(e instanceof HyracksException);
             HyracksException hyracksException = (HyracksException) e;
-            Assert.assertTrue(hyracksException.getErrorCode() == ErrorCode.JOB_CANCELED);
+            Assert.assertTrue(hyracksException.matches(ErrorCode.JOB_CANCELED));
         } finally {
             Assert.assertTrue(exceptionMatched);
         }
@@ -170,7 +170,7 @@ public class CancelJobTest extends AbstractMultiNCIntegrationTest {
             waitForCompletion(jobId);
         } catch (HyracksException e) {
             exceptionMatched = true;
-            Assert.assertTrue(e.getErrorCode() == ErrorCode.JOB_CANCELED);
+            Assert.assertTrue(e.matches(ErrorCode.JOB_CANCELED));
         } finally {
             Assert.assertTrue(exceptionMatched);
         }

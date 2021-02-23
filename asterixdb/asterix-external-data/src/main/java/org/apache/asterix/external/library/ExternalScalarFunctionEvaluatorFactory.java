@@ -19,6 +19,7 @@
 package org.apache.asterix.external.library;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
@@ -51,7 +52,7 @@ public class ExternalScalarFunctionEvaluatorFactory implements IScalarEvaluatorF
             case PYTHON:
                 return new ExternalScalarPythonFunctionEvaluator(finfo, args, argTypes, ctx, sourceLoc);
             default:
-                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND,
+                throw new RuntimeDataException(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND,
                         finfo.getLanguage());
         }
     }

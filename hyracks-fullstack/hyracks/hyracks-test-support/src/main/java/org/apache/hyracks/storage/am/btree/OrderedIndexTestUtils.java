@@ -309,7 +309,7 @@ public class OrderedIndexTestUtils extends TreeIndexTestUtils {
                 }
             } catch (HyracksDataException e) {
                 // Ignore duplicate key insertions.
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw e;
                 }
             }

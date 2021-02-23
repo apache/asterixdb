@@ -29,7 +29,6 @@ import java.util.regex.Matcher;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -84,8 +83,7 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
 
             // Warn if no files are returned
             if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
-                Warning warning =
-                        WarningUtil.forAsterix(null, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                Warning warning = Warning.of(null, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
                 warningCollector.warn(warning);
             }
 

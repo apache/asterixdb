@@ -20,7 +20,6 @@ package org.apache.hyracks.api.test;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.util.ErrorMessageUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -29,14 +28,6 @@ public class HyracksDataExceptionTest {
     @Test
     public void returnedMessageWithComponentTest() {
         HyracksDataException cause = HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE, 3);
-        HyracksDataException causeWithNodeId = HyracksDataException.create(cause, "nc1");
-        Assert.assertEquals(cause.getMessage(), causeWithNodeId.getMessage());
-    }
-
-    @Test
-    public void returnedMessageWithNoComponentTest() {
-        HyracksDataException cause = new HyracksDataException(ErrorMessageUtil.NONE, ErrorCode.ERROR_PROCESSING_TUPLE,
-                ErrorCode.getErrorMessage(ErrorCode.ERROR_PROCESSING_TUPLE), 2);
         HyracksDataException causeWithNodeId = HyracksDataException.create(cause, "nc1");
         Assert.assertEquals(cause.getMessage(), causeWithNodeId.getMessage());
     }

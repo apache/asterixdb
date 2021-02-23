@@ -169,7 +169,7 @@ public abstract class AbstractRTreeExamplesTest {
             try {
                 indexAccessor.insert(tuple);
             } catch (HyracksDataException e) {
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw e;
                 }
             }
@@ -574,7 +574,7 @@ public abstract class AbstractRTreeExamplesTest {
             try {
                 indexAccessor.insert(tuple);
             } catch (HyracksDataException e) {
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw e;
                 }
             }
@@ -698,7 +698,7 @@ public abstract class AbstractRTreeExamplesTest {
                 try {
                     indexAccessor.insert(tuple);
                 } catch (HyracksDataException e) {
-                    if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                         throw e;
                     }
                 }
@@ -715,7 +715,7 @@ public abstract class AbstractRTreeExamplesTest {
                     indexAccessor.delete(tuple);
                     delDone++;
                 } catch (HyracksDataException e) {
-                    if (e.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                    if (!e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                         throw e;
                     }
                 }

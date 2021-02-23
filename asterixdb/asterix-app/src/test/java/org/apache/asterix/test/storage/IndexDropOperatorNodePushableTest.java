@@ -179,7 +179,7 @@ public class IndexDropOperatorNodePushableTest {
             dropInUseOp.initialize();
         } catch (HyracksDataException e) {
             e.printStackTrace();
-            Assert.assertEquals(ErrorCode.CANNOT_DROP_IN_USE_INDEX, e.getErrorCode());
+            Assert.assertTrue(e.matches(ErrorCode.CANNOT_DROP_IN_USE_INDEX));
             dropFailed.set(true);
         }
         Assert.assertTrue(dropFailed.get());
@@ -219,7 +219,7 @@ public class IndexDropOperatorNodePushableTest {
             dropNonExistingOp.initialize();
         } catch (HyracksDataException e) {
             e.printStackTrace();
-            Assert.assertEquals(ErrorCode.INDEX_DOES_NOT_EXIST, e.getErrorCode());
+            Assert.assertTrue(e.matches(ErrorCode.INDEX_DOES_NOT_EXIST));
             dropFailed.set(true);
         }
         Assert.assertTrue(dropFailed.get());

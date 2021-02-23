@@ -70,7 +70,6 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.WarningCollector;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
@@ -582,7 +581,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     private void warnUnexpectedHint(String actualHint, SourceLocation sourceLoc, String expectedHints) {
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.UNEXPECTED_HINT, actualHint, expectedHints));
+            warningCollector.warn(Warning.of(sourceLoc, ErrorCode.UNEXPECTED_HINT, actualHint, expectedHints));
         }
     }
 
@@ -627,13 +626,13 @@ class SQLPPParser extends ScopeChecker implements IParser {
         }
       } catch (SqlppParseException e) {
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(WarningUtil.forAsterix(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+            warningCollector.warn(Warning.of(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
               hintToken.hint.toString(), e.getMessage()));
         }
         return onParseErrorReturn;
       } catch (CompilationException e) {
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(WarningUtil.forAsterix(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+            warningCollector.warn(Warning.of(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
               hintToken.hint.toString(), e.getMessage()));
         }
         return onParseErrorReturn;

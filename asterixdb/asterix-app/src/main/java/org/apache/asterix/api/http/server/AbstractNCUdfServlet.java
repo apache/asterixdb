@@ -138,15 +138,8 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
     }
 
     HttpResponseStatus toHttpErrorStatus(Exception e) {
-        if (e instanceof IFormattedException) {
-            IFormattedException fe = (IFormattedException) e;
-            if (ErrorCode.ASTERIX.equals(fe.getComponent())) {
-                switch (fe.getErrorCode()) {
-                    case ErrorCode.UNKNOWN_DATAVERSE:
-                    case ErrorCode.UNKNOWN_LIBRARY:
-                        return HttpResponseStatus.NOT_FOUND;
-                }
-            }
+        if (IFormattedException.matchesAny(e, ErrorCode.UNKNOWN_DATAVERSE, ErrorCode.UNKNOWN_LIBRARY)) {
+            return HttpResponseStatus.NOT_FOUND;
         }
         return HttpResponseStatus.INTERNAL_SERVER_ERROR;
     }

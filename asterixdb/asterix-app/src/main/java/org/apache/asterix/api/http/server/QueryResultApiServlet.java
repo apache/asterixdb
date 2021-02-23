@@ -112,8 +112,7 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                 ResultUtil.printResults(appCtx, resultReader, sessionOutput, new Stats(), null);
             }
         } catch (HyracksDataException e) {
-            final int errorCode = e.getErrorCode();
-            if (ErrorCode.NO_RESULT_SET == errorCode) {
+            if (e.matches(ErrorCode.NO_RESULT_SET)) {
                 LOGGER.log(Level.INFO, "No results for: \"" + strHandle + "\"");
                 response.setStatus(HttpResponseStatus.NOT_FOUND);
                 return;

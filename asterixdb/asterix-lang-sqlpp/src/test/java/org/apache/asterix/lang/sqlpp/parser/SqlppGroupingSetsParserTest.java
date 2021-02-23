@@ -39,6 +39,7 @@ import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppFormatPrintVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
+import org.apache.hyracks.api.exceptions.IError;
 import org.apache.hyracks.util.MathUtil;
 import org.junit.Assert;
 import org.junit.Test;
@@ -57,13 +58,11 @@ public class SqlppGroupingSetsParserTest {
 
     private static final int GROUPING_SETS_LIMIT_SQRT = (int) Math.ceil(Math.sqrt(GROUPING_SETS_LIMIT));
 
-    private static final String ERR_PREFIX = "ASX";
+    private static final ErrorCode ERR_SYNTAX = ErrorCode.PARSE_ERROR;
 
-    private static final String ERR_SYNTAX = ERR_PREFIX + ErrorCode.PARSE_ERROR;
+    private static final ErrorCode ERR_OVERFLOW = ErrorCode.COMPILATION_GROUPING_SETS_OVERFLOW;
 
-    private static final String ERR_OVERFLOW = ERR_PREFIX + ErrorCode.COMPILATION_GROUPING_SETS_OVERFLOW;
-
-    private static final String ERR_ALIAS = ERR_PREFIX + ErrorCode.COMPILATION_UNEXPECTED_ALIAS;
+    private static final ErrorCode ERR_ALIAS = ErrorCode.COMPILATION_UNEXPECTED_ALIAS;
 
     @Parameterized.Parameters(name = "{index}: GROUP BY {0}")
     public static Collection<Object[]> data() {
@@ -205,15 +204,15 @@ public class SqlppGroupingSetsParserTest {
 
     private final String expectedGroupingSets;
 
-    private final String expectedErrorCode;
+    private final IError expectedErrorCode;
 
-    public SqlppGroupingSetsParserTest(String groupbyInput, String expectedResult) {
+    public SqlppGroupingSetsParserTest(String groupbyInput, Object expectedResult) {
         this.groupbyInput = groupbyInput;
-        if (expectedResult.startsWith(ERR_PREFIX)) {
+        if (expectedResult instanceof IError) {
             this.expectedGroupingSets = null;
-            this.expectedErrorCode = expectedResult;
+            this.expectedErrorCode = (IError) expectedResult;
         } else {
-            this.expectedGroupingSets = expectedResult;
+            this.expectedGroupingSets = (String) expectedResult;
             this.expectedErrorCode = null;
         }
     }
@@ -231,7 +230,7 @@ public class SqlppGroupingSetsParserTest {
         } catch (CompilationException e) {
             if (expectedErrorCode == null) {
                 throw e;
-            } else if (e.getMessage().contains(expectedErrorCode)) {
+            } else if (e.getMessage().contains(expectedErrorCode.errorCode())) {
                 return; // Found expected error code. SUCCESS
             } else {
                 Assert.fail(String.format("Unable to find expected error code %s in error message: %s",

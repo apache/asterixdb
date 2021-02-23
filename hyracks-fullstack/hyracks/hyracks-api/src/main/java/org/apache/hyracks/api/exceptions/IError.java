@@ -16,20 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util;
+package org.apache.hyracks.api.exceptions;
 
-import org.apache.hyracks.api.exceptions.ErrorCode;
-import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.Warning;
+/**
+ * A type-safe error, consisting of a string-based component, integer value, and error message
+ * @since 0.3.5.1
+ */
+public interface IError {
+    String component();
 
-public class ParseUtil {
+    int intValue();
 
-    private ParseUtil() {
-    }
+    String errorMessage();
 
-    public static void warn(IWarningCollector warningCollector, String dataSourceName, long lineNum, int fieldNum,
-            String warnMessage) {
-        warningCollector
-                .warn(Warning.of(null, ErrorCode.PARSING_ERROR, dataSourceName, lineNum, fieldNum, warnMessage));
+    default String errorCode() {
+        final int intCode = intValue();
+        if (intCode < 1000) {
+            String pad = intCode < 10 ? "000" : intCode < 100 ? "00" : "0";
+            return component() + pad + intCode;
+        } else {
+            return component() + intCode;
+        }
     }
 }

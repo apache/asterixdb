@@ -28,19 +28,17 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class InvalidDataFormatException extends RuntimeDataException {
     private static final long serialVersionUID = 7927137063741221011L;
 
-    public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, byte expectedTypeTag) {
-        super(ErrorCode.INVALID_FORMAT, sourceLoc, fid.getName(),
+    public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, Throwable cause,
+            byte expectedTypeTag) {
+        super(ErrorCode.INVALID_FORMAT, cause, sourceLoc, fid.getName(),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(expectedTypeTag));
+    }
+
+    public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, byte expectedTypeTag) {
+        this(sourceLoc, fid, null, expectedTypeTag);
     }
 
     public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, String expectedType) {
         super(ErrorCode.INVALID_FORMAT, sourceLoc, fid.getName(), expectedType);
     }
-
-    public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, Throwable cause,
-            byte expectedTypeTag) {
-        super(ErrorCode.INVALID_FORMAT, sourceLoc, fid.getName(), cause, expectedTypeTag);
-        addSuppressed(cause);
-    }
-
 }

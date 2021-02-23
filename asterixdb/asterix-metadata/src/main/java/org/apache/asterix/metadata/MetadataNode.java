@@ -330,7 +330,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(dataverse);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.DATAVERSE_DATASET, tuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException(
                         "A dataverse with this name " + dataverse.getDataverseName() + " already exists.", e);
             } else {
@@ -356,7 +356,7 @@ public class MetadataNode implements IMetadataNode {
                 addIndex(txnId, primaryIndex);
             }
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException("A dataset with this name " + dataset.getDatasetName()
                         + " already exists in dataverse '" + dataset.getDataverseName() + "'.", e);
             } else {
@@ -372,7 +372,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference tuple = tupleWriter.getTupleFromMetadataEntity(index);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.INDEX_DATASET, tuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException("An index with name '" + index.getIndexName() + "' already exists.", e);
             } else {
                 throw new AlgebricksException(e);
@@ -387,7 +387,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(node);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.NODE_DATASET, tuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException("A node with name '" + node.getNodeName() + "' already exists.", e);
             } else {
                 throw new AlgebricksException(e);
@@ -402,7 +402,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(nodeGroup);
             modifyMetadataIndex(modificationOp, txnId, MetadataPrimaryIndexes.NODEGROUP_DATASET, tuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException(
                         "A nodegroup with name '" + nodeGroup.getNodeGroupName() + "' already exists.", e);
             } else {
@@ -419,7 +419,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(datatype);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException(
                         "A datatype with name '" + datatype.getDatatypeName() + "' already exists.", e);
             } else {
@@ -437,7 +437,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference functionTuple = tupleReaderWriter.getTupleFromMetadataEntity(function);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException("A function with this name " + function.getSignature()
                         + " already exists in dataverse '" + function.getDataverseName() + "'.", e);
             } else {
@@ -582,8 +582,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.DATAVERSE_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.DATAVERSE_DATASET, tuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException("Cannot drop dataverse '" + dataverseName + "' because it doesn't exist.",
                         e);
             } else {
@@ -647,8 +646,7 @@ public class MetadataNode implements IMetadataNode {
             } catch (HyracksDataException hde) {
                 // ignore this exception and continue deleting all relevant
                 // artifacts.
-                if (!hde.getComponent().equals(ErrorCode.HYRACKS)
-                        || hde.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                if (!hde.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                     throw new AlgebricksException(hde);
                 }
             } finally {
@@ -669,8 +667,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.INDEX_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.INDEX_DATASET, tuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException(
                         "Cannot drop index '" + datasetName + "." + indexName + "' because it doesn't exist.", e);
             } else {
@@ -702,8 +699,7 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.NODEGROUP_DATASET, tuple);
             return true;
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException("Cannot drop nodegroup '" + nodeGroupName + "' because it doesn't exist",
                         e);
             } else {
@@ -738,8 +734,7 @@ public class MetadataNode implements IMetadataNode {
                 }
             }
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException("Cannot drop type '" + datatypeName + "' because it doesn't exist", e);
             } else {
                 throw new AlgebricksException(e);
@@ -756,8 +751,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.DATATYPE_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException("Cannot drop type '" + datatypeName + "' because it doesn't exist", e);
             } else {
                 throw new AlgebricksException(e);
@@ -1282,8 +1276,7 @@ public class MetadataNode implements IMetadataNode {
                     getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException(
                         "Cannot drop function '" + functionSignature + "' because it doesn't exist", e);
             } else {
@@ -1520,7 +1513,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference adapterTuple = tupleReaderWriter.getTupleFromMetadataEntity(adapter);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, adapterTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException("A adapter with this name " + adapter.getAdapterIdentifier().getName()
                         + " already exists in dataverse '" + adapter.getAdapterIdentifier().getDataverseName() + "'.",
                         e);
@@ -1545,8 +1538,7 @@ public class MetadataNode implements IMetadataNode {
                     getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, datasetTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException("Cannot drop adapter '" + adapterName + " since it doesn't exist", e);
             } else {
                 throw new AlgebricksException(e);
@@ -1582,8 +1574,8 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference compactionPolicyTuple = tupleReaderWriter.getTupleFromMetadataEntity(compactionPolicy);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET, compactionPolicyTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
-                throw new AlgebricksException("A compcation policy with this name " + compactionPolicy.getPolicyName()
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
+                throw new AlgebricksException("A compaction policy with this name " + compactionPolicy.getPolicyName()
                         + " already exists in dataverse '" + compactionPolicy.getPolicyName() + "'.", e);
             } else {
                 throw new AlgebricksException(e);
@@ -1634,7 +1626,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference libraryTuple = tupleReaderWriter.getTupleFromMetadataEntity(library);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.LIBRARY_DATASET, libraryTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException("A library with this name " + library.getDataverseName()
                         + " already exists in dataverse '" + library.getDataverseName() + "'.", e);
             } else {
@@ -1661,8 +1653,7 @@ public class MetadataNode implements IMetadataNode {
                     getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.LIBRARY_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.LIBRARY_DATASET, datasetTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException("Cannot drop library '" + libraryName + "' because it doesn't exist", e);
             } else {
                 throw new AlgebricksException(e);
@@ -1700,7 +1691,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference feedPolicyTuple = tupleReaderWriter.getTupleFromMetadataEntity(feedPolicy);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.FEED_POLICY_DATASET, feedPolicyTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException("A feed policy with this name " + feedPolicy.getPolicyName()
                         + " already exists in dataverse '" + feedPolicy.getPolicyName() + "'.", e);
             } else {
@@ -1795,7 +1786,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference feedTuple = tupleReaderWriter.getTupleFromMetadataEntity(feed);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.FEED_DATASET, feedTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException("A feed with this name " + feed.getFeedName()
                         + " already exists in dataverse '" + feed.getDataverseName() + "'.", e);
             } else {
@@ -1844,8 +1835,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.FEED_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FEED_DATASET, tuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException("Cannot drop feed '" + feedName + "' because it doesn't exist", e);
             } else {
                 throw new AlgebricksException(e);
@@ -1860,8 +1850,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference tuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.FEED_POLICY_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FEED_POLICY_DATASET, tuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException("Unknown feed policy " + policyName, e);
             } else {
                 throw new AlgebricksException(e);
@@ -1893,7 +1882,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference externalFileTuple = tupleReaderWriter.getTupleFromMetadataEntity(externalFile);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, externalFileTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException("An externalFile with this number " + externalFile.getFileNumber()
                         + " already exists in dataset '" + externalFile.getDatasetName() + "' in dataverse '"
                         + externalFile.getDataverseName() + "'.", e);
@@ -1930,8 +1919,7 @@ public class MetadataNode implements IMetadataNode {
                     getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, datasetTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException("Couldn't drop externalFile.", e);
             } else {
                 throw new AlgebricksException(e);
@@ -2007,7 +1995,7 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference synonymTuple = tupleReaderWriter.getTupleFromMetadataEntity(synonym);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.SYNONYM_DATASET, synonymTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS) && e.getErrorCode() == ErrorCode.DUPLICATE_KEY) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw new AlgebricksException("A synonym with name '" + synonym.getSynonymName() + "' already exists.",
                         e);
             } else {
@@ -2031,8 +2019,7 @@ public class MetadataNode implements IMetadataNode {
                     getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.SYNONYM_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.SYNONYM_DATASET, synonymTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException("Cannot drop synonym '" + synonymName, e);
             } else {
                 throw new AlgebricksException(e);
@@ -2086,8 +2073,7 @@ public class MetadataNode implements IMetadataNode {
             datasetTuple = tupleReaderWriter.getTupleFromMetadataEntity(dataset);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
         } catch (HyracksDataException e) {
-            if (e.getComponent().equals(ErrorCode.HYRACKS)
-                    && e.getErrorCode() == ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AlgebricksException(
                         "Cannot drop dataset '" + dataset.getDatasetName() + "' because it doesn't exist");
             } else {

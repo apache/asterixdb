@@ -21,8 +21,6 @@ package org.apache.hyracks.api.exceptions;
 
 import java.io.Serializable;
 
-import org.apache.hyracks.api.util.ErrorMessageUtil;
-
 /**
  * The main execution time exception type for runtime errors in a hyracks environment
  */
@@ -51,34 +49,25 @@ public class HyracksDataException extends HyracksException {
         return new HyracksDataException(cause);
     }
 
-    public static HyracksDataException create(int code, SourceLocation sourceLoc, Serializable... params) {
-        return new HyracksDataException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), null, sourceLoc,
-                params);
+    public static HyracksDataException create(ErrorCode code, SourceLocation sourceLoc, Serializable... params) {
+        return new HyracksDataException(code, sourceLoc, params);
     }
 
-    public static HyracksDataException create(int code, Serializable... params) {
-        return new HyracksDataException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), params);
+    public static HyracksDataException create(ErrorCode code, Serializable... params) {
+        return new HyracksDataException(code, params);
     }
 
-    public static HyracksDataException create(int code, Throwable cause, SourceLocation sourceLoc,
+    public static HyracksDataException create(ErrorCode code, Throwable cause, SourceLocation sourceLoc,
             Serializable... params) {
-        return new HyracksDataException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), cause, sourceLoc,
-                params);
+        return new HyracksDataException(code, cause, sourceLoc, params);
     }
 
-    public static HyracksDataException create(int code, Throwable cause, Serializable... params) {
-        return new HyracksDataException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), cause, params);
+    public static HyracksDataException create(ErrorCode code, Throwable cause, Serializable... params) {
+        return new HyracksDataException(code, cause, null, params);
     }
 
-    public HyracksDataException(String component, int errorCode, String message, Throwable cause, String nodeId,
-            Serializable... params) {
-        super(component, errorCode, message, cause, nodeId, params);
-    }
-
-    public HyracksDataException(String component, int errorCode, String message, Throwable cause, String nodeId,
-            StackTraceElement[] stackTrace, Serializable... params) {
-        super(component, errorCode, message, cause, nodeId, params);
-        setStackTrace(stackTrace);
+    public static HyracksDataException create(HyracksDataException e, String nodeId) {
+        return new HyracksDataException(e, nodeId);
     }
 
     /**
@@ -101,34 +90,24 @@ public class HyracksDataException extends HyracksException {
         super(message, cause);
     }
 
-    public HyracksDataException(String component, int errorCode, Serializable... params) {
-        super(component, errorCode, null, null, null, params);
+    public HyracksDataException(ErrorCode code, Serializable... params) {
+        this(code, null, params);
     }
 
-    public HyracksDataException(Throwable cause, int errorCode, Serializable... params) {
-        super(ErrorMessageUtil.NONE, errorCode, cause.getMessage(), cause, null, params);
+    public HyracksDataException(ErrorCode code, SourceLocation sourceLoc, Serializable... params) {
+        this(code, null, sourceLoc, params);
     }
 
-    public HyracksDataException(String component, int errorCode, String message, Serializable... params) {
-        super(component, errorCode, message, null, null, params);
+    public HyracksDataException(ErrorCode code, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        super(code, code.component(), code.intValue(), code.errorMessage(), cause, sourceLoc, null, params);
     }
 
-    public HyracksDataException(String component, int errorCode, Throwable cause, Serializable... params) {
-        super(component, errorCode, cause, params);
+    private HyracksDataException(HyracksDataException hde, String nodeId) {
+        super(hde.getError().orElse(null), hde.getComponent(), hde.getErrorCode(), hde.getMessage(), hde.getCause(),
+                hde.getSourceLocation(), nodeId, hde.getStackTrace(), hde.getParams());
     }
 
-    public HyracksDataException(String component, int errorCode, String message, Throwable cause,
-            Serializable... params) {
-        super(component, errorCode, message, cause, null, params);
-    }
-
-    public HyracksDataException(String component, int errorCode, String message, Throwable cause,
-            SourceLocation sourceLoc, Serializable... params) {
-        super(component, errorCode, message, cause, sourceLoc, null, params);
-    }
-
-    public static HyracksDataException create(HyracksDataException e, String nodeId) {
-        return new HyracksDataException(e.getComponent(), e.getErrorCode(), e.getMessage(), e.getCause(), nodeId,
-                e.getStackTrace(), e.getParams());
+    protected HyracksDataException(IError error, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        super(error, error.component(), error.intValue(), error.errorMessage(), cause, sourceLoc, null, params);
     }
 }

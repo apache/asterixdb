@@ -20,6 +20,7 @@ package org.apache.hyracks.api.exceptions;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Optional;
 
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
@@ -31,6 +32,7 @@ public class HyracksException extends IOException implements IFormattedException
     private final int errorCode;
     private final Serializable[] params;
     private final String nodeId;
+    protected transient final IError error;
     private SourceLocation sourceLoc;
     private transient volatile String msgCache;
 
@@ -52,22 +54,12 @@ public class HyracksException extends IOException implements IFormattedException
         return new HyracksException(cause);
     }
 
-    public static HyracksException create(int code, Serializable... params) {
-        return new HyracksException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), params);
+    public static HyracksException create(ErrorCode code, Serializable... params) {
+        return new HyracksException(code, params);
     }
 
-    public static HyracksException create(int code, Throwable cause, Serializable... params) {
-        return new HyracksException(ErrorCode.HYRACKS, code, ErrorCode.getErrorMessage(code), cause, params);
-    }
-
-    public HyracksException(String component, int errorCode, String message, Throwable cause, SourceLocation sourceLoc,
-            String nodeId, Serializable... params) {
-        super(message, cause);
-        this.sourceLoc = sourceLoc;
-        this.component = component;
-        this.errorCode = errorCode;
-        this.nodeId = nodeId;
-        this.params = params;
+    public static HyracksException create(ErrorCode code, Throwable cause, Serializable... params) {
+        return new HyracksException(code, cause, params);
     }
 
     /**
@@ -75,7 +67,24 @@ public class HyracksException extends IOException implements IFormattedException
      */
     @Deprecated
     public HyracksException(String message) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, message, null, null, (Serializable[]) null);
+        this(message, null);
+    }
+
+    protected HyracksException(IError error, String component, int intCode, String message, Throwable cause,
+            SourceLocation sourceLoc, String nodeId, Serializable... params) {
+        super(message, cause);
+        this.error = error;
+        this.sourceLoc = sourceLoc;
+        this.component = component;
+        this.errorCode = intCode;
+        this.nodeId = nodeId;
+        this.params = params;
+    }
+
+    protected HyracksException(IError errorCode, Throwable cause, SourceLocation sourceLoc, String nodeId,
+            Serializable... params) {
+        this(errorCode, errorCode.component(), errorCode.intValue(), errorCode.errorMessage(), cause, sourceLoc, nodeId,
+                params);
     }
 
     /**
@@ -83,7 +92,7 @@ public class HyracksException extends IOException implements IFormattedException
      */
     @Deprecated
     protected HyracksException(Throwable cause) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, ErrorMessageUtil.getCauseMessage(cause), cause, (Serializable[]) null);
+        this(String.valueOf(cause), cause);
     }
 
     /**
@@ -91,32 +100,24 @@ public class HyracksException extends IOException implements IFormattedException
      */
     @Deprecated
     protected HyracksException(String message, Throwable cause) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, message, cause, (String) null);
+        this(ErrorMessageUtil.NONE, UNKNOWN, message, cause);
     }
 
-    public HyracksException(String component, int errorCode, Serializable... params) {
-        this(component, errorCode, null, null, null, params);
+    public HyracksException(ErrorCode errorCode, Throwable cause, Serializable... params) {
+        this(errorCode.component(), errorCode.intValue(), errorCode.errorMessage(), cause, null, params);
     }
 
-    public HyracksException(Throwable cause, int errorCode, Serializable... params) {
-        this(ErrorMessageUtil.NONE, errorCode, ErrorMessageUtil.getCauseMessage(cause), cause, null, params);
+    public HyracksException(ErrorCode errorCode, Serializable... params) {
+        this(errorCode.component(), errorCode.intValue(), errorCode.errorMessage(), null, null, params);
     }
 
-    public HyracksException(String component, int errorCode, String message, Serializable... params) {
-        this(component, errorCode, message, null, null, params);
-    }
-
-    public HyracksException(String component, int errorCode, Throwable cause, Serializable... params) {
-        this(component, errorCode, ErrorMessageUtil.getCauseMessage(cause), cause, null, params);
-    }
-
-    public HyracksException(String component, int errorCode, String message, Throwable cause, Serializable... params) {
+    private HyracksException(String component, int errorCode, String message, Throwable cause, Serializable... params) {
         this(component, errorCode, message, cause, null, params);
     }
 
-    public HyracksException(String component, int errorCode, String message, Throwable cause, String nodeId,
+    private HyracksException(String component, int errorCode, String message, Throwable cause, String nodeId,
             Serializable... params) {
-        this(component, errorCode, message, cause, null, nodeId, params);
+        this(null, component, errorCode, message, cause, null, nodeId, params);
     }
 
     @Override
@@ -147,14 +148,25 @@ public class HyracksException extends IOException implements IFormattedException
 
     @Override
     public String getMessage() {
-        if (msgCache == null) {
-            msgCache = ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), sourceLoc, params);
+        String message = msgCache;
+        if (message == null) {
+            msgCache = message =
+                    ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), sourceLoc, params);
         }
-        return msgCache;
+        return message;
     }
 
     @Override
     public String toString() {
         return getLocalizedMessage();
+    }
+
+    @Override
+    public Optional<IError> getError() {
+        return Optional.ofNullable(error);
+    }
+
+    public boolean matches(ErrorCode errorCode) {
+        return component.equals(errorCode.component()) && getErrorCode() == errorCode.intValue();
     }
 }

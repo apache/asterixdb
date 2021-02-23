@@ -30,49 +30,49 @@ public class MetadataException extends CompilationException {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LogManager.getLogger();
 
-    @Deprecated
     /**
-     * @Deprecated Instead, use a constructor with error code
+     * @deprecated Instead, use a constructor with error code
      * @param message
      */
+    @Deprecated
     public MetadataException(String message) {
         super(message);
     }
 
-    @Deprecated
     /**
-     * @Deprecated When creating a constructor with cause,
+     * @deprecated When creating a constructor with cause,
      *             create AlgebricksException using AlgebricksException.create(Throwable th);
      * @param cause
      */
+    @Deprecated
     public MetadataException(Throwable cause) {
         super(cause);
     }
 
-    @Deprecated
     /**
-     * @Deprecated When creating a constructor with cause,
+     * @deprecated When creating a constructor with cause,
      *             create AlgebricksException using AlgebricksException.create(Throwable th);
      * @param cause
      */
+    @Deprecated
     public MetadataException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public MetadataException(int errorCode, Serializable... params) {
-        super(errorCode, params);
-    }
-
-    public MetadataException(int errorCode, SourceLocation sourceLoc, Serializable... params) {
-        super(errorCode, sourceLoc, params);
-    }
-
-    public MetadataException(int errorCode, Throwable cause, Serializable... params) {
-        super(errorCode, cause, params);
-    }
-
-    public MetadataException(int errorCode, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+    public MetadataException(ErrorCode errorCode, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
         super(errorCode, cause, sourceLoc, params);
+    }
+
+    public MetadataException(ErrorCode errorCode, SourceLocation sourceLoc, Serializable... params) {
+        this(errorCode, null, sourceLoc, params);
+    }
+
+    public MetadataException(ErrorCode errorCode, Throwable cause, Serializable... params) {
+        this(errorCode, cause, null, params);
+    }
+
+    public MetadataException(ErrorCode errorCode, Serializable... params) {
+        this(errorCode, null, null, params);
     }
 
     public static MetadataException create(Throwable cause) {

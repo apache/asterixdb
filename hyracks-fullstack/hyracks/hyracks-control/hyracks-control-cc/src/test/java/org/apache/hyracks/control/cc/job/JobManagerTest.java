@@ -114,7 +114,7 @@ public class JobManagerTest {
             jobManager.add(run);
         } catch (HyracksException e) {
             // Verifies the error code.
-            jobQueueFull = e.getErrorCode() == ErrorCode.JOB_QUEUE_FULL;
+            jobQueueFull = e.matches(ErrorCode.JOB_QUEUE_FULL);
         }
         Assert.assertTrue(jobQueueFull);
 
@@ -154,7 +154,7 @@ public class JobManagerTest {
             jobManager.add(run);
         } catch (HyracksException e) {
             // Verifies the error code.
-            rejected = e.getErrorCode() == ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY;
+            rejected = e.matches(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY);
         }
         Assert.assertTrue(rejected);
         Assert.assertTrue(jobManager.getRunningJobs().isEmpty());
@@ -200,7 +200,7 @@ public class JobManagerTest {
         try {
             jobManager.add(null);
         } catch (HyracksException e) {
-            invalidParameter = e.getErrorCode() == ErrorCode.INVALID_INPUT_PARAMETER;
+            invalidParameter = e.matches(ErrorCode.INVALID_INPUT_PARAMETER);
         }
         Assert.assertTrue(invalidParameter);
         Assert.assertTrue(jobManager.getRunningJobs().isEmpty());

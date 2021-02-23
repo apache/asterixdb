@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.indexing.FileIndexTupleTranslator;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -89,7 +90,7 @@ public class ExternalFilesIndexModificationOperatorDescriptor extends AbstractSi
                             case NO_OP:
                                 break;
                             default:
-                                throw HyracksDataException.create(ErrorCode.UNKNOWN_EXTERNAL_FILE_PENDING_OP, sourceLoc,
+                                throw RuntimeDataException.create(ErrorCode.UNKNOWN_EXTERNAL_FILE_PENDING_OP, sourceLoc,
                                         file.getPendingOp());
                         }
                     }
