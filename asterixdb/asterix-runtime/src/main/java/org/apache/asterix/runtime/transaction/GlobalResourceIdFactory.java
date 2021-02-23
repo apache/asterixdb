@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.transaction;
 
+import java.util.NoSuchElementException;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
@@ -26,6 +27,12 @@ import org.apache.asterix.runtime.message.ResourceIdRequestResponseMessage;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
+import it.unimi.dsi.fastutil.longs.LongPriorityQueue;
+import it.unimi.dsi.fastutil.longs.LongPriorityQueues;
 
 /**
  * A resource id factory that generates unique resource ids across all NCs by requesting
@@ -33,7 +40,11 @@ import org.apache.hyracks.storage.common.file.IResourceIdFactory;
  */
 public class GlobalResourceIdFactory implements IResourceIdFactory {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final int RESOURCE_ID_BLOCK_SIZE = 25;
     private final INCServiceContext serviceCtx;
+    private final LongPriorityQueue resourceIds =
+            LongPriorityQueues.synchronize(new LongArrayFIFOQueue(RESOURCE_ID_BLOCK_SIZE));
     private final LinkedBlockingQueue<ResourceIdRequestResponseMessage> resourceIdResponseQ;
     private final String nodeId;
 
@@ -44,33 +55,51 @@ public class GlobalResourceIdFactory implements IResourceIdFactory {
     }
 
     public void addNewIds(ResourceIdRequestResponseMessage resourceIdResponse) throws InterruptedException {
+        LOGGER.debug("rec'd block of ids: {}", resourceIdResponse);
         resourceIdResponseQ.put(resourceIdResponse);
     }
 
     @Override
     public long createId() throws HyracksDataException {
         try {
-            ResourceIdRequestResponseMessage reponse = null;
-            //if there already exists a response, use it
-            if (!resourceIdResponseQ.isEmpty()) {
-                synchronized (resourceIdResponseQ) {
-                    if (!resourceIdResponseQ.isEmpty()) {
-                        reponse = resourceIdResponseQ.take();
+            final long resourceId = resourceIds.dequeueLong();
+            if (resourceIds.isEmpty()) {
+                serviceCtx.getControllerService().getExecutor().submit(() -> {
+                    try {
+                        requestNewBlock();
+                    } catch (Exception e) {
+                        LOGGER.warn("failed on preemptive block request", e);
                     }
-                }
+                });
             }
-            //if no response available or it has an exception, request a new one
-            if (reponse == null || reponse.getException() != null) {
-                ResourceIdRequestMessage msg = new ResourceIdRequestMessage(nodeId);
-                ((INCMessageBroker) serviceCtx.getMessageBroker()).sendMessageToPrimaryCC(msg);
-                reponse = resourceIdResponseQ.take();
-                if (reponse.getException() != null) {
-                    throw HyracksDataException.create(reponse.getException());
-                }
+            return resourceId;
+        } catch (NoSuchElementException e) {
+            // fallthrough
+        }
+        try {
+            // if there already exists a response, use it
+            ResourceIdRequestResponseMessage response = resourceIdResponseQ.poll();
+            if (response == null) {
+                requestNewBlock();
+                response = resourceIdResponseQ.take();
             }
-            return reponse.getResourceId();
+            if (response.getException() != null) {
+                throw HyracksDataException.create(response.getException());
+            }
+            // take the first id, queue the rest
+            final long startingId = response.getResourceId();
+            for (int i = 1; i < response.getBlockSize(); i++) {
+                resourceIds.enqueue(startingId + i);
+            }
+            return startingId;
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    protected void requestNewBlock() throws Exception {
+        // queue is empty; request a new block
+        ResourceIdRequestMessage msg = new ResourceIdRequestMessage(nodeId, RESOURCE_ID_BLOCK_SIZE);
+        ((INCMessageBroker) serviceCtx.getMessageBroker()).sendMessageToPrimaryCC(msg);
     }
 }
