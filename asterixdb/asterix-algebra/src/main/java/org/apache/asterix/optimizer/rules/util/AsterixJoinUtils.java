@@ -18,35 +18,26 @@
  */
 package org.apache.asterix.optimizer.rules.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.asterix.common.annotations.RangeAnnotation;
 import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
-import org.apache.asterix.om.base.AInt64;
-import org.apache.asterix.om.base.APoint;
-import org.apache.asterix.om.base.ARectangle;
-import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.commons.lang3.mutable.Mutable;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class AsterixJoinUtils {
 
@@ -72,8 +63,8 @@ public class AsterixJoinUtils {
         List<LogicalVariable> varsRight = op.getInputs().get(RIGHT).getValue().getSchema();
 
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) conditionLE;
-        FunctionIdentifier fi =
-            IntervalJoinUtils.isIntervalJoinCondition(funcExpr, varsLeft, varsRight, sideLeft, sideRight, LEFT, RIGHT);
+        FunctionIdentifier fi = IntervalJoinUtils.isIntervalJoinCondition(funcExpr, varsLeft, varsRight, sideLeft,
+                sideRight, LEFT, RIGHT);
         if (fi != null) {
             // Existing workflow for interval merge join
             RangeAnnotation rangeAnnotation = IntervalJoinUtils.findRangeAnnotation(funcExpr);
@@ -82,23 +73,24 @@ public class AsterixJoinUtils {
             }
             //Check RangeMap type
             RangeMap rangeMap = rangeAnnotation.getRangeMap();
-            if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize() && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
-                && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
+            if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize()
+                    && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
+                    && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
                 IWarningCollector warningCollector = context.getWarningCollector();
                 if (warningCollector.shouldWarn()) {
                     warningCollector.warn(Warning.forHyracks(op.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
-                        "Date, DateTime, and Time are only range hints types supported for interval joins"));
+                            "Date, DateTime, and Time are only range hints types supported for interval joins"));
                 }
                 return;
             }
-            IntervalPartitions intervalPartitions =
-                IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft, sideRight, rangeMap, context, LEFT, RIGHT);
+            IntervalPartitions intervalPartitions = IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft,
+                    sideRight, rangeMap, context, LEFT, RIGHT);
             IntervalJoinUtils.setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, context, intervalPartitions);
         } else {
             // Check if the join condition contains spatial join
-            Mutable<ILogicalExpression> joinConditionRef = op.getCondition();
             SpatialJoinAnnotation spatialJoinAnn = null;
             AbstractFunctionCallExpression spatialJoinFuncExpr = null;
+            // Maintain conditions which is not spatial_intersect in the join condition
             List<Mutable<ILogicalExpression>> conditionExprs = new ArrayList<>();
 
             if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.AND)) {
@@ -117,6 +109,7 @@ public class AsterixJoinUtils {
                     } else {
                         conditionExprs.add(exp);
                         if (BuiltinFunctions.isSTFilterRefineFunction(funcCallExp.getFunctionIdentifier())) {
+                            // Extract the hint of the spatial-temporal filter refine function
                             spatialJoinAnn = funcCallExp.getAnnotation(SpatialJoinAnnotation.class);
                         }
                     }
@@ -128,82 +121,19 @@ public class AsterixJoinUtils {
             } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
                 // Join condition is spatial_intersect only
                 spatialJoinFuncExpr = funcExpr;
+                // Extract the hint of spatial_intersect function
                 spatialJoinAnn = spatialJoinFuncExpr.getAnnotation(SpatialJoinAnnotation.class);
             } else {
                 return;
             }
 
-            if (spatialJoinAnn == null) {
-//                spatialJoinAnn = new SpatialJoinAnnotation(-180.0, -83.0, 180, 90.0, 10, 10);
-                // Spatial annotation is mandatory to apply spatial join optimal rules
+            // We only apply optimization process for spatial join if the join annotation (hint) is provided
+            if (spatialJoinAnn != null) {
+                SpatialJoinUtils.updateJoinPlan(op, spatialJoinFuncExpr, conditionExprs, spatialJoinAnn, context, LEFT,
+                        RIGHT);
+            } else {
                 return;
             }
-
-            // Extracts spatial intersect function's arguments
-            List<Mutable<ILogicalExpression>> spatialJoinInputExprs = spatialJoinFuncExpr.getArguments();
-            if (spatialJoinInputExprs.size() != 2) {
-                return;
-            }
-
-            ILogicalExpression leftOperatingExpr = spatialJoinInputExprs.get(LEFT).getValue();
-            ILogicalExpression rightOperatingExpr = spatialJoinInputExprs.get(RIGHT).getValue();
-
-            // left and right expressions should be variables.
-            if (leftOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT
-                || rightOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                return;
-            }
-
-            // Gets both input branches of the spatial join.
-            Mutable<ILogicalOperator> leftOp = op.getInputs().get(LEFT);
-            Mutable<ILogicalOperator> rightOp = op.getInputs().get(RIGHT);
-
-            // Extract left and right variable of the predicate
-            LogicalVariable leftInputVar = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
-            LogicalVariable rightInputVar = ((VariableReferenceExpression) rightOperatingExpr).getVariableReference();
-
-            // Inject unnest operator to the left and right branch of the join operator
-            LogicalVariable leftTileIdVar = SpatialJoinUtils.injectUnnestOperator(context, leftOp, leftInputVar, spatialJoinAnn);
-            LogicalVariable rightTileIdVar = SpatialJoinUtils.injectUnnestOperator(context, rightOp, rightInputVar, spatialJoinAnn);
-
-            // Compute reference tile ID
-            ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.REFERENCE_TILE),
-                new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
-                new MutableObject<>(new VariableReferenceExpression(rightInputVar)),
-                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                    new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-                        new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
-                new MutableObject<>(
-                    new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
-                new MutableObject<>(
-                    new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
-
-            // Update the join conditions with the tile Id equality condition
-            ScalarFunctionCallExpression tileIdEquiJoinCondition =
-                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
-                    new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
-                    new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
-            ScalarFunctionCallExpression referenceIdEquiJoinCondition =
-                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
-                    new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
-                    new MutableObject<>(referenceTileId));
-
-            conditionExprs.add(new MutableObject<>(tileIdEquiJoinCondition));
-            conditionExprs.add(new MutableObject<>(spatialJoinFuncExpr));
-            conditionExprs.add(new MutableObject<>(referenceIdEquiJoinCondition));
-
-            ScalarFunctionCallExpression updatedJoinCondition = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND), conditionExprs);
-            joinConditionRef.setValue(updatedJoinCondition);
-
-            List<LogicalVariable> keysLeftBranch = new ArrayList<>();
-            keysLeftBranch.add(leftTileIdVar);
-            keysLeftBranch.add(leftInputVar);
-            List<LogicalVariable> keysRightBranch = new ArrayList<>();
-            keysRightBranch.add(rightTileIdVar);
-            keysRightBranch.add(rightInputVar);
-            SpatialJoinUtils.setSpatialJoinOp(op, keysLeftBranch, keysRightBranch, context);
         }
     }
 }

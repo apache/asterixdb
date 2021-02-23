@@ -70,8 +70,6 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
                 .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildSTFilterRefineSpatialDistanceJoinCollection()));
         defaultLogicalRewrites
                 .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
-
-//        defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildSpatialJoinRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildDataExchangeRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildFulltextContainsRuleCollection()));
