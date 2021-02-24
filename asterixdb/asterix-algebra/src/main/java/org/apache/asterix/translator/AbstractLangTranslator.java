@@ -34,14 +34,26 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
+import org.apache.asterix.lang.common.statement.CreateFeedStatement;
+import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
+import org.apache.asterix.lang.common.statement.CreateLibraryStatement;
+import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DropDatasetStatement;
+import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.IndexDropStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
+import org.apache.asterix.lang.common.statement.LoadStatement;
+import org.apache.asterix.lang.common.statement.TypeDecl;
+import org.apache.asterix.lang.common.statement.TypeDropStatement;
+import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.MetadataConstants;
@@ -58,6 +70,14 @@ import org.apache.logging.log4j.Logger;
 public abstract class AbstractLangTranslator {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    protected static final String INVALID_OPERATION_MESSAGE = "Invalid operation - %s";
+
+    protected static final String BAD_DATAVERSE_DML_MESSAGE = "%s operation is not permitted in dataverse %s";
+
+    protected static final String BAD_DATAVERSE_DDL_MESSAGE = "Cannot %s dataverse: %s";
+
+    protected static final String BAD_DATAVERSE_OBJECT_DDL_MESSAGE = "Cannot %s a %s belonging to the dataverse: %s";
 
     public void validateOperation(ICcApplicationContext appCtx, Dataverse defaultDataverse, Statement stmt)
             throws AlgebricksException {
@@ -120,15 +140,36 @@ public abstract class AbstractLangTranslator {
         String message = null;
         DataverseName dataverseName = defaultDataverse != null ? defaultDataverse.getDataverseName() : null;
         switch (stmt.getKind()) {
+            case LOAD:
+                LoadStatement loadStmt = (LoadStatement) stmt;
+                if (loadStmt.getDataverseName() != null) {
+                    dataverseName = loadStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_DML_MESSAGE, "Load", dataverseName);
+                }
+                break;
+
             case INSERT:
                 InsertStatement insertStmt = (InsertStatement) stmt;
                 if (insertStmt.getDataverseName() != null) {
                     dataverseName = insertStmt.getDataverseName();
                 }
-                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
+                invalidOperation = isMetadataDataverse(dataverseName);
                 if (invalidOperation) {
-                    message = "Insert operation is not permitted in dataverse "
-                            + MetadataConstants.METADATA_DATAVERSE_NAME;
+                    message = String.format(BAD_DATAVERSE_DML_MESSAGE, "Insert", dataverseName);
+                }
+                break;
+
+            case UPSERT:
+                UpsertStatement upsertStmt = (UpsertStatement) stmt;
+                if (upsertStmt.getDataverseName() != null) {
+                    dataverseName = upsertStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_DML_MESSAGE, "Upsert", dataverseName);
                 }
                 break;
 
@@ -137,10 +178,9 @@ public abstract class AbstractLangTranslator {
                 if (deleteStmt.getDataverseName() != null) {
                     dataverseName = deleteStmt.getDataverseName();
                 }
-                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
+                invalidOperation = isMetadataDataverse(dataverseName);
                 if (invalidOperation) {
-                    message = "Delete operation is not permitted in dataverse "
-                            + MetadataConstants.METADATA_DATAVERSE_NAME;
+                    message = String.format(BAD_DATAVERSE_DML_MESSAGE, "Delete", dataverseName);
                 }
                 break;
 
@@ -150,57 +190,179 @@ public abstract class AbstractLangTranslator {
                 invalidOperation = FunctionConstants.ASTERIX_DV.equals(dataverseName)
                         || FunctionConstants.ALGEBRICKS_DV.equals(dataverseName);
                 if (invalidOperation) {
-                    message = "Cannot create dataverse: " + dataverseName;
+                    message = String.format(BAD_DATAVERSE_DDL_MESSAGE, "create", dataverseName);
                 }
                 break;
 
             case DATAVERSE_DROP:
                 DataverseDropStatement dvDropStmt = (DataverseDropStatement) stmt;
                 dataverseName = dvDropStmt.getDataverseName();
-                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
+                invalidOperation = isMetadataDataverse(dataverseName);
                 if (invalidOperation) {
-                    message = "Cannot drop dataverse: " + dataverseName;
-                }
-                break;
-
-            case DATASET_DROP:
-                DropDatasetStatement dropStmt = (DropDatasetStatement) stmt;
-                if (dropStmt.getDataverseName() != null) {
-                    dataverseName = dropStmt.getDataverseName();
-                }
-                invalidOperation = MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
-                if (invalidOperation) {
-                    message = "Cannot drop a dataset belonging to the dataverse: "
-                            + MetadataConstants.METADATA_DATAVERSE_NAME;
+                    message = String.format(BAD_DATAVERSE_DDL_MESSAGE, "drop", dataverseName);
                 }
                 break;
 
             case DATASET_DECL:
-                DatasetDecl datasetStmt = (DatasetDecl) stmt;
-                Map<String, String> hints = datasetStmt.getHints();
-                if (hints != null && !hints.isEmpty()) {
-                    StringBuilder errorMsgBuffer = new StringBuilder();
-                    for (Entry<String, String> hint : hints.entrySet()) {
-                        Pair<Boolean, String> validationResult =
-                                DatasetHints.validate(appCtx, hint.getKey(), hint.getValue());
-                        if (!validationResult.first) {
-                            errorMsgBuffer.append("Dataset: ").append(datasetStmt.getName().getValue())
-                                    .append(" error in processing hint: ").append(hint.getKey()).append(" ")
-                                    .append(validationResult.second);
-                            errorMsgBuffer.append(" \n");
+                DatasetDecl dsCreateStmt = (DatasetDecl) stmt;
+                if (dsCreateStmt.getDataverse() != null) {
+                    dataverseName = dsCreateStmt.getDataverse();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "dataset", dataverseName);
+                }
+
+                if (!invalidOperation) {
+                    Map<String, String> hints = dsCreateStmt.getHints();
+                    if (hints != null && !hints.isEmpty()) {
+                        StringBuilder errorMsgBuffer = new StringBuilder();
+                        for (Entry<String, String> hint : hints.entrySet()) {
+                            Pair<Boolean, String> validationResult =
+                                    DatasetHints.validate(appCtx, hint.getKey(), hint.getValue());
+                            if (!validationResult.first) {
+                                errorMsgBuffer.append("Dataset: ").append(dsCreateStmt.getName().getValue())
+                                        .append(" error in processing hint: ").append(hint.getKey()).append(" ")
+                                        .append(validationResult.second);
+                                errorMsgBuffer.append(" \n");
+                            }
+                        }
+                        invalidOperation = errorMsgBuffer.length() > 0;
+                        if (invalidOperation) {
+                            message = errorMsgBuffer.toString();
                         }
                     }
-                    invalidOperation = errorMsgBuffer.length() > 0;
-                    if (invalidOperation) {
-                        message = errorMsgBuffer.toString();
-                    }
+                }
+                break;
+
+            case DATASET_DROP:
+                DropDatasetStatement dsDropStmt = (DropDatasetStatement) stmt;
+                if (dsDropStmt.getDataverseName() != null) {
+                    dataverseName = dsDropStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "drop", "dataset", dataverseName);
+                }
+                break;
+
+            case INDEX_DROP:
+                IndexDropStatement idxDropStmt = (IndexDropStatement) stmt;
+                if (idxDropStmt.getDataverseName() != null) {
+                    dataverseName = idxDropStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "drop", "index", dataverseName);
+                }
+                break;
+
+            case TYPE_DECL:
+                TypeDecl typeCreateStmt = (TypeDecl) stmt;
+                if (typeCreateStmt.getDataverseName() != null) {
+                    dataverseName = typeCreateStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "type", dataverseName);
+                }
+                break;
+
+            case TYPE_DROP:
+                TypeDropStatement typeDropStmt = (TypeDropStatement) stmt;
+                if (typeDropStmt.getDataverseName() != null) {
+                    dataverseName = typeDropStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "drop", "type", dataverseName);
+                }
+                break;
+
+            case CREATE_SYNONYM:
+                CreateSynonymStatement synCreateStmt = (CreateSynonymStatement) stmt;
+                if (synCreateStmt.getDataverseName() != null) {
+                    dataverseName = synCreateStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "synonym", dataverseName);
+                }
+                break;
+
+            case FUNCTION_DECL:
+                FunctionDecl fnDeclStmt = (FunctionDecl) stmt;
+                FunctionSignature fnDeclSignature = fnDeclStmt.getSignature();
+                if (fnDeclSignature.getDataverseName() != null) {
+                    dataverseName = fnDeclSignature.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "declare", "function", dataverseName);
+                }
+                break;
+
+            case CREATE_FUNCTION:
+                CreateFunctionStatement fnCreateStmt = (CreateFunctionStatement) stmt;
+                FunctionSignature fnCreateSignature = fnCreateStmt.getFunctionSignature();
+                if (fnCreateSignature.getDataverseName() != null) {
+                    dataverseName = fnCreateSignature.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "function", dataverseName);
+                }
+                break;
+
+            case CREATE_LIBRARY:
+                CreateLibraryStatement libCreateStmt = (CreateLibraryStatement) stmt;
+                if (libCreateStmt.getDataverseName() != null) {
+                    dataverseName = libCreateStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "library", dataverseName);
+                }
+                break;
+
+            case CREATE_ADAPTER:
+                CreateAdapterStatement adCreateStmt = (CreateAdapterStatement) stmt;
+                if (adCreateStmt.getDataverseName() != null) {
+                    dataverseName = adCreateStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "adapter", dataverseName);
+                }
+                break;
+
+            case CREATE_FEED:
+                CreateFeedStatement feedCreateStmt = (CreateFeedStatement) stmt;
+                if (feedCreateStmt.getDataverseName() != null) {
+                    dataverseName = feedCreateStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "feed", dataverseName);
+                }
+                break;
+
+            case CREATE_FEED_POLICY:
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "ingestion policy",
+                            dataverseName);
                 }
                 break;
         }
 
         if (invalidOperation) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, stmt.getSourceLocation(),
-                    "Invalid operation - " + message);
+                    String.format(INVALID_OPERATION_MESSAGE, message));
         }
+    }
+
+    protected static boolean isMetadataDataverse(DataverseName dataverseName) {
+        return MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
     }
 }

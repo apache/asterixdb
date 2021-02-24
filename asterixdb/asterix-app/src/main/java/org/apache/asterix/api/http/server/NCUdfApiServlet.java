@@ -146,7 +146,6 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
         try {
             ncMb.sendMessageToPrimaryCC(requestMessage);
             responseMsg = (InternalRequestResponse) responseFuture.get(120000, TimeUnit.MILLISECONDS);
-
         } finally {
             ncMb.deregisterMessageFuture(responseFuture.getFutureId());
         }
