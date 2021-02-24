@@ -419,14 +419,14 @@ public final class RuleCollections {
     }
 
     public static final List<IAlgebraicRewriteRule> buildSTFilterRefineSpatialJoinCollection() {
-        List<IAlgebraicRewriteRule> FilterRefineSpatialJoin = new LinkedList<>();
-        FilterRefineSpatialJoin.add(new FilterRefineSpatialJoin());
-        return FilterRefineSpatialJoin;
+        List<IAlgebraicRewriteRule> filterRefineSpatialJoin = new LinkedList<>();
+        filterRefineSpatialJoin.add(new FilterRefineSpatialJoin());
+        return filterRefineSpatialJoin;
     }
 
     public static final List<IAlgebraicRewriteRule> buildSTFilterRefineSpatialDistanceJoinCollection() {
-        List<IAlgebraicRewriteRule> FilterRefineSpatialDistanceJoin = new LinkedList<>();
-        FilterRefineSpatialDistanceJoin.add(new FilterRefineSpatialDistanceJoin());
-        return FilterRefineSpatialDistanceJoin;
+        List<IAlgebraicRewriteRule> filterRefineSpatialDistanceJoin = new LinkedList<>();
+        filterRefineSpatialDistanceJoin.add(new FilterRefineSpatialDistanceJoin());
+        return filterRefineSpatialDistanceJoin;
     }
 }
