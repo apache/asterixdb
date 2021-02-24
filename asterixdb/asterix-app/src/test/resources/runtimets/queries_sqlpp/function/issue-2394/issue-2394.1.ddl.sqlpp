@@ -51,6 +51,7 @@ create function CoffeeWithFriends(user_id){
 let temp = (select * from Tweets f where f.user.id_str in (select value fw.followers from Followers fw where fw.twitter_id=user_id)[0]
 and
 spatial_intersect(create_point(f.place.bounding_box.coordinates[0][0][0],f.place.bounding_box.coordinates[0][0][1]),
-create_point(t.place.bounding_box.coordinates[0][0][0],t.place.bounding_box.coordinates[0][0][1])))
+create_point(t.place.bounding_box.coordinates[0][0][0],t.place.bounding_box.coordinates[0][0][1]))
+order by f.id)
 where t.user.id_str = user_id)
 };
