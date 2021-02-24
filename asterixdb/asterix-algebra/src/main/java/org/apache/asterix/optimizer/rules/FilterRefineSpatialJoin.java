@@ -66,12 +66,12 @@ public class FilterRefineSpatialJoin implements IAlgebraicRewriteRule {
             return false;
         }
 
-        AbstractFunctionCallExpression STFuncExpr = (AbstractFunctionCallExpression) joinCondition;
-        if (!BuiltinFunctions.isSTFilterRefineFunction(STFuncExpr.getFunctionIdentifier())) {
+        AbstractFunctionCallExpression stFuncExpr = (AbstractFunctionCallExpression) joinCondition;
+        if (!BuiltinFunctions.isSTFilterRefineFunction(stFuncExpr.getFunctionIdentifier())) {
             return false;
         }
 
-        List<Mutable<ILogicalExpression>> inputExprs = STFuncExpr.getArguments();
+        List<Mutable<ILogicalExpression>> inputExprs = stFuncExpr.getArguments();
         if (inputExprs.size() != 2) {
             return false;
         }
@@ -101,7 +101,7 @@ public class FilterRefineSpatialJoin implements IAlgebraicRewriteRule {
 
         ScalarFunctionCallExpression updatedJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
-                        new MutableObject<>(spatialIntersect), new MutableObject<>(STFuncExpr));
+                        new MutableObject<>(spatialIntersect), new MutableObject<>(stFuncExpr));
 
         joinConditionRef.setValue(updatedJoinCondition);
 
