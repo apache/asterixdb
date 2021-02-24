@@ -82,9 +82,9 @@ public class SpatialJoinUtils {
         return sideVar;
     }
 
-    public static void updateJoinPlan(AbstractBinaryJoinOperator op, AbstractFunctionCallExpression spatialJoinFuncExpr,
-            List<Mutable<ILogicalExpression>> conditionExprs, SpatialJoinAnnotation spatialJoinAnn,
-            IOptimizationContext context, int LEFT, int RIGHT) {
+    protected static void updateJoinPlan(AbstractBinaryJoinOperator op,
+            AbstractFunctionCallExpression spatialJoinFuncExpr, List<Mutable<ILogicalExpression>> conditionExprs,
+            SpatialJoinAnnotation spatialJoinAnn, IOptimizationContext context, int LEFT, int RIGHT) {
         // Extracts spatial intersect function's arguments
         List<Mutable<ILogicalExpression>> spatialJoinInputExprs = spatialJoinFuncExpr.getArguments();
         if (spatialJoinInputExprs.size() != 2) {

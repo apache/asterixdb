@@ -113,20 +113,10 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                             double ay1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
-                            //                            double ax2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                            //                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-                            //                            double ay2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                            //                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
-
                             double bx1 = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
                             double by1 = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
-
-                            //                            double bx2 = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                            //                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-                            //                            double by2 = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                            //                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
 
                             double minX = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
