@@ -83,8 +83,7 @@ public class FilterRefineSpatialDistanceJoin implements IAlgebraicRewriteRule {
         ILogicalExpression leftOperatingExpr = inputExprs.get(LEFT).getValue();
         ILogicalExpression rightOperatingExpr = inputExprs.get(RIGHT).getValue();
 
-        if (!(((ScalarFunctionCallExpression) leftOperatingExpr).getFunctionIdentifier()
-                .equals(BuiltinFunctions.ST_DISTANCE))) {
+        if (!funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.ST_DISTANCE)) {
             return false;
         }
 

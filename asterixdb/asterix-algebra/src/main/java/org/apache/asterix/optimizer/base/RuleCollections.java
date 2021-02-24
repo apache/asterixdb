@@ -88,7 +88,6 @@ import org.apache.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import org.apache.asterix.optimizer.rules.SetClosedRecordConstructorsRule;
 import org.apache.asterix.optimizer.rules.SetupCommitExtensionOpRule;
 import org.apache.asterix.optimizer.rules.SimilarityCheckRule;
-import org.apache.asterix.optimizer.rules.SpatialJoinRule;
 import org.apache.asterix.optimizer.rules.SweepIllegalNonfunctionalFunctions;
 import org.apache.asterix.optimizer.rules.UnnestToDataScanRule;
 import org.apache.asterix.optimizer.rules.am.IntroduceJoinAccessMethodRule;
@@ -419,21 +418,15 @@ public final class RuleCollections {
         return prepareForJobGenRewrites;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildSpatialJoinRuleCollection() {
-        List<IAlgebraicRewriteRule> spatialJoin = new LinkedList<>();
-        spatialJoin.add(new SpatialJoinRule());
-        return spatialJoin;
-    }
-
     public static final List<IAlgebraicRewriteRule> buildSTFilterRefineSpatialJoinCollection() {
-        List<IAlgebraicRewriteRule> FilterRefineSpatialJoin = new LinkedList<>();
-        FilterRefineSpatialJoin.add(new FilterRefineSpatialJoin());
-        return FilterRefineSpatialJoin;
+        List<IAlgebraicRewriteRule> filterRefineSpatialJoin = new LinkedList<>();
+        filterRefineSpatialJoin.add(new FilterRefineSpatialJoin());
+        return filterRefineSpatialJoin;
     }
 
     public static final List<IAlgebraicRewriteRule> buildSTFilterRefineSpatialDistanceJoinCollection() {
-        List<IAlgebraicRewriteRule> FilterRefineSpatialDistanceJoin = new LinkedList<>();
-        FilterRefineSpatialDistanceJoin.add(new FilterRefineSpatialDistanceJoin());
-        return FilterRefineSpatialDistanceJoin;
+        List<IAlgebraicRewriteRule> filterRefineSpatialDistanceJoin = new LinkedList<>();
+        filterRefineSpatialDistanceJoin.add(new FilterRefineSpatialDistanceJoin());
+        return filterRefineSpatialDistanceJoin;
     }
 }
