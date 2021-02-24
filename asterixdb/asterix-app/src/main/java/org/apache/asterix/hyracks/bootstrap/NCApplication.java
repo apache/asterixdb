@@ -19,16 +19,19 @@
 package org.apache.asterix.hyracks.bootstrap;
 
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.api.http.server.ServletConstants.SYS_AUTH_HEADER;
 import static org.apache.asterix.common.utils.Servlets.QUERY_RESULT;
 import static org.apache.asterix.common.utils.Servlets.QUERY_SERVICE;
 import static org.apache.asterix.common.utils.Servlets.QUERY_STATUS;
 import static org.apache.asterix.common.utils.Servlets.UDF;
+import static org.apache.asterix.common.utils.Servlets.UDF_RECOVERY;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +41,7 @@ import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.api.http.server.BasicAuthServlet;
 import org.apache.asterix.api.http.server.NCQueryServiceServlet;
 import org.apache.asterix.api.http.server.NCUdfApiServlet;
+import org.apache.asterix.api.http.server.NCUdfRecoveryServlet;
 import org.apache.asterix.api.http.server.NetDiagnosticsApiServlet;
 import org.apache.asterix.api.http.server.QueryResultApiServlet;
 import org.apache.asterix.api.http.server.QueryStatusApiServlet;
@@ -83,6 +87,7 @@ import org.apache.asterix.utils.RedactionUtil;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.config.IConfigManager;
@@ -106,11 +111,12 @@ import org.apache.logging.log4j.Logger;
 public class NCApplication extends BaseNCApplication {
     private static final Logger LOGGER = LogManager.getLogger();
     protected NCExtensionManager ncExtensionManager;
-    private INcApplicationContext runtimeContext;
+    protected INcApplicationContext runtimeContext;
     private String nodeId;
     private boolean stopInitiated;
-    private boolean startupCompleted;
+    protected boolean startupCompleted;
     protected WebManager webManager;
+    private HttpServer apiServer;
 
     @Override
     public void registerConfig(IConfigManager configManager) {
@@ -203,8 +209,8 @@ public class NCApplication extends BaseNCApplication {
         final ExternalProperties externalProperties = getApplicationContext().getExternalProperties();
         final HttpServerConfig config =
                 HttpServerConfigBuilder.custom().setMaxRequestSize(externalProperties.getMaxWebRequestSize()).build();
-        HttpServer apiServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(),
-                externalProperties.getNcApiPort(), config);
+        apiServer = new HttpServer(webManager.getBosses(), webManager.getWorkers(), externalProperties.getNcApiPort(),
+                config);
         apiServer.setAttribute(ServletConstants.SERVICE_CONTEXT_ATTR, ncServiceCtx);
         apiServer.setAttribute(HYRACKS_CONNECTION_ATTR, getApplicationContext().getHcc());
         apiServer.addServlet(new StorageApiServlet(apiServer.ctx(), getApplicationContext(), Servlets.STORAGE));
@@ -217,9 +223,15 @@ public class NCApplication extends BaseNCApplication {
         apiServer.setAttribute(ServletConstants.CREDENTIAL_MAP,
                 parseCredentialMap(((NodeControllerService) ncServiceCtx.getControllerService()).getConfiguration()
                         .getCredentialFilePath()));
+        Pair<Map<String, String>, Map<String, String>> auth = BasicAuthServlet.generateSysAuthHeader(apiServer.ctx());
         apiServer.addServlet(new BasicAuthServlet(apiServer.ctx(),
                 new NCUdfApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext(),
-                        sqlppCompilationProvider, apiServer.getScheme(), apiServer.getAddress().getPort())));
+                        sqlppCompilationProvider, apiServer.getScheme(), apiServer.getAddress().getPort()),
+                auth.getFirst(), auth.getSecond()));
+        apiServer.addServlet(new BasicAuthServlet(
+                apiServer.ctx(), new NCUdfRecoveryServlet(apiServer.ctx(), new String[] { UDF_RECOVERY },
+                        getApplicationContext(), apiServer.getScheme(), apiServer.getAddress().getPort()),
+                auth.getFirst(), auth.getSecond()));
         apiServer.addServlet(new QueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS));
         apiServer.addServlet(new QueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT));
         webManager.add(apiServer);
@@ -283,8 +295,11 @@ public class NCApplication extends BaseNCApplication {
         final NodeStatus currentStatus = ncs.getNodeStatus();
         final SystemState systemState = isPendingStartupTasks(currentStatus, ncs.getPrimaryCcId(), ccId)
                 ? getCurrentSystemState() : SystemState.HEALTHY;
+        final Map httpSecrets =
+                apiServer != null ? Collections.singletonMap(SYS_AUTH_HEADER, apiServer.ctx().get(SYS_AUTH_HEADER))
+                        : Collections.emptyMap();
         RegistrationTasksRequestMessage.send(ccId, (NodeControllerService) ncServiceCtx.getControllerService(),
-                currentStatus, systemState);
+                currentStatus, systemState, httpSecrets);
     }
 
     @Override

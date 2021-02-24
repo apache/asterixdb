@@ -19,9 +19,15 @@
 
 package org.apache.asterix.common.library;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.security.MessageDigest;
+
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.ipc.ExternalFunctionResultRouter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 
@@ -32,6 +38,8 @@ public interface ILibraryManager {
     void closeLibrary(DataverseName dataverseName, String libraryName) throws HyracksDataException;
 
     // deployment helpers
+
+    FileReference getStorageDir();
 
     FileReference getLibraryDir(DataverseName dataverseName, String libraryName) throws HyracksDataException;
 
@@ -44,4 +52,10 @@ public interface ILibraryManager {
     ExternalFunctionResultRouter getRouter();
 
     IPCSystem getIPCI();
+
+    MessageDigest download(FileReference targetFile, String authToken, URI libLocation) throws HyracksException;
+
+    void unzip(FileReference sourceFile, FileReference outputDir) throws IOException;
+
+    void writeAndForce(FileReference outputFile, InputStream dataStream, byte[] copyBuf) throws IOException;
 }

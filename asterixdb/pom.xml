@@ -75,7 +75,8 @@
     <itest.excludes>${global.itest.excludes}</itest.excludes>
     <license.stage>compile</license.stage>
     <resource.stage>process-classes</resource.stage>
-    <pyro-shim.stage>none</pyro-shim.stage>
+    <prepare-env.stage>none</prepare-env.stage>
+    <shim.stage>none</shim.stage>
     <pytestlib.stage>none</pytestlib.stage>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
@@ -664,7 +665,25 @@
         </file>
       </activation>
       <properties>
-        <pyro-shim.stage>process-classes</pyro-shim.stage>
+        <prepare-env.stage>process-classes</prepare-env.stage>
+        <shim.stage>process-classes</shim.stage>
+        <pytestlib.stage>generate-test-resources</pytestlib.stage>
+        <global.itest.excludes/>
+      </properties>
+    </profile>
+    <profile>
+      <id>python-udf-test-only</id>
+      <activation>
+        <property>
+          <name>no.shim</name>
+        </property>
+        <file>
+          <exists>${python.path}</exists>
+        </file>
+      </activation>
+      <properties>
+        <prepare-env.stage>process-classes</prepare-env.stage>
+        <shim.stage>none</shim.stage>
         <pytestlib.stage>generate-test-resources</pytestlib.stage>
         <global.itest.excludes/>
       </properties>

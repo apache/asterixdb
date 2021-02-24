@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.app.replication.message;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
@@ -34,22 +37,25 @@ import org.apache.logging.log4j.Logger;
 public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICcAddressedMessage {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final long serialVersionUID = 1L;
-    private final SystemState state;
-    private final String nodeId;
-    private final NodeStatus nodeStatus;
+    private static final long serialVersionUID = 2L;
+    protected final SystemState state;
+    protected final String nodeId;
+    protected final NodeStatus nodeStatus;
+    protected final Map<String, Object> secrets;
 
-    public RegistrationTasksRequestMessage(String nodeId, NodeStatus nodeStatus, SystemState state) {
+    public RegistrationTasksRequestMessage(String nodeId, NodeStatus nodeStatus, SystemState state,
+            Map<String, Object> secretsEphemeral) {
         this.state = state;
         this.nodeId = nodeId;
         this.nodeStatus = nodeStatus;
+        this.secrets = new HashMap<>(secretsEphemeral);
     }
 
-    public static void send(CcId ccId, NodeControllerService cs, NodeStatus nodeStatus, SystemState systemState)
-            throws HyracksDataException {
+    public static void send(CcId ccId, NodeControllerService cs, NodeStatus nodeStatus, SystemState systemState,
+            Map<String, Object> secretsEphemeral) throws HyracksDataException {
         try {
             RegistrationTasksRequestMessage msg =
-                    new RegistrationTasksRequestMessage(cs.getId(), nodeStatus, systemState);
+                    new RegistrationTasksRequestMessage(cs.getId(), nodeStatus, systemState, secretsEphemeral);
             ((INCMessageBroker) cs.getContext().getMessageBroker()).sendMessageToCC(ccId, msg);
         } catch (Exception e) {
             LOGGER.log(Level.ERROR, "Unable to send RegistrationTasksRequestMessage to CC", e);
@@ -79,4 +85,7 @@ public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICc
         return MessageType.REGISTRATION_TASKS_REQUEST;
     }
 
+    public Map<String, Object> getSecrets() {
+        return secrets;
+    }
 }

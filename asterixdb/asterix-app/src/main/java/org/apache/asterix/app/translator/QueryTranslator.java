@@ -51,7 +51,7 @@ import org.apache.asterix.api.http.server.ApiServlet;
 import org.apache.asterix.app.active.ActiveEntityEventsListener;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.active.FeedEventsListener;
-import org.apache.asterix.app.external.ExternalLibraryUtil;
+import org.apache.asterix.app.external.ExternalLibraryJobUtils;
 import org.apache.asterix.app.result.ExecutionError;
 import org.apache.asterix.app.result.ResultHandle;
 import org.apache.asterix.app.result.ResultReader;
@@ -1699,7 +1699,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // #. prepare jobs which will drop corresponding libraries.
             List<Library> libraries = MetadataManager.INSTANCE.getDataverseLibraries(mdTxnCtx, dataverseName);
             for (Library library : libraries) {
-                jobsToExecute.add(ExternalLibraryUtil.buildDropLibraryJobSpec(dataverseName, library.getName(),
+                jobsToExecute.add(ExternalLibraryJobUtils.buildDropLibraryJobSpec(dataverseName, library.getName(),
                         metadataProvider));
             }
 
@@ -2417,7 +2417,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 apiFramework.reWriteQuery(declaredFunctions, metadataProvider, wrappedQuery, sessionOutput, false,
                         paramVars, warningCollector);
                 List<List<Triple<DataverseName, String, String>>> dependencies = FunctionUtil.getFunctionDependencies(
-                        rewriterFactory.createQueryRewriter(), cfs.getFunctionBodyExpression(), metadataProvider);
+                        rewriterFactory.createQueryRewriter(), cfs.getFunctionBodyExpression());
 
                 newInlineTypes = Collections.emptyMap();
                 function = new Function(functionSignature, paramNames, null, null, cfs.getFunctionBody(),
@@ -2679,16 +2679,17 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         CreateLibraryStatement cls = (CreateLibraryStatement) stmt;
         DataverseName dataverseName = getActiveDataverseName(cls.getDataverseName());
         String libraryName = cls.getLibraryName();
+        String libraryHash = cls.getHash();
         lockUtil.createLibraryBegin(lockManager, metadataProvider.getLocks(), dataverseName, libraryName);
         try {
-            doCreateLibrary(metadataProvider, dataverseName, libraryName, cls, hcc);
+            doCreateLibrary(metadataProvider, dataverseName, libraryName, libraryHash, cls, hcc);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
     private void doCreateLibrary(MetadataProvider metadataProvider, DataverseName dataverseName, String libraryName,
-            CreateLibraryStatement cls, IHyracksClientConnection hcc) throws Exception {
+            String libraryHash, CreateLibraryStatement cls, IHyracksClientConnection hcc) throws Exception {
         JobUtils.ProgressState progress = ProgressState.NO_PROGRESS;
         boolean prepareJobSuccessful = false;
         JobSpecification abortJobSpec = null;
@@ -2710,7 +2711,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             // #. add/update library with PendingAddOp
             Library libraryPendingAdd =
-                    new Library(dataverseName, libraryName, language.name(), MetadataUtil.PENDING_ADD_OP);
+                    new Library(dataverseName, libraryName, language.name(), libraryHash, MetadataUtil.PENDING_ADD_OP);
             if (existingLibrary == null) {
                 MetadataManager.INSTANCE.addLibrary(mdTxnCtx, libraryPendingAdd);
             } else {
@@ -2719,7 +2720,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             // #. prepare to create library artifacts in NC.
             Triple<JobSpecification, JobSpecification, JobSpecification> jobSpecs =
-                    ExternalLibraryUtil.buildCreateLibraryJobSpec(dataverseName, libraryName, language,
+                    ExternalLibraryJobUtils.buildCreateLibraryJobSpec(dataverseName, libraryName, language,
                             cls.getLocation(), cls.getAuthToken(), metadataProvider);
             JobSpecification prepareJobSpec = jobSpecs.first;
             JobSpecification commitJobSpec = jobSpecs.second;
@@ -2739,7 +2740,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
 
-            Library newLibrary = new Library(dataverseName, libraryName, language.name(), MetadataUtil.PENDING_NO_OP);
+            Library newLibrary =
+                    new Library(dataverseName, libraryName, language.name(), libraryHash, MetadataUtil.PENDING_NO_OP);
             MetadataManager.INSTANCE.updateLibrary(mdTxnCtx, newLibrary);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -2760,8 +2762,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 } else if (existingLibrary == null) {
                     // 'commit' job failed for a new library -> try removing the library
                     try {
-                        JobSpecification dropLibraryJobSpec = ExternalLibraryUtil.buildDropLibraryJobSpec(dataverseName,
-                                libraryName, metadataProvider);
+                        JobSpecification dropLibraryJobSpec = ExternalLibraryJobUtils
+                                .buildDropLibraryJobSpec(dataverseName, libraryName, metadataProvider);
                         runJob(hcc, dropLibraryJobSpec, jobFlags);
                     } catch (Exception e2) {
                         e.addSuppressed(e2);
@@ -2841,12 +2843,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // #. mark the existing library as PendingDropOp
             // do drop instead of update because drop will fail if the library is used by functions/adapters
             MetadataManager.INSTANCE.dropLibrary(mdTxnCtx, dataverseName, libraryName);
-            MetadataManager.INSTANCE.addLibrary(mdTxnCtx,
-                    new Library(dataverseName, libraryName, library.getLanguage(), MetadataUtil.PENDING_DROP_OP));
+            MetadataManager.INSTANCE.addLibrary(mdTxnCtx, new Library(dataverseName, libraryName, library.getLanguage(),
+                    library.getHash(), MetadataUtil.PENDING_DROP_OP));
 
             // #. drop library artifacts in NCs.
             JobSpecification jobSpec =
-                    ExternalLibraryUtil.buildDropLibraryJobSpec(dataverseName, libraryName, metadataProvider);
+                    ExternalLibraryJobUtils.buildDropLibraryJobSpec(dataverseName, libraryName, metadataProvider);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
