@@ -64,6 +64,10 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
         defaultLogicalRewrites
                 .add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildNormalizationRuleCollection(appCtx)));
         defaultLogicalRewrites
+            .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildSTFilterRefineSpatialJoinCollection()));
+        defaultLogicalRewrites
+            .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildSTFilterRefineSpatialDistanceJoinCollection()));
+        defaultLogicalRewrites
                 .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildCondPushDownAndJoinInferenceRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlFullDfs, RuleCollections.buildLoadFieldsRuleCollection(appCtx)));
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildDataExchangeRuleCollection()));
@@ -71,10 +75,6 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
         defaultLogicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.buildFulltextContainsRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildAccessMethodRuleCollection()));
         defaultLogicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildPlanCleanupRuleCollection()));
-        defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildSTFilterRefineSpatialJoinCollection()));
-        defaultLogicalRewrites
-                .add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildSTFilterRefineSpatialDistanceJoinCollection()));
 
         //put TXnRuleCollection!
         return defaultLogicalRewrites;
