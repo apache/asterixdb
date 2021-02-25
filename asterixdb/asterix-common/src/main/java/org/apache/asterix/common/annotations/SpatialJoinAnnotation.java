@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.common.annotations;
 
-import java.util.Objects;
-
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 
 public final class SpatialJoinAnnotation implements IExpressionAnnotation {

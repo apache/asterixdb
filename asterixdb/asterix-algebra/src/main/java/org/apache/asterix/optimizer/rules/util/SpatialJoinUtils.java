@@ -111,8 +111,9 @@ public class SpatialJoinUtils {
                 context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), isjuf));
     }
 
-    private static LogicalVariable injectSpatialTileUnnestOperator(IOptimizationContext context, Mutable<ILogicalOperator> sideOp,
-                                                                   LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn) throws AlgebricksException {
+    private static LogicalVariable injectSpatialTileUnnestOperator(IOptimizationContext context,
+            Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn)
+            throws AlgebricksException {
         SourceLocation srcLoc = sideOp.getValue().getSourceLocation();
         LogicalVariable sideVar = context.newVar();
         VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
@@ -139,7 +140,8 @@ public class SpatialJoinUtils {
 
     protected static void updateJoinPlan(AbstractBinaryJoinOperator op,
             AbstractFunctionCallExpression spatialJoinFuncExpr, List<Mutable<ILogicalExpression>> conditionExprs,
-            SpatialJoinAnnotation spatialJoinAnn, IOptimizationContext context, int LEFT, int RIGHT) throws AlgebricksException {
+            SpatialJoinAnnotation spatialJoinAnn, IOptimizationContext context, int LEFT, int RIGHT)
+            throws AlgebricksException {
         // Extracts spatial intersect function's arguments
         List<Mutable<ILogicalExpression>> spatialJoinInputExprs = spatialJoinFuncExpr.getArguments();
         if (spatialJoinInputExprs.size() != 2) {

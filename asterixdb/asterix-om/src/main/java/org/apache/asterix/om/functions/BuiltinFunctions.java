@@ -2144,7 +2144,6 @@ public class BuiltinFunctions {
         addFunction(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
         addFunction(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE, true);
         addFunction(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE, true);
-        //        addFunction(SPATIAL_TILE, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addFunction(SPATIAL_TILE, AInt32TypeComputer.INSTANCE, true);
         addFunction(REFERENCE_TILE, AInt32TypeComputer.INSTANCE, true);
 

@@ -155,9 +155,7 @@ public class GeoFunctionRegistrant implements IFunctionRegistrant {
         fc.add(STIntersectionDescriptor.FACTORY);
         fc.add(STSymDifferenceDescriptor.FACTORY);
         fc.add(STPolygonizeDescriptor.FACTORY);
-
         fc.add(STMBRDescriptor.FACTORY);
         fc.add(STMBROffsetDescriptor.FACTORY);
-
     }
 }
