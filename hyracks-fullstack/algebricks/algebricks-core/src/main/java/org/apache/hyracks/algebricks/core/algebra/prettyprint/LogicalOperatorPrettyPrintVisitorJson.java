@@ -180,7 +180,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 jsonGenerator.writeEndArray();
             }
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -203,7 +203,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             jsonGenerator.writeEndObject();
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -224,7 +224,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeVariablesAndExpressions(op.getVariables(), op.getExpressions(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -235,7 +235,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeVariablesAndExpressions(op.getVariables(), op.getExpressions(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -245,7 +245,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeStringField(OPERATOR_FIELD, "empty-tuple-source");
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -267,7 +267,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -281,7 +281,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -292,7 +292,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeStringFieldExpression(CONDITION_FIELD, op.getCondition(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -303,7 +303,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeStringFieldExpression(CONDITION_FIELD, op.getCondition(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -313,7 +313,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeStringField(OPERATOR_FIELD, "nested-tuple-source");
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -328,7 +328,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeArrayFieldOfOrderExprList("order-by-list", op.getOrderExpressions(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -339,7 +339,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeVariablesAndExpressions(op.getVariables(), op.getExpressions(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -353,7 +353,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -367,7 +367,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -380,7 +380,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeObjectFieldWithExpressions("partitioned-by", op.getKeyExpressions(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -391,7 +391,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeStringFieldExpression(CONDITION_FIELD, op.getCondition(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -405,7 +405,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -432,7 +432,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeEndArray();
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -450,7 +450,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -473,7 +473,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeSelectLimitInformation(op.getSelectCondition(), op.getOutputLimit(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -503,7 +503,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeProjectInformation(op.getProjectionInfo());
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -519,7 +519,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -529,7 +529,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeStringField(OPERATOR_FIELD, "exchange");
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -547,7 +547,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -557,7 +557,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeStringField(OPERATOR_FIELD, "replicate");
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -568,7 +568,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeStringFieldExpression(EXPRESSION_FIELD, op.getBranchingExpression(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -578,7 +578,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeStringField(OPERATOR_FIELD, "materialize");
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -606,7 +606,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -630,7 +630,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -641,7 +641,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeVariablesAndExpressions(op.getTokenizeVars(), op.getSecondaryKeyExpressions(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -652,7 +652,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeStringFieldExpression(EXPRESSION_FIELD, op.getSideDataExpression(), indent);
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -662,7 +662,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeStringField(OPERATOR_FIELD, "sink");
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -672,7 +672,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeStringField(OPERATOR_FIELD, op.toString());
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -734,7 +734,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             return null;
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -749,7 +749,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeEndArray();
             idCounter.previousPrefix();
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -767,7 +767,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             writeArrayFieldOfExpression(EXPRESSIONS_FIELD, op.getExpressionRef(), indent);
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -782,7 +782,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             writeArrayFieldOfExpression(EXPRESSIONS_FIELD, op.getExpressionRef(), indent);
             writeFilterInformation(op.getMinFilterVars(), op.getMaxFilterVars());
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -800,7 +800,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 jsonGenerator.writeEndObject();
             }
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 
@@ -956,7 +956,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         try {
             jsonGenerator.flush();
         } catch (IOException e) {
-            throw new AlgebricksException(e, ErrorCode.ERROR_PRINTING_PLAN);
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 }

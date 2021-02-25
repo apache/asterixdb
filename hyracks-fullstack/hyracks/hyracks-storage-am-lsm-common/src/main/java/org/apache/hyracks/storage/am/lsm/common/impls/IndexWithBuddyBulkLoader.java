@@ -40,7 +40,7 @@ public class IndexWithBuddyBulkLoader implements IChainedComponentBulkLoader {
             buddyBTreeBulkLoader.add(tuple);
         } catch (HyracksDataException e) {
             //deleting a key multiple times is OK
-            if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+            if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                 cleanupArtifacts();
                 throw e;
             }

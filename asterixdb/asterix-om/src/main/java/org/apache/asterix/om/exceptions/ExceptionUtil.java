@@ -22,13 +22,13 @@ package org.apache.asterix.om.exceptions;
 import java.util.function.Supplier;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.Warning;
 
 public final class ExceptionUtil {
 
@@ -102,9 +102,9 @@ public final class ExceptionUtil {
             byte actualType, int argIdx, Supplier<String> expectedTypesString) {
         IWarningCollector warningCollector = ctx.getWarningCollector();
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.TYPE_MISMATCH_FUNCTION, fid.getName(),
-                    indexToPosition(argIdx), expectedTypesString.get(),
-                    EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualType)));
+            warningCollector
+                    .warn(Warning.of(srcLoc, ErrorCode.TYPE_MISMATCH_FUNCTION, fid.getName(), indexToPosition(argIdx),
+                            expectedTypesString.get(), EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualType)));
         }
     }
 
@@ -112,7 +112,7 @@ public final class ExceptionUtil {
             ATypeTag type1, ATypeTag type2) {
         IWarningCollector warningCollector = ctx.getWarningCollector();
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.TYPE_INCOMPATIBLE, funName, type1, type2));
+            warningCollector.warn(Warning.of(srcLoc, ErrorCode.TYPE_INCOMPATIBLE, funName, type1, type2));
         }
     }
 
@@ -120,7 +120,7 @@ public final class ExceptionUtil {
             ATypeTag unsupportedType) {
         IWarningCollector warningCollector = ctx.getWarningCollector();
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.TYPE_UNSUPPORTED, funName, unsupportedType));
+            warningCollector.warn(Warning.of(srcLoc, ErrorCode.TYPE_UNSUPPORTED, funName, unsupportedType));
         }
     }
 
@@ -128,7 +128,7 @@ public final class ExceptionUtil {
             ATypeTag type2) {
         IWarningCollector warningCollector = ctx.getWarningCollector();
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.INCOMPARABLE_TYPES, type1, type2));
+            warningCollector.warn(Warning.of(srcLoc, ErrorCode.INCOMPARABLE_TYPES, type1, type2));
         }
     }
 
@@ -144,11 +144,11 @@ public final class ExceptionUtil {
     }
 
     private static void warnInvalidValue(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid,
-            int argIdx, double argValue, int errorCode) {
+            int argIdx, double argValue, ErrorCode errorCode) {
         IWarningCollector warningCollector = ctx.getWarningCollector();
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(WarningUtil.forAsterix(srcLoc, errorCode, fid.getName(), indexToPosition(argIdx),
-                    Double.toString(argValue)));
+            warningCollector.warn(
+                    Warning.of(srcLoc, errorCode, fid.getName(), indexToPosition(argIdx), Double.toString(argValue)));
         }
     }
 }

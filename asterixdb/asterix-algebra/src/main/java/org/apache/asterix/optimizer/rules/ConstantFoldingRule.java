@@ -31,7 +31,6 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.common.exceptions.WarningCollector;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
@@ -94,6 +93,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
@@ -332,7 +332,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                     if (isDuplicate) {
                         IWarningCollector warningCollector = optContext.getWarningCollector();
                         if (warningCollector.shouldWarn()) {
-                            warningCollector.warn(WarningUtil.forAsterix(fieldNameExpr.second.getSourceLocation(),
+                            warningCollector.warn(Warning.of(fieldNameExpr.second.getSourceLocation(),
                                     ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName));
                         }
                         iterator.remove();

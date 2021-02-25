@@ -32,14 +32,14 @@ public class TypeMismatchException extends RuntimeDataException {
     private static final long serialVersionUID = -668005043013338591L;
 
     // Function parameter type mismatch.
-    public TypeMismatchException(FunctionIdentifier fid, Integer i, byte actualTypeTag, byte... expectedTypeTags) {
+    public TypeMismatchException(FunctionIdentifier fid, int i, byte actualTypeTag, byte... expectedTypeTags) {
         super(ErrorCode.TYPE_MISMATCH_FUNCTION, fid.getName(), indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
     }
 
     // Function parameter type mismatch.
-    public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, Integer i, byte actualTypeTag,
+    public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, int i, byte actualTypeTag,
             byte... expectedTypeTags) {
         super(ErrorCode.TYPE_MISMATCH_FUNCTION, sourceLoc, fid.getName(), indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags),
@@ -47,7 +47,7 @@ public class TypeMismatchException extends RuntimeDataException {
     }
 
     // Function parameter type mismatch.
-    public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, Integer i, byte actualTypeTag,
+    public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, int i, byte actualTypeTag,
             String expectedType) {
         super(ErrorCode.TYPE_MISMATCH_FUNCTION, sourceLoc, fid.getName(), indexToPosition(i), expectedType,
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
@@ -55,7 +55,7 @@ public class TypeMismatchException extends RuntimeDataException {
 
     // Function parameter type mismatch.
     @Deprecated
-    public TypeMismatchException(String functionName, Integer i, byte actualTypeTag, byte... expectedTypeTags) {
+    public TypeMismatchException(String functionName, int i, byte actualTypeTag, byte... expectedTypeTags) {
         super(ErrorCode.TYPE_MISMATCH_FUNCTION, functionName, indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags),
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(actualTypeTag));
@@ -63,7 +63,7 @@ public class TypeMismatchException extends RuntimeDataException {
 
     // Function parameter type mismatch.
     @Deprecated
-    public TypeMismatchException(SourceLocation sourceLoc, String functionName, Integer i, byte actualTypeTag,
+    public TypeMismatchException(SourceLocation sourceLoc, String functionName, int i, byte actualTypeTag,
             byte... expectedTypeTags) {
         super(ErrorCode.TYPE_MISMATCH_FUNCTION, sourceLoc, functionName, indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags),

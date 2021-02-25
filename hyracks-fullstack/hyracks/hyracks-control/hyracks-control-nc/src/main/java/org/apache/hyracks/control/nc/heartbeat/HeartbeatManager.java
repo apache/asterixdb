@@ -64,12 +64,12 @@ public class HeartbeatManager {
 
     public void notifyAck(HyracksDataException exception) {
         LOGGER.debug("ack rec'd from {} w/ exception: {}", ccId::toString, () -> String.valueOf(exception));
-        if (exception != null && exception.matches(ErrorCode.HYRACKS, ErrorCode.NO_SUCH_NODE)) {
+        if (exception != null && exception.matches(ErrorCode.NO_SUCH_NODE)) {
             LOGGER.info("{} indicates it does not recognize us; force a reconnect", ccId);
             try {
                 ccc.forceReregister(ncs);
             } catch (Exception e) {
-                LOGGER.warn("ignoring exception attempting to reregister with {}", ccId, e);
+                LOGGER.warn("ignoring exception attempting to re-register with {}", ccId, e);
             }
         }
     }

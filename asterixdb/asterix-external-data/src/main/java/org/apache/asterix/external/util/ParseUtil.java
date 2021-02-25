@@ -29,7 +29,7 @@ public class ParseUtil {
 
     public static void warn(IWarningCollector warningCollector, String dataSourceName, long lineNum, int fieldNum,
             String warnMessage) {
-        warningCollector.warn(
-                Warning.forHyracks(null, ErrorCode.PARSING_ERROR, dataSourceName, lineNum, fieldNum, warnMessage));
+        warningCollector
+                .warn(Warning.of(null, ErrorCode.PARSING_ERROR, dataSourceName, lineNum, fieldNum, warnMessage));
     }
 }

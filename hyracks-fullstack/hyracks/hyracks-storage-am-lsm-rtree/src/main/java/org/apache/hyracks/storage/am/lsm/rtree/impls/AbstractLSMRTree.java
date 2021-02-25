@@ -220,7 +220,7 @@ public abstract class AbstractLSMRTree extends AbstractLSMIndex implements ITree
             try {
                 ctx.getCurrentMutableBTreeAccessor().insert(indexTuple);
             } catch (HyracksDataException e) {
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     // Do nothing, because one delete tuple is enough to indicate
                     // that all the corresponding insert tuples are deleted
                     throw e;

@@ -37,6 +37,10 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public final class SerializerDeserializerUtil {
 
+    private SerializerDeserializerUtil() {
+        throw new AssertionError("do not instantiate");
+    }
+
     public static void writeIntToByteArray(byte[] array, int value, int offset) {
         array[offset] = (byte) (0xff & (value >> 24));
         array[offset + 1] = (byte) (0xff & (value >> 16));

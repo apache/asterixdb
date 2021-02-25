@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.base.AGeometry;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -86,7 +87,8 @@ public class AGeometrySerializerDeserializer implements ISerializerDeserializer<
         int size = AInt32SerializerDeserializer.getInt(bytes, startOffset);
 
         if (bytes.length < startOffset + size + 4)
-            throw HyracksDataException.create(ErrorCode.VALUE_OUT_OF_RANGE);
+            // TODO(mmahin): this error code takes 5 parameters, and this is passing none, so I suspect this isn't right
+            throw RuntimeDataException.create(ErrorCode.VALUE_OUT_OF_RANGE);
 
         // Skip the size of the geometry in first 4 bytes
         byte[] bytes1 = Arrays.copyOfRange(bytes, startOffset + 4, startOffset + size + 4);

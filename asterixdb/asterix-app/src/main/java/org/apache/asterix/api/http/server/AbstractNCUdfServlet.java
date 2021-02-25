@@ -39,6 +39,7 @@ import org.apache.asterix.common.library.LibraryDescriptor;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -138,15 +139,11 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
     }
 
     HttpResponseStatus toHttpErrorStatus(Exception e) {
-        if (e instanceof IFormattedException) {
-            IFormattedException fe = (IFormattedException) e;
-            if (ErrorCode.ASTERIX.equals(fe.getComponent())) {
-                switch (fe.getErrorCode()) {
-                    case ErrorCode.UNKNOWN_DATAVERSE:
-                    case ErrorCode.UNKNOWN_LIBRARY:
-                        return HttpResponseStatus.NOT_FOUND;
-                }
-            }
+        if (IFormattedException.matchesAny(e, ErrorCode.UNKNOWN_DATAVERSE, ErrorCode.UNKNOWN_LIBRARY)) {
+            return HttpResponseStatus.NOT_FOUND;
+        }
+        if (e instanceof AlgebricksException) {
+            return HttpResponseStatus.BAD_REQUEST;
         }
         return HttpResponseStatus.INTERNAL_SERVER_ERROR;
     }

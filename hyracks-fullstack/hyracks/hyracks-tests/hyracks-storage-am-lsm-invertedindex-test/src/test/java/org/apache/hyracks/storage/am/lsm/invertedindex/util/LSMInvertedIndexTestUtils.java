@@ -606,7 +606,7 @@ public class LSMInvertedIndexTestUtils {
                     accessor.search(resultCursor, searchPred);
                 } catch (HyracksDataException e) {
                     // ignore panic queries.
-                    if (e.getErrorCode() == ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION) {
+                    if (e.matches(ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION)) {
                         panic = true;
                     } else {
                         throw e;
@@ -625,7 +625,7 @@ public class LSMInvertedIndexTestUtils {
                                 actualResults.add(Integer.valueOf(actual));
                             }
                         } catch (HyracksDataException e) {
-                            if (e.getErrorCode() == ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION) {
+                            if (e.matches(ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION)) {
                                 // Ignore panic queries.
                                 continue;
                             } else {

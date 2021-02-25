@@ -787,7 +787,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             } catch (HyracksDataException hde) {
                 // Since we're undoing according the write-ahead log, the actual upserting tuple
                 // might not have been written to memory yet.
-                if (hde.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                if (!hde.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                     throw hde;
                 }
             }

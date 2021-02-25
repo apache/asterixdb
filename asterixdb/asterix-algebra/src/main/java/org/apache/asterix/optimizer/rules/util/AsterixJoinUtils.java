@@ -73,7 +73,7 @@ public class AsterixJoinUtils {
                 && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
             IWarningCollector warningCollector = context.getWarningCollector();
             if (warningCollector.shouldWarn()) {
-                warningCollector.warn(Warning.forHyracks(op.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
+                warningCollector.warn(Warning.of(op.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
                         "Date, DateTime, and Time are only range hints types supported for interval joins"));
             }
             return;

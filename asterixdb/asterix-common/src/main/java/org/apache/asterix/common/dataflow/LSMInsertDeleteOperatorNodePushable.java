@@ -147,7 +147,7 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
                 }
             }
         } catch (HyracksDataException e) {
-            if (e.getErrorCode() == ErrorCode.INVALID_OPERATOR_OPERATION) {
+            if (e.matches(ErrorCode.INVALID_OPERATOR_OPERATION)) {
                 throw e;
             } else {
                 throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE, e, sourceLoc, i);

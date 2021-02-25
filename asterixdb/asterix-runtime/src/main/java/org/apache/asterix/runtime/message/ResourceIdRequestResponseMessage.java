@@ -24,17 +24,28 @@ import org.apache.asterix.runtime.transaction.GlobalResourceIdFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ResourceIdRequestResponseMessage implements INcAddressedMessage {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private long resourceId;
+    private int blockSize = 1;
+
     private Exception exception;
 
     public long getResourceId() {
         return resourceId;
     }
 
+    public int getBlockSize() {
+        return blockSize;
+    }
+
     public void setResourceId(long resourceId) {
         this.resourceId = resourceId;
+    }
+
+    public void setResourceIdBlock(long resourceId, int blockSize) {
+        this.resourceId = resourceId;
+        this.blockSize = blockSize;
     }
 
     public Exception getException() {
@@ -52,6 +63,7 @@ public class ResourceIdRequestResponseMessage implements INcAddressedMessage {
 
     @Override
     public String toString() {
-        return ResourceIdRequestResponseMessage.class.getSimpleName();
+        return "ResourceIdRequestResponseMessage{" + "resourceId=" + resourceId + ", blockSize=" + blockSize
+                + ", exception=" + exception + '}';
     }
 }

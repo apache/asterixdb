@@ -168,7 +168,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
             try {
                 indexAccessor.insert(tuple);
             } catch (HyracksDataException e) {
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw e;
                 }
             }

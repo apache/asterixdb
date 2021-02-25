@@ -20,10 +20,19 @@ package org.apache.asterix.common.transactions;
 
 public interface IResourceIdManager {
 
+    /**
+     * @return the created resource id, or <code>-1</code> if a resource cannot be created
+     */
     long createResourceId();
 
     boolean reported(String nodeId);
 
     void report(String nodeId, long maxResourceId);
 
+    /**
+     * @param blockSize the size of resource id block to create
+     * @return the starting id of contiguous block of resource ids, or <code>-1</code> if
+     *         the resource block cannot be created
+     */
+    long createResourceIdBlock(int blockSize);
 }

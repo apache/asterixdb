@@ -1832,8 +1832,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (dv == null) {
                 if (ifExists) {
                     if (warningCollector.shouldWarn()) {
-                        warningCollector
-                                .warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, dataverseName));
+                        warningCollector.warn(Warning.of(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, dataverseName));
                     }
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
                     return false;
@@ -2190,8 +2189,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (dv == null) {
                 if (stmtTypeDrop.getIfExists()) {
                     if (warningCollector.shouldWarn()) {
-                        warningCollector
-                                .warn(WarningUtil.forAsterix(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, dataverseName));
+                        warningCollector.warn(Warning.of(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, dataverseName));
                     }
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return;
