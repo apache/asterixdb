@@ -48,6 +48,60 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
 
 public class SpatialJoinUtils {
+
+    protected static boolean trySpatialJoinAssignment(AbstractBinaryJoinOperator op, IOptimizationContext context,
+            ILogicalExpression joinCondition, int left, int right) {
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) joinCondition;
+        // Check if the join condition contains spatial join
+        SpatialJoinAnnotation spatialJoinAnn = null;
+        AbstractFunctionCallExpression spatialJoinFuncExpr = null;
+        // Maintain conditions which is not spatial_intersect in the join condition
+        List<Mutable<ILogicalExpression>> conditionExprs = new ArrayList<>();
+
+        if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.AND)) {
+            // Join condition contains multiple conditions along with spatial_intersect
+            List<Mutable<ILogicalExpression>> inputExprs = funcExpr.getArguments();
+            if (inputExprs.size() == 0) {
+                return false;
+            }
+
+            boolean spatialFunctionCallExists = false;
+            for (Mutable<ILogicalExpression> exp : inputExprs) {
+                AbstractFunctionCallExpression funcCallExp = (AbstractFunctionCallExpression) exp.getValue();
+                if (funcCallExp.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
+                    spatialJoinFuncExpr = funcCallExp;
+                    spatialFunctionCallExists = true;
+                } else {
+                    conditionExprs.add(exp);
+                    if (BuiltinFunctions.isSTFilterRefineFunction(funcCallExp.getFunctionIdentifier())) {
+                        // Extract the hint of the spatial-temporal filter refine function
+                        spatialJoinAnn = funcCallExp.getAnnotation(SpatialJoinAnnotation.class);
+                    }
+                }
+            }
+
+            if (!spatialFunctionCallExists) {
+                return false;
+            }
+        } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
+            // Join condition is spatial_intersect only
+            spatialJoinFuncExpr = funcExpr;
+            // Extract the hint of spatial_intersect function
+            spatialJoinAnn = spatialJoinFuncExpr.getAnnotation(SpatialJoinAnnotation.class);
+        } else {
+            return false;
+        }
+
+        // We only apply optimization process for spatial join if the join annotation (hint) is provided
+        if (spatialJoinAnn != null) {
+            SpatialJoinUtils.updateJoinPlan(op, spatialJoinFuncExpr, conditionExprs, spatialJoinAnn, context, left,
+                    right);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private static void setSpatialJoinOp(AbstractBinaryJoinOperator op, List<LogicalVariable> keysLeftBranch,
             List<LogicalVariable> keysRightBranch, IOptimizationContext context) {
         ISpatialJoinUtilFactory isjuf = new IntersectSpatialJoinUtilFactory();
