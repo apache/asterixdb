@@ -46,11 +46,12 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class SpatialJoinUtils {
 
     protected static boolean trySpatialJoinAssignment(AbstractBinaryJoinOperator op, IOptimizationContext context,
-            ILogicalExpression joinCondition, int left, int right) {
+            ILogicalExpression joinCondition, int left, int right) throws AlgebricksException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) joinCondition;
         // Check if the join condition contains spatial join
         SpatialJoinAnnotation spatialJoinAnn = null;
@@ -111,9 +112,11 @@ public class SpatialJoinUtils {
     }
 
     private static LogicalVariable injectUnnestOperator(IOptimizationContext context, Mutable<ILogicalOperator> sideOp,
-            LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn) {
+            LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn) throws AlgebricksException {
+        SourceLocation srcLoc = sideOp.getValue().getSourceLocation();
         LogicalVariable sideVar = context.newVar();
         VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
+        sideInputVar.setSourceLocation(srcLoc);
         UnnestingFunctionCallExpression funcExpr = new UnnestingFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
                 new MutableObject<>(sideInputVar),
@@ -124,21 +127,19 @@ public class SpatialJoinUtils {
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
                 new MutableObject<>(
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
-        funcExpr.setSourceLocation(sideOp.getValue().getSourceLocation());
+        funcExpr.setSourceLocation(srcLoc);
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar, new MutableObject<>(funcExpr));
+        sideUnnestOp.setSourceLocation(srcLoc);
         sideUnnestOp.getInputs().add(new MutableObject<>(sideOp.getValue()));
         sideOp.setValue(sideUnnestOp);
-        try {
-            context.computeAndSetTypeEnvironmentForOperator(sideUnnestOp);
-        } catch (AlgebricksException e) {
-            e.printStackTrace();
-        }
+        context.computeAndSetTypeEnvironmentForOperator(sideUnnestOp);
+
         return sideVar;
     }
 
     protected static void updateJoinPlan(AbstractBinaryJoinOperator op,
             AbstractFunctionCallExpression spatialJoinFuncExpr, List<Mutable<ILogicalExpression>> conditionExprs,
-            SpatialJoinAnnotation spatialJoinAnn, IOptimizationContext context, int LEFT, int RIGHT) {
+            SpatialJoinAnnotation spatialJoinAnn, IOptimizationContext context, int LEFT, int RIGHT) throws AlgebricksException {
         // Extracts spatial intersect function's arguments
         List<Mutable<ILogicalExpression>> spatialJoinInputExprs = spatialJoinFuncExpr.getArguments();
         if (spatialJoinInputExprs.size() != 2) {
