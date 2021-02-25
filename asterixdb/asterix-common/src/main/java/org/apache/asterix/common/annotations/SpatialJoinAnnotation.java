@@ -24,7 +24,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotat
 
 public final class SpatialJoinAnnotation implements IExpressionAnnotation {
 
-    public static final String HINT_STRING = "sj";
+    public static final String HINT_STRING = "spatial-partitioning";
 
     private final double minX;
     private final double minY;
@@ -34,12 +34,12 @@ public final class SpatialJoinAnnotation implements IExpressionAnnotation {
     private final int numColumns;
 
     public SpatialJoinAnnotation(double minX, double minY, double maxX, double maxY, int numRows, int numColumns) {
-        this.minX = Objects.requireNonNull(minX);
-        this.minY = Objects.requireNonNull(minY);
-        this.maxX = Objects.requireNonNull(maxX);
-        this.maxY = Objects.requireNonNull(maxY);
-        this.numRows = Objects.requireNonNull(numRows);
-        this.numColumns = Objects.requireNonNull(numColumns);
+        this.minX = minX;
+        this.minY = minY;
+        this.maxX = maxX;
+        this.maxY = maxY;
+        this.numRows = numRows;
+        this.numColumns = numColumns;
     }
 
     @Override
