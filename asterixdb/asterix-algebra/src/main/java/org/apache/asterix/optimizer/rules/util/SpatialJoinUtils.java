@@ -111,8 +111,8 @@ public class SpatialJoinUtils {
                 context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), isjuf));
     }
 
-    private static LogicalVariable injectUnnestOperator(IOptimizationContext context, Mutable<ILogicalOperator> sideOp,
-            LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn) throws AlgebricksException {
+    private static LogicalVariable injectSpatialTileUnnestOperator(IOptimizationContext context, Mutable<ILogicalOperator> sideOp,
+                                                                   LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn) throws AlgebricksException {
         SourceLocation srcLoc = sideOp.getValue().getSourceLocation();
         LogicalVariable sideVar = context.newVar();
         VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
@@ -165,9 +165,9 @@ public class SpatialJoinUtils {
 
         // Inject unnest operator to the left and right branch of the join operator
         LogicalVariable leftTileIdVar =
-                SpatialJoinUtils.injectUnnestOperator(context, leftOp, leftInputVar, spatialJoinAnn);
+                SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftOp, leftInputVar, spatialJoinAnn);
         LogicalVariable rightTileIdVar =
-                SpatialJoinUtils.injectUnnestOperator(context, rightOp, rightInputVar, spatialJoinAnn);
+                SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightOp, rightInputVar, spatialJoinAnn);
 
         // Compute reference tile ID
         ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(
