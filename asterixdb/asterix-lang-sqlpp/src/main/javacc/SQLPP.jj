@@ -656,6 +656,24 @@ class SQLPPParser extends ScopeChecker implements IParser {
               hintToken.hint.toString(), e.getMessage()));
         }
         return onParseErrorReturn;
+      } catch (NullPointerException e) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+              hintToken.hint.toString(), e.getMessage()));
+        }
+        return onParseErrorReturn;
+      } catch (ArrayIndexOutOfBoundsException e) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+              hintToken.hint.toString(), e.getMessage()));
+        }
+        return onParseErrorReturn;
+      } catch (NumberFormatException e) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(WarningUtil.forAsterix(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+              hintToken.hint.toString(), e.getMessage()));
+        }
+        return onParseErrorReturn;
       }
     }
 
