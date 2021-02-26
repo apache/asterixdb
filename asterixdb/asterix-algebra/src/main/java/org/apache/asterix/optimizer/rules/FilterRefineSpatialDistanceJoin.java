@@ -105,11 +105,12 @@ public class FilterRefineSpatialDistanceJoin implements IAlgebraicRewriteRule {
             return false;
         }
 
-        AbstractFunctionCallExpression distanceFuncCallExpr = (AbstractFunctionCallExpression) inputExprs.get(LEFT).getValue();
+        AbstractFunctionCallExpression distanceFuncCallExpr =
+                (AbstractFunctionCallExpression) inputExprs.get(LEFT).getValue();
         ConstantExpression distanceValExpr = (ConstantExpression) inputExprs.get(RIGHT).getValue();
 
         if (!distanceFuncCallExpr.getFunctionIdentifier().equals(BuiltinFunctions.ST_DISTANCE)
-                && distanceFuncCallExpr.getAnnotation(SpatialJoinAnnotation.class) == null) {
+                || distanceFuncCallExpr.getAnnotation(SpatialJoinAnnotation.class) == null) {
             return false;
         }
 
@@ -117,8 +118,10 @@ public class FilterRefineSpatialDistanceJoin implements IAlgebraicRewriteRule {
         LogicalVariable inputVar1;
         IAlgebricksConstantValue distanceVar;
 
-        inputVar0 = ((VariableReferenceExpression) distanceFuncCallExpr.getArguments().get(LEFT).getValue()).getVariableReference();
-        inputVar1 = ((VariableReferenceExpression) distanceFuncCallExpr.getArguments().get(RIGHT).getValue()).getVariableReference();
+        inputVar0 = ((VariableReferenceExpression) distanceFuncCallExpr.getArguments().get(LEFT).getValue())
+                .getVariableReference();
+        inputVar1 = ((VariableReferenceExpression) distanceFuncCallExpr.getArguments().get(RIGHT).getValue())
+                .getVariableReference();
         distanceVar = distanceValExpr.getValue();
 
         ScalarFunctionCallExpression enlargedLeft = new ScalarFunctionCallExpression(
@@ -133,6 +136,7 @@ public class FilterRefineSpatialDistanceJoin implements IAlgebraicRewriteRule {
         ScalarFunctionCallExpression spatialIntersect = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
                 new MutableObject<>(enlargedLeft), new MutableObject<>(rightMBR));
+        spatialIntersect.putAnnotation(distanceFuncCallExpr.getAnnotation(SpatialJoinAnnotation.class));
 
         ScalarFunctionCallExpression updatedJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),

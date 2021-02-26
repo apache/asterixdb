@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -104,12 +103,12 @@ public abstract class AbstractSTGeometryDoubleNDescriptor extends AbstractScalar
                         ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
 
-
             inStream.setContent(data0, offset + 1, len - 1);
             OGCGeometry geometry = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
             Object finalResult;
             if (data1[offset0] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
-                finalResult = evaluateOGCGeometry(geometry, ADoubleSerializerDeserializer.getDouble(data1, offset0 + 1));
+                finalResult =
+                        evaluateOGCGeometry(geometry, ADoubleSerializerDeserializer.getDouble(data1, offset0 + 1));
             } else if (data1[offset0] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
                 finalResult = evaluateOGCGeometry(geometry, AInt64SerializerDeserializer.getLong(data1, offset0 + 1));
             } else {

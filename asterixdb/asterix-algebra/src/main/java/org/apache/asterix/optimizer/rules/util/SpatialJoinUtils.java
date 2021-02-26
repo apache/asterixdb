@@ -19,6 +19,8 @@
 package org.apache.asterix.optimizer.rules.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.asterix.algebra.operators.physical.SpatialJoinPOperator;
@@ -45,6 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionC
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -54,7 +57,6 @@ public class SpatialJoinUtils {
             ILogicalExpression joinCondition, int left, int right) throws AlgebricksException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) joinCondition;
         // Check if the join condition contains spatial join
-        SpatialJoinAnnotation spatialJoinAnn = null;
         AbstractFunctionCallExpression spatialJoinFuncExpr = null;
         // Maintain conditions which is not spatial_intersect in the join condition
         List<Mutable<ILogicalExpression>> conditionExprs = new ArrayList<>();
@@ -74,11 +76,6 @@ public class SpatialJoinUtils {
                     spatialFunctionCallExists = true;
                 } else {
                     conditionExprs.add(exp);
-                    if (BuiltinFunctions.isSTFilterRefineFunction(funcCallExp.getFunctionIdentifier())
-                            || funcCallExp.getFunctionIdentifier().equals(BuiltinFunctions.ST_DISTANCE)) {
-                        // Extract the hint of the spatial-temporal filter refine function
-                        spatialJoinAnn = funcCallExp.getAnnotation(SpatialJoinAnnotation.class);
-                    }
                 }
             }
 
@@ -88,13 +85,12 @@ public class SpatialJoinUtils {
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
             // Join condition is spatial_intersect only
             spatialJoinFuncExpr = funcExpr;
-            // Extract the hint of spatial_intersect function
-            spatialJoinAnn = spatialJoinFuncExpr.getAnnotation(SpatialJoinAnnotation.class);
         } else {
             return false;
         }
 
         // We only apply optimization process for spatial join if the join annotation (hint) is provided
+        SpatialJoinAnnotation spatialJoinAnn = spatialJoinFuncExpr.getAnnotation(SpatialJoinAnnotation.class);
         if (spatialJoinAnn != null) {
             SpatialJoinUtils.updateJoinPlan(op, spatialJoinFuncExpr, conditionExprs, spatialJoinAnn, context, left,
                     right);
@@ -164,8 +160,20 @@ public class SpatialJoinUtils {
         Mutable<ILogicalOperator> rightOp = op.getInputs().get(RIGHT);
 
         // Extract left and right variable of the predicate
-        LogicalVariable leftInputVar = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
-        LogicalVariable rightInputVar = ((VariableReferenceExpression) rightOperatingExpr).getVariableReference();
+        LogicalVariable inputVar0 = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
+        LogicalVariable inputVar1 = ((VariableReferenceExpression) rightOperatingExpr).getVariableReference();
+
+        LogicalVariable leftInputVar;
+        LogicalVariable rightInputVar;
+        Collection<LogicalVariable> liveVars = new HashSet<>();
+        VariableUtilities.getLiveVariables(leftOp.getValue(), liveVars);
+        if (liveVars.contains(inputVar0)) {
+            leftInputVar = inputVar0;
+            rightInputVar = inputVar1;
+        } else {
+            leftInputVar = inputVar1;
+            rightInputVar = inputVar0;
+        }
 
         // Inject unnest operator to the left and right branch of the join operator
         LogicalVariable leftTileIdVar =
