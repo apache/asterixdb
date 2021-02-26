@@ -68,18 +68,18 @@ public class SpatialJoinUtils {
                 return false;
             }
 
-            boolean spatialFunctionCallExists = false;
+            boolean spatialIntersectExists = false;
             for (Mutable<ILogicalExpression> exp : inputExprs) {
                 AbstractFunctionCallExpression funcCallExp = (AbstractFunctionCallExpression) exp.getValue();
                 if (funcCallExp.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
                     spatialJoinFuncExpr = funcCallExp;
-                    spatialFunctionCallExists = true;
+                    spatialIntersectExists = true;
                 } else {
                     conditionExprs.add(exp);
                 }
             }
 
-            if (!spatialFunctionCallExists) {
+            if (!spatialIntersectExists) {
                 return false;
             }
         } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {

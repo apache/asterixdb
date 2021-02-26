@@ -100,34 +100,34 @@ public class FilterRefineSpatialJoin implements IAlgebraicRewriteRule {
             return false;
         }
 
-        List<Mutable<ILogicalExpression>> inputExprs = stFuncExpr.getArguments();
-        ILogicalExpression leftOperatingExpr = inputExprs.get(LEFT).getValue();
-        ILogicalExpression rightOperatingExpr = inputExprs.get(RIGHT).getValue();
-
-        if (leftOperatingExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE
-                || rightOperatingExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+        // Left and right arguments of the refine function should be either variable or function call.
+        List<Mutable<ILogicalExpression>> stFuncArgs = stFuncExpr.getArguments();
+        Mutable<ILogicalExpression> stFuncLeftArg = stFuncArgs.get(LEFT);
+        Mutable<ILogicalExpression> stFuncRightArg = stFuncArgs.get(RIGHT);
+        if (stFuncLeftArg.getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT
+            || stFuncRightArg.getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             return false;
         }
 
-        LogicalVariable inputVar0 = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
-        LogicalVariable inputVar1 = ((VariableReferenceExpression) rightOperatingExpr).getVariableReference();
-
+        // Compute MBRs of the left and right arguments of the refine function
         ScalarFunctionCallExpression left =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
-                        new MutableObject<>(new VariableReferenceExpression(inputVar0)));
-
+                    stFuncLeftArg);
         ScalarFunctionCallExpression right =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
-                        new MutableObject<>(new VariableReferenceExpression(inputVar1)));
+                    stFuncRightArg);
 
+        // Create filter function (spatial_intersect)
         ScalarFunctionCallExpression spatialIntersect = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT), new MutableObject<>(left),
                 new MutableObject<>(right));
+        // Attach the annotation to the spatial_intersect function
+        spatialIntersect.putAnnotation(stFuncExpr.getAnnotation(SpatialJoinAnnotation.class));
 
+        // Update join condition with filter and refine function
         ScalarFunctionCallExpression updatedJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
                         new MutableObject<>(spatialIntersect), new MutableObject<>(stFuncExpr));
-
         joinConditionRef.setValue(updatedJoinCondition);
 
         return true;
