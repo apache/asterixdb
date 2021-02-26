@@ -30,10 +30,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -105,17 +103,15 @@ public class FilterRefineSpatialJoin implements IAlgebraicRewriteRule {
         Mutable<ILogicalExpression> stFuncLeftArg = stFuncArgs.get(LEFT);
         Mutable<ILogicalExpression> stFuncRightArg = stFuncArgs.get(RIGHT);
         if (stFuncLeftArg.getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT
-            || stFuncRightArg.getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+                || stFuncRightArg.getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             return false;
         }
 
         // Compute MBRs of the left and right arguments of the refine function
-        ScalarFunctionCallExpression left =
-                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
-                    stFuncLeftArg);
-        ScalarFunctionCallExpression right =
-                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
-                    stFuncRightArg);
+        ScalarFunctionCallExpression left = new ScalarFunctionCallExpression(
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR), stFuncLeftArg);
+        ScalarFunctionCallExpression right = new ScalarFunctionCallExpression(
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR), stFuncRightArg);
 
         // Create filter function (spatial_intersect)
         ScalarFunctionCallExpression spatialIntersect = new ScalarFunctionCallExpression(
