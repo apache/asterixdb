@@ -24,9 +24,9 @@ import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
+import org.apache.asterix.lang.common.expression.AbstractCallExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.util.ExpressionUtils;
@@ -35,11 +35,7 @@ import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class WindowExpression extends AbstractExpression {
-
-    private FunctionSignature functionSignature;
-    private List<Expression> exprList;
-    private Expression aggFilterExpr;
+public class WindowExpression extends AbstractCallExpression {
 
     private List<Expression> partitionList;
     private List<Expression> orderbyList;
@@ -64,12 +60,7 @@ public class WindowExpression extends AbstractExpression {
             FrameBoundaryKind frameStartKind, Expression frameStartExpr, FrameBoundaryKind frameEndKind,
             Expression frameEndExpr, FrameExclusionKind frameExclusionKind, VariableExpr windowVar,
             List<Pair<Expression, Identifier>> windowFieldList, Boolean ignoreNulls, Boolean fromLast) {
-        if (functionSignature == null || exprList == null) {
-            throw new NullPointerException();
-        }
-        this.functionSignature = functionSignature;
-        this.exprList = exprList;
-        this.aggFilterExpr = aggFilterExpr;
+        super(functionSignature, exprList, aggFilterExpr);
         this.partitionList = partitionList;
         this.orderbyList = orderbyList;
         this.orderbyModifierList = orderbyModifierList;
@@ -88,40 +79,6 @@ public class WindowExpression extends AbstractExpression {
     @Override
     public Kind getKind() {
         return Kind.WINDOW_EXPRESSION;
-    }
-
-    public FunctionSignature getFunctionSignature() {
-        return functionSignature;
-    }
-
-    public void setFunctionSignature(FunctionSignature functionSignature) {
-        if (functionSignature == null) {
-            throw new NullPointerException();
-        }
-        this.functionSignature = functionSignature;
-    }
-
-    public List<Expression> getExprList() {
-        return exprList;
-    }
-
-    public void setExprList(List<Expression> exprList) {
-        if (exprList == null) {
-            throw new NullPointerException();
-        }
-        this.exprList = exprList;
-    }
-
-    public boolean hasAggregateFilterExpr() {
-        return aggFilterExpr != null;
-    }
-
-    public Expression getAggregateFilterExpr() {
-        return aggFilterExpr;
-    }
-
-    public void setAggregateFilterExpr(Expression filterExpr) {
-        this.aggFilterExpr = filterExpr;
     }
 
     public boolean hasPartitionList() {

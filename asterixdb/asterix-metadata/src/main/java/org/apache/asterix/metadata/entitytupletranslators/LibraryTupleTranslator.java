@@ -19,6 +19,7 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_HASH;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_LANGUAGE;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_PENDING_OP;
 
@@ -68,7 +69,10 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
         String language = languageIdx >= 0 ? ((AString) libraryRecord.getValueByPos(languageIdx)).getStringValue()
                 : ExternalFunctionLanguage.JAVA.name();
 
-        return new Library(dataverseName, libraryName, language, pendingOp);
+        int hashIdx = libraryRecordType.getFieldIndex(FIELD_NAME_HASH);
+        String hash = hashIdx >= 0 ? ((AString) libraryRecord.getValueByPos(hashIdx)).getStringValue() : null;
+
+        return new Library(dataverseName, libraryName, language, hash, pendingOp);
     }
 
     @Override
@@ -119,6 +123,7 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
     protected void writeOpenFields(Library library) throws HyracksDataException {
         writeLanguage(library);
         writePendingOp(library);
+        writeHash(library);
     }
 
     private void writeLanguage(Library library) throws HyracksDataException {
@@ -129,6 +134,18 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
         stringSerde.serialize(aString, fieldName.getDataOutput());
         fieldValue.reset();
         aString.setValue(language);
+        stringSerde.serialize(aString, fieldValue.getDataOutput());
+        recordBuilder.addField(fieldName, fieldValue);
+    }
+
+    private void writeHash(Library library) throws HyracksDataException {
+        String hash = library.getHash();
+
+        fieldName.reset();
+        aString.setValue(FIELD_NAME_HASH);
+        stringSerde.serialize(aString, fieldName.getDataOutput());
+        fieldValue.reset();
+        aString.setValue(hash);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(fieldName, fieldValue);
     }

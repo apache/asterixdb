@@ -22,6 +22,7 @@ import java.io.Serializable;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IError;
 
 public class ParseException extends HyracksDataException {
     private static final long serialVersionUID = 1L;
@@ -33,23 +34,31 @@ public class ParseException extends HyracksDataException {
         super(message);
     }
 
-    public ParseException(int errorCode, Serializable... param) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), param);
+    public ParseException(ErrorCode error, Throwable e, Serializable... param) {
+        super(error, e, null, param);
     }
 
-    public ParseException(int errorCode, Throwable e, Serializable... param) {
-        super(ErrorCode.ASTERIX, errorCode, e, ErrorCode.getErrorMessage(errorCode), param);
-        addSuppressed(e);
+    public ParseException(ErrorCode error, Serializable... param) {
+        this(error, null, param);
     }
 
+    /**
+     * @deprecated use {@link IError} ctors when possible
+     */
     public ParseException(Throwable cause) {
         super(cause);
     }
 
+    /**
+     * @deprecated use {@link IError} ctors when possible
+     */
     public ParseException(String message, Throwable cause) {
         super(message, cause);
     }
 
+    /**
+     * @deprecated use {@link IError} ctors when possible
+     */
     public ParseException(Throwable cause, String filename, int line, int column) {
         super(cause);
         setLocation(filename, line, column);

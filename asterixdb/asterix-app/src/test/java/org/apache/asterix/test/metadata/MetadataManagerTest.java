@@ -147,7 +147,7 @@ public class MetadataManagerTest {
                                 Collections.nCopies(MetadataConstants.DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8 / 2 + 1,
                                         String.valueOf(iuml))));
 
-        String invalidNameErrCode = ErrorCode.ASTERIX + ErrorCode.INVALID_DATABASE_OBJECT_NAME;
+        ErrorCode invalidNameErrCode = ErrorCode.INVALID_DATABASE_OBJECT_NAME;
         for (DataverseName dvNameErr : dvNameErrList) {
             String sql = String.format("create dataverse %s;", dvNameErr);
             try {
@@ -156,7 +156,7 @@ public class MetadataManagerTest {
             } catch (Exception e) {
 
                 Assert.assertTrue("Unexpected error message: " + e.getMessage(),
-                        e.getMessage().contains(invalidNameErrCode));
+                        e.getMessage().contains(invalidNameErrCode.errorCode()));
             }
         }
     }

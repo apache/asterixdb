@@ -62,7 +62,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
                     try {
                         accessor.insert(tuple);
                     } catch (HyracksDataException e) {
-                        if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                        if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                             // Ignore duplicate keys, since we get random tuples.
                             throw e;
                         }
@@ -79,7 +79,7 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
                     try {
                         accessor.delete(deleteTuple);
                     } catch (HyracksDataException e) {
-                        if (e.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                        if (!e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                             // Ignore non-existant keys, since we get random tuples.
                             throw e;
                         }
@@ -91,8 +91,8 @@ public class BTreeTestWorker extends AbstractIndexTestWorker {
                         accessor.update(tuple);
                     } catch (HyracksDataException e) {
                         // Ignore non-existant keys, since we get random tuples.
-                        if (e.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY
-                                && e.getErrorCode() != ErrorCode.INDEX_NOT_UPDATABLE) {
+                        if (!e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)
+                                && !e.matches(ErrorCode.INDEX_NOT_UPDATABLE)) {
                             // Ignore non-existant keys, since we get random tuples.
                             // Ignore not updateable exception due to numKeys == numFields.
                             throw e;

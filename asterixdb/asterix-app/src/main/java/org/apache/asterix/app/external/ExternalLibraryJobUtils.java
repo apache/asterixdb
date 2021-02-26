@@ -45,9 +45,9 @@ import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
-public class ExternalLibraryUtil {
+public class ExternalLibraryJobUtils {
 
-    private ExternalLibraryUtil() {
+    private ExternalLibraryJobUtils() {
     }
 
     public static Triple<JobSpecification, JobSpecification, JobSpecification> buildCreateLibraryJobSpec(
@@ -137,4 +137,5 @@ public class ExternalLibraryUtil {
         }
         return splits.toArray(new FileSplit[0]);
     }
+
 }

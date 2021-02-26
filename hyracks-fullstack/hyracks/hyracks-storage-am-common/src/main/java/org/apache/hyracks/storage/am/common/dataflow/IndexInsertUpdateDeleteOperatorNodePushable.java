@@ -114,7 +114,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                             indexAccessor.insert(tuple);
                         } catch (HyracksDataException e) {
                             // ignore that exception to allow inserting existing keys which becomes an NoOp
-                            if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                            if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                                 throw e;
                             }
                         }
@@ -132,8 +132,8 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                         try {
                             indexAccessor.delete(tuple);
                         } catch (HyracksDataException e) {
-                            // ingnore that exception to allow deletions of non-existing keys
-                            if (e.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                            // ignore that exception to allow deletions of non-existing keys
+                            if (!e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                                 throw e;
                             }
                         }

@@ -32,14 +32,13 @@ public class TypeMismatchException extends CompilationException {
     private static final long serialVersionUID = -3069967719104299912L;
 
     // Function parameter type mismatch.
-    public TypeMismatchException(FunctionIdentifier fid, Integer i, ATypeTag actualTypeTag,
-            ATypeTag... expectedTypeTags) {
+    public TypeMismatchException(FunctionIdentifier fid, int i, ATypeTag actualTypeTag, ATypeTag... expectedTypeTags) {
         super(ErrorCode.COMPILATION_TYPE_MISMATCH_FUNCTION, fid.getName(), indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);
     }
 
     // Function parameter type mismatch.
-    public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, Integer i, ATypeTag actualTypeTag,
+    public TypeMismatchException(SourceLocation sourceLoc, FunctionIdentifier fid, int i, ATypeTag actualTypeTag,
             ATypeTag... expectedTypeTags) {
         super(ErrorCode.COMPILATION_TYPE_MISMATCH_FUNCTION, sourceLoc, fid.getName(), indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);
@@ -47,14 +46,14 @@ public class TypeMismatchException extends CompilationException {
 
     // Function parameter type mismatch.
     @Deprecated
-    public TypeMismatchException(String functionName, Integer i, ATypeTag actualTypeTag, ATypeTag... expectedTypeTags) {
+    public TypeMismatchException(String functionName, int i, ATypeTag actualTypeTag, ATypeTag... expectedTypeTags) {
         super(ErrorCode.COMPILATION_TYPE_MISMATCH_FUNCTION, functionName, indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);
     }
 
     // Function parameter type mismatch.
     @Deprecated
-    public TypeMismatchException(SourceLocation sourceLoc, String functionName, Integer i, ATypeTag actualTypeTag,
+    public TypeMismatchException(SourceLocation sourceLoc, String functionName, int i, ATypeTag actualTypeTag,
             ATypeTag... expectedTypeTags) {
         super(ErrorCode.COMPILATION_TYPE_MISMATCH_FUNCTION, sourceLoc, functionName, indexToPosition(i),
                 toExpectedTypeString(expectedTypeTags), actualTypeTag);

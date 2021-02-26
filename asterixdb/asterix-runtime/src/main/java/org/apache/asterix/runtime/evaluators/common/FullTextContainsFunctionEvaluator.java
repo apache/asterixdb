@@ -199,7 +199,7 @@ public class FullTextContainsFunctionEvaluator implements IScalarEvaluator {
             ABoolean b = fullTextContainsWithArg(typeTag2, argLeft, argRight) ? ABoolean.TRUE : ABoolean.FALSE;
             serde.serialize(b, out);
         } catch (AlgebricksException e) {
-            throw new HyracksDataException(e, ErrorCode.ERROR_PROCESSING_TUPLE);
+            throw new HyracksDataException(ErrorCode.ERROR_PROCESSING_TUPLE, e);
         }
 
         result.set(resultStorage);

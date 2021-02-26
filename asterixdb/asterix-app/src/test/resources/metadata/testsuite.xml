@@ -327,6 +327,48 @@
   </test-group>
   <test-group name="exception">
     <test-case FilePath="exception">
+      <compilation-unit name="exception_create_system_dataset">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create a dataset belonging to the dataverse: Metadata (in line 20, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_create_system_feed">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create a feed belonging to the dataverse: Metadata (in line 20, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_create_system_feed_policy">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create a ingestion policy belonging to the dataverse: Metadata (in line 22, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_create_system_function">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create a function belonging to the dataverse: Metadata (in line 20, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_create_system_synonym">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create a synonym belonging to the dataverse: Metadata (in line 20, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_create_system_type">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create a type belonging to the dataverse: Metadata (in line 20, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_declare_system_function">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot declare a function belonging to the dataverse: Metadata (in line 22, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
       <compilation-unit name="exception_drop_dataset">
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1050: Cannot find dataset with name UnknownDataset in dataverse Default (in line 19, at column 1)</expected-error>
@@ -351,6 +393,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_system_index">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot drop a index belonging to the dataverse: Metadata (in line 20, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
       <compilation-unit name="exception_drop_nodegroup">
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1080: Cannot find node group with name UnknownNodeGroup (in line 19, at column 1)</expected-error>
@@ -360,6 +408,12 @@
       <compilation-unit name="exception_drop_type1">
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1082: Cannot find datatype with name UnknownType (in line 19, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
+      <compilation-unit name="exception_drop_system_type">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot drop a type belonging to the dataverse: Metadata (in line 20, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">

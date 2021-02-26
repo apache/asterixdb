@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.expression.FieldBinding;
@@ -69,8 +70,8 @@ public class LangRecordParseUtil {
             case LIST_CONSTRUCTOR_EXPRESSION:
                 return parseList((ListConstructor) expr);
             default:
-                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR,
-                        NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE, Expression.Kind.LITERAL_EXPRESSION.toString(),
+                throw new RuntimeDataException(ErrorCode.PARSE_ERROR, NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE,
+                        Expression.Kind.LITERAL_EXPRESSION.toString(),
                         Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION.toString(),
                         Expression.Kind.LIST_CONSTRUCTOR_EXPRESSION.toString());
         }
@@ -110,7 +111,7 @@ public class LangRecordParseUtil {
 
     private static AdmArrayNode parseList(ListConstructor valueExpr) throws CompilationException, HyracksDataException {
         if (valueExpr.getType() != ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR) {
-            throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR, "JSON List can't be of type %1$s",
+            throw new RuntimeDataException(ErrorCode.PARSE_ERROR, "JSON List can't be of type %1$s",
                     valueExpr.getType());
         }
         List<Expression> exprs = valueExpr.getExprList();
@@ -140,7 +141,7 @@ public class LangRecordParseUtil {
             case STRING:
                 return new AdmStringNode((String) value.getValue());
             default:
-                throw new HyracksDataException(ErrorCode.ASTERIX, ErrorCode.PARSE_ERROR, "Unknown Literal Type %1$s",
+                throw new RuntimeDataException(ErrorCode.PARSE_ERROR, "Unknown Literal Type %1$s",
                         value.getLiteralType());
         }
     }

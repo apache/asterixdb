@@ -31,6 +31,7 @@ import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
+import org.apache.asterix.lang.common.expression.AbstractCallExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.FieldBinding;
@@ -57,7 +58,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<Void, Void> {
 
-    protected final Set<CallExpr> calls = new LinkedHashSet<>();
+    protected final Set<AbstractCallExpression> calls = new LinkedHashSet<>();
 
     @Override
     public Void visit(CallExpr callExpr, Void arg) throws CompilationException {
@@ -239,7 +240,7 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
         return null;
     }
 
-    public Set<CallExpr> getCalls() {
+    public Set<AbstractCallExpression> getCalls() {
         return calls;
     }
 
@@ -247,5 +248,4 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
     public Void visit(FunctionDecl fd, Void arg) throws CompilationException {
         return null;
     }
-
 }

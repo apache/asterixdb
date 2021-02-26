@@ -32,24 +32,26 @@ public final class CreateLibraryRequestMessage extends AbstractInternalRequestMe
     final DataverseName dataverseName;
     final String libraryName;
     final ExternalFunctionLanguage lang;
+    final String hash;
     final URI location;
     final boolean replaceIfExists;
     final String authToken;
     private static final long serialVersionUID = 1L;
 
     public CreateLibraryRequestMessage(String nodeRequestId, long requestMessageId, DataverseName dataverseName,
-            String libraryName, ExternalFunctionLanguage lang, URI location, boolean replaceIfExists, String authToken,
-            IRequestReference requestReference, Map<String, String> additionalParams) {
+            String libraryName, ExternalFunctionLanguage lang, String hash, URI location, boolean replaceIfExists,
+            String authToken, IRequestReference requestReference, Map<String, String> additionalParams) {
         super(nodeRequestId, requestMessageId, requestReference, additionalParams);
         this.dataverseName = dataverseName;
         this.libraryName = libraryName;
         this.lang = lang;
+        this.hash = hash;
         this.location = location;
         this.replaceIfExists = replaceIfExists;
         this.authToken = authToken;
     }
 
     protected Statement produceStatement() {
-        return new CreateLibraryStatement(dataverseName, libraryName, lang, location, replaceIfExists, authToken);
+        return new CreateLibraryStatement(dataverseName, libraryName, lang, hash, location, replaceIfExists, authToken);
     }
 }

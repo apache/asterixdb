@@ -102,7 +102,7 @@ public class IntervalJoinUtils {
                     && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
                 IWarningCollector warningCollector = context.getWarningCollector();
                 if (warningCollector.shouldWarn()) {
-                    warningCollector.warn(Warning.forHyracks(op.getSourceLocation(),
+                    warningCollector.warn(Warning.of(op.getSourceLocation(),
                             org.apache.hyracks.api.exceptions.ErrorCode.INAPPLICABLE_HINT,
                             "Date, DateTime, and Time are only range hints types supported for interval joins"));
                 }

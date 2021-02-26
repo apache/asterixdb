@@ -417,7 +417,7 @@ public class LSMRTree extends AbstractLSMRTree {
             } catch (HyracksDataException e) {
                 // Do nothing, because one delete tuple is enough to indicate
                 // that all the corresponding insert tuples are deleted
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw e;
                 }
             }

@@ -55,41 +55,40 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
 
     @Override
     public void install(URI path, String libPath, Pair<String, String> credentials) throws Exception {
-        HttpHost h = new HttpHost(path.getHost(), path.getPort(), "http");
+        HttpClientContext hcCtx = createHttpClientContext(path, credentials);
         HttpPost post = new HttpPost(path);
-        CredentialsProvider cp = new BasicCredentialsProvider();
-        cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(credentials.first, credentials.second));
-        HttpClientContext hcCtx = HttpClientContext.create();
-        hcCtx.setCredentialsProvider(cp);
-        AuthCache ac = new BasicAuthCache();
-        ac.put(h, new BasicScheme());
-        hcCtx.setAuthCache(ac);
         File lib = new File(libPath);
         HttpEntity file = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT)
                 .addBinaryBody("lib", lib, ContentType.DEFAULT_BINARY, lib.getName()).build();
         post.setEntity(file);
         HttpResponse response = hc.execute(post, hcCtx);
-        response.getEntity().consumeContent();
-        if (response.getStatusLine().getStatusCode() != 200) {
-            throw new AsterixException(response.getStatusLine().toString());
-        }
+        handleResponse(response);
     }
 
     @Override
     public void uninstall(URI path, Pair<String, String> credentials) throws IOException, AsterixException {
+        HttpClientContext hcCtx = createHttpClientContext(path, credentials);
+        HttpDelete del = new HttpDelete(path);
+        HttpResponse response = hc.execute(del, hcCtx);
+        handleResponse(response);
+    }
+
+    private HttpClientContext createHttpClientContext(URI path, Pair<String, String> credentials) {
+        HttpClientContext hcCtx = HttpClientContext.create();
+        HttpHost h = new HttpHost(path.getHost(), path.getPort(), "http");
         CredentialsProvider cp = new BasicCredentialsProvider();
         cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(credentials.first, credentials.second));
-        HttpClientContext hcCtx = HttpClientContext.create();
         hcCtx.setCredentialsProvider(cp);
-        HttpHost h = new HttpHost(path.getHost(), path.getPort(), "http");
         AuthCache ac = new BasicAuthCache();
         ac.put(h, new BasicScheme());
         hcCtx.setAuthCache(ac);
-        HttpDelete del = new HttpDelete(path);
-        HttpResponse response = hc.execute(del, hcCtx);
+        return hcCtx;
+    }
+
+    private void handleResponse(HttpResponse response) throws IOException, AsterixException {
         String resp = null;
         int respCode = response.getStatusLine().getStatusCode();
-        if (respCode == 500) {
+        if (respCode == 500 || respCode == 400) {
             resp = IOUtils.toString(response.getEntity().getContent());
         }
         response.getEntity().consumeContent();
@@ -100,5 +99,4 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
             throw new AsterixException(resp);
         }
     }
-
 }

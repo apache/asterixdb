@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -47,24 +48,31 @@ public class BasicAuthServlet implements IServlet {
     private Base64.Decoder b64Decoder;
     Map<String, String> storedCredentials;
     Map<String, String> ephemeralCredentials;
-    private String sysAuthHeader;
     private final IServlet delegate;
     private ConcurrentMap<String, Object> ctx;
 
-    public BasicAuthServlet(ConcurrentMap<String, Object> ctx, IServlet delegate) {
+    public BasicAuthServlet(ConcurrentMap<String, Object> ctx, IServlet delegate, Map<String, String> storedCredentials,
+            Map<String, String> ephemeralCredentials) {
+        this.ctx = ctx;
         this.delegate = delegate;
         b64Decoder = Base64.getDecoder();
-        storedCredentials = (Map<String, String>) ctx.get(CREDENTIAL_MAP);
-        this.ctx = ctx;
+        this.storedCredentials = storedCredentials;
+        this.ephemeralCredentials = ephemeralCredentials;
+    }
+
+    public static Pair<Map<String, String>, Map<String, String>> generateSysAuthHeader(
+            ConcurrentMap<String, Object> ctx) {
+        Map<String, String> storedCredentials = (Map<String, String>) ctx.get(CREDENTIAL_MAP);
         // generate internal user
         String sysUser;
         do {
             sysUser = generateRandomString(32);
         } while (storedCredentials.containsKey(sysUser));
         String sysPassword = generateRandomString(128);
-        ephemeralCredentials = Collections.singletonMap(sysUser, hashPassword(sysPassword));
-        sysAuthHeader = createAuthHeader(sysUser, sysPassword);
+        Map<String, String> ephemeralCredentials = Collections.singletonMap(sysUser, hashPassword(sysPassword));
+        String sysAuthHeader = createAuthHeader(sysUser, sysPassword);
         ctx.put(SYS_AUTH_HEADER, sysAuthHeader);
+        return new Pair<>(storedCredentials, ephemeralCredentials);
     }
 
     @Override

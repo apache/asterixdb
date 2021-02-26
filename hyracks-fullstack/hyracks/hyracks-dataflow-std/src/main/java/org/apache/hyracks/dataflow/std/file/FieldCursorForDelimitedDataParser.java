@@ -448,7 +448,6 @@ public class FieldCursorForDelimitedDataParser {
     }
 
     private void warn(String message) {
-        warnings.warn(Warning.forHyracks(null, ErrorCode.PARSING_ERROR, dataSourceName.get(), lineCount, fieldCount,
-                message));
+        warnings.warn(Warning.of(null, ErrorCode.PARSING_ERROR, dataSourceName.get(), lineCount, fieldCount, message));
     }
 }

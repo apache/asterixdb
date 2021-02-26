@@ -205,7 +205,7 @@ public class LSMBTreeScanDiskComponentsTest extends OrderedIndexTestDriver {
         try {
             ctx.getIndexAccessor().upsert(tuple);
         } catch (HyracksDataException e) {
-            if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+            if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw e;
             }
         }
@@ -222,7 +222,7 @@ public class LSMBTreeScanDiskComponentsTest extends OrderedIndexTestDriver {
         try {
             ctx.getIndexAccessor().delete(deleteTuple);
         } catch (HyracksDataException e) {
-            if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+            if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                 throw e;
             }
         }

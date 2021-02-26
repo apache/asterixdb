@@ -219,7 +219,7 @@ public class JoinUtils {
         if (OperatorPropertiesUtil.isAlwaysTrueCond(conditionExpr) && sourceLoc != null) {
             IWarningCollector warningCollector = context.getWarningCollector();
             if (warningCollector.shouldWarn()) {
-                warningCollector.warn(Warning.forHyracks(sourceLoc, ErrorCode.CROSS_PRODUCT_JOIN));
+                warningCollector.warn(Warning.of(sourceLoc, ErrorCode.CROSS_PRODUCT_JOIN));
             }
         }
     }

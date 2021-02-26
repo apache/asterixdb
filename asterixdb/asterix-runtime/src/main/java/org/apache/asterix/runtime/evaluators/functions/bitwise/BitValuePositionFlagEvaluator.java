@@ -22,7 +22,6 @@ package org.apache.asterix.runtime.evaluators.functions.bitwise;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
@@ -42,6 +41,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -292,7 +292,7 @@ class BitValuePositionFlagEvaluator extends AbstractScalarEval {
     private void handleOutOfRangeInput(int inputPosition, int startLimit, int endLimit, long actual) {
         IWarningCollector warningCollector = context.getWarningCollector();
         if (warningCollector.shouldWarn()) {
-            warningCollector.warn(WarningUtil.forAsterix(srcLoc, ErrorCode.VALUE_OUT_OF_RANGE, funID,
+            warningCollector.warn(Warning.of(srcLoc, ErrorCode.VALUE_OUT_OF_RANGE, funID,
                     ExceptionUtil.indexToPosition(inputPosition), startLimit, endLimit, actual));
         }
     }

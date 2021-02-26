@@ -33,7 +33,7 @@ import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.clause.LetClause;
-import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.AbstractCallExpression;
 import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.parser.FunctionParser;
@@ -345,7 +345,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     }
 
     @Override
-    public Set<CallExpr> getFunctionCalls(Expression expression) throws CompilationException {
+    public Set<AbstractCallExpression> getFunctionCalls(Expression expression) throws CompilationException {
         GatherFunctionCalls gfc = new GatherFunctionCalls();
         expression.accept(gfc, null);
         return gfc.getCalls();
@@ -507,6 +507,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
         @Override
         public Void visit(WindowExpression winExpr, Void arg) throws CompilationException {
+            calls.add(winExpr);
             if (winExpr.hasPartitionList()) {
                 for (Expression expr : winExpr.getPartitionList()) {
                     expr.accept(this, arg);

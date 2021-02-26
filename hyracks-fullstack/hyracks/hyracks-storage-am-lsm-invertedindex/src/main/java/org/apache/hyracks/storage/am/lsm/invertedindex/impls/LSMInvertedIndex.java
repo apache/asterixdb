@@ -178,7 +178,7 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
                 try {
                     ctx.getCurrentDeletedKeysBTreeAccessors().insert(ctx.getKeysOnlyTuple());
                 } catch (HyracksDataException e) {
-                    if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                    if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                         // Key has already been deleted.
                         LOGGER.log(Level.WARN, "Failure during index delete operation", e);
                         throw e;

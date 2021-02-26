@@ -527,8 +527,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                 read(cPage);
                 return;
             } catch (HyracksDataException readException) {
-                if (readException.getErrorCode() == ErrorCode.CANNOT_READ_CLOSED_FILE && i <= MAX_PAGE_READ_ATTEMPTS) {
-                    /**
+                if (readException.matches(ErrorCode.CANNOT_READ_CLOSED_FILE) && i != MAX_PAGE_READ_ATTEMPTS) {
+                    /*
                      * if the read failure was due to another thread closing the file channel because
                      * it was interrupted, we will try to read again since the interrupted thread
                      * will re-open the file.

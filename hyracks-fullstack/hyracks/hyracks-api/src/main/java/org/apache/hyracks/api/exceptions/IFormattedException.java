@@ -19,6 +19,8 @@
 package org.apache.hyracks.api.exceptions;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface IFormattedException {
 
@@ -44,25 +46,43 @@ public interface IFormattedException {
     String getMessage();
 
     /**
-     * Tests for matching component & errorCode against this exception
-     *
-     * @param component the component to match
-     * @param errorCode the errorCode to match
-     * @return <code>true</code> if this {@link IFormattedException} instance matches the supplied parameters
+     * If available, returns the {@link IError} associated with this exception
+     * @return the error instance, othewise {@link Optional#empty()}
+     * @since 0.3.5.1
      */
-    default boolean matches(String component, int errorCode) {
-        Objects.requireNonNull(component, "component");
-        return component.equals(getComponent()) && errorCode == getErrorCode();
+    Optional<IError> getError();
+
+    /**
+     * Indicates whether this exception matches the supplied error code
+     */
+    default boolean matches(IError candidate) {
+        Objects.requireNonNull(candidate, "candidate");
+        return getComponent().equals(candidate.component()) && getErrorCode() == candidate.intValue();
+    }
+
+    /**
+     * Indicates whether this exception matches any of the supplied error codes
+     */
+    default boolean matchesAny(IError candidate, IError... otherCandidates) {
+        return matches(candidate) || Stream.of(otherCandidates).anyMatch(this::matches);
     }
 
     /**
      * Tests for matching component & errorCode against supplied throwable
      *
-     * @param component the component to match
-     * @param errorCode the errorCode to match
-     * @return <code>true</code> if the supplied {@link Throwable}  matches the supplied parameters
+     * @param candidate the error type to match
+     * @return <code>true</code> if the supplied {@link Throwable} matches the supplied candidate
      */
-    static boolean matches(Throwable th, String component, int errorCode) {
-        return th instanceof IFormattedException && ((IFormattedException) th).matches(component, errorCode);
+    static boolean matches(Throwable th, IError candidate) {
+        return th instanceof IFormattedException && ((IFormattedException) th).matches(candidate);
+    }
+
+    /**
+     * Tests for matching component & errorCode against supplied throwable
+     *
+     * @return <code>true</code> if the supplied {@link Throwable} matches any of the supplied candidates
+     */
+    static boolean matchesAny(Throwable th, IError candidate, IError... otherCandidates) {
+        return th instanceof IFormattedException && ((IFormattedException) th).matchesAny(candidate, otherCandidates);
     }
 }

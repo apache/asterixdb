@@ -237,7 +237,7 @@ public abstract class TreeIndexTestUtils {
             } catch (HyracksDataException e) {
                 // We set expected values only after insertion succeeds because
                 // we ignore duplicate keys.
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw e;
                 }
             }
@@ -291,7 +291,7 @@ public abstract class TreeIndexTestUtils {
             } catch (HyracksDataException e) {
                 // We set expected values only after insertion succeeds because
                 // we ignore duplicate keys.
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw e;
                 }
             }

@@ -26,54 +26,51 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class AsterixException extends AlgebricksException {
     private static final long serialVersionUID = 1L;
 
+    public AsterixException(ErrorCode error, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        super(error, cause, sourceLoc, params);
+    }
+
+    public AsterixException(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
+        this(error, null, sourceLoc, params);
+    }
+
+    public AsterixException(ErrorCode error, Serializable... params) {
+        super(error, null, null, params);
+    }
+
+    public AsterixException(ErrorCode error, Throwable cause, Serializable... params) {
+        super(error, cause, null, params);
+    }
+
     /**
-     * @deprecated Instead, use a constructor with error code
+     * @deprecated Instead, use a constructor with {@link ErrorCode}
      */
     @Deprecated
     public AsterixException(String message) {
         super(message);
     }
 
-    public AsterixException(int errorCode, SourceLocation sourceLoc, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), sourceLoc, params);
-    }
-
-    public AsterixException(int errorCode, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
-    }
-
     /**
-     * @deprecated When creating a constructor with cause,
-     *             create AlgebricksException using AlgebricksException.create(Throwable th);
+     * @deprecated Instead, use a constructor with {@link ErrorCode}
      */
     @Deprecated
     public AsterixException(Throwable cause) {
         super(cause);
     }
 
-    public AsterixException(int errorCode, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), sourceLoc, params);
-        addSuppressed(cause);
-    }
-
-    public AsterixException(int errorCode, Throwable cause, Serializable... params) {
-        super(ErrorCode.ASTERIX, errorCode, ErrorCode.getErrorMessage(errorCode), params);
-        addSuppressed(cause);
-    }
-
     /**
-     * @deprecated Instead, use a constructor with error code
+     * @deprecated Instead, use a constructor with {@link ErrorCode}
      */
     @Deprecated
     public AsterixException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public static AsterixException create(int errorCode, SourceLocation sourceLoc, Serializable... params) {
-        return new AsterixException(errorCode, sourceLoc, params);
+    public static AsterixException create(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
+        return new AsterixException(error, sourceLoc, params);
     }
 
-    public static AsterixException create(int errorCode, Serializable... params) {
-        return new AsterixException(errorCode, params);
+    public static AsterixException create(ErrorCode error, Serializable... params) {
+        return new AsterixException(error, params);
     }
 }
