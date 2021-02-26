@@ -80,6 +80,11 @@ import org.apache.logging.log4j.Logger;
 
 public class ExternalIndexingOperations {
     private static final Logger LOGGER = LogManager.getLogger();
+    /**
+     * Note: there's a special handling of this empty indexing field name in
+     * {@link org.apache.asterix.metadata.entitytupletranslators.IndexTupleTranslator
+     * IndexTupleTranslator.createMetadataEntityFromARecord()}
+     */
     public static final List<List<String>> FILE_INDEX_FIELD_NAMES =
             Collections.unmodifiableList(Collections.singletonList(Collections.singletonList("")));
     public static final List<IAType> FILE_INDEX_FIELD_TYPES =

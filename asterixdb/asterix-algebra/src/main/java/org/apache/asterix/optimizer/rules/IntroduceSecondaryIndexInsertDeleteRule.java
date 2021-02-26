@@ -18,11 +18,15 @@
  */
 package org.apache.asterix.optimizer.rules;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
@@ -38,6 +42,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.metadata.utils.ArrayIndexUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
@@ -57,6 +62,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -65,17 +71,24 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator.Kind;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -87,6 +100,8 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  * assign --> insert-delete-upsert --> *(secondary indexes index-insert-delete-upsert) --> sink
  */
 public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewriteRule {
+    private IOptimizationContext context;
+    private SourceLocation sourceLoc;
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
@@ -121,7 +136,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 primaryIndexModificationOp.getAdditionalNonFilteringExpressions();
         LogicalVariable newRecordVar;
         LogicalVariable newMetaVar = null;
-        SourceLocation sourceLoc = primaryIndexModificationOp.getSourceLocation();
+        sourceLoc = primaryIndexModificationOp.getSourceLocation();
+        this.context = context;
 
         /**
          * inputOp is the assign operator which extracts primary keys from the input
@@ -129,14 +145,14 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
          */
         AbstractLogicalOperator inputOp =
                 (AbstractLogicalOperator) primaryIndexModificationOp.getInputs().get(0).getValue();
-        newRecordVar = getRecordVar(context, inputOp, newRecordExpr, 0);
+        newRecordVar = getRecordVar(inputOp, newRecordExpr, 0);
         if (newMetaExprs != null && !newMetaExprs.isEmpty()) {
             if (newMetaExprs.size() > 1) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                         "Number of meta records can't be more than 1. Number of meta records found = "
                                 + newMetaExprs.size());
             }
-            newMetaVar = getRecordVar(context, inputOp, newMetaExprs.get(0).getValue(), 1);
+            newMetaVar = getRecordVar(inputOp, newMetaExprs.get(0).getValue(), 1);
         }
 
         /*
@@ -177,9 +193,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             // for insert, primary key index is handled together when primary index
             indexes = indexes.stream().filter(index -> !index.isPrimaryKeyIndex()).collect(Collectors.toList());
         }
+
         // Set the top operator pointer to the primary IndexInsertDeleteOperator
         ILogicalOperator currentTop = primaryIndexModificationOp;
-        boolean hasSecondaryIndex = false;
 
         // Put an n-gram or a keyword index in the later stage of index-update,
         // since TokenizeOperator needs to be involved.
@@ -216,7 +232,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
         // Replicate Operator is applied only when doing the bulk-load.
         ReplicateOperator replicateOp = null;
-        if (secondaryIndexTotalCnt > 1 && primaryIndexModificationOp.isBulkload()) {
+        if (secondaryIndexTotalCnt > 1 && isBulkload) {
             // Split the logical plan into "each secondary index update branch"
             // to replicate each <PK,OBJECT> pair.
             replicateOp = new ReplicateOperator(secondaryIndexTotalCnt);
@@ -247,8 +263,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                  * is solved
                  */
                 || primaryIndexModificationOp.getOperation() == Kind.DELETE) {
-            injectFieldAccessesForIndexes(context, dataset, indexes, fieldVarsForNewRecord, recType, metaType,
-                    newRecordVar, newMetaVar, primaryIndexModificationOp, false);
+            injectFieldAccessesForIndexes(dataset, indexes, fieldVarsForNewRecord, recType, metaType, newRecordVar,
+                    newMetaVar, primaryIndexModificationOp, false);
             if (replicateOp != null) {
                 context.computeAndSetTypeEnvironmentForOperator(replicateOp);
             }
@@ -260,38 +276,61 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
          */) {
             List<LogicalVariable> beforeOpMetaVars = primaryIndexModificationOp.getBeforeOpAdditionalNonFilteringVars();
             LogicalVariable beforeOpMetaVar = beforeOpMetaVars == null ? null : beforeOpMetaVars.get(0);
-            currentTop = injectFieldAccessesForIndexes(context, dataset, indexes, fieldVarsForBeforeOperation, recType,
-                    metaType, primaryIndexModificationOp.getBeforeOpRecordVar(), beforeOpMetaVar, currentTop, true);
+            currentTop = injectFieldAccessesForIndexes(dataset, indexes, fieldVarsForBeforeOperation, recType, metaType,
+                    primaryIndexModificationOp.getBeforeOpRecordVar(), beforeOpMetaVar, currentTop, true);
         }
 
-        // Iterate each secondary index and applying Index Update operations.
-        // At first, op1 is the index insert op insertOp
+        // Add the appropriate SIDX maintenance operations.
         for (Index index : indexes) {
             if (!index.isSecondaryIndex()) {
                 continue;
             }
-            hasSecondaryIndex = true;
+
             // Get the secondary fields names and types
-            List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
-            List<IAType> secondaryKeyTypes = index.getKeyFieldTypes();
+            List<List<String>> secondaryKeyFields = null;
+            List<IAType> secondaryKeyTypes = null;
+            List<Integer> secondaryKeySources = null;
+            switch (Index.IndexCategory.of(index.getIndexType())) {
+                case VALUE:
+                    Index.ValueIndexDetails valueIndexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+                    secondaryKeyFields = valueIndexDetails.getKeyFieldNames();
+                    secondaryKeyTypes = valueIndexDetails.getKeyFieldTypes();
+                    secondaryKeySources = valueIndexDetails.getKeyFieldSourceIndicators();
+                    break;
+                case TEXT:
+                    Index.TextIndexDetails textIndexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+                    secondaryKeyFields = textIndexDetails.getKeyFieldNames();
+                    secondaryKeyTypes = textIndexDetails.getKeyFieldTypes();
+                    secondaryKeySources = textIndexDetails.getKeyFieldSourceIndicators();
+                    break;
+                case ARRAY:
+                    // These details are handled separately for array indexes.
+                    break;
+                default:
+                    continue;
+            }
+
+            // Set our key variables and expressions for non-array indexes. Our secondary keys for array indexes will
+            // always be an empty list.
             List<LogicalVariable> secondaryKeyVars = new ArrayList<>();
             List<Mutable<ILogicalExpression>> secondaryExpressions = new ArrayList<>();
             List<Mutable<ILogicalExpression>> beforeOpSecondaryExpressions = new ArrayList<>();
             ILogicalOperator replicateOutput;
-
-            for (int i = 0; i < secondaryKeyFields.size(); i++) {
-                IndexFieldId indexFieldId = new IndexFieldId(index.getKeyFieldSourceIndicators().get(i),
-                        secondaryKeyFields.get(i), secondaryKeyTypes.get(i).getTypeTag());
-                LogicalVariable skVar = fieldVarsForNewRecord.get(indexFieldId);
-                secondaryKeyVars.add(skVar);
-                VariableReferenceExpression skVarRef = new VariableReferenceExpression(skVar);
-                skVarRef.setSourceLocation(sourceLoc);
-                secondaryExpressions.add(new MutableObject<ILogicalExpression>(skVarRef));
-                if (primaryIndexModificationOp.getOperation() == Kind.UPSERT) {
-                    VariableReferenceExpression varRef =
-                            new VariableReferenceExpression(fieldVarsForBeforeOperation.get(indexFieldId));
-                    varRef.setSourceLocation(sourceLoc);
-                    beforeOpSecondaryExpressions.add(new MutableObject<ILogicalExpression>(varRef));
+            if (!index.getIndexType().equals(IndexType.ARRAY)) {
+                for (int i = 0; i < secondaryKeyFields.size(); i++) {
+                    IndexFieldId indexFieldId = new IndexFieldId(secondaryKeySources.get(i), secondaryKeyFields.get(i),
+                            secondaryKeyTypes.get(i).getTypeTag());
+                    LogicalVariable skVar = fieldVarsForNewRecord.get(indexFieldId);
+                    secondaryKeyVars.add(skVar);
+                    VariableReferenceExpression skVarRef = new VariableReferenceExpression(skVar);
+                    skVarRef.setSourceLocation(sourceLoc);
+                    secondaryExpressions.add(new MutableObject<ILogicalExpression>(skVarRef));
+                    if (primaryIndexModificationOp.getOperation() == Kind.UPSERT) {
+                        VariableReferenceExpression varRef =
+                                new VariableReferenceExpression(fieldVarsForBeforeOperation.get(indexFieldId));
+                        varRef.setSourceLocation(sourceLoc);
+                        beforeOpSecondaryExpressions.add(new MutableObject<ILogicalExpression>(varRef));
+                    }
                 }
             }
 
@@ -301,12 +340,13 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 Mutable<ILogicalExpression> filterExpression =
                         (primaryIndexModificationOp.getOperation() == Kind.UPSERT) ? null
                                 : createFilterExpression(secondaryKeyVars, context.getOutputTypeEnvironment(currentTop),
-                                        index.isOverridingKeyFieldTypes(), sourceLoc);
+                                        index.getIndexDetails().isOverridingKeyFieldTypes());
                 DataSourceIndex dataSourceIndex = new DataSourceIndex(index, dataverseName, datasetName, mp);
 
                 // Introduce the TokenizeOperator only when doing bulk-load,
                 // and index type is keyword or n-gram.
-                if (index.getIndexType() != IndexType.BTREE && primaryIndexModificationOp.isBulkload()) {
+                if (index.getIndexType() != IndexType.BTREE && index.getIndexType() != IndexType.ARRAY
+                        && primaryIndexModificationOp.isBulkload()) {
                     // Note: Bulk load case, we don't need to take care of it for upsert operation
                     // Check whether the index is length-partitioned or not.
                     // If partitioned, [input variables to TokenizeOperator,
@@ -330,8 +370,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
                     // Check the field type of the secondary key.
                     IAType secondaryKeyType;
-                    Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(
-                            index.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), recType);
+                    Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0),
+                            secondaryKeyFields.get(0), recType);
                     secondaryKeyType = keyPairType.first;
 
                     List<Object> varTypes = new ArrayList<>();
@@ -399,11 +439,82 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                         }
                     }
                     indexUpdate.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
+
+                    // For array indexes we have no secondary keys to reference. We must add separate branches to
+                    // first extract our keys.
+                    if (index.getIndexType() == IndexType.ARRAY && !isBulkload) {
+                        NestedTupleSourceOperator unnestSourceOp =
+                                new NestedTupleSourceOperator(new MutableObject<>(indexUpdate));
+                        unnestSourceOp.setSourceLocation(sourceLoc);
+                        context.computeAndSetTypeEnvironmentForOperator(unnestSourceOp);
+                        UnnestBranchCreator unnestSIDXBranch = buildUnnestBranch(unnestSourceOp, index, newRecordVar,
+                                newMetaVar, recType, metaType, dataset.hasMetaPart());
+                        unnestSIDXBranch.applyProjectDistinct();
+
+                        // If there exists a filter expression, add it to the top of our nested plan.
+                        filterExpression = (primaryIndexModificationOp.getOperation() == Kind.UPSERT) ? null
+                                : createFilterExpression(unnestSIDXBranch.lastFieldVars,
+                                        context.getOutputTypeEnvironment(unnestSIDXBranch.currentTop),
+                                        index.getIndexDetails().isOverridingKeyFieldTypes());
+                        if (filterExpression != null) {
+                            unnestSIDXBranch.applyFilteringExpression(filterExpression);
+                        }
+
+                        // Finalize our nested plan.
+                        ILogicalPlan unnestPlan = unnestSIDXBranch.buildBranch();
+                        indexUpdate.getNestedPlans().add(unnestPlan);
+
+                        // If we have an UPSERT, then create and add a branch to extract our old keys as well.
+                        if (primaryIndexModificationOp.getOperation() == Kind.UPSERT) {
+                            NestedTupleSourceOperator unnestBeforeSourceOp =
+                                    new NestedTupleSourceOperator(new MutableObject<>(indexUpdate));
+                            unnestBeforeSourceOp.setSourceLocation(sourceLoc);
+                            context.computeAndSetTypeEnvironmentForOperator(unnestBeforeSourceOp);
+
+                            List<LogicalVariable> beforeOpMetaVars =
+                                    primaryIndexModificationOp.getBeforeOpAdditionalNonFilteringVars();
+                            LogicalVariable beforeOpMetaVar = beforeOpMetaVars == null ? null : beforeOpMetaVars.get(0);
+                            UnnestBranchCreator unnestBeforeSIDXBranch = buildUnnestBranch(unnestBeforeSourceOp, index,
+                                    primaryIndexModificationOp.getBeforeOpRecordVar(), beforeOpMetaVar, recType,
+                                    metaType, dataset.hasMetaPart());
+                            unnestBeforeSIDXBranch.applyProjectDistinct();
+                            indexUpdate.getNestedPlans().add(unnestBeforeSIDXBranch.buildBranch());
+                        }
+                    } else if (index.getIndexType() == IndexType.ARRAY && isBulkload) {
+                        // If we have a bulk load, we must sort the entire input by <SK, PK>. Do not use any
+                        // nested plans here.
+                        UnnestBranchCreator unnestSIDXBranch = buildUnnestBranch(currentTop, index, newRecordVar,
+                                newMetaVar, recType, metaType, dataset.hasMetaPart());
+                        unnestSIDXBranch.applyProjectDistinct(primaryIndexModificationOp.getPrimaryKeyExpressions(),
+                                primaryIndexModificationOp.getAdditionalFilteringExpressions());
+                        indexUpdate.getInputs().clear();
+                        introduceNewOp(unnestSIDXBranch.currentTop, indexUpdate, true);
+
+                        // Update the secondary expressions of our index.
+                        secondaryExpressions = new ArrayList<>();
+                        for (LogicalVariable var : unnestSIDXBranch.lastFieldVars) {
+                            secondaryExpressions.add(new MutableObject<>(new VariableReferenceExpression(var)));
+                        }
+                        indexUpdate.setSecondaryKeyExprs(secondaryExpressions);
+
+                        // Update the filter expression to include these new keys.
+                        filterExpression = createFilterExpression(unnestSIDXBranch.lastFieldVars,
+                                context.getOutputTypeEnvironment(unnestSIDXBranch.currentTop),
+                                index.getIndexDetails().isOverridingKeyFieldTypes());
+                        indexUpdate.setFilterExpression(filterExpression);
+
+                        if (replicateOp != null) {
+                            // If we have a replicate, then update the replicate operator to include this branch.
+                            replicateOp.getOutputs().add(new MutableObject<>(unnestSIDXBranch.currentBottom));
+                            op0.getInputs().add(new MutableObject<ILogicalOperator>(indexUpdate));
+                            continue;
+                        }
+                    }
                 }
             } else {
                 // Get type, dimensions and number of keys
-                Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
-                        secondaryKeyFields.get(0), recType);
+                Pair<IAType, Boolean> keyPairType =
+                        Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyFields.get(0), recType);
                 IAType spatialType = keyPairType.first;
                 boolean isPointMBR =
                         spatialType.getTypeTag() == ATypeTag.POINT || spatialType.getTypeTag() == ATypeTag.POINT3D;
@@ -485,7 +596,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     // nullable.
                     boolean forceFilter = keyPairType.second;
                     filterExpression = createFilterExpression(keyVarList,
-                            context.getOutputTypeEnvironment(assignCoordinates), forceFilter, sourceLoc);
+                            context.getOutputTypeEnvironment(assignCoordinates), forceFilter);
                 }
                 DataSourceIndex dataSourceIndex = new DataSourceIndex(index, dataverseName, datasetName, mp);
                 indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
@@ -532,7 +643,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                  * "blocking" sort operator since tuples are already sorted. We mark the materialization flag for that
                  * branch to make it blocking. Without "blocking", the activity cluster graph would be messed up
                  */
-                if (index.getKeyFieldNames().isEmpty() && index.getIndexType() == IndexType.BTREE) {
+                if (index.isPrimaryKeyIndex()) {
                     int positionOfSecondaryPrimaryIndex = replicateOp.getOutputs().size() - 1;
                     replicateOp.getOutputMaterializationFlags()[positionOfSecondaryPrimaryIndex] = true;
                 }
@@ -541,10 +652,6 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 // For bulk load, we connect all fanned out insert operator to a single SINK operator
                 op0.getInputs().add(new MutableObject<ILogicalOperator>(indexUpdate));
             }
-
-        }
-        if (!hasSecondaryIndex) {
-            return false;
         }
 
         if (!primaryIndexModificationOp.isBulkload()) {
@@ -557,8 +664,103 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         return true;
     }
 
-    private LogicalVariable getRecordVar(IOptimizationContext context, AbstractLogicalOperator inputOp,
-            ILogicalExpression recordExpr, int expectedRecordIndex) throws AlgebricksException {
+    private UnnestBranchCreator buildUnnestBranch(ILogicalOperator unnestSourceOp, Index index,
+            LogicalVariable recordVar, LogicalVariable metaVar, ARecordType recType, ARecordType metaType,
+            boolean hasMetaPart) throws AlgebricksException {
+        Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) index.getIndexDetails();
+
+        // First, locate a field having the required UNNEST path. Queue this first, and all other keys will follow.
+        Deque<Integer> keyPositionQueue = new ArrayDeque<>();
+        for (int i = 0; i < arrayIndexDetails.getElementList().size(); i++) {
+            Index.ArrayIndexElement e = arrayIndexDetails.getElementList().get(i);
+            if (e.getUnnestList().isEmpty()) {
+                keyPositionQueue.addLast(i);
+            } else {
+                keyPositionQueue.addFirst(i);
+            }
+        }
+
+        // Get the record variable associated with our record path.
+        Index.ArrayIndexElement workingElement = arrayIndexDetails.getElementList().get(keyPositionQueue.getFirst());
+        int sourceIndicatorForBaseRecord = workingElement.getSourceIndicator();
+        LogicalVariable sourceVarForBaseRecord = hasMetaPart
+                ? ((sourceIndicatorForBaseRecord == Index.RECORD_INDICATOR) ? recordVar : metaVar) : recordVar;
+        VariableReferenceExpression baseRecordVarRef = new VariableReferenceExpression(sourceVarForBaseRecord);
+        baseRecordVarRef.setSourceLocation(sourceLoc);
+        UnnestBranchCreator branchCreator = new UnnestBranchCreator(baseRecordVarRef, unnestSourceOp);
+
+        int initialKeyPositionQueueSize = keyPositionQueue.size();
+        Set<LogicalVariable> secondaryKeyVars = new HashSet<>();
+        for (int i = 0; i < initialKeyPositionQueueSize; i++) {
+
+            // Poll from our queue, and get a key position.
+            int workingKeyPos = keyPositionQueue.pollFirst();
+            workingElement = arrayIndexDetails.getElementList().get(workingKeyPos);
+            int sourceIndicator = workingElement.getSourceIndicator();
+            ARecordType recordType =
+                    hasMetaPart ? ((sourceIndicator == Index.RECORD_INDICATOR) ? recType : metaType) : recType;
+
+            boolean isOpenOrNestedField;
+            if (workingElement.getUnnestList().isEmpty()) {
+                // We have an atomic element (i.e. we have a composite array index).
+                List<String> atomicFieldName = workingElement.getProjectList().get(0);
+                isOpenOrNestedField =
+                        (atomicFieldName.size() != 1) || !recordType.isClosedField(atomicFieldName.get(0));
+
+                // The UNNEST path has already been created (we queued this first), so we look at the current top.
+                LogicalVariable newVar = context.newVar();
+                VariableReferenceExpression varRef = new VariableReferenceExpression(sourceVarForBaseRecord);
+                varRef.setSourceLocation(sourceLoc);
+                AbstractFunctionCallExpression newVarRef = (isOpenOrNestedField)
+                        ? getFieldAccessFunction(new MutableObject<>(varRef),
+                                recordType.getFieldIndex(atomicFieldName.get(0)), atomicFieldName)
+                        : getFieldAccessFunction(new MutableObject<>(varRef), -1, atomicFieldName);
+
+                AssignOperator newAssignOp = new AssignOperator(newVar, new MutableObject<>(newVarRef));
+                newAssignOp.setSourceLocation(sourceLoc);
+                branchCreator.currentTop = introduceNewOp(branchCreator.currentTop, newAssignOp, true);
+                secondaryKeyVars.add(newVar);
+
+            } else {
+                // We have an array element. The "open / nestedness" is determined by the first UNNEST field.
+                isOpenOrNestedField = workingElement.getUnnestList().get(0).size() > 1
+                        || !recordType.isClosedField(workingElement.getUnnestList().get(0).get(0));
+
+                // Walk the array path.
+                List<String> flatFirstFieldName = ArrayIndexUtil.getFlattenedKeyFieldNames(
+                        workingElement.getUnnestList(), workingElement.getProjectList().get(0));
+                List<Integer> firstArrayIndicator = ArrayIndexUtil
+                        .getArrayDepthIndicator(workingElement.getUnnestList(), workingElement.getProjectList().get(0));
+                ArrayIndexUtil.walkArrayPath((isOpenOrNestedField) ? null : recordType, flatFirstFieldName,
+                        firstArrayIndicator, branchCreator);
+
+                // For all other elements in the PROJECT list, add an assign.
+                for (int j = 1; j < workingElement.getProjectList().size(); j++) {
+                    LogicalVariable newVar = context.newVar();
+                    AbstractFunctionCallExpression newVarRef =
+                            getFieldAccessFunction(new MutableObject<>(branchCreator.lastRecordVarRef), -1,
+                                    workingElement.getProjectList().get(j));
+
+                    AssignOperator newAssignOp = new AssignOperator(newVar, new MutableObject<>(newVarRef));
+                    newAssignOp.setSourceLocation(sourceLoc);
+                    branchCreator.currentTop = introduceNewOp(branchCreator.currentTop, newAssignOp, true);
+                    secondaryKeyVars.add(newVar);
+                }
+            }
+
+            branchCreator.lowerIsFirstWalkFlag();
+            secondaryKeyVars.addAll(branchCreator.lastFieldVars);
+        }
+
+        // Update the variables we are to use for the head operators.
+        branchCreator.lastFieldVars.clear();
+        branchCreator.lastFieldVars.addAll(secondaryKeyVars);
+
+        return branchCreator;
+    }
+
+    private LogicalVariable getRecordVar(AbstractLogicalOperator inputOp, ILogicalExpression recordExpr,
+            int expectedRecordIndex) throws AlgebricksException {
         if (exprIsRecord(context.getOutputTypeEnvironment(inputOp), recordExpr)) {
             return ((VariableReferenceExpression) recordExpr).getVariableReference();
         } else {
@@ -598,21 +800,39 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         return false;
     }
 
-    private ILogicalOperator injectFieldAccessesForIndexes(IOptimizationContext context, Dataset dataset,
-            List<Index> indexes, Map<IndexFieldId, LogicalVariable> fieldAccessVars, ARecordType recType,
-            ARecordType metaType, LogicalVariable recordVar, LogicalVariable metaVar, ILogicalOperator currentTop,
-            boolean afterOp) throws AlgebricksException {
+    private ILogicalOperator injectFieldAccessesForIndexes(Dataset dataset, List<Index> indexes,
+            Map<IndexFieldId, LogicalVariable> fieldAccessVars, ARecordType recType, ARecordType metaType,
+            LogicalVariable recordVar, LogicalVariable metaVar, ILogicalOperator currentTop, boolean afterOp)
+            throws AlgebricksException {
         List<LogicalVariable> vars = new ArrayList<>();
         List<Mutable<ILogicalExpression>> exprs = new ArrayList<>();
         SourceLocation sourceLoc = currentTop.getSourceLocation();
         for (Index index : indexes) {
-            if (index.isPrimaryIndex()) {
+            if (index.isPrimaryIndex() || index.getIndexType() == IndexType.ARRAY) {
+                // Array indexes require UNNESTs, which must be handled after the PIDX op.
                 continue;
             }
-            List<IAType> skTypes = index.getKeyFieldTypes();
-            List<List<String>> skNames = index.getKeyFieldNames();
-            List<Integer> indicators = index.getKeyFieldSourceIndicators();
-            for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
+            List<List<String>> skNames;
+            List<IAType> skTypes;
+            List<Integer> indicators;
+            switch (Index.IndexCategory.of(index.getIndexType())) {
+                case VALUE:
+                    Index.ValueIndexDetails valueIndexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+                    skNames = valueIndexDetails.getKeyFieldNames();
+                    skTypes = valueIndexDetails.getKeyFieldTypes();
+                    indicators = valueIndexDetails.getKeyFieldSourceIndicators();
+                    break;
+                case TEXT:
+                    Index.TextIndexDetails textIndexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+                    skNames = textIndexDetails.getKeyFieldNames();
+                    skTypes = textIndexDetails.getKeyFieldTypes();
+                    indicators = textIndexDetails.getKeyFieldSourceIndicators();
+                    break;
+                default:
+                    throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
+                            String.valueOf(index.getIndexType()));
+            }
+            for (int i = 0; i < skNames.size(); i++) {
                 IndexFieldId indexFieldId =
                         new IndexFieldId(indicators.get(i), skNames.get(i), skTypes.get(i).getTypeTag());
                 if (fieldAccessVars.containsKey(indexFieldId)) {
@@ -634,8 +854,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     // make handling of records with incorrect value type for this field easier and cleaner
                     context.addNotToBeInlinedVar(fieldVar);
                     // create field access
-                    AbstractFunctionCallExpression fieldAccessFunc = getOpenOrNestedFieldAccessFunction(
-                            new MutableObject<>(varRef), indexFieldId.fieldName, sourceLoc);
+                    AbstractFunctionCallExpression fieldAccessFunc =
+                            getFieldAccessFunction(new MutableObject<>(varRef), -1, indexFieldId.fieldName);
                     // create cast
                     theFieldAccessFunc = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(
                             index.isEnforced() ? BuiltinFunctions.CAST_TYPE : BuiltinFunctions.CAST_TYPE_LAX));
@@ -648,24 +868,25 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     int pos = indexFieldId.fieldName.size() > 1 ? -1
                             : sourceType.getFieldIndex(indexFieldId.fieldName.get(0));
                     // Field not found --> This is either an open field or a nested field. it can't be accessed by index
-                    theFieldAccessFunc = (pos == -1)
-                            ? getOpenOrNestedFieldAccessFunction(new MutableObject<>(varRef), indexFieldId.fieldName,
-                                    sourceLoc)
-                            : getClosedFieldAccessFunction(new MutableObject<>(varRef), pos, sourceLoc);
+                    theFieldAccessFunc =
+                            getFieldAccessFunction(new MutableObject<>(varRef), pos, indexFieldId.fieldName);
                 }
                 vars.add(fieldVar);
                 exprs.add(new MutableObject<ILogicalExpression>(theFieldAccessFunc));
                 fieldAccessVars.put(indexFieldId, fieldVar);
             }
         }
-        // AssignOperator assigns secondary keys to their vars
-        AssignOperator castedFieldAssignOperator = new AssignOperator(vars, exprs);
-        castedFieldAssignOperator.setSourceLocation(sourceLoc);
-        return introduceNewOp(context, currentTop, castedFieldAssignOperator, afterOp);
+        if (!vars.isEmpty()) {
+            // AssignOperator assigns secondary keys to their vars
+            AssignOperator castedFieldAssignOperator = new AssignOperator(vars, exprs);
+            castedFieldAssignOperator.setSourceLocation(sourceLoc);
+            return introduceNewOp(currentTop, castedFieldAssignOperator, afterOp);
+        }
+        return currentTop;
     }
 
-    private static ILogicalOperator introduceNewOp(IOptimizationContext context, ILogicalOperator currentTopOp,
-            ILogicalOperator newOp, boolean afterOp) throws AlgebricksException {
+    private ILogicalOperator introduceNewOp(ILogicalOperator currentTopOp, ILogicalOperator newOp, boolean afterOp)
+            throws AlgebricksException {
         if (afterOp) {
             newOp.getInputs().add(new MutableObject<>(currentTopOp));
             context.computeAndSetTypeEnvironmentForOperator(newOp);
@@ -680,34 +901,34 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
     }
 
-    private static AbstractFunctionCallExpression getClosedFieldAccessFunction(Mutable<ILogicalExpression> varRef,
-            int position, SourceLocation sourceLoc) {
-        Mutable<ILogicalExpression> indexRef =
-                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(position))));
-        ScalarFunctionCallExpression fnExpr = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX), varRef, indexRef);
-        fnExpr.setSourceLocation(sourceLoc);
-        return fnExpr;
-    }
+    private AbstractFunctionCallExpression getFieldAccessFunction(Mutable<ILogicalExpression> varRef, int fieldPos,
+            List<String> fieldName) {
+        if (fieldName.size() == 1 && fieldPos != -1) {
+            Mutable<ILogicalExpression> indexRef =
+                    new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(fieldPos))));
+            ScalarFunctionCallExpression fnExpr = new ScalarFunctionCallExpression(
+                    FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX), varRef, indexRef);
+            fnExpr.setSourceLocation(sourceLoc);
+            return fnExpr;
 
-    private static AbstractFunctionCallExpression getOpenOrNestedFieldAccessFunction(Mutable<ILogicalExpression> varRef,
-            List<String> fields, SourceLocation sourceLoc) {
-        ScalarFunctionCallExpression func;
-        if (fields.size() > 1) {
-            IAObject fieldList = stringListToAOrderedList(fields);
-            Mutable<ILogicalExpression> fieldRef = constantToMutableLogicalExpression(fieldList);
-            // Create an expression for the nested case
-            func = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_NESTED),
-                    varRef, fieldRef);
         } else {
-            IAObject fieldList = new AString(fields.get(0));
-            Mutable<ILogicalExpression> fieldRef = constantToMutableLogicalExpression(fieldList);
-            // Create an expression for the open field case (By name)
-            func = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_NAME),
-                    varRef, fieldRef);
+            ScalarFunctionCallExpression func;
+            if (fieldName.size() > 1) {
+                IAObject fieldList = stringListToAOrderedList(fieldName);
+                Mutable<ILogicalExpression> fieldRef = constantToMutableLogicalExpression(fieldList);
+                // Create an expression for the nested case
+                func = new ScalarFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_NESTED), varRef, fieldRef);
+            } else {
+                IAObject fieldList = new AString(fieldName.get(0));
+                Mutable<ILogicalExpression> fieldRef = constantToMutableLogicalExpression(fieldList);
+                // Create an expression for the open field case (By name)
+                func = new ScalarFunctionCallExpression(
+                        FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_NAME), varRef, fieldRef);
+            }
+            func.setSourceLocation(sourceLoc);
+            return func;
         }
-        func.setSourceLocation(sourceLoc);
-        return func;
     }
 
     private static AOrderedList stringListToAOrderedList(List<String> fields) {
@@ -723,8 +944,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
     }
 
     private Mutable<ILogicalExpression> createFilterExpression(List<LogicalVariable> secondaryKeyVars,
-            IVariableTypeEnvironment typeEnv, boolean forceFilter, SourceLocation sourceLoc)
-            throws AlgebricksException {
+            IVariableTypeEnvironment typeEnv, boolean forceFilter) throws AlgebricksException {
         List<Mutable<ILogicalExpression>> filterExpressions = new ArrayList<>();
         // Add 'is not null' to all nullable secondary index keys as a filtering
         // condition.
@@ -760,6 +980,137 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             filterExpression = filterExpressions.get(0);
         }
         return filterExpression;
+    }
+
+    /**
+     * Builds the nested plan required for array index maintenance.
+     */
+    private class UnnestBranchCreator implements ArrayIndexUtil.TypeTrackerCommandExecutor {
+        private final List<LogicalVariable> lastFieldVars;
+        private VariableReferenceExpression lastRecordVarRef;
+        private ILogicalOperator currentTop, currentBottom;
+        private boolean isFirstWalk = true;
+
+        public UnnestBranchCreator(VariableReferenceExpression recordVarRef, ILogicalOperator sourceOperator) {
+            this.lastRecordVarRef = recordVarRef;
+            this.currentTop = sourceOperator;
+            this.lastFieldVars = new ArrayList<>();
+        }
+
+        public ILogicalPlan buildBranch() {
+            return new ALogicalPlanImpl(new MutableObject<>(currentTop));
+        }
+
+        public void lowerIsFirstWalkFlag() {
+            isFirstWalk = false;
+        }
+
+        @SafeVarargs
+        public final void applyProjectDistinct(List<Mutable<ILogicalExpression>>... auxiliaryExpressions)
+                throws AlgebricksException {
+            // Apply the following: PROJECT(SK, AK) --> (ORDER (SK, AK)) implicitly --> DISTINCT (SK, AK) .
+            List<LogicalVariable> projectVars = new ArrayList<>(this.lastFieldVars);
+            List<Mutable<ILogicalExpression>> distinctVarRefs =
+                    OperatorManipulationUtil.createVariableReferences(projectVars, sourceLoc);
+
+            // If we have any additional expressions to be added to our index, append them here.
+            if (auxiliaryExpressions.length > 0) {
+                for (List<Mutable<ILogicalExpression>> exprList : auxiliaryExpressions) {
+                    if (exprList != null) {
+                        // Sanity check: ensure that we only have variable references.
+                        if (exprList.stream().anyMatch(
+                                e -> !e.getValue().getExpressionTag().equals(LogicalExpressionTag.VARIABLE))) {
+                            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                                    "Given auxiliary expression list contains non-variable reference expressions. We"
+                                            + " cannot apply DISTINCT to this expression at this stage.");
+                        }
+
+                        distinctVarRefs.addAll(OperatorManipulationUtil.cloneExpressions(exprList));
+                        for (Mutable<ILogicalExpression> e : OperatorManipulationUtil.cloneExpressions(exprList)) {
+                            projectVars.add(((VariableReferenceExpression) e.getValue()).getVariableReference());
+                        }
+                    }
+                }
+            }
+
+            ProjectOperator projectOperator = new ProjectOperator(projectVars);
+            projectOperator.setSourceLocation(sourceLoc);
+            this.currentTop = introduceNewOp(currentTop, projectOperator, true);
+            DistinctOperator distinctOperator = new DistinctOperator(distinctVarRefs);
+            distinctOperator.setSourceLocation(sourceLoc);
+            this.currentTop = introduceNewOp(currentTop, distinctOperator, true);
+        }
+
+        public void applyFilteringExpression(Mutable<ILogicalExpression> filterExpression) throws AlgebricksException {
+            SelectOperator selectOperator = new SelectOperator(filterExpression, false, null);
+            selectOperator.setSourceLocation(sourceLoc);
+            this.currentTop = introduceNewOp(currentTop, selectOperator, true);
+        }
+
+        @Override
+        public void executeActionOnEachArrayStep(ARecordType startingStepRecordType, IAType workingType,
+                List<String> fieldName, boolean isFirstArrayStep, boolean isFirstUnnestInStep,
+                boolean isLastUnnestInIntermediateStep) throws AlgebricksException {
+            if (!isFirstWalk) {
+                // We have already built the UNNEST path, do not build again.
+                return;
+            }
+
+            ILogicalExpression accessToUnnestVar;
+            if (isFirstUnnestInStep) {
+                // This is the first UNNEST step. Get the field we want to UNNEST from our record.
+                accessToUnnestVar = (startingStepRecordType != null)
+                        ? getFieldAccessFunction(new MutableObject<>(lastRecordVarRef),
+                                startingStepRecordType.getFieldIndex(fieldName.get(0)), fieldName)
+                        : getFieldAccessFunction(new MutableObject<>(lastRecordVarRef), -1, fieldName);
+            } else {
+                // This is the second+ UNNEST step. Refer back to the previously unnested variable.
+                accessToUnnestVar = new VariableReferenceExpression(this.lastFieldVars.get(0));
+                this.lastFieldVars.clear();
+            }
+            UnnestingFunctionCallExpression scanCollection = new UnnestingFunctionCallExpression(
+                    BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
+                    Collections.singletonList(new MutableObject<>(accessToUnnestVar)));
+            scanCollection.setReturnsUniqueValues(false);
+            scanCollection.setSourceLocation(sourceLoc);
+            LogicalVariable unnestVar = context.newVar();
+            this.lastFieldVars.add(unnestVar);
+
+            UnnestOperator unnestOp = new UnnestOperator(unnestVar, new MutableObject<>(scanCollection));
+            unnestOp.setSourceLocation(sourceLoc);
+            this.currentTop = introduceNewOp(currentTop, unnestOp, true);
+            if (isFirstArrayStep) {
+                this.currentBottom = unnestOp;
+            }
+
+            if (isLastUnnestInIntermediateStep) {
+                // This is the last UNNEST before the next array step. Update our record variable.
+                this.lastRecordVarRef = new VariableReferenceExpression(unnestVar);
+                this.lastRecordVarRef.setSourceLocation(sourceLoc);
+                this.lastFieldVars.clear();
+            }
+        }
+
+        @Override
+        public void executeActionOnFinalArrayStep(ARecordType startingStepRecordType, List<String> fieldName,
+                boolean isNonArrayStep, boolean requiresOnlyOneUnnest) throws AlgebricksException {
+            // If the final value is nested inside a record, add an additional ASSIGN.
+            if (!isNonArrayStep) {
+                return;
+            }
+
+            // Create the function to access our final field.
+            AbstractFunctionCallExpression accessToFinalVar = (startingStepRecordType != null)
+                    ? getFieldAccessFunction(new MutableObject<>(lastRecordVarRef),
+                            startingStepRecordType.getFieldIndex(fieldName.get(0)), fieldName)
+                    : getFieldAccessFunction(new MutableObject<>(lastRecordVarRef), -1, fieldName);
+
+            LogicalVariable finalVar = context.newVar();
+            this.lastFieldVars.add(finalVar);
+            AssignOperator assignOperator = new AssignOperator(finalVar, new MutableObject<>(accessToFinalVar));
+            assignOperator.setSourceLocation(sourceLoc);
+            this.currentTop = introduceNewOp(currentTop, assignOperator, true);
+        }
     }
 
     private final class IndexFieldId {

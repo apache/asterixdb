@@ -456,6 +456,9 @@ public class SubstituteVariableVisitor
         substUsedVariablesInExpr(op.getUpsertIndicatorExpr(), pair.first, pair.second);
         substUsedVariablesInExpr(op.getPrevSecondaryKeyExprs(), pair.first, pair.second);
         substUsedVariablesInExpr(op.getPrevAdditionalFilteringExpression(), pair.first, pair.second);
+        if (!op.getNestedPlans().isEmpty()) {
+            substInNestedPlans(op, pair.first, pair.second);
+        }
         return null;
     }
 

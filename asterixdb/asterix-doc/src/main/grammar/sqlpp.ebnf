@@ -210,9 +210,15 @@ Properties ::= ( "(" Identifier "=" ( StringLiteral | IntegerLiteral ) ( "," Ide
 CreateIndex ::= CreateSecondaryIndex | CreatePrimaryKeyIndex
 
 CreateSecondaryIndex ::= "CREATE" "INDEX" Identifier ("IF" "NOT" "EXISTS")? "ON" QualifiedName
-                       "(" IndexField ( "," IndexField )* ")" ("TYPE" IndexType)? ("ENFORCED")?
+                       "(" IndexedElement ( "," IndexedElement )* ")" ("TYPE" IndexType)? ("ENFORCED")?
 
 CreatePrimaryKeyIndex ::= "CREATE" "PRIMARY" "INDEX" Identifier? ("IF" "NOT" "EXISTS")? "ON" QualifiedName ("TYPE" "BTREE")?
+
+IndexedElement ::= ArrayIndexElement
+               | IndexField
+               | "(" ( ArrayIndexElement | IndexField ) ")"
+
+ArrayIndexElement ::= "UNNEST" NestedField ( "UNNEST" NestedField )* ( ( ":" TypeReference "?"? ) | ( "SELECT" IndexField ( "," IndexField )* ) )?
 
 IndexField ::= NestedField ( ":" TypeReference "?"? )?
 

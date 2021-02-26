@@ -33,4 +33,5 @@ public class AlgebricksConfig {
     public static final boolean SUBPLAN_MERGE_DEFAULT = true;
     public static final boolean SUBPLAN_NESTEDPUSHDOWN_DEFAULT = true;
     public static final boolean MIN_MEMORY_ALLOCATION_DEFAULT = true;
+    public static final boolean ARRAY_INDEX_DEFAULT = false;
 }

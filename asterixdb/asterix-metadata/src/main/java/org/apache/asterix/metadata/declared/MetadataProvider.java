@@ -37,6 +37,7 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -103,7 +104,9 @@ import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage;
 import org.apache.asterix.runtime.operators.LSMPrimaryInsertOperatorDescriptor;
+import org.apache.asterix.runtime.operators.LSMSecondaryInsertDeleteWithNestedPlanOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMSecondaryUpsertOperatorDescriptor;
+import org.apache.asterix.runtime.operators.LSMSecondaryUpsertWithNestedPlanOperatorDescriptor;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -128,6 +131,7 @@ import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.algebricks.data.IResultSerializerFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
+import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.SinkWriterRuntimeFactory;
@@ -537,6 +541,21 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
         Index theIndex = isSecondary ? MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                 dataset.getDatasetName(), indexName) : primaryIndex;
+
+        int numSecondaryKeys;
+        switch (theIndex.getIndexType()) {
+            case ARRAY:
+                numSecondaryKeys = ((Index.ArrayIndexDetails) theIndex.getIndexDetails()).getElementList().stream()
+                        .map(e -> e.getProjectList().size()).reduce(0, Integer::sum);
+                break;
+            case BTREE:
+                numSecondaryKeys = ((Index.ValueIndexDetails) theIndex.getIndexDetails()).getKeyFieldNames().size();
+                break;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
+                        theIndex.getIndexType().toString());
+        }
+
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
         RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc =
@@ -551,7 +570,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         byte[] failValueForIndexOnlyPlan = null;
         boolean proceedIndexOnlyPlan = isIndexOnlyPlan && isSecondary;
         if (proceedIndexOnlyPlan) {
-            int numSecondaryKeys = theIndex.getKeyFieldNames().size();
             primaryKeyFieldsInSecondaryIndex = new int[numPrimaryKeys];
             for (int i = 0; i < numPrimaryKeys; i++) {
                 primaryKeyFieldsInSecondaryIndex[i] = i + numSecondaryKeys;
@@ -600,6 +618,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throw new AlgebricksException(
                     "Code generation error: no index " + indexName + " for dataset " + dataset.getDatasetName());
         }
+        Index.ValueIndexDetails secondaryIndexDetails = (Index.ValueIndexDetails) secondaryIndex.getIndexDetails();
         RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc =
                 getSplitProviderAndConstraints(dataset, secondaryIndex.getIndexName());
@@ -613,8 +632,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         byte[] failValueForIndexOnlyPlan = null;
         if (isIndexOnlyPlan) {
             ARecordType recType = (ARecordType) findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
-            List<List<String>> secondaryKeyFields = secondaryIndex.getKeyFieldNames();
-            List<IAType> secondaryKeyTypes = secondaryIndex.getKeyFieldTypes();
+            List<List<String>> secondaryKeyFields = secondaryIndexDetails.getKeyFieldNames();
+            List<IAType> secondaryKeyTypes = secondaryIndexDetails.getKeyFieldTypes();
             Pair<IAType, Boolean> keyTypePair =
                     Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyFields.get(0), recType);
             IAType keyType = keyTypePair.first;
@@ -752,10 +771,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
             ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec,
-            boolean bulkload) throws AlgebricksException {
+            boolean bulkload, List<List<AlgebricksPipeline>> secondaryKeysPipelines, IOperatorSchema pipelineTopSchema)
+            throws AlgebricksException {
         return getIndexInsertOrDeleteOrUpsertRuntime(IndexOperation.INSERT, dataSourceIndex, propagatedSchema,
                 inputSchemas, typeEnv, primaryKeys, secondaryKeys, additionalNonKeyFields, filterExpr, recordDesc,
-                context, spec, bulkload, null, null, null);
+                context, spec, bulkload, null, null, null, secondaryKeysPipelines, pipelineTopSchema);
     }
 
     @Override
@@ -763,11 +783,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IDataSourceIndex<String, DataSourceId> dataSourceIndex, IOperatorSchema propagatedSchema,
             IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
-            ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec)
+            ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec,
+            List<List<AlgebricksPipeline>> secondaryKeysPipelines, IOperatorSchema pipelineTopSchema)
             throws AlgebricksException {
         return getIndexInsertOrDeleteOrUpsertRuntime(IndexOperation.DELETE, dataSourceIndex, propagatedSchema,
                 inputSchemas, typeEnv, primaryKeys, secondaryKeys, additionalNonKeyFields, filterExpr, recordDesc,
-                context, spec, false, null, null, null);
+                context, spec, false, null, null, null, secondaryKeysPipelines, pipelineTopSchema);
     }
 
     @Override
@@ -777,10 +798,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalFilteringKeys,
             ILogicalExpression filterExpr, LogicalVariable upsertIndicatorVar, List<LogicalVariable> prevSecondaryKeys,
             LogicalVariable prevAdditionalFilteringKey, RecordDescriptor recordDesc, JobGenContext context,
-            JobSpecification spec) throws AlgebricksException {
+            JobSpecification spec, List<List<AlgebricksPipeline>> secondaryKeysPipelines) throws AlgebricksException {
         return getIndexInsertOrDeleteOrUpsertRuntime(IndexOperation.UPSERT, dataSourceIndex, propagatedSchema,
                 inputSchemas, typeEnv, primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, recordDesc,
-                context, spec, false, upsertIndicatorVar, prevSecondaryKeys, prevAdditionalFilteringKey);
+                context, spec, false, upsertIndicatorVar, prevSecondaryKeys, prevAdditionalFilteringKey,
+                secondaryKeysPipelines, null);
     }
 
     @Override
@@ -1185,7 +1207,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             List<LogicalVariable> additionalNonKeyFields, ILogicalExpression filterExpr,
             RecordDescriptor inputRecordDesc, JobGenContext context, JobSpecification spec, boolean bulkload,
             LogicalVariable upsertIndicatorVar, List<LogicalVariable> prevSecondaryKeys,
-            LogicalVariable prevAdditionalFilteringKey) throws AlgebricksException {
+            LogicalVariable prevAdditionalFilteringKey, List<List<AlgebricksPipeline>> secondaryKeysPipelines,
+            IOperatorSchema pipelineTopSchema) throws AlgebricksException {
         String indexName = dataSourceIndex.getId();
         DataverseName dataverseName = dataSourceIndex.getDataSource().getId().getDataverseName();
         String datasetName = dataSourceIndex.getDataSource().getId().getDatasourceName();
@@ -1199,12 +1222,36 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             prevAdditionalFilteringKeys = new ArrayList<>();
             prevAdditionalFilteringKeys.add(prevAdditionalFilteringKey);
         }
-        AsterixTupleFilterFactory filterFactory = createTupleFilterFactory(inputSchemas, typeEnv, filterExpr, context);
+
+        // If we have a pipeline, then we need to pass the schema of the pipeline to the filter factory.
+        AsterixTupleFilterFactory filterFactory;
+        if (pipelineTopSchema != null) {
+            IOperatorSchema[] schemasForFilterFactory = new IOperatorSchema[inputSchemas.length + 1];
+            System.arraycopy(inputSchemas, 0, schemasForFilterFactory, 0, inputSchemas.length);
+            schemasForFilterFactory[inputSchemas.length] = pipelineTopSchema;
+            filterFactory = createTupleFilterFactory(schemasForFilterFactory, typeEnv, filterExpr, context);
+
+        } else {
+            filterFactory = createTupleFilterFactory(inputSchemas, typeEnv, filterExpr, context);
+        }
+
         switch (secondaryIndex.getIndexType()) {
             case BTREE:
                 return getBTreeRuntime(dataverseName, datasetName, indexName, propagatedSchema, primaryKeys,
                         secondaryKeys, additionalNonKeyFields, filterFactory, inputRecordDesc, context, spec, indexOp,
                         bulkload, upsertIndicatorVar, prevSecondaryKeys, prevAdditionalFilteringKeys);
+            case ARRAY:
+                if (bulkload) {
+                    // In the case of bulk-load, we do not handle any nested plans. We perform the exact same behavior
+                    // as a normal B-Tree bulk load.
+                    return getBTreeRuntime(dataverseName, datasetName, indexName, propagatedSchema, primaryKeys,
+                            secondaryKeys, additionalNonKeyFields, filterFactory, inputRecordDesc, context, spec,
+                            indexOp, bulkload, upsertIndicatorVar, prevSecondaryKeys, prevAdditionalFilteringKeys);
+                } else {
+                    return getArrayIndexRuntime(dataverseName, datasetName, indexName, propagatedSchema, primaryKeys,
+                            additionalNonKeyFields, inputRecordDesc, spec, indexOp, upsertIndicatorVar,
+                            secondaryKeysPipelines);
+                }
             case RTREE:
                 return getRTreeRuntime(dataverseName, datasetName, indexName, propagatedSchema, primaryKeys,
                         secondaryKeys, additionalNonKeyFields, filterFactory, inputRecordDesc, context, spec, indexOp,
@@ -1219,8 +1266,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         prevAdditionalFilteringKeys);
             default:
                 throw new AlgebricksException(
-                        indexOp.name() + "Insert, upsert, and delete not implemented for index type: "
-                                + secondaryIndex.getIndexType());
+                        indexOp.name() + " not implemented for index type: " + secondaryIndex.getIndexType());
         }
     }
 
@@ -1311,6 +1357,60 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
     }
 
+    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getArrayIndexRuntime(DataverseName dataverseName,
+            String datasetName, String indexName, IOperatorSchema propagatedSchema, List<LogicalVariable> primaryKeys,
+            List<LogicalVariable> additionalNonKeyFields, RecordDescriptor inputRecordDesc, JobSpecification spec,
+            IndexOperation indexOp, LogicalVariable upsertIndicatorVar,
+            List<List<AlgebricksPipeline>> secondaryKeysPipelines) throws AlgebricksException {
+
+        Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
+        int numPrimaryKeys = primaryKeys.size();
+        int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
+
+        // Generate field permutations (this only includes primary keys and filter fields).
+        int[] fieldPermutation = new int[numPrimaryKeys + numFilterFields];
+        int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
+        int i = 0;
+        int j = 0;
+        for (LogicalVariable varKey : primaryKeys) {
+            int idx = propagatedSchema.findVariable(varKey);
+            fieldPermutation[i] = idx;
+            modificationCallbackPrimaryKeyFields[j] = i;
+            i++;
+            j++;
+        }
+        if (numFilterFields > 0) {
+            int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
+            fieldPermutation[numPrimaryKeys] = idx;
+        }
+
+        try {
+            // Index parameters.
+            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
+                    dataset.getDatasetName(), indexName);
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
+                    getSplitProviderAndConstraints(dataset, secondaryIndex.getIndexName());
+            // Prepare callback.
+            IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
+                    storageComponentProvider, secondaryIndex, indexOp, modificationCallbackPrimaryKeyFields);
+            IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(
+                    storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
+            IOperatorDescriptor op;
+            if (indexOp == IndexOperation.UPSERT) {
+                int upsertIndicatorFieldIndex = propagatedSchema.findVariable(upsertIndicatorVar);
+                op = new LSMSecondaryUpsertWithNestedPlanOperatorDescriptor(spec, inputRecordDesc, fieldPermutation,
+                        idfh, modificationCallbackFactory, upsertIndicatorFieldIndex, BinaryBooleanInspector.FACTORY,
+                        secondaryKeysPipelines.get(0), secondaryKeysPipelines.get(1));
+            } else {
+                op = new LSMSecondaryInsertDeleteWithNestedPlanOperatorDescriptor(spec, inputRecordDesc,
+                        fieldPermutation, indexOp, idfh, modificationCallbackFactory, secondaryKeysPipelines.get(0));
+            }
+            return new Pair<>(op, splitsAndConstraint.second);
+        } catch (Exception e) {
+            throw new AlgebricksException(e);
+        }
+    }
+
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getRTreeRuntime(DataverseName dataverseName,
             String datasetName, String indexName, IOperatorSchema propagatedSchema, List<LogicalVariable> primaryKeys,
             List<LogicalVariable> secondaryKeys, List<LogicalVariable> additionalNonKeyFields,
@@ -1326,8 +1426,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         ARecordType recType = (ARecordType) itemType;
         Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                 dataset.getDatasetName(), indexName);
-        List<List<String>> secondaryKeyExprs = secondaryIndex.getKeyFieldNames();
-        List<IAType> secondaryKeyTypes = secondaryIndex.getKeyFieldTypes();
+        Index.ValueIndexDetails secondaryIndexDetails = (Index.ValueIndexDetails) secondaryIndex.getIndexDetails();
+        List<List<String>> secondaryKeyExprs = secondaryIndexDetails.getKeyFieldNames();
+        List<IAType> secondaryKeyTypes = secondaryIndexDetails.getKeyFieldTypes();
         Pair<IAType, Boolean> keyPairType =
                 Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyExprs.get(0), recType);
         IAType spatialType = keyPairType.first;
@@ -1626,9 +1727,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             // Index parameters.
             Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                     dataset.getDatasetName(), indexName);
+            Index.TextIndexDetails secondaryIndexDetails = (Index.TextIndexDetails) secondaryIndex.getIndexDetails();
 
-            List<List<String>> secondaryKeyExprs = secondaryIndex.getKeyFieldNames();
-            List<IAType> secondaryKeyTypeEntries = secondaryIndex.getKeyFieldTypes();
+            List<List<String>> secondaryKeyExprs = secondaryIndexDetails.getKeyFieldNames();
+            List<IAType> secondaryKeyTypeEntries = secondaryIndexDetails.getKeyFieldTypes();
 
             int numTokenFields = (!isPartitioned) ? secondaryKeys.size() : secondaryKeys.size() + 1;
             ITypeTraits[] tokenTypeTraits = new ITypeTraits[numTokenFields];
@@ -1657,10 +1759,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             }
 
             IBinaryTokenizerFactory tokenizerFactory = NonTaggedFormatUtil.getBinaryTokenizerFactory(
-                    secondaryKeyType.getTypeTag(), indexType, secondaryIndex.getGramLength());
+                    secondaryKeyType.getTypeTag(), indexType, secondaryIndexDetails.getGramLength());
             IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory =
                     FullTextUtil.fetchFilterAndCreateConfigEvaluator(this, secondaryIndex.getDataverseName(),
-                            secondaryIndex.getFullTextConfigName());
+                            secondaryIndexDetails.getFullTextConfigName());
 
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                     getSplitProviderAndConstraints(dataset, secondaryIndex.getIndexName());

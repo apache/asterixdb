@@ -297,7 +297,8 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     @Override
     public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, ILogicalOperator arg)
             throws AlgebricksException {
-        mapVariablesStandard(op, arg);
+        mapChildren(op, arg);
+        mapVariablesInNestedPlans(op, arg);
         return null;
     }
 

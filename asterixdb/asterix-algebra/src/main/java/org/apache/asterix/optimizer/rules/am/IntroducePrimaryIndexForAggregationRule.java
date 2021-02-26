@@ -284,7 +284,7 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
         // #2. get all indexes and look for the primary one
         List<Index> indexes = mp.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
         for (Index index : indexes) {
-            if (index.getKeyFieldNames().isEmpty()) {
+            if (index.isPrimaryKeyIndex()) {
                 return Pair.of(dataset, index);
             }
         }

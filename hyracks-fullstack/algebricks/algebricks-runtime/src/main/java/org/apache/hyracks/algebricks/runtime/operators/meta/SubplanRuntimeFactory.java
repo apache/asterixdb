@@ -117,7 +117,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                     outputRecordDescriptor = SubplanRuntimeFactory.this.outputRecordDesc;
                 } else {
                     // secondary pipeline
-                    IPushRuntime outputPushRuntime = linkSecondaryPipeline(pipeline, pipelineAssemblers, i);
+                    IPushRuntime outputPushRuntime = PipelineAssembler.linkPipeline(pipeline, pipelineAssemblers, i);
                     if (outputPushRuntime == null) {
                         throw new IllegalStateException("Invalid pipeline");
                     }
@@ -130,23 +130,6 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                 startOfPipelines[i] = (NestedTupleSourceRuntime) pa.assemblePipeline(outputWriter, ctx);
                 pipelineAssemblers[i] = pa;
             }
-        }
-
-        IPushRuntime linkSecondaryPipeline(AlgebricksPipeline pipeline, PipelineAssembler[] pipelineAssemblers,
-                int pipelineAssemblersCount) {
-            IPushRuntimeFactory[] outputRuntimeFactories = pipeline.getOutputRuntimeFactories();
-            if (outputRuntimeFactories == null || outputRuntimeFactories.length != 1) {
-                throw new IllegalStateException();
-            }
-            IPushRuntimeFactory outRuntimeFactory = outputRuntimeFactories[0];
-            int outputPosition = pipeline.getOutputPositions()[0];
-            for (int i = 0; i < pipelineAssemblersCount; i++) {
-                IPushRuntime[] p = pipelineAssemblers[i].getPushRuntime(outRuntimeFactory);
-                if (p != null) {
-                    return p[outputPosition];
-                }
-            }
-            return null;
         }
 
         @Override

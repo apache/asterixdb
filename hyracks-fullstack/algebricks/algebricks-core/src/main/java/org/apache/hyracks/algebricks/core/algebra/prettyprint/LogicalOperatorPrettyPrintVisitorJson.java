@@ -620,9 +620,15 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeObjectFieldStart("from");
             if (op.getOperation() == Kind.UPSERT) {
                 writeArrayFieldOfExpressions("replace", op.getPrevSecondaryKeyExprs(), indent);
-                writeArrayFieldOfExpressions("with", op.getSecondaryKeyExpressions(), indent);
-            } else {
+                if (op.getNestedPlans().isEmpty()) {
+                    writeArrayFieldOfExpressions("with", op.getSecondaryKeyExpressions(), indent);
+                } else {
+                    writeNestedPlans(op, indent);
+                }
+            } else if (op.getNestedPlans().isEmpty()) {
                 writeArrayFieldOfExpressions(EXPRESSIONS_FIELD, op.getSecondaryKeyExpressions(), indent);
+            } else {
+                writeNestedPlans(op, indent);
             }
             jsonGenerator.writeEndObject();
             if (op.isBulkload()) {

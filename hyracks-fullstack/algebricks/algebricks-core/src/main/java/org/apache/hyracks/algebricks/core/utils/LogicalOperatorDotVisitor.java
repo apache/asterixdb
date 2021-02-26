@@ -529,6 +529,10 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
             printExprList(op.getPrevSecondaryKeyExprs());
             stringBuilder.append(" with:");
             printExprList(op.getSecondaryKeyExpressions());
+        }
+        if (!op.getNestedPlans().isEmpty()) {
+            // TODO: Finish this for nested plans.
+            stringBuilder.append("{ a nested plan }");
         } else {
             printExprList(op.getSecondaryKeyExpressions());
         }

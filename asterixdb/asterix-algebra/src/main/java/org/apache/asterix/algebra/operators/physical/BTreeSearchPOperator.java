@@ -156,7 +156,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
             return false;
         }
         Index searchIndex = ((DataSourceIndex) idx).getIndex();
-        int numberOfKeyFields = searchIndex.getKeyFieldNames().size();
+        int numberOfKeyFields = ((Index.ValueIndexDetails) searchIndex.getIndexDetails()).getKeyFieldNames().size();
 
         if (lowKeyVarList.size() != numberOfKeyFields || highKeyVarList.size() != numberOfKeyFields) {
             return false;
@@ -186,7 +186,8 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
 
                 // If this is a composite primary index, then all of the keys should be provided.
                 Index searchIndex = ((DataSourceIndex) idx).getIndex();
-                int numberOfKeyFields = searchIndex.getKeyFieldNames().size();
+                int numberOfKeyFields =
+                        ((Index.ValueIndexDetails) searchIndex.getIndexDetails()).getKeyFieldNames().size();
 
                 if (numberOfKeyFields < 2
                         || (lowKeyVarList.size() == numberOfKeyFields && highKeyVarList.size() == numberOfKeyFields)) {

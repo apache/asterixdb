@@ -20,6 +20,7 @@
 package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 
 import org.apache.asterix.algebra.operators.physical.ExternalDataLookupPOperator;
 import org.apache.asterix.common.annotations.AbstractExpressionAnnotationWithIndexNames;
@@ -41,9 +43,11 @@ import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.ArrayIndexUtil;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
@@ -59,6 +63,7 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy.TypeCastingMathFunctionType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -72,6 +77,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -88,6 +94,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
@@ -95,6 +102,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
@@ -102,6 +110,8 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.DelimitedUTF8StringBinaryTokenizer;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Static helper functions for rewriting plans using indexes.
@@ -114,6 +124,15 @@ public class AccessMethodUtils {
         SECONDARY_KEY,
         CONDITIONAL_SPLIT_VAR
     }
+
+    // Function Identifier sets that retain the original field variable through each function's arguments
+    private final static ImmutableSet<FunctionIdentifier> funcIDSetThatRetainFieldName =
+            ImmutableSet.of(BuiltinFunctions.WORD_TOKENS, BuiltinFunctions.GRAM_TOKENS, BuiltinFunctions.SUBSTRING,
+                    BuiltinFunctions.SUBSTRING_BEFORE, BuiltinFunctions.SUBSTRING_AFTER,
+                    BuiltinFunctions.CREATE_POLYGON, BuiltinFunctions.CREATE_MBR, BuiltinFunctions.CREATE_RECTANGLE,
+                    BuiltinFunctions.CREATE_CIRCLE, BuiltinFunctions.CREATE_LINE, BuiltinFunctions.CREATE_POINT,
+                    BuiltinFunctions.NUMERIC_ADD, BuiltinFunctions.NUMERIC_SUBTRACT, BuiltinFunctions.NUMERIC_MULTIPLY,
+                    BuiltinFunctions.NUMERIC_DIVIDE, BuiltinFunctions.NUMERIC_DIV, BuiltinFunctions.NUMERIC_MOD);
 
     public static void appendPrimaryIndexTypes(Dataset dataset, IAType itemType, IAType metaItemType,
             List<Object> target) throws AlgebricksException {
@@ -324,6 +343,9 @@ public class AccessMethodUtils {
         boolean primaryKeysOnly = isInvertedIndex(index);
         if (!primaryKeysOnly) {
             switch (index.getIndexType()) {
+                case ARRAY:
+                    dest.addAll(KeyFieldTypeUtil.getArrayBTreeIndexKeyTypes(index, recordType, metaRecordType));
+                    break;
                 case BTREE:
                     dest.addAll(KeyFieldTypeUtil.getBTreeIndexKeyTypes(index, recordType, metaRecordType));
                     break;
@@ -952,10 +974,40 @@ public class AccessMethodUtils {
 
     private static AbstractUnnestMapOperator createFinalNonIndexOnlySearchPlan(Dataset dataset,
             ILogicalOperator inputOp, IOptimizationContext context, boolean sortPrimaryKeys, boolean retainInput,
-            boolean retainMissing, boolean requiresBroadcast, List<LogicalVariable> primaryKeyVars,
-            List<LogicalVariable> primaryIndexUnnestVars, List<Object> primaryIndexOutputTypes)
-            throws AlgebricksException {
+            boolean retainMissing, boolean requiresBroadcast, boolean requiresDistinct,
+            List<LogicalVariable> primaryKeyVars, List<LogicalVariable> primaryIndexUnnestVars,
+            List<LogicalVariable> auxDistinctVars, List<Object> primaryIndexOutputTypes) throws AlgebricksException {
         SourceLocation sourceLoc = inputOp.getSourceLocation();
+
+        // Sanity check: requiresDistinct and sortPrimaryKeys are mutually exclusive.
+        if (requiresDistinct && sortPrimaryKeys) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                    "Non-index search plan " + "cannot include a DISTINCT and an ORDER.");
+        }
+
+        // If we have an array index, then we must only give unique keys to our primary-index scan.
+        DistinctOperator distinct = null;
+        if (requiresDistinct) {
+            List<Mutable<ILogicalExpression>> distinctExprs = new ArrayList<>();
+            for (LogicalVariable pkVar : primaryKeyVars) {
+                VariableReferenceExpression pkVarRef = new VariableReferenceExpression(pkVar);
+                pkVarRef.setSourceLocation(sourceLoc);
+                Mutable<ILogicalExpression> vRef = new MutableObject<>(pkVarRef);
+                distinctExprs.add(vRef);
+            }
+            for (LogicalVariable auxVar : auxDistinctVars) {
+                VariableReferenceExpression auxVarRef = new VariableReferenceExpression(auxVar);
+                auxVarRef.setSourceLocation(sourceLoc);
+                Mutable<ILogicalExpression> vRef = new MutableObject<>(auxVarRef);
+                distinctExprs.add(vRef);
+            }
+            distinct = new DistinctOperator(distinctExprs);
+            distinct.setSourceLocation(sourceLoc);
+            distinct.getInputs().add(new MutableObject<>(inputOp));
+            distinct.setExecutionMode(ExecutionMode.LOCAL);
+            context.computeAndSetTypeEnvironmentForOperator(distinct);
+        }
+
         // Optionally add a sort on the primary-index keys before searching the primary index.
         OrderOperator order = null;
         if (sortPrimaryKeys) {
@@ -977,7 +1029,9 @@ public class AccessMethodUtils {
         AbstractUnnestMapOperator primaryIndexUnnestMapOp =
                 createPrimaryIndexUnnestMapOp(dataset, retainInput, retainMissing, requiresBroadcast, primaryKeyVars,
                         primaryIndexUnnestVars, primaryIndexOutputTypes, sourceLoc);
-        if (sortPrimaryKeys) {
+        if (requiresDistinct) {
+            primaryIndexUnnestMapOp.getInputs().add(new MutableObject<ILogicalOperator>(distinct));
+        } else if (sortPrimaryKeys) {
             primaryIndexUnnestMapOp.getInputs().add(new MutableObject<ILogicalOperator>(order));
         } else {
             primaryIndexUnnestMapOp.getInputs().add(new MutableObject<>(inputOp));
@@ -1020,7 +1074,8 @@ public class AccessMethodUtils {
         // key search (SK, PK) and those in the original plan (datasource scan).
         LinkedHashMap<LogicalVariable, LogicalVariable> origVarToSIdxUnnestMapOpVarMap = new LinkedHashMap<>();
 
-        List<List<String>> chosenIndexFieldNames = secondaryIndex.getKeyFieldNames();
+        Index.ValueIndexDetails secondaryIndexDetails = (Index.ValueIndexDetails) secondaryIndex.getIndexDetails();
+        List<List<String>> chosenIndexFieldNames = secondaryIndexDetails.getKeyFieldNames();
         IndexType idxType = secondaryIndex.getIndexType();
 
         // variables used in SELECT or JOIN operator
@@ -1549,7 +1604,7 @@ public class AccessMethodUtils {
      * (i.e., we can guarantee the correctness of the result.)
      *
      * Case A) non-index-only plan
-     * sidx-search -> (optional) sort -> pdix-search
+     * sidx-search -> (optional) sort -> (optional) distinct -> pdix-search
      *
      * Case B) index-only plan
      * left path (an instantTryLock() on the PK fail path):
@@ -1563,8 +1618,8 @@ public class AccessMethodUtils {
             Dataset dataset, ARecordType recordType, ARecordType metaRecordType, ILogicalOperator inputOp,
             IOptimizationContext context, boolean sortPrimaryKeys, boolean retainInput, boolean retainMissing,
             boolean requiresBroadcast, Index secondaryIndex, AccessMethodAnalysisContext analysisCtx,
-            OptimizableOperatorSubTree subTree, LogicalVariable newMissingPlaceHolderForLOJ)
-            throws AlgebricksException {
+            OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree,
+            LogicalVariable newMissingPlaceHolderForLOJ) throws AlgebricksException {
         // Common part for the non-index-only plan and index-only plan
         // Variables and types for the primary-index search.
         List<LogicalVariable> primaryIndexUnnestVars = new ArrayList<>();
@@ -1577,21 +1632,32 @@ public class AccessMethodUtils {
         List<LogicalVariable> pkVarsFromSIdxUnnestMapOp = AccessMethodUtils.getKeyVarsFromSecondaryUnnestMap(dataset,
                 recordType, metaRecordType, inputOp, secondaryIndex, SecondaryUnnestMapOutputVarType.PRIMARY_KEY);
 
-        // Index-only plan or not?
+        // Index-only plan or not? Array-index involved or not?
         boolean isIndexOnlyPlan = analysisCtx.getIndexOnlyPlanInfo().getFirst();
+        boolean isArrayIndex = secondaryIndex.getIndexType() == IndexType.ARRAY;
 
-        // Non-index-only plan case: creates ORDER -> UNNEST-MAP(Primary-index search) and return that unnest-map op.
+        // Non-index-only plan case: creates (ORDER)? -> (DISTINCT)? -> UNNEST-MAP(PIDX) and return that unnest-map op.
         if (!isIndexOnlyPlan) {
-            return createFinalNonIndexOnlySearchPlan(dataset, inputOp, context, sortPrimaryKeys, retainInput,
-                    retainMissing, requiresBroadcast, pkVarsFromSIdxUnnestMapOp, primaryIndexUnnestVars,
-                    primaryIndexOutputTypes);
-        } else {
+            // If we have a join + an array index, we need add the join source PK to the DISTINCT + ORDER.
+            List<LogicalVariable> joinPKVars = Collections.emptyList();
+            if (isArrayIndex && probeSubTree != null) {
+                joinPKVars = probeSubTree.getDataSourceVariables().subList(0,
+                        probeSubTree.getDataSourceVariables().size() - 1);
+            }
+
+            return createFinalNonIndexOnlySearchPlan(dataset, inputOp, context, !isArrayIndex && sortPrimaryKeys,
+                    retainInput, retainMissing, requiresBroadcast, isArrayIndex, pkVarsFromSIdxUnnestMapOp,
+                    primaryIndexUnnestVars, joinPKVars, primaryIndexOutputTypes);
+        } else if (!isArrayIndex) {
             // Index-only plan case: creates a UNIONALL operator that has two paths after the secondary unnest-map op,
             // and returns it.
             return createFinalIndexOnlySearchPlan(afterTopOpRefs, topOpRef, conditionRef, assignsBeforeTopOpRef,
                     dataset, recordType, metaRecordType, inputOp, context, retainInput, retainMissing,
-                    requiresBroadcast, secondaryIndex, analysisCtx, subTree, newMissingPlaceHolderForLOJ,
+                    requiresBroadcast, secondaryIndex, analysisCtx, indexSubTree, newMissingPlaceHolderForLOJ,
                     pkVarsFromSIdxUnnestMapOp, primaryIndexUnnestVars, primaryIndexOutputTypes);
+        } else {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, inputOp.getSourceLocation(),
+                    "Cannot use index-only plan with array indexes.");
         }
     }
 
@@ -1890,19 +1956,19 @@ public class AccessMethodUtils {
         // Since index-only plan doesn't access the primary index, we can't get the actual value in this case.
         // Also, if no-index-only option is given, we stop here to honor that request.
         boolean noIndexOnlyPlanOption = !context.getPhysicalOptimizationConfig().isIndexOnly();
-        // TODO: For the inverted index access-method cases only:
+        // TODO: For the inverted index / array index access-method cases only:
         // Since an inverted index can contain multiple secondary key entries per one primary key,
         // Index-only plan can't be applied. For example, suppose there are two entries (SK1, SK2) for one PK.
         // Since we can't access <SK1, PK>, <SK2, PK> at the same time unless we use tryLock (we use instantTryLock),
         // right now, we can't support an index-only plan on an inverted index.
         // Once this issue is resolved, we can apply an index-only plan.
-        // One additional condition:
+        // One additional condition for inverted indexes:
         // Even if the above is resolved, if a secondary key field is used after
         // SELECT or JOIN operator, this can't be qualified as an index-only plan since
         // an inverted index contains a part of a field value, not all of it.
         if (noIndexOnlyPlanOption || dataset.getDatasetType() == DatasetType.EXTERNAL || chosenIndex.isPrimaryIndex()
-                || chosenIndex.isOverridingKeyFieldTypes() || chosenIndex.isEnforced()
-                || isInvertedIndex(chosenIndex)) {
+                || chosenIndex.getIndexDetails().isOverridingKeyFieldTypes() || chosenIndex.isEnforced()
+                || isInvertedIndex(chosenIndex) || chosenIndex.getIndexType() == IndexType.ARRAY) {
             indexOnlyPlanInfo.setFirst(false);
             return;
         }
@@ -2002,7 +2068,8 @@ public class AccessMethodUtils {
         // assign or data-source-scan in the subtree and the field-name of those variables are only PK or SK.
         // Needs to check whether variables from the given select (join) operator only contain SK and/or PK condition.
         List<List<String>> pkFieldNames = dataset.getPrimaryKeys();
-        List<List<String>> chosenIndexFieldNames = chosenIndex.getKeyFieldNames();
+        Index.ValueIndexDetails chosenIndexDetails = (Index.ValueIndexDetails) chosenIndex.getIndexDetails();
+        List<List<String>> chosenIndexFieldNames = chosenIndexDetails.getKeyFieldNames();
         List<LogicalVariable> chosenIndexVars = new ArrayList<>();
 
         // Collects variables that contain a CONSTANT expression in ASSIGN operators in the subtree.
@@ -2026,7 +2093,7 @@ public class AccessMethodUtils {
         }
 
         // For the composite index, a secondary-index search generates a superset of the results.
-        if (chosenIndex.getKeyFieldNames().size() > 1 && indexApplicableVarFoundCount > 1) {
+        if (chosenIndexDetails.getKeyFieldNames().size() > 1 && indexApplicableVarFoundCount > 1) {
             requireVerificationAfterSIdxSearch = true;
         }
 
@@ -2673,5 +2740,452 @@ public class AccessMethodUtils {
             Class<? extends AbstractExpressionAnnotationWithIndexNames> annClass) {
         AbstractExpressionAnnotationWithIndexNames ann = optFuncExpr.getFuncExpr().getAnnotation(annClass);
         return ann == null ? null : ann.getIndexNames();
+    }
+
+    /**
+     * Returns the field name corresponding to the assigned variable at
+     * varIndex. Returns Collections.emptyList() if the expr at varIndex does not yield to a field
+     * access function after following a set of allowed functions.
+     *
+     * @throws AlgebricksException
+     */
+    public static List<String> getFieldNameFromSubTree(IOptimizableFuncExpr optFuncExpr,
+            OptimizableOperatorSubTree subTree, int opIndex, int assignVarIndex, ARecordType recordType,
+            int funcVarIndex, ILogicalExpression parentFuncExpr, ARecordType metaType, LogicalVariable metaVar,
+            MutableInt fieldSource, boolean isUnnestOverVarAllowed) throws AlgebricksException {
+        // Get expression corresponding to opVar at varIndex.
+        AbstractLogicalExpression expr = null;
+        AbstractFunctionCallExpression childFuncExpr = null;
+        AbstractLogicalOperator op = subTree.getAssignsAndUnnests().get(opIndex);
+        if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            AssignOperator assignOp = (AssignOperator) op;
+            expr = (AbstractLogicalExpression) assignOp.getExpressions().get(assignVarIndex).getValue();
+            // Can't get a field name from a constant expression. So, return null.
+            if (expr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+                return Collections.emptyList();
+            }
+            childFuncExpr = (AbstractFunctionCallExpression) expr;
+        } else {
+            UnnestOperator unnestOp = (UnnestOperator) op;
+            expr = (AbstractLogicalExpression) unnestOp.getExpressionRef().getValue();
+            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                return Collections.emptyList();
+            }
+            childFuncExpr = (AbstractFunctionCallExpression) expr;
+            if (childFuncExpr.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
+                return Collections.emptyList();
+            }
+            expr = (AbstractLogicalExpression) childFuncExpr.getArguments().get(0).getValue();
+        }
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return Collections.emptyList();
+        }
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+        FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
+
+        boolean isByName = false;
+        boolean isFieldAccess = false;
+        String fieldName = null;
+        List<String> nestedAccessFieldName = null;
+        int fieldIndex = -1;
+        if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_NAME) {
+            fieldName = ConstantExpressionUtil.getStringArgument(funcExpr, 1);
+            if (fieldName == null) {
+                return Collections.emptyList();
+            }
+            isFieldAccess = true;
+            isByName = true;
+        } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
+            Integer idx = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
+            if (idx == null) {
+                return Collections.emptyList();
+            }
+            fieldIndex = idx;
+            isFieldAccess = true;
+        } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_NESTED) {
+            ILogicalExpression nameArg = funcExpr.getArguments().get(1).getValue();
+            if (nameArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                return Collections.emptyList();
+            }
+            ConstantExpression constExpr = (ConstantExpression) nameArg;
+            AOrderedList orderedNestedFieldName =
+                    (AOrderedList) ((AsterixConstantValue) constExpr.getValue()).getObject();
+            nestedAccessFieldName = new ArrayList<>();
+            for (int i = 0; i < orderedNestedFieldName.size(); i++) {
+                nestedAccessFieldName.add(((AString) orderedNestedFieldName.getItem(i)).getStringValue());
+            }
+            isFieldAccess = true;
+            isByName = true;
+        }
+        if (isFieldAccess) {
+            LogicalVariable sourceVar =
+                    ((VariableReferenceExpression) funcExpr.getArguments().get(0).getValue()).getVariableReference();
+            if (sourceVar.equals(metaVar)) {
+                fieldSource.setValue(1);
+            } else {
+                fieldSource.setValue(0);
+            }
+            if (optFuncExpr != null) {
+                optFuncExpr.setLogicalExpr(funcVarIndex, parentFuncExpr);
+            }
+            int[] assignAndExpressionIndexes = null;
+
+            //go forward through nested assigns until you find the relevant one
+            for (int i = opIndex + 1; i < subTree.getAssignsAndUnnests().size(); i++) {
+                AbstractLogicalOperator subOp = subTree.getAssignsAndUnnests().get(i);
+                List<LogicalVariable> varList;
+
+                if (subOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                    //Nested was an assign
+                    varList = ((AssignOperator) subOp).getVariables();
+                } else if (subOp.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+                    //Nested is not an assign
+                    varList = ((UnnestOperator) subOp).getVariables();
+                } else {
+                    break;
+                }
+
+                //Go through variables in assign to check for match
+                for (int varIndex = 0; varIndex < varList.size(); varIndex++) {
+                    LogicalVariable var = varList.get(varIndex);
+                    ArrayList<LogicalVariable> parentVars = new ArrayList<>();
+                    expr.getUsedVariables(parentVars);
+
+                    if (parentVars.contains(var)) {
+                        //Found the variable we are looking for.
+                        //return assign and index of expression
+                        int[] returnValues = { i, varIndex };
+                        assignAndExpressionIndexes = returnValues;
+                    }
+                }
+            }
+            if (assignAndExpressionIndexes != null && assignAndExpressionIndexes[0] > -1) {
+                //We found the nested assign
+
+                //Recursive call on nested assign
+                List<String> parentFieldNames = getFieldNameFromSubTree(optFuncExpr, subTree,
+                        assignAndExpressionIndexes[0], assignAndExpressionIndexes[1], recordType, funcVarIndex,
+                        parentFuncExpr, metaType, metaVar, fieldSource, isUnnestOverVarAllowed);
+
+                boolean isPreviousOperatorLegalUnnest = isUnnestOverVarAllowed && subTree.getAssignsAndUnnests()
+                        .get(assignAndExpressionIndexes[0]).getOperatorTag().equals(LogicalOperatorTag.UNNEST);
+                if (parentFieldNames.isEmpty() && !isPreviousOperatorLegalUnnest) {
+                    //Nested assign was not a field access.
+                    //We will not use index
+                    return Collections.emptyList();
+                } else if (isPreviousOperatorLegalUnnest) {
+                    parentFieldNames = new ArrayList<>();
+                }
+
+                if (!isByName) {
+                    IAType subFieldType;
+                    if (isUnnestOverVarAllowed && isPreviousOperatorLegalUnnest) {
+                        // In the case of UNNESTing over a variable, we use the record type given by our caller instead.
+                        subFieldType = sourceVar.equals(metaVar) ? metaType : recordType;
+                    } else {
+                        subFieldType = sourceVar.equals(metaVar) ? metaType.getSubFieldType(parentFieldNames)
+                                : recordType.getSubFieldType(parentFieldNames);
+                        // Sub-field type can be AUnionType in case if optional. Thus, needs to get the actual type.
+                        subFieldType = TypeComputeUtils.getActualType(subFieldType);
+                        if (subFieldType.getTypeTag() != ATypeTag.OBJECT) {
+                            throw CompilationException.create(ErrorCode.TYPE_CONVERT, subFieldType,
+                                    ARecordType.class.getName());
+                        }
+                    }
+                    fieldName = ((ARecordType) subFieldType).getFieldNames()[fieldIndex];
+
+                }
+                if (optFuncExpr != null) {
+                    optFuncExpr.setSourceVar(funcVarIndex, ((AssignOperator) op).getVariables().get(assignVarIndex));
+                }
+                //add fieldName to the nested fieldName, return
+                if (nestedAccessFieldName != null) {
+                    for (int i = 0; i < nestedAccessFieldName.size(); i++) {
+                        parentFieldNames.add(nestedAccessFieldName.get(i));
+                    }
+                } else {
+                    parentFieldNames.add(fieldName);
+                }
+                return (parentFieldNames);
+            }
+
+            if (optFuncExpr != null) {
+                optFuncExpr.setSourceVar(funcVarIndex, ((AssignOperator) op).getVariables().get(assignVarIndex));
+            }
+            //no nested assign, we are at the lowest level.
+            if (isByName) {
+                if (nestedAccessFieldName != null) {
+                    return nestedAccessFieldName;
+                }
+                return new ArrayList<>(Arrays.asList(fieldName));
+            }
+            return new ArrayList<>(Arrays.asList(sourceVar.equals(metaVar) ? metaType.getFieldNames()[fieldIndex]
+                    : recordType.getFieldNames()[fieldIndex]));
+
+        }
+
+        if (!funcIDSetThatRetainFieldName.contains(funcIdent)) {
+            return Collections.emptyList();
+        }
+        // We use a part of the field in edit distance computation
+        if (optFuncExpr != null
+                && optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE_CHECK) {
+            optFuncExpr.setPartialField(true);
+        }
+        // We expect the function's argument to be a variable, otherwise we
+        // cannot apply an index.
+        ILogicalExpression argExpr = funcExpr.getArguments().get(0).getValue();
+        if (argExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+            return Collections.emptyList();
+        }
+        LogicalVariable curVar = ((VariableReferenceExpression) argExpr).getVariableReference();
+        // We look for the assign or unnest operator that produces curVar below
+        // the current operator
+        for (int assignOrUnnestIndex = opIndex + 1; assignOrUnnestIndex < subTree.getAssignsAndUnnests()
+                .size(); assignOrUnnestIndex++) {
+            AbstractLogicalOperator curOp = subTree.getAssignsAndUnnests().get(assignOrUnnestIndex);
+            if (curOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                AssignOperator assignOp = (AssignOperator) curOp;
+                List<LogicalVariable> varList = assignOp.getVariables();
+                for (int varIndex = 0; varIndex < varList.size(); varIndex++) {
+                    LogicalVariable var = varList.get(varIndex);
+                    if (var.equals(curVar) && optFuncExpr != null) {
+                        optFuncExpr.setSourceVar(funcVarIndex, var);
+                        return getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, varIndex, recordType,
+                                funcVarIndex, childFuncExpr, metaType, metaVar, fieldSource, isUnnestOverVarAllowed);
+                    }
+                }
+            } else {
+                UnnestOperator unnestOp = (UnnestOperator) curOp;
+                LogicalVariable var = unnestOp.getVariable();
+                if (var.equals(curVar)) {
+                    getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0, recordType, funcVarIndex,
+                            childFuncExpr, metaType, metaVar, fieldSource, isUnnestOverVarAllowed);
+                }
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    /**
+     * Determine whether an array index can be used for the given variable.
+     */
+    public static Triple<Integer, List<String>, IAType> analyzeVarForArrayIndexes(AssignOperator assignOp,
+            IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree subTree, LogicalVariable datasetMetaVar,
+            IOptimizationContext context, List<Index> datasetIndexes, List<IOptimizableFuncExpr> matchedFuncExprs,
+            int assignVarIndex) throws AlgebricksException {
+
+        for (Index index : datasetIndexes) {
+            if (index.getIndexType() != IndexType.ARRAY) {
+                continue;
+            }
+            Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) index.getIndexDetails();
+            for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
+                if (e.getUnnestList().isEmpty()) {
+                    // Ignore the atomic part of this index (these are handled by the caller).
+                    continue;
+                }
+
+                // We have found the array field for an array index.
+                for (List<String> project : e.getProjectList()) {
+                    List<String> flattenedFieldName =
+                            ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project);
+                    List<Integer> arrayIndicator = ArrayIndexUtil.getArrayDepthIndicator(e.getUnnestList(), project);
+
+                    // Do not match a variable that we have previously matched.
+                    if (matchedFuncExprs.stream().anyMatch(f -> f.findFieldName(flattenedFieldName) != -1)) {
+                        continue;
+                    }
+
+                    Triple<Integer, List<String>, IAType> fieldTriplet =
+                            matchAssignFieldInUnnestAssignStack(assignOp.getVariables().get(assignVarIndex),
+                                    assignVarIndex, optFuncExpr, subTree, datasetMetaVar, context, arrayIndicator,
+                                    flattenedFieldName, arrayIndexDetails.isOverridingKeyFieldTypes());
+
+                    // This specific field aligns with our array index.
+                    if (fieldTriplet.first > -1) {
+                        int optVarIndex = fieldTriplet.first;
+                        List<String> fieldName = fieldTriplet.second;
+                        IAType fieldType = fieldTriplet.third;
+
+                        // Remember matching subtree.
+                        optFuncExpr.setOptimizableSubTree(optVarIndex, subTree);
+                        MutableInt fieldSource = new MutableInt(0);
+                        optFuncExpr.setFieldName(optVarIndex, fieldName, fieldSource.intValue());
+                        optFuncExpr.setFieldType(optVarIndex, fieldType);
+                        IAType type = (IAType) context.getOutputTypeEnvironment(subTree.getRoot())
+                                .getVarType(optFuncExpr.getLogicalVar(optVarIndex));
+                        optFuncExpr.setFieldType(optVarIndex, type);
+
+                        return fieldTriplet;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param assignVar Variable from lowest assign that we are trying to match (i.e. the first array step var).
+     * @param assignVarIndex Index of the variable from the lowest assign.
+     * @param optFuncExpr The function expression we are trying to optimize.
+     * @param subTree Subtree for the function expression {@code optFunExpr}.
+     * @param datasetMetaVar Meta-variable from our subtree, if any exist.
+     * @param context Context required to get the type of the found variable.
+     * @param indexArrayIndicators Depth indicators of index to match our unnest/assign stack to.
+     * @param indexFieldNames Field names of index to match our unnest/assign stack to.
+     * @param areFieldNamesInAssign True if we have an open index. False otherwise.
+     */
+    private static Triple<Integer, List<String>, IAType> matchAssignFieldInUnnestAssignStack(LogicalVariable assignVar,
+            int assignVarIndex, IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree subTree,
+            LogicalVariable datasetMetaVar, IOptimizationContext context, List<Integer> indexArrayIndicators,
+            List<String> indexFieldNames, boolean areFieldNamesInAssign) throws AlgebricksException {
+        Triple<Integer, List<String>, IAType> resultantTriple = new Triple<>(-1, new ArrayList<>(), null);
+        final int optVarIndex = subTree.getLastMatchedDataSourceVars().second;
+        if (optVarIndex < 0) {
+            return resultantTriple;
+        }
+        final ILogicalExpression optVarExpr = optFuncExpr.getFuncExpr().getArguments().get(optVarIndex).getValue();
+        optFuncExpr.setLogicalExpr(optVarIndex, optVarExpr);
+
+        // Build our assign / unnest stack. Do not include the very last assign (this is handled in the parent).
+        int indexOfWorkingOp = subTree.getAssignsAndUnnests().size() - 1;
+        Stack<AbstractLogicalOperator> logicalOperatorStack = new Stack<>();
+        logicalOperatorStack.addAll(subTree.getAssignsAndUnnests().subList(0, indexOfWorkingOp));
+        if (logicalOperatorStack.empty()) {
+            return resultantTriple;
+        }
+
+        // Aggregate our record paths, and pair these with their respective array indexes.
+        Pair<List<List<String>>, List<Integer>> unnestPairs =
+                ArrayIndexUtil.unnestComplexRecordPath(indexFieldNames, indexArrayIndicators);
+        AbstractLogicalOperator workingOp = null;
+        List<String> fieldNameForWorkingUnnest;
+        MutableInt fieldSource = new MutableInt(0);
+        ARecordType workingRecordType = subTree.getRecordType();
+
+        // TODO: (GLENN) Refactor this to use ArrayIndexUtil.
+        // Iterate through our array index structure. We must match the depth and field names for the caller's variable
+        // to qualify for an array-index optimization.
+        LogicalVariable varFromParent = assignVar;
+        for (int pairsIndex = 0; pairsIndex < unnestPairs.first.size(); pairsIndex++) {
+            if (logicalOperatorStack.empty()) {
+                return resultantTriple;
+            }
+            workingOp = logicalOperatorStack.pop();
+
+            // Explore our UNNEST path.
+            if (unnestPairs.second.get(pairsIndex) > 0) {
+                for (int i = (pairsIndex == 0) ? 1 : 0; i < unnestPairs.first.get(pairsIndex).size(); i++) {
+                    // Match our parent assign variable to a variable used in our working assign.
+                    assignVarIndex = findAssignVarIndex(workingOp, varFromParent);
+                    if (logicalOperatorStack.empty() || assignVarIndex == -1) {
+                        return resultantTriple;
+                    }
+                    varFromParent = ((AssignOperator) workingOp).getVariables().get(assignVarIndex);
+                    indexOfWorkingOp--;
+                    workingOp = logicalOperatorStack.pop();
+                }
+
+                // Get the field name associated with the current UNNEST.
+                if (workingOp.getOperatorTag() != LogicalOperatorTag.UNNEST) {
+                    return resultantTriple;
+                }
+                fieldNameForWorkingUnnest = getFieldNameFromSubTree(null, subTree, indexOfWorkingOp, assignVarIndex,
+                        workingRecordType, 0, null, subTree.getMetaRecordType(), datasetMetaVar, fieldSource, true);
+
+                if (!fieldNameForWorkingUnnest.equals(unnestPairs.first.get(pairsIndex))) {
+                    return resultantTriple;
+                }
+                resultantTriple.second.addAll(fieldNameForWorkingUnnest);
+
+                IAType typeIntermediate = workingRecordType.getSubFieldType(fieldNameForWorkingUnnest);
+                for (int i = 0; i < unnestPairs.second.get(pairsIndex); i++) {
+                    // If we are working with a closed index, then update our record type. For open types, we do not
+                    // need to do this as the field name is stored in the expression itself.
+                    if (!areFieldNamesInAssign && pairsIndex != unnestPairs.first.size() - 1) {
+                        typeIntermediate = TypeComputeUtils.extractListItemType(typeIntermediate);
+                        if (typeIntermediate == null) {
+                            return resultantTriple;
+                        }
+                    }
+                    boolean isIntermediateUnnestInPath = (i != unnestPairs.second.get(pairsIndex) - 1);
+                    if (!areFieldNamesInAssign && !isIntermediateUnnestInPath) {
+                        if (typeIntermediate.getTypeTag().equals(ATypeTag.OBJECT)) {
+                            workingRecordType = (ARecordType) typeIntermediate;
+                        } else if (!typeIntermediate.getTypeTag().isListType()) {
+                            return resultantTriple;
+                        }
+                    }
+
+                    // Update our parent variable. If we are in-between UNNESTs, we need to fetch the next UNNEST.
+                    if (isIntermediateUnnestInPath) {
+                        workingOp = logicalOperatorStack.pop();
+                        indexOfWorkingOp--;
+                    }
+                    varFromParent = ((UnnestOperator) workingOp).getVariable();
+                }
+            } else if (pairsIndex != 0) {
+                // We have explored an UNNEST array-path previously, and must now match a field name.
+                AssignOperator workingOpAsAssign = (AssignOperator) workingOp;
+                indexOfWorkingOp -= unnestPairs.first.get(pairsIndex).size();
+                for (assignVarIndex = 0; assignVarIndex < workingOpAsAssign.getVariables().size(); assignVarIndex++) {
+                    // Iterate through each of our ASSIGN's field names, and try to match the index field names.
+                    fieldNameForWorkingUnnest = getFieldNameFromSubTree(null, subTree, indexOfWorkingOp, assignVarIndex,
+                            workingRecordType, 0, null, subTree.getMetaRecordType(), datasetMetaVar, fieldSource, true);
+
+                    if (fieldNameForWorkingUnnest.equals(unnestPairs.first.get(pairsIndex))) {
+                        resultantTriple.second.addAll(fieldNameForWorkingUnnest);
+                        break;
+                    }
+                }
+
+                // We have exhausted all of our ASSIGN variables, but have not matched the field name. Exit early.
+                if (assignVarIndex == workingOpAsAssign.getVariables().size()) {
+                    return resultantTriple;
+                }
+            }
+
+            indexOfWorkingOp--;
+        }
+
+        // We have found an applicable array index. Determine our optFuncIndex and fieldType.
+        if (workingOp != null && workingOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            AssignOperator workingOpAsAssign = (AssignOperator) workingOp;
+            LogicalVariable matchedVar = workingOpAsAssign.getVariables().get(assignVarIndex);
+            if (optFuncExpr.findLogicalVar(matchedVar) > -1) {
+                resultantTriple.first = optFuncExpr.findLogicalVar(matchedVar);
+                resultantTriple.third = (IAType) context.getOutputTypeEnvironment(workingOp).getVarType(matchedVar);
+                optFuncExpr.setSourceVar(resultantTriple.first, matchedVar);
+            }
+
+        } else if (workingOp != null) {
+            UnnestOperator workingOpAsUnnest = (UnnestOperator) workingOp;
+            resultantTriple.first = optFuncExpr.findLogicalVar(workingOpAsUnnest.getVariable());
+            resultantTriple.third =
+                    (IAType) context.getOutputTypeEnvironment(workingOp).getVarType(workingOpAsUnnest.getVariable());
+            optFuncExpr.setSourceVar(resultantTriple.first, workingOpAsUnnest.getVariable());
+        }
+
+        return resultantTriple;
+    }
+
+    private static int findAssignVarIndex(AbstractLogicalOperator workingOp, LogicalVariable varFromParentAssign) {
+        if (workingOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+            return -1;
+        }
+        AssignOperator workingOpAsAssign = (AssignOperator) workingOp;
+
+        // Match our parent assign variable to a variable used in our working assign.
+        List<LogicalVariable> variablesUsedInWorkingAssign = new ArrayList<>();
+        for (Mutable<ILogicalExpression> assignExpr : workingOpAsAssign.getExpressions()) {
+            assignExpr.getValue().getUsedVariables(variablesUsedInWorkingAssign);
+            int pos = variablesUsedInWorkingAssign.indexOf(varFromParentAssign);
+            if (pos != -1) {
+                return pos;
+            }
+        }
+        return -1;
     }
 }

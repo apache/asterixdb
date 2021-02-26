@@ -602,10 +602,12 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         }
         IndexInsertDeleteUpsertOperator insertOpArg = (IndexInsertDeleteUpsertOperator) copyAndSubstituteVar(op, arg);
         boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getSchema(), insertOpArg.getSchema());
-        if (!op.getDataSourceIndex().equals(insertOpArg.getDataSourceIndex())) {
-            isomorphic = false;
+        if (!isomorphic || !op.getDataSourceIndex().equals(insertOpArg.getDataSourceIndex())) {
+            return Boolean.FALSE;
         }
-        return isomorphic;
+
+        // Check our nested plans as well.
+        return (!compareSubplans(op.getNestedPlans(), insertOpArg.getNestedPlans())) ? Boolean.TRUE : Boolean.FALSE;
     }
 
     @Override

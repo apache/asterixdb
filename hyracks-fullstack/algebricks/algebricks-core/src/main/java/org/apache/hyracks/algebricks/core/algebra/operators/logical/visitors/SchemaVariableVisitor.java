@@ -309,6 +309,7 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
     @Override
     public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, Void arg)
             throws AlgebricksException {
+        // Variables in our nested plan are not propagated.
         standardLayout(op);
         return null;
     }

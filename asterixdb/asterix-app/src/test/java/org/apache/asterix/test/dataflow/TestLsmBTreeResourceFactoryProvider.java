@@ -98,20 +98,21 @@ public class TestLsmBTreeResourceFactoryProvider implements IResourceFactoryProv
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
             return FilesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS;
         }
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
         ITypeTraitProvider typeTraitProvider = metadataProvider.getStorageComponentProvider().getTypeTraitProvider();
         ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
         for (int i = 0; i < numSecondaryKeys; i++) {
             ARecordType sourceType;
-            List<Integer> keySourceIndicators = index.getKeyFieldSourceIndicators();
+            List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
             if (keySourceIndicators == null || keySourceIndicators.get(i) == 0) {
                 sourceType = recordType;
             } else {
                 sourceType = metaType;
             }
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(i),
-                    index.getKeyFieldNames().get(i), sourceType);
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(
+                    indexDetails.getKeyFieldTypes().get(i), indexDetails.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;
             secondaryTypeTraits[i] = typeTraitProvider.getTypeTrait(keyType);
         }
@@ -132,22 +133,23 @@ public class TestLsmBTreeResourceFactoryProvider implements IResourceFactoryProv
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
             return FilesIndexDescription.FILES_INDEX_COMP_FACTORIES;
         }
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
         IBinaryComparatorFactoryProvider cmpFactoryProvider =
                 metadataProvider.getStorageComponentProvider().getComparatorFactoryProvider();
         IBinaryComparatorFactory[] secondaryCmpFactories =
                 new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];
         for (int i = 0; i < numSecondaryKeys; i++) {
             ARecordType sourceType;
-            List<Integer> keySourceIndicators = index.getKeyFieldSourceIndicators();
+            List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
             if (keySourceIndicators == null || keySourceIndicators.get(i) == 0) {
                 sourceType = recordType;
             } else {
                 sourceType = metaType;
             }
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(i),
-                    index.getKeyFieldNames().get(i), sourceType);
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(
+                    indexDetails.getKeyFieldTypes().get(i), indexDetails.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;
             secondaryCmpFactories[i] = cmpFactoryProvider.getBinaryComparatorFactory(keyType, true);
         }
@@ -166,14 +168,14 @@ public class TestLsmBTreeResourceFactoryProvider implements IResourceFactoryProv
             if (index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
                 return FilesIndexDescription.BLOOM_FILTER_FIELDS;
             } else {
-                return new int[] { index.getKeyFieldNames().size() };
+                return new int[] { ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldNames().size() };
             }
         } else if (index.getIndexType() == IndexType.BTREE || index.getIndexType() == IndexType.RTREE) {
             // secondary btrees and rtrees do not have bloom filters
             return null;
         } else {
             // inverted indexes have bloom filters on deleted-key btrees
-            int numKeys = index.getKeyFieldNames().size();
+            int numKeys = ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldNames().size();
             int[] bloomFilterKeyFields = new int[numKeys];
             for (int i = 0; i < numKeys; i++) {
                 bloomFilterKeyFields[i] = i;

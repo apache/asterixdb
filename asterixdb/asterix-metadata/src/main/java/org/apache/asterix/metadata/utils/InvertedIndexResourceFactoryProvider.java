@@ -66,7 +66,8 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
             IBinaryComparatorFactory[] filterCmpFactories) throws AlgebricksException {
         // Get basic info
         List<List<String>> primaryKeys = dataset.getPrimaryKeys();
-        List<List<String>> secondaryKeys = index.getKeyFieldNames();
+        Index.TextIndexDetails indexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+        List<List<String>> secondaryKeys = indexDetails.getKeyFieldNames();
         List<String> filterFieldName = DatasetUtil.getFilterField(dataset);
         int numPrimaryKeys = primaryKeys.size();
         int numSecondaryKeys = secondaryKeys.size();
@@ -122,7 +123,7 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         IBinaryTokenizerFactory tokenizerFactory = getTokenizerFactory(dataset, index, recordType, metaType);
         IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory =
                 FullTextUtil.fetchFilterAndCreateConfigEvaluator(mdProvider, index.getDataverseName(),
-                        index.getFullTextConfigName());
+                        indexDetails.getFullTextConfigName());
 
         return new LSMInvertedIndexLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
                 filterCmpFactories, secondaryFilterFields, opTrackerFactory, ioOpCallbackFactory,
@@ -154,7 +155,8 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
     private static ITypeTraits[] getTokenTypeTraits(Dataset dataset, Index index, ARecordType recordType,
             ARecordType metaType) throws AlgebricksException {
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        Index.TextIndexDetails indexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
         IndexType indexType = index.getIndexType();
         // Sanity checks.
         if (numPrimaryKeys > 1) {
@@ -168,14 +170,14 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         boolean isPartitioned = indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
                 || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX;
         ARecordType sourceType;
-        List<Integer> keySourceIndicators = index.getKeyFieldSourceIndicators();
+        List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
         if (keySourceIndicators == null || keySourceIndicators.get(0) == 0) {
             sourceType = recordType;
         } else {
             sourceType = metaType;
         }
-        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
-                index.getKeyFieldNames().get(0), sourceType);
+        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(indexDetails.getKeyFieldTypes().get(0),
+                indexDetails.getKeyFieldNames().get(0), sourceType);
         IAType secondaryKeyType = keyTypePair.first;
         int numTokenFields = (!isPartitioned) ? numSecondaryKeys : numSecondaryKeys + 1;
         ITypeTraits[] tokenTypeTraits = new ITypeTraits[numTokenFields];
@@ -190,7 +192,8 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
     private static IBinaryComparatorFactory[] getTokenComparatorFactories(Dataset dataset, Index index,
             ARecordType recordType, ARecordType metaType) throws AlgebricksException {
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        Index.TextIndexDetails indexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
         IndexType indexType = index.getIndexType();
         // Sanity checks.
         if (numPrimaryKeys > 1) {
@@ -203,15 +206,15 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         }
         boolean isPartitioned = indexType == IndexType.LENGTH_PARTITIONED_WORD_INVIX
                 || indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX;
-        List<Integer> keySourceIndicators = index.getKeyFieldSourceIndicators();
+        List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
         ARecordType sourceType;
         if (keySourceIndicators == null || keySourceIndicators.get(0) == 0) {
             sourceType = recordType;
         } else {
             sourceType = metaType;
         }
-        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
-                index.getKeyFieldNames().get(0), sourceType);
+        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(indexDetails.getKeyFieldTypes().get(0),
+                indexDetails.getKeyFieldNames().get(0), sourceType);
         IAType secondaryKeyType = keyTypePair.first;
         // Comparators and type traits for tokens.
         int numTokenFields = (!isPartitioned) ? numSecondaryKeys : numSecondaryKeys + 1;
@@ -227,7 +230,8 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
     private static IBinaryTokenizerFactory getTokenizerFactory(Dataset dataset, Index index, ARecordType recordType,
             ARecordType metaType) throws AlgebricksException {
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        Index.TextIndexDetails indexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
         IndexType indexType = index.getIndexType();
         // Sanity checks.
         if (numPrimaryKeys > 1) {
@@ -239,19 +243,19 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
                     indexType, 1);
         }
         ARecordType sourceType;
-        List<Integer> keySourceIndicators = index.getKeyFieldSourceIndicators();
+        List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
         if (keySourceIndicators == null || keySourceIndicators.get(0) == 0) {
             sourceType = recordType;
         } else {
             sourceType = metaType;
         }
-        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
-                index.getKeyFieldNames().get(0), sourceType);
+        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(indexDetails.getKeyFieldTypes().get(0),
+                indexDetails.getKeyFieldNames().get(0), sourceType);
         IAType secondaryKeyType = keyTypePair.first;
         // Set tokenizer factory.
         // TODO: We might want to expose the hashing option at the AQL level,
         // and add the choice to the index metadata.
         return NonTaggedFormatUtil.getBinaryTokenizerFactory(secondaryKeyType.getTypeTag(), indexType,
-                index.getGramLength());
+                indexDetails.getGramLength());
     }
 }

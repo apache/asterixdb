@@ -405,7 +405,8 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
     }
 
     @Override
-    public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, Void arg) {
+    public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, Void arg)
+            throws AlgebricksException {
         for (Mutable<ILogicalExpression> e : op.getPrimaryKeyExpressions()) {
             e.getValue().getUsedVariables(usedVariables);
         }
@@ -431,6 +432,7 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         if (op.getUpsertIndicatorExpr() != null) {
             op.getUpsertIndicatorExpr().getValue().getUsedVariables(usedVariables);
         }
+        visitNestedPlans(op);
         return null;
     }
 

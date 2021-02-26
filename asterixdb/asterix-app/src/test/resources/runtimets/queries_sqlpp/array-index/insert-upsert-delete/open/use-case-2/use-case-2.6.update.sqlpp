@@ -1,0 +1,497 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE TestYelp;
+
+UPSERT INTO YelpCheckin (
+    [
+        {
+            "business_id": "--1UhMGODdWsrMastO9DZw",
+            "checkin_times": {
+                "dates": [
+                    "2016-04-26",
+                    "2016-08-30",
+                    "2016-10-15",
+                    "2016-11-18",
+                    "2017-04-20",
+                    "2017-05-03",
+                    "2019-03-19"
+                ],
+                "times": [
+                    "19:49:16",
+                    "18:36:57",
+                    "02:45:18",
+                    "01:54:50",
+                    "18:39:06",
+                    "17:58:02",
+                    "22:04:48"
+                ]
+            }
+        },
+        {
+            "business_id": "--EF5N7P70J_UYBTPypYlA",
+            "checkin_times": {
+                "dates": [
+                    "2018-05-25",
+                    "2018-09-18",
+                    "2019-10-18"
+                ],
+                "times": [
+                    "19:52:07",
+                    "16:09:44",
+                    "21:29:09"
+                ]
+            }
+        },
+        {
+            "business_id": "--Ni3oJ4VOqfOEu7Sj2Vzg",
+            "checkin_times": {
+                "dates": [
+                    "2019-06-07"
+                ],
+                "times": [
+                    "17:54:58"
+                ]
+            }
+        },
+        {
+            "business_id": "--Y1Adl1YUWfYIRSd8vkmA",
+            "checkin_times": {
+                "dates": [
+                    "2011-05-03",
+                    "2011-08-23",
+                    "2014-12-04",
+                    "2016-11-16"
+                ],
+                "times": [
+                    "20:54:05",
+                    "20:49:45",
+                    "06:13:01",
+                    "19:25:55"
+                ]
+            }
+        },
+        {
+            "business_id": "--YPwqIlRJrhHkJcjY3eiA",
+            "checkin_times": {
+                "dates": [
+                    "2016-06-18",
+                    "2016-10-15"
+                ],
+                "times": [
+                    "21:35:45",
+                    "18:17:51"
+                ]
+            }
+        },
+        {
+            "business_id": "--e8PjCNhEz32pprnPhCwQ",
+            "checkin_times": {
+                "dates": [
+                    "2015-04-02"
+                ],
+                "times": [
+                    "21:45:17"
+                ]
+            }
+        },
+        {
+            "business_id": "--kinfHwmtdjz03g8B8z8Q",
+            "checkin_times": {
+                "dates": [
+                    "2014-08-27",
+                    "2015-12-19",
+                    "2018-11-27"
+                ],
+                "times": [
+                    "17:49:18",
+                    "21:30:31",
+                    "15:53:50"
+                ]
+            }
+        },
+        {
+            "business_id": "--q6datkI-f0EoVheXNEeQ",
+            "checkin_times": {
+                "dates": [
+                    "2014-01-28",
+                    "2014-11-16",
+                    "2015-11-15",
+                    "2015-11-15"
+                ],
+                "times": [
+                    "20:56:04",
+                    "16:11:58",
+                    "19:21:53",
+                    "19:33:39"
+                ]
+            }
+        },
+        {
+            "business_id": "--qvQS4MigHPykD2GV0-zw",
+            "checkin_times": {
+                "dates": [
+                    "2019-04-11"
+                ],
+                "times": [
+                    "18:30:12"
+                ]
+            }
+        },
+        {
+            "business_id": "--wIGbLEhlpl_UeAIyDmZQ",
+            "checkin_times": {
+                "dates": [
+                    "2015-06-06",
+                    "2019-03-14"
+                ],
+                "times": [
+                    "20:01:06",
+                    "22:01:52"
+                ]
+            }
+        },
+        {
+            "business_id": "-0FA-Qdi3SPYIoJz9UQw-A",
+            "checkin_times": {
+                "dates": [
+                    "2018-09-29",
+                    "2018-10-20",
+                    "2018-10-20"
+                ],
+                "times": [
+                    "18:55:17",
+                    "16:48:05",
+                    "22:20:24"
+                ]
+            }
+        },
+        {
+            "business_id": "-0Hj1hb_XW6ybWq2M7QhGA",
+            "checkin_times": {
+                "dates": [
+                    "2011-04-23",
+                    "2014-05-04",
+                    "2014-05-11",
+                    "2014-06-04",
+                    "2015-12-05",
+                    "2017-05-15"
+                ],
+                "times": [
+                    "21:11:22",
+                    "19:42:48",
+                    "19:16:08",
+                    "19:14:18",
+                    "19:22:42",
+                    "23:19:00"
+                ]
+            }
+        },
+        {
+            "business_id": "-0KMvRFwDWdVBeTpT11iHw",
+            "checkin_times": {
+                "dates": [
+                    "2012-07-13",
+                    "2016-12-24",
+                    "2017-08-31"
+                ],
+                "times": [
+                    "21:43:57",
+                    "02:27:31",
+                    "00:35:26"
+                ]
+            }
+        },
+        {
+            "business_id": "-0LPtgJC31FWMrMv317p0Q",
+            "checkin_times": {
+                "dates": [
+                    "2013-04-13",
+                    "2013-08-19",
+                    "2013-10-04"
+                ],
+                "times": [
+                    "12:35:33",
+                    "23:35:49",
+                    "19:14:56"
+                ]
+            }
+        },
+        {
+            "business_id": "-0M3o2uWBnQZwd3hmfEwuw",
+            "checkin_times": {
+                "dates": [
+                    "2016-09-10",
+                    "2018-09-08",
+                    "2019-09-13"
+                ],
+                "times": [
+                    "19:26:19",
+                    "14:15:37",
+                    "22:47:25"
+                ]
+            }
+        },
+        {
+            "business_id": "-0RRiWDtfnS16AKCtfvBZg",
+            "checkin_times": {
+                "dates": [
+                    "2017-05-19",
+                    "2017-05-19",
+                    "2017-08-28",
+                    "2017-09-20",
+                    "2017-10-01",
+                    "2017-10-01",
+                    "2017-12-27"
+                ],
+                "times": [
+                    "14:30:16",
+                    "14:30:25",
+                    "15:49:37",
+                    "20:19:51",
+                    "16:31:05",
+                    "16:56:27",
+                    "23:33:20"
+                ]
+            }
+        },
+        {
+            "business_id": "-0Soj75v-XoRcf2ERr8Bmg",
+            "checkin_times": {
+                "dates": [
+                    "2019-06-05"
+                ],
+                "times": [
+                    "18:22:49"
+                ]
+            }
+        },
+        {
+            "business_id": "-0ZumLlFjMh4ZW1z2nXGug",
+            "checkin_times": {
+                "dates": [
+                    "2011-09-24",
+                    "2014-03-10",
+                    "2015-05-27",
+                    "2015-08-29",
+                    "2018-03-16"
+                ],
+                "times": [
+                    "21:37:32",
+                    "20:20:07",
+                    "00:40:24",
+                    "17:58:15",
+                    "15:03:26"
+                ]
+            }
+        },
+        {
+            "business_id": "-0aOudcaAyac0VJbMX-L1g",
+            "checkin_times": {
+                "dates": [
+                    "2015-03-16",
+                    "2015-12-21",
+                    "2016-10-28",
+                    "2016-10-28"
+                ],
+                "times": [
+                    "23:51:16",
+                    "04:48:01",
+                    "20:22:42",
+                    "20:23:00"
+                ]
+            }
+        },
+        {
+            "business_id": "-0b86isaXMY0v4g-V8GZ9Q",
+            "checkin_times": {
+                "dates": [
+                    "2013-10-22",
+                    "2014-11-21"
+                ],
+                "times": [
+                    "16:49:21",
+                    "17:39:24"
+                ]
+            }
+        },
+        {
+            "business_id": "-0d-BfFSU0bwLcnMaGRxYw",
+            "checkin_times": {
+                "dates": [
+                    "2014-08-07",
+                    "2014-09-16",
+                    "2014-10-12",
+                    "2015-07-21",
+                    "2015-07-21"
+                ],
+                "times": [
+                    "18:30:48",
+                    "20:41:45",
+                    "23:22:27",
+                    "20:43:56",
+                    "20:45:07"
+                ]
+            }
+        },
+        {
+            "business_id": "-0jz6c3C6i7RG7Ag22K-Pg",
+            "checkin_times": {
+                "dates": [
+                    "2015-05-02",
+                    "2015-05-06",
+                    "2015-09-26"
+                ],
+                "times": [
+                    "19:49:05",
+                    "03:52:18",
+                    "01:13:19"
+                ]
+            }
+        },
+        {
+            "business_id": "-0y3MZU2oYP8r1ruDP1bfQ",
+            "checkin_times": {
+                "dates": [
+                    "2015-04-11",
+                    "2015-11-21",
+                    "2016-05-06",
+                    "2017-08-09",
+                    "2017-10-21"
+                ],
+                "times": [
+                    "13:14:14",
+                    "16:05:56",
+                    "14:10:04",
+                    "15:15:10",
+                    "15:12:56"
+                ]
+            }
+        },
+        {
+            "business_id": "-1BPe8UjF2_l3nVk-DFUjA",
+            "checkin_times": {
+                "dates": [
+                    "2015-12-03",
+                    "2016-03-17",
+                    "2016-11-02"
+                ],
+                "times": [
+                    "18:44:00",
+                    "18:19:21",
+                    "15:58:38"
+                ]
+            }
+        },
+        {
+            "business_id": "-1E2CQu_38mkghvmZgCCRw",
+            "checkin_times": {
+                "dates": [
+                    "2019-04-04"
+                ],
+                "times": [
+                    "22:02:37"
+                ]
+            }
+        },
+        {
+            "business_id": "-1wzk43IZ5D9Ysu6kzb5xA",
+            "checkin_times": {
+                "dates": [
+                    "2019-02-27"
+                ],
+                "times": [
+                    "14:03:08"
+                ]
+            }
+        },
+        {
+            "business_id": "-23R9P2eG7VTc6DVLjFKzA",
+            "checkin_times": {
+                "dates": [
+                    "2011-12-21",
+                    "2012-04-15",
+                    "2012-04-15",
+                    "2013-06-30",
+                    "2013-10-04",
+                    "2014-07-16"
+                ],
+                "times": [
+                    "19:02:51",
+                    "04:21:39",
+                    "14:23:56",
+                    "22:39:51",
+                    "20:34:13",
+                    "02:28:40"
+                ]
+            }
+        },
+        {
+            "business_id": "-26MGfikhJiTfCI-GqmzhQ",
+            "checkin_times": {
+                "dates": [
+                    "2018-06-13"
+                ],
+                "times": [
+                    "20:16:07"
+                ]
+            }
+        },
+        {
+            "business_id": "-2bLuJsMZ0WhI9daurVQNQ",
+            "checkin_times": {
+                "dates": [
+                    "2015-05-29",
+                    "2015-06-01"
+                ],
+                "times": [
+                    "16:46:17",
+                    "15:03:53"
+                ]
+            }
+        },
+        {
+            "business_id": "-2hDBMaza_ldqnZdiU06LQ",
+            "checkin_times": {
+                "dates": [
+                    "2011-10-08",
+                    "2014-08-18",
+                    "2016-01-07",
+                    "2016-10-21",
+                    "2016-12-01",
+                    "2016-12-29",
+                    "2018-07-22",
+                    "2018-09-07",
+                    "2019-03-08"
+                ],
+                "times": [
+                    "12:02:23",
+                    "02:11:11",
+                    "05:27:51",
+                    "20:15:55",
+                    "03:57:10",
+                    "01:54:42",
+                    "19:55:31",
+                    "01:42:54",
+                    "03:41:06"
+                ]
+            }
+        }
+    ]
+);

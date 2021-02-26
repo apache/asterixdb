@@ -89,7 +89,8 @@ public class SubplanPOperator extends AbstractPhysicalOperator {
         if (subplan.getNestedPlans().size() != 1) {
             throw new NotImplementedException("Subplan currently works only for one nested plan with one root.");
         }
-        List<List<AlgebricksPipeline>> subplans = compileSubplansImpl(inputSchemas[0], subplan, opSchema, context);
+        List<List<AlgebricksPipeline>> subplans =
+                compileSubplansImpl(inputSchemas[0], subplan, opSchema, context, true);
         assert subplans.size() == 1;
         List<AlgebricksPipeline> np = subplans.get(0);
         RecordDescriptor inputRecordDesc = JobGenHelper.mkRecordDescriptor(

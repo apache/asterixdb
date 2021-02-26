@@ -96,7 +96,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     // That is, this function can produce false positive results if it is set to true.
     // In this case, an index-search alone cannot replace the given SELECT condition and
     // that SELECT condition needs to be applied after the index-search to get the correct results.
-    // For B+Tree indexes, there are no false positive results unless the given index is a composite index.
+    // For B+Tree indexes, there are no false positive results unless the given index is a composite index or an array
+    // index.
     private static final List<Pair<FunctionIdentifier, Boolean>> FUNC_IDENTIFIERS = Collections
             .unmodifiableList(Arrays.asList(new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.EQ, false),
                     new Pair<FunctionIdentifier, Boolean>(AlgebricksBuiltinFunctions.LE, false),
@@ -127,7 +128,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     public boolean matchAllIndexExprs(Index index) {
         // require all expressions to be matched if this is a composite key index which has an unknownable key field.
         // because we only add a tuple to the index if all its key fields are not null/missing.
-        return index.getKeyFieldTypes().size() > 1 && hasUnknownableField(index);
+        return ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldTypes().size() > 1
+                && hasUnknownableField(index);
     }
 
     @Override
@@ -136,10 +138,10 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     private boolean hasUnknownableField(Index index) {
-        if (index.isSecondaryIndex() && index.isOverridingKeyFieldTypes() && !index.isEnforced()) {
+        if (index.isSecondaryIndex() && index.getIndexDetails().isOverridingKeyFieldTypes() && !index.isEnforced()) {
             return true;
         }
-        for (IAType fieldType : index.getKeyFieldTypes()) {
+        for (IAType fieldType : ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldTypes()) {
             if (NonTaggedFormatUtil.isOptional(fieldType)) {
                 return true;
             }
@@ -320,6 +322,26 @@ public class BTreeAccessMethod implements IAccessMethod {
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainMissing, boolean requiresBroadcast, IOptimizationContext context,
             LogicalVariable newMissingPlaceHolderForLOJ) throws AlgebricksException {
+
+        Index.ValueIndexDetails chosenIndexDetails = (Index.ValueIndexDetails) chosenIndex.getIndexDetails();
+        List<List<String>> chosenIndexKeyFieldNames = chosenIndexDetails.getKeyFieldNames();
+        List<IAType> chosenIndexKeyFieldTypes = chosenIndexDetails.getKeyFieldTypes();
+        List<Integer> chosenIndexKeyFieldSourceIndicators = chosenIndexDetails.getKeyFieldSourceIndicators();
+
+        return createBTreeIndexSearchPlan(afterTopOpRefs, topOpRef, conditionRef, assignBeforeTheOpRefs, indexSubTree,
+                probeSubTree, chosenIndex, analysisCtx, retainInput, retainMissing, requiresBroadcast, context,
+                newMissingPlaceHolderForLOJ, chosenIndexKeyFieldNames, chosenIndexKeyFieldTypes,
+                chosenIndexKeyFieldSourceIndicators);
+    }
+
+    protected ILogicalOperator createBTreeIndexSearchPlan(List<Mutable<ILogicalOperator>> afterTopOpRefs,
+            Mutable<ILogicalOperator> topOpRef, Mutable<ILogicalExpression> conditionRef,
+            List<Mutable<ILogicalOperator>> assignBeforeTheOpRefs, OptimizableOperatorSubTree indexSubTree,
+            OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
+            boolean retainInput, boolean retainMissing, boolean requiresBroadcast, IOptimizationContext context,
+            LogicalVariable newMissingPlaceHolderForLOJ, List<List<String>> chosenIndexKeyFieldNames,
+            List<IAType> chosenIndexKeyFieldTypes, List<Integer> chosenIndexKeyFieldSourceIndicators)
+            throws AlgebricksException {
         Dataset dataset = indexSubTree.getDataset();
         ARecordType recordType = indexSubTree.getRecordType();
         ARecordType metaRecordType = indexSubTree.getMetaRecordType();
@@ -370,12 +392,12 @@ public class BTreeAccessMethod implements IAccessMethod {
         for (Pair<Integer, Integer> exprIndex : exprAndVarList) {
             // Position of the field of matchedFuncExprs.get(exprIndex) in the chosen index's indexed exprs.
             IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprIndex.first);
-            int keyPos = indexOf(optFuncExpr.getFieldName(0), optFuncExpr.getFieldSource(0),
-                    chosenIndex.getKeyFieldNames(), chosenIndex.getKeyFieldSourceIndicators());
+            int keyPos = indexOf(optFuncExpr.getFieldName(0), optFuncExpr.getFieldSource(0), chosenIndexKeyFieldNames,
+                    chosenIndexKeyFieldSourceIndicators);
             if (keyPos < 0 && optFuncExpr.getNumLogicalVars() > 1) {
                 // If we are optimizing a join, the matching field may be the second field name.
-                keyPos = indexOf(optFuncExpr.getFieldName(1), optFuncExpr.getFieldSource(1),
-                        chosenIndex.getKeyFieldNames(), chosenIndex.getKeyFieldSourceIndicators());
+                keyPos = indexOf(optFuncExpr.getFieldName(1), optFuncExpr.getFieldSource(1), chosenIndexKeyFieldNames,
+                        chosenIndexKeyFieldSourceIndicators);
             }
             if (keyPos < 0) {
                 throw CompilationException.create(ErrorCode.NO_INDEX_FIELD_NAME_FOR_GIVEN_FUNC_EXPR,
@@ -385,7 +407,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             // The second expression will not be null only if we are creating an EQ search predicate
             // with a FLOAT or a DOUBLE constant that will be fed into an INTEGER index.
             // This is required because of type-casting. Refer to AccessMethodUtils.createSearchKeyExpr for details.
-            IAType indexedFieldType = chosenIndex.getKeyFieldTypes().get(keyPos);
+            IAType indexedFieldType = chosenIndexKeyFieldTypes.get(keyPos);
             Triple<ILogicalExpression, ILogicalExpression, Boolean> returnedSearchKeyExpr =
                     AccessMethodUtils.createSearchKeyExpr(chosenIndex, optFuncExpr, indexedFieldType, probeSubTree);
             ILogicalExpression searchKeyExpr = returnedSearchKeyExpr.first;
@@ -669,7 +691,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             indexSearchOp = AccessMethodUtils.createRestOfIndexSearchPlan(afterTopOpRefs, topOpRef, conditionRef,
                     assignBeforeTheOpRefs, dataSourceOp, dataset, recordType, metaRecordType, secondaryIndexUnnestOp,
                     context, true, retainInput, retainMissing, false, chosenIndex, analysisCtx, indexSubTree,
-                    newMissingPlaceHolderForLOJ);
+                    probeSubTree, newMissingPlaceHolderForLOJ);
 
             // Replaces the datasource scan with the new plan rooted at
             // Get dataSourceRef operator -
@@ -895,7 +917,8 @@ public class BTreeAccessMethod implements IAccessMethod {
         return limit;
     }
 
-    private boolean relaxLimitTypeToInclusive(Index chosenIndex, int keyPos, boolean realTypeConvertedToIntegerType) {
+    private boolean relaxLimitTypeToInclusive(Index chosenIndex, int keyPos, boolean realTypeConvertedToIntegerType)
+            throws CompilationException {
         // For a non-enforced index or an enforced index that stores a casted value on the given index,
         // we need to apply the following transformation.
         // For an index on a closed field, this transformation is not necessary since the value between
@@ -922,8 +945,8 @@ public class BTreeAccessMethod implements IAccessMethod {
             return true;
         }
 
-        if (chosenIndex.isOverridingKeyFieldTypes() && !chosenIndex.isEnforced()) {
-            IAType indexedKeyType = chosenIndex.getKeyFieldTypes().get(keyPos);
+        if (chosenIndex.getIndexDetails().isOverridingKeyFieldTypes() && !chosenIndex.isEnforced()) {
+            IAType indexedKeyType = getIndexedKeyType(chosenIndex.getIndexDetails(), keyPos);
             if (NonTaggedFormatUtil.isOptional(indexedKeyType)) {
                 indexedKeyType = ((AUnionType) indexedKeyType).getActualType();
             }
@@ -941,6 +964,10 @@ public class BTreeAccessMethod implements IAccessMethod {
         }
 
         return false;
+    }
+
+    protected IAType getIndexedKeyType(Index.IIndexDetails chosenIndexDetails, int keyPos) throws CompilationException {
+        return ((Index.ValueIndexDetails) chosenIndexDetails).getKeyFieldTypes().get(keyPos);
     }
 
     private boolean probeIsOnLhs(IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree probeSubTree) {
@@ -1008,6 +1035,11 @@ public class BTreeAccessMethod implements IAccessMethod {
             annotationClass = SecondaryIndexSearchPreferenceAnnotation.class;
         }
         return AccessMethodUtils.getSecondaryIndexPreferences(optFuncExpr, annotationClass);
+    }
+
+    @Override
+    public boolean matchIndexType(IndexType indexType) {
+        return indexType == IndexType.BTREE;
     }
 
     @Override

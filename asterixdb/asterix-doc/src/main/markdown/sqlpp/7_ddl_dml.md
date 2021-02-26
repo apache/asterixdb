@@ -322,6 +322,12 @@ the URL and path needed to locate the data in HDFS and a description of the data
 ### CreatePrimaryKeyIndex
 **![](../images/diagrams/CreatePrimaryKeyIndex.png)**
 
+### IndexedElement
+**![](../images/diagrams/IndexedElement.png)**
+
+### ArrayIndexElement
+**![](../images/diagrams/ArrayIndexElement.png)**
+
 ### IndexField
 **![](../images/diagrams/IndexField.png)**
 
@@ -337,6 +343,8 @@ The `CREATE INDEX` statement creates a secondary index on one or more fields of 
 Supported index types include `BTREE` for totally ordered datatypes, `RTREE` for spatial data,
 and `KEYWORD` and `NGRAM` for textual (string) data.
 An index can be created on a nested field (or fields) by providing a valid path expression as an index field identifier.
+An array index can be created on an array or multiset datatype by providing a sequence of `UNNEST` and `SELECT`s to
+identify the field(s) to be indexed.
 
 An indexed field is not required to be part of the datatype associated with a dataset if the dataset's datatype
 is declared as open **and** if the field's type is provided along with its name and if the `ENFORCED` keyword is
@@ -375,11 +383,18 @@ The following example creates a btree index called `oOrderUserNameIdx` on `order
 a nested field residing within a object-valued user field in the `orders` dataset.
 This index can be useful for accelerating exact-match queries, range search queries,
 and joins involving the nested `orderUserName` field.
-Such nested fields must be singular, i.e., one cannot index through (or on) an array-valued field.
 
 #### Example
 
     CREATE INDEX oOrderUserNameIdx ON orders(order.orderUserName) TYPE BTREE;
+
+The following example creates an array index called `oItemsPriceIdx` on the `price` field inside the `items` array of the `orders` dataset.
+This index can be useful for accelerating membership queries, existential or universal quantification queries, or joins involving the `price` field inside this array.
+(To enable array index query optimization, be sure to set the [`arrayindex` compiler option](manual.html#ArrayIndexFlag).)
+
+#### Example
+
+    CREATE INDEX oItemsPriceIdx ON orders(UNNEST items SELECT price);
 
 The following example creates an open rtree index called `oOrderLocIdx` on the order-location field of the `orders` dataset. This index can be useful for accelerating queries that use the [`spatial-intersect` function](builtins.html#spatial_intersect) in a predicate involving the sender-location field.
 

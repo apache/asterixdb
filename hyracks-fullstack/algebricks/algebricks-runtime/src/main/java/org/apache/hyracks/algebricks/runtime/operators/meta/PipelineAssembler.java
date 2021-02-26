@@ -29,6 +29,7 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobFlag;
 
@@ -122,5 +123,22 @@ public class PipelineAssembler {
             start = newRuntime;
         }
         return start;
+    }
+
+    public static IPushRuntime linkPipeline(AlgebricksPipeline pipeline, PipelineAssembler[] pipelineAssemblers,
+            int pipelineAssemblersCount) throws HyracksDataException {
+        IPushRuntimeFactory[] outputRuntimeFactories = pipeline.getOutputRuntimeFactories();
+        if (outputRuntimeFactories == null || outputRuntimeFactories.length != 1) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE, "No output runtime factories found.");
+        }
+        IPushRuntimeFactory outRuntimeFactory = outputRuntimeFactories[0];
+        int outputPosition = pipeline.getOutputPositions()[0];
+        for (int i = 0; i < pipelineAssemblersCount; i++) {
+            IPushRuntime[] p = pipelineAssemblers[i].getPushRuntime(outRuntimeFactory);
+            if (p != null) {
+                return p[outputPosition];
+            }
+        }
+        return null;
     }
 }

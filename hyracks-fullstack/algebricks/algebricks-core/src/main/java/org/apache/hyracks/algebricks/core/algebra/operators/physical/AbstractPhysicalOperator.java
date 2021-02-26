@@ -137,7 +137,7 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
     protected AlgebricksPipeline[] compileSubplans(IOperatorSchema outerPlanSchema,
             AbstractOperatorWithNestedPlans npOp, IOperatorSchema opSchema, JobGenContext context)
             throws AlgebricksException {
-        List<List<AlgebricksPipeline>> subplans = compileSubplansImpl(outerPlanSchema, npOp, opSchema, context);
+        List<List<AlgebricksPipeline>> subplans = compileSubplansImpl(outerPlanSchema, npOp, opSchema, context, true);
         int n = subplans.size();
         AlgebricksPipeline[] result = new AlgebricksPipeline[n];
         for (int i = 0; i < n; i++) {
@@ -153,26 +153,28 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
     }
 
     protected List<List<AlgebricksPipeline>> compileSubplansImpl(IOperatorSchema outerPlanSchema,
-            AbstractOperatorWithNestedPlans npOp, IOperatorSchema opSchema, JobGenContext context)
-            throws AlgebricksException {
+            AbstractOperatorWithNestedPlans npOp, IOperatorSchema opSchema, JobGenContext context,
+            boolean withProjection) throws AlgebricksException {
         List<List<AlgebricksPipeline>> subplans = new ArrayList<>(npOp.getNestedPlans().size());
         PlanCompiler pc = new PlanCompiler(context);
         for (ILogicalPlan p : npOp.getNestedPlans()) {
-            subplans.add(buildPipelineWithProjection(p, outerPlanSchema, opSchema, pc));
+            subplans.add(buildPipeline(p, outerPlanSchema, opSchema, pc, withProjection));
         }
         return subplans;
     }
 
-    private List<AlgebricksPipeline> buildPipelineWithProjection(ILogicalPlan p, IOperatorSchema outerPlanSchema,
-            IOperatorSchema opSchema, PlanCompiler pc) throws AlgebricksException {
+    private List<AlgebricksPipeline> buildPipeline(ILogicalPlan p, IOperatorSchema outerPlanSchema,
+            IOperatorSchema opSchema, PlanCompiler pc, boolean withProjection) throws AlgebricksException {
         if (p.getRoots().size() > 1) {
             throw new NotImplementedException("Nested plans with several roots are not supported.");
         }
         JobSpecification nestedJob = pc.compileNestedPlan(p, outerPlanSchema);
-        ILogicalOperator topOpInSubplan = p.getRoots().get(0).getValue();
-        JobGenContext context = pc.getContext();
-        IOperatorSchema topOpInSubplanScm = context.getSchema(topOpInSubplan);
-        opSchema.addAllVariables(topOpInSubplanScm);
+        if (withProjection) {
+            ILogicalOperator topOpInSubplan = p.getRoots().get(0).getValue();
+            JobGenContext context = pc.getContext();
+            IOperatorSchema topOpInSubplanScm = context.getSchema(topOpInSubplan);
+            opSchema.addAllVariables(topOpInSubplanScm);
+        }
 
         Map<OperatorDescriptorId, IOperatorDescriptor> opMap = nestedJob.getOperatorMap();
         List<? extends IOperatorDescriptor> metaOps = nestedJob.getMetaOps();

@@ -30,6 +30,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.optimizer.rules.util.SelectInSubplanBranchCreator;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -122,11 +123,13 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     protected IVariableTypeEnvironment typeEnvironment = null;
     protected final OptimizableOperatorSubTree subTree = new OptimizableOperatorSubTree();
     protected List<Mutable<ILogicalOperator>> afterSelectRefs = null;
+    private final SelectInSubplanBranchCreator selectInSubplanBranchCreator = new SelectInSubplanBranchCreator();
 
     // Register access methods.
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<>();
 
     static {
+        registerAccessMethod(ArrayBTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(BTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(RTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
@@ -368,6 +371,25 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = null;
             if (continueCheck) {
                 analyzedAMs = new TreeMap<>();
+            }
+
+            // If there exists a SUBPLAN in our plan, and we are conditioning on a variable,
+            // attempt to rewrite this subplan to allow an array-index AM to be introduced.
+            // This rewrite is to be used **solely** for the purpose of changing a DATA-SCAN into a
+            // non-index-only plan branch. No nodes from this rewrite will be used beyond this point. 
+            // If successful, this will create a non-index only plan that replaces the subplan's
+            // DATA-SCAN with a PIDX SEARCH <- DISTINCT <- ORDER <- SIDX SEARCH.
+            if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()) {
+                SelectOperator selectRewrite = selectInSubplanBranchCreator.createSelect(selectOp, context);
+                if (selectRewrite != null
+                        && checkAndApplyTheSelectTransformation(new MutableObject<>(selectRewrite), context)) {
+                    return true;
+
+                } else {
+                    // If this optimization or temp-branch creation was not successful, restore our state.
+                    selectRef = selectRefFromThisOp;
+                    selectOp = selectInSubplanBranchCreator.getOriginalSelect();
+                }
             }
 
             // Check the condition of SELECT operator is a function call since

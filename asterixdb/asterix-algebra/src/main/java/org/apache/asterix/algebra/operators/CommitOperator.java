@@ -44,6 +44,10 @@ public class CommitOperator extends AbstractDelegatedLogicalOperator {
         this.isSink = isSink;
     }
 
+    public List<LogicalVariable> getPrimaryKeyLogicalVars() {
+        return this.primaryKeyLogicalVars;
+    }
+
     @Override
     public boolean isMap() {
         return false;

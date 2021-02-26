@@ -308,7 +308,7 @@ public class RTreeAccessMethod implements IAccessMethod {
                         secondaryIndexUnnestOp, context, chosenIndex, retainInput, retainNull)
                 : AccessMethodUtils.createRestOfIndexSearchPlan(afterTopRefs, topRef, conditionRef, assignBeforeTopRefs,
                         dataSourceOp, dataset, recordType, metaRecordType, secondaryIndexUnnestOp, context, true,
-                        retainInput, retainNull, false, chosenIndex, analysisCtx, indexSubTree,
+                        retainInput, retainNull, false, chosenIndex, analysisCtx, indexSubTree, null,
                         newNullPlaceHolderForLOJ);
     }
 
@@ -382,6 +382,11 @@ public class RTreeAccessMethod implements IAccessMethod {
     public Collection<String> getSecondaryIndexPreferences(IOptimizableFuncExpr optFuncExpr) {
         return AccessMethodUtils.getSecondaryIndexPreferences(optFuncExpr,
                 SecondaryIndexSearchPreferenceAnnotation.class);
+    }
+
+    @Override
+    public boolean matchIndexType(IndexType indexType) {
+        return indexType == IndexType.RTREE;
     }
 
     @Override

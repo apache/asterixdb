@@ -21,10 +21,16 @@ package org.apache.asterix.metadata.entitytupletranslators;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
+import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -40,15 +46,21 @@ import org.apache.asterix.om.base.ACollectionCursor;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.base.AMutableInt8;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -70,18 +82,25 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     public static final String INDEX_SEARCHKEY_TYPE_FIELD_NAME = "SearchKeyType";
     public static final String INDEX_ISENFORCED_FIELD_NAME = "IsEnforced";
     public static final String INDEX_SEARCHKEY_SOURCE_INDICATOR_FIELD_NAME = "SearchKeySourceIndicator";
+    public static final String INDEX_SEARCHKEY_ELEMENTS_FIELD_NAME = "SearchKeyElements";
+    public static final String COMPLEXSEARCHKEY_UNNEST_FIELD_NAME = "UnnestList";
+    public static final String COMPLEXSEARCHKEY_PROJECT_FIELD_NAME = "ProjectList";
 
     protected final TxnId txnId;
     protected final MetadataNode metadataNode;
 
     protected OrderedListBuilder listBuilder;
+    protected OrderedListBuilder innerListBuilder;
     protected OrderedListBuilder primaryKeyListBuilder;
+    protected OrderedListBuilder complexSearchKeyNameListBuilder;
+    protected IARecordBuilder complexSearchKeyNameRecordBuilder;
     protected AOrderedListType stringList;
     protected AOrderedListType int8List;
     protected ArrayBackedValueStorage nameValue;
     protected ArrayBackedValueStorage itemValue;
     protected AMutableInt8 aInt8;
     protected ISerializerDeserializer<AInt8> int8Serde;
+    protected ISerializerDeserializer<ANull> nullSerde;
 
     @SuppressWarnings("unchecked")
     protected IndexTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
@@ -90,13 +109,17 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         this.metadataNode = metadataNode;
         if (getTuple) {
             listBuilder = new OrderedListBuilder();
+            innerListBuilder = new OrderedListBuilder();
             primaryKeyListBuilder = new OrderedListBuilder();
+            complexSearchKeyNameRecordBuilder = new RecordBuilder();
+            complexSearchKeyNameListBuilder = new OrderedListBuilder();
             stringList = new AOrderedListType(BuiltinType.ASTRING, null);
             int8List = new AOrderedListType(BuiltinType.AINT8, null);
             nameValue = new ArrayBackedValueStorage();
             itemValue = new ArrayBackedValueStorage();
             aInt8 = new AMutableInt8((byte) 0);
             int8Serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
+            nullSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
         }
     }
 
@@ -112,52 +135,107 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         String indexName =
                 ((AString) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXNAME_FIELD_INDEX))
                         .getStringValue();
-        IndexType indexStructure = IndexType.valueOf(
+        IndexType indexType = IndexType.valueOf(
                 ((AString) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX))
                         .getStringValue());
-        IACursor fieldNameCursor =
-                ((AOrderedList) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX))
-                        .getCursor();
-        List<List<String>> searchKey = new ArrayList<>();
-        AOrderedList fieldNameList;
-        while (fieldNameCursor.next()) {
-            fieldNameList = (AOrderedList) fieldNameCursor.get();
-            IACursor nestedFieldNameCursor = (fieldNameList.getCursor());
-            List<String> nestedFieldName = new ArrayList<>();
-            while (nestedFieldNameCursor.next()) {
-                nestedFieldName.add(((AString) nestedFieldNameCursor.get()).getStringValue());
-            }
-            searchKey.add(nestedFieldName);
-        }
-        int indexKeyTypeFieldPos = indexRecord.getType().getFieldIndex(INDEX_SEARCHKEY_TYPE_FIELD_NAME);
-        IACursor fieldTypeCursor = new ACollectionCursor();
-        if (indexKeyTypeFieldPos > 0) {
-            fieldTypeCursor = ((AOrderedList) indexRecord.getValueByPos(indexKeyTypeFieldPos)).getCursor();
-        }
-        List<IAType> searchKeyType = new ArrayList<>(searchKey.size());
-        while (fieldTypeCursor.next()) {
-            String typeName = ((AString) fieldTypeCursor.get()).getStringValue();
-            IAType fieldType = BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName);
-            searchKeyType.add(fieldType);
-        }
-        boolean isOverridingKeyTypes = !searchKeyType.isEmpty();
 
-        int isEnforcedFieldPos = indexRecord.getType().getFieldIndex(INDEX_ISENFORCED_FIELD_NAME);
-        Boolean isEnforcingKeys = false;
-        if (isEnforcedFieldPos > 0) {
-            isEnforcingKeys = ((ABoolean) indexRecord.getValueByPos(isEnforcedFieldPos)).getBoolean();
+        // Read key names
+        List<Pair<List<List<String>>, List<List<String>>>> searchElements = new ArrayList<>();
+        switch (Index.IndexCategory.of(indexType)) {
+            case VALUE:
+            case TEXT:
+                // Read the key names from the SearchKeyName field
+                IACursor fieldNameCursor = ((AOrderedList) indexRecord
+                        .getValueByPos(MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX)).getCursor();
+                AOrderedList fieldNameList;
+                while (fieldNameCursor.next()) {
+                    fieldNameList = (AOrderedList) fieldNameCursor.get();
+                    IACursor nestedFieldNameCursor = (fieldNameList.getCursor());
+                    List<String> nestedFieldName = new ArrayList<>();
+                    while (nestedFieldNameCursor.next()) {
+                        nestedFieldName.add(((AString) nestedFieldNameCursor.get()).getStringValue());
+                    }
+                    searchElements.add(new Pair<>(null, Collections.singletonList(nestedFieldName)));
+                }
+                break;
+            case ARRAY:
+                // Read the unnest/project from the ComplexSearchKeyName field
+                int complexSearchKeyFieldPos = indexRecord.getType().getFieldIndex(INDEX_SEARCHKEY_ELEMENTS_FIELD_NAME);
+                IACursor complexSearchKeyCursor = new ACollectionCursor();
+                if (complexSearchKeyFieldPos > 0) {
+                    complexSearchKeyCursor =
+                            ((AOrderedList) indexRecord.getValueByPos(complexSearchKeyFieldPos)).getCursor();
+                }
+                while (complexSearchKeyCursor.next()) {
+                    Pair<List<List<String>>, List<List<String>>> searchElement;
+                    IAObject complexSearchKeyItem = complexSearchKeyCursor.get();
+                    switch (complexSearchKeyItem.getType().getTypeTag()) {
+                        case ARRAY:
+                            AOrderedList complexSearchKeyArray = (AOrderedList) complexSearchKeyItem;
+                            List<String> project = new ArrayList<>(complexSearchKeyArray.size());
+                            // We only have one element.
+                            AOrderedList innerListForArray = (AOrderedList) complexSearchKeyArray.getItem(0);
+                            IACursor innerListCursorForArray = innerListForArray.getCursor();
+                            while (innerListCursorForArray.next()) {
+                                project.add(((AString) innerListCursorForArray.get()).getStringValue());
+                            }
+                            searchElement = new Pair<>(null, Collections.singletonList(project));
+                            break;
+                        case OBJECT:
+                            ARecord complexSearchKeyRecord = (ARecord) complexSearchKeyItem;
+                            ARecordType complexSearchKeyRecordType = complexSearchKeyRecord.getType();
+                            int unnestFieldPos =
+                                    complexSearchKeyRecordType.getFieldIndex(COMPLEXSEARCHKEY_UNNEST_FIELD_NAME);
+                            if (unnestFieldPos < 0) {
+                                throw new AsterixException(ErrorCode.METADATA_ERROR, complexSearchKeyRecord.toJSON());
+                            }
+                            AOrderedList unnestFieldList =
+                                    (AOrderedList) complexSearchKeyRecord.getValueByPos(unnestFieldPos);
+                            List<List<String>> unnestList = new ArrayList<>(unnestFieldList.size());
+                            IACursor unnestFieldListCursor = unnestFieldList.getCursor();
+                            while (unnestFieldListCursor.next()) {
+                                AOrderedList innerList = (AOrderedList) unnestFieldListCursor.get();
+                                List<String> unnestPath = new ArrayList<>(innerList.size());
+                                IACursor innerListCursor = innerList.getCursor();
+                                while (innerListCursor.next()) {
+                                    unnestPath.add(((AString) innerListCursor.get()).getStringValue());
+                                }
+                                unnestList.add(unnestPath);
+                            }
+                            int projectFieldPos =
+                                    complexSearchKeyRecordType.getFieldIndex(COMPLEXSEARCHKEY_PROJECT_FIELD_NAME);
+                            if (projectFieldPos < 0) {
+                                throw new AsterixException(ErrorCode.METADATA_ERROR, complexSearchKeyRecord.toJSON());
+                            }
+                            AOrderedList projectFieldList =
+                                    (AOrderedList) complexSearchKeyRecord.getValueByPos(projectFieldPos);
+                            List<List<String>> projectList = new ArrayList<>(projectFieldList.size());
+                            IACursor projectFieldListCursor = projectFieldList.getCursor();
+                            while (projectFieldListCursor.next()) {
+                                if (projectFieldListCursor.get().getType().getTypeTag().equals(ATypeTag.NULL)) {
+                                    projectList.add(null);
+                                    break;
+                                }
+                                AOrderedList innerList = (AOrderedList) projectFieldListCursor.get();
+                                List<String> projectPath = new ArrayList<>(innerList.size());
+                                IACursor innerListCursor = innerList.getCursor();
+                                while (innerListCursor.next()) {
+                                    projectPath.add(((AString) innerListCursor.get()).getStringValue());
+                                }
+                                projectList.add(projectPath);
+                            }
+                            searchElement = new Pair<>(unnestList, projectList);
+                            break;
+                        default:
+                            throw new AsterixException(ErrorCode.METADATA_ERROR, complexSearchKeyItem.toJSON());
+                    }
+                    searchElements.add(searchElement);
+                }
+                break;
+            default:
+                throw new AsterixException(ErrorCode.METADATA_ERROR, indexType.toString());
         }
-        Boolean isPrimaryIndex =
-                ((ABoolean) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_ISPRIMARY_FIELD_INDEX))
-                        .getBoolean();
-        int pendingOp = ((AInt32) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX))
-                .getIntegerValue();
-        // Check if there is a gram length as well.
-        int gramLength = -1;
-        int gramLenPos = indexRecord.getType().getFieldIndex(GRAM_LENGTH_FIELD_NAME);
-        if (gramLenPos >= 0) {
-            gramLength = ((AInt32) indexRecord.getValueByPos(gramLenPos)).getIntegerValue();
-        }
+        int searchElementCount = searchElements.size();
 
         String fullTextConfig = null;
         int fullTextConfigPos = indexRecord.getType().getFieldIndex(FULL_TEXT_CONFIG_FIELD_NAME);
@@ -166,7 +244,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
 
         // Read a field-source-indicator field.
-        List<Integer> keyFieldSourceIndicator = new ArrayList<>();
+        List<Integer> keyFieldSourceIndicator = new ArrayList<>(searchElementCount);
         int keyFieldSourceIndicatorIndex =
                 indexRecord.getType().getFieldIndex(INDEX_SEARCHKEY_SOURCE_INDICATOR_FIELD_NAME);
         if (keyFieldSourceIndicatorIndex >= 0) {
@@ -175,14 +253,47 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 keyFieldSourceIndicator.add((int) ((AInt8) cursor.get()).getByteValue());
             }
         } else {
-            for (int index = 0; index < searchKey.size(); ++index) {
-                keyFieldSourceIndicator.add(0);
+            for (int index = 0; index < searchElementCount; ++index) {
+                keyFieldSourceIndicator.add(Index.RECORD_INDICATOR);
             }
         }
 
-        // index key type information is not persisted, thus we extract type information
-        // from the record metadata
+        // Read key types
+        int indexKeyTypeFieldPos = indexRecord.getType().getFieldIndex(INDEX_SEARCHKEY_TYPE_FIELD_NAME);
+        IACursor fieldTypeCursor = new ACollectionCursor();
+        if (indexKeyTypeFieldPos > 0) {
+            fieldTypeCursor = ((AOrderedList) indexRecord.getValueByPos(indexKeyTypeFieldPos)).getCursor();
+        }
+        List<List<IAType>> searchKeyType = new ArrayList<>(searchElementCount);
+        while (fieldTypeCursor.next()) {
+            IAObject fieldTypeItem = fieldTypeCursor.get();
+            switch (fieldTypeItem.getType().getTypeTag()) {
+                case STRING:
+                    // This is a simple element, place in a single-element list.
+                    String typeName = ((AString) fieldTypeItem).getStringValue();
+                    IAType fieldType = BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName);
+                    searchKeyType.add(Collections.singletonList(fieldType));
+                    break;
+                case ARRAY:
+                    // This is a complex element, read all types.
+                    List<IAType> fieldTypes = new ArrayList<>();
+                    AOrderedList fieldTypeList = (AOrderedList) fieldTypeItem;
+                    IACursor fieldTypeListCursor = fieldTypeList.getCursor();
+                    while (fieldTypeListCursor.next()) {
+                        typeName = ((AString) fieldTypeListCursor.get()).getStringValue();
+                        fieldTypes
+                                .add(BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName));
+                    }
+                    searchKeyType.add(fieldTypes);
+                    break;
+                default:
+                    throw new AsterixException(ErrorCode.METADATA_ERROR, fieldTypeItem.toJSON());
+            }
+        }
+        boolean isOverridingKeyTypes;
         if (searchKeyType.isEmpty()) {
+            // if index key type information is not persisted, then we extract type information
+            // from the record metadata
             Dataset dataset = metadataNode.getDataset(txnId, dataverseName, datasetName);
             String datatypeName = dataset.getItemTypeName();
             DataverseName datatypeDataverseName = dataset.getItemTypeDataverseName();
@@ -195,16 +306,127 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 metaDt = (ARecordType) metadataNode.getDatatype(txnId, metatypeDataverseName, metatypeName)
                         .getDatatype();
             }
-            searchKeyType = KeyFieldTypeUtil.getKeyTypes(recordDt, metaDt, searchKey, keyFieldSourceIndicator);
+            searchKeyType = new ArrayList<>(searchElementCount);
+            for (int i = 0; i < searchElementCount; i++) {
+                Pair<List<List<String>>, List<List<String>>> searchElement = searchElements.get(i);
+                List<List<String>> unnestPathList = searchElement.first;
+                List<List<String>> projectPathList = searchElement.second;
+
+                ARecordType sourceRecordType = keyFieldSourceIndicator.get(i) == 1 ? metaDt : recordDt;
+                IAType inputTypePrime;
+                boolean inputTypeNullable, inputTypeMissable;
+                if (unnestPathList == null) {
+                    inputTypePrime = sourceRecordType;
+                    inputTypeNullable = inputTypeMissable = false;
+                } else {
+                    Triple<IAType, Boolean, Boolean> unnestTypeResult =
+                            KeyFieldTypeUtil.getKeyUnnestType(sourceRecordType, unnestPathList, null);
+                    if (unnestTypeResult == null) {
+                        inputTypePrime = null; // = ANY
+                        inputTypeNullable = inputTypeMissable = true;
+                    } else {
+                        inputTypePrime = unnestTypeResult.first;
+                        inputTypeNullable = unnestTypeResult.second;
+                        inputTypeMissable = unnestTypeResult.third;
+                    }
+                }
+
+                List<IAType> projectTypeList = new ArrayList<>(projectPathList.size());
+                for (List<String> projectPath : projectPathList) {
+                    IAType projectTypePrime;
+                    boolean projectTypeNullable, projectTypeMissable;
+                    if (projectPath == null) {
+                        projectTypePrime = inputTypePrime;
+                        projectTypeNullable = inputTypeNullable;
+                        projectTypeMissable = inputTypeMissable;
+                    } else if (inputTypePrime == null ||
+                    // handle special case of the empty field name in
+                    // ExternalIndexingOperations.FILE_INDEX_FIELD_NAMES
+                            (projectPath.size() == 1 && projectPath.get(0).isEmpty())) {
+                        projectTypePrime = null; // ANY
+                        projectTypeNullable = projectTypeMissable = true;
+                    } else {
+                        if (inputTypePrime.getTypeTag() != ATypeTag.OBJECT) {
+                            throw new AsterixException(ErrorCode.METADATA_ERROR, projectPath.toString());
+                        }
+                        Triple<IAType, Boolean, Boolean> projectTypeResult =
+                                KeyFieldTypeUtil.getKeyProjectType((ARecordType) inputTypePrime, projectPath, null);
+                        if (projectTypeResult == null) {
+                            throw new AsterixException(ErrorCode.METADATA_ERROR, projectPath.toString());
+                        }
+                        projectTypePrime = projectTypeResult.first;
+                        projectTypeNullable = inputTypeNullable || projectTypeResult.second;
+                        projectTypeMissable = inputTypeMissable || projectTypeResult.third;
+                    }
+                    IAType projectType = projectTypePrime == null ? null
+                            : KeyFieldTypeUtil.makeUnknownableType(projectTypePrime, projectTypeNullable,
+                                    projectTypeMissable);
+
+                    projectTypeList.add(projectType);
+                }
+
+                searchKeyType.add(projectTypeList);
+            }
+            isOverridingKeyTypes = false;
+        } else {
+            isOverridingKeyTypes = true;
         }
 
-        return new Index(dataverseName, datasetName, indexName, indexStructure, searchKey, keyFieldSourceIndicator,
-                searchKeyType, gramLength, fullTextConfig, isOverridingKeyTypes, isEnforcingKeys, isPrimaryIndex,
-                pendingOp);
+        // create index details structure
+        Index.IIndexDetails indexDetails;
+        switch (Index.IndexCategory.of(indexType)) {
+            case VALUE:
+                List<List<String>> keyFieldNames =
+                        searchElements.stream().map(Pair::getSecond).map(l -> l.get(0)).collect(Collectors.toList());
+                List<IAType> keyFieldTypes = searchKeyType.stream().map(l -> l.get(0)).collect(Collectors.toList());
+                indexDetails = new Index.ValueIndexDetails(keyFieldNames, keyFieldSourceIndicator, keyFieldTypes,
+                        isOverridingKeyTypes);
+                break;
+            case TEXT:
+                keyFieldNames =
+                        searchElements.stream().map(Pair::getSecond).map(l -> l.get(0)).collect(Collectors.toList());
+                keyFieldTypes = searchKeyType.stream().map(l -> l.get(0)).collect(Collectors.toList());
+                // Check if there is a gram length as well.
+                int gramLength = -1;
+                int gramLenPos = indexRecord.getType().getFieldIndex(GRAM_LENGTH_FIELD_NAME);
+                if (gramLenPos >= 0) {
+                    gramLength = ((AInt32) indexRecord.getValueByPos(gramLenPos)).getIntegerValue();
+                }
+                indexDetails = new Index.TextIndexDetails(keyFieldNames, keyFieldSourceIndicator, keyFieldTypes,
+                        isOverridingKeyTypes, gramLength, fullTextConfig);
+                break;
+            case ARRAY:
+                List<Index.ArrayIndexElement> elementList = new ArrayList<>(searchElementCount);
+                for (int i = 0; i < searchElementCount; i++) {
+                    Pair<List<List<String>>, List<List<String>>> searchElement = searchElements.get(i);
+                    List<IAType> typeList = searchKeyType.get(i);
+                    int sourceIndicator = keyFieldSourceIndicator.get(i);
+                    elementList.add(new Index.ArrayIndexElement(searchElement.first, searchElement.second, typeList,
+                            sourceIndicator));
+                }
+                indexDetails = new Index.ArrayIndexDetails(elementList, isOverridingKeyTypes);
+                break;
+            default:
+                throw new AsterixException(ErrorCode.METADATA_ERROR, indexType.toString());
+        }
+
+        int isEnforcedFieldPos = indexRecord.getType().getFieldIndex(INDEX_ISENFORCED_FIELD_NAME);
+        Boolean isEnforcingKeys = false;
+        if (isEnforcedFieldPos > 0) {
+            isEnforcingKeys = ((ABoolean) indexRecord.getValueByPos(isEnforcedFieldPos)).getBoolean();
+        }
+        Boolean isPrimaryIndex =
+                ((ABoolean) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_ISPRIMARY_FIELD_INDEX))
+                        .getBoolean();
+        int pendingOp = ((AInt32) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX))
+                .getIntegerValue();
+
+        return new Index(dataverseName, datasetName, indexName, indexType, indexDetails, isEnforcingKeys,
+                isPrimaryIndex, pendingOp);
     }
 
     @Override
-    public ITupleReference getTupleFromMetadataEntity(Index index) throws HyracksDataException {
+    public ITupleReference getTupleFromMetadataEntity(Index index) throws HyracksDataException, AlgebricksException {
         String dataverseCanonicalName = index.getDataverseName().getCanonicalForm();
 
         // write the key in the first 3 fields of the tuple
@@ -241,15 +463,30 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_INDEXNAME_FIELD_INDEX, fieldValue);
 
         // write field 3
+        IndexType indexType = index.getIndexType();
         fieldValue.reset();
-        aString.setValue(index.getIndexType().toString());
+        aString.setValue(indexType.toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX, fieldValue);
 
         // write field 4
         primaryKeyListBuilder.reset((AOrderedListType) MetadataRecordTypes.INDEX_RECORDTYPE
                 .getFieldTypes()[MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX]);
-        List<List<String>> searchKey = index.getKeyFieldNames();
+        List<List<String>> searchKey;
+        switch (Index.IndexCategory.of(indexType)) {
+            case VALUE:
+                searchKey = ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldNames();
+                break;
+            case TEXT:
+                searchKey = ((Index.TextIndexDetails) index.getIndexDetails()).getKeyFieldNames();
+                break;
+            case ARRAY:
+                // If we have a complex index, we persist all of the names in the complex SK name array instead.
+                searchKey = Collections.emptyList();
+                break;
+            default:
+                throw new AsterixException(ErrorCode.METADATA_ERROR, indexType.toString());
+        }
         for (List<String> field : searchKey) {
             listBuilder.reset(stringList);
             for (String subField : field) {
@@ -300,15 +537,86 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     /**
      * Keep protected to allow other extensions to add additional fields
      */
-    protected void writeOpenFields(Index index) throws HyracksDataException {
-        writeGramLength(index);
-        writeFullTextConfig(index);
+    protected void writeOpenFields(Index index) throws HyracksDataException, AlgebricksException {
+        switch (Index.IndexCategory.of(index.getIndexType())) {
+            case TEXT:
+                Index.TextIndexDetails textIndexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+                writeGramLength(textIndexDetails);
+                writeFullTextConfig(textIndexDetails);
+                break;
+            case ARRAY:
+                writeComplexSearchKeys((Index.ArrayIndexDetails) index.getIndexDetails());
+                break;
+        }
         writeSearchKeyType(index);
         writeEnforced(index);
         writeSearchKeySourceIndicator(index);
     }
 
-    private void writeGramLength(Index index) throws HyracksDataException {
+    private void writeComplexSearchKeys(Index.ArrayIndexDetails indexDetails) throws HyracksDataException {
+        complexSearchKeyNameListBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+        for (Index.ArrayIndexElement element : indexDetails.getElementList()) {
+            if (element.getUnnestList().isEmpty()) {
+                // If this is not a complex search key, write the field names as before.
+                buildSearchKeyNameList(element.getProjectList());
+                itemValue.reset();
+                listBuilder.write(itemValue.getDataOutput(), true);
+            } else {
+                // Otherwise, we create a complex searchkey name record.
+                complexSearchKeyNameRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
+
+                nameValue.reset();
+                aString.setValue(COMPLEXSEARCHKEY_UNNEST_FIELD_NAME);
+                stringSerde.serialize(aString, nameValue.getDataOutput());
+                buildSearchKeyNameList(element.getUnnestList());
+                itemValue.reset();
+                listBuilder.write(itemValue.getDataOutput(), true);
+                complexSearchKeyNameRecordBuilder.addField(nameValue, itemValue);
+
+                nameValue.reset();
+                aString.setValue(COMPLEXSEARCHKEY_PROJECT_FIELD_NAME);
+                stringSerde.serialize(aString, nameValue.getDataOutput());
+                buildSearchKeyNameList(element.getProjectList());
+                itemValue.reset();
+                listBuilder.write(itemValue.getDataOutput(), true);
+                complexSearchKeyNameRecordBuilder.addField(nameValue, itemValue);
+
+                itemValue.reset();
+                complexSearchKeyNameRecordBuilder.write(itemValue.getDataOutput(), true);
+            }
+            complexSearchKeyNameListBuilder.addItem(itemValue);
+        }
+
+        nameValue.reset();
+        fieldValue.reset();
+        aString.setValue(INDEX_SEARCHKEY_ELEMENTS_FIELD_NAME);
+        stringSerde.serialize(aString, nameValue.getDataOutput());
+        complexSearchKeyNameListBuilder.write(fieldValue.getDataOutput(), true);
+        recordBuilder.addField(nameValue, fieldValue);
+    }
+
+    private void buildSearchKeyNameList(List<List<String>> fieldList) throws HyracksDataException {
+        listBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+        for (List<String> nestedField : fieldList) {
+            if (nestedField == null) {
+                itemValue.reset();
+                nullSerde.serialize(ANull.NULL, itemValue.getDataOutput());
+            } else {
+                innerListBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+                for (String subField : nestedField) {
+                    itemValue.reset();
+                    aString.setValue(subField);
+                    stringSerde.serialize(aString, itemValue.getDataOutput());
+                    innerListBuilder.addItem(itemValue);
+                }
+                itemValue.reset();
+                innerListBuilder.write(itemValue.getDataOutput(), true);
+            }
+            listBuilder.addItem(itemValue);
+        }
+    }
+
+    private void writeGramLength(Index.TextIndexDetails index) throws HyracksDataException {
         if (index.getGramLength() > 0) {
             fieldValue.reset();
             nameValue.reset();
@@ -319,7 +627,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
     }
 
-    private void writeFullTextConfig(Index index) throws HyracksDataException {
+    private void writeFullTextConfig(Index.TextIndexDetails index) throws HyracksDataException {
         if (!Strings.isNullOrEmpty(index.getFullTextConfigName())) {
             nameValue.reset();
             aString.setValue(FULL_TEXT_CONFIG_FIELD_NAME);
@@ -333,26 +641,59 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
     }
 
-    private void writeSearchKeyType(Index index) throws HyracksDataException {
-        if (index.isOverridingKeyFieldTypes()) {
-            OrderedListBuilder typeListBuilder = new OrderedListBuilder();
-            typeListBuilder.reset(new AOrderedListType(BuiltinType.ANY, null));
-            nameValue.reset();
-            aString.setValue(INDEX_SEARCHKEY_TYPE_FIELD_NAME);
-
-            stringSerde.serialize(aString, nameValue.getDataOutput());
-
-            List<IAType> searchKeyType = index.getKeyFieldTypes();
-            for (IAType type : searchKeyType) {
-                itemValue.reset();
-                aString.setValue(type.getTypeName());
-                stringSerde.serialize(aString, itemValue.getDataOutput());
-                typeListBuilder.addItem(itemValue);
-            }
-            fieldValue.reset();
-            typeListBuilder.write(fieldValue.getDataOutput(), true);
-            recordBuilder.addField(nameValue, fieldValue);
+    private void writeSearchKeyType(Index index) throws HyracksDataException, AlgebricksException {
+        if (!index.getIndexDetails().isOverridingKeyFieldTypes()) {
+            return;
         }
+
+        OrderedListBuilder typeListBuilder = new OrderedListBuilder();
+        typeListBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+
+        nameValue.reset();
+        aString.setValue(INDEX_SEARCHKEY_TYPE_FIELD_NAME);
+
+        stringSerde.serialize(aString, nameValue.getDataOutput());
+
+        switch (Index.IndexCategory.of(index.getIndexType())) {
+            // For value and text indexes, we persist the type as a single string (backwards compatibility).
+            case VALUE:
+                for (IAType type : ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldTypes()) {
+                    itemValue.reset();
+                    aString.setValue(type.getTypeName());
+                    stringSerde.serialize(aString, itemValue.getDataOutput());
+                    typeListBuilder.addItem(itemValue);
+                }
+                break;
+            case TEXT:
+                for (IAType type : ((Index.TextIndexDetails) index.getIndexDetails()).getKeyFieldTypes()) {
+                    itemValue.reset();
+                    aString.setValue(type.getTypeName());
+                    stringSerde.serialize(aString, itemValue.getDataOutput());
+                    typeListBuilder.addItem(itemValue);
+                }
+                break;
+            case ARRAY:
+                // For array indexes we persist the type as a list of strings.
+                for (Index.ArrayIndexElement element : ((Index.ArrayIndexDetails) index.getIndexDetails())
+                        .getElementList()) {
+                    listBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+                    for (IAType type : element.getTypeList()) {
+                        itemValue.reset();
+                        aString.setValue(type.getTypeName());
+                        stringSerde.serialize(aString, itemValue.getDataOutput());
+                        listBuilder.addItem(itemValue);
+                    }
+                    itemValue.reset();
+                    listBuilder.write(itemValue.getDataOutput(), true);
+                    typeListBuilder.addItem(itemValue);
+                }
+                break;
+            default:
+                throw new AsterixException(ErrorCode.METADATA_ERROR, index.getIndexType().toString());
+        }
+        fieldValue.reset();
+        typeListBuilder.write(fieldValue.getDataOutput(), true);
+        recordBuilder.addField(nameValue, fieldValue);
     }
 
     private void writeEnforced(Index index) throws HyracksDataException {
@@ -366,8 +707,22 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
     }
 
-    private void writeSearchKeySourceIndicator(Index index) throws HyracksDataException {
-        List<Integer> keySourceIndicator = index.getKeyFieldSourceIndicators();
+    private void writeSearchKeySourceIndicator(Index index) throws HyracksDataException, AlgebricksException {
+        List<Integer> keySourceIndicator;
+        switch (Index.IndexCategory.of(index.getIndexType())) {
+            case VALUE:
+                keySourceIndicator = ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldSourceIndicators();
+                break;
+            case TEXT:
+                keySourceIndicator = ((Index.TextIndexDetails) index.getIndexDetails()).getKeyFieldSourceIndicators();
+                break;
+            case ARRAY:
+                keySourceIndicator = ((Index.ArrayIndexDetails) index.getIndexDetails()).getElementList().stream()
+                        .map(Index.ArrayIndexElement::getSourceIndicator).collect(Collectors.toList());
+                break;
+            default:
+                throw new AsterixException(ErrorCode.METADATA_ERROR, index.getIndexType().toString());
+        }
         boolean needSerialization = false;
         if (keySourceIndicator != null) {
             for (int source : keySourceIndicator) {

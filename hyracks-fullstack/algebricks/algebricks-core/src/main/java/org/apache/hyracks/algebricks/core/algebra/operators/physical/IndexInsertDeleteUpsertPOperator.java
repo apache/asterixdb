@@ -43,8 +43,11 @@ import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalProperties
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
+import org.apache.hyracks.algebricks.core.jobgen.impl.PlanCompiler;
+import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
@@ -113,8 +116,27 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
         IndexInsertDeleteUpsertOperator insertDeleteUpsertOp = (IndexInsertDeleteUpsertOperator) op;
-        IMetadataProvider mp = context.getMetadataProvider();
 
+        // Compile our nested plans if any exist.
+        int numberOfNestedPlans = insertDeleteUpsertOp.getNestedPlans().size();
+        List<List<AlgebricksPipeline>> secondaryKeyPipelines = null;
+        IOperatorSchema pipelineTopSchema = null;
+        if ((numberOfNestedPlans > 1 && !insertDeleteUpsertOp.getOperation().equals(Kind.UPSERT))
+                || numberOfNestedPlans > 2) {
+            throw AlgebricksException.create(ErrorCode.ILLEGAL_STATE, op.getSourceLocation(),
+                    "Using multiple nested plans to extract secondary keys is not supported.");
+        }
+        if (numberOfNestedPlans > 0) {
+            secondaryKeyPipelines =
+                    compileSubplansImpl(inputSchemas[0], insertDeleteUpsertOp, propagatedSchema, context, false);
+
+            // Get the schema of our nested plan root.
+            ILogicalOperator topOpInSubplan = insertDeleteUpsertOp.getNestedPlans().get(0).getRoots().get(0).getValue();
+            PlanCompiler pc = new PlanCompiler(context);
+            pipelineTopSchema = pc.getContext().getSchema(topOpInSubplan);
+        }
+
+        IMetadataProvider mp = context.getMetadataProvider();
         JobSpecification spec = builder.getJobSpec();
         RecordDescriptor inputDesc = JobGenHelper.mkRecordDescriptor(
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
@@ -124,19 +146,19 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
         Kind operation = insertDeleteUpsertOp.getOperation();
         switch (operation) {
             case INSERT:
-                runtimeAndConstraints =
-                        mp.getIndexInsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv, primaryKeys,
-                                secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context, spec, false);
+                runtimeAndConstraints = mp.getIndexInsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas,
+                        typeEnv, primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context,
+                        spec, false, secondaryKeyPipelines, pipelineTopSchema);
                 break;
             case DELETE:
-                runtimeAndConstraints =
-                        mp.getIndexDeleteRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv, primaryKeys,
-                                secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context, spec);
+                runtimeAndConstraints = mp.getIndexDeleteRuntime(dataSourceIndex, propagatedSchema, inputSchemas,
+                        typeEnv, primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context,
+                        spec, secondaryKeyPipelines, pipelineTopSchema);
                 break;
             case UPSERT:
                 runtimeAndConstraints = mp.getIndexUpsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas,
                         typeEnv, primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, upsertIndicatorVar,
-                        prevSecondaryKeys, prevAdditionalFilteringKey, inputDesc, context, spec);
+                        prevSecondaryKeys, prevAdditionalFilteringKey, inputDesc, context, spec, secondaryKeyPipelines);
                 break;
             default:
                 throw new AlgebricksException("Unsupported Operation " + operation);

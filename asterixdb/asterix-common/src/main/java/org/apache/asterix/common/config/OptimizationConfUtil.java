@@ -72,6 +72,8 @@ public class OptimizationConfUtil {
                 CompilerProperties.COMPILER_SUBPLAN_NESTEDPUSHDOWN_KEY, compilerProperties.getSubplanNestedPushdown());
         boolean minMemoryAllocation = getBoolean(querySpecificConfig,
                 CompilerProperties.COMPILER_MIN_MEMORY_ALLOCATION_KEY, compilerProperties.getMinMemoryAllocation());
+        boolean arrayIndex = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_ARRAYINDEX_KEY,
+                compilerProperties.isArrayIndex());
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -88,6 +90,7 @@ public class OptimizationConfUtil {
         physOptConf.setSubplanMerge(subplanMerge);
         physOptConf.setSubplanNestedPushdown(subplanNestedPushdown);
         physOptConf.setMinMemoryAllocation(minMemoryAllocation);
+        physOptConf.setArrayIndexEnabled(arrayIndex);
         return physOptConf;
     }
 

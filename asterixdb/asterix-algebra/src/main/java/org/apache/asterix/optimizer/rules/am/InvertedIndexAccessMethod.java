@@ -455,7 +455,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         ILogicalOperator primaryIndexUnnestOp = AccessMethodUtils.createRestOfIndexSearchPlan(afterTopOpRefs, topOpRef,
                 conditionRef, assignBeforeTopOpRefs, dataSourceScan, dataset, recordType, metaRecordType,
                 secondaryIndexUnnestOp, context, true, retainInput, retainNull, false, chosenIndex, analysisCtx,
-                indexSubTree, newNullPlaceHolderForLOJ);
+                indexSubTree, null, newNullPlaceHolderForLOJ);
 
         return primaryIndexUnnestOp;
     }
@@ -801,8 +801,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 isFilterableArgs.add(new MutableObject<ILogicalExpression>(inputSearchVarRef));
                 // Since we are optimizing a join, the similarity threshold should be the only constant in the optimizable function expression.
                 isFilterableArgs.add(new MutableObject<ILogicalExpression>(optFuncExpr.getConstantExpr(0)));
-                isFilterableArgs.add(new MutableObject<ILogicalExpression>(
-                        AccessMethodUtils.createInt32Constant(chosenIndex.getGramLength())));
+                isFilterableArgs.add(new MutableObject<ILogicalExpression>(AccessMethodUtils.createInt32Constant(
+                        ((Index.TextIndexDetails) chosenIndex.getIndexDetails()).getGramLength())));
                 boolean usePrePost = optFuncExpr.containsPartialField() ? false : true;
                 isFilterableArgs.add(
                         new MutableObject<ILogicalExpression>(AccessMethodUtils.createBooleanConstant(usePrePost)));
@@ -977,7 +977,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     private boolean isEditDistanceFuncJoinOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
         if (index.isEnforced()) {
-            return isEditDistanceFuncCompatible(index.getKeyFieldTypes().get(0).getTypeTag(), index.getIndexType());
+            return isEditDistanceFuncCompatible(
+                    ((Index.TextIndexDetails) index.getIndexDetails()).getKeyFieldTypes().get(0).getTypeTag(),
+                    index.getIndexType());
         } else {
             return isEditDistanceFuncCompatible(optFuncExpr.getFieldType(0).getTypeTag(), index.getIndexType());
         }
@@ -1026,13 +1028,14 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
         if (typeTag == ATypeTag.STRING) {
             AString astr = (AString) listOrStrObj;
+            int gramLength = ((Index.TextIndexDetails) index.getIndexDetails()).getGramLength();
             // Compute merge threshold depending on the query grams contain pre- and postfixing
             if (optFuncExpr.containsPartialField()) {
-                mergeThreshold = (astr.getStringValue().length() - index.getGramLength() + 1)
-                        - edThresh.getIntegerValue() * index.getGramLength();
+                mergeThreshold =
+                        (astr.getStringValue().length() - gramLength + 1) - edThresh.getIntegerValue() * gramLength;
             } else {
-                mergeThreshold = (astr.getStringValue().length() + index.getGramLength() - 1)
-                        - edThresh.getIntegerValue() * index.getGramLength();
+                mergeThreshold =
+                        (astr.getStringValue().length() + gramLength - 1) - edThresh.getIntegerValue() * gramLength;
             }
         }
 
@@ -1120,7 +1123,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     private boolean isFullTextContainsFuncJoinOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
         if (index.isEnforced()) {
-            return isFullTextContainsFuncCompatible(index.getKeyFieldTypes().get(0).getTypeTag(), index.getIndexType());
+            return isFullTextContainsFuncCompatible(
+                    ((Index.TextIndexDetails) index.getIndexDetails()).getKeyFieldTypes().get(0).getTypeTag(),
+                    index.getIndexType());
         } else {
             return isFullTextContainsFuncCompatible(optFuncExpr.getFieldType(0).getTypeTag(), index.getIndexType());
         }
@@ -1212,7 +1217,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Check that the constant search string has at least gramLength characters.
         if (strObj.getType().getTypeTag() == ATypeTag.STRING) {
             AString astr = (AString) strObj;
-            if (astr.getStringValue().length() >= index.getGramLength()) {
+            if (astr.getStringValue().length() >= ((Index.TextIndexDetails) index.getIndexDetails()).getGramLength()) {
                 return true;
             }
         }
@@ -1221,7 +1226,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
 
     private boolean isContainsFuncJoinOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
         if (index.isEnforced()) {
-            return isContainsFuncCompatible(index.getKeyFieldTypes().get(0).getTypeTag(), index.getIndexType());
+            return isContainsFuncCompatible(
+                    ((Index.TextIndexDetails) index.getIndexDetails()).getKeyFieldTypes().get(0).getTypeTag(),
+                    index.getIndexType());
         } else {
             return isContainsFuncCompatible(optFuncExpr.getFieldType(0).getTypeTag(), index.getIndexType());
         }
@@ -1249,7 +1256,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 boolean prePost = (searchModifierType == SearchModifierType.CONJUNCTIVE
                         || searchModifierType == SearchModifierType.CONJUNCTIVE_EDIT_DISTANCE) ? false : true;
                 return BinaryTokenizerFactoryProvider.INSTANCE.getNGramTokenizerFactory(searchKeyType,
-                        index.getGramLength(), prePost, false);
+                        ((Index.TextIndexDetails) index.getIndexDetails()).getGramLength(), prePost, false);
             }
             default: {
                 throw new CompilationException(ErrorCode.NO_TOKENIZER_FOR_TYPE, index.getIndexType());
@@ -1280,11 +1287,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 switch (index.getIndexType()) {
                     case SINGLE_PARTITION_NGRAM_INVIX:
                     case LENGTH_PARTITIONED_NGRAM_INVIX: {
+                        int gramLength = ((Index.TextIndexDetails) index.getIndexDetails()).getGramLength();
                         // Edit distance on strings, filtered with overlapping grams.
                         if (searchModifierType == SearchModifierType.EDIT_DISTANCE) {
-                            return new EditDistanceSearchModifierFactory(index.getGramLength(), edThresh);
+                            return new EditDistanceSearchModifierFactory(gramLength, edThresh);
                         } else {
-                            return new ConjunctiveEditDistanceSearchModifierFactory(index.getGramLength(), edThresh);
+                            return new ConjunctiveEditDistanceSearchModifierFactory(gramLength, edThresh);
                         }
                     }
                     case SINGLE_PARTITION_WORD_INVIX:
@@ -1317,6 +1325,19 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public Collection<String> getSecondaryIndexPreferences(IOptimizableFuncExpr optFuncExpr) {
         return AccessMethodUtils.getSecondaryIndexPreferences(optFuncExpr,
                 SecondaryIndexSearchPreferenceAnnotation.class);
+    }
+
+    @Override
+    public boolean matchIndexType(IndexType indexType) {
+        switch (indexType) {
+            case SINGLE_PARTITION_WORD_INVIX:
+            case SINGLE_PARTITION_NGRAM_INVIX:
+            case LENGTH_PARTITIONED_NGRAM_INVIX:
+            case LENGTH_PARTITIONED_WORD_INVIX:
+                return true;
+            default:
+                return false;
+        }
     }
 
     @Override

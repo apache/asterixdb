@@ -201,7 +201,8 @@ public class TestNodeController {
                     storageComponentProvider.getStorageManager(), secondaryIndexInfo.fileSplitProvider);
             IIndexDataflowHelperFactory primaryIndexHelperFactory = new IndexDataflowHelperFactory(
                     storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
-            int[] fieldPermutation = new int[secondaryIndex.getKeyFieldNames().size()];
+            Index.ValueIndexDetails secondaryIndexDetails = (Index.ValueIndexDetails) secondaryIndex.getIndexDetails();
+            int[] fieldPermutation = new int[secondaryIndexDetails.getKeyFieldNames().size()];
             for (int i = 0; i < fieldPermutation.length; i++) {
                 fieldPermutation[i] = i;
             }
@@ -257,8 +258,10 @@ public class TestNodeController {
             // for the index, we will have to create an assign operator that extract the sk
             // then the secondary LSMInsertDeleteOperatorNodePushable
             if (secondaryIndex != null) {
-                List<List<String>> skNames = secondaryIndex.getKeyFieldNames();
-                List<Integer> indicators = secondaryIndex.getKeyFieldSourceIndicators();
+                Index.ValueIndexDetails secondaryIndexDetails =
+                        (Index.ValueIndexDetails) secondaryIndex.getIndexDetails();
+                List<List<String>> skNames = secondaryIndexDetails.getKeyFieldNames();
+                List<Integer> indicators = secondaryIndexDetails.getKeyFieldSourceIndicators();
                 IScalarEvaluatorFactory[] secondaryFieldAccessEvalFactories =
                         new IScalarEvaluatorFactory[skNames.size()];
                 for (int i = 0; i < skNames.size(); i++) {
@@ -266,14 +269,15 @@ public class TestNodeController {
                             ? indicators.get(i).intValue() == Index.RECORD_INDICATOR ? recordType : metaType
                             : recordType;
                     int pos = skNames.get(i).size() > 1 ? -1 : sourceType.getFieldIndex(skNames.get(i).get(0));
-                    secondaryFieldAccessEvalFactories[i] =
-                            mdProvider.getDataFormat().getFieldAccessEvaluatorFactory(mdProvider.getFunctionManager(),
-                                    sourceType, secondaryIndex.getKeyFieldNames().get(i), pos, null);
+                    secondaryFieldAccessEvalFactories[i] = mdProvider.getDataFormat().getFieldAccessEvaluatorFactory(
+                            mdProvider.getFunctionManager(), sourceType, skNames.get(i), pos, null);
                 }
                 // outColumns are computed inside the assign runtime
                 int[] outColumns = new int[skNames.size()];
                 // projection list include old and new (primary and secondary keys)
-                int[] projectionList = new int[skNames.size() + primaryIndexInfo.index.getKeyFieldNames().size()];
+                Index.ValueIndexDetails primaryIndexDetails =
+                        (Index.ValueIndexDetails) primaryIndexInfo.index.getIndexDetails();
+                int[] projectionList = new int[skNames.size() + primaryIndexDetails.getKeyFieldNames().size()];
                 for (int i = 0; i < secondaryFieldAccessEvalFactories.length; i++) {
                     outColumns[i] = primaryIndexInfo.rDesc.getFieldCount() + i;
                 }
@@ -281,7 +285,7 @@ public class TestNodeController {
                 for (int i = 0; i < secondaryFieldAccessEvalFactories.length; i++) {
                     projectionList[projCount++] = primaryIndexInfo.rDesc.getFieldCount() + i;
                 }
-                for (int i = 0; i < primaryIndexInfo.index.getKeyFieldNames().size(); i++) {
+                for (int i = 0; i < primaryIndexDetails.getKeyFieldNames().size(); i++) {
                     projectionList[projCount++] = i;
                 }
                 IPushRuntime assignOp =
@@ -354,8 +358,10 @@ public class TestNodeController {
             // for the index, we will have to create an assign operator that extract the sk
             // then the secondary LSMInsertDeleteOperatorNodePushable
             if (secondaryIndex != null) {
-                List<List<String>> skNames = secondaryIndex.getKeyFieldNames();
-                List<Integer> indicators = secondaryIndex.getKeyFieldSourceIndicators();
+                Index.ValueIndexDetails secondaryIndexDetails =
+                        (Index.ValueIndexDetails) secondaryIndex.getIndexDetails();
+                List<List<String>> skNames = secondaryIndexDetails.getKeyFieldNames();
+                List<Integer> indicators = secondaryIndexDetails.getKeyFieldSourceIndicators();
                 IScalarEvaluatorFactory[] secondaryFieldAccessEvalFactories =
                         new IScalarEvaluatorFactory[skNames.size()];
                 for (int i = 0; i < skNames.size(); i++) {
@@ -363,14 +369,15 @@ public class TestNodeController {
                             ? indicators.get(i).intValue() == Index.RECORD_INDICATOR ? recordType : metaType
                             : recordType;
                     int pos = skNames.get(i).size() > 1 ? -1 : sourceType.getFieldIndex(skNames.get(i).get(0));
-                    secondaryFieldAccessEvalFactories[i] =
-                            mdProvider.getDataFormat().getFieldAccessEvaluatorFactory(mdProvider.getFunctionManager(),
-                                    sourceType, secondaryIndex.getKeyFieldNames().get(i), pos, null);
+                    secondaryFieldAccessEvalFactories[i] = mdProvider.getDataFormat().getFieldAccessEvaluatorFactory(
+                            mdProvider.getFunctionManager(), sourceType, skNames.get(i), pos, null);
                 }
                 // outColumns are computed inside the assign runtime
                 int[] outColumns = new int[skNames.size()];
                 // projection list include old and new (primary and secondary keys)
-                int[] projectionList = new int[skNames.size() + primaryIndexInfo.index.getKeyFieldNames().size()];
+                Index.ValueIndexDetails primaryIndexDetails =
+                        (Index.ValueIndexDetails) primaryIndexInfo.index.getIndexDetails();
+                int[] projectionList = new int[skNames.size() + primaryIndexDetails.getKeyFieldNames().size()];
                 for (int i = 0; i < secondaryFieldAccessEvalFactories.length; i++) {
                     outColumns[i] = primaryIndexInfo.rDesc.getFieldCount() + i;
                 }
@@ -378,7 +385,7 @@ public class TestNodeController {
                 for (int i = 0; i < secondaryFieldAccessEvalFactories.length; i++) {
                     projectionList[projCount++] = primaryIndexInfo.rDesc.getFieldCount() + i;
                 }
-                for (int i = 0; i < primaryIndexInfo.index.getKeyFieldNames().size(); i++) {
+                for (int i = 0; i < primaryIndexDetails.getKeyFieldNames().size(); i++) {
                     projectionList[projCount++] = i;
                 }
                 IPushRuntime assignOp =
@@ -632,6 +639,7 @@ public class TestNodeController {
         public SecondaryIndexInfo(PrimaryIndexInfo primaryIndexInfo, Index secondaryIndex) {
             this.primaryIndexInfo = primaryIndexInfo;
             this.secondaryIndex = secondaryIndex;
+            Index.ValueIndexDetails secondaryIndexDetails = (Index.ValueIndexDetails) secondaryIndex.getIndexDetails();
             List<String> nodes = Collections.singletonList(ExecutionTestUtil.integrationUtil.ncs[0].getId());
             CcApplicationContext appCtx =
                     (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
@@ -639,11 +647,11 @@ public class TestNodeController {
                     primaryIndexInfo.dataset, secondaryIndex.getIndexName(), nodes);
             fileSplitProvider = new ConstantFileSplitProvider(splits);
             secondaryIndexTypeTraits = createSecondaryIndexTypeTraits(primaryIndexInfo.recordType,
-                    primaryIndexInfo.metaType, primaryIndexInfo.primaryKeyTypes,
-                    secondaryIndex.getKeyFieldTypes().toArray(new IAType[secondaryIndex.getKeyFieldTypes().size()]));
+                    primaryIndexInfo.metaType, primaryIndexInfo.primaryKeyTypes, secondaryIndexDetails
+                            .getKeyFieldTypes().toArray(new IAType[secondaryIndexDetails.getKeyFieldTypes().size()]));
             secondaryIndexSerdes = createSecondaryIndexSerdes(primaryIndexInfo.recordType, primaryIndexInfo.metaType,
-                    primaryIndexInfo.primaryKeyTypes,
-                    secondaryIndex.getKeyFieldTypes().toArray(new IAType[secondaryIndex.getKeyFieldTypes().size()]));
+                    primaryIndexInfo.primaryKeyTypes, secondaryIndexDetails.getKeyFieldTypes()
+                            .toArray(new IAType[secondaryIndexDetails.getKeyFieldTypes().size()]));
             rDesc = new RecordDescriptor(secondaryIndexSerdes, secondaryIndexTypeTraits);
             insertFieldsPermutations = new int[secondaryIndexTypeTraits.length];
             for (int i = 0; i < insertFieldsPermutations.length; i++) {
@@ -651,7 +659,7 @@ public class TestNodeController {
             }
             primaryKeyIndexes = new int[primaryIndexInfo.primaryKeyIndexes.length];
             for (int i = 0; i < primaryKeyIndexes.length; i++) {
-                primaryKeyIndexes[i] = i + secondaryIndex.getKeyFieldNames().size();
+                primaryKeyIndexes[i] = i + secondaryIndexDetails.getKeyFieldNames().size();
             }
         }
 
@@ -711,7 +719,8 @@ public class TestNodeController {
                 keyFieldNames.add(Arrays.asList(fieldNames[primaryKeyIndexes[i]]));
             }
             index = new Index(dataset.getDataverseName(), dataset.getDatasetName(), dataset.getDatasetName(),
-                    IndexType.BTREE, keyFieldNames, primaryKeyIndicators, keyFieldTypes, false, false, true,
+                    IndexType.BTREE,
+                    new Index.ValueIndexDetails(keyFieldNames, primaryKeyIndicators, keyFieldTypes, false), false, true,
                     MetadataUtil.PENDING_NO_OP);
             List<String> nodes = Collections.singletonList(ExecutionTestUtil.integrationUtil.ncs[0].getId());
             CcApplicationContext appCtx =

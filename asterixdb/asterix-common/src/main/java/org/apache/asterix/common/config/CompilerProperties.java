@@ -95,7 +95,11 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_MIN_MEMORY_ALLOCATION(
                 BOOLEAN,
                 AlgebricksConfig.MIN_MEMORY_ALLOCATION_DEFAULT,
-                "Enable/disable allocating minimum budget for certain queries");
+                "Enable/disable allocating minimum budget for certain queries"),
+        COMPILER_ARRAYINDEX(
+                BOOLEAN,
+                AlgebricksConfig.ARRAY_INDEX_DEFAULT,
+                "Enable/disable using array-indexes in queries");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -155,6 +159,8 @@ public class CompilerProperties extends AbstractProperties {
     public static final String COMPILER_SUBPLAN_NESTEDPUSHDOWN_KEY = Option.COMPILER_SUBPLAN_NESTEDPUSHDOWN.ini();
 
     public static final String COMPILER_MIN_MEMORY_ALLOCATION_KEY = Option.COMPILER_MIN_MEMORY_ALLOCATION.ini();
+
+    public static final String COMPILER_ARRAYINDEX_KEY = Option.COMPILER_ARRAYINDEX.ini();
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
@@ -220,5 +226,9 @@ public class CompilerProperties extends AbstractProperties {
 
     public boolean getMinMemoryAllocation() {
         return accessor.getBoolean(Option.COMPILER_MIN_MEMORY_ALLOCATION);
+    }
+
+    public boolean isArrayIndex() {
+        return accessor.getBoolean(Option.COMPILER_ARRAYINDEX);
     }
 }
