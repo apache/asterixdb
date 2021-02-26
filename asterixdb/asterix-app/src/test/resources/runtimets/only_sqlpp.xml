@@ -18,11 +18,6 @@
  ! under the License.
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
-  <test-group name="spatial">
-    <test-case FilePath="spatial">
-      <compilation-unit name="spatial_intersect">
-        <output-dir compare="Text">spatial_intersect</output-dir>
-      </compilation-unit>
-    </test-case>
+  <test-group name="failed">
   </test-group>
 </test-suite>
