@@ -60,7 +60,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * WHERE /*+ spatial-partitioning -180.0 -83.0 180.0 90.0 10 10 &#42;/
  * spatial_intersect(st_mbr(ps.geom),st_mbr(ls.geom)) and st_intersects(ps.geom,ls.geom);
  *
- * Note: st_mbr() computes the mbr of the Geometries and returns rectangles to pass it spatial_intersect()
+ * Note: st_mbr() computes the mbr of the input geometry and returns rectangles to pass it spatial_intersect()
  *
  */
 public class FilterRefineSpatialJoin implements IAlgebraicRewriteRule {
