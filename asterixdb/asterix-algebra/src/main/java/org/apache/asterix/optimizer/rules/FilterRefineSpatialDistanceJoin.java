@@ -114,6 +114,8 @@ public class FilterRefineSpatialDistanceJoin implements IAlgebraicRewriteRule {
             return false;
         }
 
+        IAlgebricksConstantValue distanceVar;
+
         // Left and right arguments of the st_distance function should be either variable or function call.
         List<Mutable<ILogicalExpression>> distanceFuncCallArgs = distanceFuncCallExpr.getArguments();
         Mutable<ILogicalExpression> distanceFuncCallLeftArg = distanceFuncCallArgs.get(LEFT);
@@ -123,11 +125,12 @@ public class FilterRefineSpatialDistanceJoin implements IAlgebraicRewriteRule {
             return false;
         }
 
+        distanceVar = distanceValExpr.getValue();
+
         // Enlarge the MBR of the left argument of the refine function (st_distance)
         ScalarFunctionCallExpression enlargedLeft = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR_OFFSET), distanceFuncCallLeftArg,
                 new MutableObject<>(new ConstantExpression(distanceVar)));
-        IAlgebricksConstantValue distanceVar = distanceValExpr.getValue();
         // Compute the MBR of the right argument of the refine function (st_distance)
         ScalarFunctionCallExpression rightMBR =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
