@@ -9343,6 +9343,11 @@
         <output-dir compare="Text">spatial-large-data</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="spatial_intersect">
+        <output-dir compare="Text">spatial_intersect</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="statement-params">
     <test-case FilePath="statement-params">
