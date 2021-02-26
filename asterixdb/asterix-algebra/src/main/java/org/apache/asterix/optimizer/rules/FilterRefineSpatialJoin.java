@@ -20,6 +20,7 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.List;
 
+import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -37,6 +38,33 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
+/**
+ * If the join condition is one of the below Geometry functions and the required annotation is provided,
+ * this rule applies the spatial join by adding the spatial-intersect function into the query.
+ *
+ * <ul>
+ *     <li>st_intersects</li>
+ *     <li>st_overlaps</li>
+ *     <li>st_touches</li>
+ *     <li>st_contains</li>
+ *     <li>st_crosses</li>
+ *     <li>st_within</li>
+ * </ul>
+ *
+ * For example:<br/>
+ *
+ * SELECT COUNT(*) FROM ParkSet AS ps, LakeSet AS ls
+ * WHERE /*+ spatial-partitioning -180.0 -83.0 180.0 90.0 10 10 &#42;/ st_intersects(ps.geom,ls.geom);
+ *
+ * Becomes,
+ *
+ * SELECT COUNT(*) FROM ParkSet AS ps, LakeSet AS ls
+ * WHERE /*+ spatial-partitioning -180.0 -83.0 180.0 90.0 10 10 &#42;/
+ * spatial_intersect(st_mbr(ps.geom),st_mbr(ls.geom)) and st_intersects(ps.geom,ls.geom);
+ *
+ * Note: st_mbr() computes the mbr of the Geometries and returns rectangles to pass it spatial_intersect()
+ *
+ */
 public class FilterRefineSpatialJoin implements IAlgebraicRewriteRule {
 
     private static final int LEFT = 0;
@@ -67,15 +95,12 @@ public class FilterRefineSpatialJoin implements IAlgebraicRewriteRule {
         }
 
         AbstractFunctionCallExpression stFuncExpr = (AbstractFunctionCallExpression) joinCondition;
-        if (!BuiltinFunctions.isSTFilterRefineFunction(stFuncExpr.getFunctionIdentifier())) {
+        if ((stFuncExpr.getAnnotation(SpatialJoinAnnotation.class) == null)
+                || !BuiltinFunctions.isSTFilterRefineFunction(stFuncExpr.getFunctionIdentifier())) {
             return false;
         }
 
         List<Mutable<ILogicalExpression>> inputExprs = stFuncExpr.getArguments();
-        if (inputExprs.size() != 2) {
-            return false;
-        }
-
         ILogicalExpression leftOperatingExpr = inputExprs.get(LEFT).getValue();
         ILogicalExpression rightOperatingExpr = inputExprs.get(RIGHT).getValue();
 
