@@ -44,6 +44,8 @@ import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractWindowExpressionsRule;
 import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
+import org.apache.asterix.optimizer.rules.FilterRefineSpatialDistanceJoin;
+import org.apache.asterix.optimizer.rules.FilterRefineSpatialJoin;
 import org.apache.asterix.optimizer.rules.FindDataSourcesRule;
 import org.apache.asterix.optimizer.rules.FixReplicateOperatorOutputsRule;
 import org.apache.asterix.optimizer.rules.FullTextContainsParameterCheckAndSetRule;
@@ -372,6 +374,8 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new ConsolidateAssignsRule());
         // After adding projects, we may need need to set physical operators again.
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
+        // Optimized spatial join's query plan produces more join conditions, so we need to pull out these conditions
+        physicalRewritesAllLevels.add(new PullSelectOutOfEqJoin());
         return physicalRewritesAllLevels;
     }
 
@@ -412,5 +416,17 @@ public final class RuleCollections {
         prepareForJobGenRewrites.add(new SweepIllegalNonfunctionalFunctions());
         prepareForJobGenRewrites.add(new FixReplicateOperatorOutputsRule());
         return prepareForJobGenRewrites;
+    }
+
+    public static final List<IAlgebraicRewriteRule> buildSTFilterRefineSpatialJoinCollection() {
+        List<IAlgebraicRewriteRule> filterRefineSpatialJoin = new LinkedList<>();
+        filterRefineSpatialJoin.add(new FilterRefineSpatialJoin());
+        return filterRefineSpatialJoin;
+    }
+
+    public static final List<IAlgebraicRewriteRule> buildSTFilterRefineSpatialDistanceJoinCollection() {
+        List<IAlgebraicRewriteRule> filterRefineSpatialDistanceJoin = new LinkedList<>();
+        filterRefineSpatialDistanceJoin.add(new FilterRefineSpatialDistanceJoin());
+        return filterRefineSpatialDistanceJoin;
     }
 }

@@ -1031,6 +1031,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "subset-collection", 3);
 
     public static final FunctionIdentifier RANGE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "range", 2);
+    public static final FunctionIdentifier SPATIAL_TILE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-tile", 4);
 
     // fuzzy functions
     public static final FunctionIdentifier FUZZY_EQ =
@@ -1233,6 +1235,8 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier CAST_TYPE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast", 1);
     public static final FunctionIdentifier CAST_TYPE_LAX =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast-lax", 1);
+    public static final FunctionIdentifier REFERENCE_TILE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "reference-tile", 5);
 
     public static final FunctionIdentifier CREATE_UUID =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-uuid", 0);
@@ -1375,6 +1379,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-sym-difference", 2);
     public static final FunctionIdentifier ST_POLYGONIZE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-polygonize", 1);
+
+    public static final FunctionIdentifier ST_MBR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-mbr", 1);
+    public static final FunctionIdentifier ST_MBR_OFFSET =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-mbr-offset", 2);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR =
@@ -2136,6 +2144,8 @@ public class BuiltinFunctions {
         addFunction(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
         addFunction(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE, true);
         addFunction(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE, true);
+        addFunction(SPATIAL_TILE, AInt32TypeComputer.INSTANCE, true);
+        addFunction(REFERENCE_TILE, AInt32TypeComputer.INSTANCE, true);
 
         //geo functions
         addFunction(ST_AREA, ADoubleTypeComputer.INSTANCE, true);
@@ -2205,6 +2215,9 @@ public class BuiltinFunctions {
         addPrivateFunction(ST_UNION_AGG, AGeometryTypeComputer.INSTANCE, true);
         addPrivateFunction(ST_UNION_SQL_AGG, AGeometryTypeComputer.INSTANCE, true);
         addFunction(ST_POLYGONIZE, AGeometryTypeComputer.INSTANCE, true);
+
+        addFunction(ST_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addFunction(ST_MBR_OFFSET, ARectangleTypeComputer.INSTANCE, true);
 
         // Binary functions
         addFunction(BINARY_HEX_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE, true);
@@ -3060,6 +3073,7 @@ public class BuiltinFunctions {
         addUnnestFun(RANGE, true);
         addUnnestFun(SCAN_COLLECTION, false);
         addUnnestFun(SUBSET_COLLECTION, false);
+        addUnnestFun(SPATIAL_TILE, false);
     }
 
     public enum DataSourceFunctionProperty implements BuiltinFunctionProperty {
@@ -3281,5 +3295,24 @@ public class BuiltinFunctions {
 
     public static boolean isSimilarityFunction(FunctionIdentifier fi) {
         return similarityFunctions.contains(fi);
+    }
+
+    private static final Map<FunctionIdentifier, STFilterRefineFunctionKind> stFilterRefineFunctions = new HashMap<>();
+
+    public enum STFilterRefineFunctionKind {
+        STFR
+    }
+
+    static {
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_INTERSECTS, STFilterRefineFunctionKind.STFR);
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_OVERLAPS, STFilterRefineFunctionKind.STFR);
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_TOUCHES, STFilterRefineFunctionKind.STFR);
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_CONTAINS, STFilterRefineFunctionKind.STFR);
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_CROSSES, STFilterRefineFunctionKind.STFR);
+        stFilterRefineFunctions.put(BuiltinFunctions.ST_WITHIN, STFilterRefineFunctionKind.STFR);
+    }
+
+    public static boolean isSTFilterRefineFunction(FunctionIdentifier fi) {
+        return stFilterRefineFunctions.get(fi) != null;
     }
 }

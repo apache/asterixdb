@@ -16,22 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules;
+package org.apache.asterix.runtime.evaluators.functions.spatial;
 
-import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.rewriter.rules.ExtractFunctionsFromJoinConditionRule;
+import org.apache.asterix.om.base.ARectangle;
 
-public class AsterixExtractFunctionsFromJoinConditionRule extends ExtractFunctionsFromJoinConditionRule {
+public class SpatialLogic {
 
-    @Override
-    protected boolean processArgumentsToFunction(FunctionIdentifier fi) {
-        return fi.equals(BuiltinFunctions.GET_ITEM);
+    public SpatialLogic() {
+
     }
 
-    @Override
-    protected boolean isComparisonFunction(FunctionIdentifier fi) {
-        return BuiltinFunctions.isSimilarityFunction(fi) || BuiltinFunctions.isSpatialFilterFunction(fi);
-    }
+    public boolean intersects(ARectangle rect1, ARectangle rect2) {
+        // If one rectangle is on left side of other
+        if ((rect1.getP1().getX() > rect2.getP2().getX()) || (rect2.getP1().getX() > rect1.getP2().getX())) {
+            return false;
+        }
 
+        // If one rectangle is above other
+        if ((rect1.getP1().getY() > rect2.getP2().getY()) || (rect2.getP1().getY() > rect1.getP2().getY())) {
+            return false;
+        }
+
+        return true;
+    }
 }

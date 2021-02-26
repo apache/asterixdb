@@ -63,6 +63,7 @@ import org.apache.asterix.common.annotations.ListValFileDataGen;
 import org.apache.asterix.common.annotations.RangeAnnotation;
 import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
+import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -621,6 +622,16 @@ class SQLPPParser extends ScopeChecker implements IParser {
               List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
               return SkipSecondaryIndexSearchExpressionAnnotation.newInstance(indexNames);
             }
+          case SPATIAL_JOIN_HINT:
+            String[] splits = hintToken.hintParams != null ? hintToken.hintParams.split("\\s+") : null;
+            double minX = Double.parseDouble(splits[0]);
+            double minY = Double.parseDouble(splits[1]);
+            double maxX = Double.parseDouble(splits[2]);
+            double maxY = Double.parseDouble(splits[3]);
+            int numRows = Integer.parseInt(splits[4]);
+            int numColumns = Integer.parseInt(splits[5]);
+            SpatialJoinAnnotation spatialJoinAnn = new SpatialJoinAnnotation(minX, minY, maxX, maxY, numRows, numColumns);
+            return spatialJoinAnn;
           case USE_SECONDARY_INDEX_SEARCH_HINT:
             if (hintToken.hintParams == null) {
               throw new SqlppParseException(getSourceLocation(hintToken), "Expected index name(s)");
@@ -642,6 +653,24 @@ class SQLPPParser extends ScopeChecker implements IParser {
         if (warningCollector.shouldWarn()) {
             warningCollector.warn(Warning.of(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
               hintToken.hint.toString(), e.getMessage()));
+        }
+        return onParseErrorReturn;
+      } catch (NullPointerException e) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(Warning.of(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+                          hintToken.hint.toString(), e.getMessage()));
+        }
+        return onParseErrorReturn;
+      } catch (ArrayIndexOutOfBoundsException e) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(Warning.of(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+                          hintToken.hint.toString(), e.getMessage()));
+        }
+        return onParseErrorReturn;
+      } catch (NumberFormatException e) {
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(Warning.of(getSourceLocation(hintToken), ErrorCode.INVALID_HINT,
+                          hintToken.hint.toString(), e.getMessage()));
         }
         return onParseErrorReturn;
       }
@@ -2572,8 +2601,8 @@ FunctionName FunctionName() throws ParseException:
   // Note: there's a copy of this production in PrimaryExpr() (LOOKAHEAD for FunctionCallExpr())
   //       that copy must be kept in sync with this code
   prefix = MultipartIdentifierWithHints(
-    SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT, SqlppHint.RANGE_HINT,
-    SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT
+    SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT, SqlppHint.RANGE_HINT, SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT,
+    SqlppHint.SPATIAL_JOIN_HINT, SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT
   )
   (<SHARP> suffix = Identifier())?
   {

@@ -16,22 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules;
 
-import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.rewriter.rules.ExtractFunctionsFromJoinConditionRule;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
 
-public class AsterixExtractFunctionsFromJoinConditionRule extends ExtractFunctionsFromJoinConditionRule {
+-- Make Park type
+CREATE TYPE ParkType as closed {
+    id: int32,
+    geom: rectangle
+};
 
-    @Override
-    protected boolean processArgumentsToFunction(FunctionIdentifier fi) {
-        return fi.equals(BuiltinFunctions.GET_ITEM);
-    }
+-- Make Lake type
+CREATE TYPE LakeType as closed {
+    id: int32,
+    geom: rectangle
+};
 
-    @Override
-    protected boolean isComparisonFunction(FunctionIdentifier fi) {
-        return BuiltinFunctions.isSimilarityFunction(fi) || BuiltinFunctions.isSpatialFilterFunction(fi);
-    }
+-- Make Park dataset
+CREATE DATASET ParkSet (ParkType) primary key id;
+LOAD DATASET ParkSet USING localfs((`path`=`asterix_nc1://data/spatial/parks.json`),(`format`=`adm`));
 
-}
+-- Make Lake dataset
+CREATE DATASET LakeSet (LakeType) primary key id;
+LOAD DATASET LakeSet USING localfs((`path`=`asterix_nc1://data/spatial/lakes.json`),(`format`=`adm`));

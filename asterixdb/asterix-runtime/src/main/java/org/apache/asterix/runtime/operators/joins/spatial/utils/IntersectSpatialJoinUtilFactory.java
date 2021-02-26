@@ -16,22 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules;
+package org.apache.asterix.runtime.operators.joins.spatial.utils;
 
-import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.rewriter.rules.ExtractFunctionsFromJoinConditionRule;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class AsterixExtractFunctionsFromJoinConditionRule extends ExtractFunctionsFromJoinConditionRule {
-
+public class IntersectSpatialJoinUtilFactory implements ISpatialJoinUtilFactory {
     @Override
-    protected boolean processArgumentsToFunction(FunctionIdentifier fi) {
-        return fi.equals(BuiltinFunctions.GET_ITEM);
+    public ISpatialJoinUtil createSpatialJoinUtil(int[] buildKeys, int[] probeKeys, IHyracksTaskContext ctx,
+            int nPartitions) throws HyracksDataException {
+        return new IntersectSpatialJoinUtil(buildKeys, probeKeys);
     }
-
-    @Override
-    protected boolean isComparisonFunction(FunctionIdentifier fi) {
-        return BuiltinFunctions.isSimilarityFunction(fi) || BuiltinFunctions.isSpatialFilterFunction(fi);
-    }
-
 }

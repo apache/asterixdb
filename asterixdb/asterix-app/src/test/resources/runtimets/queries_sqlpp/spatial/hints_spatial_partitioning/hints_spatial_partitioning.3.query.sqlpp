@@ -16,22 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules;
 
-import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.rewriter.rules.ExtractFunctionsFromJoinConditionRule;
+USE test;
 
-public class AsterixExtractFunctionsFromJoinConditionRule extends ExtractFunctionsFromJoinConditionRule {
-
-    @Override
-    protected boolean processArgumentsToFunction(FunctionIdentifier fi) {
-        return fi.equals(BuiltinFunctions.GET_ITEM);
-    }
-
-    @Override
-    protected boolean isComparisonFunction(FunctionIdentifier fi) {
-        return BuiltinFunctions.isSimilarityFunction(fi) || BuiltinFunctions.isSpatialFilterFunction(fi);
-    }
-
-}
+SELECT COUNT(*) FROM ParkSet AS ps, LakeSet AS ls
+WHERE /*+ spatial-partitioning -180.0 -83.0 180.0 90.0 10 10 */ spatial_intersect(ps.geom, ls.geom);

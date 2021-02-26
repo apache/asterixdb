@@ -53,6 +53,8 @@ import org.apache.asterix.geo.evaluators.functions.STIsRingDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STIsSimpleDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STLengthDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STLineFromMultiPointDescriptor;
+import org.apache.asterix.geo.evaluators.functions.STMBRDescriptor;
+import org.apache.asterix.geo.evaluators.functions.STMBROffsetDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STMDescriptor;
 import org.apache.asterix.geo.evaluators.functions.STMakeEnvelopeDescriptorSRID;
 import org.apache.asterix.geo.evaluators.functions.STMakePoint3DDescriptor;
@@ -153,5 +155,7 @@ public class GeoFunctionRegistrant implements IFunctionRegistrant {
         fc.add(STIntersectionDescriptor.FACTORY);
         fc.add(STSymDifferenceDescriptor.FACTORY);
         fc.add(STPolygonizeDescriptor.FACTORY);
+        fc.add(STMBRDescriptor.FACTORY);
+        fc.add(STMBROffsetDescriptor.FACTORY);
     }
 }

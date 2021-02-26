@@ -32,6 +32,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.operators.joins.interval.utils.AfterIntervalJoinUtilFactory;
 import org.apache.asterix.runtime.operators.joins.interval.utils.BeforeIntervalJoinUtilFactory;
 import org.apache.asterix.runtime.operators.joins.interval.utils.CoveredByIntervalJoinUtilFactory;
@@ -60,6 +61,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoi
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AssignPOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty.PartitioningType;
 import org.apache.hyracks.algebricks.core.algebra.properties.IntervalColumn;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 
 public class IntervalJoinUtils {
@@ -74,6 +77,44 @@ public class IntervalJoinUtils {
         INTERVAL_JOIN_CONDITIONS.put(BuiltinFunctions.INTERVAL_OVERLAPPED_BY, BuiltinFunctions.INTERVAL_OVERLAPS);
         INTERVAL_JOIN_CONDITIONS.put(BuiltinFunctions.INTERVAL_OVERLAPPING, BuiltinFunctions.INTERVAL_OVERLAPPING);
         INTERVAL_JOIN_CONDITIONS.put(BuiltinFunctions.INTERVAL_OVERLAPS, BuiltinFunctions.INTERVAL_OVERLAPPED_BY);
+    }
+
+    protected static boolean tryIntervalJoinAssignment(AbstractBinaryJoinOperator op, IOptimizationContext context,
+            ILogicalExpression joinCondition, int left, int right) throws AlgebricksException {
+        List<LogicalVariable> sideLeft = new ArrayList<>(1);
+        List<LogicalVariable> sideRight = new ArrayList<>(1);
+        List<LogicalVariable> varsLeft = op.getInputs().get(left).getValue().getSchema();
+        List<LogicalVariable> varsRight = op.getInputs().get(right).getValue().getSchema();
+
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) joinCondition;
+        FunctionIdentifier fi = IntervalJoinUtils.isIntervalJoinCondition(funcExpr, varsLeft, varsRight, sideLeft,
+                sideRight, left, right);
+        if (fi != null) {
+            // Existing workflow for interval merge join
+            RangeAnnotation rangeAnnotation = IntervalJoinUtils.findRangeAnnotation(funcExpr);
+            if (rangeAnnotation == null) {
+                return false;
+            }
+            //Check RangeMap type
+            RangeMap rangeMap = rangeAnnotation.getRangeMap();
+            if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize()
+                    && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
+                    && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
+                IWarningCollector warningCollector = context.getWarningCollector();
+                if (warningCollector.shouldWarn()) {
+                    warningCollector.warn(Warning.of(op.getSourceLocation(),
+                            org.apache.hyracks.api.exceptions.ErrorCode.INAPPLICABLE_HINT,
+                            "Date, DateTime, and Time are only range hints types supported for interval joins"));
+                }
+                return false;
+            }
+            IntervalPartitions intervalPartitions = IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft,
+                    sideRight, rangeMap, context, left, right);
+            IntervalJoinUtils.setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, context, intervalPartitions);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     protected static RangeAnnotation findRangeAnnotation(AbstractFunctionCallExpression fexp) {
