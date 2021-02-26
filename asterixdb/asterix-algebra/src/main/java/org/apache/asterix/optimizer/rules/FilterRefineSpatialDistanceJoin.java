@@ -127,18 +127,19 @@ public class FilterRefineSpatialDistanceJoin implements IAlgebraicRewriteRule {
 
         distanceVar = distanceValExpr.getValue();
 
-        // Enlarge the MBR of the left and right argument of the refine function (st_distance)
+        // Enlarge the MBR of the left argument of the refine function (st_distance)
         ScalarFunctionCallExpression enlargedLeft = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR_OFFSET), distanceFuncCallLeftArg,
                 new MutableObject<>(new ConstantExpression(distanceVar)));
-        ScalarFunctionCallExpression enlargedRight = new ScalarFunctionCallExpression(
-            BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR_OFFSET), distanceFuncCallRightArg,
-            new MutableObject<>(new ConstantExpression(distanceVar)));
+        // Compute the MBR of the right argument of the refine function (st_distance)
+        ScalarFunctionCallExpression rightMBR =
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
+                    distanceFuncCallRightArg);
 
         // Create filter function (spatial_intersect)
         ScalarFunctionCallExpression spatialIntersect = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
-                new MutableObject<>(enlargedLeft), new MutableObject<>(enlargedRight));
+                new MutableObject<>(enlargedLeft), new MutableObject<>(rightMBR));
         // Attach the annotation to the spatial_intersect function
         spatialIntersect.putAnnotation(distanceFuncCallExpr.getAnnotation(SpatialJoinAnnotation.class));
 
