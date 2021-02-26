@@ -23,6 +23,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.base.APolygon;
@@ -70,7 +71,7 @@ public class APolygonSerializerDeserializer implements ISerializerDeserializer<A
             case Y:
                 return 10 + (pointId * 16);
             default:
-                throw HyracksDataException.create(ErrorCode.POLYGON_INVALID_COORDINATE);
+                throw new RuntimeDataException(ErrorCode.POLYGON_INVALID_COORDINATE);
         }
     }
 
@@ -78,7 +79,7 @@ public class APolygonSerializerDeserializer implements ISerializerDeserializer<A
         try {
             String[] points = polygon.split(" ");
             if (points.length < 3) {
-                throw HyracksDataException.create(ErrorCode.POLYGON_3_POINTS);
+                throw new RuntimeDataException(ErrorCode.POLYGON_3_POINTS);
             }
             out.writeByte(ATypeTag.POLYGON.serialize());
             out.writeShort(points.length);
@@ -87,7 +88,7 @@ public class APolygonSerializerDeserializer implements ISerializerDeserializer<A
                 APointSerializerDeserializer.serialize(Double.parseDouble(split[0]), Double.parseDouble(split[1]), out);
             }
         } catch (IOException e) {
-            throw HyracksDataException.create(ErrorCode.POLYGON_INVALID, e, polygon);
+            throw new RuntimeDataException(ErrorCode.POLYGON_INVALID, e, polygon);
         }
     }
 }

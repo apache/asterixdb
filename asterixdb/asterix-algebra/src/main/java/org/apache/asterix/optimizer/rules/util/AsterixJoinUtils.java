@@ -18,26 +18,11 @@
  */
 package org.apache.asterix.optimizer.rules.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.asterix.common.annotations.RangeAnnotation;
-import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
-import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
-import org.apache.hyracks.api.exceptions.ErrorCode;
-import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 
 public class AsterixJoinUtils {
 
@@ -52,88 +37,15 @@ public class AsterixJoinUtils {
         if (!topLevelOp) {
             return;
         }
-        ILogicalExpression conditionLE = op.getCondition().getValue();
-        if (conditionLE.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+        ILogicalExpression joinCondition = op.getCondition().getValue();
+        if (joinCondition.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return;
         }
 
-        List<LogicalVariable> sideLeft = new ArrayList<>(1);
-        List<LogicalVariable> sideRight = new ArrayList<>(1);
-        List<LogicalVariable> varsLeft = op.getInputs().get(LEFT).getValue().getSchema();
-        List<LogicalVariable> varsRight = op.getInputs().get(RIGHT).getValue().getSchema();
-
-        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) conditionLE;
-        FunctionIdentifier fi = IntervalJoinUtils.isIntervalJoinCondition(funcExpr, varsLeft, varsRight, sideLeft,
-                sideRight, LEFT, RIGHT);
-        if (fi != null) {
-            // Existing workflow for interval merge join
-            RangeAnnotation rangeAnnotation = IntervalJoinUtils.findRangeAnnotation(funcExpr);
-            if (rangeAnnotation == null) {
-                return;
-            }
-            //Check RangeMap type
-            RangeMap rangeMap = rangeAnnotation.getRangeMap();
-            if (rangeMap.getTag(0, 0) != ATypeTag.DATETIME.serialize()
-                    && rangeMap.getTag(0, 0) != ATypeTag.DATE.serialize()
-                    && rangeMap.getTag(0, 0) != ATypeTag.TIME.serialize()) {
-                IWarningCollector warningCollector = context.getWarningCollector();
-                if (warningCollector.shouldWarn()) {
-                    warningCollector.warn(Warning.forHyracks(op.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
-                            "Date, DateTime, and Time are only range hints types supported for interval joins"));
-                }
-                return;
-            }
-            IntervalPartitions intervalPartitions = IntervalJoinUtils.createIntervalPartitions(op, fi, sideLeft,
-                    sideRight, rangeMap, context, LEFT, RIGHT);
-            IntervalJoinUtils.setSortMergeIntervalJoinOp(op, fi, sideLeft, sideRight, context, intervalPartitions);
-        } else {
-            // Check if the join condition contains spatial join
-            SpatialJoinAnnotation spatialJoinAnn = null;
-            AbstractFunctionCallExpression spatialJoinFuncExpr = null;
-            // Maintain conditions which is not spatial_intersect in the join condition
-            List<Mutable<ILogicalExpression>> conditionExprs = new ArrayList<>();
-
-            if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.AND)) {
-                // Join condition contains multiple conditions along with spatial_intersect
-                List<Mutable<ILogicalExpression>> inputExprs = funcExpr.getArguments();
-                if (inputExprs.size() == 0) {
-                    return;
-                }
-
-                boolean spatialFunctionCallExists = false;
-                for (Mutable<ILogicalExpression> exp : inputExprs) {
-                    AbstractFunctionCallExpression funcCallExp = (AbstractFunctionCallExpression) exp.getValue();
-                    if (funcCallExp.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
-                        spatialJoinFuncExpr = funcCallExp;
-                        spatialFunctionCallExists = true;
-                    } else {
-                        conditionExprs.add(exp);
-                        if (BuiltinFunctions.isSTFilterRefineFunction(funcCallExp.getFunctionIdentifier())) {
-                            // Extract the hint of the spatial-temporal filter refine function
-                            spatialJoinAnn = funcCallExp.getAnnotation(SpatialJoinAnnotation.class);
-                        }
-                    }
-                }
-
-                if (!spatialFunctionCallExists) {
-                    return;
-                }
-            } else if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.SPATIAL_INTERSECT)) {
-                // Join condition is spatial_intersect only
-                spatialJoinFuncExpr = funcExpr;
-                // Extract the hint of spatial_intersect function
-                spatialJoinAnn = spatialJoinFuncExpr.getAnnotation(SpatialJoinAnnotation.class);
-            } else {
-                return;
-            }
-
-            // We only apply optimization process for spatial join if the join annotation (hint) is provided
-            if (spatialJoinAnn != null) {
-                SpatialJoinUtils.updateJoinPlan(op, spatialJoinFuncExpr, conditionExprs, spatialJoinAnn, context, LEFT,
-                        RIGHT);
-            } else {
-                return;
-            }
+        boolean intervalJoinChosen =
+                IntervalJoinUtils.tryIntervalJoinAssignment(op, context, joinCondition, LEFT, RIGHT);
+        if (!intervalJoinChosen) {
+            SpatialJoinUtils.trySpatialJoinAssignment(op, context, joinCondition, LEFT, RIGHT);
         }
     }
 }

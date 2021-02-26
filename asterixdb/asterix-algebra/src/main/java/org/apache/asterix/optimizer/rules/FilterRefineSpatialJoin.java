@@ -20,6 +20,7 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.List;
 
+import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -29,14 +30,39 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
+/**
+ * If the join condition is one of the below Geometry functions and the required annotation is provided,
+ * this rule applies the spatial join by adding the spatial-intersect function into the query.
+ *
+ * <ul>
+ *     <li>st_intersects</li>
+ *     <li>st_overlaps</li>
+ *     <li>st_touches</li>
+ *     <li>st_contains</li>
+ *     <li>st_crosses</li>
+ *     <li>st_within</li>
+ * </ul>
+ *
+ * For example:<br/>
+ *
+ * SELECT COUNT(*) FROM ParkSet AS ps, LakeSet AS ls
+ * WHERE /*+ spatial-partitioning -180.0 -83.0 180.0 90.0 10 10 &#42;/ st_intersects(ps.geom,ls.geom);
+ *
+ * Becomes,
+ *
+ * SELECT COUNT(*) FROM ParkSet AS ps, LakeSet AS ls
+ * WHERE /*+ spatial-partitioning -180.0 -83.0 180.0 90.0 10 10 &#42;/
+ * spatial_intersect(st_mbr(ps.geom),st_mbr(ls.geom)) and st_intersects(ps.geom,ls.geom);
+ *
+ * Note: st_mbr() computes the mbr of the Geometries and returns rectangles to pass it spatial_intersect()
+ *
+ */
 public class FilterRefineSpatialJoin implements IAlgebraicRewriteRule {
 
     private static final int LEFT = 0;
@@ -67,42 +93,37 @@ public class FilterRefineSpatialJoin implements IAlgebraicRewriteRule {
         }
 
         AbstractFunctionCallExpression stFuncExpr = (AbstractFunctionCallExpression) joinCondition;
-        if (!BuiltinFunctions.isSTFilterRefineFunction(stFuncExpr.getFunctionIdentifier())) {
+        if ((stFuncExpr.getAnnotation(SpatialJoinAnnotation.class) == null)
+                || !BuiltinFunctions.isSTFilterRefineFunction(stFuncExpr.getFunctionIdentifier())) {
             return false;
         }
 
-        List<Mutable<ILogicalExpression>> inputExprs = stFuncExpr.getArguments();
-        if (inputExprs.size() != 2) {
+        // Left and right arguments of the refine function should be either variable or function call.
+        List<Mutable<ILogicalExpression>> stFuncArgs = stFuncExpr.getArguments();
+        Mutable<ILogicalExpression> stFuncLeftArg = stFuncArgs.get(LEFT);
+        Mutable<ILogicalExpression> stFuncRightArg = stFuncArgs.get(RIGHT);
+        if (stFuncLeftArg.getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT
+                || stFuncRightArg.getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             return false;
         }
 
-        ILogicalExpression leftOperatingExpr = inputExprs.get(LEFT).getValue();
-        ILogicalExpression rightOperatingExpr = inputExprs.get(RIGHT).getValue();
+        // Compute MBRs of the left and right arguments of the refine function
+        ScalarFunctionCallExpression left = new ScalarFunctionCallExpression(
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR), stFuncLeftArg);
+        ScalarFunctionCallExpression right = new ScalarFunctionCallExpression(
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR), stFuncRightArg);
 
-        if (leftOperatingExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE
-                || rightOperatingExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-            return false;
-        }
-
-        LogicalVariable inputVar0 = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
-        LogicalVariable inputVar1 = ((VariableReferenceExpression) rightOperatingExpr).getVariableReference();
-
-        ScalarFunctionCallExpression left =
-                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
-                        new MutableObject<>(new VariableReferenceExpression(inputVar0)));
-
-        ScalarFunctionCallExpression right =
-                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.ST_MBR),
-                        new MutableObject<>(new VariableReferenceExpression(inputVar1)));
-
+        // Create filter function (spatial_intersect)
         ScalarFunctionCallExpression spatialIntersect = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT), new MutableObject<>(left),
                 new MutableObject<>(right));
+        // Attach the annotation to the spatial_intersect function
+        spatialIntersect.putAnnotation(stFuncExpr.getAnnotation(SpatialJoinAnnotation.class));
 
+        // Update join condition with filter and refine function
         ScalarFunctionCallExpression updatedJoinCondition =
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
                         new MutableObject<>(spatialIntersect), new MutableObject<>(stFuncExpr));
-
         joinConditionRef.setValue(updatedJoinCondition);
 
         return true;

@@ -53,7 +53,7 @@ public class JobCapacityControllerTest {
         try {
             capacityController.allocate(makeJobWithRequiredCapacity(2147483648L, 64));
         } catch (HyracksException e) {
-            exceedCapacity = e.getErrorCode() == ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY;
+            exceedCapacity = e.matches(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY);
         }
         Assert.assertTrue(exceedCapacity);
         Assert.assertTrue(capacityController.allocate(
@@ -62,7 +62,7 @@ public class JobCapacityControllerTest {
         try {
             capacityController.allocate(makeJobWithRequiredCapacity(4294967297L, 33));
         } catch (HyracksException e) {
-            exceedCapacity = e.getErrorCode() == ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY;
+            exceedCapacity = e.matches(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY);
         }
         Assert.assertTrue(exceedCapacity);
 

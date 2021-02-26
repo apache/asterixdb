@@ -123,7 +123,7 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
             try {
                 btreeAccessor.insert(insertTuple);
             } catch (HyracksDataException e) {
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     // This exception may be caused by duplicate tokens in the same insert "document".
                     // We ignore such duplicate tokens in all inverted-index implementations, hence
                     // we can safely ignore this exception.
@@ -143,7 +143,7 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
             try {
                 btreeAccessor.delete(deleteTuple);
             } catch (HyracksDataException e) {
-                if (e.getErrorCode() != ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY) {
+                if (!e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                     // Ignore this exception, since a document may have duplicate tokens.
                     throw e;
                 }

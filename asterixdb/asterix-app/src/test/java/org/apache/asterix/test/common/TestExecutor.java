@@ -294,7 +294,11 @@ public class TestExecutor {
                 boolean compareUnorderedArray = statement != null && getCompareUnorderedArray(statement);
                 runScriptAndCompareWithResultRegexJson(scriptFile, readerExpected, readerActual, compareUnorderedArray);
                 return;
+            } else if (actualFile.toString().endsWith(".unorderedtxt")) {
+                runScriptAndCompareWithResultUnorderedLinesText(scriptFile, readerExpected, readerActual);
+                return;
             }
+
             String lineExpected, lineActual;
             int num = 1;
             while ((lineExpected = readerExpected.readLine()) != null) {
@@ -356,6 +360,16 @@ public class TestExecutor {
             int num) {
         return new ComparisonException("Result for " + canonicalize(scriptFile) + " changed at line " + num
                 + ":\nexpected < " + truncateIfLong(lineExpected) + "\nactual   > " + truncateIfLong(lineActual));
+    }
+
+    private ComparisonException createLineNotFoundException(File scriptFile, String lineExpected) {
+        return new ComparisonException(
+                "Result for " + canonicalize(scriptFile) + " expected line not found: " + truncateIfLong(lineExpected));
+    }
+
+    private ComparisonException createExpectedLinesNotReturnedException(File scriptFile, List<String> expectedLines) {
+        return new ComparisonException("Result for " + canonicalize(scriptFile) + " expected lines not returned:\n"
+                + String.join("\n", expectedLines));
     }
 
     private String truncateIfLong(String string) {
@@ -552,6 +566,24 @@ public class TestExecutor {
         if (!TestHelper.equalJson(expectedJson, actualJson, compareUnorderedArray)) {
             throw new ComparisonException("Result for " + scriptFile + " didn't match the expected JSON"
                     + "\nexpected result:\n" + expectedJson + "\nactual result:\n" + actualJson);
+        }
+    }
+
+    public void runScriptAndCompareWithResultUnorderedLinesText(File scriptFile, BufferedReader readerExpected,
+            BufferedReader readerActual) throws Exception {
+        // Using Lists to allow duplicate lines in the result
+        List<String> expectedLines = readerExpected.lines().collect(Collectors.toList());
+        List<String> actualLines = readerActual.lines().collect(Collectors.toList());
+
+        for (String line : actualLines) {
+            if (!expectedLines.remove(line)) {
+                throw createLineNotFoundException(scriptFile, line);
+            }
+        }
+
+        // number of expect > actual
+        if (expectedLines.size() > 0) {
+            throw createExpectedLinesNotReturnedException(scriptFile, expectedLines);
         }
     }
 

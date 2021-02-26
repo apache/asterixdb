@@ -144,6 +144,7 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                                 out.writeInt(tileId);
                             } catch (IOException e) {
                                 e.printStackTrace();
+                                throw HyracksDataException.create(e);
                             }
                             result.set(resultStorage);
                         } else {

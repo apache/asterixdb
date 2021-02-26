@@ -477,8 +477,7 @@ public class IPCConnectionManager {
                 final Object attachment = key.attachment();
                 if (attachment != null) {
                     final IPCHandle handle = (IPCHandle) attachment;
-                    handle.close();
-                    unregisterHandle(handle);
+                    closeHandle(handle);
                 }
                 key.cancel();
             }
@@ -527,6 +526,7 @@ public class IPCConnectionManager {
                     connectionEstablished(handle, channelKey, socketChannel);
                 }
             } else {
+                closeHandle(handle);
                 close(channelKey, socketChannel.getSocketChannel());
             }
         }
@@ -537,6 +537,13 @@ public class IPCConnectionManager {
             handle.setSocketChannel(channel);
             handle.setKey(channelKey);
             channelKey.attach(handle);
+        }
+
+        private void closeHandle(IPCHandle handle) {
+            if (handle != null) {
+                handle.close();
+                unregisterHandle(handle);
+            }
         }
     }
 }

@@ -135,7 +135,7 @@ public class FeedIntakeOperatorNodePushable extends ActiveSourceOperatorNodePush
                     taskThread.interrupt();
                 }
             } catch (HyracksDataException hde) {
-                if (hde.getComponent() == ErrorCode.HYRACKS && hde.getErrorCode() == ErrorCode.TIMEOUT) {
+                if (hde.matches(ErrorCode.TIMEOUT)) {
                     LOGGER.log(Level.WARN, runtimeId + " stop adapter timed out. interrupting the thread...", hde);
                     taskThread.interrupt();
                 } else {

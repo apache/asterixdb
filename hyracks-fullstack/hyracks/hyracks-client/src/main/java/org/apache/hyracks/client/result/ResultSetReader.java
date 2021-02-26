@@ -77,7 +77,7 @@ public class ResultSetReader implements IResultSetReader {
         try {
             return resultDirectory.getResultStatus(jobId, resultSetId);
         } catch (HyracksDataException e) {
-            if (e.getErrorCode() != ErrorCode.NO_RESULT_SET) {
+            if (!e.matches(ErrorCode.NO_RESULT_SET)) {
                 LOGGER.log(Level.WARN, "Exception retrieving result set for job " + jobId, e);
             }
         } catch (Exception e) {
@@ -135,7 +135,7 @@ public class ResultSetReader implements IResultSetReader {
         try {
             return resultDirectory.getResultMetadata(jobId, resultSetId);
         } catch (HyracksDataException e) {
-            if (e.getErrorCode() != ErrorCode.NO_RESULT_SET) {
+            if (!e.matches(ErrorCode.NO_RESULT_SET)) {
                 LOGGER.log(Level.WARN, "Exception retrieving result set for job " + jobId, e);
             }
         } catch (Exception e) {

@@ -98,8 +98,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
             }
         } catch (HyracksDataException e) {
             LOGGER.log(Level.WARN, "Exception during ingestion", e);
-            if (e.getComponent() == ErrorCode.ASTERIX
-                    && (e.getErrorCode() == ErrorCode.FEED_FAILED_WHILE_GETTING_A_NEW_RECORD)) {
+            if (e.matches(ErrorCode.FEED_FAILED_WHILE_GETTING_A_NEW_RECORD)) {
                 // Failure but we know we can for sure push the previously parsed records safely
                 failure = e;
                 try {

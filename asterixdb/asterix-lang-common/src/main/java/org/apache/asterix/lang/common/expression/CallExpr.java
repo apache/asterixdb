@@ -23,56 +23,22 @@ import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class CallExpr extends AbstractExpression {
-    private FunctionSignature functionSignature;
-    private List<Expression> exprList;
-    private Expression aggFilterExpr;
+public class CallExpr extends AbstractCallExpression {
 
     public CallExpr(FunctionSignature functionSignature, List<Expression> exprList) {
-        this(functionSignature, exprList, null);
+        super(functionSignature, exprList, null);
     }
 
     public CallExpr(FunctionSignature functionSignature, List<Expression> exprList, Expression aggFilterExpr) {
-        this.functionSignature = functionSignature;
-        this.exprList = exprList;
-        this.aggFilterExpr = aggFilterExpr;
-    }
-
-    public FunctionSignature getFunctionSignature() {
-        return functionSignature;
-    }
-
-    public List<Expression> getExprList() {
-        return exprList;
-    }
-
-    public boolean hasAggregateFilterExpr() {
-        return aggFilterExpr != null;
-    }
-
-    public Expression getAggregateFilterExpr() {
-        return aggFilterExpr;
+        super(functionSignature, exprList, aggFilterExpr);
     }
 
     @Override
     public Kind getKind() {
         return Kind.CALL_EXPRESSION;
-    }
-
-    public void setFunctionSignature(FunctionSignature functionSignature) {
-        this.functionSignature = functionSignature;
-    }
-
-    public void setExprList(List<Expression> exprList) {
-        this.exprList = exprList;
-    }
-
-    public void setAggregateFilterExpr(Expression aggFilterExpr) {
-        this.aggFilterExpr = aggFilterExpr;
     }
 
     @Override

@@ -18,13 +18,13 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -38,6 +38,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.data.std.util.ByteArrayAccessibleInputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 import com.esri.core.geometry.ogc.OGCGeometry;
@@ -66,46 +67,55 @@ public abstract class AbstractSTGeometryDoubleNDescriptor extends AbstractScalar
         private ArrayBackedValueStorage resultStorage;
         private DataOutput out;
         private IPointable inputArg;
-        private IScalarEvaluator eval;
-        private IPointable inputArg0;
         private IScalarEvaluator eval0;
+        private IPointable inputArg0;
+        private IScalarEvaluator eval1;
+        private ByteArrayAccessibleInputStream inStream;
+        private DataInputStream dataIn;
 
         public AbstractSTGeometryDoubleNEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx)
                 throws HyracksDataException {
             resultStorage = new ArrayBackedValueStorage();
             out = resultStorage.getDataOutput();
             inputArg = new VoidPointable();
-            eval = args[0].createScalarEvaluator(ctx);
+            eval0 = args[0].createScalarEvaluator(ctx);
             inputArg0 = new VoidPointable();
-            eval0 = args[1].createScalarEvaluator(ctx);
+            eval1 = args[1].createScalarEvaluator(ctx);
+            inStream = new ByteArrayAccessibleInputStream(new byte[0], 0, 0);
+            dataIn = new DataInputStream(inStream);
         }
 
         @Override
         public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-            eval.evaluate(tuple, inputArg);
-            byte[] data = inputArg.getByteArray();
+            resultStorage.reset();
+
+            eval0.evaluate(tuple, inputArg);
+            byte[] data0 = inputArg.getByteArray();
             int offset = inputArg.getStartOffset();
             int len = inputArg.getLength();
 
-            eval0.evaluate(tuple, inputArg0);
-            byte[] data0 = inputArg0.getByteArray();
+            eval1.evaluate(tuple, inputArg0);
+            byte[] data1 = inputArg0.getByteArray();
             int offset0 = inputArg0.getStartOffset();
 
-            if (data[offset] != ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG) {
-                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, data[offset],
+            if (data0[offset] != ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG) {
+                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, data0[offset],
                         ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }
-            if (data0[offset0] != ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
-                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, data0[offset0],
+
+            inStream.setContent(data0, offset + 1, len - 1);
+            OGCGeometry geometry = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
+            Object finalResult;
+            if (data1[offset0] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
+                finalResult =
+                        evaluateOGCGeometry(geometry, ADoubleSerializerDeserializer.getDouble(data1, offset0 + 1));
+            } else if (data1[offset0] == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
+                finalResult = evaluateOGCGeometry(geometry, AInt64SerializerDeserializer.getLong(data1, offset0 + 1));
+            } else {
+                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, data1[offset0],
                         ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
             }
 
-            ByteArrayInputStream inStream = new ByteArrayInputStream(data, offset + 1, len - 1);
-            DataInputStream dataIn = new DataInputStream(inStream);
-            OGCGeometry geometry = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
-            int n = (int) ADoubleSerializerDeserializer.getDouble(data0, offset0 + 1);
-
-            Object finalResult = evaluateOGCGeometry(geometry, n);
             try {
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ARECTANGLE)
                         .serialize(finalResult, out);

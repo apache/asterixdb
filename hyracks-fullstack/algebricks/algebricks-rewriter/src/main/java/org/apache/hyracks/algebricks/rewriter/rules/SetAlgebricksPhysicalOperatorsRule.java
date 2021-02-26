@@ -223,8 +223,8 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     } else if (gby.getSourceLocation() != null) {
                         IWarningCollector warningCollector = context.getWarningCollector();
                         if (warningCollector.shouldWarn()) {
-                            warningCollector.warn(Warning.forHyracks(gby.getSourceLocation(),
-                                    ErrorCode.INAPPLICABLE_HINT, "Group By", "hash"));
+                            warningCollector.warn(Warning.of(gby.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
+                                    "Group By", "hash"));
                         }
                     }
                 }

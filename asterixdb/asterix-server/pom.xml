@@ -38,6 +38,8 @@
 
   <properties>
     <root.dir>${basedir}/..</root.dir>
+    <pip.path>${project.build.directory}/bin/pip3</pip.path>
+    <shiv.path>${project.build.directory}/bin/shiv</shiv.path>
   </properties>
 
   <build>
@@ -469,6 +471,94 @@
           </usedDependencies>
         </configuration>
       </plugin>
+      <!-- TODO: this is just grody. workaround for not being able to use the proper dir in our integration tests on jenkins -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>venv</id>
+            <phase>${prepare-env.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <!--suppress UnresolvedMavenProperty -->
+              <executable>${python.path}</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <arguments>
+                <argument>-m</argument>
+                <argument>venv</argument>
+                <argument>${project.build.directory}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>shiv-install</id>
+            <phase>${prepare-env.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${pip.path}</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <arguments>
+                <argument>install</argument>
+                <argument>--exists-action</argument>
+                <argument>w</argument>
+                <argument>--upgrade</argument>
+                <argument>shiv</argument>
+              </arguments>
+              <environmentVariables>
+                <VIRTUALENV>${project.build.directory}</VIRTUALENV>
+                <PATH>${project.build.directory}${path.separator}${env.PATH}${file.separator}bin</PATH>
+              </environmentVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>shiv-msgpack-shim</id>
+            <phase>${shim.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${shiv.path}</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <arguments>
+                <argument>-o </argument>
+                <argument>${project.build.directory}${file.separator}classes${file.separator}msgpack.pyz</argument>
+                <argument>msgpack</argument>
+              </arguments>
+              <environmentVariables>
+                <VIRTUALENV>${project.build.directory}</VIRTUALENV>
+                <PATH>${project.build.directory}${path.separator}${env.PATH}${file.separator}bin</PATH>
+              </environmentVariables>
+            </configuration>
+          </execution>
+          <execution>
+            <id>shiv-test-lib</id>
+            <phase>${pytestlib.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>${shiv.path}</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <arguments>
+                <argument>-o </argument>
+                <argument>${project.build.directory}${file.separator}TweetSent.pyz</argument>
+                <argument>--site-packages</argument>
+                <argument>${project.build.directory}${file.separator}..${file.separator}..${file.separator}asterix-app${file.separator}src${file.separator}test${file.separator}resources${file.separator}TweetSent</argument>
+                <argument>scikit-learn</argument>
+              </arguments>
+              <environmentVariables>
+                <VIRTUALENV>${project.build.directory}</VIRTUALENV>
+                <PATH>${project.build.directory}${path.separator}${env.PATH}${file.separator}bin</PATH>
+              </environmentVariables>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -500,6 +590,18 @@
     </pluginManagement>
   </build>
   <profiles>
+    <profile>
+      <id>windows.python.envs</id>
+      <activation>
+        <os>
+          <family>Windows</family>
+        </os>
+      </activation>
+      <properties>
+        <pip.path>${project.build.directory}\Scripts\pip3.exe</pip.path>
+        <shiv.path>${project.build.directory}\Scripts\shiv.exe</shiv.path>
+      </properties>
+    </profile>
     <profile>
       <id>opt-modules</id>
       <activation>
@@ -743,6 +845,26 @@
       <groupId>org.kitesdk</groupId>
       <artifactId>kite-data-core</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpmime</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>algebricks-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-api</artifactId>
     </dependency>
   </dependencies>
 </project>

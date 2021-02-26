@@ -102,8 +102,8 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
             OrderColumn oc = orderColumns.get(oIdx);
             LogicalVariable ocVar = oc.getColumn();
             if (!pcVars.remove(ocVar) && containsAny(orderColumns, oIdx + 1, pcVars)) {
-                throw new AlgebricksException(ErrorCode.HYRACKS, ErrorCode.UNSUPPORTED_WINDOW_SPEC,
-                        op.getSourceLocation(), String.valueOf(partitionColumns), String.valueOf(orderColumns));
+                throw AlgebricksException.create(ErrorCode.UNSUPPORTED_WINDOW_SPEC, op.getSourceLocation(),
+                        String.valueOf(partitionColumns), String.valueOf(orderColumns));
             }
             lopColumns.add(new OrderColumn(oc.getColumn(), oc.getOrder()));
         }

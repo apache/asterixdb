@@ -19,8 +19,10 @@
 package org.apache.hyracks.algebricks.common.exceptions;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.IError;
 import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
@@ -34,13 +36,23 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
     private final Serializable[] params;
     private final String nodeId;
     private final SourceLocation sourceLoc;
+    protected final transient IError error;
 
     @SuppressWarnings("squid:S1165") // exception class not final
-    private transient CachedMessage msgCache;
+    private transient volatile String msgCache;
 
-    public AlgebricksException(String component, int errorCode, String message, Throwable cause,
+    public static AlgebricksException create(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
+        return new AlgebricksException(error, sourceLoc, params);
+    }
+
+    public static AlgebricksException create(ErrorCode error, Serializable... params) {
+        return create(error, null, params);
+    }
+
+    protected AlgebricksException(IError error, String component, int errorCode, String message, Throwable cause,
             SourceLocation sourceLoc, String nodeId, Serializable... params) {
         super(message, cause);
+        this.error = error;
         this.component = component;
         this.errorCode = errorCode;
         this.sourceLoc = sourceLoc;
@@ -53,7 +65,7 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
      */
     @Deprecated
     public AlgebricksException(String message) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, message, null, null, (Serializable[]) null);
+        this((IError) null, ErrorMessageUtil.NONE, UNKNOWN, message, null, null, null);
     }
 
     /**
@@ -61,7 +73,7 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
      */
     @Deprecated
     public AlgebricksException(Throwable cause) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, cause.getMessage(), cause, (Serializable[]) null);
+        this(String.valueOf(cause), cause);
     }
 
     /**
@@ -69,60 +81,23 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
      */
     @Deprecated
     public AlgebricksException(String message, Throwable cause) {
-        this(ErrorMessageUtil.NONE, UNKNOWN, message, cause, null, (Serializable[]) null);
+        this((IError) null, ErrorMessageUtil.NONE, UNKNOWN, message, cause, null, null);
     }
 
-    public AlgebricksException(String component, int errorCode, SourceLocation sourceLoc, Serializable... params) {
-        this(component, errorCode, null, null, sourceLoc, null, params);
+    public AlgebricksException(Throwable cause, ErrorCode error, Serializable... params) {
+        this(error, error.component(), error.intValue(), error.errorMessage(), cause, null, null, params);
     }
 
-    public AlgebricksException(String component, int errorCode, Serializable... params) {
-        this(component, errorCode, null, null, null, null, params);
+    public AlgebricksException(ErrorCode error, SourceLocation sourceLoc, Serializable... params) {
+        this(error, error.component(), error.intValue(), error.errorMessage(), null, sourceLoc, null, params);
     }
 
-    public AlgebricksException(Throwable cause, int errorCode, SourceLocation sourceLoc, Serializable... params) {
-        this(ErrorMessageUtil.NONE, errorCode, cause.getMessage(), cause, sourceLoc, null, params);
+    public AlgebricksException(ErrorCode error, Serializable... params) {
+        this(error, null, params);
     }
 
-    public AlgebricksException(Throwable cause, int errorCode, Serializable... params) {
-        this(ErrorMessageUtil.NONE, errorCode, cause.getMessage(), cause, null, null, params);
-    }
-
-    public AlgebricksException(String component, int errorCode, String message, SourceLocation sourceLoc,
-            Serializable... params) {
-        this(component, errorCode, message, null, sourceLoc, null, params);
-    }
-
-    public AlgebricksException(String component, int errorCode, String message, Serializable... params) {
-        this(component, errorCode, message, null, null, null, params);
-    }
-
-    public AlgebricksException(String component, int errorCode, Throwable cause, SourceLocation sourceLoc,
-            Serializable... params) {
-        this(component, errorCode, cause.getMessage(), cause, sourceLoc, null, params);
-    }
-
-    public AlgebricksException(String component, int errorCode, Throwable cause, Serializable... params) {
-        this(component, errorCode, cause.getMessage(), cause, null, null, params);
-    }
-
-    public AlgebricksException(String component, int errorCode, String message, Throwable cause,
-            SourceLocation sourceLoc, Serializable... params) {
-        this(component, errorCode, message, cause, sourceLoc, null, params);
-    }
-
-    public AlgebricksException(String component, int errorCode, String message, Throwable cause,
-            Serializable... params) {
-        this(component, errorCode, message, cause, null, null, params);
-    }
-
-    public static AlgebricksException create(int errorCode, SourceLocation sourceLoc, Serializable... params) {
-        return new AlgebricksException(ErrorCode.HYRACKS, errorCode, ErrorCode.getErrorMessage(errorCode), sourceLoc,
-                params);
-    }
-
-    public static AlgebricksException create(int errorCode, Serializable... params) {
-        return create(errorCode, null, params);
+    protected AlgebricksException(IError error, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
+        this(error, error.component(), error.intValue(), error.errorMessage(), cause, sourceLoc, null, params);
     }
 
     @Override
@@ -148,19 +123,15 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
     }
 
     @Override
-    public String getMessage() {
-        if (msgCache == null) {
-            msgCache = new CachedMessage(
-                    ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), sourceLoc, params));
-        }
-        return msgCache.message;
+    public Optional<IError> getError() {
+        return Optional.ofNullable(error);
     }
 
-    private static class CachedMessage {
-        private final String message;
-
-        private CachedMessage(String message) {
-            this.message = message;
+    @Override
+    public String getMessage() {
+        if (msgCache == null) {
+            msgCache = ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), sourceLoc, params);
         }
+        return msgCache;
     }
 }

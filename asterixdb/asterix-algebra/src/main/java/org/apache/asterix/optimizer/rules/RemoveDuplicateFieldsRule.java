@@ -26,7 +26,6 @@ import java.util.Set;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.impl.ClosedRecordConstructorResultType;
 import org.apache.asterix.om.typecomputer.impl.OpenRecordConstructorResultType;
@@ -41,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 
 /**
  * <pre>
@@ -115,7 +115,7 @@ public class RemoveDuplicateFieldsRule implements IAlgebraicRewriteRule {
                 if (fieldName != null && !fieldNames.add(fieldName)) {
                     IWarningCollector warningCollector = context.getWarningCollector();
                     if (warningCollector.shouldWarn()) {
-                        warningCollector.warn(WarningUtil.forAsterix(fieldNameExpr.getSourceLocation(),
+                        warningCollector.warn(Warning.of(fieldNameExpr.getSourceLocation(),
                                 ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName));
                     }
                     iterator.remove();

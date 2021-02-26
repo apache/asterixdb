@@ -136,7 +136,7 @@ public class BTreeStatsTest extends AbstractBTreeTest {
             try {
                 indexAccessor.insert(tuple);
             } catch (HyracksDataException e) {
-                if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!e.matches(ErrorCode.DUPLICATE_KEY)) {
                     e.printStackTrace();
                     throw e;
                 }

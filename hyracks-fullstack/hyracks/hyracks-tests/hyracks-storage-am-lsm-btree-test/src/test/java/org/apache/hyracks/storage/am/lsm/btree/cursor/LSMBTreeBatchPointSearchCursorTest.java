@@ -32,6 +32,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -153,14 +154,11 @@ public class LSMBTreeBatchPointSearchCursorTest extends IIndexCursorTest {
                 TupleUtils.createIntegerTuple(tb, tuple, f0, f1);
                 try {
                     indexAccessor.insert(tuple);
-                } catch (HyracksDataException e) {
-                    if (e.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                } catch (Exception e) {
+                    if (!IFormattedException.matches(e, ErrorCode.DUPLICATE_KEY)) {
                         e.printStackTrace();
                         throw e;
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw e;
                 }
             }
         } finally {

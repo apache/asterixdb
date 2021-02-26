@@ -49,7 +49,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -806,8 +805,7 @@ public class ExternalDataUtils {
             boolean isEmpty = useOldApi ? ((ListObjectsResponse) response).contents().isEmpty()
                     : ((ListObjectsV2Response) response).contents().isEmpty();
             if (isEmpty && collector.shouldWarn()) {
-                Warning warning =
-                        WarningUtil.forAsterix(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                Warning warning = Warning.of(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
                 collector.warn(warning);
             }
 
@@ -955,8 +953,7 @@ public class ExternalDataUtils {
                 Iterable<BlobItem> blobItems = blobContainer.listBlobs(listBlobsOptions, null);
 
                 if (!blobItems.iterator().hasNext() && collector.shouldWarn()) {
-                    Warning warning =
-                            WarningUtil.forAsterix(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                    Warning warning = Warning.of(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
                     collector.warn(warning);
                 }
             } catch (CompilationException ex) {

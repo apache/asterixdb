@@ -217,7 +217,7 @@ public abstract class AbstractDatatypeTupleTranslator<T> extends AbstractTupleTr
                 throw HyracksDataException.create(e);
             } else {
                 HyracksDataException hde = (HyracksDataException) e.getCause();
-                if (!hde.getComponent().equals(ErrorCode.HYRACKS) || hde.getErrorCode() != ErrorCode.DUPLICATE_KEY) {
+                if (!hde.matches(ErrorCode.DUPLICATE_KEY)) {
                     throw hde;
                 }
             }

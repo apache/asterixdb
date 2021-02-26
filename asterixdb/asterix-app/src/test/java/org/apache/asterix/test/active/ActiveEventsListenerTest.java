@@ -14,9 +14,11 @@
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
- * under the License.
+ * under the License
  */
 package org.apache.asterix.test.active;
+
+import static org.apache.hyracks.api.exceptions.HyracksException.UNKNOWN;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,6 +63,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IError;
 import org.apache.hyracks.api.job.JobIdFactory;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.control.cc.ClusterControllerService;
@@ -187,7 +190,7 @@ public class ActiveEventsListenerTest {
         listener.onStart(Behavior.FAIL_COMPILE);
         Action action = users[0].startActivity(listener);
         action.sync();
-        assertFailure(action, 0);
+        assertUnknownFailure(action);
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
@@ -197,7 +200,7 @@ public class ActiveEventsListenerTest {
         listener.onStart(Behavior.FAIL_RUNTIME);
         Action action = users[0].startActivity(listener);
         action.sync();
-        assertFailure(action, 0);
+        assertUnknownFailure(action);
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
@@ -217,7 +220,7 @@ public class ActiveEventsListenerTest {
         listener.onStart(Behavior.FAIL_START_TIMEOUT_STUCK);
         Action action = users[0].startActivity(listener);
         action.sync();
-        assertFailure(action, 0);
+        assertUnknownFailure(action);
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
     }
 
@@ -1560,14 +1563,25 @@ public class ActiveEventsListenerTest {
         assertSuccess(addDataset);
     }
 
-    private void assertFailure(Action action, int errorCode) throws Exception {
+    private void assertFailure(Action action, IError errorCode) throws Exception {
         HyracksDataException exception = action.getFailure();
         try {
             Assert.assertTrue(action.hasFailed());
             Assert.assertNotNull(exception);
-            Assert.assertEquals(errorCode, exception.getErrorCode());
+            Assert.assertTrue(exception.matches(errorCode));
         } catch (Exception e) {
             throw new Exception("Expected failure: " + errorCode + ". Found failure: " + exception);
+        }
+    }
+
+    private void assertUnknownFailure(Action action) throws Exception {
+        HyracksDataException exception = action.getFailure();
+        try {
+            Assert.assertTrue(action.hasFailed());
+            Assert.assertNotNull(exception);
+            Assert.assertEquals(UNKNOWN, exception.getErrorCode());
+        } catch (Exception e) {
+            throw new Exception("Expected failure: " + UNKNOWN + ". Found failure: " + exception);
         }
     }
 

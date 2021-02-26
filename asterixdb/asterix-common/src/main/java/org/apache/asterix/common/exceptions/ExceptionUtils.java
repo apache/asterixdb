@@ -20,7 +20,6 @@ package org.apache.asterix.common.exceptions;
 
 import java.util.function.Predicate;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IFormattedException;
 
 public class ExceptionUtils {
@@ -52,22 +51,6 @@ public class ExceptionUtils {
             cause = current.getCause();
         }
         return current;
-    }
-
-    public static Throwable getCause(Throwable e, String component, int code) {
-        Throwable current = e;
-        Throwable expected =
-                (current instanceof HyracksDataException && ((HyracksDataException) current).getErrorCode() == code
-                        && ((HyracksDataException) current).getComponent().equals(component)) ? current : null;
-        Throwable cause = e.getCause();
-        while (cause != null && cause != current) {
-            current = cause;
-            expected =
-                    (current instanceof HyracksDataException && ((HyracksDataException) current).getErrorCode() == code
-                            && ((HyracksDataException) current).getComponent().equals(component)) ? current : expected;
-            cause = current.getCause();
-        }
-        return expected == null ? current : expected;
     }
 
     /**

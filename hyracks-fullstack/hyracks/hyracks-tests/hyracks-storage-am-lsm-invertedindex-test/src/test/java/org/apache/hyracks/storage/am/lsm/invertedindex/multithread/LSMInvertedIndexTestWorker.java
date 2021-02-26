@@ -125,7 +125,7 @@ public class LSMInvertedIndexTestWorker extends AbstractIndexTestWorker {
                     consumeCursorTuples(searchCursor);
                 } catch (HyracksDataException e) {
                     // Ignore.
-                    if (e.getErrorCode() != ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION) {
+                    if (!e.matches(ErrorCode.OCCURRENCE_THRESHOLD_PANIC_EXCEPTION)) {
                         throw e;
                     }
                 }

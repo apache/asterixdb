@@ -486,7 +486,7 @@ public class JSONDataParser extends AbstractNestedDataParser<ADMToken>
                 msg = ExceptionUtils.getRootCause(e).getMessage();
             }
             if (msg == null) {
-                msg = ErrorCode.getErrorMessage(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM);
+                msg = ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM.errorMessage();
             }
             long lineNum = lineNumber.getAsLong() + jsonParser.getCurrentLocation().getLineNr() - 1;
             JsonStreamContext parsingContext = jsonParser.getParsingContext();

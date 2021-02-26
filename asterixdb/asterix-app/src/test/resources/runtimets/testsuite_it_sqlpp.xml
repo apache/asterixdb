@@ -35,6 +35,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
+      <compilation-unit name="exception_create_system_library">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create a library belonging to the dataverse: Metadata</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
       <compilation-unit name="type_validation">
         <output-dir compare="Text">type_validation</output-dir>
       </compilation-unit>
@@ -103,6 +109,12 @@
     </test-case>
   </test-group>
   <test-group name="feeds">
+    <test-case FilePath="feeds">
+      <compilation-unit name="exception_create_system_adapter">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create a adapter belonging to the dataverse: Metadata (in line 24, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="feeds">
       <compilation-unit name="feed-with-external-function">
         <output-dir compare="Text">feed-with-external-function</output-dir>

@@ -37,8 +37,11 @@ public class ResourceIdManager implements IResourceIdManager {
 
     @Override
     public long createResourceId() {
-        return csm.isClusterActive() || reportedNodes.containsAll(csm.getParticipantNodes(true))
-                ? globalResourceId.incrementAndGet() : -1;
+        return readyState() ? globalResourceId.incrementAndGet() : -1;
+    }
+
+    protected boolean readyState() {
+        return csm.isClusterActive() || reportedNodes.containsAll(csm.getParticipantNodes(true));
     }
 
     @Override
@@ -50,5 +53,10 @@ public class ResourceIdManager implements IResourceIdManager {
     public void report(String nodeId, long maxResourceId) {
         globalResourceId.updateAndGet(prev -> Math.max(maxResourceId, prev));
         reportedNodes.add(nodeId);
+    }
+
+    @Override
+    public long createResourceIdBlock(int blockSize) {
+        return readyState() ? globalResourceId.getAndAdd(blockSize) + 1 : -1;
     }
 }

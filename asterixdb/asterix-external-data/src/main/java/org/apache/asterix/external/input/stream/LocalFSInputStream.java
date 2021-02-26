@@ -18,10 +18,8 @@
  */
 package org.apache.asterix.external.input.stream;
 
-import static org.apache.asterix.common.exceptions.ErrorCode.ASTERIX;
 import static org.apache.asterix.common.exceptions.ErrorCode.INPUT_RECORD_READER_CHAR_ARRAY_RECORD_TOO_LARGE;
 import static org.apache.asterix.common.exceptions.ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM;
-import static org.apache.hyracks.api.exceptions.ErrorCode.HYRACKS;
 import static org.apache.hyracks.api.exceptions.ErrorCode.PARSING_ERROR;
 
 import java.io.File;
@@ -134,21 +132,11 @@ public class LocalFSInputStream extends AbstractMultipleInputStream {
         Throwable root = ExceptionUtils.getRootCause(th);
         if (root instanceof HyracksDataException) {
             HyracksDataException r = (HyracksDataException) root;
-            String component = r.getComponent();
             boolean advance = false;
-            int errorCode = r.getErrorCode();
-            if (ASTERIX.equals(component)) {
-                switch (errorCode) {
-                    case RECORD_READER_MALFORMED_INPUT_STREAM:
-                        logCorruptedInput();
-                    case INPUT_RECORD_READER_CHAR_ARRAY_RECORD_TOO_LARGE:
-                        advance = true;
-                        break;
-                    default:
-                        break;
-                }
-            } else if (HYRACKS.equals(component) && errorCode == PARSING_ERROR) {
+            if (r.matchesAny(RECORD_READER_MALFORMED_INPUT_STREAM, PARSING_ERROR)) {
                 logCorruptedInput();
+                advance = true;
+            } else if (r.matches(INPUT_RECORD_READER_CHAR_ARRAY_RECORD_TOO_LARGE)) {
                 advance = true;
             }
             if (advance) {

@@ -26,11 +26,13 @@ import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ResourceIdRequestMessage implements ICcAddressedMessage {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final String src;
+    private final int blockSize;
 
-    public ResourceIdRequestMessage(String src) {
+    public ResourceIdRequestMessage(String src, int blockSize) {
         this.src = src;
+        this.blockSize = blockSize;
     }
 
     @Override
@@ -40,11 +42,11 @@ public class ResourceIdRequestMessage implements ICcAddressedMessage {
             ResourceIdRequestResponseMessage response = new ResourceIdRequestResponseMessage();
             IClusterStateManager clusterStateManager = appCtx.getClusterStateManager();
             IResourceIdManager resourceIdManager = appCtx.getResourceIdManager();
-            response.setResourceId(resourceIdManager.createResourceId());
+            response.setResourceIdBlock(resourceIdManager.createResourceIdBlock(blockSize), blockSize);
             if (response.getResourceId() < 0) {
                 if (!(clusterStateManager.isClusterActive())) {
                     response.setException(
-                            new Exception("Cannot generate global resource id when cluster is not active."));
+                            new Exception("Cannot generate global resource id(s) when cluster is not active."));
                 } else {
                     response.setException(new Exception("One or more nodes has not reported max resource id."));
                 }
