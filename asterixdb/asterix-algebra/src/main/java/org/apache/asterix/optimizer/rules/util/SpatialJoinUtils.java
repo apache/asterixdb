@@ -149,7 +149,7 @@ public class SpatialJoinUtils {
         ILogicalExpression leftOperatingExpr = spatialJoinInputExprs.get(LEFT).getValue();
         ILogicalExpression rightOperatingExpr = spatialJoinInputExprs.get(RIGHT).getValue();
 
-        // left and right expressions should be variables.
+        // Left and right arguments of the spatial_intersect function should be either variable or function call.
         if (leftOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT
                 || rightOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             return;
