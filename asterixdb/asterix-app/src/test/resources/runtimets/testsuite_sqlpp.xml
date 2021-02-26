@@ -9239,6 +9239,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="spatial">
+      <compilation-unit name="hints_spatial_partitioning">
+        <output-dir compare="Text">hints_spatial_partitioning</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
       <compilation-unit name="line_accessor">
         <output-dir compare="Text">line_accessor</output-dir>
       </compilation-unit>

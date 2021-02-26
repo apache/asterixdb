@@ -130,6 +130,7 @@ public class SpatialJoinUtils {
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
         funcExpr.setSourceLocation(srcLoc);
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar, new MutableObject<>(funcExpr));
+        sideUnnestOp.setSchema(sideOp.getValue().getSchema());
         sideUnnestOp.setSourceLocation(srcLoc);
         sideUnnestOp.getInputs().add(new MutableObject<>(sideOp.getValue()));
         sideOp.setValue(sideUnnestOp);
