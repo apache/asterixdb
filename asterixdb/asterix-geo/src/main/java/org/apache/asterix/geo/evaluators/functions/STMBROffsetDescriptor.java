@@ -49,8 +49,7 @@ public class STMBROffsetDescriptor extends AbstractSTGeometryDoubleNDescriptor {
     protected Object evaluateOGCGeometry(OGCGeometry geometry, double n) throws HyracksDataException {
         Envelope env = new Envelope();
         geometry.getEsriGeometry().queryEnvelope(env);
-        env.offset(n, n);
         return new AMutableRectangle(new AMutablePoint(env.getXMin(), env.getYMin()),
-                new AMutablePoint(env.getXMax(), env.getYMax()));
+                new AMutablePoint(env.getXMax() + n, env.getYMax() + n));
     }
 }
