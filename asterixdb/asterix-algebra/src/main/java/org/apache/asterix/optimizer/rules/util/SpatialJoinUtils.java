@@ -51,7 +51,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class SpatialJoinUtils {
 
     protected static boolean trySpatialJoinAssignment(AbstractBinaryJoinOperator op, IOptimizationContext context,
-            ILogicalExpression joinCondition, int left, int right) throws AlgebricksException {
+                                                      ILogicalExpression joinCondition, int left, int right) throws AlgebricksException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) joinCondition;
         // Check if the join condition contains spatial join
         SpatialJoinAnnotation spatialJoinAnn = null;
@@ -74,7 +74,8 @@ public class SpatialJoinUtils {
                     spatialFunctionCallExists = true;
                 } else {
                     conditionExprs.add(exp);
-                    if (BuiltinFunctions.isSTFilterRefineFunction(funcCallExp.getFunctionIdentifier())) {
+                    if (BuiltinFunctions.isSTFilterRefineFunction(funcCallExp.getFunctionIdentifier()) ||
+                        funcCallExp.getFunctionIdentifier().equals(BuiltinFunctions.ST_DISTANCE)) {
                         // Extract the hint of the spatial-temporal filter refine function
                         spatialJoinAnn = funcCallExp.getAnnotation(SpatialJoinAnnotation.class);
                     }
@@ -96,7 +97,7 @@ public class SpatialJoinUtils {
         // We only apply optimization process for spatial join if the join annotation (hint) is provided
         if (spatialJoinAnn != null) {
             SpatialJoinUtils.updateJoinPlan(op, spatialJoinFuncExpr, conditionExprs, spatialJoinAnn, context, left,
-                    right);
+                right);
             return true;
         } else {
             return false;
@@ -104,30 +105,30 @@ public class SpatialJoinUtils {
     }
 
     private static void setSpatialJoinOp(AbstractBinaryJoinOperator op, List<LogicalVariable> keysLeftBranch,
-            List<LogicalVariable> keysRightBranch, IOptimizationContext context) {
+                                         List<LogicalVariable> keysRightBranch, IOptimizationContext context) {
         ISpatialJoinUtilFactory isjuf = new IntersectSpatialJoinUtilFactory();
         op.setPhysicalOperator(new SpatialJoinPOperator(op.getJoinKind(),
-                AbstractJoinPOperator.JoinPartitioningType.PAIRWISE, keysLeftBranch, keysRightBranch,
-                context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), isjuf));
+            AbstractJoinPOperator.JoinPartitioningType.PAIRWISE, keysLeftBranch, keysRightBranch,
+            context.getPhysicalOptimizationConfig().getMaxFramesForJoin(), isjuf));
     }
 
     private static LogicalVariable injectSpatialTileUnnestOperator(IOptimizationContext context,
-            Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn)
-            throws AlgebricksException {
+                                                                   Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn)
+        throws AlgebricksException {
         SourceLocation srcLoc = sideOp.getValue().getSourceLocation();
         LogicalVariable sideVar = context.newVar();
         VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
         sideInputVar.setSourceLocation(srcLoc);
         UnnestingFunctionCallExpression funcExpr = new UnnestingFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
-                new MutableObject<>(sideInputVar),
-                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                        new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-                                new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
-                new MutableObject<>(
-                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
-                new MutableObject<>(
-                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
+            BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
+            new MutableObject<>(sideInputVar),
+            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
+                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                    new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
+            new MutableObject<>(
+                new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
+            new MutableObject<>(
+                new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
         funcExpr.setSourceLocation(srcLoc);
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar, new MutableObject<>(funcExpr));
         sideUnnestOp.setSchema(sideOp.getValue().getSchema());
@@ -140,9 +141,9 @@ public class SpatialJoinUtils {
     }
 
     protected static void updateJoinPlan(AbstractBinaryJoinOperator op,
-            AbstractFunctionCallExpression spatialJoinFuncExpr, List<Mutable<ILogicalExpression>> conditionExprs,
-            SpatialJoinAnnotation spatialJoinAnn, IOptimizationContext context, int LEFT, int RIGHT)
-            throws AlgebricksException {
+                                         AbstractFunctionCallExpression spatialJoinFuncExpr, List<Mutable<ILogicalExpression>> conditionExprs,
+                                         SpatialJoinAnnotation spatialJoinAnn, IOptimizationContext context, int LEFT, int RIGHT)
+        throws AlgebricksException {
         // Extracts spatial intersect function's arguments
         List<Mutable<ILogicalExpression>> spatialJoinInputExprs = spatialJoinFuncExpr.getArguments();
         if (spatialJoinInputExprs.size() != 2) {
@@ -154,7 +155,7 @@ public class SpatialJoinUtils {
 
         // left and right expressions should be variables.
         if (leftOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT
-                || rightOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+            || rightOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             return;
         }
 
@@ -168,39 +169,39 @@ public class SpatialJoinUtils {
 
         // Inject unnest operator to the left and right branch of the join operator
         LogicalVariable leftTileIdVar =
-                SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftOp, leftInputVar, spatialJoinAnn);
+            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftOp, leftInputVar, spatialJoinAnn);
         LogicalVariable rightTileIdVar =
-                SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightOp, rightInputVar, spatialJoinAnn);
+            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightOp, rightInputVar, spatialJoinAnn);
 
         // Compute reference tile ID
         ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.REFERENCE_TILE),
-                new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
-                new MutableObject<>(new VariableReferenceExpression(rightInputVar)),
-                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                        new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-                                new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
-                new MutableObject<>(
-                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
-                new MutableObject<>(
-                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
+            BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.REFERENCE_TILE),
+            new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
+            new MutableObject<>(new VariableReferenceExpression(rightInputVar)),
+            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
+                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                    new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
+            new MutableObject<>(
+                new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
+            new MutableObject<>(
+                new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
 
         // Update the join conditions with the tile Id equality condition
         ScalarFunctionCallExpression tileIdEquiJoinCondition =
-                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
-                        new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
-                        new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
+            new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
+                new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
+                new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
         ScalarFunctionCallExpression referenceIdEquiJoinCondition =
-                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
-                        new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
-                        new MutableObject<>(referenceTileId));
+            new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
+                new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
+                new MutableObject<>(referenceTileId));
 
         conditionExprs.add(new MutableObject<>(tileIdEquiJoinCondition));
         conditionExprs.add(new MutableObject<>(spatialJoinFuncExpr));
         conditionExprs.add(new MutableObject<>(referenceIdEquiJoinCondition));
 
         ScalarFunctionCallExpression updatedJoinCondition = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND), conditionExprs);
+            BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND), conditionExprs);
         Mutable<ILogicalExpression> joinConditionRef = op.getCondition();
         joinConditionRef.setValue(updatedJoinCondition);
 
