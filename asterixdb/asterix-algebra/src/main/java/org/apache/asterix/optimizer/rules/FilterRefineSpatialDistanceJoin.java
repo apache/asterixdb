@@ -113,9 +113,7 @@ public class FilterRefineSpatialDistanceJoin implements IAlgebraicRewriteRule {
                 || distanceFuncCallExpr.getAnnotation(SpatialJoinAnnotation.class) == null) {
             return false;
         }
-
-        LogicalVariable inputVar0;
-        LogicalVariable inputVar1;
+        
         IAlgebricksConstantValue distanceVar;
 
         // Left and right arguments of the st_distance function should be either variable or function call.
