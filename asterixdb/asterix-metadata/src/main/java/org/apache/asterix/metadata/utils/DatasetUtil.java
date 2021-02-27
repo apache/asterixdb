@@ -563,7 +563,7 @@ public class DatasetUtil {
     }
 
     public static String getFullyQualifiedDisplayName(DataverseName dataverseName, String datasetName) {
-        return dataverseName + "." + datasetName;
+        return MetadataUtil.getFullyQualifiedDisplayName(dataverseName, datasetName);
     }
 
     /***
