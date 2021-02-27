@@ -200,6 +200,8 @@
             <exclude>**/*.iml</exclude>
             <exclude>**/*.json</exclude>
             <exclude>**/*.adm</exclude>
+            <exclude>**/*.regexadm</exclude>
+            <exclude>**/*.regexjson</exclude>
             <exclude>**/*.template</exclude>
             <exclude>asterix-installer/**</exclude> <!-- in case -DskipInstaller -->
           </excludes>
