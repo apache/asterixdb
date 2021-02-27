@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.asterix.algebra.operators.physical.SpatialJoinPOperator;
 import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
@@ -41,14 +42,24 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.SpatialForwardPOperator;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class SpatialJoinUtils {
@@ -141,45 +152,97 @@ public class SpatialJoinUtils {
             SpatialJoinAnnotation spatialJoinAnn, IOptimizationContext context, int LEFT, int RIGHT)
             throws AlgebricksException {
         // Extracts spatial intersect function's arguments
-        List<Mutable<ILogicalExpression>> spatialJoinInputExprs = spatialJoinFuncExpr.getArguments();
-        if (spatialJoinInputExprs.size() != 2) {
+        List<Mutable<ILogicalExpression>> spatialJoinArgs = spatialJoinFuncExpr.getArguments();
+        if (spatialJoinArgs.size() != 2) {
             return;
         }
 
-        ILogicalExpression leftOperatingExpr = spatialJoinInputExprs.get(LEFT).getValue();
-        ILogicalExpression rightOperatingExpr = spatialJoinInputExprs.get(RIGHT).getValue();
+        ILogicalExpression spatialJoinLeftArg = spatialJoinArgs.get(LEFT).getValue();
+        ILogicalExpression spatialJoinRightArg = spatialJoinArgs.get(RIGHT).getValue();
 
         // Left and right arguments of the spatial_intersect function should be either variable or function call.
-        if (leftOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT
-                || rightOperatingExpr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+        if (spatialJoinLeftArg.getExpressionTag() == LogicalExpressionTag.CONSTANT
+                || spatialJoinRightArg.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
             return;
         }
 
         // Gets both input branches of the spatial join.
-        Mutable<ILogicalOperator> leftOp = op.getInputs().get(LEFT);
-        Mutable<ILogicalOperator> rightOp = op.getInputs().get(RIGHT);
+        Mutable<ILogicalOperator> leftInputOp = op.getInputs().get(LEFT);
+        Mutable<ILogicalOperator> rightInputOp = op.getInputs().get(RIGHT);
 
         // Extract left and right variable of the predicate
-        LogicalVariable inputVar0 = ((VariableReferenceExpression) leftOperatingExpr).getVariableReference();
-        LogicalVariable inputVar1 = ((VariableReferenceExpression) rightOperatingExpr).getVariableReference();
+        LogicalVariable spatialJoinVar0 = ((VariableReferenceExpression) spatialJoinLeftArg).getVariableReference();
+        LogicalVariable spatialJoinVar1 = ((VariableReferenceExpression) spatialJoinRightArg).getVariableReference();
 
         LogicalVariable leftInputVar;
         LogicalVariable rightInputVar;
         Collection<LogicalVariable> liveVars = new HashSet<>();
-        VariableUtilities.getLiveVariables(leftOp.getValue(), liveVars);
-        if (liveVars.contains(inputVar0)) {
-            leftInputVar = inputVar0;
-            rightInputVar = inputVar1;
+        VariableUtilities.getLiveVariables(leftInputOp.getValue(), liveVars);
+        if (liveVars.contains(spatialJoinVar0)) {
+            leftInputVar = spatialJoinVar0;
+            rightInputVar = spatialJoinVar1;
         } else {
-            leftInputVar = inputVar1;
-            rightInputVar = inputVar0;
+            leftInputVar = spatialJoinVar1;
+            rightInputVar = spatialJoinVar0;
         }
+
+        // Add the dynamic MBR computation to the left branch
+        SourceLocation srcLoc = op.getSourceLocation();
+        // #1. Create the replicate operator and add it above the source op feeding parent operator
+        ReplicateOperator replicateOp = EnforceStructuralPropertiesRule.createReplicateOperator(leftInputOp, context, srcLoc);
+
+        // Add to exchange operator: one for the aggregate operator and one for the forward operator
+        ExchangeOperator exchToForward = EnforceStructuralPropertiesRule.createOneToOneExchangeOp(new MutableObject<>(replicateOp), context);
+        MutableObject<ILogicalOperator> exchToForwardRef = new MutableObject<>(exchToForward);
+
+        ExchangeOperator exchToAgg = EnforceStructuralPropertiesRule.createOneToOneExchangeOp(new MutableObject<>(replicateOp), context);
+        MutableObject<ILogicalOperator> exchToAggRef = new MutableObject<>(exchToAgg);
+
+        // Add the exchange-to-forward at output 0, the exchange-to-local-aggregate at output 1
+        replicateOp.getOutputs().add(exchToForwardRef);
+        replicateOp.getOutputs().add(exchToAggRef);
+
+        // Materialize the data to be able to re-read the data again after sampling is done
+        replicateOp.getOutputMaterializationFlags()[0] = true;
+
+        // #2. Create the aggregate operator
+        AbstractLogicalExpression leftInputVarRef = new VariableReferenceExpression(leftInputVar, srcLoc);
+        List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
+        fields.add(new MutableObject<>(leftInputVarRef));
+
+        IFunctionInfo countFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.COUNT);
+        AggregateFunctionCallExpression countExpr = new AggregateFunctionCallExpression(countFunc, false, fields);
+        countExpr.setSourceLocation(srcLoc);
+        countExpr.setOpaqueParameters(new Object[] {});
+
+        List<LogicalVariable> aggResultVar = new ArrayList<>(1);
+        List<Mutable<ILogicalExpression>> aggFunc = new ArrayList<>(1);
+        aggResultVar.add(context.newVar());
+        aggFunc.add(new MutableObject<>(countExpr));
+
+        AggregateOperator aggOp = EnforceStructuralPropertiesRule.createAggregate(aggResultVar, true, aggFunc, exchToAggRef, context, srcLoc);
+        MutableObject<ILogicalOperator> agg = new MutableObject<>(aggOp);
+
+        // #3. Create the forward operator
+        String aggKey = UUID.randomUUID().toString();
+        LogicalVariable aggVar = aggResultVar.get(0);
+        ForwardOperator forward = createForward(aggKey, aggVar, exchToForwardRef, agg, context, srcLoc);
+        MutableObject<ILogicalOperator> forwardRef = new MutableObject<>(forward);
+
+        // Replace the old input of parentOp requiring the range partitioning with the new forward op
+        op.getInputs().set(LEFT, forwardRef);
+        op.recomputeSchema();
+        context.computeAndSetTypeEnvironmentForOperator(op);
+
+        // Get left input again
+        leftInputOp = op.getInputs().get(LEFT);
+
 
         // Inject unnest operator to the left and right branch of the join operator
         LogicalVariable leftTileIdVar =
-                SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftOp, leftInputVar, spatialJoinAnn);
+                SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp, leftInputVar, spatialJoinAnn);
         LogicalVariable rightTileIdVar =
-                SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightOp, rightInputVar, spatialJoinAnn);
+                SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp, rightInputVar, spatialJoinAnn);
 
         // Compute reference tile ID
         ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(
@@ -220,5 +283,20 @@ public class SpatialJoinUtils {
         keysRightBranch.add(rightTileIdVar);
         keysRightBranch.add(rightInputVar);
         SpatialJoinUtils.setSpatialJoinOp(op, keysLeftBranch, keysRightBranch, context);
+    }
+
+    private static ForwardOperator createForward(String aggKey, LogicalVariable aggVariable,
+                                                 MutableObject<ILogicalOperator> exchangeOpFromReplicate, MutableObject<ILogicalOperator> aggInput,
+                                                 IOptimizationContext context, SourceLocation sourceLoc) throws AlgebricksException {
+        AbstractLogicalExpression aggExpression = new VariableReferenceExpression(aggVariable, sourceLoc);
+        ForwardOperator forwardOperator = new ForwardOperator(aggKey, new MutableObject<>(aggExpression));
+        forwardOperator.setSourceLocation(sourceLoc);
+        forwardOperator.setPhysicalOperator(new SpatialForwardPOperator());
+        forwardOperator.getInputs().add(exchangeOpFromReplicate);
+        forwardOperator.getInputs().add(aggInput);
+        OperatorManipulationUtil.setOperatorMode(forwardOperator);
+        forwardOperator.recomputeSchema();
+        context.computeAndSetTypeEnvironmentForOperator(forwardOperator);
+        return forwardOperator;
     }
 }

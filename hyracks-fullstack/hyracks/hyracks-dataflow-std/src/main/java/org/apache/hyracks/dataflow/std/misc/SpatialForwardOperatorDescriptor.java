@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.dataflow.std.misc;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -26,13 +28,19 @@ import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractForwardOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
+import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
 
 public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDescriptor {
@@ -55,7 +63,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
 
     @Override
     public AbstractActivityNode createSideDataActivity() {
-        return null;
+        return new RangeMapReaderActivity(new ActivityId(odId, SIDE_DATA_ACTIVITY_ID));
     }
 
     private class CountState extends AbstractStateObject {
@@ -63,6 +71,84 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
 
         private CountState(JobId jobId, TaskId stateObjectKey) {
             super(jobId, stateObjectKey);
+        }
+    }
+
+    private class RangeMapReaderActivity extends AbstractActivityNode {
+        private static final long serialVersionUID = 1L;
+
+        private RangeMapReaderActivity(ActivityId activityId) {
+            super(activityId);
+        }
+
+        @Override
+        public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
+                                                       IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
+            throws HyracksDataException {
+            RecordDescriptor inputRecordDescriptor = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
+            return new RangeMapReaderActivityNodePushable(ctx, inputRecordDescriptor, getActivityId(), partition);
+        }
+    }
+
+    private class RangeMapReaderActivityNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
+        private final FrameTupleAccessor frameTupleAccessor;
+        private final FrameTupleReference frameTupleReference;
+        private final IHyracksTaskContext ctx;
+        private final ActivityId activityId;
+        private final int partition;
+        private int count;
+
+        private RangeMapReaderActivityNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecordDescriptor,
+                                                   ActivityId activityId, int partition) {
+            this.ctx = ctx;
+            this.frameTupleAccessor = new FrameTupleAccessor(inputRecordDescriptor);
+            this.frameTupleReference = new FrameTupleReference();
+            this.activityId = activityId;
+            this.partition = partition;
+            this.count = -1;
+        }
+
+        @Override
+        public void open() throws HyracksDataException {
+            // this activity does not have a consumer to open (it's a sink), and nothing to initialize
+        }
+
+        @Override
+        public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+            // "buffer" contains the serialized range map sent by a range map computer function.
+            // deserialize the range map
+            frameTupleAccessor.reset(buffer);
+            if (frameTupleAccessor.getTupleCount() != 1) {
+                throw HyracksDataException.create(ErrorCode.ONE_TUPLE_RANGEMAP_EXPECTED, sourceLoc);
+            }
+            frameTupleReference.reset(frameTupleAccessor, 0);
+            byte[] rangeMap = frameTupleReference.getFieldData(0);
+            int offset = frameTupleReference.getFieldStart(0);
+            int length = frameTupleReference.getFieldLength(0);
+            ByteArrayPointable pointable = new ByteArrayPointable();
+            pointable.set(rangeMap, offset + 1, length - 1);
+            ByteArrayInputStream rangeMapIn = new ByteArrayInputStream(pointable.getByteArray(),
+                pointable.getContentStartOffset(), pointable.getContentLength());
+            DataInputStream dataInputStream = new DataInputStream(rangeMapIn);
+            count = IntegerSerializerDeserializer.read(dataInputStream);
+        }
+
+        @Override
+        public void fail() throws HyracksDataException {
+            // it's a sink node pushable, nothing to fail
+        }
+
+        @Override
+        public void close() throws HyracksDataException {
+            // expecting count > 0
+            if (count <= 0) {
+                throw HyracksDataException.create(ErrorCode.NO_RANGEMAP_PRODUCED, sourceLoc);
+            }
+            // store the range map in the state object of ctx so that next activity (forward) could retrieve it
+            TaskId countReaderTaskId = new TaskId(activityId, partition);
+            CountState countState = new CountState(ctx.getJobletContext().getJobId(), countReaderTaskId);
+            countState.count = count;
+            ctx.setStateObject(countState);
         }
     }
 
