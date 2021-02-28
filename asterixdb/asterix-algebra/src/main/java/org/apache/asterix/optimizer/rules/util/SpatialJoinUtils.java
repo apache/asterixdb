@@ -206,6 +206,7 @@ public class SpatialJoinUtils {
         ExchangeOperator exchangeOperator2 = createOneToOneExchangeOp(replicateOperator, context);
         MutableObject<ILogicalOperator> exchToLocalAggRef = new MutableObject<>(exchangeOperator2);
 
+        // Materialize the data to be able to re-read the data again
         replicateOperator.getOutputMaterializationFlags()[0] = true;
 
         // Add agg operator
@@ -214,42 +215,41 @@ public class SpatialJoinUtils {
         List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
         fields.add(new MutableObject<>(one));
 
-        // Local function
-        IFunctionInfo countFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.SQL_COUNT);
-        AggregateFunctionCallExpression countExpr = new AggregateFunctionCallExpression(countFunc, false, fields);
-        countExpr.setSourceLocation(op.getSourceLocation());
-        countExpr.setOpaqueParameters(new Object[] {});
-
-        List<LogicalVariable> aggResultVar = new ArrayList<>(1);
-        List<Mutable<ILogicalExpression>> aggFunc = new ArrayList<>(1);
+        // Create local aggregate operator
+        IFunctionInfo localAggFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.SQL_COUNT);
+        AggregateFunctionCallExpression localAggExpr = new AggregateFunctionCallExpression(localAggFunc, false, fields);
+        localAggExpr.setSourceLocation(op.getSourceLocation());
+        localAggExpr.setOpaqueParameters(new Object[] {});
+        List<LogicalVariable> localAggResultVars = new ArrayList<>(1);
+        List<Mutable<ILogicalExpression>> localAggFuncs = new ArrayList<>(1);
         LogicalVariable localOutVariable = context.newVar();
-        aggResultVar.add(localOutVariable);
-        aggFunc.add(new MutableObject<>(countExpr));
+        localAggResultVars.add(localOutVariable);
+        localAggFuncs.add(new MutableObject<>(localAggExpr));
+        AggregateOperator localAggOperator = EnforceStructuralPropertiesRule.createAggregate(localAggResultVars, false, localAggFuncs, exchToLocalAggRef, context, op.getSourceLocation());
+        MutableObject<ILogicalOperator> localAgg = new MutableObject<>(localAggOperator);
 
-        AggregateOperator aggOp = EnforceStructuralPropertiesRule.createAggregate(aggResultVar, false, aggFunc, exchToLocalAggRef, context, op.getSourceLocation());
-        MutableObject<ILogicalOperator> localAgg = new MutableObject<>(aggOp);
+        // Create global aggregate operator
+        // Output of local aggregate function is the input of global aggregate function
+        List<Mutable<ILogicalExpression>> globalAggFuncArgs = new ArrayList<>(1);
+        AbstractLogicalExpression localOutVariableRef = new VariableReferenceExpression(localOutVariable, op.getSourceLocation());
+        globalAggFuncArgs.add(new MutableObject<>(localOutVariableRef));
 
-        // Global function
-        List<Mutable<ILogicalExpression>> argsToGlobal = new ArrayList<>(1);
-        AbstractLogicalExpression varExprRef = new VariableReferenceExpression(localOutVariable, op.getSourceLocation());
-        argsToGlobal.add(new MutableObject<>(varExprRef));
-        IFunctionInfo globalFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.SQL_SUM);
-        AggregateFunctionCallExpression globalExp = new AggregateFunctionCallExpression(globalFunc, true, argsToGlobal);
-        globalExp.setStepOneAggregate(globalFunc);
-        globalExp.setStepTwoAggregate(globalFunc);
-        globalExp.setSourceLocation(op.getSourceLocation());
-        globalExp.setOpaqueParameters(new Object[] {});
-        List<LogicalVariable> globalResultVariable = new ArrayList<>(1);
-        List<Mutable<ILogicalExpression>> globalAggFunction = new ArrayList<>(1);
-        globalResultVariable.add(context.newVar());
-        globalAggFunction.add(new MutableObject<>(globalExp));
-
-        AggregateOperator globalAggOp = EnforceStructuralPropertiesRule.createAggregate(globalResultVariable, true, globalAggFunction, localAgg, context, op.getSourceLocation());
-        MutableObject<ILogicalOperator> globalAgg = new MutableObject<>(globalAggOp);
+        IFunctionInfo globalAggFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.SQL_SUM);
+        AggregateFunctionCallExpression globalAggExpr = new AggregateFunctionCallExpression(globalAggFunc, true, globalAggFuncArgs);
+        globalAggExpr.setStepOneAggregate(globalAggFunc);
+        globalAggExpr.setStepTwoAggregate(globalAggFunc);
+        globalAggExpr.setSourceLocation(op.getSourceLocation());
+        globalAggExpr.setOpaqueParameters(new Object[] {});
+        List<LogicalVariable> globalAggResultVars = new ArrayList<>(1);
+        List<Mutable<ILogicalExpression>> globalAggFuncs = new ArrayList<>(1);
+        globalAggResultVars.add(context.newVar());
+        globalAggFuncs.add(new MutableObject<>(globalAggExpr));
+        AggregateOperator globalAggOperator = EnforceStructuralPropertiesRule.createAggregate(globalAggResultVars, true, globalAggFuncs, localAgg, context, op.getSourceLocation());
+        MutableObject<ILogicalOperator> globalAgg = new MutableObject<>(globalAggOperator);
 
         // Add forward operator
         String aggKey = UUID.randomUUID().toString();
-        LogicalVariable aggVar = globalResultVariable.get(0);
+        LogicalVariable aggVar = globalAggResultVars.get(0);
         ForwardOperator forward = createForward(aggKey, aggVar, exchToForwardRef, globalAgg, context, op.getSourceLocation());
         MutableObject<ILogicalOperator> forwardRef = new MutableObject<>(forward);
 
