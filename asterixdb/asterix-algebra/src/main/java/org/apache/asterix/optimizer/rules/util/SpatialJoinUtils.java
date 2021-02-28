@@ -38,6 +38,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -196,23 +197,11 @@ public class SpatialJoinUtils {
             rightInputVar = spatialJoinVar0;
         }
 
-        // Add ReplicationOperator for the left branch
-        SourceLocation sourceLocation = op.getSourceLocation();
-        ReplicateOperator replicateOperator = createReplicateOperator(leftInputOp, context, sourceLocation);
-
-        // Create one to one exchange operators for the replicator of the left branch
-        ExchangeOperator exchangeOperator1 = createOneToOneExchangeOp(replicateOperator, context);
-        MutableObject<ILogicalOperator> exchToForwardRef = new MutableObject<>(exchangeOperator1);
-
-        ExchangeOperator exchangeOperator2 = createOneToOneExchangeOp(replicateOperator, context);
-        MutableObject<ILogicalOperator> exchToLocalAggRef = new MutableObject<>(exchangeOperator2);
-
-        // Materialize the data to be able to re-read the data again
-        replicateOperator.getOutputMaterializationFlags()[0] = true;
-
-        Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggResult = createLocalAndGlobalAggregateOperators(op, context, leftInputVar, exchToLocalAggRef);
-        MutableObject<ILogicalOperator> globalAgg = createLocalAndGlobalAggResult.first;
-        List<LogicalVariable> globalAggResultVars = createLocalAndGlobalAggResult.second;
+        // Add a dynamic workflow to compute MBR of the left input
+        Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> createMBRCalculator = createDynamicMBRCalculator(op, context, leftInputOp, leftInputVar);
+        MutableObject<ILogicalOperator> globalAgg = createMBRCalculator.first;
+        List<LogicalVariable> globalAggResultVars = createMBRCalculator.second;
+        MutableObject<ILogicalOperator> exchToForwardRef = createMBRCalculator.third;
 
         // Add forward operator
         String aggKey = UUID.randomUUID().toString();
@@ -293,7 +282,7 @@ public class SpatialJoinUtils {
         return exchangeOperator1;
     }
 
-    private static Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>>  createLocalAndGlobalAggregateOperators(AbstractBinaryJoinOperator op, IOptimizationContext context,
+    private static Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggregateOperators(AbstractBinaryJoinOperator op, IOptimizationContext context,
                                                                                                LogicalVariable inputVar, MutableObject<ILogicalOperator> exchToLocalAggRef) throws AlgebricksException {
         // Add agg operator
         ConstantExpression one = new ConstantExpression(new AsterixConstantValue(new AInt64(1)));
@@ -348,5 +337,25 @@ public class SpatialJoinUtils {
         forwardOperator.recomputeSchema();
         context.computeAndSetTypeEnvironmentForOperator(forwardOperator);
         return forwardOperator;
+    }
+
+    private static Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> createDynamicMBRCalculator(AbstractBinaryJoinOperator op, IOptimizationContext context,
+                                                                                                             Mutable<ILogicalOperator> inputOp, LogicalVariable inputVar) throws AlgebricksException {
+        // Add ReplicationOperator for the input branch
+        SourceLocation sourceLocation = op.getSourceLocation();
+        ReplicateOperator replicateOperator = createReplicateOperator(inputOp, context, sourceLocation);
+
+        // Create one to one exchange operators for the replicator of the input branch
+        ExchangeOperator exchToForward = createOneToOneExchangeOp(replicateOperator, context);
+        MutableObject<ILogicalOperator> exchToForwardRef = new MutableObject<>(exchToForward);
+
+        ExchangeOperator exchToLocalAgg = createOneToOneExchangeOp(replicateOperator, context);
+        MutableObject<ILogicalOperator> exchToLocalAggRef = new MutableObject<>(exchToLocalAgg);
+
+        // Materialize the data to be able to re-read the data again
+        replicateOperator.getOutputMaterializationFlags()[0] = true;
+
+        Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggResult = createLocalAndGlobalAggregateOperators(op, context, inputVar, exchToLocalAggRef);
+        return new Triple<>(createLocalAndGlobalAggResult.first, createLocalAndGlobalAggResult.second, exchToForwardRef);
     }
 }
