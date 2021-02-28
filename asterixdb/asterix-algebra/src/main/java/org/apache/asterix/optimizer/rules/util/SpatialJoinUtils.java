@@ -228,32 +228,55 @@ public class SpatialJoinUtils {
 //        replicateOperator.getOutputMaterializationFlags()[1] = true;
 
         // Add agg operator
-//        AbstractLogicalExpression leftInputVarRef = new VariableReferenceExpression(leftInputVar, op.getSourceLocation());
+        ConstantExpression one = new ConstantExpression(new AsterixConstantValue(new AInt64(1)));
+        AbstractLogicalExpression leftInputVarRef = new VariableReferenceExpression(leftInputVar, op.getSourceLocation());
         List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
+        fields.add(new MutableObject<>(one));
 //        fields.add(new MutableObject<>(leftInputVarRef));
-        for (LogicalVariable var: liveVars) {
-            AbstractLogicalExpression varRef = new VariableReferenceExpression(var, op.getSourceLocation());
-            fields.add(new MutableObject<>(varRef));
-        }
+//        for (LogicalVariable var: liveVars) {
+//            AbstractLogicalExpression varRef = new VariableReferenceExpression(var, op.getSourceLocation());
+//            fields.add(new MutableObject<>(varRef));
+//        }
 
-        IFunctionInfo countFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.COUNT);
+        // Local function
+        IFunctionInfo countFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.SQL_COUNT);
         AggregateFunctionCallExpression countExpr = new AggregateFunctionCallExpression(countFunc, false, fields);
         countExpr.setSourceLocation(op.getSourceLocation());
         countExpr.setOpaqueParameters(new Object[] {});
 
         List<LogicalVariable> aggResultVar = new ArrayList<>(1);
         List<Mutable<ILogicalExpression>> aggFunc = new ArrayList<>(1);
-        aggResultVar.add(context.newVar());
+        LogicalVariable localOutVariable = context.newVar();
+        aggResultVar.add(localOutVariable);
         aggFunc.add(new MutableObject<>(countExpr));
 
         AggregateOperator aggOp = EnforceStructuralPropertiesRule.createAggregate(aggResultVar, false, aggFunc, exchToAggRef, context, op.getSourceLocation());
-        MutableObject<ILogicalOperator> agg = new MutableObject<>(aggOp);
+        MutableObject<ILogicalOperator> localAgg = new MutableObject<>(aggOp);
+
+        // Global function
+        List<Mutable<ILogicalExpression>> argsToGlobal = new ArrayList<>(1);
+        AbstractLogicalExpression varExprRef = new VariableReferenceExpression(localOutVariable, op.getSourceLocation());
+        argsToGlobal.add(new MutableObject<>(varExprRef));
+        IFunctionInfo globalFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.SQL_SUM);
+        AggregateFunctionCallExpression globalExp = new AggregateFunctionCallExpression(globalFunc, true, argsToGlobal);
+        globalExp.setStepOneAggregate(globalFunc);
+        globalExp.setStepTwoAggregate(globalFunc);
+        globalExp.setSourceLocation(op.getSourceLocation());
+        globalExp.setOpaqueParameters(new Object[] {});
+        List<LogicalVariable> globalResultVariable = new ArrayList<>(1);
+        List<Mutable<ILogicalExpression>> globalAggFunction = new ArrayList<>(1);
+        globalResultVariable.add(context.newVar());
+        globalAggFunction.add(new MutableObject<>(globalExp));
+
+        AggregateOperator globalAggOp = EnforceStructuralPropertiesRule.createAggregate(globalResultVariable, true, globalAggFunction, localAgg, context, op.getSourceLocation());
+        MutableObject<ILogicalOperator> globalAgg = new MutableObject<>(globalAggOp);
+
 
         // Add forward operator
         String aggKey = UUID.randomUUID().toString();
-        LogicalVariable aggVar = aggResultVar.get(0);
+        LogicalVariable aggVar = globalResultVariable.get(0);
 //        ForwardOperator forward = createForward(aggKey, null, exchToForwardRef, null, context, srcLoc);
-        ForwardOperator forward = createForward(aggKey, aggVar, exchToForwardRef, agg, context, op.getSourceLocation());
+        ForwardOperator forward = createForward(aggKey, aggVar, exchToForwardRef, globalAgg, context, op.getSourceLocation());
         MutableObject<ILogicalOperator> forwardRef = new MutableObject<>(forward);
 
         leftInputOp.setValue(forwardRef.getValue());

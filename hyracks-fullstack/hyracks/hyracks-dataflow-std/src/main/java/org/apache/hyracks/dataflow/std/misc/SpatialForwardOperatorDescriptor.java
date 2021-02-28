@@ -33,8 +33,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
+import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
@@ -67,7 +69,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
     }
 
     private class CountState extends AbstractStateObject {
-        int count;
+        long count;
 
         private CountState(JobId jobId, TaskId stateObjectKey) {
             super(jobId, stateObjectKey);
@@ -96,7 +98,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
         private final IHyracksTaskContext ctx;
         private final ActivityId activityId;
         private final int partition;
-        private int count;
+        private long count;
 
         private RangeMapReaderActivityNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecordDescriptor,
                                                    ActivityId activityId, int partition) {
@@ -125,12 +127,14 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
             byte[] rangeMap = frameTupleReference.getFieldData(0);
             int offset = frameTupleReference.getFieldStart(0);
             int length = frameTupleReference.getFieldLength(0);
-            ByteArrayPointable pointable = new ByteArrayPointable();
+            LongPointable pointable = new LongPointable();
             pointable.set(rangeMap, offset + 1, length - 1);
-            ByteArrayInputStream rangeMapIn = new ByteArrayInputStream(pointable.getByteArray(),
-                pointable.getContentStartOffset(), pointable.getContentLength());
-            DataInputStream dataInputStream = new DataInputStream(rangeMapIn);
-            count = IntegerSerializerDeserializer.read(dataInputStream);
+//            pointable.set(rangeMap, offset, length);
+            count = pointable.getLong();
+//            ByteArrayInputStream rangeMapIn = new ByteArrayInputStream(pointable.getByteArray(),
+//                pointable.getStartOffset(), pointable.getLength());
+//            DataInputStream dataInputStream = new DataInputStream(rangeMapIn);
+//            count = Integer64SerializerDeserializer.read(dataInputStream);
         }
 
         @Override
