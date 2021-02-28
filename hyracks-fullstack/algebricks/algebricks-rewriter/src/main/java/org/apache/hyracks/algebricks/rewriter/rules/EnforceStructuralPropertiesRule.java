@@ -752,7 +752,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         return new RangePartitionExchangePOperator(partitioningColumns, targetDomain, rangeMapKey);
     }
 
-    public static ReplicateOperator createReplicateOperator(Mutable<ILogicalOperator> inputOperator,
+    private static ReplicateOperator createReplicateOperator(Mutable<ILogicalOperator> inputOperator,
             IOptimizationContext context, SourceLocation sourceLocation) throws AlgebricksException {
         ReplicateOperator replicateOperator = new ReplicateOperator(2);
         replicateOperator.setPhysicalOperator(new ReplicatePOperator());
@@ -857,7 +857,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         return aggregateOperator;
     }
 
-    public static ExchangeOperator createOneToOneExchangeOp(MutableObject<ILogicalOperator> inputOperator,
+    private static ExchangeOperator createOneToOneExchangeOp(MutableObject<ILogicalOperator> inputOperator,
             IOptimizationContext context) throws AlgebricksException {
         ExchangeOperator exchangeOperator = new ExchangeOperator();
         exchangeOperator.setPhysicalOperator(new OneToOneExchangePOperator());

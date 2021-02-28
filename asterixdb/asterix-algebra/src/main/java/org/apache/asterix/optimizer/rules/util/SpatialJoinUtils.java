@@ -195,33 +195,16 @@ public class SpatialJoinUtils {
             rightInputVar = spatialJoinVar0;
         }
 
-        // Add ReplicationOperator
-        ReplicateOperator replicateOperator = new ReplicateOperator(2);
-        replicateOperator.setSourceLocation(op.getSourceLocation());
-        replicateOperator.setPhysicalOperator(new ReplicatePOperator());
-        replicateOperator.setSchema(leftInputOp.getValue().getSchema());
-        replicateOperator.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
-        replicateOperator.getInputs().add(new MutableObject<>(leftInputOp.getValue()));
-        context.computeAndSetTypeEnvironmentForOperator(replicateOperator);
+        // Add ReplicationOperator for the left branch
+        SourceLocation sourceLocation = op.getSourceLocation();
+        ReplicateOperator replicateOperator = createReplicateOperator(leftInputOp, context, sourceLocation);
 
-        // Add one-to-one exchange
-        ExchangeOperator exchangeOperator1 = new ExchangeOperator();
-        exchangeOperator1.setPhysicalOperator(new OneToOneExchangePOperator());
-        replicateOperator.getOutputs().add(new MutableObject<>(exchangeOperator1));
-        exchangeOperator1.getInputs().add(new MutableObject<>(replicateOperator));
-        exchangeOperator1.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
-        exchangeOperator1.setSchema(replicateOperator.getSchema());
-        context.computeAndSetTypeEnvironmentForOperator(exchangeOperator1);
+        // Create one to one exchange operators for the replicator of the left branch
+        ExchangeOperator exchangeOperator1 = createOneToOneExchangeOp(replicateOperator, context);
         MutableObject<ILogicalOperator> exchToForwardRef = new MutableObject<>(exchangeOperator1);
 
-        ExchangeOperator exchangeOperator2 = new ExchangeOperator();
-        exchangeOperator2.setPhysicalOperator(new OneToOneExchangePOperator());
-        replicateOperator.getOutputs().add(new MutableObject<>(exchangeOperator2));
-        exchangeOperator2.getInputs().add(new MutableObject<>(replicateOperator));
-        exchangeOperator2.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
-        exchangeOperator2.setSchema(replicateOperator.getSchema());
-        context.computeAndSetTypeEnvironmentForOperator(exchangeOperator2);
-        MutableObject<ILogicalOperator> exchToAggRef = new MutableObject<>(exchangeOperator2);
+        ExchangeOperator exchangeOperator2 = createOneToOneExchangeOp(replicateOperator, context);
+        MutableObject<ILogicalOperator> exchToLocalAggRef = new MutableObject<>(exchangeOperator2);
 
         replicateOperator.getOutputMaterializationFlags()[0] = true;
 
@@ -243,7 +226,7 @@ public class SpatialJoinUtils {
         aggResultVar.add(localOutVariable);
         aggFunc.add(new MutableObject<>(countExpr));
 
-        AggregateOperator aggOp = EnforceStructuralPropertiesRule.createAggregate(aggResultVar, false, aggFunc, exchToAggRef, context, op.getSourceLocation());
+        AggregateOperator aggOp = EnforceStructuralPropertiesRule.createAggregate(aggResultVar, false, aggFunc, exchToLocalAggRef, context, op.getSourceLocation());
         MutableObject<ILogicalOperator> localAgg = new MutableObject<>(aggOp);
 
         // Global function
@@ -263,7 +246,7 @@ public class SpatialJoinUtils {
 
         AggregateOperator globalAggOp = EnforceStructuralPropertiesRule.createAggregate(globalResultVariable, true, globalAggFunction, localAgg, context, op.getSourceLocation());
         MutableObject<ILogicalOperator> globalAgg = new MutableObject<>(globalAggOp);
-        
+
         // Add forward operator
         String aggKey = UUID.randomUUID().toString();
         LogicalVariable aggVar = globalResultVariable.get(0);
@@ -317,6 +300,37 @@ public class SpatialJoinUtils {
         keysRightBranch.add(rightTileIdVar);
         keysRightBranch.add(rightInputVar);
         SpatialJoinUtils.setSpatialJoinOp(op, keysLeftBranch, keysRightBranch, context);
+    }
+
+    private static ReplicateOperator createReplicateOperator(Mutable<ILogicalOperator> inputOperator,
+                                                            IOptimizationContext context, SourceLocation sourceLocation) throws AlgebricksException {
+        ReplicateOperator replicateOperator = new ReplicateOperator(2);
+        replicateOperator.setPhysicalOperator(new ReplicatePOperator());
+        replicateOperator.setSourceLocation(sourceLocation);
+        replicateOperator.getInputs().add(new MutableObject<>(inputOperator.getValue()));
+        OperatorManipulationUtil.setOperatorMode(replicateOperator);
+        replicateOperator.recomputeSchema();
+        context.computeAndSetTypeEnvironmentForOperator(replicateOperator);
+        return replicateOperator;
+    }
+
+    private static ExchangeOperator createOneToOneExchangeOp(ReplicateOperator replicateOperator,
+                                                            IOptimizationContext context) throws AlgebricksException {
+//        ExchangeOperator exchangeOperator = new ExchangeOperator();
+//        exchangeOperator.setPhysicalOperator(new OneToOneExchangePOperator());
+//        exchangeOperator.getInputs().add(new MutableObject<>(inputOperator.getValue()));
+//        exchangeOperator.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
+//        exchangeOperator.recomputeSchema();
+//        context.computeAndSetTypeEnvironmentForOperator(exchangeOperator);
+//        return exchangeOperator;
+        ExchangeOperator exchangeOperator1 = new ExchangeOperator();
+        exchangeOperator1.setPhysicalOperator(new OneToOneExchangePOperator());
+        replicateOperator.getOutputs().add(new MutableObject<>(exchangeOperator1));
+        exchangeOperator1.getInputs().add(new MutableObject<>(replicateOperator));
+        exchangeOperator1.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
+        exchangeOperator1.setSchema(replicateOperator.getSchema());
+        context.computeAndSetTypeEnvironmentForOperator(exchangeOperator1);
+        return exchangeOperator1;
     }
 
     private static ForwardOperator createForward(String aggKey, LogicalVariable aggVariable,
