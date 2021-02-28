@@ -129,12 +129,10 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
             int length = frameTupleReference.getFieldLength(0);
             LongPointable pointable = new LongPointable();
             pointable.set(rangeMap, offset + 1, length - 1);
-//            pointable.set(rangeMap, offset, length);
-            count = pointable.getLong();
-//            ByteArrayInputStream rangeMapIn = new ByteArrayInputStream(pointable.getByteArray(),
-//                pointable.getStartOffset(), pointable.getLength());
-//            DataInputStream dataInputStream = new DataInputStream(rangeMapIn);
-//            count = Integer64SerializerDeserializer.read(dataInputStream);
+            ByteArrayInputStream rangeMapIn = new ByteArrayInputStream(pointable.getByteArray(),
+                pointable.getStartOffset(), pointable.getLength());
+            DataInputStream dataInputStream = new DataInputStream(rangeMapIn);
+            count = Integer64SerializerDeserializer.read(dataInputStream);
         }
 
         @Override

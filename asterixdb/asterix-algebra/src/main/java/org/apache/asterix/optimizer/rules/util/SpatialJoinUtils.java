@@ -204,10 +204,6 @@ public class SpatialJoinUtils {
         replicateOperator.getInputs().add(new MutableObject<>(leftInputOp.getValue()));
         context.computeAndSetTypeEnvironmentForOperator(replicateOperator);
 
-//        replicateOperator.getOutputMaterializationFlags()[1] = true;
-
-//        leftInputOp.setValue(replicateOperator);
-
         // Add one-to-one exchange
         ExchangeOperator exchangeOperator1 = new ExchangeOperator();
         exchangeOperator1.setPhysicalOperator(new OneToOneExchangePOperator());
@@ -228,18 +224,12 @@ public class SpatialJoinUtils {
         MutableObject<ILogicalOperator> exchToAggRef = new MutableObject<>(exchangeOperator2);
 
         replicateOperator.getOutputMaterializationFlags()[0] = true;
-//        replicateOperator.getOutputMaterializationFlags()[1] = true;
 
         // Add agg operator
         ConstantExpression one = new ConstantExpression(new AsterixConstantValue(new AInt64(1)));
         AbstractLogicalExpression leftInputVarRef = new VariableReferenceExpression(leftInputVar, op.getSourceLocation());
         List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
         fields.add(new MutableObject<>(one));
-//        fields.add(new MutableObject<>(leftInputVarRef));
-//        for (LogicalVariable var: liveVars) {
-//            AbstractLogicalExpression varRef = new VariableReferenceExpression(var, op.getSourceLocation());
-//            fields.add(new MutableObject<>(varRef));
-//        }
 
         // Local function
         IFunctionInfo countFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.SQL_COUNT);
@@ -273,142 +263,20 @@ public class SpatialJoinUtils {
 
         AggregateOperator globalAggOp = EnforceStructuralPropertiesRule.createAggregate(globalResultVariable, true, globalAggFunction, localAgg, context, op.getSourceLocation());
         MutableObject<ILogicalOperator> globalAgg = new MutableObject<>(globalAggOp);
-
-
+        
         // Add forward operator
         String aggKey = UUID.randomUUID().toString();
         LogicalVariable aggVar = globalResultVariable.get(0);
-//        ForwardOperator forward = createForward(aggKey, null, exchToForwardRef, null, context, srcLoc);
         ForwardOperator forward = createForward(aggKey, aggVar, exchToForwardRef, globalAgg, context, op.getSourceLocation());
         MutableObject<ILogicalOperator> forwardRef = new MutableObject<>(forward);
 
         leftInputOp.setValue(forwardRef.getValue());
-//        rightInputOp.setValue(exchangeOperator2);
 
         // Inject unnest operator to the left and right branch of the join operator // leftInputOp  new MutableObject<>(replicateOp)
         LogicalVariable leftTileIdVar =
             SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp, leftInputVar, spatialJoinAnn, aggKey);
         LogicalVariable rightTileIdVar =
             SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp, rightInputVar, spatialJoinAnn, aggKey);
-
-//        MutableObject<ILogicalOperator> exchToForwardRef = new MutableObject<>(exchangeOperator1);
-//        replicateOperator.getOutputs().add(exchToForwardRef);
-////        context.computeAndSetTypeEnvironmentForOperator(replicateOperator);
-//
-//        ExchangeOperator exchangeOperator2 = new ExchangeOperator();
-//        exchangeOperator2.setPhysicalOperator(new OneToOneExchangePOperator());
-//        exchangeOperator2.getInputs().add(new MutableObject<>(replicateOperator));
-//        exchangeOperator2.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
-//        exchangeOperator2.setSchema(replicateOperator.getSchema());
-//        context.computeAndSetTypeEnvironmentForOperator(exchangeOperator2);
-//        MutableObject<ILogicalOperator> exchToAggRef = new MutableObject<>(exchangeOperator2);
-//        replicateOperator.getOutputs().add(exchToAggRef);
-
-//        replicateOperator.getOutputs().add(new MutableObject<>(exchangeOperator));
-
-        // Add forward operator
-        /*SourceLocation srcLoc = op.getSourceLocation();
-        AbstractLogicalExpression leftInputVarRef = new VariableReferenceExpression(leftInputVar, srcLoc);
-        List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
-        fields.add(new MutableObject<>(leftInputVarRef));
-
-        IFunctionInfo countFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.COUNT);
-        AggregateFunctionCallExpression countExpr = new AggregateFunctionCallExpression(countFunc, false, fields);
-        countExpr.setSourceLocation(srcLoc);
-        countExpr.setOpaqueParameters(new Object[] {});
-
-        List<LogicalVariable> aggResultVar = new ArrayList<>(1);
-        List<Mutable<ILogicalExpression>> aggFunc = new ArrayList<>(1);
-        aggResultVar.add(context.newVar());
-        aggFunc.add(new MutableObject<>(countExpr));
-
-        AggregateOperator aggOp = EnforceStructuralPropertiesRule.createAggregate(aggResultVar, true, aggFunc, new MutableObject<>(replicateOperator.getOutputs().get(1).getValue()), context, srcLoc);
-        MutableObject<ILogicalOperator> agg = new MutableObject<>(aggOp);
-
-        // #3. Create the forward operator
-        String aggKey = UUID.randomUUID().toString();
-//        LogicalVariable aggVar = aggResultVar.get(0);
-//        ForwardOperator forward = createForward(aggKey, null, exchToForwardRef, null, context, srcLoc);
-//        ForwardOperator forward = createForward(aggKey, aggVar, exchToForwardRef, agg, context, srcLoc);
-//        MutableObject<ILogicalOperator> forwardRef = new MutableObject<>(forward);
-        ForwardOperator forwardOperator = new ForwardOperator(aggKey, new MutableObject<>(
-            new ConstantExpression(new AsterixConstantValue(new AInt64(1)))));
-        forwardOperator.setSourceLocation(srcLoc);
-        forwardOperator.setPhysicalOperator(new SpatialForwardPOperator());
-        forwardOperator.getInputs().add(new MutableObject<>(replicateOperator.getOutputs().get(0).getValue()));
-        forwardOperator.getInputs().add(agg);
-//        forwardOperator.getInputs().add(aggInput);
-        OperatorManipulationUtil.setOperatorMode(forwardOperator);
-        forwardOperator.recomputeSchema();
-        context.computeAndSetTypeEnvironmentForOperator(forwardOperator);
-
-//        context.computeAndSetTypeEnvironmentForOperator(exchangeOperator1);
-//        context.computeAndSetTypeEnvironmentForOperator(exchangeOperator2);*/
-
-
-//        leftInputOp.setValue(forwardOperator);
-//        context.computeAndSetTypeEnvironmentForOperator(replicateOperator);
-
-/*
-        // Add the dynamic MBR computation to the left branch
-        SourceLocation srcLoc = op.getSourceLocation();
-        // #1. Create the replicate operator and add it above the source op feeding parent operator
-        ReplicateOperator replicateOp = EnforceStructuralPropertiesRule.createReplicateOperator(leftInputOp, 1, context, srcLoc);
-        replicateOp.setSchema(leftInputOp.getValue().getSchema());
-        context.computeAndSetTypeEnvironmentForOperator(replicateOp);
-
-        // Add to exchange operator: one for the aggregate operator and one for the forward operator
-        ExchangeOperator exchToForward = EnforceStructuralPropertiesRule.createOneToOneExchangeOp(new MutableObject<>(replicateOp), context);
-        exchToForward.setSchema(replicateOp.getSchema());
-        context.computeAndSetTypeEnvironmentForOperator(exchToForward);
-        MutableObject<ILogicalOperator> exchToForwardRef = new MutableObject<>(exchToForward);
-
-//        ExchangeOperator exchToAgg = EnforceStructuralPropertiesRule.createOneToOneExchangeOp(new MutableObject<>(replicateOp), context);
-//        MutableObject<ILogicalOperator> exchToAggRef = new MutableObject<>(exchToAgg);
-
-        // Add the exchange-to-forward at output 0, the exchange-to-local-aggregate at output 1
-        replicateOp.getOutputs().add(exchToForwardRef);
-//        replicateOp.getOutputs().add(exchToAggRef);
-
-        // Materialize the data to be able to re-read the data again after sampling is done
-        replicateOp.getOutputMaterializationFlags()[0] = true;
-//        leftInputOp.setValue(replicateOp);
-
-//        op.recomputeSchema();
-//        context.computeAndSetTypeEnvironmentForOperator(op);
-/*
-        // #2. Create the aggregate operator
-        AbstractLogicalExpression leftInputVarRef = new VariableReferenceExpression(leftInputVar, srcLoc);
-        List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
-        fields.add(new MutableObject<>(leftInputVarRef));
-
-        IFunctionInfo countFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.COUNT);
-        AggregateFunctionCallExpression countExpr = new AggregateFunctionCallExpression(countFunc, false, fields);
-        countExpr.setSourceLocation(srcLoc);
-        countExpr.setOpaqueParameters(new Object[] {});
-
-        List<LogicalVariable> aggResultVar = new ArrayList<>(1);
-        List<Mutable<ILogicalExpression>> aggFunc = new ArrayList<>(1);
-        aggResultVar.add(context.newVar());
-        aggFunc.add(new MutableObject<>(countExpr));
-
-        AggregateOperator aggOp = EnforceStructuralPropertiesRule.createAggregate(aggResultVar, true, aggFunc, exchToAggRef, context, srcLoc);
-        MutableObject<ILogicalOperator> agg = new MutableObject<>(aggOp);
-
-        // #3. Create the forward operator
-        String aggKey = UUID.randomUUID().toString();
-        LogicalVariable aggVar = aggResultVar.get(0);
-        ForwardOperator forward = createForward(aggKey, null, exchToForwardRef, null, context, srcLoc);
-//        ForwardOperator forward = createForward(aggKey, aggVar, exchToForwardRef, agg, context, srcLoc);
-        MutableObject<ILogicalOperator> forwardRef = new MutableObject<>(forward);
-
-        // Replace the old input of parentOp requiring the range partitioning with the new forward op
-        op.getInputs().set(LEFT, forwardRef);
-        op.recomputeSchema();
-        context.computeAndSetTypeEnvironmentForOperator(op);
-
-        // Get left input again
-        leftInputOp = op.getInputs().get(LEFT);*/
 
         // Compute reference tile ID
         ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(
