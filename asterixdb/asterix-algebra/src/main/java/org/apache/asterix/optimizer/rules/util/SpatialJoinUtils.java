@@ -29,6 +29,7 @@ import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.base.ARectangle;
+import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.runtime.operators.joins.spatial.utils.ISpatialJoinUtilFactory;
@@ -126,7 +127,7 @@ public class SpatialJoinUtils {
     }
 
     private static LogicalVariable injectSpatialTileUnnestOperator(IOptimizationContext context,
-            Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn)
+            Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn, String mbrKey)
             throws AlgebricksException {
         SourceLocation srcLoc = sideOp.getValue().getSourceLocation();
         LogicalVariable sideVar = context.newVar();
@@ -141,7 +142,9 @@ public class SpatialJoinUtils {
                 new MutableObject<>(
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
                 new MutableObject<>(
-                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
+                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))),
+                new MutableObject<>(
+                        new ConstantExpression(new AsterixConstantValue(new AString(mbrKey)))));
         funcExpr.setSourceLocation(srcLoc);
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar, new MutableObject<>(funcExpr));
         sideUnnestOp.setSchema(sideOp.getValue().getSchema());
@@ -284,9 +287,9 @@ public class SpatialJoinUtils {
 
         // Inject unnest operator to the left and right branch of the join operator // leftInputOp  new MutableObject<>(replicateOp)
         LogicalVariable leftTileIdVar =
-            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp, leftInputVar, spatialJoinAnn);
+            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp, leftInputVar, spatialJoinAnn, aggKey);
         LogicalVariable rightTileIdVar =
-            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp, rightInputVar, spatialJoinAnn);
+            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp, rightInputVar, spatialJoinAnn, aggKey);
 
 //        MutableObject<ILogicalOperator> exchToForwardRef = new MutableObject<>(exchangeOperator1);
 //        replicateOperator.getOutputs().add(exchToForwardRef);

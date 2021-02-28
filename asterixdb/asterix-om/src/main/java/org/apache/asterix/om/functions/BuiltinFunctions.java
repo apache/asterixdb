@@ -1032,7 +1032,7 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier RANGE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "range", 2);
     public static final FunctionIdentifier SPATIAL_TILE =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-tile", 4);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-tile", 5);
 
     // fuzzy functions
     public static final FunctionIdentifier FUZZY_EQ =

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.unnestingfunctions.std;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,7 @@ import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -42,12 +45,14 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 
 public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -73,6 +78,8 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
             @Override
             public IUnnestingEvaluator createUnnestingEvaluator(final IEvaluatorContext ctx)
                     throws HyracksDataException {
+                final IHyracksTaskContext hyracksTaskContext = ctx.getTaskContext();
+
                 return new IUnnestingEvaluator() {
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private List<Integer> tileValues = new ArrayList<>();
@@ -81,10 +88,12 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                     private final IPointable inputArg1 = new VoidPointable();
                     private final IPointable inputArg2 = new VoidPointable();
                     private final IPointable inputArg3 = new VoidPointable();
+                    private final IPointable inputArg4 = new VoidPointable();
                     private final IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval2 = args[2].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval3 = args[3].createScalarEvaluator(ctx);
+                    private final IScalarEvaluator eval4 = args[4].createScalarEvaluator(ctx);
 
                     private AMutableInt32 aInt32 = new AMutableInt32(0);
                     int pos;
@@ -99,23 +108,38 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                         eval1.evaluate(tuple, inputArg1);
                         eval2.evaluate(tuple, inputArg2);
                         eval3.evaluate(tuple, inputArg3);
+                        eval4.evaluate(tuple, inputArg4);
 
                         byte[] bytes0 = inputArg0.getByteArray();
                         byte[] bytes1 = inputArg1.getByteArray();
                         byte[] bytes2 = inputArg2.getByteArray();
                         byte[] bytes3 = inputArg3.getByteArray();
+                        byte[] bytes4 = inputArg4.getByteArray();
+
                         int offset0 = inputArg0.getStartOffset();
                         int offset1 = inputArg1.getStartOffset();
                         int offset2 = inputArg2.getStartOffset();
                         int offset3 = inputArg3.getStartOffset();
+                        int offset4 = inputArg4.getStartOffset();
 
                         ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
                         ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
                         ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes2[offset2]);
                         ATypeTag tag3 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes3[offset3]);
+                        ATypeTag tag4 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes4[offset4]);
 
                         if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.RECTANGLE) && (tag2 == ATypeTag.BIGINT)
                                 && (tag3 == ATypeTag.BIGINT)) {
+
+                            // Get dynamic MBR
+                            ByteArrayInputStream keyInputStream = new ByteArrayInputStream(bytes4, offset4 + 1, inputArg4.getLength() - 1);
+                            DataInputStream keyDataInputStream = new DataInputStream(keyInputStream);
+                            String key = AStringSerializerDeserializer.INSTANCE.deserialize(keyDataInputStream).getStringValue();
+                            Long count = Long.valueOf(-1);
+                            if (TaskUtil.get(key, hyracksTaskContext) != null) {
+                                count = TaskUtil.get(key, hyracksTaskContext);
+                            }
+
                             double x1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
                             double y1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
