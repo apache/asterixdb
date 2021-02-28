@@ -289,7 +289,6 @@ public class SpatialJoinUtils {
                         new MutableObject<>(referenceTileId));
 
         conditionExprs.add(new MutableObject<>(tileIdEquiJoinCondition));
-        conditionExprs.add(new MutableObject<>(spatialJoinFuncExpr));
         conditionExprs.add(new MutableObject<>(referenceIdEquiJoinCondition));
 
         ScalarFunctionCallExpression updatedJoinCondition = new ScalarFunctionCallExpression(
