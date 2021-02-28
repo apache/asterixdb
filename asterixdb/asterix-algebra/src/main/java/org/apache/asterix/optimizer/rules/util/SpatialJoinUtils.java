@@ -227,7 +227,7 @@ public class SpatialJoinUtils {
         LogicalVariable leftTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp,
                 leftInputVar, spatialJoinAnn, leftAggKey);
         LogicalVariable rightTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp,
-                rightInputVar, spatialJoinAnn, leftAggKey);
+                rightInputVar, spatialJoinAnn, rightAggKey);
 
         // Compute reference tile ID
         ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(
