@@ -132,9 +132,11 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                                 && (tag3 == ATypeTag.BIGINT)) {
 
                             // Get dynamic MBR
-                            ByteArrayInputStream keyInputStream = new ByteArrayInputStream(bytes4, offset4 + 1, inputArg4.getLength() - 1);
+                            ByteArrayInputStream keyInputStream =
+                                    new ByteArrayInputStream(bytes4, offset4 + 1, inputArg4.getLength() - 1);
                             DataInputStream keyDataInputStream = new DataInputStream(keyInputStream);
-                            String key = AStringSerializerDeserializer.INSTANCE.deserialize(keyDataInputStream).getStringValue();
+                            String key = AStringSerializerDeserializer.INSTANCE.deserialize(keyDataInputStream)
+                                    .getStringValue();
                             Long count = Long.valueOf(-1);
                             if (TaskUtil.get(key, hyracksTaskContext) != null) {
                                 count = TaskUtil.get(key, hyracksTaskContext);

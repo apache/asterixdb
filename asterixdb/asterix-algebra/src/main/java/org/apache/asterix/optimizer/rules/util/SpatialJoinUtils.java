@@ -61,10 +61,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastExchangePOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.RandomPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SpatialForwardPOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
@@ -129,8 +126,8 @@ public class SpatialJoinUtils {
     }
 
     private static LogicalVariable injectSpatialTileUnnestOperator(IOptimizationContext context,
-            Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn, String mbrKey)
-            throws AlgebricksException {
+            Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn,
+            String mbrKey) throws AlgebricksException {
         SourceLocation srcLoc = sideOp.getValue().getSourceLocation();
         LogicalVariable sideVar = context.newVar();
         VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
@@ -145,8 +142,7 @@ public class SpatialJoinUtils {
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
                 new MutableObject<>(
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))),
-                new MutableObject<>(
-                        new ConstantExpression(new AsterixConstantValue(new AString(mbrKey)))));
+                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AString(mbrKey)))));
         funcExpr.setSourceLocation(srcLoc);
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar, new MutableObject<>(funcExpr));
         sideUnnestOp.setSchema(sideOp.getValue().getSchema());
@@ -198,36 +194,40 @@ public class SpatialJoinUtils {
         }
 
         // Add a dynamic workflow to compute MBR of the left branch
-        Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> leftMBRCalculator = createDynamicMBRCalculator(op, context, leftInputOp, leftInputVar);
+        Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> leftMBRCalculator =
+                createDynamicMBRCalculator(op, context, leftInputOp, leftInputVar);
         MutableObject<ILogicalOperator> leftGlobalAgg = leftMBRCalculator.first;
         List<LogicalVariable> leftGlobalAggResultVars = leftMBRCalculator.second;
         MutableObject<ILogicalOperator> leftExchToForwardRef = leftMBRCalculator.third;
 
         // Add forward operator to the left branch
         String leftAggKey = UUID.randomUUID().toString();
-        LogicalVariable leftAggVar = leftGlobalAggResultVars.get(0);
-        ForwardOperator leftForward = createForward(leftAggKey, leftAggVar, leftExchToForwardRef, leftGlobalAgg, context, op.getSourceLocation());
+        LogicalVariable leftMBRVar = leftGlobalAggResultVars.get(0);
+        ForwardOperator leftForward = createForward(leftAggKey, leftMBRVar, leftExchToForwardRef, leftGlobalAgg,
+                context, op.getSourceLocation());
         MutableObject<ILogicalOperator> leftForwardRef = new MutableObject<>(leftForward);
         leftInputOp.setValue(leftForwardRef.getValue());
 
         // Add a dynamic workflow to compute MBR of the right branch
-        Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> rightMBRCalculator = createDynamicMBRCalculator(op, context, rightInputOp, rightInputVar);
+        Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> rightMBRCalculator =
+                createDynamicMBRCalculator(op, context, rightInputOp, rightInputVar);
         MutableObject<ILogicalOperator> rightGlobalAgg = rightMBRCalculator.first;
         List<LogicalVariable> rightGlobalAggResultVars = rightMBRCalculator.second;
         MutableObject<ILogicalOperator> rightExchToForwardRef = rightMBRCalculator.third;
 
         // Add forward operator to the right branch
         String rightAggKey = UUID.randomUUID().toString();
-        LogicalVariable rightAggVar = rightGlobalAggResultVars.get(0);
-        ForwardOperator rightForward = createForward(rightAggKey, rightAggVar, rightExchToForwardRef, rightGlobalAgg, context, op.getSourceLocation());
+        LogicalVariable rightMBRVar = rightGlobalAggResultVars.get(0);
+        ForwardOperator rightForward = createForward(rightAggKey, rightMBRVar, rightExchToForwardRef, rightGlobalAgg,
+                context, op.getSourceLocation());
         MutableObject<ILogicalOperator> rightForwardRef = new MutableObject<>(rightForward);
         rightInputOp.setValue(rightForwardRef.getValue());
 
         // Inject unnest operator to the left and right branch of the join operator
-        LogicalVariable leftTileIdVar =
-            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp, leftInputVar, spatialJoinAnn, leftAggKey);
-        LogicalVariable rightTileIdVar =
-            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp, rightInputVar, spatialJoinAnn, leftAggKey);
+        LogicalVariable leftTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp,
+                leftInputVar, spatialJoinAnn, leftAggKey);
+        LogicalVariable rightTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp,
+                rightInputVar, spatialJoinAnn, leftAggKey);
 
         // Compute reference tile ID
         ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(
@@ -271,7 +271,7 @@ public class SpatialJoinUtils {
     }
 
     private static ReplicateOperator createReplicateOperator(Mutable<ILogicalOperator> inputOperator,
-                                                            IOptimizationContext context, SourceLocation sourceLocation) throws AlgebricksException {
+            IOptimizationContext context, SourceLocation sourceLocation) throws AlgebricksException {
         ReplicateOperator replicateOperator = new ReplicateOperator(2);
         replicateOperator.setPhysicalOperator(new ReplicatePOperator());
         replicateOperator.setSourceLocation(sourceLocation);
@@ -283,7 +283,7 @@ public class SpatialJoinUtils {
     }
 
     private static ExchangeOperator createOneToOneExchangeOp(ReplicateOperator replicateOperator,
-                                                            IOptimizationContext context) throws AlgebricksException {
+            IOptimizationContext context) throws AlgebricksException {
         ExchangeOperator exchangeOperator1 = new ExchangeOperator();
         exchangeOperator1.setPhysicalOperator(new OneToOneExchangePOperator());
         replicateOperator.getOutputs().add(new MutableObject<>(exchangeOperator1));
@@ -294,11 +294,12 @@ public class SpatialJoinUtils {
         return exchangeOperator1;
     }
 
-    private static Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggregateOperators(AbstractBinaryJoinOperator op, IOptimizationContext context,
-                                                                                               LogicalVariable inputVar, MutableObject<ILogicalOperator> exchToLocalAggRef) throws AlgebricksException {
+    private static Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggregateOperators(
+            AbstractBinaryJoinOperator op, IOptimizationContext context, LogicalVariable inputVar,
+            MutableObject<ILogicalOperator> exchToLocalAggRef) throws AlgebricksException {
         // Add agg operator
         ConstantExpression one = new ConstantExpression(new AsterixConstantValue(new AInt64(1)));
-        AbstractLogicalExpression leftInputVarRef = new VariableReferenceExpression(inputVar, op.getSourceLocation());
+        //        AbstractLogicalExpression inputVarRef = new VariableReferenceExpression(inputVar, op.getSourceLocation());
         List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
         fields.add(new MutableObject<>(one));
 
@@ -312,17 +313,20 @@ public class SpatialJoinUtils {
         LogicalVariable localOutVariable = context.newVar();
         localAggResultVars.add(localOutVariable);
         localAggFuncs.add(new MutableObject<>(localAggExpr));
-        AggregateOperator localAggOperator = EnforceStructuralPropertiesRule.createAggregate(localAggResultVars, false, localAggFuncs, exchToLocalAggRef, context, op.getSourceLocation());
+        AggregateOperator localAggOperator = EnforceStructuralPropertiesRule.createAggregate(localAggResultVars, false,
+                localAggFuncs, exchToLocalAggRef, context, op.getSourceLocation());
         MutableObject<ILogicalOperator> localAgg = new MutableObject<>(localAggOperator);
 
         // Create global aggregate operator
         // Output of local aggregate function is the input of global aggregate function
         List<Mutable<ILogicalExpression>> globalAggFuncArgs = new ArrayList<>(1);
-        AbstractLogicalExpression localOutVariableRef = new VariableReferenceExpression(localOutVariable, op.getSourceLocation());
+        AbstractLogicalExpression localOutVariableRef =
+                new VariableReferenceExpression(localOutVariable, op.getSourceLocation());
         globalAggFuncArgs.add(new MutableObject<>(localOutVariableRef));
 
         IFunctionInfo globalAggFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.SQL_SUM);
-        AggregateFunctionCallExpression globalAggExpr = new AggregateFunctionCallExpression(globalAggFunc, true, globalAggFuncArgs);
+        AggregateFunctionCallExpression globalAggExpr =
+                new AggregateFunctionCallExpression(globalAggFunc, true, globalAggFuncArgs);
         globalAggExpr.setStepOneAggregate(globalAggFunc);
         globalAggExpr.setStepTwoAggregate(globalAggFunc);
         globalAggExpr.setSourceLocation(op.getSourceLocation());
@@ -331,14 +335,15 @@ public class SpatialJoinUtils {
         globalAggResultVars.add(context.newVar());
         List<Mutable<ILogicalExpression>> globalAggFuncs = new ArrayList<>(1);
         globalAggFuncs.add(new MutableObject<>(globalAggExpr));
-        AggregateOperator globalAggOperator = EnforceStructuralPropertiesRule.createAggregate(globalAggResultVars, true, globalAggFuncs, localAgg, context, op.getSourceLocation());
+        AggregateOperator globalAggOperator = EnforceStructuralPropertiesRule.createAggregate(globalAggResultVars, true,
+                globalAggFuncs, localAgg, context, op.getSourceLocation());
         MutableObject<ILogicalOperator> globalAgg = new MutableObject<>(globalAggOperator);
         return new Pair<>(globalAgg, globalAggResultVars);
     }
 
     private static ForwardOperator createForward(String aggResultKey, LogicalVariable aggResultVariable,
-                                                 MutableObject<ILogicalOperator> exchangeOpFromReplicate, MutableObject<ILogicalOperator> globalAggInput,
-                                                 IOptimizationContext context, SourceLocation sourceLoc) throws AlgebricksException {
+            MutableObject<ILogicalOperator> exchangeOpFromReplicate, MutableObject<ILogicalOperator> globalAggInput,
+            IOptimizationContext context, SourceLocation sourceLoc) throws AlgebricksException {
         AbstractLogicalExpression aggResultExpression = new VariableReferenceExpression(aggResultVariable, sourceLoc);
         ForwardOperator forwardOperator = new ForwardOperator(aggResultKey, new MutableObject<>(aggResultExpression));
         forwardOperator.setSourceLocation(sourceLoc);
@@ -351,8 +356,9 @@ public class SpatialJoinUtils {
         return forwardOperator;
     }
 
-    private static Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> createDynamicMBRCalculator(AbstractBinaryJoinOperator op, IOptimizationContext context,
-                                                                                                             Mutable<ILogicalOperator> inputOp, LogicalVariable inputVar) throws AlgebricksException {
+    private static Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> createDynamicMBRCalculator(
+            AbstractBinaryJoinOperator op, IOptimizationContext context, Mutable<ILogicalOperator> inputOp,
+            LogicalVariable inputVar) throws AlgebricksException {
         // Add ReplicationOperator for the input branch
         SourceLocation sourceLocation = op.getSourceLocation();
         ReplicateOperator replicateOperator = createReplicateOperator(inputOp, context, sourceLocation);
@@ -367,7 +373,9 @@ public class SpatialJoinUtils {
         // Materialize the data to be able to re-read the data again
         replicateOperator.getOutputMaterializationFlags()[0] = true;
 
-        Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggResult = createLocalAndGlobalAggregateOperators(op, context, inputVar, exchToLocalAggRef);
-        return new Triple<>(createLocalAndGlobalAggResult.first, createLocalAndGlobalAggResult.second, exchToForwardRef);
+        Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggResult =
+                createLocalAndGlobalAggregateOperators(op, context, inputVar, exchToLocalAggRef);
+        return new Triple<>(createLocalAndGlobalAggResult.first, createLocalAndGlobalAggResult.second,
+                exchToForwardRef);
     }
 }

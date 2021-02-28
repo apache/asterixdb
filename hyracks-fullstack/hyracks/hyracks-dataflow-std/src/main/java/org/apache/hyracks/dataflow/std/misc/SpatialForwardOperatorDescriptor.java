@@ -32,12 +32,10 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
-import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractForwardOperatorDescriptor;
@@ -85,8 +83,8 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
 
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
-                                                       IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
-            throws HyracksDataException {
+                IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
+                throws HyracksDataException {
             RecordDescriptor inputRecordDescriptor = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
             return new RangeMapReaderActivityNodePushable(ctx, inputRecordDescriptor, getActivityId(), partition);
         }
@@ -101,7 +99,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
         private long count;
 
         private RangeMapReaderActivityNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecordDescriptor,
-                                                   ActivityId activityId, int partition) {
+                ActivityId activityId, int partition) {
             this.ctx = ctx;
             this.frameTupleAccessor = new FrameTupleAccessor(inputRecordDescriptor);
             this.frameTupleReference = new FrameTupleReference();
@@ -130,7 +128,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
             LongPointable pointable = new LongPointable();
             pointable.set(rangeMap, offset + 1, length - 1);
             ByteArrayInputStream rangeMapIn = new ByteArrayInputStream(pointable.getByteArray(),
-                pointable.getStartOffset(), pointable.getLength());
+                    pointable.getStartOffset(), pointable.getLength());
             DataInputStream dataInputStream = new DataInputStream(rangeMapIn);
             count = Integer64SerializerDeserializer.read(dataInputStream);
         }
