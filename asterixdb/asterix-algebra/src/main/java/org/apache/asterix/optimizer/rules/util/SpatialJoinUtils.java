@@ -197,25 +197,37 @@ public class SpatialJoinUtils {
             rightInputVar = spatialJoinVar0;
         }
 
-        // Add a dynamic workflow to compute MBR of the left input
-        Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> createMBRCalculator = createDynamicMBRCalculator(op, context, leftInputOp, leftInputVar);
-        MutableObject<ILogicalOperator> globalAgg = createMBRCalculator.first;
-        List<LogicalVariable> globalAggResultVars = createMBRCalculator.second;
-        MutableObject<ILogicalOperator> exchToForwardRef = createMBRCalculator.third;
+        // Add a dynamic workflow to compute MBR of the left branch
+        Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> leftMBRCalculator = createDynamicMBRCalculator(op, context, leftInputOp, leftInputVar);
+        MutableObject<ILogicalOperator> leftGlobalAgg = leftMBRCalculator.first;
+        List<LogicalVariable> leftGlobalAggResultVars = leftMBRCalculator.second;
+        MutableObject<ILogicalOperator> leftExchToForwardRef = leftMBRCalculator.third;
 
-        // Add forward operator
-        String aggKey = UUID.randomUUID().toString();
-        LogicalVariable aggVar = globalAggResultVars.get(0);
-        ForwardOperator forward = createForward(aggKey, aggVar, exchToForwardRef, globalAgg, context, op.getSourceLocation());
-        MutableObject<ILogicalOperator> forwardRef = new MutableObject<>(forward);
+        // Add forward operator to the left branch
+        String leftAggKey = UUID.randomUUID().toString();
+        LogicalVariable leftAggVar = leftGlobalAggResultVars.get(0);
+        ForwardOperator leftForward = createForward(leftAggKey, leftAggVar, leftExchToForwardRef, leftGlobalAgg, context, op.getSourceLocation());
+        MutableObject<ILogicalOperator> leftForwardRef = new MutableObject<>(leftForward);
+        leftInputOp.setValue(leftForwardRef.getValue());
 
-        leftInputOp.setValue(forwardRef.getValue());
+        // Add a dynamic workflow to compute MBR of the right branch
+        Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> rightMBRCalculator = createDynamicMBRCalculator(op, context, rightInputOp, rightInputVar);
+        MutableObject<ILogicalOperator> rightGlobalAgg = rightMBRCalculator.first;
+        List<LogicalVariable> rightGlobalAggResultVars = rightMBRCalculator.second;
+        MutableObject<ILogicalOperator> rightExchToForwardRef = rightMBRCalculator.third;
+
+        // Add forward operator to the right branch
+        String rightAggKey = UUID.randomUUID().toString();
+        LogicalVariable rightAggVar = rightGlobalAggResultVars.get(0);
+        ForwardOperator rightForward = createForward(rightAggKey, rightAggVar, rightExchToForwardRef, rightGlobalAgg, context, op.getSourceLocation());
+        MutableObject<ILogicalOperator> rightForwardRef = new MutableObject<>(rightForward);
+        rightInputOp.setValue(rightForwardRef.getValue());
 
         // Inject unnest operator to the left and right branch of the join operator
         LogicalVariable leftTileIdVar =
-            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp, leftInputVar, spatialJoinAnn, aggKey);
+            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp, leftInputVar, spatialJoinAnn, leftAggKey);
         LogicalVariable rightTileIdVar =
-            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp, rightInputVar, spatialJoinAnn, aggKey);
+            SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp, rightInputVar, spatialJoinAnn, leftAggKey);
 
         // Compute reference tile ID
         ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(
