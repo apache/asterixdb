@@ -64,6 +64,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SpatialForwardPOperator;
@@ -264,6 +265,13 @@ public class SpatialJoinUtils {
         context.computeAndSetTypeEnvironmentForOperator(unionAllOperator);
         MutableObject<ILogicalOperator> unionAllOperatorRef = new MutableObject<>(unionAllOperator);
 
+        //
+//        Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggResult =
+//            createLocalAndGlobalAggregateOperators(op, context, unionMBRVar, unionAllOperatorRef);
+//        MutableObject<ILogicalOperator> globalAgg = createLocalAndGlobalAggResult.first;
+//        List<LogicalVariable> globalAggResultVars = createLocalAndGlobalAggResult.second;
+//        LogicalVariable finalMBR = globalAggResultVars.get(0);
+
         // Call agg-mbr for union result
         List<Mutable<ILogicalExpression>> globalAggFuncArgs = new ArrayList<>(1);
         AbstractLogicalExpression localOutVariableRef =
@@ -296,22 +304,22 @@ public class SpatialJoinUtils {
         context.computeAndSetTypeEnvironmentForOperator(replicateOperator);
         MutableObject<ILogicalOperator> replicateOperatorRef = new MutableObject<>(replicateOperator);
 
-        ExchangeOperator exchMBRToForwardLeft = createOneToOneExchangeOp(replicateOperator, context);
+        ExchangeOperator exchMBRToForwardLeft = createBroadcastExchangeOp(replicateOperator, context);
         MutableObject<ILogicalOperator> exchMBRToForwardLeftRef = new MutableObject<>(exchMBRToForwardLeft);
 
-        ExchangeOperator exchMBRToForwardRight = createOneToOneExchangeOp(replicateOperator, context);
+        ExchangeOperator exchMBRToForwardRight = createBroadcastExchangeOp(replicateOperator, context);
         MutableObject<ILogicalOperator> exchMBRToForwardRightRef = new MutableObject<>(exchMBRToForwardRight);
 
         // Add forward operator to the left branch
         String leftAggKey = UUID.randomUUID().toString();
-        ForwardOperator leftForward = createForward(leftAggKey, finalMBR, leftExchToForwardRef, globalAgg,
+        ForwardOperator leftForward = createForward(leftAggKey, finalMBR, leftExchToForwardRef, exchMBRToForwardLeftRef,
             context, op.getSourceLocation());
         MutableObject<ILogicalOperator> leftForwardRef = new MutableObject<>(leftForward);
         leftInputOp.setValue(leftForwardRef.getValue());
 
         // Add forward operator to the right branch
         String rightAggKey = UUID.randomUUID().toString();
-        ForwardOperator rightForward = createForward(rightAggKey, finalMBR, rightExchToForwardRef, globalAgg,
+        ForwardOperator rightForward = createForward(rightAggKey, finalMBR, rightExchToForwardRef, exchMBRToForwardRightRef,
                 context, op.getSourceLocation());
         MutableObject<ILogicalOperator> rightForwardRef = new MutableObject<>(rightForward);
         rightInputOp.setValue(rightForwardRef.getValue());
@@ -378,6 +386,18 @@ public class SpatialJoinUtils {
             IOptimizationContext context) throws AlgebricksException {
         ExchangeOperator exchangeOperator = new ExchangeOperator();
         exchangeOperator.setPhysicalOperator(new OneToOneExchangePOperator());
+        replicateOperator.getOutputs().add(new MutableObject<>(exchangeOperator));
+        exchangeOperator.getInputs().add(new MutableObject<>(replicateOperator));
+        exchangeOperator.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
+        exchangeOperator.setSchema(replicateOperator.getSchema());
+        context.computeAndSetTypeEnvironmentForOperator(exchangeOperator);
+        return exchangeOperator;
+    }
+
+    private static ExchangeOperator createBroadcastExchangeOp(ReplicateOperator replicateOperator,
+                                                             IOptimizationContext context) throws AlgebricksException {
+        ExchangeOperator exchangeOperator = new ExchangeOperator();
+        exchangeOperator.setPhysicalOperator(new BroadcastExchangePOperator(context.getComputationNodeDomain()));
         replicateOperator.getOutputs().add(new MutableObject<>(exchangeOperator));
         exchangeOperator.getInputs().add(new MutableObject<>(replicateOperator));
         exchangeOperator.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
