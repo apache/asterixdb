@@ -213,7 +213,9 @@ public class SpatialJoinUtils {
         MutableObject<ILogicalOperator> rightExchToForwardRef = rightMBRCalculator.third;
         LogicalVariable rightMBRVar = rightGlobalAggResultVars.get(0);
 
-        // TODO: investigate the idea of using assign operator instead of union and aggregate operator
+        // TODO: investigate the idea of using assign operator instead of union and aggregate operator.
+        //  This could reduce the partitioning space, thus it might reduce the partitioning time.
+
         // Union the results of left and right aggregators
         LogicalVariable unionMBRVar = context.newVar();
         Triple<LogicalVariable, LogicalVariable, LogicalVariable> unionVarMap = new Triple<>(leftMBRVar, rightMBRVar, unionMBRVar);
