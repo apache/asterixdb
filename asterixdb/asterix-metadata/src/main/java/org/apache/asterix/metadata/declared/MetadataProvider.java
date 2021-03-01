@@ -1749,11 +1749,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         int totalLengthUTF8 = 0;
         for (String dvNamePart : dataverseName.getParts()) {
             validateDatabaseObjectNameImpl(dvNamePart, sourceLoc);
-            int lengthUTF8 = dvNamePart.getBytes(StandardCharsets.UTF_8).length;
-            if (lengthUTF8 > MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8) {
-                throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, dvNamePart);
-            }
-            totalLengthUTF8 += lengthUTF8;
+            totalLengthUTF8 += dvNamePart.getBytes(StandardCharsets.UTF_8).length;
         }
         if (totalLengthUTF8 > MetadataConstants.DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8) {
             throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, dataverseName.toString());
@@ -1773,6 +1769,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, "<empty>");
         }
         if (Character.isWhitespace(name.codePointAt(0))) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, name);
+        }
+        int lengthUTF8 = name.getBytes(StandardCharsets.UTF_8).length;
+        if (lengthUTF8 > MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8) {
             throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, name);
         }
     }

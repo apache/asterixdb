@@ -26,7 +26,7 @@ import org.apache.asterix.common.metadata.DataverseName;
  */
 public class MetadataConstants {
 
-    public static final int DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 = 255;
+    public static final int METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 = 255;
     public static final int DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8 = 1023;
 
     // Name of the dataverse the metadata lives in.
