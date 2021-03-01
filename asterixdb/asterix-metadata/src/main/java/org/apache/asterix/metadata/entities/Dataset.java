@@ -38,6 +38,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexPageWriteCallbackFactory;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
@@ -154,6 +155,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     private final long rebalanceCount;
     private int pendingOp;
     private final String compressionScheme;
+    private final DatasetFullyQualifiedName datasetFullyQualifiedName;
 
     public Dataset(DataverseName dataverseName, String datasetName, DataverseName recordTypeDataverseName,
             String recordTypeName, String nodeGroupName, String compactionPolicy,
@@ -203,6 +205,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         this.hints = hints;
         this.rebalanceCount = rebalanceCount;
         this.compressionScheme = compressionScheme;
+        datasetFullyQualifiedName = new DatasetFullyQualifiedName(dataverseName, datasetName);
     }
 
     @Override
@@ -877,4 +880,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public String getCompressionScheme() {
         return compressionScheme;
     }
+
+    public DatasetFullyQualifiedName getDatasetFullyQualifiedName() {
+        return datasetFullyQualifiedName;
+    }
+
 }
