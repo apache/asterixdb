@@ -63,21 +63,21 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
 
     @Override
     public AbstractActivityNode createSideDataActivity() {
-        return new RangeMapReaderActivity(new ActivityId(odId, SIDE_DATA_ACTIVITY_ID));
+        return new MBRReaderActivity(new ActivityId(odId, SIDE_DATA_ACTIVITY_ID));
     }
 
-    private class CountState extends AbstractStateObject {
+    private class MBRState extends AbstractStateObject {
         long count;
 
-        private CountState(JobId jobId, TaskId stateObjectKey) {
+        private MBRState(JobId jobId, TaskId stateObjectKey) {
             super(jobId, stateObjectKey);
         }
     }
 
-    private class RangeMapReaderActivity extends AbstractActivityNode {
+    private class MBRReaderActivity extends AbstractActivityNode {
         private static final long serialVersionUID = 1L;
 
-        private RangeMapReaderActivity(ActivityId activityId) {
+        private MBRReaderActivity(ActivityId activityId) {
             super(activityId);
         }
 
@@ -86,11 +86,11 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions)
                 throws HyracksDataException {
             RecordDescriptor inputRecordDescriptor = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
-            return new RangeMapReaderActivityNodePushable(ctx, inputRecordDescriptor, getActivityId(), partition);
+            return new MBRReaderActivityNodePushable(ctx, inputRecordDescriptor, getActivityId(), partition);
         }
     }
 
-    private class RangeMapReaderActivityNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
+    private class MBRReaderActivityNodePushable extends AbstractUnaryInputSinkOperatorNodePushable {
         private final FrameTupleAccessor frameTupleAccessor;
         private final FrameTupleReference frameTupleReference;
         private final IHyracksTaskContext ctx;
@@ -98,8 +98,8 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
         private final int partition;
         private long count;
 
-        private RangeMapReaderActivityNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecordDescriptor,
-                ActivityId activityId, int partition) {
+        private MBRReaderActivityNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecordDescriptor,
+                                              ActivityId activityId, int partition) {
             this.ctx = ctx;
             this.frameTupleAccessor = new FrameTupleAccessor(inputRecordDescriptor);
             this.frameTupleReference = new FrameTupleReference();
@@ -115,22 +115,22 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
 
         @Override
         public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-            // "buffer" contains the serialized range map sent by a range map computer function.
-            // deserialize the range map
+            // "buffer" contains the serialized MBR sent by a MBR computer function.
+            // deserialize the MBR
             frameTupleAccessor.reset(buffer);
             if (frameTupleAccessor.getTupleCount() != 1) {
                 throw HyracksDataException.create(ErrorCode.ONE_TUPLE_RANGEMAP_EXPECTED, sourceLoc);
             }
             frameTupleReference.reset(frameTupleAccessor, 0);
-            byte[] rangeMap = frameTupleReference.getFieldData(0);
+            byte[] mbrBytes = frameTupleReference.getFieldData(0);
             int offset = frameTupleReference.getFieldStart(0);
             int length = frameTupleReference.getFieldLength(0);
-            LongPointable pointable = new LongPointable();
-            pointable.set(rangeMap, offset + 1, length - 1);
-            ByteArrayInputStream rangeMapIn = new ByteArrayInputStream(pointable.getByteArray(),
-                    pointable.getStartOffset(), pointable.getLength());
-            DataInputStream dataInputStream = new DataInputStream(rangeMapIn);
-            count = Integer64SerializerDeserializer.read(dataInputStream);
+            LongPointable mbrPointable = new LongPointable();
+            mbrPointable.set(mbrBytes, offset + 1, length - 1);
+            ByteArrayInputStream mbrIn = new ByteArrayInputStream(mbrPointable.getByteArray(),
+                    mbrPointable.getStartOffset(), mbrPointable.getLength());
+            DataInputStream mbrDataInputStream = new DataInputStream(mbrIn);
+            count = Integer64SerializerDeserializer.read(mbrDataInputStream);
         }
 
         @Override
@@ -146,7 +146,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
             }
             // store the range map in the state object of ctx so that next activity (forward) could retrieve it
             TaskId countReaderTaskId = new TaskId(activityId, partition);
-            CountState countState = new CountState(ctx.getJobletContext().getJobId(), countReaderTaskId);
+            MBRState countState = new MBRState(ctx.getJobletContext().getJobId(), countReaderTaskId);
             countState.count = count;
             ctx.setStateObject(countState);
         }
@@ -188,7 +188,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
             // retrieve the range map from the state object (previous activity should have already stored it)
             // then deposit it into the ctx so that MToN-partition can pick it up
             Object stateObjKey = new TaskId(new ActivityId(odId, SIDE_DATA_ACTIVITY_ID), partition);
-            CountState countState = (CountState) ctx.getStateObject(stateObjKey);
+            MBRState countState = (MBRState) ctx.getStateObject(stateObjKey);
             TaskUtil.put(sideDataKey, countState.count, ctx);
             writer.open();
         }

@@ -51,6 +51,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -211,13 +212,13 @@ public class SpatialJoinUtils {
         LogicalVariable rightMBRVar = rightGlobalAggResultVars.get(0);
 
         // Compute union of left and right MBRs
-        LogicalVariable unionMBRVar = context.newVar();
+        /*LogicalVariable unionMBRVar = context.newVar();
         VariableReferenceExpression leftMBRVarRef = new VariableReferenceExpression(leftMBRVar);
         leftMBRVarRef.setSourceLocation(op.getSourceLocation());
         VariableReferenceExpression rightMBRVarRef = new VariableReferenceExpression(rightMBRVar);
         rightMBRVarRef.setSourceLocation(op.getSourceLocation());
 
-        ScalarFunctionCallExpression unionMBRFuncExpr = new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.NUMERIC_MULTIPLY),
+        ScalarFunctionCallExpression unionMBRFuncExpr = new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.NUMERIC_ADD),
             new MutableObject<>(leftMBRVarRef), new MutableObject<>(rightMBRVarRef));
         unionMBRFuncExpr.setSourceLocation(op.getSourceLocation());
         AssignOperator assignOperator = new AssignOperator(unionMBRVar, new MutableObject<>(unionMBRFuncExpr));
@@ -225,9 +226,12 @@ public class SpatialJoinUtils {
         List<LogicalVariable> assignOperatorSchema = new ArrayList<>();
         assignOperatorSchema.add(leftMBRVar);
         assignOperatorSchema.add(rightMBRVar);
+        assignOperatorSchema.add(unionMBRVar);
         assignOperator.setSchema(assignOperatorSchema);
         assignOperator.getInputs().add(new MutableObject<>(leftGlobalAgg.getValue()));
         assignOperator.getInputs().add(new MutableObject<>(rightGlobalAgg.getValue()));
+        assignOperator.setExecutionMode(AbstractLogicalOperator.ExecutionMode.LOCAL);
+//        assignOperator.recomputeSchema();
         context.computeAndSetTypeEnvironmentForOperator(assignOperator);
         MutableObject<ILogicalOperator> assignOperatorRef = new MutableObject<>(assignOperator);
 
@@ -243,21 +247,21 @@ public class SpatialJoinUtils {
         ForwardOperator rightForward = createForward(rightAggKey, unionMBRVar, rightExchToForwardRef, assignOperatorRef,
             context, op.getSourceLocation());
         MutableObject<ILogicalOperator> rightForwardRef = new MutableObject<>(rightForward);
-        rightInputOp.setValue(rightForwardRef.getValue());
+        rightInputOp.setValue(rightForwardRef.getValue());*/
 
-//        // Add forward operator to the left branch
-//        String leftAggKey = UUID.randomUUID().toString();
-//        ForwardOperator leftForward = createForward(leftAggKey, leftMBRVar, leftExchToForwardRef, leftGlobalAgg,
-//            context, op.getSourceLocation());
-//        MutableObject<ILogicalOperator> leftForwardRef = new MutableObject<>(leftForward);
-//        leftInputOp.setValue(leftForwardRef.getValue());
-//
-//        // Add forward operator to the right branch
-//        String rightAggKey = UUID.randomUUID().toString();
-//        ForwardOperator rightForward = createForward(rightAggKey, rightMBRVar, rightExchToForwardRef, rightGlobalAgg,
-//                context, op.getSourceLocation());
-//        MutableObject<ILogicalOperator> rightForwardRef = new MutableObject<>(rightForward);
-//        rightInputOp.setValue(rightForwardRef.getValue());
+        // Add forward operator to the left branch
+        String leftAggKey = UUID.randomUUID().toString();
+        ForwardOperator leftForward = createForward(leftAggKey, leftMBRVar, leftExchToForwardRef, leftGlobalAgg,
+            context, op.getSourceLocation());
+        MutableObject<ILogicalOperator> leftForwardRef = new MutableObject<>(leftForward);
+        leftInputOp.setValue(leftForwardRef.getValue());
+
+        // Add forward operator to the right branch
+        String rightAggKey = UUID.randomUUID().toString();
+        ForwardOperator rightForward = createForward(rightAggKey, rightMBRVar, rightExchToForwardRef, rightGlobalAgg,
+                context, op.getSourceLocation());
+        MutableObject<ILogicalOperator> rightForwardRef = new MutableObject<>(rightForward);
+        rightInputOp.setValue(rightForwardRef.getValue());
 
         // Inject unnest operator to the left and right branch of the join operator
         LogicalVariable leftTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp,
