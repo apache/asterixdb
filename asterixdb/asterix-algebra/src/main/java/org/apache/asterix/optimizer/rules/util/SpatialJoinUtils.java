@@ -339,7 +339,6 @@ public class SpatialJoinUtils {
     private static Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggregateOperators(
             AbstractBinaryJoinOperator op, IOptimizationContext context, LogicalVariable inputVar,
             MutableObject<ILogicalOperator> exchToLocalAggRef) throws AlgebricksException {
-        // Add agg operator
         ConstantExpression one = new ConstantExpression(new AsterixConstantValue(new AInt64(1)));
         //        AbstractLogicalExpression inputVarRef = new VariableReferenceExpression(inputVar, op.getSourceLocation());
         List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
@@ -359,28 +358,8 @@ public class SpatialJoinUtils {
                 localAggFuncs, exchToLocalAggRef, context, op.getSourceLocation());
         MutableObject<ILogicalOperator> localAgg = new MutableObject<>(localAggOperator);
 
-        // Create global aggregate operator
-        // Output of local aggregate function is the input of global aggregate function
-        List<Mutable<ILogicalExpression>> globalAggFuncArgs = new ArrayList<>(1);
-        AbstractLogicalExpression localOutVariableRef =
-                new VariableReferenceExpression(localOutVariable, op.getSourceLocation());
-        globalAggFuncArgs.add(new MutableObject<>(localOutVariableRef));
-
-        IFunctionInfo globalAggFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.SQL_SUM);
-        AggregateFunctionCallExpression globalAggExpr =
-                new AggregateFunctionCallExpression(globalAggFunc, true, globalAggFuncArgs);
-        globalAggExpr.setStepOneAggregate(globalAggFunc);
-        globalAggExpr.setStepTwoAggregate(globalAggFunc);
-        globalAggExpr.setSourceLocation(op.getSourceLocation());
-        globalAggExpr.setOpaqueParameters(new Object[] {});
-        List<LogicalVariable> globalAggResultVars = new ArrayList<>(1);
-        globalAggResultVars.add(context.newVar());
-        List<Mutable<ILogicalExpression>> globalAggFuncs = new ArrayList<>(1);
-        globalAggFuncs.add(new MutableObject<>(globalAggExpr));
-        AggregateOperator globalAggOperator = EnforceStructuralPropertiesRule.createAggregate(globalAggResultVars, true,
-                globalAggFuncs, localAgg, context, op.getSourceLocation());
-        MutableObject<ILogicalOperator> globalAgg = new MutableObject<>(globalAggOperator);
-        return new Pair<>(globalAgg, globalAggResultVars);
+        // Output of local aggregate operator is the input of global aggregate operator
+        return createGlobalAggregateOperator(op, context, localOutVariable, localAgg);
     }
 
     private static Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createGlobalAggregateOperator(AbstractBinaryJoinOperator op,
