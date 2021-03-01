@@ -834,6 +834,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-kurtosis", 1);
     public static final FunctionIdentifier LOCAL_SQL_KURTOSIS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-kurtosis", 1);
+    public static final FunctionIdentifier UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-union-mbr", 1);
 
     public static final FunctionIdentifier SCALAR_SQL_AVG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-avg", 1);

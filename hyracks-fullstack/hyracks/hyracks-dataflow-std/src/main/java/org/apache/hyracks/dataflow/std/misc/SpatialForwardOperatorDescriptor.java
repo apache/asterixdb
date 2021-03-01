@@ -99,7 +99,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
         private long count;
 
         private MBRReaderActivityNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecordDescriptor,
-                                              ActivityId activityId, int partition) {
+                ActivityId activityId, int partition) {
             this.ctx = ctx;
             this.frameTupleAccessor = new FrameTupleAccessor(inputRecordDescriptor);
             this.frameTupleReference = new FrameTupleReference();
