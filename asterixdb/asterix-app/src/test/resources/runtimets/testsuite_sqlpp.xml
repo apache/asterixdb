@@ -12012,6 +12012,7 @@
         <expected-error>ASX1001: Syntax error: Unexpected type declaration for parameter a in function myfn001</expected-error>
         <expected-error>ASX1001: Syntax error: Unexpected return type declaration for function myfn002</expected-error>
         <expected-error>ASX1001: Syntax error: Unexpected return type declaration for function myfn003</expected-error>
+        <expected-error>ASX1001: Syntax error: Unexpected IF NOT EXISTS (in line 29, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

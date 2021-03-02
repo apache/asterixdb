@@ -17,10 +17,15 @@
  * under the License.
  */
 
-create function externallibtest.mysum(a: int32, b: int32) returns int32
-  as "org.apache.asterix.external.library.MySumFactory" at externallibtest.testlib;
+/*
+ * Description  : IF NOT EXISTS is not allowed if OR REPLACE is present
+ * Expected Res : Error
+ */
 
-/* test if not exists */
-create function externallibtest.mysum(a: int32, b: int32) if not exists returns int32
-  as "org.apache.asterix.external.library.MySumFactory" at externallibtest.testlib;
+drop dataverse experiments4 if exists;
+create dataverse experiments4;
+use experiments4;
 
+create or replace function myfn004() if not exists {
+  1
+};
