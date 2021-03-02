@@ -1238,7 +1238,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier CAST_TYPE_LAX =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast-lax", 1);
     public static final FunctionIdentifier REFERENCE_TILE =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "reference-tile", 5);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "reference-tile", 6);
 
     public static final FunctionIdentifier CREATE_UUID =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-uuid", 0);

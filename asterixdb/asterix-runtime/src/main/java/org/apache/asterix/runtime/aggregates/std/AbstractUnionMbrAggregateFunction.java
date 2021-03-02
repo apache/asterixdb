@@ -97,7 +97,12 @@ public abstract class AbstractUnionMbrAggregateFunction extends AbstractAggregat
     public void finish(IPointable result) throws HyracksDataException {
         resultStorage.reset();
         try {
-            rectangleSerde.serialize(unionMbr, resultStorage.getDataOutput());
+            if (unionMbr == null) {
+                // TODO: this might not be the correct way to handle null
+                unionMbr = new ARectangle(new APoint(0, 0), new APoint(0, 0));
+            } else {
+                rectangleSerde.serialize(unionMbr, resultStorage.getDataOutput());
+            }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -106,7 +111,9 @@ public abstract class AbstractUnionMbrAggregateFunction extends AbstractAggregat
 
     @Override
     public void finishPartial(IPointable result) throws HyracksDataException {
-        finish(result);
+        if (unionMbr != null) {
+            finish(result);
+        }
     }
 
     protected void processNull() throws UnsupportedItemTypeException {

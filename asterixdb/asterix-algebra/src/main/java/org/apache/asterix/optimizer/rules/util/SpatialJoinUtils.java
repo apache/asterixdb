@@ -274,7 +274,8 @@ public class SpatialJoinUtils {
                 new MutableObject<>(
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
                 new MutableObject<>(
-                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
+                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))),
+                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AString(leftAggKey)))));
 
         // Update the join conditions with the tile Id equality condition
         ScalarFunctionCallExpression tileIdEquiJoinCondition =
