@@ -71,8 +71,8 @@ public class DatasetCopyIdentifier implements Serializable {
     }
 
     public boolean isMatch(ResourceReference resourceReference) {
-        return resourceReference.getDataverse().equals(dataverse.getCanonicalForm())
-                && resourceReference.getDataset().equals(dataset) && resourceReference.getRebalance().equals(rebalance);
+        return resourceReference.getDataverse().equals(dataverse) && resourceReference.getDataset().equals(dataset)
+                && resourceReference.getRebalance().equals(rebalance);
     }
 
     @Override

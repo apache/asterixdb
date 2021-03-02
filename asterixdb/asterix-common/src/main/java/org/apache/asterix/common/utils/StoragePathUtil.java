@@ -21,6 +21,7 @@ package org.apache.asterix.common.utils;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.metadata.DataverseName;
@@ -40,6 +41,7 @@ import org.apache.logging.log4j.Logger;
 public class StoragePathUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final char DATAVERSE_CONTINUATION_MARKER = '^';
 
     private StoragePathUtil() {
     }
@@ -66,11 +68,21 @@ public class StoragePathUtil {
 
     public static String prepareDataverseIndexName(DataverseName dataverseName, String datasetName, String idxName,
             long rebalanceCount) {
-        return prepareDataverseIndexName(dataverseName, prepareFullIndexName(datasetName, idxName, rebalanceCount));
+        return prepareDataverseComponentName(dataverseName, prepareFullIndexName(datasetName, idxName, rebalanceCount));
     }
 
-    public static String prepareDataverseIndexName(DataverseName dataverseName, String fullIndexName) {
-        return dataverseName.getCanonicalForm() + File.separator + fullIndexName; //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
+    public static String prepareDataverseName(DataverseName dataverseName) {
+        Iterator<String> dvParts = dataverseName.getParts().iterator();
+        StringBuilder builder = new StringBuilder();
+        builder.append(dvParts.next());
+        while (dvParts.hasNext()) {
+            builder.append(File.separatorChar).append(DATAVERSE_CONTINUATION_MARKER).append(dvParts.next());
+        }
+        return builder.toString();
+    }
+
+    public static String prepareDataverseComponentName(DataverseName dataverseName, String component) {
+        return prepareDataverseName(dataverseName) + File.separatorChar + component;
     }
 
     private static String prepareFullIndexName(String datasetName, String idxName, long rebalanceCount) {
