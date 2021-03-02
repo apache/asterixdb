@@ -18,6 +18,11 @@
  */
 package org.apache.asterix.runtime.aggregates.std;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.IOException;
+
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.APoint;
@@ -38,12 +43,7 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.IOException;
-
-public abstract class AbstractUnionMbrAggregateFunction extends AbstractAggregateFunction  {
+public abstract class AbstractUnionMbrAggregateFunction extends AbstractAggregateFunction {
 
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private IPointable inputVal = new VoidPointable();
@@ -52,9 +52,10 @@ public abstract class AbstractUnionMbrAggregateFunction extends AbstractAggregat
     protected ARectangle unionMbr;
 
     private ISerializerDeserializer<ARectangle> rectangleSerde =
-        SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ARECTANGLE);
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ARECTANGLE);
 
-    public AbstractUnionMbrAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context, SourceLocation sourceLoc) throws HyracksDataException {
+    public AbstractUnionMbrAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
         super(sourceLoc);
         this.eval = args[0].createScalarEvaluator(context);
         this.context = context;
@@ -73,7 +74,7 @@ public abstract class AbstractUnionMbrAggregateFunction extends AbstractAggregat
         int offset = inputVal.getStartOffset();
         int len = inputVal.getLength();
         ATypeTag typeTag =
-            EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(inputVal.getByteArray()[inputVal.getStartOffset()]);
         // Ignore SYSTEM_NULL.
         if (typeTag == ATypeTag.NULL || typeTag == ATypeTag.MISSING) {
             processNull();
@@ -110,6 +111,6 @@ public abstract class AbstractUnionMbrAggregateFunction extends AbstractAggregat
 
     protected void processNull() throws UnsupportedItemTypeException {
         throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.UNION_MBR,
-            ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
+                ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
     }
 }

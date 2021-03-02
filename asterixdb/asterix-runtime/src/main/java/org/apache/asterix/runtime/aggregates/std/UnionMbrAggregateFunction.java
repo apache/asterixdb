@@ -25,8 +25,8 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class UnionMbrAggregateFunction extends AbstractUnionMbrAggregateFunction {
 
-    public UnionMbrAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context, SourceLocation sourceLoc)
-        throws HyracksDataException {
+    public UnionMbrAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context,
+            SourceLocation sourceLoc) throws HyracksDataException {
         super(args, context, sourceLoc);
     }
 }

@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -47,7 +46,7 @@ public class UnionMbrAggregateDescriptor extends AbstractAggregateFunctionDynami
 
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IEvaluatorContext ctx)
-                throws HyracksDataException {
+                    throws HyracksDataException {
                 return new UnionMbrAggregateFunction(args, ctx, sourceLoc);
             }
         };
