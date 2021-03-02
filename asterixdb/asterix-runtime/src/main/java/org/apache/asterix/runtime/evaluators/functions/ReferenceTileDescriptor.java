@@ -129,12 +129,17 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                             String key = AStringSerializerDeserializer.INSTANCE.deserialize(keyDataInputStream)
                                     .getStringValue();
                             Double[] mbrCoordinates = new Double[4];
-                            if (TaskUtil.get(key, hyracksTaskContext) != null) {
-                                mbrCoordinates = TaskUtil.get(key, hyracksTaskContext);
-                                double minX = mbrCoordinates[0];
-                                double minY = mbrCoordinates[1];
-                                double maxX = mbrCoordinates[2];
-                                double maxY = mbrCoordinates[3];
+                            if (TaskUtil.get(key, hyracksTaskContext) == null) {
+//                                mbrCoordinates = TaskUtil.get(key, hyracksTaskContext);
+//                                double minX = mbrCoordinates[0];
+//                                double minY = mbrCoordinates[1];
+//                                double maxX = mbrCoordinates[2];
+//                                double maxY = mbrCoordinates[3];
+
+                                double minX = -124.421948157;
+                                double minY = -60.7865500782;
+                                double maxX = 85.2928232587;
+                                double maxY = 55.3172948124;
 
                                 double ax1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                         + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));

@@ -123,7 +123,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
             // deserialize the MBR
             frameTupleAccessor.reset(buffer);
             if (frameTupleAccessor.getTupleCount() != 1) {
-                throw HyracksDataException.create(ErrorCode.ONE_TUPLE_RANGEMAP_EXPECTED, sourceLoc);
+                throw HyracksDataException.create(ErrorCode.ONE_TUPLE_RECTANGLE_EXPECTED, sourceLoc);
             }
             frameTupleReference.reset(frameTupleAccessor, 0);
             byte[] mbrBytes = frameTupleReference.getFieldData(0);
@@ -150,7 +150,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
             // Expecting mbr is not zero point
             if ((mbrCoordinates[0] == 0.0) && (mbrCoordinates[1] == 0.0) && (mbrCoordinates[2] == 0.0)
                     && (mbrCoordinates[3] == 0.0)) {
-                throw HyracksDataException.create(ErrorCode.NO_RANGEMAP_PRODUCED, sourceLoc);
+                throw HyracksDataException.create(ErrorCode.NO_RECTANGLE_PRODUCED, sourceLoc);
             }
             // store the mbr in the state object of ctx so that next activity (forward) could retrieve it
             TaskId countReaderTaskId = new TaskId(activityId, partition);
@@ -183,8 +183,8 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
         private final int partition;
 
         /**
-         * @param ctx used to retrieve the range map stored by the range reader activity.
-         * @param partition used to create the same task id used by the range reader activity for storing the range.
+         * @param ctx used to retrieve the mbr stored by the mbr reader activity.
+         * @param partition used to create the same task id used by the mbr reader activity for storing the mbr.
          */
         private ForwardDataActivityNodePushable(IHyracksTaskContext ctx, int partition) {
             this.ctx = ctx;
@@ -193,7 +193,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
 
         @Override
         public void open() throws HyracksDataException {
-            // retrieve the range map from the state object (previous activity should have already stored it)
+            // retrieve the mbr from the state object (previous activity should have already stored it)
             // then deposit it into the ctx so that MToN-partition can pick it up
             Object stateObjKey = new TaskId(new ActivityId(odId, SIDE_DATA_ACTIVITY_ID), partition);
             MBRState countState = (MBRState) ctx.getStateObject(stateObjKey);
