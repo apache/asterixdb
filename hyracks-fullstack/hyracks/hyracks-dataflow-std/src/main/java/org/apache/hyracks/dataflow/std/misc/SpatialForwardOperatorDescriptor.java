@@ -32,9 +32,11 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
+import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
@@ -67,7 +69,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
     }
 
     private class MBRState extends AbstractStateObject {
-        long count;
+        Double[] mbrCoordinates;
 
         private MBRState(JobId jobId, TaskId stateObjectKey) {
             super(jobId, stateObjectKey);
@@ -96,7 +98,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
         private final IHyracksTaskContext ctx;
         private final ActivityId activityId;
         private final int partition;
-        private long count;
+        private Double[] mbrCoordinates;;
 
         private MBRReaderActivityNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecordDescriptor,
                 ActivityId activityId, int partition) {
@@ -105,7 +107,11 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
             this.frameTupleReference = new FrameTupleReference();
             this.activityId = activityId;
             this.partition = partition;
-            this.count = -1;
+            this.mbrCoordinates = new Double[4];
+            mbrCoordinates[0] = 0.0;
+            mbrCoordinates[1] = 0.0;
+            mbrCoordinates[2] = 0.0;
+            mbrCoordinates[3] = 0.0;
         }
 
         @Override
@@ -125,12 +131,16 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
             byte[] mbrBytes = frameTupleReference.getFieldData(0);
             int offset = frameTupleReference.getFieldStart(0);
             int length = frameTupleReference.getFieldLength(0);
-            LongPointable mbrPointable = new LongPointable();
+//            LongPointable mbrPointable = new LongPointable();
+            ByteArrayPointable mbrPointable = new ByteArrayPointable();
             mbrPointable.set(mbrBytes, offset + 1, length - 1);
             ByteArrayInputStream mbrIn = new ByteArrayInputStream(mbrPointable.getByteArray(),
                     mbrPointable.getStartOffset(), mbrPointable.getLength());
             DataInputStream mbrDataInputStream = new DataInputStream(mbrIn);
-            count = Integer64SerializerDeserializer.read(mbrDataInputStream);
+            mbrCoordinates[0] = DoubleSerializerDeserializer.INSTANCE.deserialize(mbrDataInputStream);
+            mbrCoordinates[1] = DoubleSerializerDeserializer.INSTANCE.deserialize(mbrDataInputStream);
+            mbrCoordinates[2] = DoubleSerializerDeserializer.INSTANCE.deserialize(mbrDataInputStream);
+            mbrCoordinates[3] = DoubleSerializerDeserializer.INSTANCE.deserialize(mbrDataInputStream);
         }
 
         @Override
@@ -141,13 +151,13 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
         @Override
         public void close() throws HyracksDataException {
             // expecting count > 0
-            if (count <= 0) {
+            if ((mbrCoordinates[0] == 0.0) && (mbrCoordinates[1] == 0.0) && (mbrCoordinates[2] == 0.0) && (mbrCoordinates[3] == 0.0)) {
                 throw HyracksDataException.create(ErrorCode.NO_RANGEMAP_PRODUCED, sourceLoc);
             }
             // store the range map in the state object of ctx so that next activity (forward) could retrieve it
             TaskId countReaderTaskId = new TaskId(activityId, partition);
             MBRState countState = new MBRState(ctx.getJobletContext().getJobId(), countReaderTaskId);
-            countState.count = count;
+            countState.mbrCoordinates = mbrCoordinates;
             ctx.setStateObject(countState);
         }
     }
@@ -189,7 +199,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
             // then deposit it into the ctx so that MToN-partition can pick it up
             Object stateObjKey = new TaskId(new ActivityId(odId, SIDE_DATA_ACTIVITY_ID), partition);
             MBRState countState = (MBRState) ctx.getStateObject(stateObjKey);
-            TaskUtil.put(sideDataKey, countState.count, ctx);
+            TaskUtil.put(sideDataKey, countState.mbrCoordinates, ctx);
             writer.open();
         }
 

@@ -342,13 +342,14 @@ public class SpatialJoinUtils {
     private static Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggregateOperators(
             AbstractBinaryJoinOperator op, IOptimizationContext context, LogicalVariable inputVar,
             MutableObject<ILogicalOperator> exchToLocalAggRef) throws AlgebricksException {
-        ConstantExpression one = new ConstantExpression(new AsterixConstantValue(new AInt64(1)));
-        //        AbstractLogicalExpression inputVarRef = new VariableReferenceExpression(inputVar, op.getSourceLocation());
+//        ConstantExpression one = new ConstantExpression(new AsterixConstantValue(new AInt64(1)));
+        AbstractLogicalExpression inputVarRef = new VariableReferenceExpression(inputVar, op.getSourceLocation());
         List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
-        fields.add(new MutableObject<>(one));
+        fields.add(new MutableObject<>(inputVarRef));
+//        fields.add(new MutableObject<>(one));
 
         // Create local aggregate operator
-        IFunctionInfo localAggFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.SQL_COUNT);
+        IFunctionInfo localAggFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.UNION_MBR);
         AggregateFunctionCallExpression localAggExpr = new AggregateFunctionCallExpression(localAggFunc, false, fields);
         localAggExpr.setSourceLocation(op.getSourceLocation());
         localAggExpr.setOpaqueParameters(new Object[] {});
@@ -371,7 +372,7 @@ public class SpatialJoinUtils {
         List<Mutable<ILogicalExpression>> globalAggFuncArgs = new ArrayList<>(1);
         AbstractLogicalExpression inputVarRef = new VariableReferenceExpression(inputVar, op.getSourceLocation());
         globalAggFuncArgs.add(new MutableObject<>(inputVarRef));
-        IFunctionInfo globalAggFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.SQL_SUM);
+        IFunctionInfo globalAggFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.UNION_MBR);
         AggregateFunctionCallExpression globalAggExpr =
                 new AggregateFunctionCallExpression(globalAggFunc, true, globalAggFuncArgs);
         globalAggExpr.setStepOneAggregate(globalAggFunc);
