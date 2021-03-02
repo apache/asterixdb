@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.metadata.declared;
 
+import static org.apache.asterix.metadata.utils.MetadataConstants.METADATA_OBJECT_NAME_INVALID_CHARS;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -1768,7 +1770,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         if (name == null || name.isEmpty()) {
             throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, "<empty>");
         }
-        if (Character.isWhitespace(name.codePointAt(0))) {
+        if (Character.isWhitespace(name.codePointAt(0)) || METADATA_OBJECT_NAME_INVALID_CHARS.matcher(name).find()) {
             throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, name);
         }
         int lengthUTF8 = name.getBytes(StandardCharsets.UTF_8).length;

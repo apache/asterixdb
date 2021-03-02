@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.test.metadata;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -156,6 +157,31 @@ public class MetadataManagerTest {
                 Assert.fail("Expected failure: " + invalidNameErrCode);
             } catch (Exception e) {
 
+                Assert.assertTrue("Unexpected error message: " + e.getMessage(),
+                        e.getMessage().contains(invalidNameErrCode.errorCode()));
+            }
+        }
+    }
+
+    @Test
+    public void testInvalidCharacters() throws Exception {
+        TestCaseContext.OutputFormat cleanJson = TestCaseContext.OutputFormat.CLEAN_JSON;
+
+        List<DataverseName> dvNameBadCharsList = Arrays.asList(
+                // #1. nul characters
+                DataverseName.createSinglePartName("abc\u0000def"),
+                // #2. leading whitespace
+                DataverseName.createSinglePartName(" abcdef"),
+                // #2. file separator
+                DataverseName.createSinglePartName("abc" + File.separatorChar + "def"));
+
+        ErrorCode invalidNameErrCode = ErrorCode.INVALID_DATABASE_OBJECT_NAME;
+        for (DataverseName dvNameOk : dvNameBadCharsList) {
+            String sql = String.format("create dataverse %s;", dvNameOk);
+            try {
+                testExecutor.executeSqlppUpdateOrDdl(sql, cleanJson);
+                Assert.fail("Expected failure: " + invalidNameErrCode);
+            } catch (Exception e) {
                 Assert.assertTrue("Unexpected error message: " + e.getMessage(),
                         e.getMessage().contains(invalidNameErrCode.errorCode()));
             }
