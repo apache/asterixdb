@@ -1884,6 +1884,7 @@ public class BuiltinFunctions {
         addFunction(KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(NULL_WRITER, PropagateTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
 
         // SUM
         addFunction(SUM, NumericSumAggTypeComputer.INSTANCE, true);
@@ -3031,6 +3032,12 @@ public class BuiltinFunctions {
         addScalarAgg(ST_UNION_SQL_AGG, SCALAR_ST_UNION_SQL_AGG);
         addDistinctAgg(ST_UNION_SQL_AGG_DISTINCT, ST_UNION_SQL_AGG);
         addScalarAgg(ST_UNION_SQL_AGG_DISTINCT, SCALAR_ST_UNION_SQL_AGG_DISTINCT);
+
+        addAgg(UNION_MBR);
+        addLocalAgg(UNION_MBR, UNION_MBR);
+        addIntermediateAgg(UNION_MBR, UNION_MBR);
+        addGlobalAgg(UNION_MBR, UNION_MBR);
+
     }
 
     interface BuiltinFunctionProperty {

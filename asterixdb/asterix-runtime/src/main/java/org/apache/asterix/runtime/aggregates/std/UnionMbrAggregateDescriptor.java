@@ -19,6 +19,7 @@
 package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -31,8 +32,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class UnionMbrAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY =
-        AbstractAggregateFunctionDynamicDescriptor.createFactory(UnionMbrAggregateDescriptor::new);
+
+    public static final IFunctionDescriptorFactory FACTORY = () -> new UnionMbrAggregateDescriptor();
 
     @Override
     public FunctionIdentifier getIdentifier() {

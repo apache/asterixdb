@@ -225,6 +225,7 @@ import org.apache.asterix.runtime.aggregates.std.SqlVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.StddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.StddevPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SumAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.UnionMbrAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.VarAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.VarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.stream.EmptyStreamAggregateDescriptor;
@@ -681,6 +682,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(EmptyStreamAggregateDescriptor.FACTORY);
         fc.add(NonEmptyStreamAggregateDescriptor.FACTORY);
         fc.add(NullWriterAggregateDescriptor.FACTORY);
+        fc.add(UnionMbrAggregateDescriptor.FACTORY);
 
         // serializable aggregates
         fc.add(SerializableCountAggregateDescriptor.FACTORY);
