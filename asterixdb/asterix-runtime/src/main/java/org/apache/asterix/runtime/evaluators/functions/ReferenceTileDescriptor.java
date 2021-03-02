@@ -124,10 +124,10 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                                 && (tag3 == ATypeTag.BIGINT) && (tag4 == ATypeTag.BIGINT)) {
                             // Get dynamic MBR
                             ByteArrayInputStream keyInputStream =
-                                new ByteArrayInputStream(bytes5, offset5 + 1, inputArg5.getLength() - 1);
+                                    new ByteArrayInputStream(bytes5, offset5 + 1, inputArg5.getLength() - 1);
                             DataInputStream keyDataInputStream = new DataInputStream(keyInputStream);
                             String key = AStringSerializerDeserializer.INSTANCE.deserialize(keyDataInputStream)
-                                .getStringValue();
+                                    .getStringValue();
                             Double[] mbrCoordinates = new Double[4];
                             if (TaskUtil.get(key, hyracksTaskContext) != null) {
                                 mbrCoordinates = TaskUtil.get(key, hyracksTaskContext);
@@ -137,24 +137,24 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                                 double maxY = mbrCoordinates[3];
 
                                 double ax1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
                                 double ay1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
+                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
                                 double bx1 = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
                                 double by1 = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
+                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
-//                                double minX = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
-//                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
-//                                double minY = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
-//                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
-//
-//                                double maxX = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
-//                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-//                                double maxY = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
-//                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
+                                //                                double minX = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
+                                //                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+                                //                                double minY = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
+                                //                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
+                                //
+                                //                                double maxX = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
+                                //                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+                                //                                double maxY = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
+                                //                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
 
                                 int rows = (int) AInt64SerializerDeserializer.getLong(bytes3, offset3 + 1);
                                 int columns = (int) AInt64SerializerDeserializer.getLong(bytes4, offset4 + 1);
@@ -166,6 +166,10 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                                 // Compute the tile ID of the reference point
                                 int row = (int) Math.ceil((y - minY) * rows / (maxY - minY));
                                 int col = (int) Math.ceil((x - minX) * columns / (maxX - minX));
+
+                                row = Math.min(Math.max(1, row), rows * columns);
+                                col = Math.min(Math.max(1, col), rows * columns);
+
                                 int tileId = (row - 1) * columns + col;
                                 try {
                                     out.writeByte(ATypeTag.SERIALIZED_INT32_TYPE_TAG);

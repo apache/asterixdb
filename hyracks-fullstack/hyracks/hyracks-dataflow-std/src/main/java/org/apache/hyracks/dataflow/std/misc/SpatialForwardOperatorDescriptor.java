@@ -33,11 +33,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
-import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
-import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.base.AbstractActivityNode;
 import org.apache.hyracks.dataflow.std.base.AbstractForwardOperatorDescriptor;
@@ -50,7 +48,7 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
 
     /**
      * @param spec used to create the operator id.
-     * @param sideDataKey the unique key to store the range map in the shared map & transfer it to partitioner.
+     * @param sideDataKey the unique key to store the mbr in the shared map & transfer it to partitioner.
      * @param outputRecordDescriptor the output schema of this operator.
      */
     public SpatialForwardOperatorDescriptor(IOperatorDescriptorRegistry spec, String sideDataKey,
@@ -131,7 +129,6 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
             byte[] mbrBytes = frameTupleReference.getFieldData(0);
             int offset = frameTupleReference.getFieldStart(0);
             int length = frameTupleReference.getFieldLength(0);
-//            LongPointable mbrPointable = new LongPointable();
             ByteArrayPointable mbrPointable = new ByteArrayPointable();
             mbrPointable.set(mbrBytes, offset + 1, length - 1);
             ByteArrayInputStream mbrIn = new ByteArrayInputStream(mbrPointable.getByteArray(),
@@ -150,11 +147,12 @@ public class SpatialForwardOperatorDescriptor extends AbstractForwardOperatorDes
 
         @Override
         public void close() throws HyracksDataException {
-            // expecting count > 0
-            if ((mbrCoordinates[0] == 0.0) && (mbrCoordinates[1] == 0.0) && (mbrCoordinates[2] == 0.0) && (mbrCoordinates[3] == 0.0)) {
+            // Expecting mbr is not zero point
+            if ((mbrCoordinates[0] == 0.0) && (mbrCoordinates[1] == 0.0) && (mbrCoordinates[2] == 0.0)
+                    && (mbrCoordinates[3] == 0.0)) {
                 throw HyracksDataException.create(ErrorCode.NO_RANGEMAP_PRODUCED, sourceLoc);
             }
-            // store the range map in the state object of ctx so that next activity (forward) could retrieve it
+            // store the mbr in the state object of ctx so that next activity (forward) could retrieve it
             TaskId countReaderTaskId = new TaskId(activityId, partition);
             MBRState countState = new MBRState(ctx.getJobletContext().getJobId(), countReaderTaskId);
             countState.mbrCoordinates = mbrCoordinates;

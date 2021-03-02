@@ -343,11 +343,11 @@ public class SpatialJoinUtils {
     private static Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> createLocalAndGlobalAggregateOperators(
             AbstractBinaryJoinOperator op, IOptimizationContext context, LogicalVariable inputVar,
             MutableObject<ILogicalOperator> exchToLocalAggRef) throws AlgebricksException {
-//        ConstantExpression one = new ConstantExpression(new AsterixConstantValue(new AInt64(1)));
+        //        ConstantExpression one = new ConstantExpression(new AsterixConstantValue(new AInt64(1)));
         AbstractLogicalExpression inputVarRef = new VariableReferenceExpression(inputVar, op.getSourceLocation());
         List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
         fields.add(new MutableObject<>(inputVarRef));
-//        fields.add(new MutableObject<>(one));
+        //        fields.add(new MutableObject<>(one));
 
         // Create local aggregate operator
         IFunctionInfo localAggFunc = context.getMetadataProvider().lookupFunction(BuiltinFunctions.UNION_MBR);
