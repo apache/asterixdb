@@ -577,6 +577,7 @@ import org.apache.asterix.runtime.runningaggregates.std.WinMarkFirstMissingRunni
 import org.apache.asterix.runtime.runningaggregates.std.WinPartitionLenRunningAggregateDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.RangeDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.ScanCollectionDescriptor;
+import org.apache.asterix.runtime.unnestingfunctions.std.SpatialAttachDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.SpatialTileDescriptor;
 import org.apache.asterix.runtime.unnestingfunctions.std.SubsetCollectionDescriptor;
 
@@ -630,6 +631,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(RangeDescriptor.FACTORY);
         fc.add(SubsetCollectionDescriptor.FACTORY);
         fc.add(SpatialTileDescriptor.FACTORY);
+        fc.add(SpatialAttachDescriptor.FACTORY);
 
         // aggregate functions
         fc.add(ListifyAggregateDescriptor.FACTORY);

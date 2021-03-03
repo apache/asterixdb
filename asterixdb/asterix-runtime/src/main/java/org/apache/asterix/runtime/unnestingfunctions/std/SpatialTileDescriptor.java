@@ -129,30 +129,19 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                         ATypeTag tag4 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes4[offset4]);
 
                         if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.RECTANGLE) && (tag2 == ATypeTag.BIGINT)
-                                && (tag3 == ATypeTag.BIGINT)) {
+                                && (tag3 == ATypeTag.BIGINT) && (tag4 == ATypeTag.STRING)) {
                             // Get dynamic MBR
                             ByteArrayInputStream keyInputStream =
                                     new ByteArrayInputStream(bytes4, offset4 + 1, inputArg4.getLength() - 1);
                             DataInputStream keyDataInputStream = new DataInputStream(keyInputStream);
                             String key = AStringSerializerDeserializer.INSTANCE.deserialize(keyDataInputStream)
                                     .getStringValue();
-                            Double[] mbrCoordinates = new Double[4];
                             if (TaskUtil.get(key, hyracksTaskContext) != null) {
-                                mbrCoordinates = TaskUtil.get(key, hyracksTaskContext);
+                                Double[] mbrCoordinates = TaskUtil.get(key, hyracksTaskContext);
                                 double minX = mbrCoordinates[0];
                                 double minY = mbrCoordinates[1];
                                 double maxX = mbrCoordinates[2];
                                 double maxY = mbrCoordinates[3];
-
-                                //                                minX = -124.421948157*2;
-                                //                                minY = -60.7865500782*2;
-                                //                                maxX = 85.2928232587*2;
-                                //                                maxY = 55.3172948124*2;
-
-                                //                                minX = -180.0;
-                                //                                minY = -83.0;
-                                //                                maxX = 180.0;
-                                //                                maxY = 90.0;
 
                                 //                            double minX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                 //                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
@@ -201,7 +190,8 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                                 }
                                 pos = 0;
                             } else {
-                                throw HyracksDataException.create(new Throwable("No MBR found"));
+                                throw HyracksDataException.create(
+                                        new Throwable(String.format("%s: No MBR found", this.getClass().toString())));
                             }
                         } else {
                             if (tag0 != ATypeTag.RECTANGLE) {
@@ -219,6 +209,10 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                             if (tag3 != ATypeTag.BIGINT) {
                                 throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes3[offset3],
                                         ATypeTag.SERIALIZED_INT64_TYPE_TAG);
+                            }
+                            if (tag4 != ATypeTag.STRING) {
+                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes4[offset4],
+                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         }
                     }
