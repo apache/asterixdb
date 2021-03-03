@@ -19,15 +19,11 @@
 
 # <a id="DDL_and_DML_statements">7. DDL and DML statements</a>
 
----
+##### Stmnt
+![](../images/diagrams/Stmnt.png)
 
-### Stmnt
-**![](../images/diagrams/Stmnt.png)**
-
-### SingleStmnt
-**![](../images/diagrams/SingleStmnt.png)**
-
----
+##### SingleStmnt
+![](../images/diagrams/SingleStmnt.png)
 
 In addition to queries, an implementation of SQL++ needs to support statements for data definition
 and manipulation purposes as well as controlling the context to be used in evaluating query expressions.

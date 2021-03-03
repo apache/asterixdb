@@ -20,7 +20,7 @@
 ## <a id="PrimitiveTypes">Primitive Types</a> ##
 
 ### <a id="PrimitiveTypesBoolean">Boolean</a> ###
-`boolean` data type can have one of the two values: _*true*_ or _*false*_.
+`boolean` data type can have one of the two values: *true* or *false*.
 
  * Example:
 

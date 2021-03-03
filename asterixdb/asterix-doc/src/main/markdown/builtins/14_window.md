@@ -209,7 +209,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Syntax:
 
-        FIRST_VALUE(expr) [nulls-treatment] OVER (window-definition)
+        FIRST_VALUE(expr) [nulls-modifier] OVER (window-definition)
 
 * Returns the requested value from the first tuple in the current window
   frame, where the window frame is specified by the window definition.
@@ -221,7 +221,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Modifiers:
 
-    * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
+    * [NULLS Modifier](manual.html#Window_function_options): (Optional) Determines how
       NULL or MISSING values are treated when finding the first value in the
       window frame.
 
@@ -330,7 +330,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Syntax:
 
-        LAG(expr[, offset[, default]]) [nulls-treatment] OVER ([window-partition-clause] [window-order-clause])
+        LAG(expr[, offset[, default]]) [nulls-modifier] OVER ([window-partition-clause] [window-order-clause])
 
 * Returns the value from a tuple at a given offset prior to the current tuple
   position.
@@ -353,7 +353,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Modifiers:
 
-    * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
+    * [NULLS Modifier](manual.html#Window_function_options): (Optional) Determines how
       NULL or MISSING values are treated when finding the offset tuple in the
       window partition.
 
@@ -442,7 +442,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Syntax:
 
-        LAST_VALUE(expr) [nulls-treatment] OVER (window-definition)
+        LAST_VALUE(expr) [nulls-modifier] OVER (window-definition)
 
 * Returns the requested value from the last tuple in the current window frame,
   where the window frame is specified by the window definition.
@@ -454,7 +454,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Modifiers:
 
-    * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
+    * [NULLS Modifier](manual.html#Window_function_options): (Optional) Determines how
       NULL or MISSING values are treated when finding the last tuple in the
       window frame.
 
@@ -573,7 +573,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Syntax:
 
-        LEAD(expr[, offset[, default]]) [nulls-treatment] OVER ([window-partition-clause] [window-order-clause])
+        LEAD(expr[, offset[, default]]) [nulls-modifier] OVER ([window-partition-clause] [window-order-clause])
 
 * Returns the value from a tuple at a given offset ahead of the current tuple
   position.
@@ -596,7 +596,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Modifiers:
 
-    * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
+    * [NULLS Modifier](manual.html#Window_function_options): (Optional) Determines how
       NULL or MISSING values are treated when finding the offset tuple in the
       window partition.
 
@@ -685,7 +685,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Syntax:
 
-        NTH_VALUE(expr, offset) [nthval-from] [nulls-treatment] OVER (window-definition)
+        NTH_VALUE(expr, offset) [from-modifier] [nulls-modifier] OVER (window-definition)
 
 * Returns the requested value from a tuple in the current window frame, where
   the window frame is specified by the window definition.
@@ -700,7 +700,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Modifiers:
 
-    * [Nth Val From](manual.html#Nth_val_from): (Optional) Determines where the
+    * [FROM Modifier](manual.html#Window_function_options): (Optional) Determines where the
       function starts counting the offset.
 
         - `FROM FIRST`: Counting starts at the first tuple in the window frame.
@@ -714,7 +714,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
         The order of the tuples is determined by the window order clause.
         If this modifier is omitted, the default is `FROM FIRST`.
 
-    * [Nulls Treatment](manual.html#Nulls_treatment): (Optional) Determines how
+    * [NULLS Modifier](manual.html#Window_function_options): (Optional) Determines how
       NULL or MISSING values are treated when finding the offset tuple in the
       window frame.
 

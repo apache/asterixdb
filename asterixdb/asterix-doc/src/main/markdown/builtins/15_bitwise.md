@@ -651,3 +651,4 @@ The function has an alias `isbitset`.
 
     This returns 10 (1010 in binary) because 3 XOR 6 equals 5 (0101 in binary),
     and then 5 XOR 15 equals 10 (1010 in binary).
+
