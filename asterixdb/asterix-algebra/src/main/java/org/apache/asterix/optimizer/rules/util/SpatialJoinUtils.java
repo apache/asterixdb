@@ -217,73 +217,81 @@ public class SpatialJoinUtils {
             rightInputVar = spatialJoinVar0;
         }
 
-        // Add a dynamic workflow to compute MBR of the left branch
-        Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> leftMBRCalculator =
+        boolean useDynamicMBR = (spatialJoinAnn.getMinX() == 0.0) && (spatialJoinAnn.getMinY() == 0.0)
+            && (spatialJoinAnn.getMaxX() == 0.0) && (spatialJoinAnn.getMaxY() == 0.0);
+
+        String leftAggKey = "";
+        String rightAggKey = "";
+        LogicalVariable leftUnionMBRVar = null;
+        LogicalVariable rightUnionMBRVar = null;
+
+        if (useDynamicMBR) {
+            // Add a dynamic workflow to compute MBR of the left branch
+            Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> leftMBRCalculator =
                 createDynamicMBRCalculator(op, context, leftInputOp, leftInputVar);
-        MutableObject<ILogicalOperator> leftGlobalAgg = leftMBRCalculator.first;
-        List<LogicalVariable> leftGlobalAggResultVars = leftMBRCalculator.second;
-        MutableObject<ILogicalOperator> leftExchToForwardRef = leftMBRCalculator.third;
-        LogicalVariable leftMBRVar = leftGlobalAggResultVars.get(0);
+            MutableObject<ILogicalOperator> leftGlobalAgg = leftMBRCalculator.first;
+            List<LogicalVariable> leftGlobalAggResultVars = leftMBRCalculator.second;
+            MutableObject<ILogicalOperator> leftExchToForwardRef = leftMBRCalculator.third;
+            LogicalVariable leftMBRVar = leftGlobalAggResultVars.get(0);
 
-        // Add a dynamic workflow to compute MBR of the right branch
-        Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> rightMBRCalculator =
+            // Add a dynamic workflow to compute MBR of the right branch
+            Triple<MutableObject<ILogicalOperator>, List<LogicalVariable>, MutableObject<ILogicalOperator>> rightMBRCalculator =
                 createDynamicMBRCalculator(op, context, rightInputOp, rightInputVar);
-        MutableObject<ILogicalOperator> rightGlobalAgg = rightMBRCalculator.first;
-        List<LogicalVariable> rightGlobalAggResultVars = rightMBRCalculator.second;
-        MutableObject<ILogicalOperator> rightExchToForwardRef = rightMBRCalculator.third;
-        LogicalVariable rightMBRVar = rightGlobalAggResultVars.get(0);
+            MutableObject<ILogicalOperator> rightGlobalAgg = rightMBRCalculator.first;
+            List<LogicalVariable> rightGlobalAggResultVars = rightMBRCalculator.second;
+            MutableObject<ILogicalOperator> rightExchToForwardRef = rightMBRCalculator.third;
+            LogicalVariable rightMBRVar = rightGlobalAggResultVars.get(0);
 
-        // TODO: investigate the idea of using assign operator instead of union and aggregate operator.
-        //  This could reduce the partitioning space, thus it might reduce the partitioning time.
+            // TODO: investigate the idea of using assign operator instead of union and aggregate operator.
+            //  This could reduce the partitioning space, thus it might reduce the partitioning time.
 
-        // Union the results of left and right aggregators
-        LogicalVariable unionMBRVar = context.newVar();
-        Triple<LogicalVariable, LogicalVariable, LogicalVariable> unionVarMap =
+            // Union the results of left and right aggregators
+            LogicalVariable unionMBRVar = context.newVar();
+            Triple<LogicalVariable, LogicalVariable, LogicalVariable> unionVarMap =
                 new Triple<>(leftMBRVar, rightMBRVar, unionMBRVar);
-        List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> unionVarMaps = new ArrayList<>();
-        unionVarMaps.add(unionVarMap);
-        UnionAllOperator unionAllOperator = new UnionAllOperator(unionVarMaps);
-        unionAllOperator.setSourceLocation(op.getSourceLocation());
-        unionAllOperator.getInputs().add(new MutableObject<>(leftGlobalAgg.getValue()));
-        unionAllOperator.getInputs().add(new MutableObject<>(rightGlobalAgg.getValue()));
-        OperatorManipulationUtil.setOperatorMode(unionAllOperator);
-        unionAllOperator.recomputeSchema();
-        context.computeAndSetTypeEnvironmentForOperator(unionAllOperator);
-        MutableObject<ILogicalOperator> unionAllOperatorRef = new MutableObject<>(unionAllOperator);
+            List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> unionVarMaps = new ArrayList<>();
+            unionVarMaps.add(unionVarMap);
+            UnionAllOperator unionAllOperator = new UnionAllOperator(unionVarMaps);
+            unionAllOperator.setSourceLocation(op.getSourceLocation());
+            unionAllOperator.getInputs().add(new MutableObject<>(leftGlobalAgg.getValue()));
+            unionAllOperator.getInputs().add(new MutableObject<>(rightGlobalAgg.getValue()));
+            OperatorManipulationUtil.setOperatorMode(unionAllOperator);
+            unionAllOperator.recomputeSchema();
+            context.computeAndSetTypeEnvironmentForOperator(unionAllOperator);
+            MutableObject<ILogicalOperator> unionAllOperatorRef = new MutableObject<>(unionAllOperator);
 
-        // Compute the union MBR of the left and the right MBR
-        Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> globalAggregateOperator =
+            // Compute the union MBR of the left and the right MBR
+            Pair<MutableObject<ILogicalOperator>, List<LogicalVariable>> globalAggregateOperator =
                 createGlobalAggregateOperator(op, context, unionMBRVar, unionAllOperatorRef);
-        MutableObject<ILogicalOperator> globalAgg = globalAggregateOperator.first;
-        LogicalVariable finalMBR = globalAggregateOperator.second.get(0);
+            MutableObject<ILogicalOperator> globalAgg = globalAggregateOperator.first;
+            LogicalVariable finalMBR = globalAggregateOperator.second.get(0);
 
-        // Replicate the union MBR to left and right forward operator
-        ReplicateOperator unionMBRReplicateOperator =
+            // Replicate the union MBR to left and right forward operator
+            ReplicateOperator unionMBRReplicateOperator =
                 createReplicateOperator(globalAgg, context, op.getSourceLocation());
-        ExchangeOperator exchMBRToForwardLeft = createBroadcastExchangeOp(unionMBRReplicateOperator, context);
-        MutableObject<ILogicalOperator> exchMBRToForwardLeftRef = new MutableObject<>(exchMBRToForwardLeft);
-        ExchangeOperator exchMBRToForwardRight = createBroadcastExchangeOp(unionMBRReplicateOperator, context);
-        MutableObject<ILogicalOperator> exchMBRToForwardRightRef = new MutableObject<>(exchMBRToForwardRight);
+            ExchangeOperator exchMBRToForwardLeft = createBroadcastExchangeOp(unionMBRReplicateOperator, context);
+            MutableObject<ILogicalOperator> exchMBRToForwardLeftRef = new MutableObject<>(exchMBRToForwardLeft);
+            ExchangeOperator exchMBRToForwardRight = createBroadcastExchangeOp(unionMBRReplicateOperator, context);
+            MutableObject<ILogicalOperator> exchMBRToForwardRightRef = new MutableObject<>(exchMBRToForwardRight);
 
-        // Add forward operator to the left branch
-        String leftAggKey = UUID.randomUUID().toString();
-        ForwardOperator leftForward = createForward(leftAggKey, finalMBR, leftExchToForwardRef, exchMBRToForwardLeftRef,
+            // Add forward operator to the left branch
+            leftAggKey = UUID.randomUUID().toString();
+            ForwardOperator leftForward = createForward(leftAggKey, finalMBR, leftExchToForwardRef, exchMBRToForwardLeftRef,
                 context, op.getSourceLocation());
-        MutableObject<ILogicalOperator> leftForwardRef = new MutableObject<>(leftForward);
-        leftInputOp.setValue(leftForwardRef.getValue());
+            MutableObject<ILogicalOperator> leftForwardRef = new MutableObject<>(leftForward);
+            leftInputOp.setValue(leftForwardRef.getValue());
 
-        // Add forward operator to the right branch
-        String rightAggKey = UUID.randomUUID().toString();
-        ForwardOperator rightForward = createForward(rightAggKey, finalMBR, rightExchToForwardRef,
+            // Add forward operator to the right branch
+            rightAggKey = UUID.randomUUID().toString();
+            ForwardOperator rightForward = createForward(rightAggKey, finalMBR, rightExchToForwardRef,
                 exchMBRToForwardRightRef, context, op.getSourceLocation());
-        MutableObject<ILogicalOperator> rightForwardRef = new MutableObject<>(rightForward);
-        rightInputOp.setValue(rightForwardRef.getValue());
+            MutableObject<ILogicalOperator> rightForwardRef = new MutableObject<>(rightForward);
+            rightInputOp.setValue(rightForwardRef.getValue());
 
-        // Inject assign operator to add the union MBR to the left and right branch of the join operator
-        LogicalVariable leftUnionMBRVar =
-                SpatialJoinUtils.injectSpatialAttachAssignOperator(context, leftInputOp, leftInputVar, leftAggKey);
-        LogicalVariable rightUnionMBRVar =
-                SpatialJoinUtils.injectSpatialAttachAssignOperator(context, rightInputOp, rightInputVar, rightAggKey);
+            // Inject assign operator to add the union MBR to the left and right branch of the join operator
+            leftUnionMBRVar = SpatialJoinUtils.injectSpatialAttachAssignOperator(context, leftInputOp, leftInputVar, leftAggKey);
+            rightUnionMBRVar = SpatialJoinUtils.injectSpatialAttachAssignOperator(context, rightInputOp, rightInputVar, rightAggKey);
+        }
 
         // Inject unnest operator to add tile ID to the left and right branch of the join operator
         LogicalVariable leftTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp,
@@ -291,12 +299,21 @@ public class SpatialJoinUtils {
         LogicalVariable rightTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp,
                 rightInputVar, spatialJoinAnn, rightAggKey);
 
+        Mutable<ILogicalExpression> unionMBRExpr;
+        if (useDynamicMBR) {
+            unionMBRExpr = new MutableObject<>(new VariableReferenceExpression(leftUnionMBRVar));
+        } else {
+            unionMBRExpr = new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
+                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                    new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))));
+        }
+
         // Compute reference tile ID
         ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.REFERENCE_TILE),
                 new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
                 new MutableObject<>(new VariableReferenceExpression(rightInputVar)),
-                new MutableObject<>(new VariableReferenceExpression(leftUnionMBRVar)),
+                unionMBRExpr,
                 new MutableObject<>(
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
                 new MutableObject<>(
@@ -311,14 +328,17 @@ public class SpatialJoinUtils {
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
                         new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
                         new MutableObject<>(referenceTileId));
-        ScalarFunctionCallExpression mbrIntersectJoinCondition = new ScalarFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
-                new MutableObject<>(new VariableReferenceExpression(leftUnionMBRVar)),
-                new MutableObject<>(new VariableReferenceExpression(rightUnionMBRVar)));
 
         conditionExprs.add(new MutableObject<>(tileIdEquiJoinCondition));
         conditionExprs.add(new MutableObject<>(referenceIdEquiJoinCondition));
-        conditionExprs.add(new MutableObject<>(mbrIntersectJoinCondition));
+
+        if (useDynamicMBR) {
+            ScalarFunctionCallExpression mbrIntersectJoinCondition = new ScalarFunctionCallExpression(
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
+                new MutableObject<>(new VariableReferenceExpression(leftUnionMBRVar)),
+                new MutableObject<>(new VariableReferenceExpression(rightUnionMBRVar)));
+            conditionExprs.add(new MutableObject<>(mbrIntersectJoinCondition));
+        }
 
         ScalarFunctionCallExpression updatedJoinCondition = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND), conditionExprs);
@@ -328,11 +348,17 @@ public class SpatialJoinUtils {
         List<LogicalVariable> keysLeftBranch = new ArrayList<>();
         keysLeftBranch.add(leftTileIdVar);
         keysLeftBranch.add(leftInputVar);
-        keysLeftBranch.add(leftUnionMBRVar);
+
         List<LogicalVariable> keysRightBranch = new ArrayList<>();
         keysRightBranch.add(rightTileIdVar);
         keysRightBranch.add(rightInputVar);
-        keysRightBranch.add(rightUnionMBRVar);
+
+
+        if (useDynamicMBR) {
+            keysLeftBranch.add(leftUnionMBRVar);
+            keysRightBranch.add(rightUnionMBRVar);
+        }
+
         SpatialJoinUtils.setSpatialJoinOp(op, keysLeftBranch, keysRightBranch, context);
     }
 

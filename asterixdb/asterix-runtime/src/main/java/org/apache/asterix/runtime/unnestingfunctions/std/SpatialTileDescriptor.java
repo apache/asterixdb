@@ -136,63 +136,68 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                             DataInputStream keyDataInputStream = new DataInputStream(keyInputStream);
                             String key = AStringSerializerDeserializer.INSTANCE.deserialize(keyDataInputStream)
                                     .getStringValue();
-                            if (TaskUtil.get(key, hyracksTaskContext) != null) {
-                                Double[] mbrCoordinates = TaskUtil.get(key, hyracksTaskContext);
-                                double minX = mbrCoordinates[0];
-                                double minY = mbrCoordinates[1];
-                                double maxX = mbrCoordinates[2];
-                                double maxY = mbrCoordinates[3];
+                            double minX, minY, maxX, maxY;
 
-                                //                            double minX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                //                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
-                                //                            double minY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                //                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
-                                //
-                                //                            double maxX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                //                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-                                //                            double maxY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                //                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
+                            // key == empty mean we should use static MBR
+                            if (key.equals("")) {
+                                minX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+                                minY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
-                                double x1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
-                                double y1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
-
-                                double x2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                                        + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-                                double y2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                                        + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
-
-                                int rows = (int) AInt64SerializerDeserializer.getLong(bytes2, offset2 + 1);
-                                int columns = (int) AInt64SerializerDeserializer.getLong(bytes3, offset3 + 1);
-
-                                int row1 = (int) Math.ceil((y1 - minY) * rows / (maxY - minY));
-                                int col1 = (int) Math.ceil((x1 - minX) * columns / (maxX - minX));
-                                int row2 = (int) Math.ceil((y2 - minY) * rows / (maxY - minY));
-                                int col2 = (int) Math.ceil((x2 - minX) * columns / (maxX - minX));
-
-                                row1 = Math.min(Math.max(1, row1), rows * columns);
-                                col1 = Math.min(Math.max(1, col1), rows * columns);
-                                row2 = Math.min(Math.max(1, row2), rows * columns);
-                                col2 = Math.min(Math.max(1, col2), rows * columns);
-
-                                int minRow = Math.min(row1, row2);
-                                int maxRow = Math.max(row1, row2);
-                                int minCol = Math.min(col1, col2);
-                                int maxCol = Math.max(col1, col2);
-
-                                tileValues.clear();
-                                for (int i = minRow; i <= maxRow; i++) {
-                                    for (int j = minCol; j <= maxCol; j++) {
-                                        int tileId = (i - 1) * columns + j;
-                                        tileValues.add(tileId);
-                                    }
-                                }
-                                pos = 0;
+                                maxX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+                                maxY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
                             } else {
-                                throw HyracksDataException.create(
+                                if (TaskUtil.get(key, hyracksTaskContext) != null) {
+                                    Double[] mbrCoordinates = TaskUtil.get(key, hyracksTaskContext);
+                                    minX = mbrCoordinates[0];
+                                    minY = mbrCoordinates[1];
+                                    maxX = mbrCoordinates[2];
+                                    maxY = mbrCoordinates[3];
+                                } else {
+                                    throw HyracksDataException.create(
                                         new Throwable(String.format("%s: No MBR found", this.getClass().toString())));
+                                }
                             }
+
+                            double x1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
+                                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+                            double y1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
+                                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
+
+                            double x2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
+                                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+                            double y2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
+                                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
+
+                            int rows = (int) AInt64SerializerDeserializer.getLong(bytes2, offset2 + 1);
+                            int columns = (int) AInt64SerializerDeserializer.getLong(bytes3, offset3 + 1);
+
+                            int row1 = (int) Math.ceil((y1 - minY) * rows / (maxY - minY));
+                            int col1 = (int) Math.ceil((x1 - minX) * columns / (maxX - minX));
+                            int row2 = (int) Math.ceil((y2 - minY) * rows / (maxY - minY));
+                            int col2 = (int) Math.ceil((x2 - minX) * columns / (maxX - minX));
+
+                            row1 = Math.min(Math.max(1, row1), rows * columns);
+                            col1 = Math.min(Math.max(1, col1), rows * columns);
+                            row2 = Math.min(Math.max(1, row2), rows * columns);
+                            col2 = Math.min(Math.max(1, col2), rows * columns);
+
+                            int minRow = Math.min(row1, row2);
+                            int maxRow = Math.max(row1, row2);
+                            int minCol = Math.min(col1, col2);
+                            int maxCol = Math.max(col1, col2);
+
+                            tileValues.clear();
+                            for (int i = minRow; i <= maxRow; i++) {
+                                for (int j = minCol; j <= maxCol; j++) {
+                                    int tileId = (i - 1) * columns + j;
+                                    tileValues.add(tileId);
+                                }
+                            }
+                            pos = 0;
                         } else {
                             if (tag0 != ATypeTag.RECTANGLE) {
                                 throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes0[offset0],
