@@ -1037,6 +1037,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-tile", 5);
     public static final FunctionIdentifier SPATIAL_ATTACH =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-attach", 2);
+    public static final FunctionIdentifier SPATIAL_ATTACH2 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-attach2", 2);
 
     // fuzzy functions
     public static final FunctionIdentifier FUZZY_EQ =
@@ -2152,6 +2154,7 @@ public class BuiltinFunctions {
         addFunction(SPATIAL_TILE, AInt32TypeComputer.INSTANCE, true);
         addFunction(SPATIAL_ATTACH, ARectangleTypeComputer.INSTANCE, true);
         addFunction(REFERENCE_TILE, AInt32TypeComputer.INSTANCE, true);
+        addFunction(SPATIAL_ATTACH2, ARectangleTypeComputer.INSTANCE, true);
 
         //geo functions
         addFunction(ST_AREA, ADoubleTypeComputer.INSTANCE, true);

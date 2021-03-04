@@ -32,14 +32,12 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -49,31 +47,31 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 
-public class SpatialAttachDescriptor extends AbstractUnnestingFunctionDynamicDescriptor {
+public class SpatialAttach2Descriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new SpatialAttachDescriptor();
+            return new SpatialAttach2Descriptor();
         }
     };
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SPATIAL_ATTACH;
+        return BuiltinFunctions.SPATIAL_ATTACH2;
     }
 
     @Override
-    public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
-        return new IUnnestingEvaluatorFactory() {
+    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
+        return new IScalarEvaluatorFactory() {
+            private static final long serialVersionUID = 1L;
 
             @Override
-            public IUnnestingEvaluator createUnnestingEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-
+            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 final IHyracksTaskContext hyracksTaskContext = ctx.getTaskContext();
 
-                return new IUnnestingEvaluator() {
+                return new IScalarEvaluator() {
 
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private final IPointable inputArg0 = new VoidPointable();
@@ -81,16 +79,16 @@ public class SpatialAttachDescriptor extends AbstractUnnestingFunctionDynamicDes
                     private final IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
 
-                    private final AMutableRectangle aRectangle = new AMutableRectangle(new AMutablePoint(0, 0), new AMutablePoint(0, 0));
+                    private final AMutableRectangle aRectangle =
+                            new AMutableRectangle(new AMutablePoint(0, 0), new AMutablePoint(0, 0));
                     private final AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
-                    int pos;
 
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<ARectangle> rectangleSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ARECTANGLE);
 
                     @Override
-                    public void init(IFrameTupleReference tuple) throws HyracksDataException {
+                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
                         eval0.evaluate(tuple, inputArg0);
                         eval1.evaluate(tuple, inputArg1);
 
@@ -104,8 +102,8 @@ public class SpatialAttachDescriptor extends AbstractUnnestingFunctionDynamicDes
                         ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
 
                         if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.STRING)) {
-//                            aRectangle.setValue(aPoint[0], aPoint[1]);
-//                            pos = 0;
+                            //                            aRectangle.setValue(aPoint[0], aPoint[1]);
+                            //                            pos = 0;
                             // Get dynamic MBR
                             ByteArrayInputStream keyInputStream =
                                     new ByteArrayInputStream(bytes1, offset1 + 1, inputArg1.getLength() - 1);
@@ -121,7 +119,10 @@ public class SpatialAttachDescriptor extends AbstractUnnestingFunctionDynamicDes
                                 aPoint[0].setValue(minX, minY);
                                 aPoint[1].setValue(maxX, maxY);
                                 aRectangle.setValue(aPoint[0], aPoint[1]);
-                                pos = 0;
+
+                                resultStorage.reset();
+                                rectangleSerde.serialize(aRectangle, resultStorage.getDataOutput());
+                                result.set(resultStorage);
                             } else {
                                 throw HyracksDataException.create(
                                         new Throwable(String.format("%s: No MBR found", this.getClass().toString())));
@@ -137,20 +138,9 @@ public class SpatialAttachDescriptor extends AbstractUnnestingFunctionDynamicDes
                             }
                         }
                     }
-
-                    @Override
-                    public boolean step(IPointable result) throws HyracksDataException {
-                        if (pos == 0) {
-                            resultStorage.reset();
-                            rectangleSerde.serialize(aRectangle, resultStorage.getDataOutput());
-                            result.set(resultStorage);
-                            pos++;
-                            return true;
-                        }
-                        return false;
-                    }
                 };
             }
         };
     }
+
 }

@@ -55,8 +55,10 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
@@ -66,6 +68,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastEx
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SpatialForwardPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.StreamProjectPOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -168,6 +171,41 @@ public class SpatialJoinUtils {
                 new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AString(mbrKey)))));
         funcExpr.setSourceLocation(srcLoc);
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar, new MutableObject<>(funcExpr));
+        sideUnnestOp.setSchema(sideOp.getValue().getSchema());
+        sideUnnestOp.setSourceLocation(srcLoc);
+        sideUnnestOp.getInputs().add(new MutableObject<>(sideOp.getValue()));
+        sideOp.setValue(sideUnnestOp);
+        context.computeAndSetTypeEnvironmentForOperator(sideUnnestOp);
+
+        return sideVar;
+    }
+
+    private static void injectProjectOperator(IOptimizationContext context, Mutable<ILogicalOperator> sideOp,
+                                              ArrayList<LogicalVariable> usedVariables) throws AlgebricksException {
+        ProjectOperator projectOp = new ProjectOperator(usedVariables);
+        projectOp.getInputs().add(new MutableObject<ILogicalOperator>(sideOp.getValue()));
+        sideOp.setValue(projectOp);
+        projectOp.setPhysicalOperator(new StreamProjectPOperator());
+        projectOp.setExecutionMode(sideOp.getValue().getExecutionMode());
+        context.computeAndSetTypeEnvironmentForOperator(projectOp);
+        projectOp.recomputeSchema();
+        context.computeAndSetTypeEnvironmentForOperator(sideOp.getValue());
+        sideOp.getValue().recomputeSchema();
+    }
+
+    private static LogicalVariable injectSpatialAttachAssignOperator(IOptimizationContext context,
+            Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar, String mbrKey) throws AlgebricksException {
+        SourceLocation srcLoc = sideOp.getValue().getSourceLocation();
+        LogicalVariable sideVar = context.newVar();
+        VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
+        sideInputVar.setSourceLocation(srcLoc);
+        ScalarFunctionCallExpression funcExpr = new ScalarFunctionCallExpression(
+                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_ATTACH2),
+                new MutableObject<>(sideInputVar),
+                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AString(mbrKey)))));
+        funcExpr.setSourceLocation(srcLoc);
+        AssignOperator sideUnnestOp = new AssignOperator(sideVar, new MutableObject<>(funcExpr));
+        //        UnnestOperator sideUnnestOp = new UnnestOperator(sideVar, new MutableObject<>(funcExpr));
         sideUnnestOp.setSchema(sideOp.getValue().getSchema());
         sideUnnestOp.setSourceLocation(srcLoc);
         sideUnnestOp.getInputs().add(new MutableObject<>(sideOp.getValue()));
@@ -283,16 +321,51 @@ public class SpatialJoinUtils {
 //        LogicalVariable rightTileIdVar0 = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp,
 //            rightInputVar, spatialJoinAnn, rightAggKey);
 
+//                LogicalVariable leftUnionMBRVar =
+//                    SpatialJoinUtils.injectSpatialAttachUnnestOperator(context, leftInputOp, leftInputVar, leftAggKey);
+//                LogicalVariable rightUnionMBRVar =
+//                    SpatialJoinUtils.injectSpatialAttachUnnestOperator(context, rightInputOp, rightInputVar, rightAggKey);
+
+//        ArrayList<LogicalVariable> leftUsedVariables = new ArrayList<>();
+//        leftUsedVariables.add(leftInputVar);
+//        leftUsedVariables.add(leftUnionMBRVar);
+//        SpatialJoinUtils.injectProjectOperator(context, leftInputOp, leftUsedVariables);
+//
+//        ArrayList<LogicalVariable> rightUsedVariables = new ArrayList<>();
+//        rightUsedVariables.add(rightInputVar);
+//        rightUsedVariables.add(rightUnionMBRVar);
+//        SpatialJoinUtils.injectProjectOperator(context, rightInputOp, rightUsedVariables);
+
+        //        ScalarFunctionCallExpression leftUnionMBRVar = new ScalarFunctionCallExpression(
+        //            BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_ATTACH2),
+        //            new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
+        //            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AString(leftAggKey)))));
+        //
+        //        ScalarFunctionCallExpression rightUnionMBRVar = new ScalarFunctionCallExpression(
+        //            BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_ATTACH2),
+        //            new MutableObject<>(new VariableReferenceExpression(rightInputVar)),
+        //            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AString(rightAggKey)))));
+
+        LogicalVariable leftUnionMBRVar =
+            SpatialJoinUtils.injectSpatialAttachAssignOperator(context, leftInputOp, leftInputVar, leftAggKey);
+        LogicalVariable rightUnionMBRVar =
+            SpatialJoinUtils.injectSpatialAttachAssignOperator(context, rightInputOp, rightInputVar, rightAggKey);
+
+//        ReplicateOperator replicateOperatorLeft = createReplicateOperator(leftInputOp, context, op.getSourceLocation(), 1);
+//        ExchangeOperator exchToForwardLeft = createOneToOneExchangeOp(replicateOperatorLeft, context);
+//        leftInputOp.setValue(exchToForwardLeft);
+//        context.computeAndSetTypeEnvironmentForOperator(exchToForwardLeft);
+//
+//        ReplicateOperator replicateOperatorRight = createReplicateOperator(leftInputOp, context, op.getSourceLocation(), 1);
+//        ExchangeOperator exchToForwardRight = createOneToOneExchangeOp(replicateOperatorRight, context);
+//        rightInputOp.setValue(exchToForwardRight);
+//        context.computeAndSetTypeEnvironmentForOperator(exchToForwardRight);
+
         // Inject unnest operator to the left and right branch of the join operator
         LogicalVariable leftTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp,
                 leftInputVar, spatialJoinAnn, leftAggKey);
         LogicalVariable rightTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp,
                 rightInputVar, spatialJoinAnn, rightAggKey);
-
-        LogicalVariable leftUnionMBRVar =
-            SpatialJoinUtils.injectSpatialAttachUnnestOperator(context, leftInputOp, leftInputVar, leftAggKey);
-        LogicalVariable rightUnionMBRVar =
-            SpatialJoinUtils.injectSpatialAttachUnnestOperator(context, rightInputOp, rightInputVar, rightAggKey);
 
         // Compute reference tile ID
         ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(
@@ -304,13 +377,13 @@ public class SpatialJoinUtils {
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
                 new MutableObject<>(
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))),
-            new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-                    new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))));
+                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
+                        new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                                new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))));
         //new MutableObject<>(new VariableReferenceExpression(leftUnionMBRVar))
-//        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-//            new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-//                new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))))
+        //        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
+        //            new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+        //                new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))))
 
         // Update the join conditions with the tile Id equality condition
         ScalarFunctionCallExpression tileIdEquiJoinCondition =
@@ -321,10 +394,15 @@ public class SpatialJoinUtils {
                 new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
                         new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
                         new MutableObject<>(referenceTileId));
+        ScalarFunctionCallExpression mbrIntersectJoinCondition =
+            new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_INTERSECT),
+                new MutableObject<>(new VariableReferenceExpression(leftUnionMBRVar)),
+                new MutableObject<>(new VariableReferenceExpression(rightUnionMBRVar)));
 
         conditionExprs.add(new MutableObject<>(tileIdEquiJoinCondition));
         conditionExprs.add(new MutableObject<>(spatialJoinFuncExpr));
         conditionExprs.add(new MutableObject<>(referenceIdEquiJoinCondition));
+        conditionExprs.add(new MutableObject<>(mbrIntersectJoinCondition));
 
         ScalarFunctionCallExpression updatedJoinCondition = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND), conditionExprs);
@@ -339,12 +417,26 @@ public class SpatialJoinUtils {
         keysRightBranch.add(rightTileIdVar);
         keysRightBranch.add(rightInputVar);
         keysRightBranch.add(rightUnionMBRVar);
+        op.getInputs().get(LEFT).getValue().getSchema().add(leftUnionMBRVar);
+        op.getInputs().get(RIGHT).getValue().getSchema().add(rightUnionMBRVar);
         SpatialJoinUtils.setSpatialJoinOp(op, keysLeftBranch, keysRightBranch, context);
     }
 
     private static ReplicateOperator createReplicateOperator(Mutable<ILogicalOperator> inputOperator,
             IOptimizationContext context, SourceLocation sourceLocation) throws AlgebricksException {
         ReplicateOperator replicateOperator = new ReplicateOperator(2);
+        replicateOperator.setPhysicalOperator(new ReplicatePOperator());
+        replicateOperator.setSourceLocation(sourceLocation);
+        replicateOperator.getInputs().add(new MutableObject<>(inputOperator.getValue()));
+        OperatorManipulationUtil.setOperatorMode(replicateOperator);
+        replicateOperator.recomputeSchema();
+        context.computeAndSetTypeEnvironmentForOperator(replicateOperator);
+        return replicateOperator;
+    }
+
+    private static ReplicateOperator createReplicateOperator(Mutable<ILogicalOperator> inputOperator,
+                                                             IOptimizationContext context, SourceLocation sourceLocation, int outputArity) throws AlgebricksException {
+        ReplicateOperator replicateOperator = new ReplicateOperator(outputArity);
         replicateOperator.setPhysicalOperator(new ReplicatePOperator());
         replicateOperator.setSourceLocation(sourceLocation);
         replicateOperator.getInputs().add(new MutableObject<>(inputOperator.getValue()));
