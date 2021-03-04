@@ -76,13 +76,11 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                     private final IPointable inputArg2 = new VoidPointable();
                     private final IPointable inputArg3 = new VoidPointable();
                     private final IPointable inputArg4 = new VoidPointable();
-                    private final IPointable inputArg5 = new VoidPointable();
                     private final IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval2 = args[2].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval3 = args[3].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval4 = args[4].createScalarEvaluator(ctx);
-                    private final IScalarEvaluator eval5 = args[5].createScalarEvaluator(ctx);
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -93,32 +91,27 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                         eval2.evaluate(tuple, inputArg2);
                         eval3.evaluate(tuple, inputArg3);
                         eval4.evaluate(tuple, inputArg4);
-                        eval5.evaluate(tuple, inputArg5);
 
                         byte[] bytes0 = inputArg0.getByteArray();
                         byte[] bytes1 = inputArg1.getByteArray();
                         byte[] bytes2 = inputArg2.getByteArray();
                         byte[] bytes3 = inputArg3.getByteArray();
                         byte[] bytes4 = inputArg4.getByteArray();
-                        byte[] bytes5 = inputArg5.getByteArray();
 
                         int offset0 = inputArg0.getStartOffset();
                         int offset1 = inputArg1.getStartOffset();
                         int offset2 = inputArg2.getStartOffset();
                         int offset3 = inputArg3.getStartOffset();
                         int offset4 = inputArg4.getStartOffset();
-                        int offset5 = inputArg5.getStartOffset();
 
                         ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
                         ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
                         ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes2[offset2]);
                         ATypeTag tag3 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes3[offset3]);
                         ATypeTag tag4 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes4[offset4]);
-                        ATypeTag tag5 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes5[offset5]);
 
                         if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.RECTANGLE) && (tag2 == ATypeTag.RECTANGLE)
-                                && (tag3 == ATypeTag.BIGINT) && (tag4 == ATypeTag.BIGINT)
-                                && (tag5 == ATypeTag.RECTANGLE)) {
+                                && (tag3 == ATypeTag.BIGINT) && (tag4 == ATypeTag.BIGINT)) {
                             double ax1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
                             double ay1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
@@ -129,9 +122,6 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                             double by1 = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
-                            int rows = (int) AInt64SerializerDeserializer.getLong(bytes3, offset3 + 1);
-                            int columns = (int) AInt64SerializerDeserializer.getLong(bytes4, offset4 + 1);
-
                             double minX = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
                             double minY = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
@@ -141,6 +131,9 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                                     + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
                             double maxY = ADoubleSerializerDeserializer.getDouble(bytes2, offset2 + 1
                                     + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
+
+                            int rows = (int) AInt64SerializerDeserializer.getLong(bytes3, offset3 + 1);
+                            int columns = (int) AInt64SerializerDeserializer.getLong(bytes4, offset4 + 1);
 
                             // Compute the reference point
                             double x = Math.max(ax1, bx1);
@@ -182,10 +175,6 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                             if (tag4 != ATypeTag.BIGINT) {
                                 throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes4[offset4],
                                         ATypeTag.SERIALIZED_INT64_TYPE_TAG);
-                            }
-                            if (tag5 != ATypeTag.RECTANGLE) {
-                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes5[offset5],
-                                        ATypeTag.SERIALIZED_RECTANGLE_TYPE_TAG);
                             }
                         }
                     }

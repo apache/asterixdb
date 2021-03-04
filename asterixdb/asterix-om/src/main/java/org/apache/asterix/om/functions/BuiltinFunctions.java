@@ -1036,8 +1036,6 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier SPATIAL_TILE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-tile", 5);
     public static final FunctionIdentifier SPATIAL_ATTACH =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-attach", 2);
-    public static final FunctionIdentifier SPATIAL_ATTACH2 =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-attach2", 2);
 
     // fuzzy functions
@@ -2152,9 +2150,8 @@ public class BuiltinFunctions {
         addFunction(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE, true);
         addFunction(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE, true);
         addFunction(SPATIAL_TILE, AInt32TypeComputer.INSTANCE, true);
-        addFunction(SPATIAL_ATTACH, ARectangleTypeComputer.INSTANCE, true);
         addFunction(REFERENCE_TILE, AInt32TypeComputer.INSTANCE, true);
-        addFunction(SPATIAL_ATTACH2, ARectangleTypeComputer.INSTANCE, true);
+        addFunction(SPATIAL_ATTACH, ARectangleTypeComputer.INSTANCE, true);
 
         //geo functions
         addFunction(ST_AREA, ADoubleTypeComputer.INSTANCE, true);
@@ -3089,7 +3086,6 @@ public class BuiltinFunctions {
         addUnnestFun(SCAN_COLLECTION, false);
         addUnnestFun(SUBSET_COLLECTION, false);
         addUnnestFun(SPATIAL_TILE, false);
-        addUnnestFun(SPATIAL_ATTACH, false);
     }
 
     public enum DataSourceFunctionProperty implements BuiltinFunctionProperty {
