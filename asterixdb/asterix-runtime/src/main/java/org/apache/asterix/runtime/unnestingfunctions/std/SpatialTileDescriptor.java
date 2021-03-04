@@ -141,14 +141,14 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                             // key == empty mean we should use static MBR
                             if (key.equals("")) {
                                 minX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
                                 minY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
+                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
                                 maxX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+                                        + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
                                 maxY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
+                                        + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
                             } else {
                                 if (TaskUtil.get(key, hyracksTaskContext) != null) {
                                     Double[] mbrCoordinates = TaskUtil.get(key, hyracksTaskContext);
@@ -157,20 +157,20 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                                     maxX = mbrCoordinates[2];
                                     maxY = mbrCoordinates[3];
                                 } else {
-                                    throw HyracksDataException.create(
-                                        new Throwable(String.format("%s: No MBR found", this.getClass().toString())));
+                                    throw HyracksDataException.create(new Throwable(
+                                            String.format("%s: No MBR found", this.getClass().toString())));
                                 }
                             }
 
                             double x1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
                             double y1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
+                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
                             double x2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
                             double y2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
-                                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
+                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
 
                             int rows = (int) AInt64SerializerDeserializer.getLong(bytes2, offset2 + 1);
                             int columns = (int) AInt64SerializerDeserializer.getLong(bytes3, offset3 + 1);
