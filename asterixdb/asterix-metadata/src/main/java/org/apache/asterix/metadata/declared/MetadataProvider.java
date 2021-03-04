@@ -1751,6 +1751,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         int totalLengthUTF8 = 0;
         for (String dvNamePart : dataverseName.getParts()) {
             validateDatabaseObjectNameImpl(dvNamePart, sourceLoc);
+            if (totalLengthUTF8 == 0 && StoragePathUtil.DATAVERSE_CONTINUATION_MARKER == dvNamePart.codePointAt(0)) {
+                throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, dvNamePart);
+            }
             totalLengthUTF8 += dvNamePart.getBytes(StandardCharsets.UTF_8).length;
         }
         if (totalLengthUTF8 > MetadataConstants.DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8) {

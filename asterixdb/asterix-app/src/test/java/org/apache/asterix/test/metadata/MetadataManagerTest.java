@@ -27,6 +27,7 @@ import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -100,7 +101,14 @@ public class MetadataManagerTest {
                                 StringUtils.repeat(euml, MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2),
                                 StringUtils.repeat(auml, MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2),
                                 StringUtils.repeat(euml,
-                                        MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2))));
+                                        MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2))),
+                        // #4. single-part name containing continuation char
+                        DataverseName
+                                .createSinglePartName("abc" + StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "def"),
+                        // #5. multi-part name containing continuation chars
+                        DataverseName
+                                .create(Arrays.asList("abc" + StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "def",
+                                        StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "def")));
 
         for (DataverseName dvNameOk : dvNameOkList) {
             String sql = String.format("create dataverse %s;", dvNameOk);
@@ -172,8 +180,13 @@ public class MetadataManagerTest {
                 DataverseName.createSinglePartName("abc\u0000def"),
                 // #2. leading whitespace
                 DataverseName.createSinglePartName(" abcdef"),
-                // #2. file separator
-                DataverseName.createSinglePartName("abc" + File.separatorChar + "def"));
+                // #3. file separator
+                DataverseName.createSinglePartName("abc" + File.separatorChar + "def"),
+                // #4. single-part starting with ^
+                DataverseName.createSinglePartName(StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "abcdef"),
+                // #5. multi-part w/ first part starting with ^
+                DataverseName
+                        .create(Arrays.asList(StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "abcdef", "abcdef")));
 
         ErrorCode invalidNameErrCode = ErrorCode.INVALID_DATABASE_OBJECT_NAME;
         for (DataverseName dvNameOk : dvNameBadCharsList) {

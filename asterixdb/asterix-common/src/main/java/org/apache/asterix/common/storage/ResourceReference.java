@@ -60,7 +60,7 @@ public class ResourceReference {
         dataset = tokens[--offset];
         List<String> dvParts = new ArrayList<>();
         String dvPart = tokens[--offset];
-        while (dvPart.charAt(0) == StoragePathUtil.DATAVERSE_CONTINUATION_MARKER) {
+        while (dvPart.codePointAt(0) == StoragePathUtil.DATAVERSE_CONTINUATION_MARKER) {
             dvParts.add(dvPart.substring(1));
             dvPart = tokens[--offset];
         }
