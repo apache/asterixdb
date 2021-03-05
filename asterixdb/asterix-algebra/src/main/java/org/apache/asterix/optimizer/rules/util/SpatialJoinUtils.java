@@ -129,23 +129,18 @@ public class SpatialJoinUtils {
     }
 
     private static LogicalVariable injectSpatialTileUnnestOperator(IOptimizationContext context,
-            Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar, SpatialJoinAnnotation spatialJoinAnn,
-            String mbrKey) throws AlgebricksException {
+            Mutable<ILogicalOperator> sideOp, LogicalVariable inputVar, Mutable<ILogicalExpression> unionMBRExpr, SpatialJoinAnnotation spatialJoinAnn) throws AlgebricksException {
         SourceLocation srcLoc = sideOp.getValue().getSourceLocation();
         LogicalVariable sideVar = context.newVar();
-        VariableReferenceExpression sideInputVar = new VariableReferenceExpression(inputVar);
-        sideInputVar.setSourceLocation(srcLoc);
+        VariableReferenceExpression inputVarRef = new VariableReferenceExpression(inputVar);
+        inputVarRef.setSourceLocation(srcLoc);
         UnnestingFunctionCallExpression funcExpr = new UnnestingFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SPATIAL_TILE),
-                new MutableObject<>(sideInputVar),
-                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                        new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-                                new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY()))))),
+                new MutableObject<>(inputVarRef), unionMBRExpr,
                 new MutableObject<>(
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
                 new MutableObject<>(
-                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))),
-                new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AString(mbrKey)))));
+                        new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumColumns())))));
         funcExpr.setSourceLocation(srcLoc);
         UnnestOperator sideUnnestOp = new UnnestOperator(sideVar, new MutableObject<>(funcExpr));
         sideUnnestOp.setSchema(sideOp.getValue().getSchema());
@@ -295,12 +290,6 @@ public class SpatialJoinUtils {
                     rightAggKey);
         }
 
-        // Inject unnest operator to add tile ID to the left and right branch of the join operator
-        LogicalVariable leftTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp,
-                leftInputVar, spatialJoinAnn, leftAggKey);
-        LogicalVariable rightTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp,
-                rightInputVar, spatialJoinAnn, rightAggKey);
-
         Mutable<ILogicalExpression> leftUnionMBRExpr;
         Mutable<ILogicalExpression> rightUnionMBRExpr;
         if (useDynamicMBR) {
@@ -308,12 +297,18 @@ public class SpatialJoinUtils {
             rightUnionMBRExpr = new MutableObject<>(new VariableReferenceExpression(rightUnionMBRVar));
         } else {
             leftUnionMBRExpr = new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                    new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-                            new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))));
+                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                    new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))));
             rightUnionMBRExpr = new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                    new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-                            new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))));
+                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                    new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))));
         }
+
+        // Inject unnest operator to add tile ID to the left and right branch of the join operator
+        LogicalVariable leftTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, leftInputOp,
+                leftInputVar, leftUnionMBRExpr, spatialJoinAnn);
+        LogicalVariable rightTileIdVar = SpatialJoinUtils.injectSpatialTileUnnestOperator(context, rightInputOp,
+                rightInputVar, rightUnionMBRExpr, spatialJoinAnn);
 
         // Compute reference tile ID
         ScalarFunctionCallExpression referenceTileId = new ScalarFunctionCallExpression(

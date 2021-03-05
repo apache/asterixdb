@@ -83,17 +83,14 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                 return new IUnnestingEvaluator() {
                     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private List<Integer> tileValues = new ArrayList<>();
-                    private final DataOutput out = resultStorage.getDataOutput();
                     private final IPointable inputArg0 = new VoidPointable();
                     private final IPointable inputArg1 = new VoidPointable();
                     private final IPointable inputArg2 = new VoidPointable();
                     private final IPointable inputArg3 = new VoidPointable();
-                    private final IPointable inputArg4 = new VoidPointable();
                     private final IScalarEvaluator eval0 = args[0].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval1 = args[1].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval2 = args[2].createScalarEvaluator(ctx);
                     private final IScalarEvaluator eval3 = args[3].createScalarEvaluator(ctx);
-                    private final IScalarEvaluator eval4 = args[4].createScalarEvaluator(ctx);
 
                     private AMutableInt32 aInt32 = new AMutableInt32(0);
                     int pos;
@@ -108,59 +105,24 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                         eval1.evaluate(tuple, inputArg1);
                         eval2.evaluate(tuple, inputArg2);
                         eval3.evaluate(tuple, inputArg3);
-                        eval4.evaluate(tuple, inputArg4);
 
                         byte[] bytes0 = inputArg0.getByteArray();
                         byte[] bytes1 = inputArg1.getByteArray();
                         byte[] bytes2 = inputArg2.getByteArray();
                         byte[] bytes3 = inputArg3.getByteArray();
-                        byte[] bytes4 = inputArg4.getByteArray();
 
                         int offset0 = inputArg0.getStartOffset();
                         int offset1 = inputArg1.getStartOffset();
                         int offset2 = inputArg2.getStartOffset();
                         int offset3 = inputArg3.getStartOffset();
-                        int offset4 = inputArg4.getStartOffset();
 
                         ATypeTag tag0 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes0[offset0]);
                         ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
                         ATypeTag tag2 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes2[offset2]);
                         ATypeTag tag3 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes3[offset3]);
-                        ATypeTag tag4 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes4[offset4]);
 
                         if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.RECTANGLE) && (tag2 == ATypeTag.BIGINT)
-                                && (tag3 == ATypeTag.BIGINT) && (tag4 == ATypeTag.STRING)) {
-                            // Get dynamic MBR
-                            ByteArrayInputStream keyInputStream =
-                                    new ByteArrayInputStream(bytes4, offset4 + 1, inputArg4.getLength() - 1);
-                            DataInputStream keyDataInputStream = new DataInputStream(keyInputStream);
-                            String key = AStringSerializerDeserializer.INSTANCE.deserialize(keyDataInputStream)
-                                    .getStringValue();
-                            double minX, minY, maxX, maxY;
-
-                            // key == empty mean we should use static MBR
-                            if (key.equals("")) {
-                                minX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
-                                minY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                        + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
-
-                                maxX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                        + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
-                                maxY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                        + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
-                            } else {
-                                if (TaskUtil.get(key, hyracksTaskContext) != null) {
-                                    Double[] mbrCoordinates = TaskUtil.get(key, hyracksTaskContext);
-                                    minX = mbrCoordinates[0];
-                                    minY = mbrCoordinates[1];
-                                    maxX = mbrCoordinates[2];
-                                    maxY = mbrCoordinates[3];
-                                } else {
-                                    throw HyracksDataException.create(new Throwable(
-                                            String.format("%s: No MBR found", this.getClass().toString())));
-                                }
-                            }
+                                && (tag3 == ATypeTag.BIGINT)) {
 
                             double x1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
@@ -171,6 +133,16 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                                     + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
                             double y2 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                     + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
+
+                            double minX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+                            double minY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
+
+                            double maxX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+                            double maxY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
+                                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
 
                             int rows = (int) AInt64SerializerDeserializer.getLong(bytes2, offset2 + 1);
                             int columns = (int) AInt64SerializerDeserializer.getLong(bytes3, offset3 + 1);
@@ -214,10 +186,6 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                             if (tag3 != ATypeTag.BIGINT) {
                                 throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes3[offset3],
                                         ATypeTag.SERIALIZED_INT64_TYPE_TAG);
-                            }
-                            if (tag4 != ATypeTag.STRING) {
-                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, bytes4[offset4],
-                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             }
                         }
                     }

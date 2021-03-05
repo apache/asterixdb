@@ -102,8 +102,6 @@ public class SpatialAttachDescriptor extends AbstractScalarFunctionDynamicDescri
                         ATypeTag tag1 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes1[offset1]);
 
                         if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.STRING)) {
-                            //                            aRectangle.setValue(aPoint[0], aPoint[1]);
-                            //                            pos = 0;
                             // Get dynamic MBR
                             ByteArrayInputStream keyInputStream =
                                     new ByteArrayInputStream(bytes1, offset1 + 1, inputArg1.getLength() - 1);

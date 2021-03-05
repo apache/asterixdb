@@ -1034,7 +1034,7 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier RANGE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "range", 2);
     public static final FunctionIdentifier SPATIAL_TILE =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-tile", 5);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-tile", 4);
     public static final FunctionIdentifier SPATIAL_ATTACH =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-attach2", 2);
 
