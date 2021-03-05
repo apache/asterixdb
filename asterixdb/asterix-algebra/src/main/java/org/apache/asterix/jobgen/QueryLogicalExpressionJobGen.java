@@ -30,7 +30,6 @@ import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
-import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -138,13 +137,10 @@ public class QueryLogicalExpressionJobGen implements ILogicalExpressionJobGen {
             IVariableTypeEnvironment env, IOperatorSchema[] inputSchemas, JobGenContext context)
             throws AlgebricksException {
         IScalarEvaluatorFactory[] args = codegenArguments(expr, env, inputSchemas, context);
-        IFunctionDescriptor fd = null;
+        IFunctionDescriptor fd;
         if (expr.getFunctionInfo() instanceof IExternalFunctionInfo) {
             // Expr is an external function
-            fd = ExternalFunctionDescriptorProvider
-                    .getExternalFunctionDescriptor((IExternalFunctionInfo) expr.getFunctionInfo());
-            CompilerProperties props = ((IApplicationContext) context.getAppContext()).getCompilerProperties();
-            FunctionTypeInferers.SET_ARGUMENTS_TYPE.infer(expr, fd, env, props);
+            fd = ExternalFunctionDescriptorProvider.resolveExternalFunction(expr, env, context);
         } else {
             // Expr is an internal (built-in) function
             fd = resolveFunction(expr, env, context);

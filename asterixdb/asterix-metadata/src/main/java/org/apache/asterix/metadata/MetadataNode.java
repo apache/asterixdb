@@ -27,12 +27,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
@@ -93,6 +95,7 @@ import org.apache.asterix.metadata.entitytupletranslators.NodeGroupTupleTranslat
 import org.apache.asterix.metadata.entitytupletranslators.NodeTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.SynonymTupleTranslator;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.metadata.valueextractors.MetadataEntityValueExtractor;
 import org.apache.asterix.metadata.valueextractors.TupleCopyValueExtractor;
@@ -293,30 +296,21 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public <T extends IExtensionMetadataEntity> void addEntity(TxnId txnId, T entity) throws AlgebricksException {
-        ExtensionMetadataDataset<T> index = (ExtensionMetadataDataset<T>) extensionDatasets.get(entity.getDatasetId());
-        if (index == null) {
-            throw new AlgebricksException("Metadata Extension Index: " + entity.getDatasetId() + " was not found");
-        }
+        ExtensionMetadataDataset<T> index = getExtensionMetadataDataset(entity.getDatasetId());
         IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator(true);
         addEntity(txnId, entity, tupleTranslator, index);
     }
 
     @Override
     public <T extends IExtensionMetadataEntity> void upsertEntity(TxnId txnId, T entity) throws AlgebricksException {
-        ExtensionMetadataDataset<T> index = (ExtensionMetadataDataset<T>) extensionDatasets.get(entity.getDatasetId());
-        if (index == null) {
-            throw new AlgebricksException("Metadata Extension Index: " + entity.getDatasetId() + " was not found");
-        }
+        ExtensionMetadataDataset<T> index = getExtensionMetadataDataset(entity.getDatasetId());
         IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator(true);
         upsertEntity(txnId, entity, tupleTranslator, index);
     }
 
     @Override
     public <T extends IExtensionMetadataEntity> void deleteEntity(TxnId txnId, T entity) throws AlgebricksException {
-        ExtensionMetadataDataset<T> index = (ExtensionMetadataDataset<T>) extensionDatasets.get(entity.getDatasetId());
-        if (index == null) {
-            throw new AlgebricksException("Metadata Extension Index: " + entity.getDatasetId() + " was not found");
-        }
+        ExtensionMetadataDataset<T> index = getExtensionMetadataDataset(entity.getDatasetId());
         IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator(true);
         deleteEntity(txnId, entity, tupleTranslator, index);
     }
@@ -324,13 +318,19 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public <T extends IExtensionMetadataEntity> List<T> getEntities(TxnId txnId, IExtensionMetadataSearchKey searchKey)
             throws AlgebricksException {
-        ExtensionMetadataDataset<T> index =
-                (ExtensionMetadataDataset<T>) extensionDatasets.get(searchKey.getDatasetId());
-        if (index == null) {
-            throw new AlgebricksException("Metadata Extension Index: " + searchKey.getDatasetId() + " was not found");
-        }
+        ExtensionMetadataDataset<T> index = getExtensionMetadataDataset(searchKey.getDatasetId());
         IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator(false);
         return getEntities(txnId, searchKey.getSearchKey(), tupleTranslator, index);
+    }
+
+    private <T extends IExtensionMetadataEntity> ExtensionMetadataDataset<T> getExtensionMetadataDataset(
+            ExtensionMetadataDatasetId datasetId) throws AlgebricksException {
+        ExtensionMetadataDataset<T> index = (ExtensionMetadataDataset<T>) extensionDatasets.get(datasetId);
+        if (index == null) {
+            throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.METADATA_ERROR,
+                    "Metadata Extension Index: " + datasetId + " was not found");
+        }
+        return index;
     }
 
     @Override
@@ -341,8 +341,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.DATAVERSE_DATASET, tuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException(
-                        "A dataverse with this name " + dataverse.getDataverseName() + " already exists.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.DATAVERSE_EXISTS, e,
+                        dataverse.getDataverseName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -367,8 +367,8 @@ public class MetadataNode implements IMetadataNode {
             }
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException("A dataset with this name " + dataset.getDatasetName()
-                        + " already exists in dataverse '" + dataset.getDataverseName() + "'.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.DATASET_EXISTS, e,
+                        dataset.getDatasetName(), dataset.getDataverseName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -383,7 +383,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.INDEX_DATASET, tuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException("An index with name '" + index.getIndexName() + "' already exists.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.INDEX_EXISTS, e,
+                        index.getIndexName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -398,7 +399,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.NODE_DATASET, tuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException("A node with name '" + node.getNodeName() + "' already exists.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.NODE_EXISTS, e,
+                        node.getNodeName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -413,8 +415,8 @@ public class MetadataNode implements IMetadataNode {
             modifyMetadataIndex(modificationOp, txnId, MetadataPrimaryIndexes.NODEGROUP_DATASET, tuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException(
-                        "A nodegroup with name '" + nodeGroup.getNodeGroupName() + "' already exists.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.NODEGROUP_EXISTS, e,
+                        nodeGroup.getNodeGroupName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -430,8 +432,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException(
-                        "A datatype with name '" + datatype.getDatatypeName() + "' already exists.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.TYPE_EXISTS, e,
+                        datatype.getDatatypeName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -448,8 +450,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException("A function with this name " + function.getSignature()
-                        + " already exists in dataverse '" + function.getDataverseName() + "'.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.FUNCTION_EXISTS, e,
+                        function.getName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -741,8 +743,8 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.DATAVERSE_DATASET, tuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException("Cannot drop dataverse '" + dataverseName + "' because it doesn't exist.",
-                        e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_DATAVERSE, e,
+                        dataverseName);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -772,7 +774,8 @@ public class MetadataNode implements IMetadataNode {
 
         Dataset dataset = getDataset(txnId, dataverseName, datasetName);
         if (dataset == null) {
-            throw new AlgebricksException("Cannot drop dataset '" + datasetName + "' because it doesn't exist.");
+            throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE,
+                    datasetName, dataverseName);
         }
         try {
             // Delete entry from the 'datasets' dataset.
@@ -828,8 +831,7 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.INDEX_DATASET, tuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException(
-                        "Cannot drop index '" + datasetName + "." + indexName + "' because it doesn't exist.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_INDEX, e, indexName);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -838,18 +840,15 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public boolean dropNodegroup(TxnId txnId, String nodeGroupName, boolean failSilently) throws AlgebricksException {
-        List<String> datasetNames = getDatasetNamesPartitionedOnThisNodeGroup(txnId, nodeGroupName);
-        if (!datasetNames.isEmpty()) {
+        List<Dataset> datasets = getDatasetsPartitionedOnThisNodeGroup(txnId, nodeGroupName);
+        if (!datasets.isEmpty()) {
             if (failSilently) {
                 return false;
             }
-            StringBuilder sb = new StringBuilder();
-            sb.append("Nodegroup '" + nodeGroupName
-                    + "' cannot be dropped; it was used for partitioning these datasets:");
-            for (int i = 0; i < datasetNames.size(); i++) {
-                sb.append("\n" + (i + 1) + "- " + datasetNames.get(i) + ".");
-            }
-            throw new AlgebricksException(sb.toString());
+            throw new AsterixException(
+                    org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "node group",
+                    nodeGroupName, "datasets",
+                    datasets.stream().map(DatasetUtil::getFullyQualifiedDisplayName).collect(Collectors.joining(", ")));
         }
         try {
             ITupleReference searchKey = createTuple(nodeGroupName);
@@ -860,8 +859,8 @@ public class MetadataNode implements IMetadataNode {
             return true;
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException("Cannot drop nodegroup '" + nodeGroupName + "' because it doesn't exist",
-                        e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_NODEGROUP, e,
+                        nodeGroupName);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -895,7 +894,8 @@ public class MetadataNode implements IMetadataNode {
             }
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException("Cannot drop type '" + datatypeName + "' because it doesn't exist", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_TYPE, e,
+                        datatypeName);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -912,7 +912,8 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.DATATYPE_DATASET, tuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException("Cannot drop type '" + datatypeName + "' because it doesn't exist", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_TYPE, e,
+                        datatypeName);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -1124,16 +1125,18 @@ public class MetadataNode implements IMetadataNode {
                 continue;
             }
             if (set.getItemTypeDataverseName().equals(dataverseName)) {
-                throw new AlgebricksException("Cannot drop dataverse. Type "
-                        + TypeUtil.getFullyQualifiedDisplayName(set.getItemTypeDataverseName(), set.getItemTypeName())
-                        + " used by dataset " + DatasetUtil.getFullyQualifiedDisplayName(set));
+                throw new AsterixException(
+                        org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS, "type",
+                        TypeUtil.getFullyQualifiedDisplayName(set.getItemTypeDataverseName(), set.getItemTypeName()),
+                        "dataset", DatasetUtil.getFullyQualifiedDisplayName(set));
             }
             if (set.getMetaItemTypeDataverseName() != null
                     && set.getMetaItemTypeDataverseName().equals(dataverseName)) {
-                throw new AlgebricksException("Cannot drop dataverse. Type "
-                        + TypeUtil.getFullyQualifiedDisplayName(set.getMetaItemTypeDataverseName(),
-                                set.getMetaItemTypeName())
-                        + " used by dataset " + DatasetUtil.getFullyQualifiedDisplayName(set));
+                throw new AsterixException(
+                        org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS, "type",
+                        TypeUtil.getFullyQualifiedDisplayName(set.getMetaItemTypeDataverseName(),
+                                set.getMetaItemTypeName()),
+                        "dataset", DatasetUtil.getFullyQualifiedDisplayName(set));
             }
         }
 
@@ -1147,22 +1150,28 @@ public class MetadataNode implements IMetadataNode {
             }
             for (Triple<DataverseName, String, String> datasetDependency : function.getDependencies().get(0)) {
                 if (datasetDependency.first.equals(dataverseName)) {
-                    throw new AlgebricksException("Cannot drop dataverse. Function " + function.getSignature()
-                            + " depends on dataset " + DatasetUtil.getFullyQualifiedDisplayName(datasetDependency.first,
-                                    datasetDependency.second));
+                    throw new AsterixException(
+                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
+                            "dataset",
+                            DatasetUtil.getFullyQualifiedDisplayName(datasetDependency.first, datasetDependency.second),
+                            "function", function.getSignature());
                 }
             }
             for (Triple<DataverseName, String, String> functionDependency : function.getDependencies().get(1)) {
                 if (functionDependency.first.equals(dataverseName)) {
-                    throw new AlgebricksException("Cannot drop dataverse. Function " + function.getSignature()
-                            + " depends on function " + new FunctionSignature(functionDependency.first,
-                                    functionDependency.second, Integer.parseInt(functionDependency.third)));
+                    throw new AsterixException(
+                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
+                            "function", new FunctionSignature(functionDependency.first, functionDependency.second,
+                                    Integer.parseInt(functionDependency.third)),
+                            "function", function.getSignature());
                 }
             }
             for (Triple<DataverseName, String, String> type : function.getDependencies().get(2)) {
                 if (type.first.equals(dataverseName)) {
-                    throw new AlgebricksException("Cannot drop dataverse. Function " + function.getSignature()
-                            + " depends on type " + TypeUtil.getFullyQualifiedDisplayName(type.first, type.second));
+                    throw new AsterixException(
+                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
+                            "type", TypeUtil.getFullyQualifiedDisplayName(type.first, type.second), "function",
+                            function.getSignature());
                 }
             }
         }
@@ -1176,9 +1185,10 @@ public class MetadataNode implements IMetadataNode {
             }
             for (FunctionSignature functionSignature : feedConnection.getAppliedFunctions()) {
                 if (dataverseName.equals(functionSignature.getDataverseName())) {
-                    throw new AlgebricksException(
-                            "Cannot drop dataverse. Feed connection " + feedConnection.getDataverseName() + "."
-                                    + feedConnection.getFeedName() + " depends on function " + functionSignature);
+                    throw new AsterixException(
+                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
+                            "function", functionSignature, "feed connection", MetadataUtil.getFullyQualifiedDisplayName(
+                                    feedConnection.getDataverseName(), feedConnection.getFeedName()));
                 }
             }
         }
@@ -1192,8 +1202,9 @@ public class MetadataNode implements IMetadataNode {
                 if (functionalDependency.first.equals(signature.getDataverseName())
                         && functionalDependency.second.equals(signature.getName())
                         && functionalDependency.third.equals(Integer.toString(signature.getArity()))) {
-                    throw new AlgebricksException(
-                            "Cannot drop function " + signature + " being used by function " + function.getSignature());
+                    throw new AsterixException(
+                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS,
+                            "function", signature, "function", function.getSignature());
                 }
             }
         }
@@ -1202,8 +1213,10 @@ public class MetadataNode implements IMetadataNode {
         List<FeedConnection> feedConnections = getAllFeedConnections(txnId);
         for (FeedConnection feedConnection : feedConnections) {
             if (feedConnection.containsFunction(signature)) {
-                throw new AlgebricksException("Cannot drop function " + signature + " being used by feed connection "
-                        + feedConnection.getDatasetName() + "." + feedConnection.getFeedName());
+                throw new AsterixException(
+                        org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "function",
+                        signature, "feed connection", MetadataUtil.getFullyQualifiedDisplayName(
+                                feedConnection.getDataverseName(), feedConnection.getFeedName()));
             }
         }
     }
@@ -1215,9 +1228,10 @@ public class MetadataNode implements IMetadataNode {
         for (Function function : functions) {
             for (Triple<DataverseName, String, String> datasetDependency : function.getDependencies().get(0)) {
                 if (datasetDependency.first.equals(dataverseName) && datasetDependency.second.equals(datasetName)) {
-                    throw new AlgebricksException("Cannot drop dataset "
-                            + DatasetUtil.getFullyQualifiedDisplayName(dataverseName, datasetName)
-                            + " being used by function " + function.getSignature());
+                    throw new AsterixException(
+                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS,
+                            "dataset", DatasetUtil.getFullyQualifiedDisplayName(dataverseName, datasetName), "function",
+                            function.getSignature());
                 }
             }
         }
@@ -1262,8 +1276,10 @@ public class MetadataNode implements IMetadataNode {
         for (Function function : functions) {
             if (libraryName.equals(function.getLibraryName())
                     && dataverseName.equals(function.getLibraryDataverseName())) {
-                throw new AlgebricksException("Cannot drop library " + dataverseName + '.' + libraryName
-                        + " being used by funciton " + function.getSignature());
+                throw new AsterixException(
+                        org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "library",
+                        MetadataUtil.getFullyQualifiedDisplayName(dataverseName, libraryName), "function",
+                        function.getSignature());
             }
         }
     }
@@ -1274,9 +1290,11 @@ public class MetadataNode implements IMetadataNode {
         for (DatasourceAdapter adapter : adapters) {
             if (libraryName.equals(adapter.getLibraryName())
                     && dataverseName.equals(adapter.getLibraryDataverseName())) {
-                throw new AlgebricksException("Cannot drop library " + dataverseName + '.' + libraryName
-                        + " being used by adapter " + adapter.getAdapterIdentifier().getDataverseName() + '.'
-                        + adapter.getAdapterIdentifier().getName());
+                throw new AsterixException(
+                        org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "library",
+                        MetadataUtil.getFullyQualifiedDisplayName(dataverseName, libraryName), "adapter",
+                        MetadataUtil.getFullyQualifiedDisplayName(adapter.getAdapterIdentifier().getDataverseName(),
+                                adapter.getAdapterIdentifier().getName()));
             }
         }
     }
@@ -1294,9 +1312,10 @@ public class MetadataNode implements IMetadataNode {
         List<Dataset> datasets = getAllDatasets(txnId);
         for (Dataset set : datasets) {
             if (set.getItemTypeName().equals(datatypeName) && set.getItemTypeDataverseName().equals(dataverseName)) {
-                throw new AlgebricksException(
-                        "Cannot drop type " + TypeUtil.getFullyQualifiedDisplayName(dataverseName, datatypeName)
-                                + " being used by dataset " + DatasetUtil.getFullyQualifiedDisplayName(set));
+                throw new AsterixException(
+                        org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "type",
+                        TypeUtil.getFullyQualifiedDisplayName(dataverseName, datatypeName), "dataset",
+                        DatasetUtil.getFullyQualifiedDisplayName(set));
             }
         }
     }
@@ -1318,9 +1337,10 @@ public class MetadataNode implements IMetadataNode {
             }
             AbstractComplexType recType = (AbstractComplexType) dataType.getDatatype();
             if (recType.containsType(typeToBeDropped)) {
-                throw new AlgebricksException("Cannot drop type "
-                        + TypeUtil.getFullyQualifiedDisplayName(dataverseName, datatypeName) + " being used by type "
-                        + TypeUtil.getFullyQualifiedDisplayName(dataverseName, recType.getTypeName()));
+                throw new AsterixException(
+                        org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "type",
+                        TypeUtil.getFullyQualifiedDisplayName(dataverseName, datatypeName), "type",
+                        TypeUtil.getFullyQualifiedDisplayName(dataverseName, recType.getTypeName()));
             }
         }
     }
@@ -1332,9 +1352,10 @@ public class MetadataNode implements IMetadataNode {
         for (Function function : functions) {
             for (Triple<DataverseName, String, String> datasetDependency : function.getDependencies().get(2)) {
                 if (datasetDependency.first.equals(dataverseName) && datasetDependency.second.equals(dataTypeName)) {
-                    throw new AlgebricksException(
-                            "Cannot drop type " + TypeUtil.getFullyQualifiedDisplayName(dataverseName, dataTypeName)
-                                    + " is being used by function " + function.getSignature());
+                    throw new AsterixException(
+                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "type",
+                            TypeUtil.getFullyQualifiedDisplayName(dataverseName, dataTypeName), "function",
+                            function.getSignature());
                 }
             }
         }
@@ -1381,19 +1402,17 @@ public class MetadataNode implements IMetadataNode {
         return nestedTypes;
     }
 
-    private List<String> getDatasetNamesPartitionedOnThisNodeGroup(TxnId txnId, String nodegroup)
+    private List<Dataset> getDatasetsPartitionedOnThisNodeGroup(TxnId txnId, String nodegroup)
             throws AlgebricksException {
-        // this needs to scan the datasets and return the datasets that use this
-        // nodegroup
-        List<String> nodeGroupDatasets = new ArrayList<>();
+        // this needs to scan the datasets and return the datasets that use this nodegroup
+        List<Dataset> nodeGroupDatasets = new ArrayList<>();
         List<Dataset> datasets = getAllDatasets(txnId);
         for (Dataset set : datasets) {
             if (set.getNodeGroupName().equals(nodegroup)) {
-                nodeGroupDatasets.add(set.getDatasetName());
+                nodeGroupDatasets.add(set);
             }
         }
         return nodeGroupDatasets;
-
     }
 
     @Override
@@ -1512,8 +1531,8 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FUNCTION_DATASET, functionTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException(
-                        "Cannot drop function '" + functionSignature + "' because it doesn't exist", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_FUNCTION, e,
+                        functionSignature.toString());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -1609,7 +1628,8 @@ public class MetadataNode implements IMetadataNode {
             IValueExtractor<T> valueExtractor, List<T> results) throws AlgebricksException, HyracksDataException {
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
         if (index.getFile() == null) {
-            throw new AlgebricksException("No file for Index " + index.getDataverseName() + "." + index.getIndexName());
+            throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.METADATA_ERROR,
+                    "No file for Index " + index.getDataverseName() + "." + index.getIndexName());
         }
         String resourceName = index.getFile().getRelativePath();
         IIndex indexInstance = datasetLifecycleManager.get(resourceName);
@@ -1749,9 +1769,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, adapterTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException("A adapter with this name " + adapter.getAdapterIdentifier().getName()
-                        + " already exists in dataverse '" + adapter.getAdapterIdentifier().getDataverseName() + "'.",
-                        e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.ADAPTER_EXISTS, e,
+                        adapter.getAdapterIdentifier().getName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -1760,10 +1779,6 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void dropAdapter(TxnId txnId, DataverseName dataverseName, String adapterName) throws AlgebricksException {
-        DatasourceAdapter adapter = getAdapter(txnId, dataverseName, adapterName);
-        if (adapter == null) {
-            throw new AlgebricksException("Cannot drop adapter '" + adapter + "' because it doesn't exist.");
-        }
         try {
             // Delete entry from the 'Adapter' dataset.
             ITupleReference searchKey = createTuple(dataverseName, adapterName);
@@ -1774,7 +1789,8 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, datasetTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException("Cannot drop adapter '" + adapterName + " since it doesn't exist", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_ADAPTER, e,
+                        adapterName);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -1810,8 +1826,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET, compactionPolicyTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException("A compaction policy with this name " + compactionPolicy.getPolicyName()
-                        + " already exists in dataverse '" + compactionPolicy.getPolicyName() + "'.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.COMPACTION_POLICY_EXISTS, e,
+                        compactionPolicy.getPolicyName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -1862,8 +1878,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.LIBRARY_DATASET, libraryTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException("A library with this name " + library.getDataverseName()
-                        + " already exists in dataverse '" + library.getDataverseName() + "'.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.LIBRARY_EXISTS, e,
+                        library.getName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -1889,7 +1905,8 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.LIBRARY_DATASET, datasetTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException("Cannot drop library '" + libraryName + "' because it doesn't exist", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_LIBRARY, e,
+                        libraryName);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -1927,8 +1944,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.FEED_POLICY_DATASET, feedPolicyTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException("A feed policy with this name " + feedPolicy.getPolicyName()
-                        + " already exists in dataverse '" + feedPolicy.getPolicyName() + "'.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.FEED_POLICY_EXISTS, e,
+                        feedPolicy.getPolicyName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -1961,7 +1978,12 @@ public class MetadataNode implements IMetadataNode {
             ITupleReference feedConnTuple = tupleReaderWriter.getTupleFromMetadataEntity(feedConnection);
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, feedConnTuple);
         } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.FEED_CONNECTION_EXISTS, e,
+                        feedConnection.getFeedName(), feedConnection.getDatasetName());
+            } else {
+                throw new AlgebricksException(e);
+            }
         }
     }
 
@@ -2009,7 +2031,12 @@ public class MetadataNode implements IMetadataNode {
                     getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, searchKey);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET, tuple);
         } catch (HyracksDataException e) {
-            throw new AlgebricksException(e);
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_FEED_CONNECTION, e,
+                        feedName, datasetName);
+            } else {
+                throw new AlgebricksException(e);
+            }
         }
     }
 
@@ -2022,8 +2049,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.FEED_DATASET, feedTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException("A feed with this name " + feed.getFeedName()
-                        + " already exists in dataverse '" + feed.getDataverseName() + "'.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.FEED_EXISTS, e,
+                        feed.getFeedName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -2071,7 +2098,7 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FEED_DATASET, tuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException("Cannot drop feed '" + feedName + "' because it doesn't exist", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_FEED, e, feedName);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -2086,7 +2113,8 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FEED_POLICY_DATASET, tuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException("Unknown feed policy " + policyName, e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_FEED_POLICY, e,
+                        policyName);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -2118,9 +2146,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, externalFileTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException("An externalFile with this number " + externalFile.getFileNumber()
-                        + " already exists in dataset '" + externalFile.getDatasetName() + "' in dataverse '"
-                        + externalFile.getDataverseName() + "'.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_FILE_EXISTS, e,
+                        externalFile.getFileNumber(), externalFile.getDatasetName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -2155,7 +2182,8 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, datasetTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException("Couldn't drop externalFile.", e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_EXTERNAL_FILE, e,
+                        fileNumber, datasetName);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -2231,8 +2259,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.SYNONYM_DATASET, synonymTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                throw new AlgebricksException("A synonym with name '" + synonym.getSynonymName() + "' already exists.",
-                        e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.SYNONYM_EXISTS, e,
+                        synonym.getSynonymName());
             } else {
                 throw new AlgebricksException(e);
             }
@@ -2241,10 +2269,6 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void dropSynonym(TxnId txnId, DataverseName dataverseName, String synonymName) throws AlgebricksException {
-        Synonym synonym = getSynonym(txnId, dataverseName, synonymName);
-        if (synonym == null) {
-            throw new AlgebricksException("Cannot drop synonym '" + synonym + "' because it doesn't exist.");
-        }
         try {
             // Delete entry from the 'Synonym' dataset.
             ITupleReference searchKey = createTuple(dataverseName, synonymName);
@@ -2255,7 +2279,8 @@ public class MetadataNode implements IMetadataNode {
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.SYNONYM_DATASET, synonymTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException("Cannot drop synonym '" + synonymName, e);
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_SYNONYM, e,
+                        synonymName);
             } else {
                 throw new AlgebricksException(e);
             }
@@ -2309,8 +2334,8 @@ public class MetadataNode implements IMetadataNode {
             insertTupleIntoIndex(txnId, MetadataPrimaryIndexes.DATASET_DATASET, datasetTuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AlgebricksException(
-                        "Cannot drop dataset '" + dataset.getDatasetName() + "' because it doesn't exist");
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE,
+                        e, dataset.getDatasetName(), dataset.getDataverseName());
             } else {
                 throw new AlgebricksException(e);
             }

@@ -28,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -695,7 +694,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public void addFullTextConfig(MetadataTransactionContext mdTxnCtx,
             FullTextConfigMetadataEntity configMetadataEntity) throws AlgebricksException {
         if (Strings.isNullOrEmpty(configMetadataEntity.getFullTextConfig().getName())) {
-            throw new AsterixException(ErrorCode.FULL_TEXT_CONFIG_ALREADY_EXISTS);
+            throw new MetadataException(ErrorCode.FULL_TEXT_CONFIG_ALREADY_EXISTS);
         }
 
         try {

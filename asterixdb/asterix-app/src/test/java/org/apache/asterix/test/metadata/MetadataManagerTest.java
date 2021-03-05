@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.test.metadata;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +27,7 @@ import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -83,23 +85,30 @@ public class MetadataManagerTest {
                 Arrays.asList(
                         // #1. max single-part name
                         DataverseName.createSinglePartName(
-                                StringUtils.repeat('a', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8)),
+                                StringUtils.repeat('a', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8)),
                         // #2. max single-part name (2-byte characters)
                         DataverseName.createSinglePartName(
-                                StringUtils.repeat(auml, MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2)),
+                                StringUtils.repeat(auml, MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2)),
                         // #3. 4 max parts
                         DataverseName.create(Arrays.asList(
-                                StringUtils.repeat('a', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8),
-                                StringUtils.repeat('b', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8),
-                                StringUtils.repeat('c', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8),
-                                StringUtils.repeat('d', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8))),
+                                StringUtils.repeat('a', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8),
+                                StringUtils.repeat('b', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8),
+                                StringUtils.repeat('c', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8),
+                                StringUtils.repeat('d', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8))),
                         // #3. 4 max parts (2-byte characters)
                         DataverseName.create(Arrays.asList(
-                                StringUtils.repeat(auml, MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2),
-                                StringUtils.repeat(euml, MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2),
-                                StringUtils.repeat(auml, MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2),
+                                StringUtils.repeat(auml, MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2),
+                                StringUtils.repeat(euml, MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2),
+                                StringUtils.repeat(auml, MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2),
                                 StringUtils.repeat(euml,
-                                        MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2))));
+                                        MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2))),
+                        // #4. single-part name containing continuation char
+                        DataverseName
+                                .createSinglePartName("abc" + StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "def"),
+                        // #5. multi-part name containing continuation chars
+                        DataverseName
+                                .create(Arrays.asList("abc" + StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "def",
+                                        StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "def")));
 
         for (DataverseName dvNameOk : dvNameOkList) {
             String sql = String.format("create dataverse %s;", dvNameOk);
@@ -114,31 +123,32 @@ public class MetadataManagerTest {
                 Arrays.asList(
                         // #1. single-part name exceeds part length limit
                         DataverseName.createSinglePartName(
-                                StringUtils.repeat('A', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 + 1)),
+                                StringUtils.repeat('A', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 + 1)),
                         // #2 single-part name exceeds part length limit (2-byte characters)
                         DataverseName.createSinglePartName(StringUtils.repeat(iuml,
-                                MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2 + 1)),
+                                MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2 + 1)),
                         // #3. 2-part name, 2nd part exceed part length limit
                         DataverseName.create(Arrays.asList("A",
-                                StringUtils.repeat('B', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 + 1))),
+                                StringUtils.repeat('B', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 + 1))),
                         // #4. 2-part name, 2nd part exceed part length limit (2-byte characters)
                         DataverseName.create(Arrays.asList("A",
                                 StringUtils.repeat(ouml,
-                                        MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2 + 1))),
+                                        MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2 + 1))),
                         // #5. 5-part name, each part at the part length limit, total length limit is exceeded
                         DataverseName.create(Arrays.asList(
-                                StringUtils.repeat('A', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8),
-                                StringUtils.repeat('B', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8),
-                                StringUtils.repeat('C', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8),
-                                StringUtils.repeat('D', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8),
-                                StringUtils.repeat('E', MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8))),
+                                StringUtils.repeat('A', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8),
+                                StringUtils.repeat('B', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8),
+                                StringUtils.repeat('C', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8),
+                                StringUtils.repeat('D', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8),
+                                StringUtils.repeat('E', MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8))),
                         // #6. 5-part name, each part at the part length limit, total length limit is exceeded (2-byte characters)
                         DataverseName.create(Arrays.asList(
-                                StringUtils.repeat(iuml, MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2),
-                                StringUtils.repeat(ouml, MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2),
-                                StringUtils.repeat(iuml, MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2),
-                                StringUtils.repeat(ouml, MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2),
-                                StringUtils.repeat(iuml, MetadataConstants.DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 / 2))),
+                                StringUtils.repeat(iuml, MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2),
+                                StringUtils.repeat(ouml, MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2),
+                                StringUtils.repeat(iuml, MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2),
+                                StringUtils.repeat(ouml, MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2),
+                                StringUtils.repeat(iuml,
+                                        MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 / 2))),
                         // #7. Multi-part name, each part at the part length limit, total length limit is exceeded
                         DataverseName.create(
                                 Collections.nCopies(MetadataConstants.DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8 + 1, "A")),
@@ -155,6 +165,36 @@ public class MetadataManagerTest {
                 Assert.fail("Expected failure: " + invalidNameErrCode);
             } catch (Exception e) {
 
+                Assert.assertTrue("Unexpected error message: " + e.getMessage(),
+                        e.getMessage().contains(invalidNameErrCode.errorCode()));
+            }
+        }
+    }
+
+    @Test
+    public void testInvalidCharacters() throws Exception {
+        TestCaseContext.OutputFormat cleanJson = TestCaseContext.OutputFormat.CLEAN_JSON;
+
+        List<DataverseName> dvNameBadCharsList = Arrays.asList(
+                // #1. nul characters
+                DataverseName.createSinglePartName("abc\u0000def"),
+                // #2. leading whitespace
+                DataverseName.createSinglePartName(" abcdef"),
+                // #3. file separator
+                DataverseName.createSinglePartName("abc" + File.separatorChar + "def"),
+                // #4. single-part starting with ^
+                DataverseName.createSinglePartName(StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "abcdef"),
+                // #5. multi-part w/ first part starting with ^
+                DataverseName
+                        .create(Arrays.asList(StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "abcdef", "abcdef")));
+
+        ErrorCode invalidNameErrCode = ErrorCode.INVALID_DATABASE_OBJECT_NAME;
+        for (DataverseName dvNameOk : dvNameBadCharsList) {
+            String sql = String.format("create dataverse %s;", dvNameOk);
+            try {
+                testExecutor.executeSqlppUpdateOrDdl(sql, cleanJson);
+                Assert.fail("Expected failure: " + invalidNameErrCode);
+            } catch (Exception e) {
                 Assert.assertTrue("Unexpected error message: " + e.getMessage(),
                         e.getMessage().contains(invalidNameErrCode.errorCode()));
             }

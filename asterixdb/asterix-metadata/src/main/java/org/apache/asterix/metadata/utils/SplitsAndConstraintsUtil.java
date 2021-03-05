@@ -48,11 +48,10 @@ public class SplitsAndConstraintsUtil {
             DataverseName dataverseName) {
         List<FileSplit> splits = new ArrayList<>();
         // get all partitions
-        ClusterPartition[] clusterPartition = clusterStateManager.getClusterPartitons();
-        for (int j = 0; j < clusterPartition.length; j++) {
-            File f = new File(StoragePathUtil.prepareStoragePartitionPath(clusterPartition[j].getPartitionId()),
-                    dataverseName.getCanonicalForm()); //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
-            splits.add(StoragePathUtil.getFileSplitForClusterPartition(clusterPartition[j], f.getPath()));
+        for (ClusterPartition clusterPartition : clusterStateManager.getClusterPartitons()) {
+            File f = new File(StoragePathUtil.prepareStoragePartitionPath(clusterPartition.getPartitionId()),
+                    StoragePathUtil.prepareDataverseName(dataverseName));
+            splits.add(StoragePathUtil.getFileSplitForClusterPartition(clusterPartition, f.getPath()));
         }
         return splits.toArray(new FileSplit[] {});
     }

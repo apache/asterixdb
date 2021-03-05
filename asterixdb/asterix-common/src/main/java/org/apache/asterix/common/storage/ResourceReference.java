@@ -21,24 +21,34 @@ package org.apache.asterix.common.storage;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.utils.StorageConstants;
+import org.apache.asterix.common.utils.StoragePathUtil;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ResourceReference {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     protected final String root;
     protected final String partition;
-    protected final String dataverse; // == DataverseName.getCanonicalForm()
+    protected final DataverseName dataverse;
     protected final String dataset;
     protected final String rebalance;
     protected final String index;
     protected final String name;
-    private volatile Path relativePath;
+    private final Path relativePath;
 
     protected ResourceReference(String path) {
         // format: root/partition/dataverse/dataset/rebalanceCount/index/fileName
+        // format: root/partition/dataverse_p1[/^dataverse_p2[/^dataverse_p3...]]/dataset/rebalanceCount/index/fileName
         final String[] tokens = StringUtils.split(path, File.separatorChar);
         if (tokens.length < 6) {
             throw new IllegalStateException("Unrecognized path structure: " + path);
@@ -48,9 +58,40 @@ public class ResourceReference {
         index = tokens[--offset];
         rebalance = tokens[--offset];
         dataset = tokens[--offset];
-        dataverse = tokens[--offset]; //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
-        partition = tokens[--offset];
-        root = tokens[--offset];
+        List<String> dvParts = new ArrayList<>();
+        String dvPart = tokens[--offset];
+        while (dvPart.codePointAt(0) == StoragePathUtil.DATAVERSE_CONTINUATION_MARKER) {
+            dvParts.add(dvPart.substring(1));
+            dvPart = tokens[--offset];
+        }
+        String probablyPartition = tokens[--offset];
+        if (dvParts.isEmpty()) {
+            // root/partition/dataverse/dataset/rebalanceCount/index/fileName
+            dataverse = DataverseName.createSinglePartName(dvPart);
+            partition = probablyPartition;
+            root = tokens[--offset];
+        } else if (probablyPartition.startsWith(StorageConstants.PARTITION_DIR_PREFIX)) {
+            // root/partition/dataverse_p1/^dataverse_p2/.../^dataverse_pn/dataset/rebalanceCount/index/fileName
+            dvParts.add(dvPart);
+            Collections.reverse(dvParts);
+            dataverse = DataverseName.create(dvParts);
+            partition = probablyPartition;
+            root = tokens[--offset];
+        } else if (dvPart.startsWith(StorageConstants.PARTITION_DIR_PREFIX)) {
+            // root/partition/dataverse/dataset/rebalanceCount/index/fileName (where dataverse starts with ^)
+            if (dvParts.size() != 1) {
+                throw new IllegalArgumentException("unable to parse path: '" + path + "'!");
+            }
+            dataverse =
+                    DataverseName.createSinglePartName(StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + dvParts.get(0));
+            LOGGER.info("legacy dataverse starting with ^ found: '{}'; this is not supported for new dataverses",
+                    dataverse);
+            partition = dvPart;
+            root = probablyPartition;
+        } else {
+            throw new IllegalArgumentException("unable to parse path: '" + path + "'!");
+        }
+        relativePath = Paths.get(root, ArrayUtils.subarray(tokens, offset + 1, tokens.length - 1));
     }
 
     public static ResourceReference ofIndex(String indexPath) {
@@ -65,7 +106,7 @@ public class ResourceReference {
         return partition;
     }
 
-    public String getDataverse() { //TODO(MULTI_PART_DATAVERSE_NAME):REVISIT
+    public DataverseName getDataverse() {
         return dataverse;
     }
 
@@ -86,19 +127,15 @@ public class ResourceReference {
     }
 
     public Path getRelativePath() {
-        if (relativePath == null) {
-            relativePath = Paths.get(root, partition, dataverse, dataset, rebalance, index);
-        }
         return relativePath;
     }
 
     public ResourceReference getDatasetReference() {
-        return ResourceReference
-                .ofIndex(Paths.get(root, partition, dataverse, dataset, rebalance, dataset).toFile().getPath());
+        return ResourceReference.ofIndex(relativePath.getParent().resolve(dataset).toFile().getPath());
     }
 
     public Path getFileRelativePath() {
-        return Paths.get(root, partition, dataverse, dataset, rebalance, index, name);
+        return relativePath.resolve(name);
     }
 
     public int getPartitionNum() {

@@ -1388,12 +1388,13 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
   {
      defaultDataverse = fctName.dataverse;
   }
-  ifNotExists = IfNotExists()
   paramsWithArity = FunctionParameters()
   {
     arity = paramsWithArity.first;
     params = paramsWithArity.second;
+    signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
   }
+  ifNotExists = IfNotExists()
   returnType = FunctionReturnType()
   (
     (
@@ -1408,13 +1409,10 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
         endPos = token;
         String functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine,
           endPos.beginColumn);
-        signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
         getCurrentScope().addFunctionDescriptor(signature, false);
         removeCurrentScope();
-        defaultDataverse = currentDataverse;
         ensureNoTypeDeclsInFunction(fctName.function, params, returnType, startStmtToken);
         stmt = new CreateFunctionStatement(signature, params, functionBody, functionBodyExpr, orReplace, ifNotExists);
-        return addSourceLocation(stmt, startStmtToken);
       }
     )
   |
@@ -1423,18 +1421,22 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
       <AT> libraryName = QualifiedName()
       (<WITH> withOptions = RecordConstructor())?
       {
-        signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
-        defaultDataverse = currentDataverse;
         try {
           stmt = new CreateFunctionStatement(signature, params, returnType, libraryName.first,
             libraryName.second.getValue(), externalIdentifier, withOptions, orReplace, ifNotExists);
         } catch (AlgebricksException e) {
             throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
         }
-        return addSourceLocation(stmt, startStmtToken);
       }
     )
   )
+  {
+    if (orReplace && ifNotExists) {
+      throw new SqlppParseException(getSourceLocation(startStmtToken), "Unexpected IF NOT EXISTS");
+    }
+    defaultDataverse = currentDataverse;
+    return addSourceLocation(stmt, startStmtToken);
+  }
 }
 
 Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>> FunctionParameters() :

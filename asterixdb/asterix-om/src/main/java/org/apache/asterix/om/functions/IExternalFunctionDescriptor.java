@@ -17,10 +17,13 @@
  * under the License.
  */
 
-create function externallibtest.mysum(a: int32, b: int32) returns int32
-  as "org.apache.asterix.external.library.MySumFactory" at externallibtest.testlib;
+package org.apache.asterix.om.functions;
 
-/* test if not exists */
-create function externallibtest.mysum(a: int32, b: int32) if not exists returns int32
-  as "org.apache.asterix.external.library.MySumFactory" at externallibtest.testlib;
+import org.apache.asterix.om.types.IAType;
 
+public interface IExternalFunctionDescriptor extends IFunctionDescriptor {
+
+    IExternalFunctionInfo getFunctionInfo();
+
+    IAType[] getArgumentTypes();
+}

@@ -20,22 +20,19 @@
 ## <a id="Lifecycle_management_statements">Lifecycle Management Statements</a>
 
 ### <a id="Use">Use Statement</a>
----
 
-### UseStmnt
-**![](../images/diagrams/UseStmnt.png)**
+##### UseStmnt
+![](../images/diagrams/UseStmnt.png)
 
-### DataverseName
-**![](../images/diagrams/DataverseName.png)**
-
----
+##### DataverseName
+![](../images/diagrams/DataverseName.png)
 
 At the uppermost level, the world of data is organized into data namespaces called **dataverses**.
 To set the default dataverse for statements, the `USE` statement is provided.
 
 As an example, the following statement sets the default dataverse to be `Commerce`.
 
-	USE Commerce;
+    USE Commerce;
 
 ### <a id="Sets"> Set Statement</a>
 
@@ -50,24 +47,21 @@ In general, the function body (expression) can be any legal query expression.
 
 The function named in the `DECLARE FUNCTION` statement is accessible only in the current query. To create a persistent function for use in multiple queries, use the `CREATE FUNCTION` statement.
 
----
-### FunctionDeclaration
-**![](../images/diagrams/FunctionDeclaration.png)**
-
----
+##### FunctionDeclaration
+![](../images/diagrams/FunctionDeclaration.png)
 
 The following is a simple example of a temporary function definition and its use.
 
 ##### Example
 
     DECLARE FUNCTION nameSearch(customerId){
-		(SELECT c.custid, c.name
-		FROM customers AS c
-		WHERE c.custid = customerId)[0]
+        (SELECT c.custid, c.name
+        FROM customers AS c
+        WHERE c.custid = customerId)[0]
      };
 
 
-	SELECT VALUE nameSearch("C25");
+    SELECT VALUE nameSearch("C25");
 
 For our sample data set, this returns:
 
@@ -76,31 +70,26 @@ For our sample data set, this returns:
     ]
 
 ### <a id="Create"> Create Statement</a>
----
-### CreateStmnt
-**![](../images/diagrams/CreateStmnt.png)**
 
-### DataverseName
-**![](../images/diagrams/DataverseName.png)**
+##### CreateStmnt
+![](../images/diagrams/CreateStmnt.png)
 
-### QualifiedName
-**![](../images/diagrams/QualifiedName.png)**
+##### DataverseName
+![](../images/diagrams/DataverseName.png)
 
-### DoubleQualifiedName
-**![](../images/diagrams/DoubleQualifiedName.png)**
+##### QualifiedName
+![](../images/diagrams/QualifiedName.png)
 
----
+##### DoubleQualifiedName
+![](../images/diagrams/DoubleQualifiedName.png)
 
 The `CREATE` statement is used for creating dataverses as well as other persistent artifacts in a dataverse.
 It can be used to create new dataverses, datatypes, datasets, indexes, and user-defined query functions.
 
 #### <a id="Dataverses"> Create Dataverse</a>
 
----
-### CreateDataverse
-**![](../images/diagrams/CreateDataverse.png)**
-
----
+##### CreateDataverse
+![](../images/diagrams/CreateDataverse.png)
 
 The `CREATE DATAVERSE` statement is used to create new dataverses.
 To ease the authoring of reusable query scripts, an optional `IF NOT EXISTS` clause is included to allow
@@ -115,29 +104,26 @@ The following example creates a new dataverse named `Commerce` if one does not a
 
 #### <a id="Types"> Create Type </a>
 
----
-### CreateType
-**![](../images/diagrams/CreateType.png)**
+##### CreateType
+![](../images/diagrams/CreateType.png)
 
-### ObjectTypeDef
-**![](../images/diagrams/ObjectTypeDef.png)**
+##### ObjectTypeDef
+![](../images/diagrams/ObjectTypeDef.png)
 
-### ObjectField
-**![](../images/diagrams/ObjectField.png)**
+##### ObjectField
+![](../images/diagrams/ObjectField.png)
 
-### TypeExpr
-**![](../images/diagrams/TypeExpr.png)**
+##### TypeExpr
+![](../images/diagrams/TypeExpr.png)
 
-### ArrayTypeDef
-**![](../images/diagrams/ArrayTypeDef.png)**
+##### ArrayTypeDef
+![](../images/diagrams/ArrayTypeDef.png)
 
-### MultisetTypeDef
-**![](../images/diagrams/MultisetTypeDef.png)**
+##### MultisetTypeDef
+![](../images/diagrams/MultisetTypeDef.png)
 
-### TypeReference
-**![](../images/diagrams/TypeReference.png)**
-
----
+##### TypeReference
+![](../images/diagrams/TypeReference.png)
 
 The `CREATE TYPE` statement is used to create a new named datatype.
 This type can then be used to create stored collections or utilized when defining one or more other datatypes.
@@ -147,38 +133,38 @@ A object type can be defined as being either open or closed.
 Instances of a closed object type are not permitted to contain fields other than those specified in the create type statement.
 Instances of an open object type may carry additional fields, and open is the default for new types if neither option is specified.
 
-The following example creates three new object type called `addressType` ,  `customerType` and `itemType`.
+The following example creates three new object types called `addressType`, `customerType`, and `itemType`.
 Their fields are essentially traditional typed name/value pairs (much like SQL fields).
 Since it is defined as (defaulting to) being an open type, instances will be permitted to contain more than what is specified in the type definition. Indeed many of the customer objects contain a rating as well, however this is not necessary for the customer object to be created. As can be seen in the sample data, customers can exist without ratings or with part (or all) of the address missing.
 
 ##### Example
 
-	CREATE TYPE addressType AS {
-	    street:			string,
-	    city:			string,
-	    zipcode:			string?
-	};
-
-    CREATE TYPE customerType AS {
-        custid:			string,
-        name:			string,
-        address:			addressType?
+    CREATE TYPE addressType AS {
+        street:                     string,
+        city:                       string,
+        zipcode:                    string?
     };
 
-	CREATE TYPE itemType AS {
-	    itemno:			int,
-	    qty:			int,
-	    price:			int
-	};
+    CREATE TYPE customerType AS {
+        custid:                     string,
+        name:                       string,
+        address:                    addressType?
+    };
+
+    CREATE TYPE itemType AS {
+        itemno:                     int,
+        qty:                        int,
+        price:                      int
+    };
 
 Optionally, you may wish to create a type that has an automatically generated primary key field. The example below shows an alternate form of `itemType` which achieves this by setting its primary key, `itemno`, to UUID. (Refer to the Datasets section later for more details on such fields.)
 
 ##### Example
-	CREATE TYPE itemType AS {
-	    itemno:			uuid,
-	    qty:			int,
-	    price:			int
-	};
+    CREATE TYPE itemType AS {
+        itemno:                     uuid,
+        qty:                        int,
+        price:                      int
+    };
 
 Note that the type of the `itemno` in this example is UUID. This field type can be used if you want to have an autogenerated-PK field. (Refer to the Datasets section later for more details on such fields.)
 
@@ -188,54 +174,51 @@ although the `ship_date` field is marked as optional and may thus be `NULL` or `
 
 ##### Example
 
-	CREATE TYPE orderType AS CLOSED {
-	    orderno:			int,
-	    custid:			string,
-	    order_date:			string,
-	    ship_date:			string?,
-	    items:			[ itemType ]
-	};
+    CREATE TYPE orderType AS CLOSED {
+        orderno:                    int,
+        custid:                     string,
+        order_date:                 string,
+        ship_date:                  string?,
+        items:                      [ itemType ]
+    };
 
 #### <a id="Datasets"> Create Dataset</a>
 
----
-### CreateDataset
-**![](../images/diagrams/CreateDataset.png)**
+##### CreateDataset
+![](../images/diagrams/CreateDataset.png)
 
-### CreateInternalDataset
-**![](../images/diagrams/CreateInternalDataset.png)**
+##### CreateInternalDataset
+![](../images/diagrams/CreateInternalDataset.png)
 
-### CreateExternalDataset
-**![](../images/diagrams/CreateExternalDataset.png)**
+##### CreateExternalDataset
+![](../images/diagrams/CreateExternalDataset.png)
 
-### DatasetTypeDef
-**![](../images/diagrams/DatasetTypeDef.png)**
+##### DatasetTypeDef
+![](../images/diagrams/DatasetTypeDef.png)
 
-### DatasetFieldDef
-**![](../images/diagrams/DatasetFieldDef.png)**
+##### DatasetFieldDef
+![](../images/diagrams/DatasetFieldDef.png)
 
-### TypeReference
-**![](../images/diagrams/TypeReference.png)**
+##### TypeReference
+![](../images/diagrams/TypeReference.png)
 
-### PrimaryKey
-**![](../images/diagrams/PrimaryKey.png)**
+##### PrimaryKey
+![](../images/diagrams/PrimaryKey.png)
 
-### NestedField
-**![](../images/diagrams/NestedField.png)**
+##### NestedField
+![](../images/diagrams/NestedField.png)
 
-### AdapterName
-**![](../images/diagrams/AdapterName.png)**
+##### AdapterName
+![](../images/diagrams/AdapterName.png)
 
-### Configuration
-**![](../images/diagrams/Configuration.png)**
+##### Configuration
+![](../images/diagrams/Configuration.png)
 
-### KeyValuePair
-**![](../images/diagrams/KeyValuePair.png)**
+##### KeyValuePair
+![](../images/diagrams/KeyValuePair.png)
 
-### Properties
-**![](../images/diagrams/Properties.png)**
-
----
+##### Properties
+![](../images/diagrams/Properties.png)
 
 The `CREATE DATASET` statement is used to create a new dataset.
 Datasets are named, multisets of object type instances;
@@ -277,7 +260,7 @@ When defining an External dataset, an appropriate adapter type must be selected 
 The following example creates an Internal dataset for storing `customerType` objects.
 It specifies that their `custid` field is their primary key.
 
-#### Example
+##### Example
 
     CREATE INTERNAL DATASET customers(customerType) PRIMARY KEY custid;
 
@@ -286,13 +269,13 @@ It also specifies that the `itemno` field is an auto-generated field, meaning th
 
 Note that the `itemno` field's declared type must be UUID in this case.
 
-#### Example
+##### Example
 
     CREATE DATASET MyItems(itemType) PRIMARY KEY itemno AUTOGENERATED;
 
 Alternatively the dataset object type can be specified using inline type definition syntax.
 
-#### Example
+##### Example
 
     CREATE DATASET MyItems(itemno INT NOT UNKNOWN, qty INT NOT UNKNOWN, price INT NOT UNKNOWN) PRIMARY KEY itemno AUTOGENERATED;
 
@@ -301,7 +284,7 @@ The choice of the `hdfs` adapter means that this dataset's data actually resides
 The example `CREATE` statement also provides parameters used by the hdfs adapter:
 the URL and path needed to locate the data in HDFS and a description of the data format.
 
-#### Example
+##### Example
 
     CREATE EXTERNAL DATASET LineItem(LineItemType) USING hdfs (
       ("hdfs"="hdfs://HOST:PORT"),
@@ -312,32 +295,29 @@ the URL and path needed to locate the data in HDFS and a description of the data
 
 #### <a id="Indices">Create Index</a>
 
----
-### CreateIndex
-**![](../images/diagrams/CreateIndex.png)**
+##### CreateIndex
+![](../images/diagrams/CreateIndex.png)
 
-### CreateSecondaryIndex
-**![](../images/diagrams/CreateSecondaryIndex.png)**
+##### CreateSecondaryIndex
+![](../images/diagrams/CreateSecondaryIndex.png)
 
-### CreatePrimaryKeyIndex
-**![](../images/diagrams/CreatePrimaryKeyIndex.png)**
+##### CreatePrimaryKeyIndex
+![](../images/diagrams/CreatePrimaryKeyIndex.png)
 
-### IndexedElement
+##### IndexedElement
 **![](../images/diagrams/IndexedElement.png)**
 
-### ArrayIndexElement
+##### ArrayIndexElement
 **![](../images/diagrams/ArrayIndexElement.png)**
 
-### IndexField
+##### IndexField
 **![](../images/diagrams/IndexField.png)**
 
-### NestedField
-**![](../images/diagrams/NestedField.png)**
+##### NestedField
+![](../images/diagrams/NestedField.png)
 
-### IndexType
-**![](../images/diagrams/IndexType.png)**
-
----
+##### IndexType
+![](../images/diagrams/IndexType.png)
 
 The `CREATE INDEX` statement creates a secondary index on one or more fields of a specified dataset.
 Supported index types include `BTREE` for totally ordered datatypes, `RTREE` for spatial data,
@@ -353,9 +333,9 @@ specified at the end of the index definition.
 (if the optional field exists in the object) always matches this specified (open) field type.
 
 The following example creates a btree index called `cCustIdx` on the `custid` field of the orders dataset.
-This index can be useful for accelerating exact-match queries, range search queries, and joins involving the `custid`field.
+This index can be useful for accelerating exact-match queries, range search queries, and joins involving the `custid` field.
 
-#### Example
+##### Example
 
     CREATE INDEX cCustIdx ON orders(custid) TYPE BTREE;
 
@@ -364,7 +344,7 @@ This index can be useful for accelerating exact-match queries, range search quer
 The index is enforced so that records that do not have the `createdTime` field or have a mismatched type on the field
 cannot be inserted into the dataset.
 
-#### Example
+##### Example
 
     CREATE INDEX oCreatedTimeIdx ON orders(createdTime: datetime?) TYPE BTREE ENFORCED;
 
@@ -375,7 +355,7 @@ and joins involving the `addedTime` field.
 The index is not enforced so that records that do not have the `addedTime` field or have a mismatched type on the field
 can still be inserted into the dataset.
 
-#### Example
+##### Example
 
     CREATE INDEX cAddedTimeIdx ON customers(addedTime: datetime?);
 
@@ -384,7 +364,7 @@ a nested field residing within a object-valued user field in the `orders` datase
 This index can be useful for accelerating exact-match queries, range search queries,
 and joins involving the nested `orderUserName` field.
 
-#### Example
+##### Example
 
     CREATE INDEX oOrderUserNameIdx ON orders(order.orderUserName) TYPE BTREE;
 
@@ -398,19 +378,19 @@ This index can be useful for accelerating membership queries, existential or uni
 
 The following example creates an open rtree index called `oOrderLocIdx` on the order-location field of the `orders` dataset. This index can be useful for accelerating queries that use the [`spatial-intersect` function](builtins.html#spatial_intersect) in a predicate involving the sender-location field.
 
-#### Example
+##### Example
 
     CREATE INDEX oOrderLocIDx ON orders(`order-location` : point?) TYPE RTREE ENFORCED;
 
 The following example creates a 3-gram index called `cUserIdx` on the name field of the `customers` dataset. This index can be used to accelerate some similarity or substring maching queries on the name field. For details refer to the document on [similarity queries](similarity.html#NGram_Index).
 
-#### Example
+##### Example
 
     CREATE INDEX cUserIdx ON customers(name) TYPE NGRAM(3);
 
 The following example creates a keyword index called `oCityIdx` on the `city` within the `address` field of the `customers` dataset. This keyword index can be used to optimize queries with token-based similarity predicates on the `address` field. For details refer to the document on [similarity queries](similarity.html#Keyword_Index).
 
-#### Example
+##### Example
 
     CREATE INDEX oCityIdx ON customers(address.city) TYPE KEYWORD;
 
@@ -419,7 +399,7 @@ This index is useful for speeding up aggregation queries which involve only prim
 The name of the index is optional. If the name is not specified, the system will generate
 one. When the user would like to drop this index, the metadata can be queried to find the system-generated name.
 
-#### Example
+##### Example
 
     CREATE PRIMARY INDEX cus_pk_idx ON customers;
 
@@ -435,32 +415,32 @@ To look up the the above primary-key index, issue the following query:
 
 The query returns:
 
-	[
-	    {
-	        "DataverseName": "Commerce",
-	        "DatasetName": "customers",
-	        "IndexName": "cus_pk_idx",
-	        "IndexStructure": "BTREE",
-	        "SearchKey": [],
-	        "IsPrimary": false,
-	        "Timestamp": "Fri Sep 18 14:15:51 PDT 2020",
-	        "PendingOp": 0
-	    },
-	    {
-	        "DataverseName": "Commerce",
-	        "DatasetName": "customers",
-	        "IndexName": "customers",
-	        "IndexStructure": "BTREE",
-	        "SearchKey": [
-	            [
-	                "custid"
-	            ]
-	        ],
-	        "IsPrimary": true,
-	        "Timestamp": "Thu Jul 16 13:07:37 PDT 2020",
-	        "PendingOp": 0
-	    }
-	]
+    [
+        {
+            "DataverseName": "Commerce",
+            "DatasetName": "customers",
+            "IndexName": "cus_pk_idx",
+            "IndexStructure": "BTREE",
+            "SearchKey": [],
+            "IsPrimary": false,
+            "Timestamp": "Fri Sep 18 14:15:51 PDT 2020",
+            "PendingOp": 0
+        },
+        {
+            "DataverseName": "Commerce",
+            "DatasetName": "customers",
+            "IndexName": "customers",
+            "IndexStructure": "BTREE",
+            "SearchKey": [
+                [
+                    "custid"
+                ]
+            ],
+            "IsPrimary": true,
+            "Timestamp": "Thu Jul 16 13:07:37 PDT 2020",
+            "PendingOp": 0
+        }
+    ]
 
 Remember that `CREATE PRIMARY INDEX` creates a secondary index.
 That is the reason the `IsPrimary` field is false.
@@ -468,11 +448,8 @@ The primary-key index can be identified by the fact that the `SearchKey` field i
 
 #### <a id="Synonyms"> Create Synonym</a>
 
----
-### CreateSynonym
-**![](../images/diagrams/CreateSynonym.png)**
-
----
+##### CreateSynonym
+![](../images/diagrams/CreateSynonym.png)
 
 The `CREATE SYNONYM` statement creates a synonym for a given dataset.
 This synonym may be used used instead of the dataset name in `SELECT`, `INSERT`, `UPSERT`, `DELETE`, and `LOAD` statements.
@@ -486,24 +463,21 @@ The target dataset does not need to exist when the synonym is created.
 
     SELECT * FROM customersSynonym;
 
-More information on how synonyms are resolved can be found in the [Appendix 3. Variable Bindings and Name Resolution](#Variable_bindings_and_name_resolution).
+More information on how synonyms are resolved can be found in [Appendix 3. Variable Bindings and Name Resolution](#Variable_bindings_and_name_resolution).
 
 #### <a id="Create_function">Create Function</a>
 
 The `CREATE FUNCTION` statement creates a **named** function that can then be used and reused in queries.
 The body of a function can be any query expression involving the function's parameters.
 
----
-### CreateFunction
-**![](../images/diagrams/CreateFunction.png)**
+##### CreateFunction
+![](../images/diagrams/CreateFunction.png)
 
-### FunctionParameters
-**![](../images/diagrams/FunctionParameters.png)**
+##### FunctionParameters
+![](../images/diagrams/FunctionParameters.png)
 
-### ExternalFunctionDef
-**![](../images/diagrams/ExternalFunctionDef.png)**
-
----
+##### ExternalFunctionDef
+![](../images/diagrams/ExternalFunctionDef.png)
 
 The following is an example of a `CREATE FUNCTION` statement which is similar to our earlier `DECLARE FUNCTION` example.
 
@@ -546,26 +520,23 @@ would be as follows
 
 ### <a id="Removal">Drop Statement</a>
 
----
-### DropStmnt
-**![](../images/diagrams/DropStmnt.png)**
+##### DropStmnt
+![](../images/diagrams/DropStmnt.png)
 
-### DataverseName
-**![](../images/diagrams/DataverseName.png)**
+##### DataverseName
+![](../images/diagrams/DataverseName.png)
 
-### QualifiedName
-**![](../images/diagrams/QualifiedName.png)**
+##### QualifiedName
+![](../images/diagrams/QualifiedName.png)
 
-### DoubleQualifiedName
-**![](../images/diagrams/DoubleQualifiedName.png)**
+##### DoubleQualifiedName
+![](../images/diagrams/DoubleQualifiedName.png)
 
-### FunctionSignature
-**![](../images/diagrams/FunctionSignature.png)**
+##### FunctionSignature
+![](../images/diagrams/FunctionSignature.png)
 
-### FunctionParameters
-**![](../images/diagrams/FunctionParameters.png)**
-
----
+##### FunctionParameters
+![](../images/diagrams/FunctionParameters.png)
 
 The `DROP` statement is the inverse of the `CREATE` statement. It can be used to drop dataverses, datatypes, datasets, indexes, functions, and synonyms.
 
@@ -595,20 +566,17 @@ the identifying name of the function to be dropped must explicitly include that 
 
 ### <a id="Load_statement">Load Statement</a>
 
----
-### LoadStmnt
-**![](../images/diagrams/LoadStmnt.png)**
+##### LoadStmnt
+![](../images/diagrams/LoadStmnt.png)
 
-### AdapterName
-**![](../images/diagrams/AdapterName.png)**
+##### AdapterName
+![](../images/diagrams/AdapterName.png)
 
-### Configuration
-**![](../images/diagrams/Configuration.png)**
+##### Configuration
+![](../images/diagrams/Configuration.png)
 
-### KeyValuePair
-**![](../images/diagrams/KeyValuePair.png)**
-
----
+##### KeyValuePair
+![](../images/diagrams/KeyValuePair.png)
 
 The `LOAD` statement is used to initially populate a dataset via bulk loading of data from an external file.
 An appropriate adapter must be selected to handle the nature of the desired external data.
@@ -629,11 +597,8 @@ The following example shows how to bulk load the `customers` dataset from an ext
 
 ### <a id="Inserts">Insert Statement</a>
 
----
-### InsertStmnt
-**![](../images/diagrams/InsertStmnt.png)**
-
----
+##### InsertStmnt
+![](../images/diagrams/InsertStmnt.png)
 
 The `INSERT` statement is used to insert new data into a dataset.
 The data to be inserted comes from a query expression.
@@ -659,11 +624,8 @@ The following example illustrates a query-based insertion.
 
 ### <a id="Upserts">Upsert Statement</a>
 
----
-### UpsertStmnt
-**![](../images/diagrams/UpsertStmnt.png)**
-
----
+##### UpsertStmnt
+![](../images/diagrams/UpsertStmnt.png)
 
 The `UPSERT` statement syntactically mirrors the `INSERT `statement discussed above.
 The difference lies in its semantics, which for `UPSERT` are "add or replace" instead of the `INSERT` "add if not present, else error" semantics.
@@ -682,11 +644,8 @@ The following example illustrates a query-based upsert operation.
 
 ### <a id="Deletes">Delete Statement</a>
 
----
-### DeleteStmnt
-**![](../images/diagrams/DeleteStmnt.png)**
-
----
+##### DeleteStmnt
+![](../images/diagrams/DeleteStmnt.png)
 
 The `DELETE` statement is used to delete data from a target dataset.
 The data to be deleted is identified by a boolean expression involving the variable bound to the target dataset in the `DELETE` statement.
@@ -707,3 +666,4 @@ The following examples illustrate single-object deletions.
 ##### Example
 
     DELETE FROM customers WHERE custid = "C47";
+

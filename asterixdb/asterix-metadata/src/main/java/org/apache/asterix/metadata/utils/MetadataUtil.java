@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.metadata.utils;
 
+import org.apache.asterix.common.metadata.DataverseName;
+
 public class MetadataUtil {
     public static final int PENDING_NO_OP = 0;
     public static final int PENDING_ADD_OP = 1;
@@ -37,5 +39,9 @@ public class MetadataUtil {
             default:
                 return "Unknown Pending Operation";
         }
+    }
+
+    public static String getFullyQualifiedDisplayName(DataverseName dataverseName, String objectName) {
+        return dataverseName + "." + objectName;
     }
 }

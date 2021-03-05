@@ -2446,14 +2446,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             List<TypeSignature> existingInlineTypes;
             Function existingFunction = MetadataManager.INSTANCE.getFunction(mdTxnCtx, functionSignature);
             if (existingFunction != null) {
-                if (cfs.getReplaceIfExists()) {
-                    if (cfs.getIfNotExists()) {
-                        throw new CompilationException(ErrorCode.PARSE_ERROR, cfs.getSourceLocation(), "IF NOT EXISTS");
-                    }
-                } else if (cfs.getIfNotExists()) {
+                if (cfs.getIfNotExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return;
-                } else {
+                } else if (!cfs.getReplaceIfExists()) {
                     throw new CompilationException(ErrorCode.FUNCTION_EXISTS, cfs.getSourceLocation(),
                             functionSignature.toString(false));
                 }

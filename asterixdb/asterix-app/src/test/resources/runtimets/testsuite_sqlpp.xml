@@ -7836,14 +7836,14 @@
       <test-case FilePath="array-index/error-handling">
         <compilation-unit name="index-with-enforced-type">
           <output-dir compare="Text">index-with-enforced-type</output-dir>
-          <expected-error>ASX1140: Incompatible index type ARRAY</expected-error>
+          <expected-error>ASX1154: Incompatible index type ARRAY</expected-error>
           <source-location>false</source-location>
         </compilation-unit>
       </test-case>
       <test-case FilePath="array-index/error-handling">
         <compilation-unit name="index-mixed-composite">
           <output-dir compare="Text">index-mixed-composite</output-dir>
-          <expected-error>ASX1140: Incompatible index type ARRAY</expected-error>
+          <expected-error>ASX1154: Incompatible index type ARRAY</expected-error>
           <source-location>false</source-location>
         </compilation-unit>
       </test-case>
@@ -12327,7 +12327,7 @@
     <test-case FilePath="cross-dataverse">
       <compilation-unit name="drop-dataverse">
         <output-dir compare="Text">drop-dataverse</output-dir>
-        <expected-error>Cannot drop dataverse. Type a.a used by dataset b.b1</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: type a.a being used by dataset b.b1</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -12427,6 +12427,7 @@
         <expected-error>ASX1001: Syntax error: Unexpected type declaration for parameter a in function myfn001</expected-error>
         <expected-error>ASX1001: Syntax error: Unexpected return type declaration for function myfn002</expected-error>
         <expected-error>ASX1001: Syntax error: Unexpected return type declaration for function myfn003</expected-error>
+        <expected-error>ASX1001: Syntax error: Unexpected IF NOT EXISTS (in line 29, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12442,18 +12443,18 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-dependency-1">
         <output-dir compare="Text">drop-dependency-1</output-dir>
-        <expected-error>Cannot drop dataverse. Function B.f0(2) depends on function C.f1(2)</expected-error>
-        <expected-error>Cannot drop dataverse. Function B.f3(2) depends on function C.f2(...)</expected-error>
-        <expected-error>Cannot drop dataverse. Function B.f5(...) depends on function C.f4(2)</expected-error>
-        <expected-error>Cannot drop dataverse. Function B.f7(...) depends on function C.f6(...)</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: function C.f1(2) being used by function B.f0(2)</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: function C.f2(...) being used by function B.f3(2)</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: function C.f4(2) being used by function B.f5(...)</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: function C.f6(...) being used by function B.f7(...)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-dependency-2">
         <output-dir compare="Text">drop-dependency-2</output-dir>
-        <expected-error>Cannot drop dataverse. Function B.f2(2) depends on dataset C.TweetMessages</expected-error>
-        <expected-error>Cannot drop dataverse. Function B.f3(...) depends on dataset C.TweetMessages</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: dataset C.TweetMessages being used by function B.f2(2)</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: dataset C.TweetMessages being used by function B.f3(...)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -13195,7 +13196,7 @@
     <test-case FilePath="feeds">
       <compilation-unit name="drop-function-used-by-feed">
         <output-dir compare="Text">drop-function-used-by-feed</output-dir>
-        <expected-error>Cannot drop function experiments.test_func0(1) being used by feed connection TwitterUsers.UserFeed</expected-error>
+        <expected-error>ASX1148: Cannot drop function experiments.test_func0(1) being used by feed connection experiments.UserFeed</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -13207,7 +13208,7 @@
     <test-case FilePath="feeds">
       <compilation-unit name="drop-dataverse-with-function-used-by-feed">
         <output-dir compare="Text">drop-dataverse-with-function-used-by-feed</output-dir>
-        <expected-error>Cannot drop dataverse. Feed connection feeddv.UserFeed depends on function fundv.test_func0(1)</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: function fundv.test_func0(1) being used by feed connection feeddv.UserFeed</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

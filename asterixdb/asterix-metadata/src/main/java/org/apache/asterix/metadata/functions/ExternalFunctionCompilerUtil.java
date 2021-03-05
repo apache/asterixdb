@@ -29,6 +29,7 @@ import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -165,6 +166,25 @@ public class ExternalFunctionCompilerUtil {
         if (actualSize != expectedSize) {
             throw new CompilationException(ErrorCode.INVALID_EXTERNAL_IDENTIFIER_SIZE, sourceLoc,
                     String.valueOf(actualSize), language.name());
+        }
+    }
+
+    public static boolean supportsBatchInvocation(FunctionKind fnKind, IFunctionInfo fnInfo)
+            throws CompilationException {
+        if (fnKind != FunctionKind.SCALAR) {
+            return false;
+        }
+        if (!(fnInfo instanceof IExternalFunctionInfo)) {
+            return false;
+        }
+        ExternalFunctionLanguage language = ((IExternalFunctionInfo) fnInfo).getLanguage();
+        switch (language) {
+            case JAVA:
+                return false;
+            case PYTHON:
+                return false;
+            default:
+                throw new CompilationException(ErrorCode.METADATA_ERROR, language.name());
         }
     }
 }

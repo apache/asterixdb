@@ -21,6 +21,7 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.algebra.operators.physical.AssignBatchPOperator;
 import org.apache.asterix.algebra.operators.physical.BTreeSearchPOperator;
 import org.apache.asterix.algebra.operators.physical.InvertedIndexPOperator;
 import org.apache.asterix.algebra.operators.physical.RTreeSearchPOperator;
@@ -30,6 +31,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
@@ -49,10 +51,12 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
@@ -69,16 +73,47 @@ import org.apache.hyracks.algebricks.rewriter.rules.SetAlgebricksPhysicalOperato
 
 public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysicalOperatorsRule {
 
+    // Disable ASSIGN_BATCH physical operator if this option is set to 'false'
+    public static final String REWRITE_ATTEMPT_BATCH_ASSIGN = "rewrite_attempt_batch_assign";
+    static final boolean REWRITE_ATTEMPT_BATCH_ASSIGN_DEFAULT = false;
+
     @Override
     protected ILogicalOperatorVisitor<IPhysicalOperator, Boolean> createPhysicalOperatorFactoryVisitor(
             IOptimizationContext context) {
         return new AsterixPhysicalOperatorFactoryVisitor(context);
     }
 
+    static boolean isBatchAssignEnabled(IOptimizationContext context) {
+        MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
+        return metadataProvider.getBooleanProperty(REWRITE_ATTEMPT_BATCH_ASSIGN, REWRITE_ATTEMPT_BATCH_ASSIGN_DEFAULT);
+    }
+
     private static class AsterixPhysicalOperatorFactoryVisitor extends AlgebricksPhysicalOperatorFactoryVisitor {
+
+        private final boolean isBatchAssignEnabled;
 
         private AsterixPhysicalOperatorFactoryVisitor(IOptimizationContext context) {
             super(context);
+            isBatchAssignEnabled = isBatchAssignEnabled(context);
+        }
+
+        @Override
+        public IPhysicalOperator visitAssignOperator(AssignOperator op, Boolean topLevelOp) throws AlgebricksException {
+            List<Mutable<ILogicalExpression>> exprList = op.getExpressions();
+            boolean batchMode = isBatchAssignEnabled && exprList.size() > 0 && allBatchableFunctionCalls(exprList);
+            if (batchMode) {
+                // disable inlining of variable arguments
+                for (Mutable<ILogicalExpression> exprRef : exprList) {
+                    AbstractFunctionCallExpression callExpr = (AbstractFunctionCallExpression) exprRef.getValue();
+                    for (Mutable<ILogicalExpression> argRef : callExpr.getArguments()) {
+                        LogicalVariable var = ((VariableReferenceExpression) argRef.getValue()).getVariableReference();
+                        context.addNotToBeInlinedVar(var);
+                    }
+                }
+                return new AssignBatchPOperator();
+            } else {
+                return super.visitAssignOperator(op, topLevelOp);
+            }
         }
 
         @Override
@@ -279,6 +314,32 @@ public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysical
             } else {
                 return new WindowStreamPOperator(winOp.getPartitionVarList(), winOp.getOrderColumnList());
             }
+        }
+
+        private boolean allBatchableFunctionCalls(List<Mutable<ILogicalExpression>> exprList)
+                throws CompilationException {
+            for (Mutable<ILogicalExpression> exprRef : exprList) {
+                if (!isBatchableFunctionCall(exprRef.getValue())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static boolean isBatchableFunctionCall(ILogicalExpression expr) throws CompilationException {
+            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                return false;
+            }
+            AbstractFunctionCallExpression callExpr = (AbstractFunctionCallExpression) expr;
+            if (!ExternalFunctionCompilerUtil.supportsBatchInvocation(callExpr.getKind(), callExpr.getFunctionInfo())) {
+                return false;
+            }
+            for (Mutable<ILogicalExpression> argRef : callExpr.getArguments()) {
+                if (argRef.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

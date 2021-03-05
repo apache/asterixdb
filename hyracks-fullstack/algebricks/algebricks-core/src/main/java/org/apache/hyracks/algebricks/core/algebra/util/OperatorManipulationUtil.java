@@ -27,6 +27,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -385,8 +386,21 @@ public class OperatorManipulationUtil {
      * @return operator position in the given list or {@code -1} if not found
      */
     public static int indexOf(List<Mutable<ILogicalOperator>> list, ILogicalOperator op) {
+        return indexOf(list, (listItemOpRef, paramOp) -> listItemOpRef.getValue() == paramOp, op);
+    }
+
+    /**
+     * Find an item a given list
+     *
+     * @param list list to search in
+     * @param predicate predicate to test
+     * @param predicateParam parameter to pass to the predicate
+     * @return item position in the given list or {@code -1} if not found
+     */
+    public static <T, U> int indexOf(List<T> list, BiPredicate<T, U> predicate, U predicateParam) {
         for (int i = 0, ln = list.size(); i < ln; i++) {
-            if (list.get(i).getValue() == op) {
+            T listItem = list.get(i);
+            if (predicate.test(listItem, predicateParam)) {
                 return i;
             }
         }

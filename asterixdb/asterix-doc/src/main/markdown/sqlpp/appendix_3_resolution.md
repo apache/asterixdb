@@ -197,16 +197,15 @@ The likely intent of the query above can be accomplished as follows:
     SELECT e.name, pay
     ORDER BY pay
 
-Note:
-In the phrase *expr1* `JOIN` *expr2* `ON` *expr3*, variables defined in *expr1* are visible in *expr3* but not in *expr2*. Here's an example that will not work:
+Note that in the phrase *expr1* `JOIN` *expr2* `ON` *expr3*, variables defined in *expr1* are visible in *expr3* but not in *expr2*. Here's an example that will not work:
 
-	FROM orders AS o JOIN o.items AS i ON 1 = 1
+    FROM orders AS o JOIN o.items AS i ON 1 = 1
 
 The variable `o`, defined in the phrase before `JOIN`, cannot be used in the phrase immediately following `JOIN`. The probable intent of this example could be accomplished in either of the following ways:
 
-	FROM orders AS o UNNEST o.items AS i
+    FROM orders AS o UNNEST o.items AS i
 
-	FROM orders AS o, o.items AS i
+    FROM orders AS o, o.items AS i
 
 To summarize this rule: You may not use left-correlation in an explicit `JOIN` clause.
 
@@ -281,3 +280,4 @@ The rules for resolving the leftmost identifier are:
 5.  Once the leftmost identifier has been resolved, the following dots and identifiers in the name (if any) are treated as a path expression that navigates to a field nested inside that object.
     The name resolves to the field at the end of the path.
     If this field does not exist, the value `missing` is returned.
+

@@ -469,7 +469,7 @@ public class TypeUtil {
     }
 
     public static String getFullyQualifiedDisplayName(DataverseName dataverseName, String typeName) {
-        return dataverseName + "." + typeName;
+        return MetadataUtil.getFullyQualifiedDisplayName(dataverseName, typeName);
     }
 
     /**

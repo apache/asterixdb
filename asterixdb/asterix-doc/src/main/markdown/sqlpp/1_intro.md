@@ -17,7 +17,7 @@
  ! under the License.
  !-->
 
-# <a id="Introduction">1. Introduction</a><font size="3"/>
+# <a id="Introduction">1. Introduction</a>
 
 This document is intended as a reference guide to the full syntax and semantics of
 AsterixDB's query language, a SQL-based language for working with semistructured data.
@@ -43,3 +43,4 @@ We list and briefly explain each of the productions in the query grammar, offeri
 using two datasets named `customers` and `orders`. Each dataset is a collection of objects.
 The contents of the example datasets can be found at the end of this manual in [Appendix 4](#Manual_data).
 
+For additional reading on SQL++ and more examples, refer to [SQL++ for SQL Users: A Tutorial](https://asterixdb.apache.org/files/SQL_Book.pdf).

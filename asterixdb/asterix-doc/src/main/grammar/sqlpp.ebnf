@@ -232,7 +232,7 @@ CreateSynonym ::= "CREATE" "SYNONYM" QualifiedName "FOR" QualifiedName ("IF" "NO
 
 FunctionDeclaration ::= "DECLARE" "FUNCTION" Identifier "(" ( (Identifier ("," Identifier)*) | "..." )? ")" "{" Expr "}"
 
-CreateFunction ::= "CREATE" ("OR" "REPLACE")? "FUNCTION" QualifiedName ("IF" "NOT" "EXISTS")? "(" FunctionParameters? ")"
+CreateFunction ::= "CREATE" ("OR" "REPLACE")? "FUNCTION" QualifiedName "(" FunctionParameters? ")" ("IF" "NOT" "EXISTS")?
                   ( ("{" Expr "}") | ExternalFunctionDef )
 
 FunctionParameters ::=  ( Identifier ((":")? TypeExpr)? ("," Identifier ((":")? TypeExpr)? )* ) | "..."
