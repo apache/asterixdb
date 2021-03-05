@@ -1036,7 +1036,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier SPATIAL_TILE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-tile", 4);
     public static final FunctionIdentifier SPATIAL_ATTACH =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-attach2", 2);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-attach", 2);
 
     // fuzzy functions
     public static final FunctionIdentifier FUZZY_EQ =
