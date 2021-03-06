@@ -423,21 +423,22 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return MetadataManagerUtil.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
     }
 
-    public Pair<DataverseName, String> resolveDatasetNameUsingSynonyms(DataverseName dataverseName, String datasetName)
-            throws AlgebricksException {
+    public Triple<DataverseName, String, Boolean> resolveDatasetNameUsingSynonyms(DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
         DataverseName dvName = getActiveDataverseName(dataverseName);
         if (dvName == null) {
             return null;
         }
+        Synonym synonym = null;
         while (MetadataManagerUtil.findDataset(mdTxnCtx, dvName, datasetName) == null) {
-            Synonym synonym = findSynonym(dvName, datasetName);
+            synonym = findSynonym(dvName, datasetName);
             if (synonym == null) {
                 return null;
             }
             dvName = synonym.getObjectDataverseName();
             datasetName = synonym.getObjectName();
         }
-        return new Pair<>(dvName, datasetName);
+        return new Triple<>(dvName, datasetName, synonym != null);
     }
 
     public Synonym findSynonym(DataverseName dataverseName, String synonymName) throws AlgebricksException {

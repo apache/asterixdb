@@ -51,6 +51,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -155,13 +156,19 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             return null;
         }
         SourceLocation sourceLoc = varExpr.getSourceLocation();
-        Dataset dataset = findDataset(dataverseName, datasetName, sourceLoc);
-        if (dataset == null) {
+        Pair<Dataset, Boolean> datasetSynonymPair = findDataset(dataverseName, datasetName, sourceLoc);
+        if (datasetSynonymPair == null) {
             throw createUnresolvableError(dataverseName, datasetName, sourceLoc);
         }
-        List<Expression> argList = new ArrayList<>(2);
+        Dataset dataset = datasetSynonymPair.first;
+        boolean viaSynonym = datasetSynonymPair.second;
+        List<Expression> argList = new ArrayList<>(4);
         argList.add(new LiteralExpr(new StringLiteral(dataset.getDataverseName().getCanonicalForm())));
         argList.add(new LiteralExpr(new StringLiteral(dataset.getDatasetName())));
+        if (viaSynonym) {
+            argList.add(new LiteralExpr(new StringLiteral(dataverseName.getCanonicalForm())));
+            argList.add(new LiteralExpr(new StringLiteral(datasetName)));
+        }
         CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), argList);
         callExpr.setSourceLocation(sourceLoc);
         return callExpr;
@@ -221,16 +228,19 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                 dataverseName == null ? defaultDataverseName : dataverseName);
     }
 
-    private Dataset findDataset(DataverseName dataverseName, String datasetName, SourceLocation sourceLoc)
-            throws CompilationException {
+    private Pair<Dataset, Boolean> findDataset(DataverseName dataverseName, String datasetName,
+            SourceLocation sourceLoc) throws CompilationException {
         try {
-            Pair<DataverseName, String> dsName =
+            Boolean viaSynonym = false;
+            Triple<DataverseName, String, Boolean> dsName =
                     metadataProvider.resolveDatasetNameUsingSynonyms(dataverseName, datasetName);
             if (dsName != null) {
                 dataverseName = dsName.first;
                 datasetName = dsName.second;
+                viaSynonym = dsName.third;
             }
-            return metadataProvider.findDataset(dataverseName, datasetName);
+            Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+            return dataset == null ? null : new Pair<>(dataset, viaSynonym);
         } catch (AlgebricksException e) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
         }

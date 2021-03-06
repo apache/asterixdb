@@ -11913,6 +11913,7 @@
       <compilation-unit name="drop-dataverse">
         <output-dir compare="Text">drop-dataverse</output-dir>
         <expected-error>ASX1147: Cannot drop dataverse: type a.a being used by dataset b.b1</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: synonym a.s1 being used by function b.f1()</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -12056,8 +12057,10 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-dependency-4">
         <output-dir compare="Text">drop-dependency-4</output-dir>
-        <expected-error>Cannot drop dataset C.TweetMessages being used by function B.f2(2)</expected-error>
-        <expected-error>Cannot drop dataset C.TweetMessages being used by function B.f2(...)</expected-error>
+        <expected-error>ASX1148: Cannot drop dataset C.TweetMessages being used by function B.f2(2)</expected-error>
+        <expected-error>ASX1148: Cannot drop dataset C.TweetMessages being used by function B.f2(...)</expected-error>
+        <expected-error>ASX1148: Cannot drop synonym C.TweetMessagesSyn being used by function B.f2(2)</expected-error>
+        <expected-error>ASX1148: Cannot drop synonym C.TweetMessagesSyn being used by function B.f2(...)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -12074,8 +12077,10 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-dependency-6">
         <output-dir compare="Text">drop-dependency-6</output-dir>
-        <expected-error>Cannot drop dataset C.TweetMessages being used by function C.f2(2)</expected-error>
-        <expected-error>Cannot drop dataset C.TweetMessages being used by function C.f2(...)</expected-error>
+        <expected-error>ASX1148: Cannot drop dataset C.TweetMessages being used by function C.f2(2)</expected-error>
+        <expected-error>ASX1148: Cannot drop dataset C.TweetMessages being used by function C.f2(...)</expected-error>
+        <expected-error>ASX1148: Cannot drop synonym C.TweetMessagesSyn being used by function C.f2(2)</expected-error>
+        <expected-error>ASX1148: Cannot drop synonym C.TweetMessagesSyn being used by function C.f2(...)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
