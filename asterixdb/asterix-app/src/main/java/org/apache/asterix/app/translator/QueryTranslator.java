@@ -493,7 +493,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
         SourceLocation sourceLoc = stmtCreateDataverse.getSourceLocation();
         String dvName = stmtCreateDataverse.getDataverseName().getValue();
-        validateDatabaseObjectName(dvName, sourceLoc);
+        validateDataverseName(dvName, sourceLoc);
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         lockManager.acquireDataverseReadLock(metadataProvider.getLocks(), dvName);
@@ -3289,6 +3289,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc)
             throws CompilationException {
         ExternalDataUtils.validateAdapterSpecificProperties(configuration, srcLoc, warningCollector);
+    }
+
+    private static void validateDataverseName(String dataverseName, SourceLocation sourceLoc)
+            throws CompilationException {
+        validateDatabaseObjectName(dataverseName, sourceLoc);
+        if (dataverseName.contains(".")) {
+            throw new CompilationException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, dataverseName);
+        }
     }
 
     public static void validateDatabaseObjectName(String name, SourceLocation sourceLoc) throws CompilationException {
