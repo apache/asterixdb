@@ -367,13 +367,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleAdapterDropStatement(metadataProvider, stmt);
                         break;
                     case CREATE_FUNCTION:
-                        handleCreateFunctionStatement(metadataProvider, stmt, stmtRewriter);
+                        handleCreateFunctionStatement(metadataProvider, stmt, stmtRewriter, requestParameters);
                         break;
                     case FUNCTION_DROP:
                         handleFunctionDropStatement(metadataProvider, stmt);
                         break;
                     case CREATE_LIBRARY:
-                        handleCreateLibraryStatement(metadataProvider, stmt, hcc);
+                        handleCreateLibraryStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case LIBRARY_DROP:
                         handleLibraryDropStatement(metadataProvider, stmt, hcc);
@@ -2000,7 +2000,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     public void handleCreateFunctionStatement(MetadataProvider metadataProvider, Statement stmt,
-            IStatementRewriter stmtRewriter) throws Exception {
+            IStatementRewriter stmtRewriter, IRequestParameters requestParameters) throws Exception {
         CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
         FunctionSignature signature = cfs.getFunctionSignature();
         metadataProvider.validateDatabaseObjectName(signature.getDataverseName(), signature.getName(),
@@ -2019,7 +2019,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         lockUtil.createFunctionBegin(lockManager, metadataProvider.getLocks(), dataverseName, signature.getName(),
                 libraryDataverseName, libraryName);
         try {
-            doCreateFunction(metadataProvider, cfs, signature, stmtRewriter);
+            doCreateFunction(metadataProvider, cfs, signature, stmtRewriter, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
             metadataProvider.setDefaultDataverse(activeDataverse);
@@ -2027,7 +2027,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void doCreateFunction(MetadataProvider metadataProvider, CreateFunctionStatement cfs,
-            FunctionSignature functionSignature, IStatementRewriter stmtRewriter) throws Exception {
+            FunctionSignature functionSignature, IStatementRewriter stmtRewriter, IRequestParameters requestParameters)
+            throws Exception {
         DataverseName dataverseName = functionSignature.getDataverseName();
         SourceLocation sourceLoc = cfs.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -2420,21 +2421,22 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleCreateLibraryStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         CreateLibraryStatement cls = (CreateLibraryStatement) stmt;
         DataverseName dataverseName = getActiveDataverseName(cls.getDataverseName());
         String libraryName = cls.getLibraryName();
         String libraryHash = cls.getHash();
         lockUtil.createLibraryBegin(lockManager, metadataProvider.getLocks(), dataverseName, libraryName);
         try {
-            doCreateLibrary(metadataProvider, dataverseName, libraryName, libraryHash, cls, hcc);
+            doCreateLibrary(metadataProvider, dataverseName, libraryName, libraryHash, cls, hcc, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
-    private void doCreateLibrary(MetadataProvider metadataProvider, DataverseName dataverseName, String libraryName,
-            String libraryHash, CreateLibraryStatement cls, IHyracksClientConnection hcc) throws Exception {
+    protected void doCreateLibrary(MetadataProvider metadataProvider, DataverseName dataverseName, String libraryName,
+            String libraryHash, CreateLibraryStatement cls, IHyracksClientConnection hcc,
+            IRequestParameters requestParameters) throws Exception {
         JobUtils.ProgressState progress = ProgressState.NO_PROGRESS;
         boolean prepareJobSuccessful = false;
         JobSpecification abortJobSpec = null;
