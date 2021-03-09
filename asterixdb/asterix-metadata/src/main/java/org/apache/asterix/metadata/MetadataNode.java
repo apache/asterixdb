@@ -658,12 +658,6 @@ public class MetadataNode implements IMetadataNode {
         try {
             confirmDataverseCanBeDeleted(txnId, dataverseName);
 
-            // Drop all synonyms in this dataverse.
-            List<Synonym> dataverseSynonyms = getDataverseSynonyms(txnId, dataverseName);
-            for (Synonym synonym : dataverseSynonyms) {
-                dropSynonym(txnId, dataverseName, synonym.getSynonymName());
-            }
-
             // Drop all feeds and connections in this dataverse.
             // Feeds may depend on datatypes and adapters
             List<Feed> dataverseFeeds = getDataverseFeeds(txnId, dataverseName);
@@ -682,7 +676,7 @@ public class MetadataNode implements IMetadataNode {
             }
 
             // Drop all functions in this dataverse.
-            // Functions may depend on datatypes and libraries
+            // Functions may depend on libraries, datasets, functions, datatypes, synonyms
             // As a side effect, acquires an S lock on the 'Function' dataset on behalf of txnId.
             List<Function> dataverseFunctions = getDataverseFunctions(txnId, dataverseName);
             for (Function function : dataverseFunctions) {
@@ -701,6 +695,12 @@ public class MetadataNode implements IMetadataNode {
             List<Library> dataverseLibraries = getDataverseLibraries(txnId, dataverseName);
             for (Library lib : dataverseLibraries) {
                 dropLibrary(txnId, lib.getDataverseName(), lib.getName());
+            }
+
+            // Drop all synonyms in this dataverse.
+            List<Synonym> dataverseSynonyms = getDataverseSynonyms(txnId, dataverseName);
+            for (Synonym synonym : dataverseSynonyms) {
+                dropSynonym(txnId, dataverseName, synonym.getSynonymName(), true);
             }
 
             // Drop all datasets and indexes in this dataverse.
@@ -1141,37 +1141,25 @@ public class MetadataNode implements IMetadataNode {
         }
 
         // If a function from a DIFFERENT dataverse
-        // uses datasets, functions or datatypes from this dataverse
+        // uses datasets, functions, datatypes, or synonyms from this dataverse
         // throw an error
+        Function.FunctionDependencyKind[] functionDependencyKinds = Function.FunctionDependencyKind.values();
         List<Function> functions = getAllFunctions(txnId);
         for (Function function : functions) {
             if (function.getDataverseName().equals(dataverseName)) {
                 continue;
             }
-            for (Triple<DataverseName, String, String> datasetDependency : function.getDependencies().get(0)) {
-                if (datasetDependency.first.equals(dataverseName)) {
-                    throw new AsterixException(
-                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
-                            "dataset",
-                            DatasetUtil.getFullyQualifiedDisplayName(datasetDependency.first, datasetDependency.second),
-                            "function", function.getSignature());
-                }
-            }
-            for (Triple<DataverseName, String, String> functionDependency : function.getDependencies().get(1)) {
-                if (functionDependency.first.equals(dataverseName)) {
-                    throw new AsterixException(
-                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
-                            "function", new FunctionSignature(functionDependency.first, functionDependency.second,
-                                    Integer.parseInt(functionDependency.third)),
-                            "function", function.getSignature());
-                }
-            }
-            for (Triple<DataverseName, String, String> type : function.getDependencies().get(2)) {
-                if (type.first.equals(dataverseName)) {
-                    throw new AsterixException(
-                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
-                            "type", TypeUtil.getFullyQualifiedDisplayName(type.first, type.second), "function",
-                            function.getSignature());
+            List<List<Triple<DataverseName, String, String>>> dependencies = function.getDependencies();
+            for (int i = 0, n = dependencies.size(); i < n; i++) {
+                for (Triple<DataverseName, String, String> dependency : dependencies.get(i)) {
+                    if (dependency.first.equals(dataverseName)) {
+                        Function.FunctionDependencyKind functionDependencyKind = functionDependencyKinds[i];
+                        throw new AsterixException(
+                                org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
+                                functionDependencyKind.toString().toLowerCase(),
+                                functionDependencyKind.getDependencyDisplayName(dependency), "function",
+                                function.getSignature());
+                    }
                 }
             }
         }
@@ -1195,19 +1183,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void confirmFunctionCanBeDeleted(TxnId txnId, FunctionSignature signature) throws AlgebricksException {
-        // If any other function uses this function, throw an error
-        List<Function> functions = getAllFunctions(txnId);
-        for (Function function : functions) {
-            for (Triple<DataverseName, String, String> functionalDependency : function.getDependencies().get(1)) {
-                if (functionalDependency.first.equals(signature.getDataverseName())
-                        && functionalDependency.second.equals(signature.getName())
-                        && functionalDependency.third.equals(Integer.toString(signature.getArity()))) {
-                    throw new AsterixException(
-                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS,
-                            "function", signature, "function", function.getSignature());
-                }
-            }
-        }
+        confirmFunctionIsUnusedByFunctions(txnId, signature);
 
         // if any other feed connection uses this function, throw an error
         List<FeedConnection> feedConnections = getAllFeedConnections(txnId);
@@ -1221,17 +1197,33 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmDatasetCanBeDeleted(TxnId txnId, DataverseName dataverseName, String datasetName)
+    private void confirmFunctionIsUnusedByFunctions(TxnId txnId, FunctionSignature signature)
             throws AlgebricksException {
-        // If any function uses this type, throw an error
+        confirmObjectIsUnusedByFunctions(txnId, Function.FunctionDependencyKind.FUNCTION, signature.getDataverseName(),
+                signature.getName(), Integer.toString(signature.getArity()));
+    }
+
+    private void confirmObjectIsUnusedByFunctions(TxnId txnId, Function.FunctionDependencyKind dependencyKind,
+            DataverseName dataverseName, String objectName, String objectArg) throws AlgebricksException {
+        // If any function uses this object, throw an error
+        int functionDependencyIdx = dependencyKind.ordinal();
         List<Function> functions = getAllFunctions(txnId);
         for (Function function : functions) {
-            for (Triple<DataverseName, String, String> datasetDependency : function.getDependencies().get(0)) {
-                if (datasetDependency.first.equals(dataverseName) && datasetDependency.second.equals(datasetName)) {
-                    throw new AsterixException(
-                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS,
-                            "dataset", DatasetUtil.getFullyQualifiedDisplayName(dataverseName, datasetName), "function",
-                            function.getSignature());
+            List<List<Triple<DataverseName, String, String>>> functionDependencies = function.getDependencies();
+            if (functionDependencyIdx < functionDependencies.size()) {
+                List<Triple<DataverseName, String, String>> functionObjectDependencies =
+                        functionDependencies.get(functionDependencyIdx);
+                if (functionObjectDependencies != null) {
+                    for (Triple<DataverseName, String, String> dependency : functionObjectDependencies) {
+                        if (dependency.first.equals(dataverseName) && dependency.second.equals(objectName)
+                                && (objectArg == null || objectArg.equals(dependency.third))) {
+                            throw new AsterixException(
+                                    org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS,
+                                    dependencyKind.toString().toLowerCase(),
+                                    dependencyKind.getDependencyDisplayName(dependency), "function",
+                                    function.getSignature());
+                        }
+                    }
                 }
             }
         }
@@ -1256,12 +1248,27 @@ public class MetadataNode implements IMetadataNode {
                     String indexConfigName = ((Index.TextIndexDetails) index.getIndexDetails()).getFullTextConfigName();
                     if (index.getDataverseName().equals(dataverseNameFullTextConfig)
                             && !Strings.isNullOrEmpty(indexConfigName) && indexConfigName.equals(configName)) {
-                        throw new AlgebricksException("Cannot drop full-text config "
-                                + " because it is being used by index " + index.getIndexName());
+                        throw new AsterixException(
+                                org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS,
+                                "full-text config",
+                                MetadataUtil.getFullyQualifiedDisplayName(dataverseNameFullTextConfig, configName),
+                                "index", DatasetUtil.getFullyQualifiedDisplayName(index.getDataverseName(),
+                                        index.getDatasetName()) + "." + index.getIndexName());
                     }
                 }
             }
         }
+    }
+
+    private void confirmDatasetCanBeDeleted(TxnId txnId, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException {
+        confirmDatasetIsUnusedByFunctions(txnId, dataverseName, datasetName);
+    }
+
+    private void confirmDatasetIsUnusedByFunctions(TxnId txnId, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException {
+        confirmObjectIsUnusedByFunctions(txnId, Function.FunctionDependencyKind.DATASET, dataverseName, datasetName,
+                null);
     }
 
     private void confirmLibraryCanBeDeleted(TxnId txnId, DataverseName dataverseName, String libraryName)
@@ -1347,18 +1354,8 @@ public class MetadataNode implements IMetadataNode {
 
     private void confirmDatatypeIsUnusedByFunctions(TxnId txnId, DataverseName dataverseName, String dataTypeName)
             throws AlgebricksException {
-        // If any function uses this type, throw an error
-        List<Function> functions = getAllFunctions(txnId);
-        for (Function function : functions) {
-            for (Triple<DataverseName, String, String> datasetDependency : function.getDependencies().get(2)) {
-                if (datasetDependency.first.equals(dataverseName) && datasetDependency.second.equals(dataTypeName)) {
-                    throw new AsterixException(
-                            org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "type",
-                            TypeUtil.getFullyQualifiedDisplayName(dataverseName, dataTypeName), "function",
-                            function.getSignature());
-                }
-            }
-        }
+        confirmObjectIsUnusedByFunctions(txnId, Function.FunctionDependencyKind.TYPE, dataverseName, dataTypeName,
+                null);
     }
 
     private void confirmFullTextFilterCanBeDeleted(TxnId txnId, DataverseName dataverseName, String fullTextFilterName)
@@ -2269,6 +2266,15 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void dropSynonym(TxnId txnId, DataverseName dataverseName, String synonymName) throws AlgebricksException {
+        dropSynonym(txnId, dataverseName, synonymName, false);
+    }
+
+    private void dropSynonym(TxnId txnId, DataverseName dataverseName, String synonymName, boolean force)
+            throws AlgebricksException {
+        if (!force) {
+            confirmSynonymCanBeDeleted(txnId, dataverseName, synonymName);
+        }
+
         try {
             // Delete entry from the 'Synonym' dataset.
             ITupleReference searchKey = createTuple(dataverseName, synonymName);
@@ -2285,6 +2291,17 @@ public class MetadataNode implements IMetadataNode {
                 throw new AlgebricksException(e);
             }
         }
+    }
+
+    private void confirmSynonymCanBeDeleted(TxnId txnId, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException {
+        confirmSynonymIsUnusedByFunctions(txnId, dataverseName, synonymName);
+    }
+
+    private void confirmSynonymIsUnusedByFunctions(TxnId txnId, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException {
+        confirmObjectIsUnusedByFunctions(txnId, Function.FunctionDependencyKind.SYNONYM, dataverseName, synonymName,
+                null);
     }
 
     @Override

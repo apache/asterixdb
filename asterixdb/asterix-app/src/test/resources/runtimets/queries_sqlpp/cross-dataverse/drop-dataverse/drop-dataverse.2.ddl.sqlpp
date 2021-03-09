@@ -18,8 +18,27 @@
  */
 /*
  * Description  : Test cross dataverse functionality
- *              : create a dataset using a foreign datatype
- *              : Try dropping the foreign type's dataverse
+ *              : create a function using a foreign synonym
+ *              : Try dropping the foreign synonym's dataverse
  * Expected Res : Failure
- * Date         : 2015 Steven Jacobs
  */
+
+drop dataverse b if exists;
+drop dataverse a if exists;
+
+create dataverse a;
+create dataverse b;
+
+create type a.a as {
+  id:int32
+};
+
+create dataset a.b1(a.a) primary key id;
+
+create synonym a.s1 for a.b1;
+
+create function b.f1() {
+  select * from a.s1
+};
+
+drop dataverse a;
