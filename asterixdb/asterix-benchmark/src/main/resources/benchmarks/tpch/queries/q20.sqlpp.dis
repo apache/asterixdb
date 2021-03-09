@@ -38,12 +38,12 @@ q20_tmp2 AS
 ,
 q20_tmp3 AS
 (
-  SELECT ps_suppkey, ps_availqty, t2.sum_quantity
-  FROM Partsupp
+  SELECT ps.ps_suppkey, ps.ps_availqty, t2.sum_quantity
+  FROM Partsupp ps
   JOIN q20_tmp1 t1
-  ON ps_partkey = t1.p_partkey
+  ON ps.ps_partkey = t1.p_partkey
   JOIN q20_tmp2 t2
-  ON ps_partkey = t2.l_partkey and ps_suppkey = t2.l_suppkey
+  ON ps.ps_partkey = t2.l_partkey and ps.ps_suppkey = t2.l_suppkey
 )
 ,
 q20_tmp4 AS
