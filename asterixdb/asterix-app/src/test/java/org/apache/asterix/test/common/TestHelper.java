@@ -141,7 +141,8 @@ public final class TestHelper {
         return RequestParameters.deserializeParameterValues(RequestParameters.serializeParameterValues(stmtParams));
     }
 
-    public static boolean equalJson(JsonNode expectedJson, JsonNode actualJson, boolean compareUnorderedArray) {
+    public static boolean equalJson(JsonNode expectedJson, JsonNode actualJson, boolean compareUnorderedArray,
+            boolean ignoreExtraFields) {
         if (expectedJson == actualJson) {
             return true;
         }
@@ -167,13 +168,14 @@ public final class TestHelper {
             if (expectedArray.size() != actualArray.size()) {
                 return false;
             }
-            return compareUnorderedArray ? compareUnordered(expectedArray, actualArray)
-                    : compareOrdered(expectedArray, actualArray);
+            return compareUnorderedArray ? compareUnordered(expectedArray, actualArray, ignoreExtraFields)
+                    : compareOrdered(expectedArray, actualArray, ignoreExtraFields);
         } else if (expectedJson.isObject() && actualJson.isObject()) {
             // assumes no duplicates in field names
             ObjectNode expectedObject = (ObjectNode) expectedJson;
             ObjectNode actualObject = (ObjectNode) actualJson;
-            if (expectedObject.size() != actualObject.size()) {
+            if (!ignoreExtraFields && expectedObject.size() != actualObject.size()
+                    || (ignoreExtraFields && expectedObject.size() > actualObject.size())) {
                 return false;
             }
             Iterator<Map.Entry<String, JsonNode>> expectedFields = expectedObject.fields();
@@ -182,8 +184,8 @@ public final class TestHelper {
             while (expectedFields.hasNext()) {
                 expectedField = expectedFields.next();
                 actualFieldValue = actualObject.get(expectedField.getKey());
-                if (actualFieldValue == null
-                        || !equalJson(expectedField.getValue(), actualFieldValue, compareUnorderedArray)) {
+                if (actualFieldValue == null || !equalJson(expectedField.getValue(), actualFieldValue,
+                        compareUnorderedArray, ignoreExtraFields)) {
                     return false;
                 }
             }
@@ -195,13 +197,13 @@ public final class TestHelper {
         return expectedAsString.equals(actualAsString);
     }
 
-    private static boolean compareUnordered(ArrayNode expectedArray, ArrayNode actualArray) {
+    private static boolean compareUnordered(ArrayNode expectedArray, ArrayNode actualArray, boolean ignoreExtraFields) {
         BitSet alreadyMatched = new BitSet(actualArray.size());
         for (int i = 0; i < expectedArray.size(); i++) {
             boolean found = false;
             JsonNode expectedElement = expectedArray.get(i);
             for (int k = 0; k < actualArray.size(); k++) {
-                if (!alreadyMatched.get(k) && equalJson(expectedElement, actualArray.get(k), true)) {
+                if (!alreadyMatched.get(k) && equalJson(expectedElement, actualArray.get(k), true, ignoreExtraFields)) {
                     alreadyMatched.set(k);
                     found = true;
                     break;
@@ -214,9 +216,9 @@ public final class TestHelper {
         return true;
     }
 
-    private static boolean compareOrdered(ArrayNode expectedArray, ArrayNode actualArray) {
+    private static boolean compareOrdered(ArrayNode expectedArray, ArrayNode actualArray, boolean ignoreExtraFields) {
         for (int i = 0, size = expectedArray.size(); i < size; i++) {
-            if (!equalJson(expectedArray.get(i), actualArray.get(i), false)) {
+            if (!equalJson(expectedArray.get(i), actualArray.get(i), false, ignoreExtraFields)) {
                 return false;
             }
         }

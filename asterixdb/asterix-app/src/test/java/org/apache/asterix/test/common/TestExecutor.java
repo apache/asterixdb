@@ -163,6 +163,7 @@ public class TestExecutor {
     private static final Pattern HANDLE_VARIABLE_PATTERN = Pattern.compile("handlevariable=(\\w+)");
     private static final Pattern RESULT_VARIABLE_PATTERN = Pattern.compile("resultvariable=(\\w+)");
     private static final Pattern COMPARE_UNORDERED_ARRAY_PATTERN = Pattern.compile("compareunorderedarray=(\\w+)");
+    private static final Pattern IGNORE_EXTRA_FIELDS_PATTERN = Pattern.compile("ignoreextrafields=(\\w+)");
     private static final Pattern BODY_REF_PATTERN = Pattern.compile("bodyref=(.*)", Pattern.MULTILINE);
     private static final Pattern MACRO_PARAM_PATTERN =
             Pattern.compile("macro (?<name>[\\w-$]+)=(?<value>.*)", Pattern.MULTILINE);
@@ -291,8 +292,7 @@ public class TestExecutor {
                 runScriptAndCompareWithResultRegexAdm(scriptFile, readerExpected, readerActual);
                 return;
             } else if (actualFile.toString().endsWith(".regexjson")) {
-                boolean compareUnorderedArray = statement != null && getCompareUnorderedArray(statement);
-                runScriptAndCompareWithResultRegexJson(scriptFile, readerExpected, readerActual, compareUnorderedArray);
+                runScriptAndCompareWithResultRegexJson(scriptFile, readerExpected, readerActual, statement);
                 return;
             } else if (actualFile.toString().endsWith(".unorderedtxt")) {
                 runScriptAndCompareWithResultUnorderedLinesText(scriptFile, readerExpected, readerActual);
@@ -546,24 +546,28 @@ public class TestExecutor {
     }
 
     private static void runScriptAndCompareWithResultRegexJson(File scriptFile, BufferedReader readerExpected,
-            BufferedReader readerActual, boolean compareUnorderedArray) throws ComparisonException, IOException {
+            BufferedReader readerActual, String statement) throws ComparisonException, IOException {
+
+        boolean compareUnorderedArray = statement != null && getCompareUnorderedArray(statement);
+        boolean ignoreExtraFields = statement != null && getIgnoreExtraFields(statement);
+
         JsonNode expectedJson, actualJson;
         try {
             expectedJson = SINGLE_JSON_NODE_READER.readTree(readerExpected);
         } catch (JsonProcessingException e) {
-            throw new ComparisonException("Invalid expected JSON for: " + scriptFile);
+            throw new ComparisonException("Invalid expected JSON for: " + scriptFile, e);
         }
         try {
             actualJson = SINGLE_JSON_NODE_READER.readTree(readerActual);
         } catch (JsonProcessingException e) {
-            throw new ComparisonException("Invalid actual JSON for: " + scriptFile);
+            throw new ComparisonException("Invalid actual JSON for: " + scriptFile, e);
         }
         if (expectedJson == null) {
             throw new ComparisonException("No expected result for: " + scriptFile);
         } else if (actualJson == null) {
             throw new ComparisonException("No actual result for: " + scriptFile);
         }
-        if (!TestHelper.equalJson(expectedJson, actualJson, compareUnorderedArray)) {
+        if (!TestHelper.equalJson(expectedJson, actualJson, compareUnorderedArray, ignoreExtraFields)) {
             throw new ComparisonException("Result for " + scriptFile + " didn't match the expected JSON"
                     + "\nexpected result:\n" + expectedJson + "\nactual result:\n" + actualJson);
         }
@@ -1753,6 +1757,11 @@ public class TestExecutor {
 
     protected static boolean getCompareUnorderedArray(String statement) {
         final Matcher matcher = COMPARE_UNORDERED_ARRAY_PATTERN.matcher(statement);
+        return matcher.find() && Boolean.parseBoolean(matcher.group(1));
+    }
+
+    protected static boolean getIgnoreExtraFields(String statement) {
+        final Matcher matcher = IGNORE_EXTRA_FIELDS_PATTERN.matcher(statement);
         return matcher.find() && Boolean.parseBoolean(matcher.group(1));
     }
 
