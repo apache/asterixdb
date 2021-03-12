@@ -2664,6 +2664,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (synonym != null) {
                 if (css.getIfNotExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector
+                                .warn(Warning.of(css.getSourceLocation(), ErrorCode.SYNONYM_EXISTS, synonymName));
+                    }
                     return;
                 }
                 throw new CompilationException(ErrorCode.SYNONYM_EXISTS, css.getSourceLocation(), synonymName);
