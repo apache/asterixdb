@@ -12481,6 +12481,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="unnest">
+      <compilation-unit name="ASTERIXDB-2844_unnest_syntax">
+        <output-dir compare="Text">ASTERIXDB-2844_unnest_syntax</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="unnest">
       <compilation-unit name="left-outer-unnest">
         <output-dir compare="Text">left-outer-unnest</output-dir>
       </compilation-unit>
