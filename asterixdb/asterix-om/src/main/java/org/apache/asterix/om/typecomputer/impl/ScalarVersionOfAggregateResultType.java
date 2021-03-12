@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
@@ -32,32 +30,48 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ScalarVersionOfAggregateResultType extends AbstractResultTypeComputer {
 
-    public static final ScalarVersionOfAggregateResultType INSTANCE = new ScalarVersionOfAggregateResultType();
+    private final AggregateResultTypeComputer aggResultTypeComputer;
 
-    private ScalarVersionOfAggregateResultType() {
+    public ScalarVersionOfAggregateResultType(AggregateResultTypeComputer aggResultTypeComputer) {
+        this.aggResultTypeComputer = aggResultTypeComputer;
     }
 
     @Override
-    public void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
+    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType argType, SourceLocation sourceLoc)
             throws AlgebricksException {
-        ATypeTag tag = type.getTypeTag();
-        if (tag != ATypeTag.ANY && tag != ATypeTag.ARRAY && tag != ATypeTag.MULTISET) {
-            throw new TypeMismatchException(sourceLoc, funcId, argIndex, tag, ATypeTag.ARRAY, ATypeTag.MULTISET);
+        if (argIndex == 0) {
+            switch (argType.getTypeTag()) {
+                case ARRAY:
+                case MULTISET:
+                    AbstractCollectionType act = (AbstractCollectionType) argType;
+                    aggResultTypeComputer.checkArgType(funcId, argIndex, act.getItemType(), sourceLoc);
+                    break;
+            }
         }
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        ATypeTag tag = strippedInputTypes[0].getTypeTag();
-        if (tag == ATypeTag.ANY) {
-            return BuiltinType.ANY;
+        IAType argType = strippedInputTypes[0];
+        switch (argType.getTypeTag()) {
+            case ARRAY:
+            case MULTISET:
+                AbstractCollectionType act = (AbstractCollectionType) argType;
+                IAType[] strippedInputTypes2 = strippedInputTypes.clone();
+                strippedInputTypes2[0] = act.getItemType();
+                IAType resultType = aggResultTypeComputer.getResultType(expr, strippedInputTypes2);
+                switch (resultType.getTypeTag()) {
+                    case NULL:
+                    case MISSING:
+                    case ANY:
+                        return resultType;
+                    case UNION:
+                        return AUnionType.createUnknownableType(((AUnionType) resultType).getActualType());
+                    default:
+                        return AUnionType.createUnknownableType(resultType);
+                }
+            default:
+                return BuiltinType.ANY;
         }
-        if (tag != ATypeTag.ARRAY && tag != ATypeTag.MULTISET) {
-            // this condition being true would've thrown an exception above, no?
-            return strippedInputTypes[0];
-        }
-        AbstractCollectionType act = (AbstractCollectionType) strippedInputTypes[0];
-        IAType t = act.getItemType();
-        return AUnionType.createUnknownableType(t);
     }
 }
