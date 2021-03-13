@@ -4411,12 +4411,12 @@ JoinClause JoinClause(JoinType joinType) throws ParseException :
 UnnestClause UnnestClause(UnnestType unnestType) throws ParseException :
 {
     Token startToken = null;
-    Expression rightExpr;
-    VariableExpr rightVar;
+    Expression rightExpr = null;
+    VariableExpr rightVar = null;
     VariableExpr posVar = null;
 }
 {
-  (<UNNEST>|<CORRELATE>|<FLATTEN>) { startToken = token; } rightExpr = Expression() ((<AS>)? rightVar = Variable()) (<AT> posVar = Variable())?
+  (<UNNEST>|<CORRELATE>|<FLATTEN>) { startToken = token; } rightExpr = Expression() ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())?
   {
     if (rightVar == null) {
       rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);

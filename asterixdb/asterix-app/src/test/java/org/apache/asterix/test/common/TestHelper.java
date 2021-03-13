@@ -23,6 +23,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -41,10 +44,13 @@ import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.util.file.FileUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -52,8 +58,28 @@ import com.fasterxml.jackson.databind.node.TextNode;
 
 public final class TestHelper {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String TEST_DIR_BASE_PATH = System.getProperty("user.dir") + File.separator + "target";
     private static final String[] TEST_DIRS = new String[] { "txnLogDir", "IODevice", "spill_area", "config" };
+
+    private static final ObjectMapper SORTED_MAPPER = new ObjectMapper();
+    private static final ObjectWriter PRETTY_SORTED_WRITER;
+
+    static {
+        SORTED_MAPPER.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
+        SORTED_MAPPER.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+        PRETTY_SORTED_WRITER = SORTED_MAPPER.writerWithDefaultPrettyPrinter();
+    }
+
+    public static Reader asPrettyJson(final Reader rawJson) throws IOException {
+        try {
+            StringWriter sw = new StringWriter();
+            PRETTY_SORTED_WRITER.writeValue(sw, SORTED_MAPPER.readTree(rawJson));
+            return new StringReader(sw.toString());
+        } finally {
+            IOUtils.closeQuietly(rawJson);
+        }
+    }
 
     public static boolean isInPrefixList(List<String> prefixList, String s) {
         for (String s2 : prefixList) {
@@ -141,7 +167,8 @@ public final class TestHelper {
         return RequestParameters.deserializeParameterValues(RequestParameters.serializeParameterValues(stmtParams));
     }
 
-    public static boolean equalJson(JsonNode expectedJson, JsonNode actualJson, boolean compareUnorderedArray) {
+    public static boolean equalJson(JsonNode expectedJson, JsonNode actualJson, boolean compareUnorderedArray,
+            boolean ignoreExtraFields, boolean withinUnorderedComparison, String context) {
         if (expectedJson == actualJson) {
             return true;
         }
@@ -151,29 +178,50 @@ public final class TestHelper {
         }
         if ((expectedJson.isMissingNode() && !actualJson.isMissingNode())
                 || (!expectedJson.isMissingNode() && actualJson.isMissingNode())) {
+            if (!withinUnorderedComparison) {
+                LOGGER.info("missing node mismatch: expected={} actual={} context={}", expectedJson, actualJson,
+                        context);
+            }
             return false;
         }
         // both are not null
         if (isRegexField(expectedJson)) {
             String expectedRegex = expectedJson.asText();
-            String actualAsString = actualJson.isValueNode() ? actualJson.asText() : actualJson.toString();
+            String actualAsString = stringify(actualJson);
             expectedRegex = expectedRegex.substring(2, expectedRegex.length() - 1);
-            return actualAsString.matches(expectedRegex);
+            final boolean matches = actualAsString.matches(expectedRegex);
+            if (!matches && !withinUnorderedComparison) {
+                LOGGER.info("regex mismatch: expected={} actual={} context={}", expectedRegex, actualAsString, context);
+            }
+            return matches;
         } else if (expectedJson.getNodeType() != actualJson.getNodeType()) {
+            if (!withinUnorderedComparison) {
+                LOGGER.info("node type mismatch: expected={}({}) actual={}({})", stringify(expectedJson),
+                        expectedJson.getNodeType(), stringify(actualJson), actualJson.getNodeType());
+            }
             return false;
         } else if (expectedJson.isArray() && actualJson.isArray()) {
             ArrayNode expectedArray = (ArrayNode) expectedJson;
             ArrayNode actualArray = (ArrayNode) actualJson;
             if (expectedArray.size() != actualArray.size()) {
+                if (!withinUnorderedComparison) {
+                    LOGGER.info("array size mismatch: expected={} actual={}", stringify(expectedArray),
+                            stringify(actualArray));
+                }
                 return false;
             }
-            return compareUnorderedArray ? compareUnordered(expectedArray, actualArray)
-                    : compareOrdered(expectedArray, actualArray);
+            return compareUnorderedArray ? compareUnordered(expectedArray, actualArray, ignoreExtraFields)
+                    : compareOrdered(expectedArray, actualArray, ignoreExtraFields);
         } else if (expectedJson.isObject() && actualJson.isObject()) {
             // assumes no duplicates in field names
             ObjectNode expectedObject = (ObjectNode) expectedJson;
             ObjectNode actualObject = (ObjectNode) actualJson;
-            if (expectedObject.size() != actualObject.size()) {
+            if (!ignoreExtraFields && expectedObject.size() != actualObject.size()
+                    || (ignoreExtraFields && expectedObject.size() > actualObject.size())) {
+                if (!withinUnorderedComparison) {
+                    LOGGER.info("object size mismatch: expected={} actual={} context={}", stringify(expectedObject),
+                            stringify(actualObject), context);
+                }
                 return false;
             }
             Iterator<Map.Entry<String, JsonNode>> expectedFields = expectedObject.fields();
@@ -182,41 +230,62 @@ public final class TestHelper {
             while (expectedFields.hasNext()) {
                 expectedField = expectedFields.next();
                 actualFieldValue = actualObject.get(expectedField.getKey());
-                if (actualFieldValue == null
-                        || !equalJson(expectedField.getValue(), actualFieldValue, compareUnorderedArray)) {
+                if (actualFieldValue == null) {
+                    if (!withinUnorderedComparison) {
+                        LOGGER.info("actual field value null: expected name={} expected value={}",
+                                expectedField.getKey(), expectedField.getValue().asText());
+                    }
+                    return false;
+                }
+                if (!equalJson(expectedField.getValue(), actualFieldValue, compareUnorderedArray, ignoreExtraFields,
+                        withinUnorderedComparison, expectedField.getKey())) {
                     return false;
                 }
             }
             return true;
         }
         // value node
-        String expectedAsString = expectedJson.isValueNode() ? expectedJson.asText() : expectedJson.toString();
-        String actualAsString = actualJson.isValueNode() ? actualJson.asText() : actualJson.toString();
-        return expectedAsString.equals(actualAsString);
+        String expectedAsString = stringify(expectedJson);
+        String actualAsString = stringify(actualJson);
+        if (!expectedAsString.equals(actualAsString)) {
+            if (!withinUnorderedComparison) {
+                LOGGER.info("value node mismatch: expected={} actual={} context={}", expectedAsString, actualAsString,
+                        context);
+            }
+            return false;
+        }
+        return true;
     }
 
-    private static boolean compareUnordered(ArrayNode expectedArray, ArrayNode actualArray) {
+    private static String stringify(JsonNode jsonNode) {
+        return jsonNode == null ? null : (jsonNode.isValueNode() ? jsonNode.asText() : jsonNode.toString());
+    }
+
+    private static boolean compareUnordered(ArrayNode expectedArray, ArrayNode actualArray, boolean ignoreExtraFields) {
         BitSet alreadyMatched = new BitSet(actualArray.size());
         for (int i = 0; i < expectedArray.size(); i++) {
             boolean found = false;
             JsonNode expectedElement = expectedArray.get(i);
             for (int k = 0; k < actualArray.size(); k++) {
-                if (!alreadyMatched.get(k) && equalJson(expectedElement, actualArray.get(k), true)) {
+                if (!alreadyMatched.get(k) && equalJson(expectedElement, actualArray.get(k), true, ignoreExtraFields,
+                        true, stringify(actualArray))) {
                     alreadyMatched.set(k);
                     found = true;
                     break;
                 }
             }
             if (!found) {
+                LOGGER.info("unordered array comparison failed; expected={} actual={}", expectedArray, actualArray);
                 return false;
             }
         }
         return true;
     }
 
-    private static boolean compareOrdered(ArrayNode expectedArray, ArrayNode actualArray) {
+    private static boolean compareOrdered(ArrayNode expectedArray, ArrayNode actualArray, boolean ignoreExtraFields) {
         for (int i = 0, size = expectedArray.size(); i < size; i++) {
-            if (!equalJson(expectedArray.get(i), actualArray.get(i), false)) {
+            if (!equalJson(expectedArray.get(i), actualArray.get(i), false, ignoreExtraFields, false,
+                    stringify(actualArray))) {
                 return false;
             }
         }

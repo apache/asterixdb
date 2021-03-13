@@ -16,39 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public class NumericSumAggTypeComputer extends AggregateResultTypeComputer {
-    public static final NumericSumAggTypeComputer INSTANCE = new NumericSumAggTypeComputer();
-
-    private NumericSumAggTypeComputer() {
+public abstract class AggregateResultTypeComputer extends AbstractResultTypeComputer {
+    @Override
+    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
+            throws AlgebricksException {
+        super.checkArgType(funcId, argIndex, type, sourceLoc);
     }
 
     @Override
-    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        ATypeTag tag = strippedInputTypes[0].getTypeTag();
-        switch (tag) {
-            case TINYINT:
-            case SMALLINT:
-            case INTEGER:
-            case BIGINT:
-                return AUnionType.createNullableType(BuiltinType.AINT64);
-            case FLOAT:
-            case DOUBLE:
-                return AUnionType.createNullableType(BuiltinType.ADOUBLE);
-            case ANY:
-                return BuiltinType.ANY;
-            default:
-                // All other possible cases.
-                return BuiltinType.ANULL;
-        }
-
-    }
+    protected abstract IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes)
+            throws AlgebricksException;
 }

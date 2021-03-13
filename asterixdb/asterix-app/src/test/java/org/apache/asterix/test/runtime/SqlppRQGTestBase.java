@@ -164,7 +164,7 @@ public abstract class SqlppRQGTestBase {
                     ResultExtractor.extract(resultStream, StandardCharsets.UTF_8, TestCaseContext.OutputFormat.ADM));
         }
 
-        boolean eq = TestHelper.equalJson(sqlResult, sqlppResult, false);
+        boolean eq = TestHelper.equalJson(sqlResult, sqlppResult, false, false, false, null);
 
         File sqlResultFile = writeResult(sqlResult, testcaseId, "sql", testcaseDescription);
         File sqlppResultFile = writeResult(sqlppResult, testcaseId, "sqlpp", testcaseDescription);

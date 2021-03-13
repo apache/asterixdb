@@ -16,6 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-//prettifyjsonresult=true
 
-nc:asterix_nc2 /admin/storage
+/**
+ * Test that scalar sum() produces correct output type
+ */
+
+select array_sum(array_reverse(lst))
+let lst = (
+  from range(1, 3) r
+  select value int32(to_string(r))
+)

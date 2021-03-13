@@ -211,7 +211,7 @@ public class LogReplicationManager {
         }
     }
 
-    private synchronized void handleFailure(ISocketChannel replicaSocket, IOException e) {
+    private synchronized void handleFailure(ISocketChannel replicaSocket, Exception e) {
         if (failedSockets.contains(replicaSocket)) {
             return;
         }
@@ -249,7 +249,7 @@ public class LogReplicationManager {
                 }
             } catch (AsynchronousCloseException e) {
                 LOGGER.debug(() -> "Stopped listening on socket:" + dest, e);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 handleFailure(replicaSocket, e);
             }
         }

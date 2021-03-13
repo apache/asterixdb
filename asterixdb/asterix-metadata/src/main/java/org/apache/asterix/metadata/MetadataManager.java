@@ -133,6 +133,11 @@ public abstract class MetadataManager implements IMetadataManager {
 
     @Override
     public MetadataTransactionContext beginTransaction() throws RemoteException {
+        try {
+            INSTANCE.init();
+        } catch (HyracksDataException e) {
+            throw new ACIDException(e);
+        }
         TxnId txnId = createTxnId();
         metadataNode.beginTransaction(txnId);
         return new MetadataTransactionContext(txnId);

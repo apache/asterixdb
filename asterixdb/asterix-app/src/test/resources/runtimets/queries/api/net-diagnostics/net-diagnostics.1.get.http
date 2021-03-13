@@ -16,4 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+--prettifyjsonresult=true
 nc:asterix_nc1 /admin/net

@@ -834,6 +834,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="sum/scalar_sum_type">
+        <output-dir compare="Text">sum/scalar_sum_type</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="scalar_var">
         <output-dir compare="Text">scalar_var</output-dir>
       </compilation-unit>
@@ -2094,6 +2099,11 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="sum/scalar_sum_null">
         <output-dir compare="Text">sum/scalar_sum_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="sum/scalar_sum_type">
+        <output-dir compare="Text">sum/scalar_sum_type</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
@@ -14086,6 +14096,11 @@
     <test-case FilePath="unnest">
       <compilation-unit name="ASTERIXDB-2750_unnest_join">
         <output-dir compare="Text">ASTERIXDB-2750_unnest_join</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="unnest">
+      <compilation-unit name="ASTERIXDB-2844_unnest_syntax">
+        <output-dir compare="Text">ASTERIXDB-2844_unnest_syntax</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="unnest">

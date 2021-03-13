@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-//prettifyjsonresult=true
 
-nc:asterix_nc2 /admin/storage
+with t as (select r, [r*10,r*10+1] ra from range(1, 2) r)
+select *
+from t unnest t.ra
+order by ra

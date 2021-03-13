@@ -28,27 +28,18 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JSONUtil {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    private static final String INDENT = "\t";
-
     private static final ObjectMapper SORTED_MAPPER = new ObjectMapper();
-    private static final ObjectWriter PRETTY_SORTED_WRITER;
 
     private JSONUtil() {
     }
@@ -56,11 +47,10 @@ public class JSONUtil {
     static {
         SORTED_MAPPER.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
         SORTED_MAPPER.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
-        PRETTY_SORTED_WRITER = SORTED_MAPPER.writerWithDefaultPrettyPrinter();
     }
 
     public static String convertNode(final JsonNode node) throws JsonProcessingException {
-        return PRETTY_SORTED_WRITER.writeValueAsString(SORTED_MAPPER.treeToValue(node, Object.class));
+        return SORTED_MAPPER.writeValueAsString(SORTED_MAPPER.treeToValue(node, Object.class));
     }
 
     public static String convertNodeOrThrow(final JsonNode node) {
@@ -72,87 +62,7 @@ public class JSONUtil {
     }
 
     public static void writeNode(final Writer writer, final JsonNode node) throws IOException {
-        PRETTY_SORTED_WRITER.writeValue(writer, SORTED_MAPPER.treeToValue(node, Object.class));
-    }
-
-    public static String indent(String str, int initialIndent) {
-        ObjectMapper om = new ObjectMapper();
-        try {
-            return appendObj(new StringBuilder(), om.readTree(str), initialIndent).toString();
-        } catch (IOException e) {
-            LOGGER.trace(String.valueOf(e));
-            LOGGER.trace("Could not indent JSON string, returning the input string: " + str);
-            return str;
-        }
-    }
-
-    private static StringBuilder appendOrd(StringBuilder sb, JsonNode o, int indent) {
-        if (o.isObject()) {
-            return appendObj(sb, o, indent);
-        } else if (o.isArray()) {
-            return appendAry(sb, o, indent);
-        } else if (o.isTextual()) {
-            return quoteAndEscape(sb, o.asText());
-        } else if (o.isNull() || o.isIntegralNumber() || o.isBoolean()) {
-            return sb.append(String.valueOf(o));
-        }
-        throw new UnsupportedOperationException(o.getClass().getSimpleName());
-    }
-
-    private static StringBuilder appendObj(final StringBuilder sb, final JsonNode outer, final int indent) {
-        sb.append("{\n");
-        boolean first = true;
-        for (JsonNode inner : outer) {
-            final String key = inner.asText();
-            if (first) {
-                first = false;
-            } else {
-                sb.append(",\n");
-            }
-            indent(sb, indent + 1);
-            quote(sb, key);
-            sb.append(": ");
-            appendVal(sb, outer.get(key), indent);
-        }
-        sb.append("\n");
-        return indent(sb, indent).append("}");
-    }
-
-    private static StringBuilder appendVal(final StringBuilder sb, final JsonNode value, final int indent) {
-        if (value.isArray()) {
-            appendAry(sb, value, indent + 1);
-        } else if (value.isObject()) {
-            appendObj(sb, value, indent + 1);
-        } else {
-            appendOrd(sb, value, indent + 1);
-        }
-        return sb;
-    }
-
-    private static StringBuilder appendAry(final StringBuilder sb, JsonNode jarr, int indent) {
-        sb.append("[\n");
-        for (int i = 0; i < jarr.size(); ++i) {
-            if (i > 0) {
-                sb.append(",\n");
-            }
-            indent(sb, indent + 1);
-            appendVal(sb, jarr.get(i), indent);
-        }
-        sb.append("\n");
-        return indent(sb, indent).append("]");
-    }
-
-    private static StringBuilder quote(StringBuilder sb, String str) {
-        return sb.append('"').append(str).append('"');
-    }
-
-    private static StringBuilder indent(StringBuilder sb, int i) {
-        int indent = i;
-        while (indent > 0) {
-            sb.append(INDENT);
-            --indent;
-        }
-        return sb;
+        SORTED_MAPPER.writeValue(writer, SORTED_MAPPER.treeToValue(node, Object.class));
     }
 
     public static String quoteAndEscape(String str) {

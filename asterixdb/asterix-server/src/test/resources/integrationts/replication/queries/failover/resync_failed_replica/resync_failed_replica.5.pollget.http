@@ -17,5 +17,6 @@
  * under the License.
  */
 //polltimeoutsecs=60
+//prettifyjsonresult=true
 
 /admin/cluster/summary
