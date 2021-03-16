@@ -39,4 +39,30 @@ public class SpatialLogic {
 
         return true;
     }
+
+    public boolean intersectsAtReferenceTile(ARectangle rect1, ARectangle rect2, ARectangle mbr, int tileId, int rows,
+            int columns) {
+        if (intersects(rect1, rect2)) {
+            // Compute the reference point
+            double x = Math.max(rect1.getP1().getX(), rect2.getP1().getX());
+            double y = Math.max(rect1.getP1().getY(), rect2.getP1().getY());
+
+            // Compute the tile ID of the reference point
+            double minX = mbr.getP1().getX();
+            double minY = mbr.getP1().getY();
+            double maxX = mbr.getP2().getX();
+            double maxY = mbr.getP2().getY();
+            int row = (int) Math.ceil((y - minY) * rows / (maxY - minY));
+            int col = (int) Math.ceil((x - minX) * columns / (maxX - minX));
+
+            row = Math.min(Math.max(1, row), rows * columns);
+            col = Math.min(Math.max(1, col), rows * columns);
+
+            int referenceTileId = (row - 1) * columns + col;
+
+            return referenceTileId == tileId;
+        }
+
+        return false;
+    }
 }

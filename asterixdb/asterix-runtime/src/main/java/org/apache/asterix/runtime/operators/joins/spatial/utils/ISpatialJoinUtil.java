@@ -65,7 +65,7 @@ public interface ISpatialJoinUtil {
             IFrameTupleAccessor probeAccessor, int probeTupleIndex) throws HyracksDataException;
 
     /**
-     * Check to see if the interval matches the join condition.
+     * Check to see if the spatial object matches the join condition.
      * The check is true if it matches.
      *
      * @param rectBuild

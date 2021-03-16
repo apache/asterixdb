@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.runtime.unnestingfunctions.std;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutput;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +25,6 @@ import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARectangleSerializerDeserializer;
-import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -52,7 +48,6 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 
 public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
@@ -135,14 +130,14 @@ public class SpatialTileDescriptor extends AbstractUnnestingFunctionDynamicDescr
                                     + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
 
                             double minX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
+                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
                             double minY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
+                                    + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.Y));
 
                             double maxX = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
+                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.X));
                             double maxY = ADoubleSerializerDeserializer.getDouble(bytes1, offset1 + 1
-                                + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
+                                    + ARectangleSerializerDeserializer.getUpperRightCoordinateOffset(Coordinate.Y));
 
                             int rows = (int) AInt64SerializerDeserializer.getLong(bytes2, offset2 + 1);
                             int columns = (int) AInt64SerializerDeserializer.getLong(bytes3, offset3 + 1);

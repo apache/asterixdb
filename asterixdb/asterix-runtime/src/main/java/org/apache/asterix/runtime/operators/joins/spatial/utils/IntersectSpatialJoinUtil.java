@@ -79,8 +79,10 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
         int probeTileId = SpatialJoinUtil.getTileId(probeAccessor, probeTupleIndex, idProbe[0]);
         ARectangle rectBuild = SpatialJoinUtil.getRectangle(buildAccessor, buildTupleIndex, idBuild[1]);
         ARectangle rectProbe = SpatialJoinUtil.getRectangle(probeAccessor, probeTupleIndex, idProbe[1]);
+        ARectangle mbr = SpatialJoinUtil.getRectangle(buildAccessor, buildTupleIndex, idBuild[2]);
 
         if (buildTileId == probeTileId) {
+            //            return compareRectangle(rectBuild, rectProbe, mbr, buildTileId, 30, 30);
             return compareRectangle(rectBuild, rectProbe);
         } else {
             return false;
@@ -88,7 +90,7 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
     }
 
     /**
-     * Right (second argument) interval starts before left (first argument) interval ends.
+     * Right (second argument) rectangle starts before left (first argument) rectangle ends.
      */
     @Override
     public boolean checkForEarlyExit(IFrameTupleAccessor buildAccessor, int buildTupleIndex,
@@ -108,6 +110,11 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
     @Override
     public boolean compareRectangle(ARectangle rectBuild, ARectangle rectProbe) {
         return sl.intersects(rectBuild, rectProbe);
+    }
+
+    public boolean compareRectangle(ARectangle rectBuild, ARectangle rectProbe, ARectangle mbr, int tileId, int rows,
+            int columns) {
+        return sl.intersectsAtReferenceTile(rectBuild, rectProbe, mbr, tileId, rows, columns);
     }
 
     @Override
