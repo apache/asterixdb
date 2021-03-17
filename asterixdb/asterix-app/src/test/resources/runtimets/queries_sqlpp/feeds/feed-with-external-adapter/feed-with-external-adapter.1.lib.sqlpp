@@ -21,4 +21,4 @@
  * Expected Res : Success
  */
 
-install externallibtest testlib admin admin target/data/externallib/asterix-external-data-testlib.zip
+install externallibtest testlib java admin admin target/data/externallib/asterix-external-data-testlib.zip

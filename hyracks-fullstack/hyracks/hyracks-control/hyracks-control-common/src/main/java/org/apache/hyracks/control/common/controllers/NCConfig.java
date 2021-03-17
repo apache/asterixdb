@@ -94,6 +94,7 @@ public class NCConfig extends ControllerConfig {
         IO_WORKERS_PER_PARTITION(POSITIVE_INTEGER, 2),
         IO_QUEUE_SIZE(POSITIVE_INTEGER, 10),
         PYTHON_CMD(STRING, (String) null),
+        PYTHON_CMD_AUTOLOCATE(BOOLEAN, false),
         PYTHON_ADDITIONAL_PACKAGES(STRING_ARRAY, new String[0]),
         PYTHON_USE_BUNDLED_MSGPACK(BOOLEAN, true),
         PYTHON_ARGS(STRING_ARRAY, (String[]) null),
@@ -235,13 +236,15 @@ public class NCConfig extends ControllerConfig {
                 case IO_QUEUE_SIZE:
                     return "Length of the queue used for requests to write and read";
                 case PYTHON_CMD:
-                    return "Absolute path to python interpreter. Defaults to environmental Python3";
+                    return "Absolute path to python interpreter";
                 case PYTHON_ADDITIONAL_PACKAGES:
                     return "List of additional paths, separated by a path separator character, to add to sys.path behind msgpack and library package paths";
                 case PYTHON_USE_BUNDLED_MSGPACK:
                     return "True to include bundled msgpack on Python sys.path, false to use system-provided msgpack";
                 case PYTHON_ARGS:
                     return "Python args to pass to Python interpreter";
+                case PYTHON_CMD_AUTOLOCATE:
+                    return "Whether or not to attempt to automatically set PYTHON_CMD to a usable interpreter";
                 case CREDENTIAL_FILE:
                     return "Path to HTTP basic credentials";
                 default:

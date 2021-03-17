@@ -82,11 +82,18 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
         super(finfo, args, argTypes, ctx);
         IApplicationConfig cfg = ctx.getServiceContext().getAppConfig();
         String pythonPathCmd = cfg.getString(NCConfig.Option.PYTHON_CMD);
+        boolean findPython = cfg.getBoolean(NCConfig.Option.PYTHON_CMD_AUTOLOCATE);
         List<String> pythonArgs = new ArrayList<>();
         if (pythonPathCmd == null) {
-            //if absolute path to interpreter is not specified, use environmental python
-            pythonPathCmd = "/usr/bin/env";
-            pythonArgs.add("python3");
+            //if absolute path to interpreter is not specified, try to use environmental python
+            if (findPython) {
+                pythonPathCmd = "/usr/bin/env";
+                pythonArgs.add("python3");
+            } else {
+                throw HyracksDataException.create(AsterixException.create(ErrorCode.EXTERNAL_UDF_EXCEPTION,
+                        "Python interpreter not specified, and " + NCConfig.Option.PYTHON_CMD_AUTOLOCATE.ini()
+                                + " is false"));
+            }
         }
         File pythonPath = new File(pythonPathCmd);
         List<String> sitePkgs = new ArrayList<>();

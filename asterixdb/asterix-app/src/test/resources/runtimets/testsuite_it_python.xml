@@ -29,6 +29,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
+      <compilation-unit name="mysentiment_multipart">
+        <output-dir compare="Text">mysentiment</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
       <compilation-unit name="python-fn-escape">
         <output-dir compare="Text">python-fn-escape</output-dir>
         <expected-error>ImportError: Module was not found in library</expected-error>

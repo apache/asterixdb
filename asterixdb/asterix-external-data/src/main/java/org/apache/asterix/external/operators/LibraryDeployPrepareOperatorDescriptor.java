@@ -130,17 +130,9 @@ public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOpera
 
                 switch (language) {
                     case JAVA:
-                        if (!LibraryDescriptor.FILE_EXT_ZIP.equals(fileExt)) {
-                            // shouldn't happen
-                            throw new IOException("Unexpected file type: " + fileExt);
-                        }
                         libraryManager.unzip(targetFile, contentsDir);
                         break;
                     case PYTHON:
-                        if (!LibraryDescriptor.FILE_EXT_PYZ.equals(fileExt)) {
-                            // shouldn't happen
-                            throw new IOException("Unexpected file type: " + fileExt);
-                        }
                         boolean extractMsgPack = ctx.getJobletContext().getServiceContext().getAppConfig()
                                 .getBoolean(PYTHON_USE_BUNDLED_MSGPACK);
                         shiv(targetFile, stageDir, contentsDir, extractMsgPack);
