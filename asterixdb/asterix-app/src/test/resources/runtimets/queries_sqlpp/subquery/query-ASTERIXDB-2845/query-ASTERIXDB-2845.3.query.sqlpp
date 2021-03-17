@@ -1,0 +1,49 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+
+SET `compiler.sort.parallel` "false";
+
+WITH
+j AS (
+  SELECT jid, a
+  FROM jds
+), ---> 3 rows (jid=1, 2, 3)
+
+m1 AS (
+  SELECT jid, x, COUNT(1) c1
+  FROM mds
+  GROUP BY jid, x
+), ---> 4 rows ( 2 with jid=1, 2 with jid=2 )
+
+m2 AS (
+  SELECT jid, y, COUNT(1) c2
+  FROM mds
+  GROUP BY jid, y
+)  ---> 4 rows ( 2 with jid=1, 2 with jid=2 )
+
+SELECT j.jid AS j_jid, j.a AS j_a,
+  m1.jid AS m1_jid, m1.x AS m1_x, m1.c1 AS m1_c1,
+  m2.jid AS m2_jid, m2.y AS m2_y, m2.c2 AS m2_c2
+FROM j
+LEFT OUTER JOIN m1 ON j.jid=m1.jid ---> 5 rows (2 with jid=1, 2 with jid=2, 1 with jid=3)
+LEFT OUTER JOIN m2 ON j.jid=m1.jid ---> this predicate is intentional to reproduce the issue
+                                   ---> 17 rows (4 x 4 + 1 with jid=3 because m1.jid is MISSING for it)
+ORDER BY j_jid, m1_x, m2_y, m2_jid;

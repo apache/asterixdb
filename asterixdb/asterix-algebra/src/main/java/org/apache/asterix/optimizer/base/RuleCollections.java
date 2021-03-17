@@ -221,7 +221,7 @@ public final class RuleCollections {
 
         condPushDownAndJoinInference.add(new PushSelectDownRule());
         condPushDownAndJoinInference.add(new PushSortDownRule());
-        condPushDownAndJoinInference.add(new RemoveRedundantListifyRule());
+        condPushDownAndJoinInference.add(new RemoveRedundantListifyRule(false));
         condPushDownAndJoinInference.add(new CancelUnnestWithNestedListifyRule());
         condPushDownAndJoinInference.add(new SimpleUnnestToProductRule());
         condPushDownAndJoinInference.add(new ComplexUnnestToProductRule());
@@ -298,7 +298,7 @@ public final class RuleCollections {
         consolidation.add(new RemoveRedundantGroupByDecorVarsRule());
         //PushUnnestThroughUnion => RemoveRedundantListifyRule cause these rules are correlated
         consolidation.add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.UNNEST));
-        consolidation.add(new RemoveRedundantListifyRule());
+        consolidation.add(new RemoveRedundantListifyRule(true));
         // Window operator consolidation rules
         consolidation.add(new AsterixConsolidateWindowOperatorsRule());
         consolidation.add(new ReuseWindowAggregateRule());

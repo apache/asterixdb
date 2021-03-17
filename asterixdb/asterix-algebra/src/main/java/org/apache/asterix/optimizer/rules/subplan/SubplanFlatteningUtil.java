@@ -57,13 +57,17 @@ class SubplanFlatteningUtil {
         // For nested subplan, we do not continue for the general inlining.
         if (OperatorManipulationUtil.ancestorOfOperators(subplanOp,
                 ImmutableSet.of(LogicalOperatorTag.NESTEDTUPLESOURCE))) {
-            return new Pair<Map<LogicalVariable, LogicalVariable>, List<Pair<IOrder, Mutable<ILogicalExpression>>>>(
-                    null, null);
+            return new Pair<>(null, null);
         }
-        InlineAllNtsInSubplanVisitor visitor = new InlineAllNtsInSubplanVisitor(context, subplanOp);
+
+        Mutable<ILogicalOperator> topOpRef = findLowestAggregate(subplanOp.getNestedPlans().get(0).getRoots().get(0));
+        if (topOpRef == null) {
+            return new Pair<>(null, null);
+        }
 
         // Rewrites the query plan.
-        ILogicalOperator topOp = findLowestAggregate(subplanOp.getNestedPlans().get(0).getRoots().get(0)).getValue();
+        InlineAllNtsInSubplanVisitor visitor = new InlineAllNtsInSubplanVisitor(context, subplanOp);
+        ILogicalOperator topOp = topOpRef.getValue();
         ILogicalOperator opToVisit = topOp.getInputs().get(0).getValue();
         ILogicalOperator result = opToVisit.accept(visitor, null);
         topOp.getInputs().get(0).setValue(result);

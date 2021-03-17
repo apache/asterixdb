@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -45,6 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.CardinalityInferenceVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnpartitionedPropertyComputer;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -52,36 +52,53 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 /**
  * The rule cancels out redundant pairs of operators unnest-listify aggregate
  * <p>
- * <ul>
- * <li>case 1 (direct):
+ * Case 1 (direct):
  * <p>
  * Before plan:
- * <ul>
- * <li>unnest $x [[ at $p ]] <- function-call:scan-collection($y)
- * <li>aggregate $y <- function-call:listify($z)
- * </ul>
- * <p>
+ * <pre>
+ * unnest $x [[ at $p ]] <- function-call:scan-collection($y)
+ * aggregate $y <- function-call:listify($z)
+ * </pre>
  * After plan:
- * <ul>
- * <li>[[ runningaggregate $p <- tid]]
- * <li>assign $x <- $z
- * </ul>
- * <li>case 2 (reverse):
+ * <pre>
+ * [[ runningaggregate $p <- tid]]
+ * assign $x <- $z
+ * </pre>
+ *
+ * Case 2 (reverse):
  * <p>
  * Before plan:
- * <ul>
- * <li>aggregate $x <- function-call:listify($y)
- * <li>unnest $y <- function-call:scan-collection($z)
- * </ul>
- * <p>
+ * <pre>
+ * aggregate $x <- function-call:listify($y)
+ * unnest $y <- function-call:scan-collection($z)
+ * </pre>
  * After plan:
- * <ul>
- * <li>assign $x <- $z
- * </ul>
- * </ul>
+ * <pre>
+ * assign $x <- $z
+ * </pre>
+ *
+ * Notes regarding Case 2(reverse):
+ * <ol>
+ * <li> Case 2 rewriting is only considered if unnest's input operator has cardinality "exactly 1".
+ *      If unnest's input operator produces 0 tuples then the aggregate operator would produce 1 tuple with $x = [],
+ *      while the assign rewriting would produce 0 tuples. Therefore it's not equivalent.
+ *      If unnest's input operator produces N tuples (where N > 1) then the aggregate operator would produce 1 tuple
+ *      with a concatenated list of all unnested values from all input tuples,
+ *      while the assign rewriting would produce N tuples. Therefore it's not equivalent.
+ *
+ * <li> It's configurable whether Case 2 rewriting is attempted or not if the 'aggregate' operator
+ *      is the root of a subplan's nested plan. The reason for allowing disabling Case 2 is because
+ *      aggregate-unnest elimination may prevent further subplan inlining rewritings.
+ * </ol>
  */
-
 public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
+
+    private final boolean allowReverseCaseAtSubplanRoot;
+
+    public RemoveRedundantListifyRule(boolean allowReverseCaseAtSubplanRoot) {
+        this.allowReverseCaseAtSubplanRoot = allowReverseCaseAtSubplanRoot;
+    }
+
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
         return false;
@@ -95,25 +112,29 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         if (context.checkIfInDontApplySet(this, op)) {
             return false;
         }
-        Set<LogicalVariable> varSet = new HashSet<LogicalVariable>();
-        return applyRuleDown(opRef, varSet, context);
+        Set<LogicalVariable> varSet = new HashSet<>();
+        return applyRuleDown(opRef, false, varSet, context);
     }
 
-    private boolean applyRuleDown(Mutable<ILogicalOperator> opRef, Set<LogicalVariable> varSet,
+    private boolean applyRuleDown(Mutable<ILogicalOperator> opRef, boolean isSubplanRoot, Set<LogicalVariable> varSet,
             IOptimizationContext context) throws AlgebricksException {
         boolean changed = applies(opRef, varSet, context);
-        changed |= appliesForReverseCase(opRef, varSet, context);
+        boolean skipReverseCase = isSubplanRoot && !allowReverseCaseAtSubplanRoot;
+        if (!skipReverseCase) {
+            changed |= appliesForReverseCase(opRef, varSet, context);
+        }
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         VariableUtilities.getUsedVariables(op, varSet);
         if (op.hasNestedPlans()) {
+            boolean isSubplanOp = op.getOperatorTag() == LogicalOperatorTag.SUBPLAN;
             // Variables used by the parent operators should be live at op.
-            Set<LogicalVariable> localLiveVars = new ListSet<LogicalVariable>();
+            Set<LogicalVariable> localLiveVars = new ListSet<>();
             VariableUtilities.getLiveVariables(op, localLiveVars);
             varSet.retainAll(localLiveVars);
             AbstractOperatorWithNestedPlans aonp = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : aonp.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                    if (applyRuleDown(r, varSet, context)) {
+                    if (applyRuleDown(r, isSubplanOp, varSet, context)) {
                         changed = true;
                     }
                     context.addToDontApplySet(this, r.getValue());
@@ -121,7 +142,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             }
         }
         for (Mutable<ILogicalOperator> i : op.getInputs()) {
-            if (applyRuleDown(i, varSet, context)) {
+            if (applyRuleDown(i, false, varSet, context)) {
                 changed = true;
             }
             context.addToDontApplySet(this, i.getValue());
@@ -205,7 +226,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         List<Mutable<ILogicalExpression>> assgnExprs = new ArrayList<>(1);
         VariableReferenceExpression paramVarRef = new VariableReferenceExpression(paramVar);
         paramVarRef.setSourceLocation(arg0.getSourceLocation());
-        assgnExprs.add(new MutableObject<ILogicalExpression>(paramVarRef));
+        assgnExprs.add(new MutableObject<>(paramVarRef));
         AssignOperator assign = new AssignOperator(assgnVars, assgnExprs);
         assign.setSourceLocation(agg.getSourceLocation());
         assign.getInputs().add(agg.getInputs().get(0));
@@ -219,13 +240,14 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             List<LogicalVariable> raggVars = new ArrayList<>(1);
             raggVars.add(posVar);
             List<Mutable<ILogicalExpression>> rAggExprs = new ArrayList<>(1);
-            StatefulFunctionCallExpression tidFun = new StatefulFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(BuiltinFunctions.TID), UnpartitionedPropertyComputer.INSTANCE);
+            StatefulFunctionCallExpression tidFun =
+                    new StatefulFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.TID),
+                            UnpartitionedPropertyComputer.INSTANCE);
             tidFun.setSourceLocation(agg.getSourceLocation());
-            rAggExprs.add(new MutableObject<ILogicalExpression>(tidFun));
+            rAggExprs.add(new MutableObject<>(tidFun));
             RunningAggregateOperator rAgg = new RunningAggregateOperator(raggVars, rAggExprs);
             rAgg.setSourceLocation(agg.getSourceLocation());
-            rAgg.getInputs().add(new MutableObject<ILogicalOperator>(assign));
+            rAgg.getInputs().add(new MutableObject<>(assign));
             aggregateParentRef.setValue(rAgg);
             context.computeAndSetTypeEnvironmentForOperator(rAgg);
         }
@@ -241,7 +263,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             return false;
         }
         AggregateOperator agg = (AggregateOperator) op1;
-        if (agg.getVariables().size() > 1 || agg.getVariables().size() <= 0) {
+        if (agg.getVariables().size() != 1) {
             return false;
         }
         LogicalVariable aggVar = agg.getVariables().get(0);
@@ -288,12 +310,16 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
         if (scanFunc.getArguments().size() != 1) {
             return false;
         }
+        ILogicalOperator unnestInputOp = unnest.getInputs().get(0).getValue();
+        if (!CardinalityInferenceVisitor.isCardinalityExactOne(unnestInputOp)) {
+            return false;
+        }
 
         List<LogicalVariable> assgnVars = new ArrayList<>(1);
         assgnVars.add(aggVar);
         AssignOperator assign = new AssignOperator(assgnVars, scanFunc.getArguments());
         assign.setSourceLocation(agg.getSourceLocation());
-        assign.getInputs().add(unnest.getInputs().get(0));
+        assign.getInputs().add(new MutableObject<>(unnestInputOp));
         context.computeAndSetTypeEnvironmentForOperator(assign);
         opRef.setValue(assign);
         return true;
