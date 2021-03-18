@@ -42,9 +42,8 @@ import org.apache.commons.lang3.StringUtils;
  * <p>
  * E.g. the canonical form for a dataverse name {@code ["a", "b", "c"]} is {@code "a.b.c"}
  * <p>
- * {@link #toString()} returns a display form which is a {@link #CANONICAL_FORM_SEPARATOR_CHAR '.'} separated
- * concatenation of name parts without escaping. In general it's impossible to reconstruct a dataverse name from
- * its display form.
+ * {@link #toString()} returns a display form which is suitable for error messages,
+ * and is a valid SQL++ multi-part identifier parsable by {@code IParser#parseMultipartIdentifier()}
  * <p>
  * Notes:
  * <li>

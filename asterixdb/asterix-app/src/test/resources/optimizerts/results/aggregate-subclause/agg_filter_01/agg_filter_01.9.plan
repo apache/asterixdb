@@ -6,8 +6,8 @@
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
             -- AGGREGATE  |PARTITIONED|
               -- ASSIGN  |PARTITIONED|
-                -- STREAM_SELECT  |PARTITIONED|
-                  -- STREAM_PROJECT  |PARTITIONED|
+                -- STREAM_PROJECT  |PARTITIONED|
+                  -- STREAM_SELECT  |PARTITIONED|
                     -- ASSIGN  |PARTITIONED|
                       -- STREAM_PROJECT  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

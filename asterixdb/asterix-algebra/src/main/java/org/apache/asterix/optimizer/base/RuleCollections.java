@@ -185,6 +185,8 @@ public final class RuleCollections {
         normalization.add(new CheckInsertUpsertReturningRule());
         normalization.add(new IntroduceUnnestForCollectionToSequenceRule());
         normalization.add(new EliminateSubplanRule());
+        // The following rule must run before PushAggregateIntoNestedSubplanRule
+        normalization.add(new EliminateIsomorphicSubplanRule());
         normalization.add(new EnforceOrderByAfterSubplan());
         normalization.add(new BreakSelectIntoConjunctsRule());
         normalization.add(new ExtractGbyExpressionsRule());
@@ -236,9 +238,6 @@ public final class RuleCollections {
         condPushDownAndJoinInference
                 .add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.ASSIGN, LogicalOperatorTag.SELECT));
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
-        // The following rule must run before PushAggregateIntoNestedSubplanRule
-        // (before common subplans diverge due to aggregate pushdown)
-        condPushDownAndJoinInference.add(new EliminateIsomorphicSubplanRule());
 
         condPushDownAndJoinInference.add(new AsterixExtractFunctionsFromJoinConditionRule());
 
