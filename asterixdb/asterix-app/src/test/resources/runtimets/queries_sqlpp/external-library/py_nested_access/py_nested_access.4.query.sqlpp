@@ -27,6 +27,5 @@ use test;
 
 select element result
 from  Animals as test
-with  result as roundtrip(test)[0][0].class.fullClassification.lower.lower.lower.lower.lower.lower.Species
-order by result
-;
+with  result as roundtrip(test)[0].class.fullClassification.lower.lower.lower.lower.lower.lower.Species
+order by result;

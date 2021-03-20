@@ -27,16 +27,15 @@ import static org.msgpack.core.MessagePack.Code.INT32;
 import static org.msgpack.core.MessagePack.Code.INT64;
 import static org.msgpack.core.MessagePack.Code.INT8;
 import static org.msgpack.core.MessagePack.Code.MAP32;
+import static org.msgpack.core.MessagePack.Code.NIL;
 import static org.msgpack.core.MessagePack.Code.STR32;
 import static org.msgpack.core.MessagePack.Code.TRUE;
-import static org.msgpack.core.MessagePack.Code.UINT16;
-import static org.msgpack.core.MessagePack.Code.UINT32;
-import static org.msgpack.core.MessagePack.Code.UINT64;
-import static org.msgpack.core.MessagePack.Code.UINT8;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -64,11 +63,12 @@ public class MessagePackerFromADM {
     private static final int ITEM_COUNT_SIZE = 4;
     private static final int ITEM_OFFSET_SIZE = 4;
 
-    public static void pack(IValueReference ptr, IAType type, ByteBuffer out) throws HyracksDataException {
-        pack(ptr.getByteArray(), ptr.getStartOffset(), type, true, out);
+    public static ATypeTag pack(IValueReference ptr, IAType type, ByteBuffer out, boolean packUnknown)
+            throws HyracksDataException {
+        return pack(ptr.getByteArray(), ptr.getStartOffset(), type, true, packUnknown, out);
     }
 
-    public static void pack(byte[] ptr, int offs, IAType type, boolean tagged, ByteBuffer out)
+    public static ATypeTag pack(byte[] ptr, int offs, IAType type, boolean tagged, boolean packUnknown, ByteBuffer out)
             throws HyracksDataException {
         int relOffs = tagged ? offs + 1 : offs;
         ATypeTag tag = type.getTypeTag();
@@ -108,32 +108,33 @@ public class MessagePackerFromADM {
             case OBJECT:
                 packObject(ptr, offs, type, out);
                 break;
+            case MISSING:
+            case NULL:
+                if (packUnknown) {
+                    packNull(out);
+                    break;
+                } else {
+                    return tag;
+                }
             default:
-                throw new IllegalArgumentException("NYI");
+                throw HyracksDataException.create(AsterixException.create(ErrorCode.PARSER_ADM_DATA_PARSER_CAST_ERROR,
+                        tag.name(), "to a msgpack"));
+        }
+        return ATypeTag.TYPE;
+    }
+
+    public static ATypeTag peekUnknown(IAType type) {
+        switch (type.getTypeTag()) {
+            case MISSING:
+            case NULL:
+                return type.getTypeTag();
+            default:
+                return ATypeTag.TYPE;
         }
     }
 
-    public static byte minPackPosLong(ByteBuffer out, long in) {
-        if (in < 127) {
-            packFixPos(out, (byte) in);
-            return 1;
-        } else if (in < Byte.MAX_VALUE) {
-            out.put(UINT8);
-            out.put((byte) in);
-            return 2;
-        } else if (in < Short.MAX_VALUE) {
-            out.put(UINT16);
-            out.putShort((short) in);
-            return 3;
-        } else if (in < Integer.MAX_VALUE) {
-            out.put(UINT32);
-            out.putInt((int) in);
-            return 5;
-        } else {
-            out.put(UINT64);
-            out.putLong(in);
-            return 9;
-        }
+    public static void packNull(ByteBuffer out) {
+        out.put(NIL);
     }
 
     public static void packByte(ByteBuffer out, byte in) {
@@ -167,18 +168,20 @@ public class MessagePackerFromADM {
         out.putDouble(in);
     }
 
-    public static void packFixPos(ByteBuffer out, byte in) {
+    public static void packFixPos(ByteBuffer out, byte in) throws HyracksDataException {
         byte mask = (byte) (1 << 7);
         if ((in & mask) != 0) {
-            throw new IllegalArgumentException("fixint7 must be positive");
+            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.ILLEGAL_STATE,
+                    "fixint7 must be positive");
         }
         out.put(in);
     }
 
-    public static void packFixStr(ByteBuffer buf, String in) {
-        byte[] strBytes = in.getBytes(Charset.forName("UTF-8"));
+    public static void packFixStr(ByteBuffer buf, String in) throws HyracksDataException {
+        byte[] strBytes = in.getBytes(StandardCharsets.UTF_8);
         if (strBytes.length > 31) {
-            throw new IllegalArgumentException("fixstr cannot be longer than 31");
+            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.ILLEGAL_STATE,
+                    "fixint7 must be positive");
         }
         buf.put((byte) (FIXSTR_PREFIX + strBytes.length));
         buf.put(strBytes);
@@ -186,7 +189,7 @@ public class MessagePackerFromADM {
 
     public static void packStr(ByteBuffer out, String in) {
         out.put(STR32);
-        byte[] strBytes = in.getBytes(Charset.forName("UTF-8"));
+        byte[] strBytes = in.getBytes(StandardCharsets.UTF_8);
         out.putInt(strBytes.length);
         out.put(strBytes);
     }
@@ -195,14 +198,14 @@ public class MessagePackerFromADM {
         out.put(STR32);
         //TODO: tagged/untagged. closed support is borked so always tagged rn
         String str = UTF8StringUtil.toString(in, offs);
-        byte[] strBytes = str.getBytes(Charset.forName("UTF-8"));
+        byte[] strBytes = str.getBytes(StandardCharsets.UTF_8);
         out.putInt(strBytes.length);
         out.put(strBytes);
     }
 
     public static void packStr(String str, ByteBuffer out) {
         out.put(STR32);
-        byte[] strBytes = str.getBytes(Charset.forName("UTF-8"));
+        byte[] strBytes = str.getBytes(StandardCharsets.UTF_8);
         out.putInt(strBytes.length);
         out.put(strBytes);
     }
@@ -221,12 +224,12 @@ public class MessagePackerFromADM {
             if (fixType) {
                 int itemOffs = itemCtOffs + ITEM_COUNT_SIZE + (i
                         * NonTaggedFormatUtil.getFieldValueLength(in, 0, collType.getItemType().getTypeTag(), false));
-                pack(in, itemOffs, collType.getItemType(), false, out);
+                pack(in, itemOffs, collType.getItemType(), false, true, out);
             } else {
                 int itemOffs =
                         offs + IntegerPointable.getInteger(in, itemCtOffs + ITEM_COUNT_SIZE + (i * ITEM_OFFSET_SIZE));
                 ATypeTag tag = ATypeTag.VALUE_TYPE_MAPPING[BytePointable.getByte(in, itemOffs)];
-                pack(in, itemOffs, TypeTagUtil.getBuiltinTypeByTag(tag), true, out);
+                pack(in, itemOffs, TypeTagUtil.getBuiltinTypeByTag(tag), true, true, out);
             }
         }
     }
@@ -240,14 +243,14 @@ public class MessagePackerFromADM {
             String field = recType.getFieldNames()[i];
             IAType fieldType = RecordUtils.getClosedFieldType(recType, i);
             packStr(field, out);
-            pack(in, RecordUtils.getClosedFieldOffset(in, offs, recType, i), fieldType, false, out);
+            pack(in, RecordUtils.getClosedFieldOffset(in, offs, recType, i), fieldType, false, true, out);
         }
         if (RecordUtils.isExpanded(in, offs, recType)) {
             for (int i = 0; i < RecordUtils.getOpenFieldCount(in, offs, recType); i++) {
                 packStr(in, RecordUtils.getOpenFieldNameOffset(in, offs, recType, i), out);
                 ATypeTag tag = ATypeTag.VALUE_TYPE_MAPPING[RecordUtils.getOpenFieldTag(in, offs, recType, i)];
                 pack(in, RecordUtils.getOpenFieldValueOffset(in, offs, recType, i),
-                        TypeTagUtil.getBuiltinTypeByTag(tag), true, out);
+                        TypeTagUtil.getBuiltinTypeByTag(tag), true, true, out);
             }
         }
 

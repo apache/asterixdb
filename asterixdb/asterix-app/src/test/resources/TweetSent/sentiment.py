@@ -28,5 +28,7 @@ class TweetSent(object):
         self.pipeline = pickle.load(f)
         f.close()
 
-    def sentiment(self, *args):
-        return self.pipeline.predict(args[0])[0].item()
+    def sentiment(self, args):
+        if args is None:
+            return 2
+        return self.pipeline.predict([args])[0].item()

@@ -47,4 +47,6 @@ public interface IExternalFunctionInfo extends IFunctionInfo {
     List<String> getExternalIdentifier();
 
     Map<String, String> getResources();
+
+    boolean getNullCall();
 }

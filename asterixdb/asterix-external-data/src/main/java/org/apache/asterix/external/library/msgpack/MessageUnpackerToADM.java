@@ -20,13 +20,16 @@ import static org.msgpack.core.MessagePack.Code.*;
 
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class MessageUnpackerToADM {
 
-    public static void unpack(ByteBuffer in, ByteBuffer out, boolean tagged) {
+    public static void unpack(ByteBuffer in, ByteBuffer out, boolean tagged) throws HyracksDataException {
         byte tag = NIL;
         if (in != null) {
             tag = in.get();
@@ -67,6 +70,9 @@ public class MessageUnpackerToADM {
                     break;
                 case UINT32:
                     unpackUInt(in, out, tagged);
+                    break;
+                case UINT64:
+                    unpackULong(in, out, tagged);
                     break;
                 case INT8:
                     unpackByte(in, out, tagged);
@@ -109,40 +115,10 @@ public class MessageUnpackerToADM {
                     break;
 
                 default:
-                    throw new IllegalArgumentException("NYI");
+                    throw HyracksDataException.create(AsterixException.create(
+                            ErrorCode.PARSER_ADM_DATA_PARSER_CAST_ERROR, "msgpack tag " + tag + " ", "to an ADM type"));
             }
         }
-    }
-
-    public static long unpackNextInt(ByteBuffer in) {
-        byte tag = in.get();
-        if (isFixInt(tag)) {
-            if (isPosFixInt(tag)) {
-                return tag;
-            } else if (isNegFixInt(tag)) {
-                return (tag ^ NEGFIXINT_PREFIX);
-            }
-        } else {
-            switch (tag) {
-                case INT8:
-                    return in.get();
-                case UINT8:
-                    return Byte.toUnsignedInt(in.get());
-                case INT16:
-                    return in.getShort();
-                case UINT16:
-                    return Short.toUnsignedInt(in.getShort());
-                case INT32:
-                    return in.getInt();
-                case UINT32:
-                    return Integer.toUnsignedLong(in.getInt());
-                case INT64:
-                    return in.getLong();
-                default:
-                    throw new IllegalArgumentException("NYI");
-            }
-        }
-        return -1;
     }
 
     public static void unpackByte(ByteBuffer in, ByteBuffer out, boolean tagged) {
@@ -194,6 +170,17 @@ public class MessageUnpackerToADM {
         out.putLong(in.getInt() & 0x00000000FFFFFFFFl);
     }
 
+    public static void unpackULong(ByteBuffer in, ByteBuffer out, boolean tagged) {
+        if (tagged) {
+            out.put(ATypeTag.SERIALIZED_INT64_TYPE_TAG);
+        }
+        long val = in.getLong();
+        if (val < 0) {
+            throw new IllegalArgumentException("Integer overflow");
+        }
+        out.putLong(val);
+    }
+
     public static void unpackFloat(ByteBuffer in, ByteBuffer out, boolean tagged) {
         if (tagged) {
             out.put(ATypeTag.SERIALIZED_FLOAT_TYPE_TAG);
@@ -209,9 +196,9 @@ public class MessageUnpackerToADM {
         out.putDouble(in.getDouble());
     }
 
-    public static void unpackArray(ByteBuffer in, ByteBuffer out, long uLen) {
+    public static void unpackArray(ByteBuffer in, ByteBuffer out, long uLen) throws HyracksDataException {
         if (uLen > Integer.MAX_VALUE) {
-            throw new UnsupportedOperationException("String is too long");
+            throw new UnsupportedOperationException("Array is too long");
         }
         int count = (int) uLen;
         int offs = out.position();
@@ -233,7 +220,7 @@ public class MessageUnpackerToADM {
         out.putInt(asxLenPos, totalLen);
     }
 
-    public static void unpackMap(ByteBuffer in, ByteBuffer out, int count) {
+    public static void unpackMap(ByteBuffer in, ByteBuffer out, int count) throws HyracksDataException {
         //TODO: need to handle typed records. this only produces a completely open record.
         //hdr size = 6?
         int startOffs = out.position();
