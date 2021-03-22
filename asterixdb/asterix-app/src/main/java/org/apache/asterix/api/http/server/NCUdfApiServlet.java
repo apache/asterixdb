@@ -83,6 +83,7 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
     protected Path workingDir;
     protected String sysAuthHeader;
     private ILibraryManager libraryManager;
+    private int timeout;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -91,6 +92,7 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
         super(ctx, paths, appCtx, compilationProvider, httpServerProtocol, httpServerPort);
         this.compilationProvider = compilationProvider;
         this.receptionist = appCtx.getReceptionist();
+        this.timeout = appCtx.getExternalProperties().getLibraryDeployTimeout();
     }
 
     @Override
@@ -152,7 +154,7 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
         InternalRequestResponse responseMsg;
         try {
             ncMb.sendMessageToPrimaryCC(requestMessage);
-            responseMsg = (InternalRequestResponse) responseFuture.get(120000, TimeUnit.MILLISECONDS);
+            responseMsg = (InternalRequestResponse) responseFuture.get(timeout, TimeUnit.SECONDS);
         } finally {
             ncMb.deregisterMessageFuture(responseFuture.getFutureId());
         }

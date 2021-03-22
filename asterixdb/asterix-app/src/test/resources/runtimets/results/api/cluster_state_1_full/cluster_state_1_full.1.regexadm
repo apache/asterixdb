@@ -24,6 +24,7 @@
     "compiler\.textsearchmemory" : 163840,
     "compiler\.windowmemory" : 196608,
     "default\.dir" : "target/io/dir/asterixdb",
+    "library\.deploy\.timeout" : 1800,
     "log\.dir" : "logs/",
     "log\.level" : "WARN",
     "max\.wait\.active\.cluster" : 60,
