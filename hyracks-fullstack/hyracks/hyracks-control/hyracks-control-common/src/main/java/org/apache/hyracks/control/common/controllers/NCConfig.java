@@ -98,6 +98,7 @@ public class NCConfig extends ControllerConfig {
         PYTHON_ADDITIONAL_PACKAGES(STRING_ARRAY, new String[0]),
         PYTHON_USE_BUNDLED_MSGPACK(BOOLEAN, true),
         PYTHON_ARGS(STRING_ARRAY, (String[]) null),
+        PYTHON_ENV(STRING_ARRAY, (String[]) null),
         CREDENTIAL_FILE(
                 OptionTypes.STRING,
                 (Function<IApplicationConfig, String>) appConfig -> FileUtil
@@ -245,6 +246,8 @@ public class NCConfig extends ControllerConfig {
                     return "Python args to pass to Python interpreter";
                 case PYTHON_CMD_AUTOLOCATE:
                     return "Whether or not to attempt to automatically set PYTHON_CMD to a usable interpreter";
+                case PYTHON_ENV:
+                    return "List of environment variables to set when invoking the Python interpreter for Python UDFs. E.g. FOO=1";
                 case CREDENTIAL_FILE:
                     return "Path to HTTP basic credentials";
                 default:
@@ -621,4 +624,5 @@ public class NCConfig extends ControllerConfig {
     public String getCredentialFilePath() {
         return getAppConfig().getString(Option.CREDENTIAL_FILE);
     }
+
 }

@@ -57,7 +57,7 @@
     result[0].append(self.next_tuple(*arg, key=self.mid))
   File "entrypoint.py", line 99, in next_tuple
     return self.wrapped_fns[key](*args)
-  File "site-packages/roundtrip.py", line 28, in warning
+  File "site-packages/roundtrip.py", line 29, in warning
     raise ArithmeticError("oof")
 ArithmeticError: oof
  (in line 28, at column 1)</expected-warn>

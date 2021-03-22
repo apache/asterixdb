@@ -23,8 +23,9 @@ import static org.apache.asterix.external.library.PythonLibraryEvaluator.SITE_PA
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -46,6 +47,7 @@ public class PythonLibraryEvaluatorFactory {
     private final ExternalFunctionResultRouter router;
     private final String sitePackagesPath;
     private final List<String> pythonArgs;
+    private final Map<String, String> pythonEnv;
 
     public PythonLibraryEvaluatorFactory(IHyracksTaskContext ctx) throws AsterixException {
         this.ctx = ctx;
@@ -67,17 +69,41 @@ public class PythonLibraryEvaluatorFactory {
                         + NCConfig.Option.PYTHON_CMD_AUTOLOCATE.ini() + " is false");
             }
         }
+        pythonEnv = new HashMap<>();
+        String[] envRaw = appCfg.getStringArray((NCConfig.Option.PYTHON_ENV));
+        if (envRaw != null) {
+            for (String rawEnvArg : envRaw) {
+                //TODO: i think equals is shared among all unixes and windows. but it needs verification
+                if (rawEnvArg.length() < 1) {
+                    continue;
+                }
+                String[] rawArgSplit = rawEnvArg.split("(?<!\\\\)=", 2);
+                if (rawArgSplit.length < 2) {
+                    throw AsterixException.create(ErrorCode.EXTERNAL_UDF_EXCEPTION,
+                            "Invalid environment variable format detected.");
+                }
+                pythonEnv.put(rawArgSplit[0], rawArgSplit[1]);
+            }
+        }
         pythonPath = new File(pythonPathCmd);
         List<String> sitePkgs = new ArrayList<>();
         sitePkgs.add(SITE_PACKAGES);
         String[] addlSitePackages = appCfg.getStringArray((NCConfig.Option.PYTHON_ADDITIONAL_PACKAGES));
-        sitePkgs.addAll(Arrays.asList(addlSitePackages));
+        for (String sitePkg : addlSitePackages) {
+            if (sitePkg.length() > 0) {
+                sitePkgs.add(sitePkg);
+            }
+        }
         if (appCfg.getBoolean(NCConfig.Option.PYTHON_USE_BUNDLED_MSGPACK)) {
             sitePkgs.add("ipc" + File.separator + SITE_PACKAGES + File.separator);
         }
         String[] pythonArgsRaw = appCfg.getStringArray(NCConfig.Option.PYTHON_ARGS);
         if (pythonArgsRaw != null) {
-            pythonArgs.addAll(Arrays.asList(pythonArgsRaw));
+            for (String arg : pythonArgsRaw) {
+                if (arg.length() > 0) {
+                    pythonArgs.add(arg);
+                }
+            }
         }
         StringBuilder sitePackagesPathBuilder = new StringBuilder();
         for (int i = 0; i < sitePkgs.size() - 1; i++) {
@@ -91,6 +117,6 @@ public class PythonLibraryEvaluatorFactory {
     public PythonLibraryEvaluator getEvaluator(IExternalFunctionInfo fnInfo, SourceLocation sourceLoc)
             throws IOException, AsterixException {
         return PythonLibraryEvaluator.getInstance(fnInfo, libraryManager, router, ipcSys, pythonPath, ctx,
-                sitePackagesPath, pythonArgs, ctx.getWarningCollector(), sourceLoc);
+                sitePackagesPath, pythonArgs, pythonEnv, ctx.getWarningCollector(), sourceLoc);
     }
 }

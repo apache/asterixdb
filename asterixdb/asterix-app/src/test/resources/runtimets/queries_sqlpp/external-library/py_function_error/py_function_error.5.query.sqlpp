@@ -16,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+* Description  : Access a records nested records at each level.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+// param max-warnings:json=0
 
 use test;
 
-create function warning()
-  as "roundtrip", "Tests.warning" at testlib;
-
-create function roundtrip(s)
-  as "roundtrip", "Tests.roundtrip" at testlib;
-
-create function env_test(k)
-  as "roundtrip", "Tests.env_test" at testlib;
+env_test("FOO");
