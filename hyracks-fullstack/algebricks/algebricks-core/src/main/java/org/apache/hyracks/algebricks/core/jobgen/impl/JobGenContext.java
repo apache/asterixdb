@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
+import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.IBinaryHashFunctionFactoryProvider;
@@ -68,6 +69,7 @@ public class JobGenContext {
     private final IPartialAggregationTypeComputer partialAggregationTypeComputer;
     private final IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider;
     private final int frameSize;
+    private final PhysicalOptimizationConfig physicalOptimizationConfig;
     private AlgebricksAbsolutePartitionConstraint clusterLocations;
     private int varCounter;
     private final ITypingContext typingContext;
@@ -88,7 +90,7 @@ public class JobGenContext {
             IPartialAggregationTypeComputer partialAggregationTypeComputer,
             IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider, int frameSize,
             AlgebricksAbsolutePartitionConstraint clusterLocations, IWarningCollector warningCollector,
-            long maxWarnings) {
+            long maxWarnings, PhysicalOptimizationConfig physicalOptimizationConfig) {
         this.outerFlowSchema = outerFlowSchema;
         this.metadataProvider = metadataProvider;
         this.appContext = appContext;
@@ -110,6 +112,7 @@ public class JobGenContext {
         this.partialAggregationTypeComputer = partialAggregationTypeComputer;
         this.predEvaluatorFactoryProvider = predEvaluatorFactoryProvider;
         this.frameSize = frameSize;
+        this.physicalOptimizationConfig = physicalOptimizationConfig;
         this.varCounter = 0;
         this.warningCollector = warningCollector;
         this.maxWarnings = maxWarnings;
@@ -219,5 +222,9 @@ public class JobGenContext {
 
     public long getMaxWarnings() {
         return maxWarnings;
+    }
+
+    public PhysicalOptimizationConfig getPhysicalOptimizationConfig() {
+        return physicalOptimizationConfig;
     }
 }

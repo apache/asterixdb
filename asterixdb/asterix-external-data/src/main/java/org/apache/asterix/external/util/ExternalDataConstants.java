@@ -117,6 +117,7 @@ public class ExternalDataConstants {
     // a string representing the NULL value
     public static final String KEY_NULL_STR = "null";
     public static final String KEY_REDACT_WARNINGS = "redact-warnings";
+    public static final String KEY_EXTERNAL_SCAN_BUFFER_SIZE = "external-scan-buffer-size";
 
     /**
      *  Keys for adapter name

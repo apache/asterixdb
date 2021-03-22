@@ -56,6 +56,10 @@ public class CompilerProperties extends AbstractProperties {
                 LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for an inverted-index-search operator instance in a partition"),
+        COMPILER_EXTERNALSCANMEMORY(
+                INTEGER_BYTE_UNIT,
+                StorageUtil.getIntSizeInBytes(4, KILOBYTE),
+                "The memory budget (in bytes) for an external scan operator instance in a partition"),
         COMPILER_FRAMESIZE(
                 INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(32, KILOBYTE),
@@ -110,7 +114,7 @@ public class CompilerProperties extends AbstractProperties {
 
         @Override
         public boolean hidden() {
-            return this == COMPILER_STRINGOFFSET;
+            return this == COMPILER_STRINGOFFSET || this == COMPILER_EXTERNALSCANMEMORY;
         }
     }
 
@@ -129,6 +133,8 @@ public class CompilerProperties extends AbstractProperties {
     public static final String COMPILER_SORT_PARALLEL_KEY = Option.COMPILER_SORT_PARALLEL.ini();
 
     public static final String COMPILER_SORT_SAMPLES_KEY = Option.COMPILER_SORT_SAMPLES.ini();
+
+    public static final String COMPILER_EXTERNALSCANMEMORY_KEY = Option.COMPILER_EXTERNALSCANMEMORY.ini();
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
@@ -175,5 +181,9 @@ public class CompilerProperties extends AbstractProperties {
 
     public int getSortSamples() {
         return accessor.getInt(Option.COMPILER_SORT_SAMPLES);
+    }
+
+    public int getExternalScanMemorySize() {
+        return accessor.getInt(Option.COMPILER_EXTERNALSCANMEMORY);
     }
 }

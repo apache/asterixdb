@@ -29,7 +29,6 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.input.stream.AbstractMultipleInputStream;
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
@@ -48,6 +47,7 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
 
     // Configuration
     private final Map<String, String> configuration;
+    private final int bufferSize;
 
     private final S3Client s3Client;
 
@@ -59,6 +59,7 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
         this.configuration = configuration;
         this.filePaths = filePaths;
         this.s3Client = buildAwsS3Client(configuration);
+        this.bufferSize = ExternalDataUtils.getOrDefaultBufferSize(configuration);
     }
 
     @Override
@@ -101,7 +102,7 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
         // Use gzip stream if needed
         String filename = filePaths.get(nextFileIndex).toLowerCase();
         if (filename.endsWith(".gz") || filename.endsWith(".gzip")) {
-            in = new GZIPInputStream(s3Client.getObject(getObjectRequest), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+            in = new GZIPInputStream(s3Client.getObject(getObjectRequest), bufferSize);
         }
 
         // Current file ready, point to the next file

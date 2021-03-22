@@ -16,18 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.core.config;
 
-import org.apache.hyracks.util.StorageUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+use test;
+set `compiler.externalscanmemory` "16KB";
+select count(*) `count` from test2;
 
-public class AlgebricksConfig {
-
-    public static final String ALGEBRICKS_LOGGER_NAME = "org.apache.hyracks.algebricks";
-    public static final Logger ALGEBRICKS_LOGGER = LogManager.getLogger(ALGEBRICKS_LOGGER_NAME);
-    public static final int SORT_SAMPLES = 100;
-    public static final int EXTERNAL_SCAN_BUFFER_SIZE =
-            StorageUtil.getIntSizeInBytes(4, StorageUtil.StorageUnit.KILOBYTE);
-    public static final boolean SORT_PARALLEL = true;
-}

@@ -19,6 +19,11 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="external-dataset">
+    <test-case FilePath="external-dataset/aws/s3/">
+      <compilation-unit name="custom-buffer-size">
+        <output-dir compare="Text">custom-buffer-size</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-dataset">
       <compilation-unit name="aws/s3/json/json">
         <output-dir compare="Text">aws/s3/json/json</output-dir>

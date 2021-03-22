@@ -33,7 +33,6 @@ import org.apache.asterix.external.api.IStreamNotificationHandler;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.stream.AsterixInputStreamReader;
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -51,9 +50,10 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     private Supplier<String> previousDataSourceName = EMPTY_STRING;
 
     public void configure(AsterixInputStream inputStream, Map<String, String> config) {
-        this.reader = new AsterixInputStreamReader(inputStream);
+        int bufferSize = ExternalDataUtils.getOrDefaultBufferSize(config);
+        this.reader = new AsterixInputStreamReader(inputStream, bufferSize);
         record = new CharArrayRecord();
-        inputBuffer = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
+        inputBuffer = new char[bufferSize];
         if (!ExternalDataUtils.isTrue(config, KEY_REDACT_WARNINGS)) {
             this.dataSourceName = reader::getStreamName;
             this.previousDataSourceName = reader::getPreviousStreamName;

@@ -18,7 +18,10 @@
  */
 package org.apache.asterix.metadata.declared;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
+
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -42,6 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
@@ -111,9 +115,12 @@ public class DatasetDataSource extends DataSource {
                         externalDataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
 
                 ExternalDatasetDetails edd = (ExternalDatasetDetails) externalDataset.getDatasetDetails();
-                ITypedAdapterFactory adapterFactory =
-                        metadataProvider.getConfiguredAdapterFactory(externalDataset, edd.getAdapter(),
-                                edd.getProperties(), (ARecordType) itemType, null, context.getWarningCollector());
+                PhysicalOptimizationConfig physicalOptimizationConfig = context.getPhysicalOptimizationConfig();
+                int externalScanBufferSize = physicalOptimizationConfig.getExternalScanBufferSize();
+                Map<String, String> properties = edd.getProperties();
+                properties.put(KEY_EXTERNAL_SCAN_BUFFER_SIZE, String.valueOf(externalScanBufferSize));
+                ITypedAdapterFactory adapterFactory = metadataProvider.getConfiguredAdapterFactory(externalDataset,
+                        edd.getAdapter(), properties, (ARecordType) itemType, null, context.getWarningCollector());
                 return metadataProvider.buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory);
             case INTERNAL:
                 DataSourceId id = getId();

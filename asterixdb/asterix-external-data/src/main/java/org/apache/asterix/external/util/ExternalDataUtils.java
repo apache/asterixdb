@@ -20,6 +20,7 @@ package org.apache.asterix.external.util;
 
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
@@ -88,6 +89,11 @@ public class ExternalDataUtils {
     }
 
     private ExternalDataUtils() {
+    }
+
+    public static int getOrDefaultBufferSize(Map<String, String> configuration) {
+        String bufferSize = configuration.get(KEY_EXTERNAL_SCAN_BUFFER_SIZE);
+        return bufferSize != null ? Integer.parseInt(bufferSize) : ExternalDataConstants.DEFAULT_BUFFER_SIZE;
     }
 
     // Get a delimiter from the given configuration

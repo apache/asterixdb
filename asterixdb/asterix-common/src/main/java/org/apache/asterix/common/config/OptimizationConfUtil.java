@@ -59,6 +59,9 @@ public class OptimizationConfUtil {
         int textSearchFrameLimit = getTextSearchNumFrames(compilerProperties, querySpecificConfig, sourceLoc);
         int sortNumSamples = getSortSamples(compilerProperties, querySpecificConfig, sourceLoc);
         boolean fullParallelSort = getSortParallel(compilerProperties, querySpecificConfig);
+        int externalScanBufferSize = getExternalScanBufferSize(
+                (String) querySpecificConfig.get(CompilerProperties.COMPILER_EXTERNALSCANMEMORY_KEY),
+                compilerProperties.getExternalScanMemorySize(), sourceLoc);
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -69,8 +72,20 @@ public class OptimizationConfUtil {
         physOptConf.setMaxFramesForTextSearch(textSearchFrameLimit);
         physOptConf.setSortParallel(fullParallelSort);
         physOptConf.setSortSamples(sortNumSamples);
+        physOptConf.setExternalScanBufferSize(externalScanBufferSize);
 
         return physOptConf;
+    }
+
+    private static int getExternalScanBufferSize(String externalScanMemorySizeParameter,
+            int compilerExternalScanMemorySize, SourceLocation sourceLoc) throws AsterixException {
+        IOptionType<Integer> intByteParser = OptionTypes.INTEGER_BYTE_UNIT;
+        try {
+            return externalScanMemorySizeParameter != null ? intByteParser.parse(externalScanMemorySizeParameter)
+                    : compilerExternalScanMemorySize;
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+        }
     }
 
     public static int getSortNumFrames(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig,

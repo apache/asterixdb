@@ -39,6 +39,7 @@ public class PhysicalOptimizationConfig {
     private static final String DEFAULT_IN_MEM_HASH_JOIN_TABLE_SIZE = "DEFAULT_IN_MEM_HASH_JOIN_TABLE_SIZE";
     private static final String SORT_PARALLEL = "SORT_PARALLEL";
     private static final String SORT_SAMPLES = "SORT_SAMPLES";
+    private static final String EXTERNAL_SCAN_BUFFER_SIZE = "EXTERNAL_SCAN_BUFFER_SIZE";
 
     private Properties properties = new Properties();
 
@@ -170,6 +171,14 @@ public class PhysicalOptimizationConfig {
 
     public void setSortSamples(int sortSamples) {
         setInt(SORT_SAMPLES, sortSamples);
+    }
+
+    public int getExternalScanBufferSize() {
+        return getInt(EXTERNAL_SCAN_BUFFER_SIZE, AlgebricksConfig.EXTERNAL_SCAN_BUFFER_SIZE);
+    }
+
+    public void setExternalScanBufferSize(int bufferSize) {
+        setInt(EXTERNAL_SCAN_BUFFER_SIZE, bufferSize);
     }
 
     private void setInt(String property, int value) {
