@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
+import org.apache.hyracks.util.StorageUtil;
+
 public class ExternalDataConstants {
 
     private ExternalDataConstants() {
@@ -257,7 +259,7 @@ public class ExternalDataConstants {
     /**
      * Size default values
      */
-    public static final int DEFAULT_BUFFER_SIZE = 4096;
+    public static final int DEFAULT_BUFFER_SIZE = StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.KILOBYTE);
     public static final float DEFAULT_BUFFER_INCREMENT_FACTOR = 1.5F;
     public static final int DEFAULT_QUEUE_SIZE = 64;
     public static final int MAX_RECORD_SIZE = 32000000;
