@@ -254,9 +254,9 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                     if (a1.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                         LogicalVariable argVar = ((VariableReferenceExpression) a1).getVariableReference();
                         AbstractOperatorWithNestedPlans nspOp = nspWithAgg.get(argVar);
-
                         if (nspOp != null) {
-                            if (!aggregateExprToVarExpr.containsKey(expr)) {
+                            ILogicalExpression varExpr = aggregateExprToVarExpr.get(expr);
+                            if (varExpr == null) {
                                 LogicalVariable newVar = context.newVar();
                                 AggregateFunctionCallExpression aggFun =
                                         BuiltinFunctions.makeAggregateFunctionExpression(fi, fce.getArguments());
@@ -267,8 +267,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                                 aggregateExprToVarExpr.put(expr, newVarExpr);
                                 return new Pair<>(Boolean.TRUE, newVarExpr);
                             } else {
-                                ILogicalExpression varExpr = aggregateExprToVarExpr.get(expr);
-                                return new Pair<>(Boolean.TRUE, varExpr);
+                                return new Pair<>(Boolean.TRUE, varExpr.cloneExpression());
                             }
                         }
                     }

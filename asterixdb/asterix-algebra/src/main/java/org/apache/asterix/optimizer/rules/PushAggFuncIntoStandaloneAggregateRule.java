@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
@@ -211,10 +212,12 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
                         BuiltinFunctions.getAggregateFunction(assignScalarAggExpr.getFunctionIdentifier());
 
                 // Push the scalar aggregate function into the aggregate op.
-                int sz = assignScalarAggExpr.getArguments().size();
-                List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<>(sz);
-                aggArgs.add(listifyCandidateExpr.getArguments().get(0));
-                aggArgs.addAll(assignScalarAggExpr.getArguments().subList(1, sz));
+                int nArgs = assignScalarAggExpr.getArguments().size();
+                List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<>(nArgs);
+                aggArgs.add(
+                        new MutableObject<>(listifyCandidateExpr.getArguments().get(0).getValue().cloneExpression()));
+                aggArgs.addAll(OperatorManipulationUtil
+                        .cloneExpressions(assignScalarAggExpr.getArguments().subList(1, nArgs)));
                 AggregateFunctionCallExpression aggFuncExpr =
                         BuiltinFunctions.makeAggregateFunctionExpression(aggFuncIdent, aggArgs);
                 aggFuncExpr.setSourceLocation(assignScalarAggExpr.getSourceLocation());

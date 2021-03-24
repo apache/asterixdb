@@ -807,7 +807,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             fields.add(new MutableObject<>(varExprRef));
             // add the same field as input to the corresponding local function propagating the type of the field
             expr = new AggregateFunctionCallExpression(typeFun, false,
-                    Collections.singletonList(new MutableObject<>(varExprRef)));
+                    Collections.singletonList(new MutableObject<>(varExprRef.cloneExpression())));
             // add the type propagating function to the list of the local functions
             localOutVariable = context.newVar();
             localResultVariables.add(localOutVariable);
