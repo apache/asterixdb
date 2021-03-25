@@ -109,6 +109,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
@@ -118,6 +119,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.HttpMultipartMode;
@@ -186,6 +188,9 @@ public class TestExecutor {
     private static final Pattern VARIABLE_REF_PATTERN = Pattern.compile("\\$(\\w+)");
     private static final Pattern HTTP_PARAM_PATTERN =
             Pattern.compile("param (?<name>[\\w-$]+)(?::(?<type>\\w+))?=(?<value>.*)", Pattern.MULTILINE);
+    private static final Pattern HTTP_PARAMS_FROM_QUERY_PATTERN =
+            Pattern.compile("paramsfromquery (?<value>.*)", Pattern.MULTILINE);
+
     private static final Pattern HTTP_AUTH_PATTERN =
             Pattern.compile("auth (?<username>.*):(?<password>.*)", Pattern.MULTILINE);
     private static final Pattern HTTP_BODY_PATTERN = Pattern.compile("body=(.*)", Pattern.MULTILINE);
@@ -1930,7 +1935,7 @@ public class TestExecutor {
 
     public static List<Parameter> extractParameters(String statement) {
         List<Parameter> params = new ArrayList<>();
-        final Matcher m = HTTP_PARAM_PATTERN.matcher(statement);
+        Matcher m = HTTP_PARAM_PATTERN.matcher(statement);
         while (m.find()) {
             final Parameter param = new Parameter();
             String name = m.group("name");
@@ -1947,6 +1952,16 @@ public class TestExecutor {
                 }
             }
             params.add(param);
+        }
+        m = HTTP_PARAMS_FROM_QUERY_PATTERN.matcher(statement);
+        while (m.find()) {
+            String queryString = m.group("value");
+            for (NameValuePair queryParam : URLEncodedUtils.parse(queryString, UTF_8)) {
+                Parameter param = new Parameter();
+                param.setName(queryParam.getName());
+                param.setValue(queryParam.getValue());
+                params.add(param);
+            }
         }
         return params;
     }
