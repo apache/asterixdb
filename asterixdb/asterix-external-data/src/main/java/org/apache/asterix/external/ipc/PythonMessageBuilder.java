@@ -25,19 +25,16 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 import org.apache.asterix.external.library.msgpack.MessagePackerFromADM;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class PythonMessageBuilder {
-    private static final int MAX_BUF_SIZE = 21 * 1024 * 1024; //21MB.
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final int MAX_BUF_SIZE = 64 * 1024 * 1024; //64MB.
     MessageType type;
     long dataLength;
     ByteBuffer buf;
-    String[] initAry = new String[3];
 
     public PythonMessageBuilder() {
         this.type = null;
@@ -49,12 +46,12 @@ public class PythonMessageBuilder {
         this.type = type;
     }
 
-    public void packHeader() {
+    public void packHeader() throws HyracksDataException {
         MessagePackerFromADM.packFixPos(buf, (byte) type.ordinal());
     }
 
     //TODO: this is wrong for any multibyte chars
-    private int getStringLength(String s) {
+    private static int getStringLength(String s) {
         return s.length();
     }
 
@@ -66,7 +63,7 @@ public class PythonMessageBuilder {
     public void hello() throws IOException {
         this.type = MessageType.HELO;
         byte[] serAddr = serialize(new InetSocketAddress(InetAddress.getLoopbackAddress(), 1));
-        dataLength = serAddr.length + 5;
+        dataLength = serAddr.length + 1;
         packHeader();
         //TODO:make this cleaner
         buf.put(BIN32);
@@ -74,32 +71,38 @@ public class PythonMessageBuilder {
         buf.put(serAddr);
     }
 
-    public void quit() {
+    public void quit() throws HyracksDataException {
         this.type = MessageType.QUIT;
         dataLength = getStringLength("QUIT");
         packHeader();
         MessagePackerFromADM.packFixStr(buf, "QUIT");
     }
 
-    public void init(String module, String clazz, String fn) {
+    public void init(final String module, final String clazz, final String fn) throws HyracksDataException {
         this.type = MessageType.INIT;
-        initAry[0] = module;
-        initAry[1] = clazz;
-        initAry[2] = fn;
-        dataLength = Arrays.stream(initAry).mapToInt(s -> getStringLength(s)).sum() + 2;
-        packHeader();
-        MessagePackerFromADM.packFixArrayHeader(buf, (byte) initAry.length);
-        for (String s : initAry) {
-            MessagePackerFromADM.packStr(buf, s);
+        // sum(string lengths) + 2 from fix array tag and message type
+        if (clazz != null) {
+            dataLength =
+                    PythonMessageBuilder.getStringLength(module) + getStringLength(clazz) + getStringLength(fn) + 2;
+        } else {
+            dataLength = PythonMessageBuilder.getStringLength(module) + getStringLength(fn) + 2;
         }
+        packHeader();
+        int numArgs = clazz == null ? 2 : 3;
+        MessagePackerFromADM.packFixArrayHeader(buf, (byte) numArgs);
+        MessagePackerFromADM.packStr(buf, module);
+        if (clazz != null) {
+            MessagePackerFromADM.packStr(buf, clazz);
+        }
+        MessagePackerFromADM.packStr(buf, fn);
     }
 
-    public void call(byte[] args, int lim, int numArgs) {
+    public void call(byte[] args, int lim, int numArgs) throws HyracksDataException {
         if (args.length > buf.capacity()) {
             int growTo = ExternalFunctionResultRouter.closestPow2(args.length);
             if (growTo > MAX_BUF_SIZE) {
-                //TODO: something more graceful
-                throw new IllegalArgumentException("Reached maximum buffer size");
+                throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                        "Unable to allocate message buffer larger than:" + MAX_BUF_SIZE + " bytes");
             }
             buf = ByteBuffer.allocate(growTo);
         }
@@ -109,11 +112,32 @@ public class PythonMessageBuilder {
         dataLength = 5 + 1 + lim;
         packHeader();
         //TODO: make this switch between fixarray/array16/array32
-        if (numArgs == 0) {
-            buf.put(NIL);
-        } else {
-            buf.put(ARRAY32);
-            buf.putInt(numArgs);
+        buf.put((byte) (FIXARRAY_PREFIX + 1));
+        buf.put(ARRAY32);
+        buf.putInt(numArgs);
+        if (numArgs > 0) {
+            buf.put(args, 0, lim);
+        }
+    }
+
+    public void callMulti(byte[] args, int lim, int numArgs) throws HyracksDataException {
+        if (args.length > buf.capacity()) {
+            int growTo = ExternalFunctionResultRouter.closestPow2(args.length);
+            if (growTo > MAX_BUF_SIZE) {
+                throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                        "Unable to allocate message buffer larger than:" + MAX_BUF_SIZE + " bytes");
+            }
+            buf = ByteBuffer.allocate(growTo);
+        }
+        buf.clear();
+        buf.position(0);
+        this.type = MessageType.CALL;
+        dataLength = 5 + 1 + lim;
+        packHeader();
+        //TODO: make this switch between fixarray/array16/array32
+        buf.put(ARRAY16);
+        buf.putShort((short) numArgs);
+        if (numArgs > 0) {
             buf.put(args, 0, lim);
         }
     }

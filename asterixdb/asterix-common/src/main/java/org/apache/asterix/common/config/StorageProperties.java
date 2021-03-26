@@ -55,7 +55,10 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_COMPRESSION_BLOCK(STRING, "snappy"),
         STORAGE_DISK_FORCE_BYTES(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(16, MEGABYTE)),
         STORAGE_IO_SCHEDULER(STRING, "greedy"),
-        STORAGE_WRITE_RATE_LIMIT(LONG_BYTE_UNIT, 0l);
+        STORAGE_WRITE_RATE_LIMIT(LONG_BYTE_UNIT, 0l),
+        STORAGE_MAX_RUNNING_FLUSHES_PER_PARTITION(NONNEGATIVE_INTEGER, 2),
+        STORAGE_MAX_SCHEDULED_MERGES_PER_PARTITION(NONNEGATIVE_INTEGER, 8),
+        STORAGE_MAX_RUNNING_MERGES_PER_PARTITION(NONNEGATIVE_INTEGER, 2);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -111,6 +114,12 @@ public class StorageProperties extends AbstractProperties {
                     return "The number of bytes before each disk force (fsync)";
                 case STORAGE_IO_SCHEDULER:
                     return "The I/O scheduler for LSM flush and merge operations";
+                case STORAGE_MAX_RUNNING_FLUSHES_PER_PARTITION:
+                    return "The maximum number of running flushes per partition (0 means unlimited)";
+                case STORAGE_MAX_SCHEDULED_MERGES_PER_PARTITION:
+                    return "The maximum number of scheduled merges per partition (0 means unlimited)";
+                case STORAGE_MAX_RUNNING_MERGES_PER_PARTITION:
+                    return "The maximum number of running merges per partition (0 means unlimited)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -202,6 +211,21 @@ public class StorageProperties extends AbstractProperties {
 
     public String getIoScheduler() {
         return accessor.getString(Option.STORAGE_IO_SCHEDULER);
+    }
+
+    public int getMaxRunningFlushes(int numPartitions) {
+        int value = accessor.getInt(Option.STORAGE_MAX_RUNNING_FLUSHES_PER_PARTITION);
+        return value != 0 ? value * numPartitions : Integer.MAX_VALUE;
+    }
+
+    public int getMaxScheduledMerges(int numPartitions) {
+        int value = accessor.getInt(Option.STORAGE_MAX_SCHEDULED_MERGES_PER_PARTITION);
+        return value != 0 ? value * numPartitions : Integer.MAX_VALUE;
+    }
+
+    public int getMaxRunningMerges(int numPartitions) {
+        int value = accessor.getInt(Option.STORAGE_MAX_RUNNING_MERGES_PER_PARTITION);
+        return value != 0 ? value * numPartitions : Integer.MAX_VALUE;
     }
 
     protected int getMetadataDatasets() {

@@ -46,4 +46,18 @@ public interface ThrowingConsumer<V> {
             return null;
         };
     }
+
+    static <R> void forEach(Iterable<R> iterable, ThrowingConsumer<R> consumer) throws Exception {
+        try {
+            iterable.forEach(value -> {
+                try {
+                    consumer.process(value);
+                } catch (Exception e) {
+                    throw new UncheckedExecutionException(e);
+                }
+            });
+        } catch (UncheckedExecutionException e) {
+            throw (Exception) e.getCause();
+        }
+    }
 }

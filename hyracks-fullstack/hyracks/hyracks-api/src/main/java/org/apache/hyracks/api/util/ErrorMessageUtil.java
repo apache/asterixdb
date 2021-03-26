@@ -21,11 +21,14 @@ package org.apache.hyracks.api.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 import org.apache.hyracks.api.exceptions.IError;
@@ -139,5 +142,23 @@ public class ErrorMessageUtil {
             throw new IllegalStateException(e);
         }
         return enumMessages;
+    }
+
+    public static void writeObjectWithError(IError error, ObjectOutputStream out) throws IOException {
+        out.defaultWriteObject();
+        out.writeObject(error);
+    }
+
+    public static Optional<IError> readObjectWithError(ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        try {
+            return Optional.ofNullable((IError) in.readObject());
+        } catch (IllegalArgumentException e) {
+            // this is expected in case of error codes not available in this version; return null
+            LOGGER.debug("unable to deserialize error object due to {}, the error reference will be empty",
+                    String.valueOf(e));
+            return Optional.empty();
+        }
     }
 }

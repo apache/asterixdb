@@ -16,4 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-nc:asterix_nc1 /admin/storage/release?partition=0
+# param partition=0
+
+nc:asterix_nc1 /admin/storage/release

@@ -582,20 +582,26 @@ public class NCAppRuntimeContext implements INcApplicationContext {
 
     private ILSMIOOperationScheduler createIoScheduler(StorageProperties properties) {
         String schedulerName = storageProperties.getIoScheduler();
+        int numPartitions = ioManager.getIODevices().size();
+
+        int maxRunningFlushes = storageProperties.getMaxRunningFlushes(numPartitions);
+        int maxScheduledMerges = storageProperties.getMaxScheduledMerges(numPartitions);
+        int maxRunningMerges = storageProperties.getMaxRunningMerges(numPartitions);
+
         ILSMIOOperationScheduler ioScheduler = null;
         if (AsynchronousScheduler.FACTORY.getName().equalsIgnoreCase(schedulerName)) {
             ioScheduler = AsynchronousScheduler.FACTORY.createIoScheduler(getServiceContext().getThreadFactory(),
-                    HaltCallback.INSTANCE);
+                    HaltCallback.INSTANCE, maxRunningFlushes, maxScheduledMerges, maxRunningMerges);
         } else if (GreedyScheduler.FACTORY.getName().equalsIgnoreCase(schedulerName)) {
             ioScheduler = GreedyScheduler.FACTORY.createIoScheduler(getServiceContext().getThreadFactory(),
-                    HaltCallback.INSTANCE);
+                    HaltCallback.INSTANCE, maxRunningFlushes, maxScheduledMerges, maxRunningMerges);
         } else {
             if (LOGGER.isWarnEnabled()) {
                 LOGGER.log(Level.WARN,
                         "Unknown storage I/O scheduler: " + schedulerName + "; defaulting to greedy I/O scheduler.");
             }
             ioScheduler = GreedyScheduler.FACTORY.createIoScheduler(getServiceContext().getThreadFactory(),
-                    HaltCallback.INSTANCE);
+                    HaltCallback.INSTANCE, maxRunningFlushes, maxScheduledMerges, maxRunningMerges);
         }
         return ioScheduler;
     }

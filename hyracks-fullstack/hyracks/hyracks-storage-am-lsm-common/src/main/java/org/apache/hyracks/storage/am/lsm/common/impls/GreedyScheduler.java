@@ -18,85 +18,141 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.storage.am.lsm.common.api.IIoOperationFailedCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
-import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerFactory;
 
 /**
- * This is a greedy asynchronous scheduler that always allocates the full bandwidth for the merge operation
- * with the smallest required disk bandwidth to minimize the number of disk components. It has been proven
- * that if the number of components in all merge operations are the same, then this scheduler is optimal
- * by always minimizing the number of disk components over time; if not, this is still a good heuristic
+ * Under the greedy scheduler, a merge operation has the following lifecycles. When the merge policy submits a
+ * merge operation to the greedy scheduler, the merge operation is SCHEDULED if the number of scheduled merge
+ * operations is smaller than maxNumScheduledMergeOperations; otherwise, the merge operation is WAITING and is
+ * stored into a queue. WAITING merge operations will be scheduled after some existing merge operations finish
+ * in a FIFO order.
+ *
+ * The greedy scheduler always runs at most one (and smallest) merge operation for each LSM-tree. The maximum number of
+ * running merge operations is controlled by maxNumRunningMergeOperations. A SCHEDULED merge operation can become
+ * RUNNING if the greedy scheduler resumes this merge operation, and a RUNNING merge operation can become SCHEDULED
+ * if the greedy scheduler pauses this merge operation.
  *
  */
 public class GreedyScheduler extends AbstractAsynchronousScheduler {
-    public static final ILSMIOOperationSchedulerFactory FACTORY = new ILSMIOOperationSchedulerFactory() {
+    public static ILSMIOOperationSchedulerFactory FACTORY = new ILSMIOOperationSchedulerFactory() {
         @Override
         public ILSMIOOperationScheduler createIoScheduler(ThreadFactory threadFactory,
-                IIoOperationFailedCallback callback) {
-            return new GreedyScheduler(threadFactory, callback);
+                IIoOperationFailedCallback callback, int maxNumRunningFlushes, int maxNumScheduledMerges,
+                int maxNumRunningMerges) {
+            return new GreedyScheduler(threadFactory, callback, maxNumRunningFlushes, maxNumScheduledMerges,
+                    maxNumRunningMerges);
         }
 
+        @Override
         public String getName() {
             return "greedy";
         }
     };
 
-    private final Map<String, List<ILSMIOOperation>> mergeOperations = new HashMap<>();
+    private final int maxNumScheduledMerges;
+    private final int maxNumRunningMerges;
 
-    public GreedyScheduler(ThreadFactory threadFactory, IIoOperationFailedCallback callback) {
-        super(threadFactory, callback);
+    private int numScheduledMerges;
+    private final Map<String, Set<ILSMIOOperation>> scheduledMergeOperations = new HashMap<>();
+    private final Map<String, ILSMIOOperation> runningMergeOperations = new HashMap<>();
+
+    public GreedyScheduler(ThreadFactory threadFactory, IIoOperationFailedCallback callback, int maxNumRunningFlushes,
+            int maxNumScheduledMerges, int maxNumRunningMerges) {
+        super(threadFactory, callback, maxNumRunningFlushes);
+        this.maxNumScheduledMerges = maxNumScheduledMerges;
+        this.maxNumRunningMerges = maxNumRunningMerges;
     }
 
+    @Override
     protected void scheduleMerge(ILSMIOOperation operation) {
         operation.pause();
-        String id = operation.getIndexIdentifier();
         synchronized (executor) {
-            List<ILSMIOOperation> mergeOpList = mergeOperations.computeIfAbsent(id, key -> new ArrayList<>());
-            mergeOpList.add(operation);
-            dispatchMergeOperation(mergeOpList);
+            if (numScheduledMerges >= maxNumScheduledMerges) {
+                waitingMergeOperations.add(operation);
+            } else {
+                doScheduleMerge(operation);
+            }
         }
-        executor.submit(operation);
     }
 
-    private void dispatchMergeOperation(List<ILSMIOOperation> mergeOps) {
-        ILSMIOOperation activeOp = null;
+    private void doScheduleMerge(ILSMIOOperation operation) {
+        String indexIdentier = operation.getIndexIdentifier();
+        Set<ILSMIOOperation> mergeOps = scheduledMergeOperations.computeIfAbsent(indexIdentier, k -> new HashSet<>());
+        mergeOps.add(operation);
+        executor.submit(operation);
+        numScheduledMerges++;
+
+        dispatchMergeOperation(indexIdentier, mergeOps);
+    }
+
+    private void dispatchMergeOperation(String indexIdentier, Set<ILSMIOOperation> mergeOps) {
+        if (!runningMergeOperations.containsKey(indexIdentier)
+                && runningMergeOperations.size() >= maxNumRunningMerges) {
+            return;
+        }
+        ILSMIOOperation runningOp = null;
         ILSMIOOperation smallestMergeOp = null;
         for (ILSMIOOperation op : mergeOps) {
             if (op.isActive()) {
-                activeOp = op;
+                runningOp = op;
             }
             if (smallestMergeOp == null || op.getRemainingPages() < smallestMergeOp.getRemainingPages()) {
                 smallestMergeOp = op;
             }
         }
-        if (smallestMergeOp != activeOp) {
-            if (activeOp != null) {
-                activeOp.pause();
+        if (smallestMergeOp != runningOp) {
+            if (runningOp != null) {
+                runningOp.pause();
             }
             smallestMergeOp.resume();
+            runningMergeOperations.put(indexIdentier, smallestMergeOp);
         }
     }
 
     @Override
-    public void completeOperation(ILSMIOOperation op) {
-        if (op.getIOOpertionType() == LSMIOOperationType.MERGE) {
-            String id = op.getIndexIdentifier();
-            synchronized (executor) {
-                List<ILSMIOOperation> mergeOpList = mergeOperations.get(id);
-                mergeOpList.remove(op);
-                if (!mergeOpList.isEmpty()) {
-                    dispatchMergeOperation(mergeOpList);
+    protected void completeMerge(ILSMIOOperation op) {
+        String id = op.getIndexIdentifier();
+        synchronized (executor) {
+            Set<ILSMIOOperation> mergeOperations = scheduledMergeOperations.get(id);
+            mergeOperations.remove(op);
+            if (mergeOperations.isEmpty()) {
+                scheduledMergeOperations.remove(id);
+            }
+            runningMergeOperations.remove(id);
+            numScheduledMerges--;
+
+            if (!waitingMergeOperations.isEmpty() && numScheduledMerges < maxNumScheduledMerges) {
+                doScheduleMerge(waitingMergeOperations.poll());
+            }
+            if (runningMergeOperations.size() < maxNumRunningMerges) {
+                String indexWithMostScheduledMerges = findIndexWithMostScheduledMerges();
+                if (indexWithMostScheduledMerges != null) {
+                    dispatchMergeOperation(indexWithMostScheduledMerges,
+                            scheduledMergeOperations.get(indexWithMostScheduledMerges));
                 }
             }
         }
+    }
+
+    private String findIndexWithMostScheduledMerges() {
+        String targetIndex = null;
+        int maxMerges = 0;
+        for (Map.Entry<String, Set<ILSMIOOperation>> e : scheduledMergeOperations.entrySet()) {
+            if (!runningMergeOperations.containsKey(e.getKey())
+                    && (targetIndex == null || maxMerges < e.getValue().size())) {
+                targetIndex = e.getKey();
+                maxMerges = e.getValue().size();
+            }
+        }
+        return targetIndex;
     }
 }

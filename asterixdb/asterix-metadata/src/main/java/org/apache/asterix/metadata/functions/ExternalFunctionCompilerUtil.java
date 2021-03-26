@@ -81,7 +81,7 @@ public class ExternalFunctionCompilerUtil {
 
         return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(), paramTypes,
                 returnType, typeComputer, lang, function.getLibraryDataverseName(), function.getLibraryName(),
-                function.getExternalIdentifier(), function.getResources(), deterministic);
+                function.getExternalIdentifier(), function.getResources(), deterministic, function.getNullCall());
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataProvider metadataProvider, Function function) {
@@ -182,7 +182,7 @@ public class ExternalFunctionCompilerUtil {
             case JAVA:
                 return false;
             case PYTHON:
-                return false;
+                return true;
             default:
                 throw new CompilationException(ErrorCode.METADATA_ERROR, language.name());
         }

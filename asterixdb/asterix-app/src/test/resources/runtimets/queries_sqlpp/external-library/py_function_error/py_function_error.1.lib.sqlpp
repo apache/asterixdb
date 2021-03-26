@@ -17,4 +17,4 @@
  * under the License.
  */
 
-install test testlib admin admin target/TweetSent.pyz
+install test testlib python admin admin target/TweetSent.pyz

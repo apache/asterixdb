@@ -24,11 +24,11 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -106,21 +106,15 @@ public class RebalanceApiServlet extends AbstractServlet {
             // Gets dataverse, dataset, and target nodes for rebalance.
             DataverseName dataverseName = ServletUtil.getDataverseName(request, "dataverseName");
             String datasetName = request.getParameter("datasetName");
-            String nodes = request.getParameter("nodes");
+            Set<String> targetNodes = new LinkedHashSet<>(request.getParameterValues("targetNode"));
             boolean forceRebalance = true;
             String force = request.getParameter("force");
             if (force != null) {
                 forceRebalance = Boolean.parseBoolean(force);
             }
             // Parses and check target nodes.
-            if (nodes == null) {
-                sendResponse(response, HttpResponseStatus.BAD_REQUEST, "nodes are not given");
-                return;
-            }
-            String nodesString = nodes.trim();
-            String[] targetNodes = nodesString.split(",");
-            if ("".equals(nodesString)) {
-                sendResponse(response, HttpResponseStatus.BAD_REQUEST, "target nodes should not be empty");
+            if (targetNodes.isEmpty()) {
+                sendResponse(response, HttpResponseStatus.BAD_REQUEST, "at least one targetNode must be specified");
                 return;
             }
 
@@ -161,7 +155,7 @@ public class RebalanceApiServlet extends AbstractServlet {
 
     // Schedules a rebalance task.
     private synchronized CountDownLatch scheduleRebalance(DataverseName dataverseName, String datasetName,
-            String[] targetNodes, IServletResponse response, boolean force) {
+            Set<String> targetNodes, IServletResponse response, boolean force) {
         CountDownLatch terminated = new CountDownLatch(1);
         Future<Void> task = executor
                 .submit(() -> doRebalance(dataverseName, datasetName, targetNodes, response, terminated, force));
@@ -171,7 +165,7 @@ public class RebalanceApiServlet extends AbstractServlet {
     }
 
     // Performs the actual rebalance.
-    private Void doRebalance(DataverseName dataverseName, String datasetName, String[] targetNodes,
+    private Void doRebalance(DataverseName dataverseName, String datasetName, Set<String> targetNodes,
             IServletResponse response, CountDownLatch terminated, boolean force) {
         try {
             // Sets the content type.
@@ -248,8 +242,8 @@ public class RebalanceApiServlet extends AbstractServlet {
     }
 
     // Rebalances a given dataset.
-    private void rebalanceDataset(DataverseName dataverseName, String datasetName, String[] targetNodes, boolean force)
-            throws Exception {
+    private void rebalanceDataset(DataverseName dataverseName, String datasetName, Set<String> targetNodes,
+            boolean force) throws Exception {
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
         MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
         try {
@@ -260,8 +254,8 @@ public class RebalanceApiServlet extends AbstractServlet {
                 IMetadataLockManager lockManager = appCtx.getMetadataLockManager();
                 lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), dataverseName,
                         datasetName);
-                RebalanceUtil.rebalance(dataverseName, datasetName, new LinkedHashSet<>(Arrays.asList(targetNodes)),
-                        metadataProvider, hcc, NoOpDatasetRebalanceCallback.INSTANCE, force);
+                RebalanceUtil.rebalance(dataverseName, datasetName, targetNodes, metadataProvider, hcc,
+                        NoOpDatasetRebalanceCallback.INSTANCE, force);
             } finally {
                 activeNotificationHandler.resume(metadataProvider);
             }

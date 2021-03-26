@@ -76,11 +76,14 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisitor<Void, ILogicalOperator> {
 
-    private final Map<ILogicalOperator, Set<ILogicalOperator>> alreadyMapped = new HashMap<>();
+    private final Map<ILogicalOperator, Set<ILogicalOperator>> alreadyMapped;
     private final Map<LogicalVariable, LogicalVariable> variableMapping;
+    private final boolean goThroughNts;
 
-    IsomorphismVariableMappingVisitor(Map<LogicalVariable, LogicalVariable> variableMapping) {
+    IsomorphismVariableMappingVisitor(Map<LogicalVariable, LogicalVariable> variableMapping, boolean goThroughNts) {
         this.variableMapping = variableMapping;
+        this.goThroughNts = goThroughNts;
+        this.alreadyMapped = goThroughNts ? new HashMap<>() : null;
     }
 
     @Override
@@ -143,6 +146,9 @@ public class IsomorphismVariableMappingVisitor implements ILogicalOperatorVisito
     public Void visitNestedTupleSourceOperator(NestedTupleSourceOperator op, ILogicalOperator arg)
             throws AlgebricksException {
         if (op.getOperatorTag() != arg.getOperatorTag()) {
+            return null;
+        }
+        if (!goThroughNts) {
             return null;
         }
         Set<ILogicalOperator> mappedOps = alreadyMapped.get(op);

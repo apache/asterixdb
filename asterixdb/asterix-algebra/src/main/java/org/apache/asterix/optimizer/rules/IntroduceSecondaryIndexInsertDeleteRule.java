@@ -573,7 +573,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                         AbstractFunctionCallExpression createMBR = new ScalarFunctionCallExpression(
                                 FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_MBR));
                         createMBR.setSourceLocation(sourceLoc);
-                        createMBR.getArguments().add(beforeOpSecondaryExpressions.get(0));
+                        createMBR.getArguments().add(
+                                new MutableObject<>(beforeOpSecondaryExpressions.get(0).getValue().cloneExpression()));
                         createMBR.getArguments().add(new MutableObject<ILogicalExpression>(
                                 new ConstantExpression(new AsterixConstantValue(new AInt32(dimension)))));
                         createMBR.getArguments().add(new MutableObject<ILogicalExpression>(

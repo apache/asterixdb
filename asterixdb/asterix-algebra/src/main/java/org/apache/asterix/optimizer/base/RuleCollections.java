@@ -185,6 +185,8 @@ public final class RuleCollections {
         normalization.add(new CheckInsertUpsertReturningRule());
         normalization.add(new IntroduceUnnestForCollectionToSequenceRule());
         normalization.add(new EliminateSubplanRule());
+        // The following rule must run before PushAggregateIntoNestedSubplanRule
+        normalization.add(new EliminateIsomorphicSubplanRule());
         normalization.add(new EnforceOrderByAfterSubplan());
         normalization.add(new BreakSelectIntoConjunctsRule());
         normalization.add(new ExtractGbyExpressionsRule());
@@ -221,7 +223,7 @@ public final class RuleCollections {
 
         condPushDownAndJoinInference.add(new PushSelectDownRule());
         condPushDownAndJoinInference.add(new PushSortDownRule());
-        condPushDownAndJoinInference.add(new RemoveRedundantListifyRule());
+        condPushDownAndJoinInference.add(new RemoveRedundantListifyRule(false));
         condPushDownAndJoinInference.add(new CancelUnnestWithNestedListifyRule());
         condPushDownAndJoinInference.add(new SimpleUnnestToProductRule());
         condPushDownAndJoinInference.add(new ComplexUnnestToProductRule());
@@ -236,9 +238,6 @@ public final class RuleCollections {
         condPushDownAndJoinInference
                 .add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.ASSIGN, LogicalOperatorTag.SELECT));
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
-        // The following rule must run before PushAggregateIntoNestedSubplanRule
-        // (before common subplans diverge due to aggregate pushdown)
-        condPushDownAndJoinInference.add(new EliminateIsomorphicSubplanRule());
 
         condPushDownAndJoinInference.add(new AsterixExtractFunctionsFromJoinConditionRule());
 
@@ -298,7 +297,7 @@ public final class RuleCollections {
         consolidation.add(new RemoveRedundantGroupByDecorVarsRule());
         //PushUnnestThroughUnion => RemoveRedundantListifyRule cause these rules are correlated
         consolidation.add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.UNNEST));
-        consolidation.add(new RemoveRedundantListifyRule());
+        consolidation.add(new RemoveRedundantListifyRule(true));
         // Window operator consolidation rules
         consolidation.add(new AsterixConsolidateWindowOperatorsRule());
         consolidation.add(new ReuseWindowAggregateRule());

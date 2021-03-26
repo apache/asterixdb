@@ -383,6 +383,11 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
 
         Mutable<ILogicalOperator> lowestAggregateRefInSubplan =
                 SubplanFlatteningUtil.findLowestAggregate(subplanOp.getNestedPlans().get(0).getRoots().get(0));
+        if (lowestAggregateRefInSubplan == null) {
+            inputOpRef.setValue(inputOpBackup);
+            return new Pair<>(false, new LinkedHashMap<>());
+        }
+
         Mutable<ILogicalOperator> rightInputOpRef = lowestAggregateRefInSubplan.getValue().getInputs().get(0);
         ILogicalOperator rightInputOp = rightInputOpRef.getValue();
 

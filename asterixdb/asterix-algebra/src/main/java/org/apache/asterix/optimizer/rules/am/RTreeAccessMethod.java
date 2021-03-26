@@ -266,7 +266,7 @@ public class RTreeAccessMethod implements IAccessMethod {
                     new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_MBR));
             createMBR.setSourceLocation(optFuncExpr.getFuncExpr().getSourceLocation());
             // Spatial object is the constant from the func expr we are optimizing.
-            createMBR.getArguments().add(new MutableObject<>(returnedSearchKeyExpr));
+            createMBR.getArguments().add(new MutableObject<>(returnedSearchKeyExpr.cloneExpression()));
             // The number of dimensions
             createMBR.getArguments().add(new MutableObject<ILogicalExpression>(
                     new ConstantExpression(new AsterixConstantValue(new AInt32(numDimensions)))));

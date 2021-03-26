@@ -22,12 +22,12 @@
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- REPLICATE  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- EXTERNAL_GROUP_BY[$$212, $$213]  |PARTITIONED|
+                      -- EXTERNAL_GROUP_BY[$$206, $$207]  |PARTITIONED|
                               {
                                 -- AGGREGATE  |LOCAL|
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                               }
-                        -- HASH_PARTITION_EXCHANGE [$$212, $$213]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$206, $$207]  |PARTITIONED|
                           -- EXTERNAL_GROUP_BY[$$181, $$182]  |PARTITIONED|
                                   {
                                     -- AGGREGATE  |LOCAL|
@@ -51,12 +51,12 @@
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- REPLICATE  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- EXTERNAL_GROUP_BY[$$212, $$213]  |PARTITIONED|
+                                -- EXTERNAL_GROUP_BY[$$206, $$207]  |PARTITIONED|
                                         {
                                           -- AGGREGATE  |LOCAL|
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                                         }
-                                  -- HASH_PARTITION_EXCHANGE [$$212, $$213]  |PARTITIONED|
+                                  -- HASH_PARTITION_EXCHANGE [$$206, $$207]  |PARTITIONED|
                                     -- EXTERNAL_GROUP_BY[$$181, $$182]  |PARTITIONED|
                                             {
                                               -- AGGREGATE  |LOCAL|

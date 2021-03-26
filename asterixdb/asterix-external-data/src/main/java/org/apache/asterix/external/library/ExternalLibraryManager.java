@@ -21,6 +21,7 @@ package org.apache.asterix.external.library;
 import static com.fasterxml.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHABETICALLY;
 import static com.fasterxml.jackson.databind.SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -41,9 +42,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.DigestOutputStream;
 import java.security.KeyStore;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -51,17 +54,21 @@ import java.util.zip.ZipFile;
 
 import javax.net.ssl.SSLContext;
 
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.library.LibraryDescriptor;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.ipc.ExternalFunctionResultRouter;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
@@ -221,7 +228,7 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
     }
 
     private FileReference getDataverseDir(DataverseName dataverseName) throws HyracksDataException {
-        return getChildFileRef(storageDir, dataverseName.getCanonicalForm());
+        return getChildFileRef(storageDir, StoragePathUtil.prepareDataverseName(dataverseName));
     }
 
     @Override
@@ -233,6 +240,68 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
     @Override
     public FileReference getDistributionDir() {
         return distDir;
+    }
+
+    @Override
+    public List<Pair<DataverseName, String>> getLibraryListing() throws IOException {
+        List<Pair<DataverseName, String>> libs = new ArrayList<>();
+        Files.walkFileTree(storageDirPath, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path currPath, BasicFileAttributes attrs) {
+                //never want to see any files
+                return FileVisitResult.TERMINATE;
+            }
+
+            @Override
+            public FileVisitResult preVisitDirectory(Path currPath, BasicFileAttributes attrs)
+                    throws HyracksDataException {
+                if (currPath.equals(storageDirPath) || currPath.getParent().equals(storageDirPath)) {
+                    return FileVisitResult.CONTINUE;
+                }
+                if (currPath.getFileName().toString().codePointAt(0) == StoragePathUtil.DATAVERSE_CONTINUATION_MARKER) {
+                    return FileVisitResult.CONTINUE;
+                }
+                final String candidateDvAndLib = storageDirPath.toAbsolutePath().normalize()
+                        .relativize(currPath.toAbsolutePath().normalize()).toString();
+                List<String> dvParts = new ArrayList<>();
+                final String[] tokens = StringUtils.split(candidateDvAndLib, File.separatorChar);
+                if (tokens == null || tokens.length < 2) {
+                    //? shouldn't happen
+                    return FileVisitResult.TERMINATE;
+                }
+                //add first part, then all multiparts
+                dvParts.add(tokens[0]);
+                int currToken = 1;
+                for (; currToken < tokens.length && tokens[currToken]
+                        .codePointAt(0) == StoragePathUtil.DATAVERSE_CONTINUATION_MARKER; currToken++) {
+                    dvParts.add(tokens[currToken].substring(1));
+                }
+                //we should only arrive at foo/^bar/^baz/.../^bat/lib
+                //anything else is fishy or empty
+                if (currToken != tokens.length - 1) {
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                String candidateLib = tokens[currToken];
+                DataverseName candidateDv = DataverseName.create(dvParts);
+                FileReference candidateLibPath = findLibraryRevDir(candidateDv, candidateLib);
+                if (candidateLibPath != null) {
+                    libs.add(new Pair<>(candidateDv, candidateLib));
+                }
+                return FileVisitResult.SKIP_SUBTREE;
+            }
+        });
+        return libs;
+    }
+
+    @Override
+    public String getLibraryHash(DataverseName dataverseName, String libraryName) throws IOException {
+        FileReference revDir = findLibraryRevDir(dataverseName, libraryName);
+        if (revDir == null) {
+            throw HyracksDataException
+                    .create(AsterixException.create(ErrorCode.EXTERNAL_UDF_EXCEPTION, "Library does not exist"));
+        }
+        LibraryDescriptor desc = getLibraryDescriptor(revDir);
+        return desc.getHash();
     }
 
     @Override
@@ -545,9 +614,8 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
         outputFile.getFile().createNewFile();
         IFileHandle fHandle = ioManager.open(outputFile, IIOManager.FileReadWriteMode.READ_WRITE,
                 IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
-        try {
-            WritableByteChannel outChannel = ioManager.newWritableChannel(fHandle);
-            OutputStream outputStream = Channels.newOutputStream(outChannel);
+        WritableByteChannel outChannel = ioManager.newWritableChannel(fHandle);
+        try (OutputStream outputStream = Channels.newOutputStream(outChannel)) {
             IOUtils.copyLarge(dataStream, outputStream, copyBuffer);
             outputStream.flush();
             ioManager.sync(fHandle, true);

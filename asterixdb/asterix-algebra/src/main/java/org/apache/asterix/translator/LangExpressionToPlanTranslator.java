@@ -1972,10 +1972,10 @@ abstract class LangExpressionToPlanTranslator
     protected Mutable<ILogicalExpression> generateAndNotIsUnknownWrap(ILogicalExpression logicalExpr) {
         SourceLocation sourceLoc = logicalExpr.getSourceLocation();
         List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
-        arguments.add(new MutableObject<>(logicalExpr));
+        arguments.add(new MutableObject<>(logicalExpr.cloneExpression()));
         ScalarFunctionCallExpression isUnknownExpr =
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_UNKNOWN),
-                        new ArrayList<>(Collections.singletonList(new MutableObject<>(logicalExpr))));
+                        new ArrayList<>(Collections.singletonList(new MutableObject<>(logicalExpr.cloneExpression()))));
         isUnknownExpr.setSourceLocation(sourceLoc);
         ScalarFunctionCallExpression notExpr =
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT),

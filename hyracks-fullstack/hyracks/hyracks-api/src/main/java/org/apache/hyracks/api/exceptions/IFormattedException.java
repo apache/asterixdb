@@ -46,8 +46,13 @@ public interface IFormattedException {
     String getMessage();
 
     /**
+     * See {@link Throwable#getSuppressed()}
+     */
+    Throwable[] getSuppressed();
+
+    /**
      * If available, returns the {@link IError} associated with this exception
-     * @return the error instance, othewise {@link Optional#empty()}
+     * @return the error instance, otherwise {@link Optional#empty()}
      * @since 0.3.5.1
      */
     Optional<IError> getError();
@@ -84,5 +89,17 @@ public interface IFormattedException {
      */
     static boolean matchesAny(Throwable th, IError candidate, IError... otherCandidates) {
         return th instanceof IFormattedException && ((IFormattedException) th).matchesAny(candidate, otherCandidates);
+    }
+
+    /**
+     * If the supplied {@link Throwable} is an instance of {@link IFormattedException}, return the {@link IError}
+     * associated with this exception if available
+     *
+     * @return the error instance, otherwise {@link Optional#empty()}
+     * @since 0.3.5.1
+     */
+    static Optional<IError> getError(Throwable throwable) {
+        return throwable instanceof IFormattedException ? ((IFormattedException) throwable).getError()
+                : Optional.empty();
     }
 }

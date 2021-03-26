@@ -17,4 +17,8 @@
  * under the License.
  */
 
-/admin/rebalance?dataverseName=tpch&nodes=asterix_nc1%2Casterix_nc2
+# param dataverseName=tpch
+# param targetNode=asterix_nc1
+# param targetNode=asterix_nc2
+
+/admin/rebalance

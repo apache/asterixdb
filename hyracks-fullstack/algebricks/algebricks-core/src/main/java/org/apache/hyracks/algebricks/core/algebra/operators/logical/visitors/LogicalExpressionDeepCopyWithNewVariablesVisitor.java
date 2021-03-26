@@ -156,7 +156,9 @@ public class LogicalExpressionDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         LogicalVariable var = expr.getVariableReference();
         if (freeVars.contains(var)) {
-            return expr;
+            VariableReferenceExpression varRef = new VariableReferenceExpression(var);
+            copySourceLocation(expr, varRef);
+            return varRef;
         }
         LogicalVariable givenVarReplacement = inVarMapping.get(var);
         if (givenVarReplacement != null) {

@@ -216,16 +216,22 @@ public class IntervalJoinUtils {
     private static void insertPartitionSortKey(AbstractBinaryJoinOperator op, int branch,
             List<LogicalVariable> partitionVars, LogicalVariable intervalVar, IOptimizationContext context)
             throws AlgebricksException {
-        Mutable<ILogicalExpression> intervalExp = new MutableObject<>(new VariableReferenceExpression(intervalVar));
-
         List<Mutable<ILogicalExpression>> assignExps = new ArrayList<>();
         // Start partition
+        VariableReferenceExpression intervalVarRef1 = new VariableReferenceExpression(intervalVar);
+        intervalVarRef1.setSourceLocation(op.getSourceLocation());
         IFunctionInfo startFi = FunctionUtil.getFunctionInfo(BuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_START);
-        ScalarFunctionCallExpression startPartitionExp = new ScalarFunctionCallExpression(startFi, intervalExp);
+        ScalarFunctionCallExpression startPartitionExp =
+                new ScalarFunctionCallExpression(startFi, new MutableObject<>(intervalVarRef1));
+        startPartitionExp.setSourceLocation(op.getSourceLocation());
         assignExps.add(new MutableObject<>(startPartitionExp));
         // End partition
+        VariableReferenceExpression intervalVarRef2 = new VariableReferenceExpression(intervalVar);
+        intervalVarRef2.setSourceLocation(op.getSourceLocation());
         IFunctionInfo endFi = FunctionUtil.getFunctionInfo(BuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_END);
-        ScalarFunctionCallExpression endPartitionExp = new ScalarFunctionCallExpression(endFi, intervalExp);
+        ScalarFunctionCallExpression endPartitionExp =
+                new ScalarFunctionCallExpression(endFi, new MutableObject<>(intervalVarRef2));
+        endPartitionExp.setSourceLocation(op.getSourceLocation());
         assignExps.add(new MutableObject<>(endPartitionExp));
 
         AssignOperator ao = new AssignOperator(partitionVars, assignExps);

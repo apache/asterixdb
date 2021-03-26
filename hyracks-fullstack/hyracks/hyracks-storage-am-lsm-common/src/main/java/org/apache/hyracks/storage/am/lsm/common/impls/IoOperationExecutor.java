@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
-import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.RunnableFuture;
@@ -40,16 +39,14 @@ public class IoOperationExecutor extends ThreadPoolExecutor {
     private final IIoOperationFailedCallback callback;
     private final Map<String, ILSMIOOperation> runningFlushOperations;
     private final Map<String, Throwable> failedGroups;
-    private final Map<String, Deque<ILSMIOOperation>> waitingFlushOperations;
 
     public IoOperationExecutor(ThreadFactory threadFactory, ILSMIOOperationScheduler scheduler,
             IIoOperationFailedCallback callback, Map<String, ILSMIOOperation> runningFlushOperations,
-            Map<String, Deque<ILSMIOOperation>> waitingFlushOperations, Map<String, Throwable> failedGroups) {
+            Map<String, Throwable> failedGroups) {
         super(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), threadFactory);
         this.scheduler = scheduler;
         this.callback = callback;
         this.runningFlushOperations = runningFlushOperations;
-        this.waitingFlushOperations = waitingFlushOperations;
         this.failedGroups = failedGroups;
     }
 
@@ -80,20 +77,6 @@ public class IoOperationExecutor extends ThreadPoolExecutor {
             executedOp.complete(); // destroy if merge or successful flush
         }
         scheduler.completeOperation(executedOp);
-        if (executedOp.getIOOpertionType() == LSMIOOperationType.FLUSH) {
-            String id = executedOp.getIndexIdentifier();
-            synchronized (this) {
-                runningFlushOperations.remove(id);
-                if (waitingFlushOperations.containsKey(id)) {
-                    ILSMIOOperation op = waitingFlushOperations.get(id).poll();
-                    if (op != null) {
-                        scheduler.scheduleOperation(op);
-                    } else {
-                        waitingFlushOperations.remove(id);
-                    }
-                }
-            }
-        }
     }
 
     private void fail(ILSMIOOperation executedOp, Throwable t) throws HyracksDataException {
@@ -106,16 +89,6 @@ public class IoOperationExecutor extends ThreadPoolExecutor {
                 String id = executedOp.getIndexIdentifier();
                 failedGroups.put(id, t);
                 runningFlushOperations.remove(id);
-                if (waitingFlushOperations.containsKey(id)) {
-                    Deque<ILSMIOOperation> ops = waitingFlushOperations.remove(id);
-                    ILSMIOOperation next = ops.poll();
-                    while (next != null) {
-                        next.setFailure(new RuntimeException("Operation group " + id + " has permanently failed", t));
-                        next.setStatus(LSMIOOperationStatus.FAILURE);
-                        next.complete();
-                        next = ops.poll();
-                    }
-                }
             }
         }
     }

@@ -130,7 +130,7 @@ public class BasicAuthServlet implements IServlet {
             return false;
         }
         String providedUsername = providedCredentials[0];
-        String storedPw = getStoredCredentials(request).get(providedUsername);
+        String storedPw = getCredential(providedUsername, request);
         if (storedPw == null) {
             LOGGER.debug("Invalid username");
             return false;
@@ -144,8 +144,15 @@ public class BasicAuthServlet implements IServlet {
         }
     }
 
-    protected Map<String, String> getStoredCredentials(IServletRequest request) {
-        return request.getHttpRequest().method().equals(HttpMethod.GET) ? ephemeralCredentials : storedCredentials;
+    private String getCredential(String username, IServletRequest request) {
+        String credential = storedCredentials.get(username);
+        if (credential != null) {
+            return credential;
+        } else if (request != null && request.getHttpRequest().method().equals(HttpMethod.GET)) {
+            return ephemeralCredentials.get(username);
+        } else {
+            return null;
+        }
     }
 
     public static String hashPassword(String password) {

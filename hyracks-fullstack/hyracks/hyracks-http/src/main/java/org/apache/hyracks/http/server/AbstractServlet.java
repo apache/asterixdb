@@ -22,6 +22,8 @@ import static com.fasterxml.jackson.databind.MapperFeature.SORT_PROPERTIES_ALPHA
 import static com.fasterxml.jackson.databind.SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentMap;
@@ -175,7 +177,12 @@ public abstract class AbstractServlet implements IServlet {
     public String localPath(IServletRequest request) {
         final String uri = request.getHttpRequest().uri();
         int queryStart = uri.indexOf('?');
-        return queryStart == -1 ? uri.substring(trim(uri)) : uri.substring(trim(uri), queryStart);
+        String localPath = queryStart == -1 ? uri.substring(trim(uri)) : uri.substring(trim(uri), queryStart);
+        try {
+            return URLDecoder.decode(localPath, StandardCharsets.UTF_8.name());
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 
     public String servletPath(IServletRequest request) {

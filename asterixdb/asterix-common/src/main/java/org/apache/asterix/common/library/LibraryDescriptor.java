@@ -31,14 +31,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class LibraryDescriptor implements IJsonSerializable {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private static final String FIELD_LANGUAGE = "lang";
-    private static final String FIELD_HASH = "hash";
-
-    public static final String FILE_EXT_ZIP = "zip";
-
-    public static final String FILE_EXT_PYZ = "pyz";
+    public static final String FIELD_HASH = "hash_md5";
 
     /**
      * The library's language

@@ -24,32 +24,41 @@ import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.hyracks.ipc.impl.IPCSystem;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.ipc.impl.Message;
 import org.msgpack.core.MessagePack;
+import org.msgpack.core.MessageUnpacker;
+import org.msgpack.core.buffer.ArrayBufferInput;
 
 public class PythonIPCProto {
 
-    public PythonMessageBuilder messageBuilder;
-    OutputStream sockOut;
-    ByteBuffer headerBuffer = ByteBuffer.allocate(21);
-    ByteBuffer recvBuffer = ByteBuffer.allocate(4096);
-    ExternalFunctionResultRouter router;
-    IPCSystem ipcSys;
-    Message outMsg;
-    Long key;
+    private PythonMessageBuilder messageBuilder;
+    private OutputStream sockOut;
+    private ByteBuffer headerBuffer = ByteBuffer.allocate(21);
+    private ByteBuffer recvBuffer = ByteBuffer.allocate(32768);
+    private ExternalFunctionResultRouter router;
+    private long routeId;
+    private Pair<ByteBuffer, Exception> bufferBox;
+    private Process pythonProc;
+    private long maxFunctionId;
+    private ArrayBufferInput unpackerInput;
+    private MessageUnpacker unpacker;
 
-    public PythonIPCProto(OutputStream sockOut, ExternalFunctionResultRouter router, IPCSystem ipcSys)
-            throws IOException {
+    public PythonIPCProto(OutputStream sockOut, ExternalFunctionResultRouter router, Process pythonProc) {
         this.sockOut = sockOut;
         messageBuilder = new PythonMessageBuilder();
         this.router = router;
-        this.ipcSys = ipcSys;
-        this.outMsg = new Message(null);
+        this.pythonProc = pythonProc;
+        this.maxFunctionId = 0l;
+        unpackerInput = new ArrayBufferInput(new byte[0]);
+        unpacker = MessagePack.newDefaultUnpacker(unpackerInput);
     }
 
     public void start() {
-        this.key = router.insertRoute(recvBuffer);
+        Pair<Long, Pair<ByteBuffer, Exception>> keyAndBufferBox = router.insertRoute(recvBuffer);
+        this.routeId = keyAndBufferBox.getFirst();
+        this.bufferBox = keyAndBufferBox.getSecond();
     }
 
     public void helo() throws IOException, AsterixException {
@@ -59,78 +68,106 @@ public class PythonIPCProto {
         messageBuilder.buf.clear();
         messageBuilder.buf.position(0);
         messageBuilder.hello();
-        sendMsg();
+        sendMsg(routeId);
         receiveMsg();
         if (getResponseType() != MessageType.HELO) {
-            throw new IllegalStateException("Illegal reply received, expected HELO");
+            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.ILLEGAL_STATE,
+                    "Expected HELO, recieved " + getResponseType().name());
         }
     }
 
-    public void init(String module, String clazz, String fn) throws IOException, AsterixException {
+    public long init(String module, String clazz, String fn) throws IOException, AsterixException {
+        long functionId = maxFunctionId++;
         recvBuffer.clear();
         recvBuffer.position(0);
         recvBuffer.limit(0);
         messageBuilder.buf.clear();
         messageBuilder.buf.position(0);
         messageBuilder.init(module, clazz, fn);
-        sendMsg();
+        sendMsg(functionId);
         receiveMsg();
         if (getResponseType() != MessageType.INIT_RSP) {
-            throw new IllegalStateException("Illegal reply received, expected INIT_RSP");
+            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.ILLEGAL_STATE,
+                    "Expected INIT_RSP, recieved " + getResponseType().name());
         }
+        return functionId;
     }
 
-    public ByteBuffer call(ByteBuffer args, int numArgs) throws Exception {
+    public ByteBuffer call(long functionId, ByteBuffer args, int numArgs) throws IOException, AsterixException {
         recvBuffer.clear();
         recvBuffer.position(0);
         recvBuffer.limit(0);
         messageBuilder.buf.clear();
         messageBuilder.buf.position(0);
         messageBuilder.call(args.array(), args.position(), numArgs);
-        sendMsg();
+        sendMsg(functionId);
         receiveMsg();
         if (getResponseType() != MessageType.CALL_RSP) {
-            throw new IllegalStateException("Illegal reply received, expected CALL_RSP, recvd: " + getResponseType());
+            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.ILLEGAL_STATE,
+                    "Expected CALL_RSP, recieved " + getResponseType().name());
         }
         return recvBuffer;
     }
 
-    public void quit() throws IOException {
+    public ByteBuffer callMulti(long key, ByteBuffer args, int numTuples) throws IOException, AsterixException {
+        recvBuffer.clear();
+        recvBuffer.position(0);
+        recvBuffer.limit(0);
+        messageBuilder.buf.clear();
+        messageBuilder.buf.position(0);
+        messageBuilder.callMulti(args.array(), args.position(), numTuples);
+        sendMsg(key);
+        receiveMsg();
+        if (getResponseType() != MessageType.CALL_RSP) {
+            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.ILLEGAL_STATE,
+                    "Expected CALL_RSP, recieved " + getResponseType().name());
+        }
+        return recvBuffer;
+    }
+
+    //For future use with interpreter reuse between jobs.
+    public void quit() throws HyracksDataException {
         messageBuilder.quit();
-        router.removeRoute(key);
+        router.removeRoute(routeId);
     }
 
     public void receiveMsg() throws IOException, AsterixException {
         Exception except = null;
         try {
-            synchronized (recvBuffer) {
-                while (recvBuffer.limit() == 0) {
-                    recvBuffer.wait(100);
+            synchronized (bufferBox) {
+                while ((bufferBox.getFirst().limit() == 0 || bufferBox.getSecond() != null) && pythonProc.isAlive()) {
+                    bufferBox.wait(100);
                 }
             }
-            if (router.hasException(key)) {
-                except = router.getException(key);
+            except = router.getAndRemoveException(routeId);
+            if (!pythonProc.isAlive()) {
+                except = new IOException("Python process exited with code: " + pythonProc.exitValue());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new AsterixException(ErrorCode.EXTERNAL_UDF_EXCEPTION, e);
         }
         if (except != null) {
-            throw new AsterixException(ErrorCode.EXTERNAL_UDF_EXCEPTION, except);
+            throw new AsterixException(except);
+        }
+        if (bufferBox.getFirst() != recvBuffer) {
+            recvBuffer = bufferBox.getFirst();
         }
         messageBuilder.readHead(recvBuffer);
         if (messageBuilder.type == MessageType.ERROR) {
-            throw new AsterixException(ErrorCode.EXTERNAL_UDF_EXCEPTION,
-                    MessagePack.newDefaultUnpacker(recvBuffer).unpackString());
+            unpackerInput.reset(recvBuffer.array(), recvBuffer.position() + recvBuffer.arrayOffset(),
+                    recvBuffer.remaining());
+            unpacker.reset(unpackerInput);
+            throw new AsterixException(unpacker.unpackString());
         }
     }
 
-    public void sendMsg() throws IOException {
+    public void sendMsg(long key) throws IOException {
         headerBuffer.clear();
         headerBuffer.position(0);
-        headerBuffer.putInt(HEADER_SIZE + messageBuilder.buf.position());
-        headerBuffer.putLong(-1);
+        headerBuffer.putInt(HEADER_SIZE + Integer.BYTES + messageBuilder.buf.position());
         headerBuffer.putLong(key);
+        headerBuffer.putLong(routeId);
         headerBuffer.put(Message.NORMAL);
         sockOut.write(headerBuffer.array(), 0, HEADER_SIZE + Integer.BYTES);
         sockOut.write(messageBuilder.buf.array(), 0, messageBuilder.buf.position());
@@ -139,6 +176,10 @@ public class PythonIPCProto {
 
     public MessageType getResponseType() {
         return messageBuilder.type;
+    }
+
+    public long getRouteId() {
+        return routeId;
     }
 
 }

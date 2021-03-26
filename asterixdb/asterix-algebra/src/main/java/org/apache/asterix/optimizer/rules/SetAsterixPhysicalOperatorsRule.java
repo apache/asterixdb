@@ -75,7 +75,7 @@ public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysical
 
     // Disable ASSIGN_BATCH physical operator if this option is set to 'false'
     public static final String REWRITE_ATTEMPT_BATCH_ASSIGN = "rewrite_attempt_batch_assign";
-    static final boolean REWRITE_ATTEMPT_BATCH_ASSIGN_DEFAULT = false;
+    static final boolean REWRITE_ATTEMPT_BATCH_ASSIGN_DEFAULT = true;
 
     @Override
     protected ILogicalOperatorVisitor<IPhysicalOperator, Boolean> createPhysicalOperatorFactoryVisitor(

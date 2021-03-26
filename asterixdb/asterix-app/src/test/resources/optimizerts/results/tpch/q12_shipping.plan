@@ -3,12 +3,12 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- SORT_MERGE_EXCHANGE [$$l_shipmode(ASC) ]  |PARTITIONED|
-          -- SORT_GROUP_BY[$$132]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$131]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- HASH_PARTITION_EXCHANGE [$$132]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$131]  |PARTITIONED|
               -- SORT_GROUP_BY[$$114]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
@@ -17,12 +17,12 @@
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- HYBRID_HASH_JOIN [$$114][$$121]  |PARTITIONED|
+                      -- HYBRID_HASH_JOIN [$$114][$$120]  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- HYBRID_HASH_JOIN [$$123][$$118]  |PARTITIONED|
-                                -- HASH_PARTITION_EXCHANGE [$$123]  |PARTITIONED|
+                              -- HYBRID_HASH_JOIN [$$122][$$118]  |PARTITIONED|
+                                -- HASH_PARTITION_EXCHANGE [$$122]  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- STREAM_SELECT  |PARTITIONED|
                                       -- ASSIGN  |PARTITIONED|

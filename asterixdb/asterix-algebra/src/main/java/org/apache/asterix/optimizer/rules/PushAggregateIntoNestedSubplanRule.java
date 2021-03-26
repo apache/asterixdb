@@ -19,7 +19,6 @@
 package org.apache.asterix.optimizer.rules;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -208,55 +207,38 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
     private void collectAggregateVars(Map<LogicalVariable, Integer> nspListifyVarsCount,
             Map<LogicalVariable, AbstractOperatorWithNestedPlans> nspWithAgg,
             Map<LogicalVariable, Integer> nspAggVarToPlanIndex, AbstractOperatorWithNestedPlans op) {
-        List<LogicalVariable> vars = collectOneVarPerAggFromOpWithNestedPlans(op);
-        for (int i = 0; i < vars.size(); i++) {
-            LogicalVariable v = vars.get(i);
-            if (v != null) {
-                nspListifyVarsCount.put(v, 0);
-                nspAggVarToPlanIndex.put(v, i);
-                nspWithAgg.put(v, op);
-            }
-        }
-    }
-
-    private List<LogicalVariable> collectOneVarPerAggFromOpWithNestedPlans(AbstractOperatorWithNestedPlans op) {
         List<ILogicalPlan> nPlans = op.getNestedPlans();
-        if (nPlans == null || nPlans.isEmpty()) {
-            return Collections.emptyList();
+        for (int planIdx = 0, planCount = nPlans.size(); planIdx < planCount; planIdx++) {
+            ILogicalPlan nestedPlan = nPlans.get(planIdx);
+            List<Mutable<ILogicalOperator>> roots = nestedPlan.getRoots();
+            if (roots.size() != 1) {
+                continue;
+            }
+            AbstractLogicalOperator rootOp = (AbstractLogicalOperator) roots.get(0).getValue();
+            if (rootOp.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
+                continue;
+            }
+            AggregateOperator agg = (AggregateOperator) rootOp;
+            // TODO: for now we only consider aggregate operators with every expression being listify()
+            // in the future we should check whether this can be relaxed (i.e. if some expressions are listify())
+            boolean everyExprIsListify = agg.getExpressions().stream().map(Mutable::getValue)
+                    .allMatch(expr -> expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL
+                            && ((AbstractFunctionCallExpression) expr).getFunctionIdentifier()
+                                    .equals(BuiltinFunctions.LISTIFY));
+            if (everyExprIsListify) {
+                for (LogicalVariable v : agg.getVariables()) {
+                    nspListifyVarsCount.put(v, 0);
+                    nspAggVarToPlanIndex.put(v, planIdx);
+                    nspWithAgg.put(v, op);
+                }
+            }
         }
-
-        List<LogicalVariable> aggVars = new ArrayList<>();
-        // test that the operator computes a "listify" aggregate
-        for (int i = 0; i < nPlans.size(); i++) {
-            AbstractLogicalOperator topOp = (AbstractLogicalOperator) nPlans.get(i).getRoots().get(0).getValue();
-            if (topOp.getOperatorTag() != LogicalOperatorTag.AGGREGATE) {
-                continue;
-            }
-            AggregateOperator agg = (AggregateOperator) topOp;
-            if (agg.getVariables().size() != 1) {
-                continue;
-            }
-            ILogicalExpression expr = agg.getExpressions().get(0).getValue();
-            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                continue;
-            }
-            AbstractFunctionCallExpression fceAgg = (AbstractFunctionCallExpression) expr;
-            if (fceAgg.getFunctionIdentifier() != BuiltinFunctions.LISTIFY) {
-                continue;
-            }
-            aggVars.add(agg.getVariables().get(0));
-        }
-        return aggVars;
     }
 
     /**
-     * @param exprRef
-     * @param nspWithAgg
-     * @param context
      * @return a pair whose first member is a boolean which is true iff
      *         something was changed in the expression tree rooted at expr. The
      *         second member is the result of transforming expr.
-     * @throws AlgebricksException
      */
     private Pair<Boolean, ILogicalExpression> extractAggFunctionsFromExpression(Mutable<ILogicalExpression> exprRef,
             Map<LogicalVariable, AbstractOperatorWithNestedPlans> nspWithAgg,
@@ -272,9 +254,9 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                     if (a1.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
                         LogicalVariable argVar = ((VariableReferenceExpression) a1).getVariableReference();
                         AbstractOperatorWithNestedPlans nspOp = nspWithAgg.get(argVar);
-
                         if (nspOp != null) {
-                            if (!aggregateExprToVarExpr.containsKey(expr)) {
+                            ILogicalExpression varExpr = aggregateExprToVarExpr.get(expr);
+                            if (varExpr == null) {
                                 LogicalVariable newVar = context.newVar();
                                 AggregateFunctionCallExpression aggFun =
                                         BuiltinFunctions.makeAggregateFunctionExpression(fi, fce.getArguments());
@@ -285,8 +267,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                                 aggregateExprToVarExpr.put(expr, newVarExpr);
                                 return new Pair<>(Boolean.TRUE, newVarExpr);
                             } else {
-                                ILogicalExpression varExpr = aggregateExprToVarExpr.get(expr);
-                                return new Pair<>(Boolean.TRUE, varExpr);
+                                return new Pair<>(Boolean.TRUE, varExpr.cloneExpression());
                             }
                         }
                     }
@@ -296,7 +277,7 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
                 for (Mutable<ILogicalExpression> a : fce.getArguments()) {
                     Pair<Boolean, ILogicalExpression> aggArg =
                             extractAggFunctionsFromExpression(a, nspWithAgg, aggregateExprToVarExpr, context);
-                    if (aggArg.first.booleanValue()) {
+                    if (aggArg.first) {
                         a.setValue(aggArg.second);
                         change = true;
                     }
