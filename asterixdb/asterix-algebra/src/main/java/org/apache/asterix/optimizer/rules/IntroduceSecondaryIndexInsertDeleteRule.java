@@ -686,9 +686,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         int sourceIndicatorForBaseRecord = workingElement.getSourceIndicator();
         LogicalVariable sourceVarForBaseRecord = hasMetaPart
                 ? ((sourceIndicatorForBaseRecord == Index.RECORD_INDICATOR) ? recordVar : metaVar) : recordVar;
-        VariableReferenceExpression baseRecordVarRef = new VariableReferenceExpression(sourceVarForBaseRecord);
-        baseRecordVarRef.setSourceLocation(sourceLoc);
-        UnnestBranchCreator branchCreator = new UnnestBranchCreator(baseRecordVarRef, unnestSourceOp);
+        UnnestBranchCreator branchCreator = new UnnestBranchCreator(sourceVarForBaseRecord, unnestSourceOp);
 
         int initialKeyPositionQueueSize = keyPositionQueue.size();
         Set<LogicalVariable> secondaryKeyVars = new HashSet<>();
@@ -739,7 +737,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 for (int j = 1; j < workingElement.getProjectList().size(); j++) {
                     LogicalVariable newVar = context.newVar();
                     AbstractFunctionCallExpression newVarRef =
-                            getFieldAccessFunction(new MutableObject<>(branchCreator.lastRecordVarRef), -1,
+                            getFieldAccessFunction(new MutableObject<>(branchCreator.createLastRecordVarRef()), -1,
                                     workingElement.getProjectList().get(j));
 
                     AssignOperator newAssignOp = new AssignOperator(newVar, new MutableObject<>(newVarRef));
@@ -988,12 +986,12 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
      */
     private class UnnestBranchCreator implements ArrayIndexUtil.TypeTrackerCommandExecutor {
         private final List<LogicalVariable> lastFieldVars;
-        private VariableReferenceExpression lastRecordVarRef;
+        private LogicalVariable lastRecordVar;
         private ILogicalOperator currentTop, currentBottom;
         private boolean isFirstWalk = true;
 
-        public UnnestBranchCreator(VariableReferenceExpression recordVarRef, ILogicalOperator sourceOperator) {
-            this.lastRecordVarRef = recordVarRef;
+        public UnnestBranchCreator(LogicalVariable recordVar, ILogicalOperator sourceOperator) {
+            this.lastRecordVar = recordVar;
             this.currentTop = sourceOperator;
             this.lastFieldVars = new ArrayList<>();
         }
@@ -1004,6 +1002,12 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
         public void lowerIsFirstWalkFlag() {
             isFirstWalk = false;
+        }
+
+        public VariableReferenceExpression createLastRecordVarRef() {
+            VariableReferenceExpression varRef = new VariableReferenceExpression(lastRecordVar);
+            varRef.setSourceLocation(sourceLoc);
+            return varRef;
         }
 
         @SafeVarargs
@@ -1061,9 +1065,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             if (isFirstUnnestInStep) {
                 // This is the first UNNEST step. Get the field we want to UNNEST from our record.
                 accessToUnnestVar = (startingStepRecordType != null)
-                        ? getFieldAccessFunction(new MutableObject<>(lastRecordVarRef),
+                        ? getFieldAccessFunction(new MutableObject<>(createLastRecordVarRef()),
                                 startingStepRecordType.getFieldIndex(fieldName.get(0)), fieldName)
-                        : getFieldAccessFunction(new MutableObject<>(lastRecordVarRef), -1, fieldName);
+                        : getFieldAccessFunction(new MutableObject<>(createLastRecordVarRef()), -1, fieldName);
             } else {
                 // This is the second+ UNNEST step. Refer back to the previously unnested variable.
                 accessToUnnestVar = new VariableReferenceExpression(this.lastFieldVars.get(0));
@@ -1086,8 +1090,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
             if (isLastUnnestInIntermediateStep) {
                 // This is the last UNNEST before the next array step. Update our record variable.
-                this.lastRecordVarRef = new VariableReferenceExpression(unnestVar);
-                this.lastRecordVarRef.setSourceLocation(sourceLoc);
+                this.lastRecordVar = unnestVar;
                 this.lastFieldVars.clear();
             }
         }
@@ -1102,9 +1105,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
             // Create the function to access our final field.
             AbstractFunctionCallExpression accessToFinalVar = (startingStepRecordType != null)
-                    ? getFieldAccessFunction(new MutableObject<>(lastRecordVarRef),
+                    ? getFieldAccessFunction(new MutableObject<>(createLastRecordVarRef()),
                             startingStepRecordType.getFieldIndex(fieldName.get(0)), fieldName)
-                    : getFieldAccessFunction(new MutableObject<>(lastRecordVarRef), -1, fieldName);
+                    : getFieldAccessFunction(new MutableObject<>(createLastRecordVarRef()), -1, fieldName);
 
             LogicalVariable finalVar = context.newVar();
             this.lastFieldVars.add(finalVar);
