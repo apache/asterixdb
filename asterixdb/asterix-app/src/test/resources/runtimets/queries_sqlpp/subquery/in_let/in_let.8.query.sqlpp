@@ -17,8 +17,23 @@
  * under the License.
  */
 
-use tpch;
+/*
+ * Test "rewrite_internal_queryuid_pk" option (default is true)
+ */
 
-load dataset LineItem
-using localfs
-(("path"="asterix_nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+use test;
+
+SET `compiler.sort.parallel` "false";
+SET `rewrite_internal_queryuid_pk` "false";
+
+select c1.cid, i1.pid, i1.ts
+from cart c1 unnest c1.items i1
+where i1.ts >= 2000 and i1.pid in
+(
+  select value i2.pid
+  from cart c2 unnest c2.items i2
+  where i2.ts >= 2000
+  group by i2.pid
+  having count(*) > 1
+)
+order by c1.cid;

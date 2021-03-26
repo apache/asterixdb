@@ -487,11 +487,16 @@ public class OperatorManipulationUtil {
     public static List<Mutable<ILogicalExpression>> createVariableReferences(Collection<LogicalVariable> varList,
             SourceLocation sourceLoc) {
         List<Mutable<ILogicalExpression>> varRefs = new ArrayList<>(varList.size());
+        createVariableReferences(varList, sourceLoc, varRefs);
+        return varRefs;
+    }
+
+    public static void createVariableReferences(Collection<LogicalVariable> varList, SourceLocation sourceLoc,
+            List<Mutable<ILogicalExpression>> outVarRefList) {
         for (LogicalVariable var : varList) {
             VariableReferenceExpression varRef = new VariableReferenceExpression(var);
             varRef.setSourceLocation(sourceLoc);
-            varRefs.add(new MutableObject<>(varRef));
+            outVarRefList.add(new MutableObject<>(varRef));
         }
-        return varRefs;
     }
 }

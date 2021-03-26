@@ -22,8 +22,8 @@
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- HYBRID_HASH_JOIN [$$116][$$108]  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- ASSIGN  |PARTITIONED|
-                                        -- STREAM_SELECT  |PARTITIONED|
+                                      -- STREAM_SELECT  |PARTITIONED|
+                                        -- RUNNING_AGGREGATE  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ASSIGN  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|

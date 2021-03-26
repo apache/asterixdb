@@ -125,9 +125,6 @@ public class SweepIllegalNonfunctionalFunctions implements IAlgebraicRewriteRule
 
         @Override
         public Void visitRunningAggregateOperator(RunningAggregateOperator op, Void arg) throws AlgebricksException {
-            for (Mutable<ILogicalExpression> me : op.getExpressions()) {
-                sweepExpression(me.getValue());
-            }
             return null;
         }
 

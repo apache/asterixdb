@@ -17,8 +17,29 @@
  * under the License.
  */
 
-use tpch;
+drop  dataverse test if exists;
+create  dataverse test;
 
-select distinct value print_binary(id, "hex") from LineItem
-let id = create_query_uid()
-order by id;
+use test;
+
+SET `compiler.sort.parallel` "false";
+SET `rewrite_internal_queryuid_pk` "false";
+
+create type test.TestType as
+{
+  id : integer
+};
+
+create dataset cart(TestType) primary key id;
+
+select c1.cid, i1.pid, i1.ts
+from cart c1 unnest c1.items i1
+where i1.ts >= 2000 and i1.pid in
+(
+  select value i2.pid
+  from cart c2 unnest c2.items i2
+  where i2.ts >= 2000
+  group by i2.pid
+  having count(*) > 1
+)
+order by c1.cid;

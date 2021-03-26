@@ -46,7 +46,7 @@
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           -- HYBRID_HASH_JOIN [$$174][$$171]  |PARTITIONED|
                                                             -- HASH_PARTITION_EXCHANGE [$$174]  |PARTITIONED|
-                                                              -- ASSIGN  |PARTITIONED|
+                                                              -- RUNNING_AGGREGATE  |PARTITIONED|
                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                     -- NESTED_LOOP  |PARTITIONED|
@@ -123,7 +123,7 @@
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                     -- HYBRID_HASH_JOIN [$$174][$$171]  |PARTITIONED|
                                                                       -- HASH_PARTITION_EXCHANGE [$$174]  |PARTITIONED|
-                                                                        -- ASSIGN  |PARTITIONED|
+                                                                        -- RUNNING_AGGREGATE  |PARTITIONED|
                                                                           -- STREAM_PROJECT  |PARTITIONED|
                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                               -- NESTED_LOOP  |PARTITIONED|
