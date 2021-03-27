@@ -10475,6 +10475,11 @@
         <expected-error>ASX1063: Cannot find dataverse with name UNKNOWN_DATAVERSE</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="synonym">
+      <compilation-unit name="synonym-03">
+        <output-dir compare="Text">synonym-03</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="tokenizers">
     <test-case FilePath="tokenizers">

@@ -2639,7 +2639,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         CreateSynonymStatement css = (CreateSynonymStatement) stmt;
         DataverseName dataverseName = getActiveDataverseName(css.getDataverseName());
         String synonymName = css.getSynonymName();
-        DataverseName objectDataverseName = getActiveDataverseName(css.getObjectDataverseName());
+        DataverseName objectDataverseName =
+                css.getObjectDataverseName() != null ? css.getObjectDataverseName() : dataverseName;
         String objectName = css.getObjectName();
         lockUtil.createSynonymBegin(lockManager, metadataProvider.getLocks(), dataverseName, synonymName);
         try {
