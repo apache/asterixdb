@@ -776,7 +776,7 @@ public class ExternalDataUtils {
             S3Client s3Client = buildAwsS3Client(configuration);;
             S3Response response;
             boolean useOldApi = false;
-            String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
+            String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
             String prefix = getPrefix(configuration);
 
             try {
@@ -943,7 +943,7 @@ public class ExternalDataUtils {
             // Check if the bucket is present
             BlobServiceClient blobServiceClient;
             try {
-                String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
+                String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
                 blobServiceClient = buildAzureClient(configuration);
                 BlobContainerClient blobContainer = blobServiceClient.getBlobContainerClient(container);
 

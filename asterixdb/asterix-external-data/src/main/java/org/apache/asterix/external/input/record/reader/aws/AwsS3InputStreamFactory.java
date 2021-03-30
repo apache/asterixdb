@@ -18,19 +18,17 @@
  */
 package org.apache.asterix.external.input.record.reader.aws;
 
-import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -61,8 +59,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
     @Override
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
             throws AlgebricksException {
-        this.configuration = configuration;
-        ICcApplicationContext ccApplicationContext = (ICcApplicationContext) ctx.getApplicationContext();
+        super.configure(ctx, configuration, warningCollector);
 
         // Ensure the validity of include/exclude
         ExternalDataUtils.validateIncludeExclude(configuration);
@@ -70,7 +67,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
 
         // Prepare to retrieve the objects
         List<S3Object> filesOnly;
-        String container = configuration.get(AwsS3.CONTAINER_NAME_FIELD_NAME);
+        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
         S3Client s3Client = ExternalDataUtils.AwsS3.buildAwsS3Client(configuration);
 
         try {
@@ -101,12 +98,8 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
             warningCollector.warn(warning);
         }
 
-        // Partition constraints
-        partitionConstraint = ccApplicationContext.getClusterStateManager().getClusterLocations();
-        int partitionsCount = partitionConstraint.getLocations().length;
-
         // Distribute work load amongst the partitions
-        distributeWorkLoad(filesOnly, partitionsCount);
+        distributeWorkLoad(filesOnly, getPartitionsCount());
     }
 
     /**

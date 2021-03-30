@@ -42,15 +42,17 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 public class AwsS3InputStream extends AbstractExternalInputStream {
 
     private final S3Client s3Client;
+    private final String bucket;
 
     public AwsS3InputStream(Map<String, String> configuration, List<String> filePaths) throws HyracksDataException {
         super(configuration, filePaths);
         this.s3Client = buildAwsS3Client(configuration);
+        this.bucket = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
     }
 
     @Override
     protected boolean getInputStream() throws IOException {
-        String bucket = configuration.get(AwsS3.CONTAINER_NAME_FIELD_NAME);
+        String fileName = filePaths.get(nextFileIndex);
         GetObjectRequest.Builder getObjectBuilder = GetObjectRequest.builder();
         GetObjectRequest getObjectRequest = getObjectBuilder.bucket(bucket).key(filePaths.get(nextFileIndex)).build();
 
@@ -67,11 +69,10 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
         }
 
         // Use gzip stream if needed
-        String filename = filePaths.get(nextFileIndex).toLowerCase();
-        if (filename.endsWith(".gz") || filename.endsWith(".gzip")) {
-            in = new GZIPInputStream(s3Client.getObject(getObjectRequest), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+        String lowerCaseFileName = fileName.toLowerCase();
+        if (lowerCaseFileName.endsWith(".gz") || lowerCaseFileName.endsWith(".gzip")) {
+            in = new GZIPInputStream(in, ExternalDataConstants.DEFAULT_BUFFER_SIZE);
         }
-
         return true;
     }
 

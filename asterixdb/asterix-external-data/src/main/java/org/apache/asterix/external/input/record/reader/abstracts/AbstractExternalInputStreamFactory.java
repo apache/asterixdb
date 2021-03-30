@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
@@ -69,9 +70,17 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
         return partitionConstraint;
     }
 
+    protected int getPartitionsCount() {
+        return getPartitionConstraint().getLocations().length;
+    }
+
     @Override
-    public abstract void configure(IServiceContext ctx, Map<String, String> configuration,
-            IWarningCollector warningCollector) throws AlgebricksException;
+    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
+            throws AlgebricksException {
+        this.configuration = configuration;
+        this.partitionConstraint =
+                ((ICcApplicationContext) ctx.getApplicationContext()).getClusterStateManager().getClusterLocations();
+    }
 
     /**
      * Finds the smallest workload and returns it
