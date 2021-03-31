@@ -82,27 +82,6 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
                 ((ICcApplicationContext) ctx.getApplicationContext()).getClusterStateManager().getClusterLocations();
     }
 
-    /**
-     * Finds the smallest workload and returns it
-     *
-     * @return the smallest workload
-     */
-    protected PartitionWorkLoadBasedOnSize getSmallestWorkLoad() {
-        PartitionWorkLoadBasedOnSize smallest = partitionWorkLoadsBasedOnSize.get(0);
-        for (PartitionWorkLoadBasedOnSize partition : partitionWorkLoadsBasedOnSize) {
-            // If the current total size is 0, add the file directly as this is a first time partition
-            if (partition.getTotalSize() == 0) {
-                smallest = partition;
-                break;
-            }
-            if (partition.getTotalSize() < smallest.getTotalSize()) {
-                smallest = partition;
-            }
-        }
-
-        return smallest;
-    }
-
     protected IncludeExcludeMatcher getIncludeExcludeMatchers() throws CompilationException {
         // Get and compile the patterns for include/exclude if provided
         List<Matcher> includeMatchers = new ArrayList<>();

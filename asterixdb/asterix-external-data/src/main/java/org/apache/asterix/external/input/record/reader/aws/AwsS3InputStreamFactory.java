@@ -19,8 +19,10 @@
 package org.apache.asterix.external.input.record.reader.aws;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 
@@ -216,14 +218,19 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
      * @param partitionsCount Partitions count
      */
     private void distributeWorkLoad(List<S3Object> fileObjects, int partitionsCount) {
+        PriorityQueue<PartitionWorkLoadBasedOnSize> workloadQueue = new PriorityQueue<>(partitionsCount,
+                Comparator.comparingLong(PartitionWorkLoadBasedOnSize::getTotalSize));
+
         // Prepare the workloads based on the number of partitions
         for (int i = 0; i < partitionsCount; i++) {
-            partitionWorkLoadsBasedOnSize.add(new PartitionWorkLoadBasedOnSize());
+            workloadQueue.add(new PartitionWorkLoadBasedOnSize());
         }
 
         for (S3Object object : fileObjects) {
-            PartitionWorkLoadBasedOnSize smallest = getSmallestWorkLoad();
-            smallest.addFilePath(object.key(), object.size());
+            PartitionWorkLoadBasedOnSize workload = workloadQueue.poll();
+            workload.addFilePath(object.key(), object.size());
+            workloadQueue.add(workload);
         }
+        partitionWorkLoadsBasedOnSize.addAll(workloadQueue);
     }
 }

@@ -19,8 +19,10 @@
 package org.apache.asterix.external.input.record.reader.azure;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 
@@ -131,14 +133,19 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
      * @param partitionsCount Partitions count
      */
     private void distributeWorkLoad(List<BlobItem> items, int partitionsCount) {
+        PriorityQueue<PartitionWorkLoadBasedOnSize> workloadQueue = new PriorityQueue<>(partitionsCount,
+                Comparator.comparingLong(PartitionWorkLoadBasedOnSize::getTotalSize));
+
         // Prepare the workloads based on the number of partitions
         for (int i = 0; i < partitionsCount; i++) {
-            partitionWorkLoadsBasedOnSize.add(new PartitionWorkLoadBasedOnSize());
+            workloadQueue.add(new PartitionWorkLoadBasedOnSize());
         }
 
-        for (BlobItem item : items) {
-            PartitionWorkLoadBasedOnSize smallest = getSmallestWorkLoad();
-            smallest.addFilePath(item.getName(), item.getProperties().getContentLength());
+        for (BlobItem object : items) {
+            PartitionWorkLoadBasedOnSize workload = workloadQueue.poll();
+            workload.addFilePath(object.getName(), object.getProperties().getContentLength());
+            workloadQueue.add(workload);
         }
+        partitionWorkLoadsBasedOnSize.addAll(workloadQueue);
     }
 }
