@@ -75,12 +75,21 @@ public class RunFileWriter implements IFrameWriter {
     }
 
     public void erase() throws HyracksDataException {
-        close();
-        file.delete();
+        try {
+            close();
+        } finally {
+            // Make sure we never access the file if it is deleted.
+            handle = null;
+            eraseClosed();
+        }
+    }
 
-        // Make sure we never access the file if it is deleted.
-        file = null;
-        handle = null;
+    public void eraseClosed() {
+        FileReference f = file;
+        if (f != null) {
+            file = null;
+            f.delete();
+        }
     }
 
     public FileReference getFileReference() {
