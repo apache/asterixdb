@@ -802,11 +802,10 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     // The nested loop join result is outer + inner. All the other operator is probe + build.
                     // Hence the reverse relation is different.
                     boolean isReversed = outerRd == buildRd && innerRd == probeRd;
-                    assert isLeftOuter ? !isReversed : true : "LeftOut Join can not reverse roles";
                     ITuplePairComparator nljComptorOuterInner = isReversed ? buildComp : probComp;
                     NestedLoopJoin nlj = new NestedLoopJoin(jobletCtx, new FrameTupleAccessor(outerRd),
-                            new FrameTupleAccessor(innerRd), memorySize, predEvaluator, isLeftOuter, nonMatchWriter);
-                    nlj.setIsReversed(isReversed);
+                            new FrameTupleAccessor(innerRd), memorySize, predEvaluator, isLeftOuter, nonMatchWriter,
+                            isReversed);
                     nlj.setComparator(nljComptorOuterInner);
 
                     IFrame cacheBuff = new VSizeFrame(jobletCtx);

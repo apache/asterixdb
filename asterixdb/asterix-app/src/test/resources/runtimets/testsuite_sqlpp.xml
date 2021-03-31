@@ -12983,6 +12983,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="leftouterjoin">
+      <compilation-unit name="query-ASTERIXDB-2857">
+        <output-dir compare="Text">query-ASTERIXDB-2857</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="leftouterjoin">
       <compilation-unit name="right_branch_opt_1">
         <output-dir compare="Text">right_branch_opt_1</output-dir>
       </compilation-unit>
