@@ -21,7 +21,6 @@ package org.apache.asterix.app.message;
 import static org.apache.hyracks.util.ExitUtil.EC_NC_FAILED_TO_NOTIFY_TASKS_COMPLETED;
 
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -38,14 +37,16 @@ import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+
 public class StorageCleanupRequestMessage extends CcIdentifiedMessage implements INcAddressedMessage {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LogManager.getLogger();
-    private final Set<Integer> validDatasetIds;
+    private final IntOpenHashSet validDatasetIds;
     private final long reqId;
 
-    public StorageCleanupRequestMessage(long reqId, Set<Integer> validDatasetIds) {
+    public StorageCleanupRequestMessage(long reqId, IntOpenHashSet validDatasetIds) {
         this.validDatasetIds = validDatasetIds;
         this.reqId = reqId;
     }

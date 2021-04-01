@@ -21,7 +21,6 @@ package org.apache.asterix.hyracks.bootstrap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -55,6 +54,8 @@ import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 public class GlobalRecoveryManager implements IGlobalRecoveryManager {
 
@@ -134,11 +135,11 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
     protected void performGlobalStorageCleanup(MetadataTransactionContext mdTxnCtx, int storageGlobalCleanupTimeoutSecs)
             throws Exception {
         List<Dataverse> dataverses = MetadataManager.INSTANCE.getDataverses(mdTxnCtx);
-        Set<Integer> validDatasetIds = new HashSet<>();
+        IntOpenHashSet validDatasetIds = new IntOpenHashSet();
         for (Dataverse dataverse : dataverses) {
             List<Dataset> dataverseDatasets =
                     MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dataverse.getDataverseName());
-            dataverseDatasets.stream().map(Dataset::getDatasetId).forEach(validDatasetIds::add);
+            dataverseDatasets.stream().mapToInt(Dataset::getDatasetId).forEach(validDatasetIds::add);
         }
         ICcApplicationContext ccAppCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
         final List<String> ncs = new ArrayList<>(ccAppCtx.getClusterStateManager().getParticipantNodes());
