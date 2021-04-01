@@ -83,7 +83,7 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_EXTERNAL_FIELD_PUSHDOWN(
                 BOOLEAN,
                 AlgebricksConfig.EXTERNAL_FIELD_PUSHDOWN_DEFAULT,
-                "Enable pushdown of field accesses to the external dataset data-scan operator"),
+                "Enable pushdown of field accesses to the external data-scan operator"),
         COMPILER_SUBPLAN_MERGE(
                 BOOLEAN,
                 AlgebricksConfig.SUBPLAN_MERGE_DEFAULT,

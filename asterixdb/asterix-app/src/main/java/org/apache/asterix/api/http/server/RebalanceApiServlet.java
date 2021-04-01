@@ -19,6 +19,7 @@
 package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -121,13 +122,13 @@ public class RebalanceApiServlet extends AbstractServlet {
             // If a user gives parameter datasetName, she should give dataverseName as well.
             if (dataverseName == null && datasetName != null) {
                 sendResponse(response, HttpResponseStatus.BAD_REQUEST,
-                        "to rebalance a particular dataset, the parameter dataverseName must be given");
+                        "to rebalance a particular " + dataset() + ", the parameter dataverseName must be given");
                 return;
             }
 
             // Does not allow rebalancing a metadata dataset.
             if (MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName)) {
-                sendResponse(response, HttpResponseStatus.BAD_REQUEST, "cannot rebalance a metadata dataset");
+                sendResponse(response, HttpResponseStatus.BAD_REQUEST, "cannot rebalance a metadata " + dataset());
                 return;
             }
             // Schedules a rebalance task and wait for its completion.

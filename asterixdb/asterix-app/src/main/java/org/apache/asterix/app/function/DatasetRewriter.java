@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.function;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,7 +69,7 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         if (unnest.getPositionalVariable() != null) {
             // TODO remove this after enabling the support of positional variables in data scan
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, unnest.getSourceLocation(),
-                    "No positional variables are allowed over datasets.");
+                    "No positional variables are allowed over " + dataset() + "s");
         }
 
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
@@ -122,7 +124,7 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         IAType type = metadata.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         if (type == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, datasetFnCall.getSourceLocation(),
-                    "No type for dataset " + dataset.getDatasetName());
+                    "No type for " + dataset() + " " + dataset.getDatasetName());
         }
         return type;
     }

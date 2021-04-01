@@ -19,6 +19,8 @@
 
 package org.apache.asterix.metadata;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -687,7 +689,7 @@ public class MetadataNode implements IMetadataNode {
             }
             throw new AsterixException(
                     org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "node group",
-                    nodeGroupName, "datasets",
+                    nodeGroupName, dataset() + "(s)",
                     datasets.stream().map(DatasetUtil::getFullyQualifiedDisplayName).collect(Collectors.joining(", ")));
         }
         try {
@@ -936,7 +938,7 @@ public class MetadataNode implements IMetadataNode {
                 throw new AsterixException(
                         org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS, "type",
                         TypeUtil.getFullyQualifiedDisplayName(set.getItemTypeDataverseName(), set.getItemTypeName()),
-                        "dataset", DatasetUtil.getFullyQualifiedDisplayName(set));
+                        dataset(), DatasetUtil.getFullyQualifiedDisplayName(set));
             }
             if (set.getMetaItemTypeDataverseName() != null
                     && set.getMetaItemTypeDataverseName().equals(dataverseName)) {
@@ -944,7 +946,7 @@ public class MetadataNode implements IMetadataNode {
                         org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS, "type",
                         TypeUtil.getFullyQualifiedDisplayName(set.getMetaItemTypeDataverseName(),
                                 set.getMetaItemTypeName()),
-                        "dataset", DatasetUtil.getFullyQualifiedDisplayName(set));
+                        dataset(), DatasetUtil.getFullyQualifiedDisplayName(set));
             }
         }
 
@@ -964,9 +966,8 @@ public class MetadataNode implements IMetadataNode {
                         Function.FunctionDependencyKind functionDependencyKind = functionDependencyKinds[i];
                         throw new AsterixException(
                                 org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
-                                functionDependencyKind.toString().toLowerCase(),
-                                functionDependencyKind.getDependencyDisplayName(dependency), "function",
-                                function.getSignature());
+                                functionDependencyKind, functionDependencyKind.getDependencyDisplayName(dependency),
+                                "function", function.getSignature());
                     }
                 }
             }
@@ -1098,7 +1099,7 @@ public class MetadataNode implements IMetadataNode {
             if (set.getItemTypeName().equals(datatypeName) && set.getItemTypeDataverseName().equals(dataverseName)) {
                 throw new AsterixException(
                         org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "type",
-                        TypeUtil.getFullyQualifiedDisplayName(dataverseName, datatypeName), "dataset",
+                        TypeUtil.getFullyQualifiedDisplayName(dataverseName, datatypeName), dataset(),
                         DatasetUtil.getFullyQualifiedDisplayName(set));
             }
         }

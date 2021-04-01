@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.metadata.utils;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
+
 import java.io.DataOutput;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -366,7 +369,8 @@ public class DatasetUtil {
         DataverseName dataverseName = dataverse.getDataverseName();
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new AsterixException("Could not find dataset " + datasetName + " in dataverse " + dataverseName);
+            throw new AsterixException(
+                    "Could not find " + dataset() + " " + datasetName + " in " + dataverse() + " " + dataverseName);
         }
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =

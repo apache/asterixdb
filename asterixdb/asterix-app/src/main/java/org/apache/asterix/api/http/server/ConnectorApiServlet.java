@@ -19,6 +19,8 @@
 package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -34,6 +36,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.utils.FlushDatasetUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.io.FileSplit;
@@ -98,8 +101,8 @@ public class ConnectorApiServlet extends AbstractServlet {
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
                 Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
                 if (dataset == null) {
-                    jsonResponse.put("error",
-                            "Dataset " + datasetName + " does not exist in " + "dataverse " + dataverseName);
+                    jsonResponse.put("error", StringUtils.capitalize(dataset()) + " " + datasetName
+                            + " does not exist in " + dataverse() + " " + dataverseName);
                     out.write(jsonResponse.toString());
                     out.flush();
                     return;

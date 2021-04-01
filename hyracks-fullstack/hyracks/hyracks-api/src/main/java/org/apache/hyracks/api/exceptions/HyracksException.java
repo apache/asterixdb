@@ -130,6 +130,7 @@ public class HyracksException extends IOException implements IFormattedException
         return errorCode;
     }
 
+    @Override
     public Serializable[] getParams() {
         return params;
     }
@@ -138,6 +139,7 @@ public class HyracksException extends IOException implements IFormattedException
         return nodeId;
     }
 
+    @Override
     public SourceLocation getSourceLocation() {
         return sourceLoc;
     }
