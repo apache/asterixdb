@@ -35,6 +35,7 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
     protected final ArrayTupleBuilder tb;
     protected final FeedLogManager feedLogManager;
     protected boolean flushing;
+    protected long incomingRecordsCount = 0;
 
     public AbstractFeedDataFlowController(IHyracksTaskContext ctx, FeedLogManager feedLogManager, int numOfFields) {
         this.feedLogManager = feedLogManager;
@@ -48,6 +49,10 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
         flushing = true;
         tupleForwarder.flush();
         flushing = false;
+    }
+
+    public long getIncomingRecordsCount() {
+        return incomingRecordsCount;
     }
 
     public abstract String getStats();
