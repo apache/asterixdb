@@ -32,9 +32,12 @@ import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.network.ISocketChannel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FileSynchronizer {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private final INcApplicationContext appCtx;
     private final PartitionReplica replica;
 
@@ -53,6 +56,7 @@ public class FileSynchronizer {
             final ISocketChannel channel = replica.getChannel();
             final FileReference filePath = ioManager.resolve(file);
             ReplicateFileTask task = new ReplicateFileTask(file, filePath.getFile().length(), metadata);
+            LOGGER.info("attempting to replicate {} to replica {}", task, replica);
             ReplicationProtocol.sendTo(replica, task);
             // send the file itself
             try (RandomAccessFile fromFile = new RandomAccessFile(filePath.getFile(), "r");
