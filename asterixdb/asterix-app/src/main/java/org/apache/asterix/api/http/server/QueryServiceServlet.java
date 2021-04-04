@@ -280,10 +280,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             final ResultProperties resultProperties = new ResultProperties(delivery, param.getMaxResultReads());
             buildResponseHeaders(requestRef, sessionOutput, param, responsePrinter, delivery);
             responsePrinter.printHeaders();
-            validateStatement(param.getStatement());
-            String statementsText = param.getStatement() + ";";
+            String statement = param.getStatement();
+            statement = statement == null || (!statement.isEmpty() && statement.charAt(statement.length() - 1) == ';')
+                    ? statement : (statement + ";");
+            validateStatement(statement);
             if (param.isParseOnly()) {
-                ResultUtil.ParseOnlyResult parseOnlyResult = parseStatement(statementsText);
+                ResultUtil.ParseOnlyResult parseOnlyResult = parseStatement(statement);
                 setAccessControlHeaders(request, response);
                 executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
                 response.setStatus(executionState.getHttpStatus());
@@ -296,9 +298,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 IStatementExecutor.StatementProperties statementProperties =
                         new IStatementExecutor.StatementProperties();
                 response.setStatus(HttpResponseStatus.OK);
-                executeStatement(request, requestRef, statementsText, sessionOutput, resultProperties,
-                        statementProperties, stats, param, executionState, param.getOptionalParams(), statementParams,
-                        responsePrinter, warnings);
+                executeStatement(request, requestRef, statement, sessionOutput, resultProperties, statementProperties,
+                        stats, param, executionState, param.getOptionalParams(), statementParams, responsePrinter,
+                        warnings);
                 executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
             }
             errorCount = 0;
