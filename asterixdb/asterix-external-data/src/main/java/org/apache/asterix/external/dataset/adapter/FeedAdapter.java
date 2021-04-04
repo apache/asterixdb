@@ -21,6 +21,7 @@ package org.apache.asterix.external.dataset.adapter;
 import java.io.Closeable;
 import java.io.IOException;
 
+import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -68,5 +69,9 @@ public class FeedAdapter implements IDataSourceAdapter, Closeable {
     @Override
     public void close() throws IOException {
         controller.close();
+    }
+
+    public void handleGenericEvent(ActiveManagerMessage event) {
+        controller.handleGenericEvent(event);
     }
 }

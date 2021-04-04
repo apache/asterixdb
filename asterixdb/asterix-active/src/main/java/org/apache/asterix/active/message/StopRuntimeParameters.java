@@ -21,23 +21,15 @@ package org.apache.asterix.active.message;
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.asterix.active.ActiveRuntimeId;
-
 public class StopRuntimeParameters implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-    private final ActiveRuntimeId runtimeId;
+    private static final long serialVersionUID = 2L;
     private final long timeout;
     private final TimeUnit unit;
 
-    public StopRuntimeParameters(ActiveRuntimeId runtimeId, long timeout, TimeUnit unit) {
-        this.runtimeId = runtimeId;
+    public StopRuntimeParameters(long timeout, TimeUnit unit) {
         this.timeout = timeout;
         this.unit = unit;
-    }
-
-    public ActiveRuntimeId getRuntimeId() {
-        return runtimeId;
     }
 
     public long getTimeout() {

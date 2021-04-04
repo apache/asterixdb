@@ -21,6 +21,7 @@ package org.apache.asterix.external.dataflow;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IRawRecord;
@@ -279,5 +280,10 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 .append(",\"" + FAILED_AT_PARSER_RECORDS_COUNT_FIELD_NAME + "\":").append(failedRecordsCount)
                 .append("}");
         return str.toString();
+    }
+
+    @Override
+    public void handleGenericEvent(ActiveManagerMessage event) {
+        recordReader.handleGenericEvent(event);
     }
 }
