@@ -14,30 +14,28 @@ RecordConstructor [
       FunctionCall asterix.sum@1[
         (
           SELECT ELEMENT [
-          CASE              LiteralExpr [TRUE]
-
-          WHEN               OperatorExpr [
-                FieldAccessor [
-                  FieldAccessor [
-                    Variable [ Name=$i ]
-                    Field=t
-                  ]
-                  Field=s_name
-                ]
-                =
-                LiteralExpr [STRING] [BRAZIL]
-              ]
-          THEN               FieldAccessor [
+          FunctionCall asterix.switch-case[
+            LiteralExpr [TRUE]
+            OperatorExpr [
+              FieldAccessor [
                 FieldAccessor [
                   Variable [ Name=$i ]
                   Field=t
                 ]
-                Field=revenue
+                Field=s_name
               ]
-
-          ELSE               LiteralExpr [DOUBLE] [0.0]
-
-          END
+              =
+              LiteralExpr [STRING] [BRAZIL]
+            ]
+            FieldAccessor [
+              FieldAccessor [
+                Variable [ Name=$i ]
+                Field=t
+              ]
+              Field=revenue
+            ]
+            LiteralExpr [DOUBLE] [0.0]
+          ]
           ]
           FROM [            Variable [ Name=$g ]
             AS Variable [ Name=$i ]

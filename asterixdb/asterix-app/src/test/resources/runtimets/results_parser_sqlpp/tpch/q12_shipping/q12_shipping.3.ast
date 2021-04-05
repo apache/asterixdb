@@ -13,35 +13,14 @@ RecordConstructor [
     FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
-        CASE            OperatorExpr [
-              OperatorExpr [
-                FieldAccessor [
-                  Variable [ Name=$i ]
-                  Field=o_orderpriority
-                ]
-                =
-                LiteralExpr [STRING] [1-URGENT]
-              ]
-              or
-              OperatorExpr [
-                FieldAccessor [
-                  Variable [ Name=$i ]
-                  Field=o_orderpriority
-                ]
-                =
-                LiteralExpr [STRING] [2-HIGH]
-              ]
-            ]
-
-        WHEN             LiteralExpr [TRUE]
-        THEN             LiteralExpr [LONG] [1]
-
-        WHEN             LiteralExpr [FALSE]
-        THEN             LiteralExpr [LONG] [0]
-
-        ELSE             LiteralExpr [NULL]
-
-        END
+        FunctionCall asterix.switch-case[
+          LiteralExpr [TRUE]
+          LiteralExpr [TRUE]
+          LiteralExpr [LONG] [1]
+          LiteralExpr [FALSE]
+          LiteralExpr [LONG] [0]
+          LiteralExpr [NULL]
+        ]
         ]
         FROM [          (
             SELECT ELEMENT [
@@ -65,32 +44,30 @@ RecordConstructor [
     FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
-        CASE            LiteralExpr [TRUE]
-
-        WHEN             OperatorExpr [
-              OperatorExpr [
-                FieldAccessor [
-                  Variable [ Name=$i ]
-                  Field=o_orderpriority
-                ]
-                =
-                LiteralExpr [STRING] [1-URGENT]
+        FunctionCall asterix.switch-case[
+          LiteralExpr [TRUE]
+          OperatorExpr [
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=$i ]
+                Field=o_orderpriority
               ]
-              or
-              OperatorExpr [
-                FieldAccessor [
-                  Variable [ Name=$i ]
-                  Field=o_orderpriority
-                ]
-                =
-                LiteralExpr [STRING] [2-HIGH]
-              ]
+              =
+              LiteralExpr [STRING] [1-URGENT]
             ]
-        THEN             LiteralExpr [LONG] [0]
-
-        ELSE             LiteralExpr [LONG] [1]
-
-        END
+            or
+            OperatorExpr [
+              FieldAccessor [
+                Variable [ Name=$i ]
+                Field=o_orderpriority
+              ]
+              =
+              LiteralExpr [STRING] [2-HIGH]
+            ]
+          ]
+          LiteralExpr [LONG] [0]
+          LiteralExpr [LONG] [1]
+        ]
         ]
         FROM [          (
             SELECT ELEMENT [

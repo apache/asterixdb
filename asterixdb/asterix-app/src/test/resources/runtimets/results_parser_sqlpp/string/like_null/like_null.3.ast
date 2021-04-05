@@ -4,18 +4,16 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [field1]
     :
-    OperatorExpr [
+    FunctionCall asterix.like@2[
       LiteralExpr [STRING] [A8BBB]
-      like
       LiteralExpr [NULL]
     ]
   )
   (
     LiteralExpr [STRING] [field2]
     :
-    OperatorExpr [
+    FunctionCall asterix.like@2[
       LiteralExpr [NULL]
-      like
       LiteralExpr [STRING] [_6%]
     ]
   )

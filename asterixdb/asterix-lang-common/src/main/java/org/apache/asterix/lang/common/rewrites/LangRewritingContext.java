@@ -19,21 +19,31 @@
 package org.apache.asterix.lang.common.rewrites;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public final class LangRewritingContext {
+    private final MetadataProvider metadataProvider;
     private final IWarningCollector warningCollector;
-    private Counter varCounter;
+    private final Map<FunctionSignature, FunctionDecl> declaredFunctions;
+    private final Counter varCounter;
     private int systemVarCounter = 1;
-    private Map<Integer, VarIdentifier> oldVarIdToNewVarId = new HashMap<>();
+    private final Map<Integer, VarIdentifier> oldVarIdToNewVarId = new HashMap<>();
 
-    public LangRewritingContext(int varCounter, IWarningCollector warningCollector) {
-        this.varCounter = new Counter(varCounter);
+    public LangRewritingContext(MetadataProvider metadataProvider, List<FunctionDecl> declaredFunctions,
+            IWarningCollector warningCollector, int varCounter) {
+        this.metadataProvider = metadataProvider;
         this.warningCollector = warningCollector;
+        this.declaredFunctions = FunctionUtil.getFunctionMap(declaredFunctions);
+        this.varCounter = new Counter(varCounter);
     }
 
     public Counter getVarCounter() {
@@ -74,5 +84,13 @@ public final class LangRewritingContext {
 
     public IWarningCollector getWarningCollector() {
         return warningCollector;
+    }
+
+    public MetadataProvider getMetadataProvider() {
+        return metadataProvider;
+    }
+
+    public Map<FunctionSignature, FunctionDecl> getDeclaredFunctions() {
+        return declaredFunctions;
     }
 }

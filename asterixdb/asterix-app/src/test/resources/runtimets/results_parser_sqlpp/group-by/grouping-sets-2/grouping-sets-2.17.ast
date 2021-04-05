@@ -8,32 +8,32 @@ FunctionCall asterix.field-access-by-name@2[
 ]
 FROM [  (
     SELECT [
-    OperatorExpr [
-      FunctionCall asterix.to-string@1[
-        FunctionCall asterix.if-null[
-          Variable [ Name=$four ]
-          LiteralExpr [STRING] [null]
+    FunctionCall asterix.string-concat@1[
+      OrderedListConstructor [
+        FunctionCall asterix.to-string@1[
+          FunctionCall asterix.if-null[
+            Variable [ Name=$four ]
+            LiteralExpr [STRING] [null]
+          ]
         ]
-      ]
-      ||
-      LiteralExpr [STRING] [,]
-      ||
-      FunctionCall asterix.to-string@1[
-        FunctionCall asterix.sql-sum@1[
-          (
-            SELECT ELEMENT [
-            FieldAccessor [
+        LiteralExpr [STRING] [,]
+        FunctionCall asterix.to-string@1[
+          FunctionCall asterix.sql-sum@1[
+            (
+              SELECT ELEMENT [
               FieldAccessor [
-                Variable [ Name=#5 ]
-                Field=tenk
+                FieldAccessor [
+                  Variable [ Name=#5 ]
+                  Field=tenk
+                ]
+                Field=two
               ]
-              Field=two
-            ]
-            ]
-            FROM [              Variable [ Name=#1 ]
-              AS Variable [ Name=#5 ]
-            ]
-          )
+              ]
+              FROM [                Variable [ Name=#1 ]
+                AS Variable [ Name=#5 ]
+              ]
+            )
+          ]
         ]
       ]
     ]
@@ -60,32 +60,32 @@ FROM [  (
 
     UNION
       SELECT [
-      OperatorExpr [
-        FunctionCall asterix.to-string@1[
-          FunctionCall asterix.if-null[
-            Variable [ Name=$four ]
-            LiteralExpr [STRING] [null]
+      FunctionCall asterix.string-concat@1[
+        OrderedListConstructor [
+          FunctionCall asterix.to-string@1[
+            FunctionCall asterix.if-null[
+              Variable [ Name=$four ]
+              LiteralExpr [STRING] [null]
+            ]
           ]
-        ]
-        ||
-        LiteralExpr [STRING] [,]
-        ||
-        FunctionCall asterix.to-string@1[
-          FunctionCall asterix.sql-sum@1[
-            (
-              SELECT ELEMENT [
-              FieldAccessor [
+          LiteralExpr [STRING] [,]
+          FunctionCall asterix.to-string@1[
+            FunctionCall asterix.sql-sum@1[
+              (
+                SELECT ELEMENT [
                 FieldAccessor [
-                  Variable [ Name=#6 ]
-                  Field=tenk
+                  FieldAccessor [
+                    Variable [ Name=#6 ]
+                    Field=tenk
+                  ]
+                  Field=two
                 ]
-                Field=two
-              ]
-              ]
-              FROM [                Variable [ Name=#1 ]
-                AS Variable [ Name=#6 ]
-              ]
-            )
+                ]
+                FROM [                  Variable [ Name=#1 ]
+                  AS Variable [ Name=#6 ]
+                ]
+              )
+            ]
           ]
         ]
       ]

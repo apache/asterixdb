@@ -1,16 +1,10 @@
 DataverseUse test
 Query:
 SELECT ELEMENT [
-CASE    OperatorExpr [
-      LiteralExpr [LONG] [2]
-      >
-      LiteralExpr [LONG] [1]
-    ]
-
-WHEN     LiteralExpr [TRUE]
-THEN     LiteralExpr [LONG] [20]
-
-ELSE     LiteralExpr [LONG] [10]
-
-END
+FunctionCall asterix.switch-case[
+  LiteralExpr [TRUE]
+  LiteralExpr [TRUE]
+  LiteralExpr [LONG] [20]
+  LiteralExpr [LONG] [10]
+]
 ]

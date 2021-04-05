@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
-import java.util.List;
-import java.util.Set;
 import java.util.function.BiFunction;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -28,35 +26,35 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
-import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
-import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 
 public final class SqlppFunctionCallResolverVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
-    private final MetadataProvider metadataProvider;
+    private final LangRewritingContext context;
 
-    private final Set<FunctionSignature> declaredFunctions;
+    private final boolean allowNonStoredUdfCalls;
 
     private final BiFunction<String, Integer, FunctionSignature> builtinFunctionResolver;
 
     private final BiFunction<String, Integer, FunctionSignature> callExprResolver;
 
-    public SqlppFunctionCallResolverVisitor(MetadataProvider metadataProvider, List<FunctionDecl> declaredFunctions) {
-        this.metadataProvider = metadataProvider;
-        this.declaredFunctions = FunctionUtil.getFunctionSignatures(declaredFunctions);
-        this.builtinFunctionResolver = FunctionUtil.createBuiltinFunctionResolver(metadataProvider);
+    public SqlppFunctionCallResolverVisitor(LangRewritingContext context, boolean allowNonStoredUdfCalls) {
+        this.context = context;
+        this.allowNonStoredUdfCalls = allowNonStoredUdfCalls;
+        this.builtinFunctionResolver = FunctionUtil.createBuiltinFunctionResolver(context.getMetadataProvider());
         this.callExprResolver = this::resolveCallExpr;
     }
 
     @Override
     public Expression visit(CallExpr callExpr, ILangExpression arg) throws CompilationException {
         FunctionSignature fs = FunctionUtil.resolveFunctionCall(callExpr.getFunctionSignature(),
-                callExpr.getSourceLocation(), metadataProvider, declaredFunctions, callExprResolver);
+                callExpr.getSourceLocation(), context.getMetadataProvider(), callExprResolver, true,
+                context.getDeclaredFunctions(), allowNonStoredUdfCalls);
         callExpr.setFunctionSignature(fs);
         return super.visit(callExpr, arg);
     }
@@ -64,7 +62,7 @@ public final class SqlppFunctionCallResolverVisitor extends AbstractSqlppSimpleE
     @Override
     public Expression visit(WindowExpression winExpr, ILangExpression arg) throws CompilationException {
         FunctionSignature fs = FunctionUtil.resolveFunctionCall(winExpr.getFunctionSignature(),
-                winExpr.getSourceLocation(), metadataProvider, declaredFunctions, callExprResolver);
+                winExpr.getSourceLocation(), context.getMetadataProvider(), callExprResolver, false, null, false);
         winExpr.setFunctionSignature(fs);
         return super.visit(winExpr, arg);
     }

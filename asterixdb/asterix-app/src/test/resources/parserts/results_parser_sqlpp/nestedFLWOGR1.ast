@@ -4,18 +4,12 @@ SELECT ELEMENT [
   SELECT ELEMENT [
   Variable [ Name=$k ]
   ]
-  FROM [    CASE        OperatorExpr [
-          Variable [ Name=$i ]
-          >
-          Variable [ Name=$j ]
-        ]
-
-    WHEN         LiteralExpr [TRUE]
-    THEN         Variable [ Name=$i ]
-
-    ELSE         Variable [ Name=$j ]
-
-    END
+  FROM [    FunctionCall asterix.switch-case[
+      LiteralExpr [TRUE]
+      LiteralExpr [TRUE]
+      Variable [ Name=$i ]
+      Variable [ Name=$j ]
+    ]
     AS Variable [ Name=$k ]
   ]
   Where
