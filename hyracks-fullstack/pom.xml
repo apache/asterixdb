@@ -307,8 +307,8 @@
       </dependency>
       <dependency>
         <groupId>it.unimi.dsi</groupId>
-        <artifactId>fastutil</artifactId>
-        <version>8.3.0</version>
+        <artifactId>fastutil-core</artifactId>
+        <version>8.5.4</version>
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>

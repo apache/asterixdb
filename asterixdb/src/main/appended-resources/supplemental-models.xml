@@ -250,11 +250,33 @@
       <artifactId>fastutil</artifactId>
       <properties>
         <!-- fastutil is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <!-- see https://github.com/vigna/fastutil/blob/8.1.1/LICENSE-2.0 -->
-        <!-- see https://github.com/vigna/fastutil/blob/8.2.2/LICENSE-2.0 -->
-        <!-- see https://github.com/vigna/fastutil/blob/8.3.0/LICENSE-2.0 -->
-        <license.ignoreMissingEmbeddedLicense>8.1.1,8.2.2,8.3.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>8.1.1,8.2.2,8.3.0</license.ignoreMissingEmbeddedNotice>
+        <!-- see https://github.com/vigna/fastutil/blob/8.5.4/LICENSE-2.0 -->
+        <license.ignoreMissingEmbeddedLicense>8.5.4</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>8.5.4</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>it.unimi.dsi</groupId>
+      <artifactId>fastutil-core</artifactId>
+      <properties>
+        <!-- fastutil is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
+        <!-- see https://github.com/vigna/fastutil/blob/8.5.4/LICENSE-2.0 -->
+        <license.ignoreMissingEmbeddedLicense>8.5.4</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>8.5.4</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>it.unimi.dsi</groupId>
+      <artifactId>fastutil-extra</artifactId>
+      <properties>
+        <!-- fastutil is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
+        <!-- see https://github.com/vigna/fastutil/blob/8.5.4/LICENSE-2.0 -->
+        <license.ignoreMissingEmbeddedLicense>8.5.4</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>8.5.4</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
