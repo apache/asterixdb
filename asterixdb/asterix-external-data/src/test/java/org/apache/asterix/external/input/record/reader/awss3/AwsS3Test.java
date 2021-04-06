@@ -18,16 +18,26 @@
  */
 package org.apache.asterix.external.input.record.reader.awss3;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ERROR_INTERNAL_ERROR;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ERROR_SLOW_DOWN;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
+import org.apache.asterix.external.input.record.reader.aws.AwsS3InputStream;
 import org.apache.asterix.external.input.record.reader.aws.AwsS3InputStreamFactory;
+import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class AwsS3Test {
@@ -68,6 +78,68 @@ public class AwsS3Test {
 
         for (AbstractExternalInputStreamFactory.PartitionWorkLoadBasedOnSize workload : workloads) {
             Assert.assertEquals(workload.getTotalSize(), 600);
+        }
+    }
+
+    @Test
+    public void s3InternalError() throws Exception {
+        // S3Client mock
+        S3Client s3ClientMock = Mockito.mock(S3Client.class);
+
+        // Prepare S3Exception with internal error code
+        AwsErrorDetails errorDetails = AwsErrorDetails.builder().errorCode(ERROR_INTERNAL_ERROR)
+                .errorMessage("Internal Error from AWS").build();
+        S3Exception internalErrorEx = (S3Exception) S3Exception.builder().awsErrorDetails(errorDetails).build();
+        Mockito.when(s3ClientMock.getObject(GetObjectRequest.builder().build())).thenThrow(internalErrorEx);
+
+        // Set S3Client mock
+        AwsS3InputStream inputStreamMock = Mockito.mock(AwsS3InputStream.class);
+        Field s3ClientField = AwsS3InputStream.class.getDeclaredField("s3Client");
+        s3ClientField.setAccessible(true);
+        s3ClientField.set(inputStreamMock, s3ClientMock);
+
+        // doGetInputStream method
+        Method doGetInputStreamMethod =
+                AwsS3InputStream.class.getDeclaredMethod("doGetInputStream", GetObjectRequest.class);
+        doGetInputStreamMethod.setAccessible(true);
+
+        try {
+            doGetInputStreamMethod.invoke(inputStreamMock, GetObjectRequest.builder().build());
+        } catch (Exception ex) {
+            Assert.assertTrue("Not internal error", ex.getCause() instanceof IFormattedException
+                    && ex.getCause().toString().contains("ASX1108: External source error. Internal Error from AWS"));
+        }
+    }
+
+    @Test
+    public void s3SlowDown() throws Exception {
+        // S3Client mock
+        S3Client s3ClientMock = Mockito.mock(S3Client.class);
+
+        // Prepare S3Exception with slow down error code
+        AwsErrorDetails errorDetails =
+                AwsErrorDetails.builder().errorCode(ERROR_SLOW_DOWN).errorMessage("SlowDown Error from AWS").build();
+        S3Exception slowDownEx = (S3Exception) S3Exception.builder().awsErrorDetails(errorDetails).build();
+        Mockito.when(s3ClientMock.getObject(GetObjectRequest.builder().build())).thenThrow(slowDownEx);
+
+        // Set S3Client mock
+        AwsS3InputStream inputStreamMock = Mockito.mock(AwsS3InputStream.class);
+
+        // Set S3Client
+        Field s3ClientField = AwsS3InputStream.class.getDeclaredField("s3Client");
+        s3ClientField.setAccessible(true);
+        s3ClientField.set(inputStreamMock, s3ClientMock);
+
+        // doGetInputStream method
+        Method doGetInputStreamMethod =
+                AwsS3InputStream.class.getDeclaredMethod("doGetInputStream", GetObjectRequest.class);
+        doGetInputStreamMethod.setAccessible(true);
+
+        try {
+            doGetInputStreamMethod.invoke(inputStreamMock, GetObjectRequest.builder().build());
+        } catch (Exception ex) {
+            Assert.assertTrue("Not SlowDown error", ex.getCause() instanceof IFormattedException
+                    && ex.getCause().toString().contains("ASX1108: External source error. SlowDown Error from AWS"));
         }
     }
 }

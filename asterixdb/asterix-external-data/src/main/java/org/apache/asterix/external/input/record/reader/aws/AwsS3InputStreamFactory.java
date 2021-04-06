@@ -78,7 +78,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
             // New API is not implemented, try falling back to old API
             try {
                 // For error code, see https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
-                if (ex.awsErrorDetails().errorCode().equals("NotImplemented")) {
+                if (ex.awsErrorDetails().errorCode().equals(ExternalDataConstants.AwsS3.ERROR_METHOD_NOT_IMPLEMENTED)) {
                     filesOnly = oldApiListS3Objects(s3Client, container, includeExcludeMatcher);
                 } else {
                     throw ex;
