@@ -417,6 +417,7 @@ import org.apache.asterix.runtime.evaluators.functions.SleepDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialAreaDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialDistanceDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.SpatialTileDescriptor2;
 import org.apache.asterix.runtime.evaluators.functions.StringConcatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringEndsWithDescriptor;
@@ -631,6 +632,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(RangeDescriptor.FACTORY);
         fc.add(SubsetCollectionDescriptor.FACTORY);
         fc.add(SpatialTileDescriptor.FACTORY);
+        fc.add(SpatialTileDescriptor2.FACTORY);
 
         // aggregate functions
         fc.add(ListifyAggregateDescriptor.FACTORY);
