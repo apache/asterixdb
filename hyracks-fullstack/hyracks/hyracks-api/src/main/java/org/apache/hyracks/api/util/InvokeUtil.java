@@ -278,7 +278,7 @@ public class InvokeUtil {
                 failure = th;
                 try {
                     long delayMs = delay.calculate(attempt);
-                    if (!policy.retry(th) || span.remaining(TimeUnit.MILLISECONDS) < delayMs) {
+                    if (!policy.retry(th) || span.elapsed() || span.remaining(TimeUnit.MILLISECONDS) < delayMs) {
                         onFailure.attemptFailed(action, attempt, true, span, failure);
                         throw HyracksDataException.create(failure);
                     } else {
