@@ -55,6 +55,10 @@ public class CompilerProperties extends AbstractProperties {
                 LONG_BYTE_UNIT,
                 StorageUtil.getLongSizeInBytes(32L, MEGABYTE),
                 "The memory budget (in bytes) for an inverted-index-search operator instance in a partition"),
+        COMPILER_EXTERNALSCANMEMORY(
+                INTEGER_BYTE_UNIT,
+                StorageUtil.getIntSizeInBytes(8, KILOBYTE),
+                "The memory budget (in bytes) for an external scan operator instance in a partition"),
         COMPILER_FRAMESIZE(
                 INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(32, KILOBYTE),
@@ -126,6 +130,11 @@ public class CompilerProperties extends AbstractProperties {
         public Object defaultValue() {
             return defaultValue;
         }
+
+        @Override
+        public boolean hidden() {
+            return this == COMPILER_EXTERNALSCANMEMORY;
+        }
     }
 
     public static final String COMPILER_SORTMEMORY_KEY = Option.COMPILER_SORTMEMORY.ini();
@@ -155,6 +164,8 @@ public class CompilerProperties extends AbstractProperties {
     public static final String COMPILER_SUBPLAN_NESTEDPUSHDOWN_KEY = Option.COMPILER_SUBPLAN_NESTEDPUSHDOWN.ini();
 
     public static final String COMPILER_MIN_MEMORY_ALLOCATION_KEY = Option.COMPILER_MIN_MEMORY_ALLOCATION.ini();
+
+    public static final String COMPILER_EXTERNALSCANMEMORY_KEY = Option.COMPILER_EXTERNALSCANMEMORY.ini();
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
@@ -220,5 +231,9 @@ public class CompilerProperties extends AbstractProperties {
 
     public boolean getMinMemoryAllocation() {
         return accessor.getBoolean(Option.COMPILER_MIN_MEMORY_ALLOCATION);
+    }
+
+    public int getExternalScanMemorySize() {
+        return accessor.getInt(Option.COMPILER_EXTERNALSCANMEMORY);
     }
 }

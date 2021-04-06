@@ -141,7 +141,7 @@ public class StandardUTF8ToModifiedUTF8DataOutput implements DataOutput {
         private final ByteArrayAccessibleInputStream inByte;
 
         public ResettableUTF8InputStreamReader(ByteArrayAccessibleInputStream inByte) {
-            super(new BasicInputStream(inByte));
+            super(new BasicInputStream(inByte), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
             this.inByte = inByte;
         }
 

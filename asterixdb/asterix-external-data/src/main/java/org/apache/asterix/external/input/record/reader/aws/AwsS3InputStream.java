@@ -45,8 +45,9 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 
 public class AwsS3InputStream extends AbstractExternalInputStream {
 
-    private final S3Client s3Client;
+    // Configuration
     private final String bucket;
+    private final S3Client s3Client;
     private static final int MAX_RETRIES = 5; // We will retry 5 times in case of internal error from AWS S3 service
 
     public AwsS3InputStream(Map<String, String> configuration, List<String> filePaths) throws HyracksDataException {
@@ -60,13 +61,11 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
         String fileName = filePaths.get(nextFileIndex);
         GetObjectRequest.Builder getObjectBuilder = GetObjectRequest.builder();
         GetObjectRequest getObjectRequest = getObjectBuilder.bucket(bucket).key(filePaths.get(nextFileIndex)).build();
-
         // Have a reference to the S3 stream to ensure that if GZipInputStream causes an IOException because of reading
         // the header, then the S3 stream gets closed in the close method
         if (!doGetInputStream(getObjectRequest)) {
             return false;
         }
-
         // Use gzip stream if needed
         if (StringUtils.endsWithIgnoreCase(fileName, ".gz") || StringUtils.endsWithIgnoreCase(fileName, ".gzip")) {
             in = new GZIPInputStream(in, ExternalDataConstants.DEFAULT_BUFFER_SIZE);
