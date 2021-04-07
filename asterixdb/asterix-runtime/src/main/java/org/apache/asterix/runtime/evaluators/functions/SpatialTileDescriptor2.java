@@ -88,7 +88,7 @@ public class SpatialTileDescriptor2 extends AbstractScalarFunctionDynamicDescrip
 
                     @SuppressWarnings("unchecked")
                     private ISerializerDeserializer intSerde =
-                        SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
+                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
 
                     private final OrderedListBuilder listBuilder = new OrderedListBuilder();
                     private final AOrderedListType listType = new AOrderedListType(BuiltinType.AINT32, null);

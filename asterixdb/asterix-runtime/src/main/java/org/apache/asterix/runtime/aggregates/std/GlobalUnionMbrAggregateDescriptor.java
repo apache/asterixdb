@@ -20,6 +20,7 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
@@ -27,15 +28,14 @@ import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class UnionMbrAggregateDescriptor extends AbstractUnionMbrAggregateDescriptor {
-
+public class GlobalUnionMbrAggregateDescriptor extends AbstractUnionMbrAggregateDescriptor {
     private static final long serialVersionUID = 1L;
-
-    public static final IFunctionDescriptorFactory FACTORY = () -> new UnionMbrAggregateDescriptor();
+    public static final IFunctionDescriptorFactory FACTORY =
+            AbstractAggregateFunctionDynamicDescriptor.createFactory(GlobalUnionMbrAggregateDescriptor::new);
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.UNIONMBR;
+        return BuiltinFunctions.GLOBAL_UNIONMBR;
     }
 
     @Override

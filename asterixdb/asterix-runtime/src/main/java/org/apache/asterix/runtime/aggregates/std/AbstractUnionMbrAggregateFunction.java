@@ -117,7 +117,7 @@ public abstract class AbstractUnionMbrAggregateFunction extends AbstractAggregat
     }
 
     protected void processNull() throws UnsupportedItemTypeException {
-        throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.UNION_MBR,
+        throw new UnsupportedItemTypeException(sourceLoc, BuiltinFunctions.UNIONMBR,
                 ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
     }
 }

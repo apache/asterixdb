@@ -16,38 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.aggregates.std;
+package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.aggregates.std.SqlUnionMbrAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class UnionMbrAggregateDescriptor extends AbstractUnionMbrAggregateDescriptor {
-
+public class ScalarSqlUnionMbrAggregateDescriptor extends AbstractScalarAggregateDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = () -> new UnionMbrAggregateDescriptor();
+    public static final IFunctionDescriptorFactory FACTORY =
+            createDescriptorFactory(ScalarSqlUnionMbrAggregateDescriptor::new);
 
-    @Override
-    public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.UNIONMBR;
+    private ScalarSqlUnionMbrAggregateDescriptor() {
+        super(SqlUnionMbrAggregateDescriptor.FACTORY);
     }
 
     @Override
-    public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
-        return new IAggregateEvaluatorFactory() {
-            private static final long serialVersionUID = 1L;
+    public FunctionIdentifier getIdentifier() {
+        return BuiltinFunctions.SCALAR_SQL_UNIONMBR;
+    }
 
-            @Override
-            public IAggregateEvaluator createAggregateEvaluator(final IEvaluatorContext ctx)
-                    throws HyracksDataException {
-                return new UnionMbrAggregateFunction(args, ctx, sourceLoc);
-            }
-        };
+    @Override
+    public void setImmutableStates(Object... states) {
+        super.setImmutableStates(states);
+        aggFuncDesc.setImmutableStates(getItemType((IAType) states[0]));
     }
 }
