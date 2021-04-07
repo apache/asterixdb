@@ -1244,7 +1244,7 @@ public class MetadataNode implements IMetadataNode {
                 //   we may need to include the dataverse of the full-text config in the index.getFullTextConfigDataverse()
                 //   and instead of checking index.getDataverseName(), we need to check index.getFullTextConfigDataverse()
                 //   to see if it is the same as the dataverse of the full-text config
-                if (index.getIndexDetails() instanceof Index.TextIndexDetails) {
+                if (Index.IndexCategory.of(index.getIndexType()) == Index.IndexCategory.TEXT) {
                     String indexConfigName = ((Index.TextIndexDetails) index.getIndexDetails()).getFullTextConfigName();
                     if (index.getDataverseName().equals(dataverseNameFullTextConfig)
                             && !Strings.isNullOrEmpty(indexConfigName) && indexConfigName.equals(configName)) {

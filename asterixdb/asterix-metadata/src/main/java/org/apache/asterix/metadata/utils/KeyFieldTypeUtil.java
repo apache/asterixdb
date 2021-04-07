@@ -150,7 +150,8 @@ public class KeyFieldTypeUtil {
         List<IAType> indexKeyTypes = new ArrayList<>();
         for (Index.ArrayIndexElement e : indexDetails.getElementList()) {
             for (int i = 0; i < e.getProjectList().size(); i++) {
-                ARecordType sourceType = (e.getSourceIndicator() == 0) ? recordType : metaRecordType;
+                ARecordType sourceType =
+                        (e.getSourceIndicator() == Index.RECORD_INDICATOR) ? recordType : metaRecordType;
                 Pair<IAType, Boolean> keyPairType = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
                         ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), e.getProjectList().get(i)),
                         sourceType,
@@ -308,7 +309,7 @@ public class KeyFieldTypeUtil {
     public static Triple<IAType, Boolean, Boolean> getKeyProjectType(final ARecordType inputType, List<String> path,
             SourceLocation sourceLoc) throws CompilationException {
         IAType itemType = inputType;
-        boolean itemTypeNullable = false, itemTypeMissalbe = false;
+        boolean itemTypeNullable = false, itemTypeMissable = false;
         for (String step : path) {
             // check that the type is a record at this point
             if (itemType.getTypeTag() != ATypeTag.OBJECT) {
@@ -331,12 +332,12 @@ public class KeyFieldTypeUtil {
                 AUnionType fieldTypeUnion = (AUnionType) fieldType;
                 itemType = fieldTypeUnion.getActualType();
                 itemTypeNullable = itemTypeNullable || fieldTypeUnion.isNullableType();
-                itemTypeMissalbe = itemTypeMissalbe || fieldTypeUnion.isMissableType();
+                itemTypeMissable = itemTypeMissable || fieldTypeUnion.isMissableType();
             } else {
                 itemType = fieldType;
             }
         }
-        return new Triple<>(itemType, itemTypeNullable, itemTypeMissalbe);
+        return new Triple<>(itemType, itemTypeNullable, itemTypeMissable);
     }
 
     public static IAType makeUnknownableType(IAType primeType, boolean nullable, boolean missable) {
