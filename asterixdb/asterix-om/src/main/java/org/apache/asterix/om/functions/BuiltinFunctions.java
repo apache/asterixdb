@@ -835,7 +835,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier LOCAL_SQL_KURTOSIS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-kurtosis", 1);
     public static final FunctionIdentifier UNION_MBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-union-mbr", 1);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-union_mbr", 1);
 
     public static final FunctionIdentifier SCALAR_SQL_AVG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-avg", 1);
@@ -3043,7 +3043,7 @@ public class BuiltinFunctions {
         addLocalAgg(UNION_MBR, UNION_MBR);
         addIntermediateAgg(UNION_MBR, UNION_MBR);
         addGlobalAgg(UNION_MBR, UNION_MBR);
-
+        addScalarAgg(UNION_MBR, UNION_MBR);
     }
 
     interface BuiltinFunctionProperty {
