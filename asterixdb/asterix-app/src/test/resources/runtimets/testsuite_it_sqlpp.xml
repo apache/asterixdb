@@ -65,8 +65,8 @@
       <compilation-unit name="invalid_library_requests">
         <output-dir compare="Text">mysum_bad_credential</output-dir>
         <expected-error>ASX3042: Unsupported function language badType</expected-error>
-        <expected-error>ASX1110: The parameters \"type\" and \"delete\" cannot be provided at the same time</expected-error>
-        <expected-error>ASX0049: Parameter(s) type or delete must be specified</expected-error>
+        <expected-error>ASX1117: Cannot find library with name testlib</expected-error>
+        <expected-error>ASX0049: Parameter(s) type must be specified</expected-error>
         <expected-error>ASX0047: Invalid value for parameter \"data\": Attribute</expected-error>
         <expected-error>ASX0049: Parameter(s) data must be specified</expected-error>
       </compilation-unit>

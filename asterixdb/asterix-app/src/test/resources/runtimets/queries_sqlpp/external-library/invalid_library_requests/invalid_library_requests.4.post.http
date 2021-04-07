@@ -17,9 +17,7 @@
  * under the License.
  */
 # auth admin:admin
-# param dataverse:multipart_text=Default
-# param name:multipart_text=testlib
 # param type:multipart_text=java
 # param data:multipart_text=bogus
 
-/admin/udf
+/admin/udf/Default/testlib

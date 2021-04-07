@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -39,8 +38,8 @@ public class NCUdfRecoveryServlet extends AbstractNCUdfServlet {
     public static final String GET_ALL_UDF_ENDPOINT = "/all";
 
     public NCUdfRecoveryServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx,
-            ILangCompilationProvider compilationProvider, HttpScheme httpServerProtocol, int httpServerPort) {
-        super(ctx, paths, appCtx, compilationProvider, httpServerProtocol, httpServerPort);
+            HttpScheme httpServerProtocol, int httpServerPort) {
+        super(ctx, paths, appCtx, httpServerProtocol, httpServerPort);
     }
 
     @Override
