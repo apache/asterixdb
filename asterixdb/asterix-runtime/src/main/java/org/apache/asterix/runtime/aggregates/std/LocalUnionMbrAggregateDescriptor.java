@@ -35,7 +35,7 @@ public class LocalUnionMbrAggregateDescriptor extends AbstractUnionMbrAggregateD
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.LOCAL_UNIONMBR;
+        return BuiltinFunctions.LOCAL_UNION_MBR;
     }
 
     @Override

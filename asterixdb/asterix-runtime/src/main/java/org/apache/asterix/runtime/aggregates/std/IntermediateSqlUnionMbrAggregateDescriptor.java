@@ -35,7 +35,7 @@ public class IntermediateSqlUnionMbrAggregateDescriptor extends AbstractUnionMbr
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.INTERMEDIATE_SQL_UNIONMBR;
+        return BuiltinFunctions.INTERMEDIATE_SQL_UNION_MBR;
     }
 
     @Override

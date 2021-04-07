@@ -35,7 +35,7 @@ public class GlobalSqlUnionMbrAggregateDescriptor extends AbstractUnionMbrAggreg
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.GLOBAL_SQL_UNIONMBR;
+        return BuiltinFunctions.GLOBAL_SQL_UNION_MBR;
     }
 
     @Override

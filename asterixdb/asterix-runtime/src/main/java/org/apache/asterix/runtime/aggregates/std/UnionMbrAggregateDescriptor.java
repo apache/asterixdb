@@ -35,7 +35,7 @@ public class UnionMbrAggregateDescriptor extends AbstractUnionMbrAggregateDescri
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.UNIONMBR;
+        return BuiltinFunctions.UNION_MBR;
     }
 
     @Override

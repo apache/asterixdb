@@ -605,14 +605,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-kurtosis", 1);
     public static final FunctionIdentifier NULL_WRITER =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-null-writer", 1);
-    public static final FunctionIdentifier UNIONMBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-unionmbr", 1);
-    public static final FunctionIdentifier LOCAL_UNIONMBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-unionmbr", 1);
-    public static final FunctionIdentifier INTERMEDIATE_UNIONMBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-unionmbr", 1);
-    public static final FunctionIdentifier GLOBAL_UNIONMBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-unionmbr", 1);
+    public static final FunctionIdentifier UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-union_mbr", 1);
+    public static final FunctionIdentifier LOCAL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-union_mbr", 1);
+    public static final FunctionIdentifier INTERMEDIATE_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-union_mbr", 1);
+    public static final FunctionIdentifier GLOBAL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-union_mbr", 1);
 
     public static final FunctionIdentifier SCALAR_ARRAYAGG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "arrayagg", 1);
@@ -640,8 +640,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "skewness", 1);
     public static final FunctionIdentifier SCALAR_KURTOSIS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "kurtosis", 1);
-    public static final FunctionIdentifier SCALAR_UNIONMBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unionmbr", 1);
+    public static final FunctionIdentifier SCALAR_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "union_mbr", 1);
 
     // serializable aggregate functions
     public static final FunctionIdentifier SERIAL_AVG =
@@ -844,14 +844,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-kurtosis", 1);
     public static final FunctionIdentifier LOCAL_SQL_KURTOSIS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-kurtosis", 1);
-    public static final FunctionIdentifier SQL_UNIONMBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-unionmbr", 1);
-    public static final FunctionIdentifier LOCAL_SQL_UNIONMBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-unionmbr", 1);
-    public static final FunctionIdentifier INTERMEDIATE_SQL_UNIONMBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-sql-unionmbr", 1);
-    public static final FunctionIdentifier GLOBAL_SQL_UNIONMBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-unionmbr", 1);
+    public static final FunctionIdentifier SQL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-union_mbr", 1);
+    public static final FunctionIdentifier LOCAL_SQL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-union_mbr", 1);
+    public static final FunctionIdentifier INTERMEDIATE_SQL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-sql-union_mbr", 1);
+    public static final FunctionIdentifier GLOBAL_SQL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-union_mbr", 1);
 
     public static final FunctionIdentifier SCALAR_SQL_AVG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-avg", 1);
@@ -875,8 +875,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-skewness", 1);
     public static final FunctionIdentifier SCALAR_SQL_KURTOSIS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-kurtosis", 1);
-    public static final FunctionIdentifier SCALAR_SQL_UNIONMBR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-unionmbr", 1);
+    public static final FunctionIdentifier SCALAR_SQL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-union_mbr", 1);
 
     // serializable sql aggregate functions
     public static final FunctionIdentifier SERIAL_SQL_AVG =
@@ -1906,10 +1906,10 @@ public class BuiltinFunctions {
         addFunction(KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(NULL_WRITER, PropagateTypeComputer.INSTANCE_NULLABLE, true);
-        addFunction(UNIONMBR, ARectangleTypeComputer.INSTANCE, true);
-        addPrivateFunction(LOCAL_UNIONMBR, ARectangleTypeComputer.INSTANCE, true);
-        addPrivateFunction(INTERMEDIATE_UNIONMBR, ARectangleTypeComputer.INSTANCE, true);
-        addPrivateFunction(GLOBAL_UNIONMBR, ARectangleTypeComputer.INSTANCE, true);
+        addFunction(UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERMEDIATE_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
 
         // SUM
         addFunction(SUM, NumericSumAggTypeComputer.INSTANCE, true);
@@ -1968,7 +1968,7 @@ public class BuiltinFunctions {
         addPrivateFunction(SERIAL_GLOBAL_SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_UNIONMBR, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_UNION_MBR, ScalarVersionOfAggregateResultType.INSTANCE, true);
 
         // SQL SUM
         addFunction(SQL_SUM, NumericSumAggTypeComputer.INSTANCE, true);
@@ -2029,11 +2029,11 @@ public class BuiltinFunctions {
         addPrivateFunction(LOCAL_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
-        addFunction(SQL_UNIONMBR, ARectangleTypeComputer.INSTANCE, true);
-        addPrivateFunction(LOCAL_SQL_UNIONMBR, ARectangleTypeComputer.INSTANCE, true);
-        addPrivateFunction(INTERMEDIATE_SQL_UNIONMBR, ARectangleTypeComputer.INSTANCE, true);
-        addPrivateFunction(GLOBAL_SQL_UNIONMBR, ARectangleTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_SQL_UNIONMBR, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERMEDIATE_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SQL_UNION_MBR, ScalarVersionOfAggregateResultType.INSTANCE, true);
 
         addPrivateFunction(SERIAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE, true);
@@ -3067,16 +3067,16 @@ public class BuiltinFunctions {
         addScalarAgg(ST_UNION_SQL_AGG_DISTINCT, SCALAR_ST_UNION_SQL_AGG_DISTINCT);
 
         // SQL UNION MBR
-        addAgg(SQL_UNIONMBR);
-        addAgg(LOCAL_SQL_UNIONMBR);
-        addAgg(GLOBAL_SQL_UNIONMBR);
-        addLocalAgg(SQL_UNIONMBR, LOCAL_SQL_UNIONMBR);
-        addIntermediateAgg(LOCAL_SQL_UNIONMBR, INTERMEDIATE_SQL_UNIONMBR);
-        addIntermediateAgg(GLOBAL_SQL_UNIONMBR, GLOBAL_SQL_UNIONMBR);
-        addIntermediateAgg(SQL_UNIONMBR, GLOBAL_SQL_UNIONMBR);
-        addGlobalAgg(SQL_UNIONMBR, GLOBAL_SQL_UNIONMBR);
+        addAgg(SQL_UNION_MBR);
+        addAgg(LOCAL_SQL_UNION_MBR);
+        addAgg(GLOBAL_SQL_UNION_MBR);
+        addLocalAgg(SQL_UNION_MBR, LOCAL_SQL_UNION_MBR);
+        addIntermediateAgg(LOCAL_SQL_UNION_MBR, INTERMEDIATE_SQL_UNION_MBR);
+        addIntermediateAgg(GLOBAL_SQL_UNION_MBR, GLOBAL_SQL_UNION_MBR);
+        addIntermediateAgg(SQL_UNION_MBR, GLOBAL_SQL_UNION_MBR);
+        addGlobalAgg(SQL_UNION_MBR, GLOBAL_SQL_UNION_MBR);
 
-        addScalarAgg(SQL_UNIONMBR, SCALAR_SQL_UNIONMBR);
+        addScalarAgg(SQL_UNION_MBR, SCALAR_SQL_UNION_MBR);
     }
 
     interface BuiltinFunctionProperty {

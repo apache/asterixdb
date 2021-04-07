@@ -36,7 +36,7 @@ public class ScalarUnionMbrAggregateDescriptor extends AbstractScalarAggregateDe
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.SCALAR_UNIONMBR;
+        return BuiltinFunctions.SCALAR_UNION_MBR;
     }
 
     @Override
