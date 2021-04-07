@@ -51,9 +51,7 @@ public class DataverseNameTest {
 
     private static final List<String> TEST_BUILTIN_DATAVERSE_INVALID_NAME_PARAMS = Arrays.asList(
             // separator character is not allowed
-            "a.b",
-            // escape character is not allowed
-            "c@d");
+            "a/b");
 
     private static final List<Triple<String, String, String>> TEST_SINGLE_PART_NAME_PARAMS = Arrays.asList(
             // <1-part-name, canonical-form, display-form>
@@ -63,30 +61,30 @@ public class DataverseNameTest {
             // letters and digits
             new Triple<>("aA09", "aA09", "aA09"),
             // with canonical form escape character
-            new Triple<>("a@b", "a@@b", "`a@b`"),
+            new Triple<>("a@b", "a@b", "`a@b`"),
             // with canonical form separator character
-            new Triple<>("a.b", "a@.b", "`a.b`"),
+            new Triple<>("a.b", "a.b", "`a.b`"),
             // with canonical form escape and separator characters
-            new Triple<>("a@.b", "a@@@.b", "`a@.b`"),
+            new Triple<>("a@.b", "a@.b", "`a@.b`"),
             // with display form escape character
             new Triple<>("a\\b", "a\\b", "`a\\\\b`"));
 
     private static final List<Triple<List<String>, String, String>> TEST_MULTI_PART_NAME_PARAMS = Arrays.asList(
             // <multi-part-name, canonical-form, display-form>
-            new Triple<>(Arrays.asList("aa", "bb", "cc"), "aa.bb.cc", "aa.bb.cc"),
+            new Triple<>(Arrays.asList("aa", "bb", "cc"), "aa/bb/cc", "aa.bb.cc"),
             // mixed case letters, digits
-            new Triple<>(Arrays.asList("az", "AZ", "a09Z"), "az.AZ.a09Z", "az.AZ.a09Z"),
+            new Triple<>(Arrays.asList("az", "AZ", "a09Z"), "az/AZ/a09Z", "az.AZ.a09Z"),
             // with canonical form escape character
-            new Triple<>(Arrays.asList("a@a@", "@b@b", "@c@c"), "a@@a@@.@@b@@b.@@c@@c", "`a@a@`.`@b@b`.`@c@c`"),
+            new Triple<>(Arrays.asList("a@a@", "@b@b", "@c@c"), "a@a@/@b@b/@c@c", "`a@a@`.`@b@b`.`@c@c`"),
             // with canonical form separator character
-            new Triple<>(Arrays.asList("a.a.", ".b.b.", ".c.c"), "a@.a@..@.b@.b@..@.c@.c", "`a.a.`.`.b.b.`.`.c.c`"),
+            new Triple<>(Arrays.asList("a.a.", ".b.b.", ".c.c"), "a.a./.b.b./.c.c", "`a.a.`.`.b.b.`.`.c.c`"),
             // with canonical form escape and separator characters
-            new Triple<>(Arrays.asList("a@a.", "@b.b@", ".c@c"), "a@@a@..@@b@.b@@.@.c@@c", "`a@a.`.`@b.b@`.`.c@c`"),
+            new Triple<>(Arrays.asList("a@a.", "@b.b@", ".c@c"), "a@a./@b.b@/.c@c", "`a@a.`.`@b.b@`.`.c@c`"),
             // with canonical form escape and separator characters repeated
-            new Triple<>(Arrays.asList("a@@a..", "@@b..b@@", "..c@@c"), "a@@@@a@.@..@@@@b@.@.b@@@@.@.@.c@@@@c",
+            new Triple<>(Arrays.asList("a@@a..", "@@b..b@@", "..c@@c"), "a@@a../@@b..b@@/..c@@c",
                     "`a@@a..`.`@@b..b@@`.`..c@@c`"),
             // with display form escape character
-            new Triple<>(Arrays.asList("a\\b", "c\\d"), "a\\b.c\\d", "`a\\\\b`.`c\\\\d`"));
+            new Triple<>(Arrays.asList("a\\b", "c\\d"), "a\\b/c\\d", "`a\\\\b`.`c\\\\d`"));
 
     @Test
     public void testBuiltinDataverseName() throws Exception {
@@ -220,7 +218,6 @@ public class DataverseNameTest {
         testRuntimeException(() -> DataverseName.createBuiltinDataverseName(null), NullPointerException.class);
         testRuntimeException(() -> DataverseName.createFromCanonicalForm(null), NullPointerException.class);
         testRuntimeException(() -> DataverseName.create(Collections.singletonList(null)), NullPointerException.class);
-        testRuntimeException(() -> DataverseName.create(Arrays.asList(null, null)), NullPointerException.class);
         // 3. IndexOutOfBoundsException
         testRuntimeException(() -> DataverseName.create(Collections.emptyList(), 0, 1),
                 IndexOutOfBoundsException.class);

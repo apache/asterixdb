@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.metadata.declared;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 import static org.apache.asterix.metadata.utils.MetadataConstants.METADATA_OBJECT_NAME_INVALID_CHARS;
 
 import java.io.File;
@@ -618,8 +620,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                 dataset.getDatasetName(), indexName);
         if (secondaryIndex == null) {
-            throw new AlgebricksException(
-                    "Code generation error: no index " + indexName + " for dataset " + dataset.getDatasetName());
+            throw new AlgebricksException("Code generation error: no index " + indexName + " for " + dataset() + " "
+                    + dataset.getDatasetName());
         }
         Index.ValueIndexDetails secondaryIndexDetails = (Index.ValueIndexDetails) secondaryIndex.getIndexDetails();
         RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
@@ -985,8 +987,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String datasetName = dataSource.getId().getDatasourceName();
         Dataset dataset = findDataset(dataSource.getId().getDataverseName(), datasetName);
         if (dataset == null) {
-            throw new AlgebricksException(
-                    "Unknown dataset " + datasetName + " in dataverse " + dataSource.getId().getDataverseName());
+            throw new AlgebricksException("Unknown " + dataset() + " " + datasetName + " in " + dataverse() + " "
+                    + dataSource.getId().getDataverseName());
         }
         int numKeys = primaryKeys.size();
         int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
@@ -1035,7 +1037,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             JobSpecification jobSpec, IAType itemType, ITypedAdapterFactory adapterFactory,
             ITupleFilterFactory tupleFilterFactory, long outputLimit) throws AlgebricksException {
         if (itemType.getTypeTag() != ATypeTag.OBJECT) {
-            throw new AlgebricksException("Can only scan datasets of records.");
+            throw new AlgebricksException("Can only scan " + dataset() + "s of records.");
         }
 
         ISerializerDeserializer<?> payloadSerde =
@@ -1090,7 +1092,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         keyType = IndexingConstants.getFieldType(j);
                         break;
                     default:
-                        throw new AlgebricksException("Unknown Dataset Type");
+                        throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_DATASET_TYPE, dsType.toString());
                 }
             } catch (AsterixException e) {
                 throw new AlgebricksException(e);
@@ -1531,7 +1533,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
         // Sanity checks.
         if (primaryKeys.size() > 1) {
-            throw new AlgebricksException("Cannot create inverted index on dataset with composite primary key.");
+            throw new AlgebricksException(
+                    "Cannot create inverted index on " + dataset() + "s with composite primary key.");
         }
         // The size of secondaryKeys can be two if it receives input from its
         // TokenizeOperator- [token, number of token]

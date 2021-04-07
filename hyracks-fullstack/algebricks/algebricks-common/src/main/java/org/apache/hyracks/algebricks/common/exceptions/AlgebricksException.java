@@ -113,6 +113,7 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
         return errorCode;
     }
 
+    @Override
     public Serializable[] getParams() {
         return params;
     }
@@ -121,6 +122,7 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
         return nodeId;
     }
 
+    @Override
     public SourceLocation getSourceLocation() {
         return sourceLoc;
     }

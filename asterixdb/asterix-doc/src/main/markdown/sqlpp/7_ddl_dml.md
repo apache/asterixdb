@@ -452,8 +452,9 @@ The primary-key index can be identified by the fact that the `SearchKey` field i
 ![](../images/diagrams/CreateSynonym.png)
 
 The `CREATE SYNONYM` statement creates a synonym for a given dataset.
-This synonym may be used used instead of the dataset name in `SELECT`, `INSERT`, `UPSERT`, `DELETE`, and `LOAD` statements.
+This synonym may be used instead of the dataset name in `SELECT`, `INSERT`, `UPSERT`, `DELETE`, and `LOAD` statements.
 The target dataset does not need to exist when the synonym is created.
+A synonym may be created for another synonym.
 
 ##### Example
 

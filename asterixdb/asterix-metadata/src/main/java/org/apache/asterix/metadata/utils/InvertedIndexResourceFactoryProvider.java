@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.metadata.utils;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+
 import java.util.List;
 import java.util.Map;
 
@@ -77,7 +79,8 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
                     index.getIndexType().name(), dataset.getDatasetType());
         }
         if (numPrimaryKeys > 1) {
-            throw new AsterixException("Cannot create inverted index on dataset with composite primary key.");
+            throw new AsterixException(
+                    "Cannot create inverted index on " + dataset() + "s with composite primary key.");
         }
         if (numSecondaryKeys > 1) {
             throw new AsterixException("Cannot create composite inverted index on multiple fields.");

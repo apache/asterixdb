@@ -34,8 +34,12 @@ import java.util.Enumeration;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.network.ISocketChannel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class NetworkingUtil {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private NetworkingUtil() {
         throw new AssertionError("This util class should not be initialized.");
@@ -72,9 +76,15 @@ public class NetworkingUtil {
         long fileSize = fileChannel.size();
         long count = fileSize;
         long numTransferred = 0;
-        while ((numTransferred += fileChannel.transferFrom(socketChannel, pos, count)) < fileSize) {
-            pos += numTransferred;
-            count -= numTransferred;
+        try {
+            while ((numTransferred += fileChannel.transferFrom(socketChannel, pos, count)) < fileSize) {
+                pos += numTransferred;
+                count -= numTransferred;
+            }
+        } catch (Exception e) {
+            LOGGER.info("failed to download file; file size {}, pos {}, count {}, numTransferred {}", fileSize, pos,
+                    count, numTransferred);
+            throw e;
         }
     }
 

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.transaction.management.service.transaction;
 
+import static org.apache.asterix.transaction.management.service.transaction.TransactionManagementConstants.LogManagerConstants.TERMINAL_LSN;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
@@ -101,10 +103,12 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
         final ITransactionContext txnCtx = getTransactionContext(txnId);
         try {
             if (txnCtx.isWriteTxn()) {
-                LogRecord logRecord = new LogRecord();
-                TransactionUtil.formJobTerminateLogRecord(txnCtx, logRecord, false);
-                txnSubsystem.getLogManager().log(logRecord);
-                txnSubsystem.getCheckpointManager().secure(txnId);
+                if (txnCtx.getFirstLSN() != TERMINAL_LSN) {
+                    LogRecord logRecord = new LogRecord();
+                    TransactionUtil.formJobTerminateLogRecord(txnCtx, logRecord, false);
+                    txnSubsystem.getLogManager().log(logRecord);
+                    txnSubsystem.getCheckpointManager().secure(txnId);
+                }
                 txnSubsystem.getRecoveryManager().rollbackTransaction(txnCtx);
                 txnCtx.setTxnState(ITransactionManager.ABORTED);
             }

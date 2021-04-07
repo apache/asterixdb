@@ -63,6 +63,7 @@ public class ReplicateFileTask implements IReplicaTask {
     @Override
     public void perform(INcApplicationContext appCtx, IReplicationWorker worker) {
         try {
+            LOGGER.info("attempting to replicate {}", this);
             final IIOManager ioManager = appCtx.getIoManager();
             // resolve path
             final FileReference localPath = ioManager.resolve(file);
@@ -126,5 +127,11 @@ public class ReplicateFileTask implements IReplicaTask {
         final long i = input.readLong();
         final boolean isMetadata = input.readBoolean();
         return new ReplicateFileTask(s, i, isMetadata);
+    }
+
+    @Override
+    public String toString() {
+        return "ReplicateFileTask{" + "file='" + file + '\'' + ", size=" + size + ", indexMetadata=" + indexMetadata
+                + '}';
     }
 }

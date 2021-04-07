@@ -36,6 +36,11 @@ public class RunningAggregateOperator extends AbstractAssignOperator {
         super(variables, expressions);
     }
 
+    public RunningAggregateOperator(LogicalVariable var, Mutable<ILogicalExpression> expr) {
+        this.variables.add(var);
+        this.expressions.add(expr);
+    }
+
     @Override
     public LogicalOperatorTag getOperatorTag() {
         return LogicalOperatorTag.RUNNINGAGGREGATE;

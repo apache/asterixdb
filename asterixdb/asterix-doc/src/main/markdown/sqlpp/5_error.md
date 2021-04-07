@@ -71,7 +71,7 @@ cannot be successfully resolved as a valid field access.
 If we have a typo as above in "customers" that misses the dataset name's ending "s",
 we will get an identifier resolution error as follows:
 
-    ERROR: Code: 1 "ASX1077: Cannot find dataset customer in dataverse Commerce nor an alias with name customer! (in line 2, at column 7)"
+    ERROR: Code: 1 "ASX1077: Cannot find dataset customer in dataverse Commerce nor an alias with name customer (in line 2, at column 7)"
 
 ##### Example
 (Q4.4)

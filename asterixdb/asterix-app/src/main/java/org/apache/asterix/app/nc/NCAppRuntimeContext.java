@@ -209,15 +209,15 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             }
             localResourceRepository.deleteStorageData();
         }
-        int maxConcurrentFlushes = storageProperties.getMaxConcurrentFlushes();
-        if (maxConcurrentFlushes <= 0) {
-            maxConcurrentFlushes = ioManager.getIODevices().size();
+        int maxScheduledFlushes = storageProperties.getMaxScheduledFlushes();
+        if (maxScheduledFlushes <= 0) {
+            maxScheduledFlushes = ioManager.getIODevices().size();
             if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("The value of maxConcurrentFlushes is not provided. Setting maxConcurrentFlushes = {}.",
-                        maxConcurrentFlushes);
+                LOGGER.info("The value of maxScheduledFlushes is not provided. Setting maxConcurrentFlushes = {}.",
+                        maxScheduledFlushes);
             }
         }
-        virtualBufferCache = new GlobalVirtualBufferCache(allocator, storageProperties, maxConcurrentFlushes);
+        virtualBufferCache = new GlobalVirtualBufferCache(allocator, storageProperties, maxScheduledFlushes);
         // Must start vbc now instead of by life cycle component manager (lccm) because lccm happens after
         // the metadata bootstrap task
         ((ILifeCycleComponent) virtualBufferCache).start();
@@ -584,24 +584,24 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         String schedulerName = storageProperties.getIoScheduler();
         int numPartitions = ioManager.getIODevices().size();
 
-        int maxRunningFlushes = storageProperties.getMaxRunningFlushes(numPartitions);
+        int maxConcurrentFlushes = storageProperties.geMaxConcurrentFlushes(numPartitions);
         int maxScheduledMerges = storageProperties.getMaxScheduledMerges(numPartitions);
-        int maxRunningMerges = storageProperties.getMaxRunningMerges(numPartitions);
+        int maxConcurrentMerges = storageProperties.getMaxConcurrentMerges(numPartitions);
 
         ILSMIOOperationScheduler ioScheduler = null;
         if (AsynchronousScheduler.FACTORY.getName().equalsIgnoreCase(schedulerName)) {
             ioScheduler = AsynchronousScheduler.FACTORY.createIoScheduler(getServiceContext().getThreadFactory(),
-                    HaltCallback.INSTANCE, maxRunningFlushes, maxScheduledMerges, maxRunningMerges);
+                    HaltCallback.INSTANCE, maxConcurrentFlushes, maxScheduledMerges, maxConcurrentMerges);
         } else if (GreedyScheduler.FACTORY.getName().equalsIgnoreCase(schedulerName)) {
             ioScheduler = GreedyScheduler.FACTORY.createIoScheduler(getServiceContext().getThreadFactory(),
-                    HaltCallback.INSTANCE, maxRunningFlushes, maxScheduledMerges, maxRunningMerges);
+                    HaltCallback.INSTANCE, maxConcurrentFlushes, maxScheduledMerges, maxConcurrentMerges);
         } else {
             if (LOGGER.isWarnEnabled()) {
                 LOGGER.log(Level.WARN,
                         "Unknown storage I/O scheduler: " + schedulerName + "; defaulting to greedy I/O scheduler.");
             }
             ioScheduler = GreedyScheduler.FACTORY.createIoScheduler(getServiceContext().getThreadFactory(),
-                    HaltCallback.INSTANCE, maxRunningFlushes, maxScheduledMerges, maxRunningMerges);
+                    HaltCallback.INSTANCE, maxConcurrentFlushes, maxScheduledMerges, maxConcurrentMerges);
         }
         return ioScheduler;
     }

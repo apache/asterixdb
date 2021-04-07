@@ -1657,7 +1657,7 @@ public class BuiltinFunctions {
         addFunction(CREATE_RECTANGLE, ARectangleTypeComputer.INSTANCE, true);
         addFunction(CREATE_UUID, AUUIDTypeComputer.INSTANCE, false);
         addFunction(UUID, AUUIDTypeComputer.INSTANCE, false);
-        addFunction(CREATE_QUERY_UID, ABinaryTypeComputer.INSTANCE, false);
+        addPrivateFunction(CREATE_QUERY_UID, ABinaryTypeComputer.INSTANCE, false);
         addFunction(UUID_CONSTRUCTOR, AUUIDTypeComputer.INSTANCE, true);
         addFunction(RANDOM, ADoubleTypeComputer.INSTANCE, false);
         addFunction(RANDOM_WITH_SEED, NumericUnaryTypeComputer.INSTANCE_DOUBLE, false);

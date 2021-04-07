@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -47,6 +48,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
@@ -99,10 +101,11 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  *   The visitor ensures that the variables used to correlate between the
  *   query plan rooted at <code>subplanInputOperator</code> are propagated
  *   to the operator being visited.
- *
- *   ----------------------------------
+ *   <p>
  *   Here is an abstract example.
+ *   <p>
  *   The original query plan:
+ *   <pre>
  *   --Op1
  *     --Subplan{
  *       --AggregateOp
@@ -112,9 +115,10 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  *       }
  *       --InputOp
  *         .....
- *
+ *   </pre>
  *   After we call NestedOp.accept(....) with this visitor. We will get an
  *   intermediate plan that looks like:
+ *   <pre>
  *   --Op1
  *     --Subplan{
  *       --AggregateOp
@@ -125,9 +129,9 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  *       }
  *       --InputOp
  *         .....
+ *    </pre>
  *    The plan rooted at InputOp' is a deep copy of the plan rooted at InputOp
  *    with a different set of variables.
- *
  */
 class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOperator, Void> {
     // The optimization context.
@@ -186,17 +190,6 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     }
 
     @Override
-    public ILogicalOperator visitAggregateOperator(AggregateOperator op, Void arg) throws AlgebricksException {
-        return visitAggregateOperator(op);
-    }
-
-    @Override
-    public ILogicalOperator visitRunningAggregateOperator(RunningAggregateOperator op, Void arg)
-            throws AlgebricksException {
-        return visitAggregateOperator(op);
-    }
-
-    @Override
     public ILogicalOperator visitEmptyTupleSourceOperator(EmptyTupleSourceOperator op, Void arg)
             throws AlgebricksException {
         return visitSingleInputOperator(op);
@@ -248,14 +241,38 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     }
 
     @Override
+    public ILogicalOperator visitRunningAggregateOperator(RunningAggregateOperator op, Void arg)
+            throws AlgebricksException {
+        return visitLimitOrRunningAggregateOperator(op, InlineAllNtsInSubplanVisitor::isCreateQueryUidRunningAggregate);
+    }
+
+    /*
+     * create-query-uid() doesn't require GROUP BY wrapping in the presence of correlated keys
+     */
+    private static boolean isCreateQueryUidRunningAggregate(RunningAggregateOperator ragg) {
+        return ragg.getExpressions().stream().map(Mutable::getValue)
+                .allMatch(expr -> expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL
+                        && BuiltinFunctions.CREATE_QUERY_UID
+                                .equals(((AbstractFunctionCallExpression) expr).getFunctionIdentifier()));
+    }
+
+    @Override
     public ILogicalOperator visitLimitOperator(LimitOperator op, Void arg) throws AlgebricksException {
+        return visitLimitOrRunningAggregateOperator(op, null);
+    }
+
+    private <T extends ILogicalOperator> ILogicalOperator visitLimitOrRunningAggregateOperator(T op,
+            Predicate<T> noCorrelatedKeysHandlingTest) throws AlgebricksException {
         // Processes its input operator.
         visitSingleInputOperator(op);
         if (correlatedKeyVars.isEmpty()) {
             return op;
         }
+        if (noCorrelatedKeysHandlingTest != null && noCorrelatedKeysHandlingTest.test(op)) {
+            return op;
+        }
 
-        // Get live variables before limit.
+        // Get live variables before limit (or running aggregate) operator.
         Set<LogicalVariable> inputLiveVars = new HashSet<LogicalVariable>();
         VariableUtilities.getSubplanLocalLiveVariables(op.getInputs().get(0).getValue(), inputLiveVars);
 
@@ -267,8 +284,9 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         ILogicalOperator inputOp = op.getInputs().get(0).getValue();
         assignOp.getInputs().add(new MutableObject<>(inputOp));
 
-        // Rewrites limit to a group-by with limit as its nested operator.
-        Pair<ILogicalOperator, LogicalVariable> gbyOpAndAggVar = wrapLimitInGroupBy(op, recordVar, inputLiveVars);
+        // Rewrites limit (or running aggregate) to a group-by with limit (or running aggregate) as its nested operator.
+        Pair<ILogicalOperator, LogicalVariable> gbyOpAndAggVar =
+                wrapLimitOrRunningAggregateInGroupBy(op, recordVar, inputLiveVars);
         ILogicalOperator gbyOp = gbyOpAndAggVar.first;
         LogicalVariable aggVar = gbyOpAndAggVar.second;
         gbyOp.getInputs().add(new MutableObject<>(assignOp));
@@ -312,8 +330,8 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         return new Pair<>(assignOp, recordVar);
     }
 
-    private Pair<ILogicalOperator, LogicalVariable> wrapLimitInGroupBy(ILogicalOperator op, LogicalVariable recordVar,
-            Set<LogicalVariable> inputLiveVars) throws AlgebricksException {
+    private Pair<ILogicalOperator, LogicalVariable> wrapLimitOrRunningAggregateInGroupBy(ILogicalOperator op,
+            LogicalVariable recordVar, Set<LogicalVariable> inputLiveVars) throws AlgebricksException {
         SourceLocation sourceLoc = op.getSourceLocation();
         GroupByOperator gbyOp = new GroupByOperator();
         gbyOp.setSourceLocation(sourceLoc);
@@ -348,7 +366,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         AggregateOperator aggOp = new AggregateOperator(aggVarList, aggExprList);
         aggOp.setSourceLocation(sourceLoc);
 
-        // Adds the original limit operator as the input operator to the added
+        // Adds the original limit (or running aggregate) operator as the input operator to the added
         // aggregate operator.
         aggOp.getInputs().add(new MutableObject<>(op));
         op.getInputs().clear();
@@ -361,7 +379,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         }
 
         // Adds a nested tuple source operator as the input operator to the
-        // limit operator.
+        // limit (or running aggregate) operator.
         NestedTupleSourceOperator nts = new NestedTupleSourceOperator(new MutableObject<>(gbyOp));
         nts.setSourceLocation(sourceLoc);
         currentOp.getInputs().add(new MutableObject<>(nts));
@@ -450,10 +468,11 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         // Updates the primary key info in the copied plan segment.
         Map<LogicalVariable, LogicalVariable> varMap = deepCopyVisitor.getInputToOutputVariableMapping();
         addPrimaryKeys(varMap);
-        Pair<ILogicalOperator, Set<LogicalVariable>> primaryOpAndVars =
+        EquivalenceClassUtils.computePrimaryKeys(copiedInputOperator, context);
+        Triple<Set<LogicalVariable>, ILogicalOperator, FunctionalDependency> primaryOpAndVars =
                 EquivalenceClassUtils.findOrCreatePrimaryKeyOpAndVariables(copiedInputOperator, true, context);
         correlatedKeyVars.clear();
-        correlatedKeyVars.addAll(primaryOpAndVars.second);
+        correlatedKeyVars.addAll(primaryOpAndVars.first);
         // Update key variables and input-output-var mapping.
         varMap.forEach((oldVar, newVar) -> {
             if (correlatedKeyVars.contains(oldVar)) {
@@ -462,7 +481,14 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
             }
             updateInputToOutputVarMapping(oldVar, newVar, true);
         });
-        return primaryOpAndVars.first;
+        if (primaryOpAndVars.second == null) {
+            // found primary key for the existing operator (copiedInputOperator)
+            return copiedInputOperator;
+        } else {
+            ILogicalOperator newInputOp = primaryOpAndVars.second;
+            context.addPrimaryKey(primaryOpAndVars.third);
+            return newInputOp;
+        }
     }
 
     @Override
@@ -669,19 +695,20 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
     }
 
     /**
-     * Wraps an AggregateOperator or RunningAggregateOperator with a group-by
+     * Wraps an AggregateOperator with a group-by
      * operator where the group-by keys are variables in keyVarsToEnforce. Note
      * that the function here prevents this visitor being used to rewrite
      * arbitrary query plans. Instead, it could only be used for rewriting a
      * nested plan within a subplan operator.
      *
      * @param op
-     *            the logical operator for aggregate or running aggregate.
+     *            the logical operator for aggregate.
      * @return the wrapped group-by operator if {@code keyVarsToEnforce} is not
      *         empty, and {@code op} otherwise.
      * @throws AlgebricksException
      */
-    private ILogicalOperator visitAggregateOperator(ILogicalOperator op) throws AlgebricksException {
+    @Override
+    public ILogicalOperator visitAggregateOperator(AggregateOperator op, Void arg) throws AlgebricksException {
         visitSingleInputOperator(op);
         if (correlatedKeyVars.isEmpty()) {
             return op;
@@ -808,5 +835,4 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
                     new FunctionalDependency(newDependencies, Collections.singletonList(entry.getValue())));
         }
     }
-
 }

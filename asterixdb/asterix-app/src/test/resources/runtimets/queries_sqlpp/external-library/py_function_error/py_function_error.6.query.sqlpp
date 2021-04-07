@@ -16,9 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+* Description  : Access a records nested records at each level.
+* Expected Res : Success
+* Date         : 04 Jun 2015
+*/
+// param max-warnings:json=0
 
-use tpch;
+use test;
 
-select distinct value print_binary(id, "hex") from LineItem
-let id = create_query_uid()
-order by id;
+env_test("BAR");

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.metadata.feeds;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+
 import java.rmi.RemoteException;
 import java.util.Map;
 
@@ -53,6 +55,7 @@ import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -73,12 +76,12 @@ public class FeedMetadataUtil {
             String datasetName) throws AlgebricksException {
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new CompilationException("Unknown target dataset :" + datasetName);
+            throw new CompilationException("Unknown target " + dataset() + " :" + datasetName);
         }
 
         if (!dataset.getDatasetType().equals(DatasetType.INTERNAL)) {
-            throw new CompilationException("Statement not applicable. Dataset " + datasetName
-                    + " is not of required type " + DatasetType.INTERNAL);
+            throw new CompilationException("Statement not applicable. " + StringUtils.capitalize(dataset()) + " "
+                    + datasetName + " is not of required type " + DatasetType.INTERNAL);
         }
         return dataset;
     }

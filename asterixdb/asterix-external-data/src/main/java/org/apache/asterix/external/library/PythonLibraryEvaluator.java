@@ -27,6 +27,7 @@ import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -65,18 +66,21 @@ public class PythonLibraryEvaluator extends AbstractStateObject implements IDeal
     private IPCSystem ipcSys;
     private String sitePkgs;
     private List<String> pythonArgs;
+    private Map<String, String> pythonEnv;
     private TaskAttemptId task;
     private IWarningCollector warningCollector;
     private SourceLocation sourceLoc;
 
     public PythonLibraryEvaluator(JobId jobId, PythonLibraryEvaluatorId evaluatorId, ILibraryManager libMgr,
-            File pythonHome, String sitePkgs, List<String> pythonArgs, ExternalFunctionResultRouter router,
-            IPCSystem ipcSys, TaskAttemptId task, IWarningCollector warningCollector, SourceLocation sourceLoc) {
+            File pythonHome, String sitePkgs, List<String> pythonArgs, Map<String, String> pythonEnv,
+            ExternalFunctionResultRouter router, IPCSystem ipcSys, TaskAttemptId task,
+            IWarningCollector warningCollector, SourceLocation sourceLoc) {
         super(jobId, evaluatorId);
         this.libMgr = libMgr;
         this.pythonHome = pythonHome;
         this.sitePkgs = sitePkgs;
         this.pythonArgs = pythonArgs;
+        this.pythonEnv = pythonEnv;
         this.router = router;
         this.task = task;
         this.ipcSys = ipcSys;
@@ -98,8 +102,8 @@ public class PythonLibraryEvaluator extends AbstractStateObject implements IDeal
         args.add(InetAddress.getLoopbackAddress().getHostAddress());
         args.add(Integer.toString(port));
         args.add(sitePkgs);
-
         ProcessBuilder pb = new ProcessBuilder(args.toArray(new String[0]));
+        pb.environment().putAll(pythonEnv);
         pb.directory(new File(wd));
         p = pb.start();
         proto = new PythonIPCProto(p.getOutputStream(), router, p);
@@ -199,14 +203,15 @@ public class PythonLibraryEvaluator extends AbstractStateObject implements IDeal
 
     public static PythonLibraryEvaluator getInstance(IExternalFunctionInfo finfo, ILibraryManager libMgr,
             ExternalFunctionResultRouter router, IPCSystem ipcSys, File pythonHome, IHyracksTaskContext ctx,
-            String sitePkgs, List<String> pythonArgs, IWarningCollector warningCollector, SourceLocation sourceLoc)
-            throws IOException, AsterixException {
+            String sitePkgs, List<String> pythonArgs, Map<String, String> pythonEnv, IWarningCollector warningCollector,
+            SourceLocation sourceLoc) throws IOException, AsterixException {
         PythonLibraryEvaluatorId evaluatorId = new PythonLibraryEvaluatorId(finfo.getLibraryDataverseName(),
                 finfo.getLibraryName(), Thread.currentThread());
         PythonLibraryEvaluator evaluator = (PythonLibraryEvaluator) ctx.getStateObject(evaluatorId);
         if (evaluator == null) {
             evaluator = new PythonLibraryEvaluator(ctx.getJobletContext().getJobId(), evaluatorId, libMgr, pythonHome,
-                    sitePkgs, pythonArgs, router, ipcSys, ctx.getTaskAttemptId(), warningCollector, sourceLoc);
+                    sitePkgs, pythonArgs, pythonEnv, router, ipcSys, ctx.getTaskAttemptId(), warningCollector,
+                    sourceLoc);
             ctx.getJobletContext().registerDeallocatable(evaluator);
             evaluator.initialize();
             ctx.setStateObject(evaluator);

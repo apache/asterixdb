@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ERROR_METHOD_NOT_IMPLEMENTED;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_KEY_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_NAME_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.BLOB_ENDPOINT_FIELD_NAME;
@@ -31,6 +32,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.E
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
@@ -111,6 +113,11 @@ public class ExternalDataUtils {
     }
 
     private ExternalDataUtils() {
+    }
+
+    public static int getOrDefaultBufferSize(Map<String, String> configuration) {
+        String bufferSize = configuration.get(KEY_EXTERNAL_SCAN_BUFFER_SIZE);
+        return bufferSize != null ? Integer.parseInt(bufferSize) : ExternalDataConstants.DEFAULT_BUFFER_SIZE;
     }
 
     // Get a delimiter from the given configuration
@@ -776,7 +783,7 @@ public class ExternalDataUtils {
             S3Client s3Client = buildAwsS3Client(configuration);;
             S3Response response;
             boolean useOldApi = false;
-            String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
+            String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
             String prefix = getPrefix(configuration);
 
             try {
@@ -785,7 +792,7 @@ public class ExternalDataUtils {
                 // Method not implemented, try falling back to old API
                 try {
                     // For error code, see https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
-                    if (ex.awsErrorDetails().errorCode().equals("NotImplemented")) {
+                    if (ex.awsErrorDetails().errorCode().equals(ERROR_METHOD_NOT_IMPLEMENTED)) {
                         useOldApi = true;
                         response = isBucketEmpty(s3Client, container, prefix, true);
                     } else {
@@ -943,7 +950,7 @@ public class ExternalDataUtils {
             // Check if the bucket is present
             BlobServiceClient blobServiceClient;
             try {
-                String container = configuration.get(ExternalDataConstants.AwsS3.CONTAINER_NAME_FIELD_NAME);
+                String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
                 blobServiceClient = buildAzureClient(configuration);
                 BlobContainerClient blobContainer = blobServiceClient.getBlobContainerClient(container);
 

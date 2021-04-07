@@ -599,22 +599,19 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             throw new ACIDException(e);
         }
         long lastLSN = txnContext.getLastLSN();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("rollbacking transaction log records from " + firstLSN + " to " + lastLSN);
-        }
+        boolean infoEnabled = LOGGER.isInfoEnabled();
         // check if the transaction actually wrote some logs.
         if (firstLSN == TransactionManagementConstants.LogManagerConstants.TERMINAL_LSN || firstLSN > lastLSN) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("no need to roll back as there were no operations by the txn " + txnContext.getTxnId());
+            if (infoEnabled) {
+                LOGGER.info("no need to rollback as there were no operations by " + txnContext.getTxnId());
             }
             return;
         }
-
-        // While reading log records from firstLsn to lastLsn, collect uncommitted txn's Lsns
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("collecting loser transaction's LSNs from " + firstLSN + " to " + lastLSN);
+        if (infoEnabled) {
+            LOGGER.info("rolling back transaction log records from " + firstLSN + " to " + lastLSN + " for "
+                    + txnContext.getTxnId());
         }
-
+        // While reading log records from firstLsn to lastLsn, collect uncommitted txn's Lsns
         Map<TxnEntityId, List<Long>> jobLoserEntity2LSNsMap = new HashMap<>();
         TxnEntityId tempKeyTxnEntityId = new TxnEntityId(-1, -1, -1, null, -1, false);
         int updateLogCount = 0;
@@ -722,7 +719,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                 }
             }
 
-            if (LOGGER.isInfoEnabled()) {
+            if (infoEnabled) {
                 LOGGER.info("undone loser transaction's effect");
                 LOGGER.info("[RecoveryManager's rollback log count] update/entityCommit/undo:" + updateLogCount + "/"
                         + entityCommitLogCount + "/" + undoCount);

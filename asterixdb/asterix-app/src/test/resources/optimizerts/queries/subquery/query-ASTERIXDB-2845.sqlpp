@@ -35,7 +35,7 @@ WITH
 j AS (
   SELECT jid, a
   FROM jds
-), ---> 3 rows (jid=1, 2, 3)
+),
 
 m1 AS (
   SELECT jid, x, COUNT(1) c1

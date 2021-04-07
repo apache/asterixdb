@@ -17,30 +17,19 @@
  * under the License.
  */
 
-drop dataverse tpch if exists;
-create dataverse tpch;
+/*
+ * Test that if the target object's dataverse is not specified then
+ * it defaults to the synonym's dataverse
+ */
 
-use tpch;
+drop dataverse test1 if exists;
+create dataverse test1;
 
-create type LineItemType as closed {
-  l_orderkey: int64,
-  l_partkey: int64,
-  l_suppkey: int64,
-  l_linenumber: int64,
-  l_quantity: double,
-  l_extendedprice: double,
-  l_discount: double,
-  l_tax: double,
-  l_returnflag: string,
-  l_linestatus: string,
-  l_shipdate: string,
-  l_commitdate: string,
-  l_receiptdate: string,
-  l_shipinstruct: string,
-  l_shipmode: string,
-  l_comment: string
-};
+drop  dataverse test2 if exists;
+create  dataverse test2;
 
-create dataset LineItem(LineItemType)
-  primary key l_orderkey, l_linenumber;
+use test1;
 
+create synonym test2.md_syn_1 for `Metadata`.`Synonym`;
+
+create synonym test2.md_syn_2 for md_syn_1;

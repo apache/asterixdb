@@ -18,19 +18,19 @@
  */
 package org.apache.asterix.external.input.record.reader.azure;
 
-import static org.apache.asterix.external.util.ExternalDataConstants.*;
-
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -56,10 +56,9 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
     @Override
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
             throws AlgebricksException {
-        this.configuration = configuration;
-        ICcApplicationContext ccApplicationContext = (ICcApplicationContext) ctx.getApplicationContext();
+        super.configure(ctx, configuration, warningCollector);
 
-        String container = configuration.get(AzureBlob.CONTAINER_NAME_FIELD_NAME);
+        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
 
         List<BlobItem> filesOnly = new ArrayList<>();
 
@@ -87,12 +86,8 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
                 warningCollector.warn(warning);
             }
 
-            // Partition constraints
-            partitionConstraint = ccApplicationContext.getClusterStateManager().getClusterLocations();
-            int partitionsCount = partitionConstraint.getLocations().length;
-
             // Distribute work load amongst the partitions
-            distributeWorkLoad(filesOnly, partitionsCount);
+            distributeWorkLoad(filesOnly, getPartitionsCount());
         } catch (Exception ex) {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
         }
@@ -138,14 +133,19 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
      * @param partitionsCount Partitions count
      */
     private void distributeWorkLoad(List<BlobItem> items, int partitionsCount) {
+        PriorityQueue<PartitionWorkLoadBasedOnSize> workloadQueue = new PriorityQueue<>(partitionsCount,
+                Comparator.comparingLong(PartitionWorkLoadBasedOnSize::getTotalSize));
+
         // Prepare the workloads based on the number of partitions
         for (int i = 0; i < partitionsCount; i++) {
-            partitionWorkLoadsBasedOnSize.add(new PartitionWorkLoadBasedOnSize());
+            workloadQueue.add(new PartitionWorkLoadBasedOnSize());
         }
 
-        for (BlobItem item : items) {
-            PartitionWorkLoadBasedOnSize smallest = getSmallestWorkLoad();
-            smallest.addFilePath(item.getName(), item.getProperties().getContentLength());
+        for (BlobItem object : items) {
+            PartitionWorkLoadBasedOnSize workload = workloadQueue.poll();
+            workload.addFilePath(object.getName(), object.getProperties().getContentLength());
+            workloadQueue.add(workload);
         }
+        partitionWorkLoadsBasedOnSize.addAll(workloadQueue);
     }
 }

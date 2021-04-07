@@ -112,14 +112,31 @@ public class ActiveManager {
             case REQUEST_STATS:
                 requestStats((ActiveStatsRequestMessage) message);
                 break;
+            case GENERIC_EVENT:
+                deliverGenericEvent(message);
+                break;
             default:
                 LOGGER.warn("Unknown message type received: " + message.getKind());
         }
     }
 
+    private void deliverGenericEvent(ActiveManagerMessage message) throws HyracksDataException {
+        try {
+            ActiveRuntimeId runtimeId = message.getRuntimeId();
+            IActiveRuntime runtime = runtimes.get(runtimeId);
+            if (runtime == null) {
+                LOGGER.warn("Request for a runtime {} that is not registered {}", runtimeId, message);
+                return;
+            }
+            runtime.handleGenericEvent(message);
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
     private void requestStats(ActiveStatsRequestMessage message) throws HyracksDataException {
         try {
-            ActiveRuntimeId runtimeId = (ActiveRuntimeId) message.getPayload();
+            ActiveRuntimeId runtimeId = message.getRuntimeId();
             IActiveRuntime runtime = runtimes.get(runtimeId);
             long reqId = message.getReqId();
             if (runtime == null) {
@@ -168,7 +185,7 @@ public class ActiveManager {
     @SuppressWarnings("squid:S1181") // Catch Error
     private void stopRuntime(ActiveManagerMessage message) {
         StopRuntimeParameters content = (StopRuntimeParameters) message.getPayload();
-        ActiveRuntimeId runtimeId = content.getRuntimeId();
+        ActiveRuntimeId runtimeId = message.getRuntimeId();
         IActiveRuntime runtime = runtimes.get(runtimeId);
         if (runtime == null) {
             LOGGER.warn("Request to stop runtime: " + runtimeId

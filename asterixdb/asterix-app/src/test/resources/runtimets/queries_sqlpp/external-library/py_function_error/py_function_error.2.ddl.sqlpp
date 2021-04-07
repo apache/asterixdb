@@ -24,3 +24,6 @@ create function warning()
 
 create function roundtrip(s)
   as "roundtrip", "Tests.roundtrip" at testlib;
+
+create function env_test(k)
+  as "roundtrip", "Tests.env_test" at testlib;

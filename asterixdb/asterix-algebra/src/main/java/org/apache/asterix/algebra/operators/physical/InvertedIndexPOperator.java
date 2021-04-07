@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.algebra.operators.physical;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSourceId;
@@ -157,7 +159,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                 dataset.getDataverseName(), dataset.getDatasetName(), indexName);
         if (secondaryIndex == null) {
             throw new AlgebricksException(
-                    "Code generation error: no index " + indexName + " for dataset " + datasetName);
+                    "Code generation error: no index " + indexName + " for " + dataset() + " " + datasetName);
         }
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(unnestMap);
         RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);

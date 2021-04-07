@@ -21,6 +21,7 @@ package org.apache.asterix.external.dataflow;
 import java.io.Closeable;
 import java.io.IOException;
 
+import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -56,5 +57,9 @@ public abstract class AbstractFeedDataFlowController implements IDataFlowControl
         if (feedLogManager != null) {
             feedLogManager.close();
         }
+    }
+
+    public void handleGenericEvent(ActiveManagerMessage event) {
+        throw new IllegalStateException("unexpected generic event " + event);
     }
 }

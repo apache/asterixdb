@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.config;
 
+import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,4 +35,6 @@ public class AlgebricksConfig {
     public static final boolean SUBPLAN_NESTEDPUSHDOWN_DEFAULT = true;
     public static final boolean MIN_MEMORY_ALLOCATION_DEFAULT = true;
     public static final boolean ARRAY_INDEX_DEFAULT = false;
+    public static final int EXTERNAL_SCAN_BUFFER_SIZE =
+            StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.KILOBYTE);
 }

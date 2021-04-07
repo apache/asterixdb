@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.metadata.declared;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,7 +81,7 @@ public class MetadataManagerUtil {
             return null;
         }
         if (dataverseName == null) {
-            throw new AlgebricksException("Cannot declare output-record-type with no dataverse!");
+            throw new AlgebricksException("Cannot declare output-record-type with no " + dataverse());
         }
         IAType type = findType(mdTxnCtx, dataverseName, outputRecordType);
         if (!(type instanceof ARecordType)) {
@@ -109,7 +112,8 @@ public class MetadataManagerUtil {
             String datasetName) throws AlgebricksException {
         Dataset dataset = findDataset(mdTxnCtx, dataverseName, datasetName);
         if (dataset == null) {
-            throw new AlgebricksException("Unknown dataset " + datasetName + " in dataverse " + dataverseName);
+            throw new AlgebricksException(
+                    "Unknown " + dataset() + " " + datasetName + " in " + dataverse() + " " + dataverseName);
         }
         return dataset;
     }

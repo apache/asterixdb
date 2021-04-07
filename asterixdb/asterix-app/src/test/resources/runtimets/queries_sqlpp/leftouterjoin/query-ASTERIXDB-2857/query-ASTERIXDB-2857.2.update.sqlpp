@@ -17,8 +17,6 @@
  * under the License.
  */
 
-use tpch;
+use test;
 
-load dataset LineItem
-using localfs
-(("path"="asterix_nc1://data/tpch0.001/lineitem.tbl"),("format"="delimited-text"),("delimiter"="|")) pre-sorted;
+load  dataset tenk using localfs ((`path`=`asterix_nc1://data/tenk.tbl`),(`format`=`delimited-text`),(`delimiter`=`|`));

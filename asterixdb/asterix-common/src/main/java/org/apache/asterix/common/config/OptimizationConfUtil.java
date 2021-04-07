@@ -74,6 +74,9 @@ public class OptimizationConfUtil {
                 CompilerProperties.COMPILER_MIN_MEMORY_ALLOCATION_KEY, compilerProperties.getMinMemoryAllocation());
         boolean arrayIndex = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_ARRAYINDEX_KEY,
                 compilerProperties.isArrayIndex());
+        int externalScanBufferSize = getExternalScanBufferSize(
+                (String) querySpecificConfig.get(CompilerProperties.COMPILER_EXTERNALSCANMEMORY_KEY),
+                compilerProperties.getExternalScanMemorySize(), sourceLoc);
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -91,7 +94,19 @@ public class OptimizationConfUtil {
         physOptConf.setSubplanNestedPushdown(subplanNestedPushdown);
         physOptConf.setMinMemoryAllocation(minMemoryAllocation);
         physOptConf.setArrayIndexEnabled(arrayIndex);
+        physOptConf.setExternalScanBufferSize(externalScanBufferSize);
         return physOptConf;
+    }
+
+    private static int getExternalScanBufferSize(String externalScanMemorySizeParameter,
+            int compilerExternalScanMemorySize, SourceLocation sourceLoc) throws AsterixException {
+        IOptionType<Integer> intByteParser = OptionTypes.INTEGER_BYTE_UNIT;
+        try {
+            return externalScanMemorySizeParameter != null ? intByteParser.parse(externalScanMemorySizeParameter)
+                    : compilerExternalScanMemorySize;
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+        }
     }
 
     public static int getSortNumFrames(CompilerProperties compilerProperties, Map<String, Object> querySpecificConfig,

@@ -50,7 +50,8 @@ public class ExternalProperties extends AbstractProperties {
                 POSITIVE_INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(200, StorageUtil.StorageUnit.MEGABYTE),
                 "The maximum accepted web request size in bytes"),
-        REQUESTS_ARCHIVE_SIZE(NONNEGATIVE_INTEGER, 50, "The maximum number of archived requests to maintain");
+        REQUESTS_ARCHIVE_SIZE(NONNEGATIVE_INTEGER, 50, "The maximum number of archived requests to maintain"),
+        LIBRARY_DEPLOY_TIMEOUT(POSITIVE_INTEGER, 1800, "Timeout to upload a UDF in seconds");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -76,6 +77,7 @@ public class ExternalProperties extends AbstractProperties {
                 case LOG_LEVEL:
                 case MAX_WAIT_ACTIVE_CLUSTER:
                 case MAX_WEB_REQUEST_SIZE:
+                case LIBRARY_DEPLOY_TIMEOUT:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
                 case NC_JAVA_OPTS:
@@ -147,6 +149,10 @@ public class ExternalProperties extends AbstractProperties {
 
     public int getRequestsArchiveSize() {
         return accessor.getInt(Option.REQUESTS_ARCHIVE_SIZE);
+    }
+
+    public int getLibraryDeployTimeout() {
+        return accessor.getInt(Option.LIBRARY_DEPLOY_TIMEOUT);
     }
 
 }

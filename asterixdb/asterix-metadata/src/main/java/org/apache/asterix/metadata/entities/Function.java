@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.metadata.entities;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -196,6 +198,11 @@ public class Function implements IMetadataEntity<Function> {
 
         public String getDependencyDisplayName(Triple<DataverseName, String, String> dependency) {
             return dependencyDisplayNameAccessor.apply(dependency);
+        }
+
+        @Override
+        public String toString() {
+            return this == DATASET ? dataset() : name().toLowerCase();
         }
     }
 }

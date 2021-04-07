@@ -18,19 +18,19 @@
  */
 package org.apache.asterix.external.input.record.reader.aws;
 
-import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3;
-
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -61,8 +61,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
     @Override
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
             throws AlgebricksException {
-        this.configuration = configuration;
-        ICcApplicationContext ccApplicationContext = (ICcApplicationContext) ctx.getApplicationContext();
+        super.configure(ctx, configuration, warningCollector);
 
         // Ensure the validity of include/exclude
         ExternalDataUtils.validateIncludeExclude(configuration);
@@ -70,7 +69,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
 
         // Prepare to retrieve the objects
         List<S3Object> filesOnly;
-        String container = configuration.get(AwsS3.CONTAINER_NAME_FIELD_NAME);
+        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
         S3Client s3Client = ExternalDataUtils.AwsS3.buildAwsS3Client(configuration);
 
         try {
@@ -79,7 +78,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
             // New API is not implemented, try falling back to old API
             try {
                 // For error code, see https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
-                if (ex.awsErrorDetails().errorCode().equals("NotImplemented")) {
+                if (ex.awsErrorDetails().errorCode().equals(ExternalDataConstants.AwsS3.ERROR_METHOD_NOT_IMPLEMENTED)) {
                     filesOnly = oldApiListS3Objects(s3Client, container, includeExcludeMatcher);
                 } else {
                     throw ex;
@@ -101,12 +100,8 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
             warningCollector.warn(warning);
         }
 
-        // Partition constraints
-        partitionConstraint = ccApplicationContext.getClusterStateManager().getClusterLocations();
-        int partitionsCount = partitionConstraint.getLocations().length;
-
         // Distribute work load amongst the partitions
-        distributeWorkLoad(filesOnly, partitionsCount);
+        distributeWorkLoad(filesOnly, getPartitionsCount());
     }
 
     /**
@@ -223,14 +218,19 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
      * @param partitionsCount Partitions count
      */
     private void distributeWorkLoad(List<S3Object> fileObjects, int partitionsCount) {
+        PriorityQueue<PartitionWorkLoadBasedOnSize> workloadQueue = new PriorityQueue<>(partitionsCount,
+                Comparator.comparingLong(PartitionWorkLoadBasedOnSize::getTotalSize));
+
         // Prepare the workloads based on the number of partitions
         for (int i = 0; i < partitionsCount; i++) {
-            partitionWorkLoadsBasedOnSize.add(new PartitionWorkLoadBasedOnSize());
+            workloadQueue.add(new PartitionWorkLoadBasedOnSize());
         }
 
         for (S3Object object : fileObjects) {
-            PartitionWorkLoadBasedOnSize smallest = getSmallestWorkLoad();
-            smallest.addFilePath(object.key(), object.size());
+            PartitionWorkLoadBasedOnSize workload = workloadQueue.poll();
+            workload.addFilePath(object.key(), object.size());
+            workloadQueue.add(workload);
         }
+        partitionWorkLoadsBasedOnSize.addAll(workloadQueue);
     }
 }

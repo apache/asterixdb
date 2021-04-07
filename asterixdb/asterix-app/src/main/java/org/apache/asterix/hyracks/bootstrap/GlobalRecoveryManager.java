@@ -18,11 +18,14 @@
  */
 package org.apache.asterix.hyracks.bootstrap;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.asterix.app.message.StorageCleanupRequestMessage;
 import org.apache.asterix.common.api.IClusterManagementWork;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
@@ -32,6 +35,7 @@ import org.apache.asterix.common.config.DatasetConfig.TransactionState;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -50,6 +54,8 @@ import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 public class GlobalRecoveryManager implements IGlobalRecoveryManager {
 
@@ -111,6 +117,10 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
             LOGGER.info("Starting Global Recovery");
             MetadataManager.INSTANCE.init();
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            if (appCtx.getStorageProperties().isStorageGlobalCleanup()) {
+                int storageGlobalCleanupTimeout = appCtx.getStorageProperties().getStorageGlobalCleanupTimeout();
+                performGlobalStorageCleanup(mdTxnCtx, storageGlobalCleanupTimeout);
+            }
             mdTxnCtx = doRecovery(appCtx, mdTxnCtx);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             recoveryCompleted = true;
@@ -120,6 +130,27 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    protected void performGlobalStorageCleanup(MetadataTransactionContext mdTxnCtx, int storageGlobalCleanupTimeoutSecs)
+            throws Exception {
+        List<Dataverse> dataverses = MetadataManager.INSTANCE.getDataverses(mdTxnCtx);
+        IntOpenHashSet validDatasetIds = new IntOpenHashSet();
+        for (Dataverse dataverse : dataverses) {
+            List<Dataset> dataverseDatasets =
+                    MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dataverse.getDataverseName());
+            dataverseDatasets.stream().mapToInt(Dataset::getDatasetId).forEach(validDatasetIds::add);
+        }
+        ICcApplicationContext ccAppCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
+        final List<String> ncs = new ArrayList<>(ccAppCtx.getClusterStateManager().getParticipantNodes());
+        CCMessageBroker messageBroker = (CCMessageBroker) ccAppCtx.getServiceContext().getMessageBroker();
+        long reqId = messageBroker.newRequestId();
+        List<StorageCleanupRequestMessage> requests = new ArrayList<>();
+        for (int i = 0; i < ncs.size(); i++) {
+            requests.add(new StorageCleanupRequestMessage(reqId, validDatasetIds));
+        }
+        messageBroker.sendSyncRequestToNCs(reqId, ncs, requests,
+                TimeUnit.SECONDS.toMillis(storageGlobalCleanupTimeoutSecs));
     }
 
     protected MetadataTransactionContext doRecovery(ICcApplicationContext appCtx, MetadataTransactionContext mdTxnCtx)

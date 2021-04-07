@@ -20,6 +20,7 @@ package org.apache.asterix.active;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IActiveRuntime {
@@ -47,5 +48,9 @@ public interface IActiveRuntime {
      */
     default String getStats() {
         return "\"Runtime stats is not available.\"";
+    }
+
+    default void handleGenericEvent(ActiveManagerMessage event) throws HyracksDataException {
+        throw new IllegalStateException("generic events not supported for runtime " + getRuntimeId());
     }
 }

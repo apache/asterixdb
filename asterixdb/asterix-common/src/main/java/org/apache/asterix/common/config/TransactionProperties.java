@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
@@ -41,7 +42,7 @@ public class TransactionProperties extends AbstractProperties {
         TXN_DATASET_CHECKPOINT_INTERVAL(
                 POSITIVE_INTEGER,
                 (int) TimeUnit.MINUTES.toSeconds(60),
-                "The interval (in seconds) after which a dataset is considered idle and persisted to disk"),
+                "The interval (in seconds) after which a " + dataset() + " is considered idle and persisted to disk"),
         TXN_LOG_BUFFER_NUMPAGES(POSITIVE_INTEGER, 8, "The number of pages in the transaction log tail"),
         TXN_LOG_BUFFER_PAGESIZE(
                 INTEGER_BYTE_UNIT,
@@ -65,7 +66,7 @@ public class TransactionProperties extends AbstractProperties {
         TXN_LOCK_ESCALATIONTHRESHOLD(
                 NONNEGATIVE_INTEGER,
                 1000,
-                "The maximum number of entity locks to obtain before upgrading to a dataset lock"),
+                "The maximum number of entity locks to obtain before upgrading to a " + dataset() + " lock"),
         TXN_LOCK_SHRINKTIMER(
                 POSITIVE_INTEGER,
                 5000,

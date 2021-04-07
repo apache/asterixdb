@@ -52,9 +52,6 @@ public abstract class AbstractExternalInputStream extends AbstractMultipleInputS
 
         // Finished reading all the files
         if (nextFileIndex >= filePaths.size()) {
-            if (in != null) {
-                CleanupUtils.close(in, null);
-            }
             return false;
         }
 
