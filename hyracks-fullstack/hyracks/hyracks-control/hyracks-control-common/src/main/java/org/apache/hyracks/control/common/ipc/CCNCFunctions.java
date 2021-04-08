@@ -127,9 +127,10 @@ public class CCNCFunctions {
     }
 
     public static class SendApplicationMessageFunction extends Function {
-        private static final long serialVersionUID = 1L;
-        private byte[] serializedMessage;
-        private DeploymentId deploymentId;
+        private static final long serialVersionUID = 2L;
+        private final byte[] serializedMessage;
+        private final DeploymentId deploymentId;
+        private final boolean realTime;
         private String nodeId;
 
         public DeploymentId getDeploymentId() {
@@ -148,9 +149,14 @@ public class CCNCFunctions {
             return serializedMessage;
         }
 
-        public SendApplicationMessageFunction(byte[] data, DeploymentId deploymentId, String nodeId) {
+        public boolean isRealTime() {
+            return realTime;
+        }
+
+        public SendApplicationMessageFunction(byte[] data, DeploymentId deploymentId, boolean realTime, String nodeId) {
             this.serializedMessage = data;
             this.deploymentId = deploymentId;
+            this.realTime = realTime;
             this.nodeId = nodeId;
         }
 

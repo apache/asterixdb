@@ -129,8 +129,16 @@ class ClusterControllerIPCI implements IIPCI {
                 break;
             case SEND_APPLICATION_MESSAGE:
                 CCNCFunctions.SendApplicationMessageFunction rsf = (CCNCFunctions.SendApplicationMessageFunction) fn;
-                ccs.getWorkQueue().schedule(
-                        new ApplicationMessageWork(ccs, rsf.getMessage(), rsf.getDeploymentId(), rsf.getNodeId()));
+                ApplicationMessageWork work =
+                        new ApplicationMessageWork(ccs, rsf.getMessage(), rsf.getDeploymentId(), rsf.getNodeId());
+                if (rsf.isRealTime()) {
+                    final ExecutorService executor = ccs.getExecutor();
+                    if (executor != null) {
+                        executor.execute(work);
+                    }
+                } else {
+                    ccs.getWorkQueue().schedule(work);
+                }
                 break;
             case GET_NODE_CONTROLLERS_INFO:
                 ccs.getWorkQueue().schedule(new GetNodeControllersInfoWork(ccs.getNodeManager(),

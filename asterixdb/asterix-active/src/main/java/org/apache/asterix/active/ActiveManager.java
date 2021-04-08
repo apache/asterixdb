@@ -153,8 +153,8 @@ public class ActiveManager {
             String stats = runtime.getStats();
             LOGGER.debug("Sending stats response for {} ", runtimeId);
             ActiveStatsResponse response = new ActiveStatsResponse(reqId, stats, null);
-            ((NodeControllerService) serviceCtx.getControllerService()).sendApplicationMessageToCC(message.getCcId(),
-                    JavaSerializationUtils.serialize(response), null);
+            ((NodeControllerService) serviceCtx.getControllerService()).sendRealTimeApplicationMessageToCC(
+                    message.getCcId(), JavaSerializationUtils.serialize(response), null);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
