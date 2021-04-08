@@ -378,13 +378,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleCreateFunctionStatement(metadataProvider, stmt, stmtRewriter, requestParameters);
                         break;
                     case FUNCTION_DROP:
-                        handleFunctionDropStatement(metadataProvider, stmt);
+                        handleFunctionDropStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case CREATE_LIBRARY:
                         handleCreateLibraryStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case LIBRARY_DROP:
-                        handleLibraryDropStatement(metadataProvider, stmt, hcc);
+                        handleLibraryDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case CREATE_SYNONYM:
                         handleCreateSynonymStatement(metadataProvider, stmt);
@@ -2279,7 +2279,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return new Triple<>(paramTypeSignature, depTypeSignature, paramInlineTypeEntity);
     }
 
-    protected void handleFunctionDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleFunctionDropStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
         FunctionDropStatement stmtDropFunction = (FunctionDropStatement) stmt;
         FunctionSignature signature = stmtDropFunction.getFunctionSignature();
         metadataProvider.validateDatabaseObjectName(signature.getDataverseName(), signature.getName(),
@@ -2288,14 +2289,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         signature.setDataverseName(dataverseName);
         lockUtil.dropFunctionBegin(lockManager, metadataProvider.getLocks(), dataverseName, signature.getName());
         try {
-            doDropFunction(metadataProvider, stmtDropFunction, signature);
+            doDropFunction(metadataProvider, stmtDropFunction, signature, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
     protected boolean doDropFunction(MetadataProvider metadataProvider, FunctionDropStatement stmtDropFunction,
-            FunctionSignature signature) throws Exception {
+            FunctionSignature signature, IRequestParameters requestParameters) throws Exception {
         DataverseName dataverseName = signature.getDataverseName();
         SourceLocation sourceLoc = stmtDropFunction.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -2585,7 +2586,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleLibraryDropStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         LibraryDropStatement stmtDropLibrary = (LibraryDropStatement) stmt;
         String libraryName = stmtDropLibrary.getLibraryName();
         metadataProvider.validateDatabaseObjectName(stmtDropLibrary.getDataverseName(), libraryName,
@@ -2593,14 +2594,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DataverseName dataverseName = getActiveDataverseName(stmtDropLibrary.getDataverseName());
         lockUtil.dropLibraryBegin(lockManager, metadataProvider.getLocks(), dataverseName, libraryName);
         try {
-            doDropLibrary(metadataProvider, stmtDropLibrary, dataverseName, libraryName, hcc);
+            doDropLibrary(metadataProvider, stmtDropLibrary, dataverseName, libraryName, hcc, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
     protected boolean doDropLibrary(MetadataProvider metadataProvider, LibraryDropStatement stmtDropLibrary,
-            DataverseName dataverseName, String libraryName, IHyracksClientConnection hcc) throws Exception {
+            DataverseName dataverseName, String libraryName, IHyracksClientConnection hcc,
+            IRequestParameters requestParameters) throws Exception {
         JobUtils.ProgressState progress = ProgressState.NO_PROGRESS;
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
