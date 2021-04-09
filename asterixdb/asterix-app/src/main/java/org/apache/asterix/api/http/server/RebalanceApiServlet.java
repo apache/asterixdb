@@ -48,6 +48,7 @@ import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.rebalance.NoOpDatasetRebalanceCallback;
 import org.apache.asterix.utils.RebalanceUtil;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -105,7 +106,13 @@ public class RebalanceApiServlet extends AbstractServlet {
     protected void post(IServletRequest request, IServletResponse response) {
         try {
             // Gets dataverse, dataset, and target nodes for rebalance.
-            DataverseName dataverseName = ServletUtil.getDataverseName(request, "dataverseName");
+            DataverseName dataverseName;
+            try {
+                dataverseName = ServletUtil.getDataverseName(request, "dataverseName");
+            } catch (AlgebricksException e) {
+                sendResponse(response, HttpResponseStatus.BAD_REQUEST, e.getMessage());
+                return;
+            }
             String datasetName = request.getParameter("datasetName");
             Set<String> targetNodes = new LinkedHashSet<>(request.getParameterValues("targetNode"));
             boolean forceRebalance = true;

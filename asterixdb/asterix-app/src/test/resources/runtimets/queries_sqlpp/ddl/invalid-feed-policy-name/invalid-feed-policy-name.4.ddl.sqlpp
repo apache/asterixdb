@@ -18,23 +18,15 @@
  */
 
 /*
- * Invalid dataverse name in CREATE FEED -> Error
+ * Invalid feed policy name in DROP -> Error
  */
 
-drop dataverse test if exists;
-create dataverse test;
+drop dataverse c.d if exists;
+create dataverse c.d;
 
-use test;
+use c.d;
 
-create type Tweet as closed
-{
-  id: int64
-};
+create ingestion policy e from path 'data/feed-policy/policy.properties'
+  definition 'someString';
 
-create feed `a/b`.a with {
- "adapter-name" : "socket_adapter",
- "sockets" : "127.0.0.1:10001",
- "address-type" : "IP",
- "type-name" : "Tweet",
- "format" : "adm"
-};
+drop ingestion policy `c/d`.e;

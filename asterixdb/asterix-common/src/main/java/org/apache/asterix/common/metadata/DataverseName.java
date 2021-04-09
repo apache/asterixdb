@@ -24,9 +24,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 
 /**
  * This class represents a dataverse name.
@@ -36,7 +36,7 @@ import org.apache.commons.lang3.StringUtils;
  * <p>
  * Each dataverse name can be encoded into a single string (called a canonical form) by
  * {@link #getCanonicalForm()} and decoded back from it with {@link #createFromCanonicalForm(String)}.
- * The canonical form encoding concatenates name parts together with {@link #CANONICAL_FORM_SEPARATOR_CHAR '/'}
+ * The canonical form encoding concatenates name parts together with {@link #CANONICAL_FORM_PART_SEPARATOR '/'}
  * character.
  * <p>
  * E.g. the canonical form for a dataverse name {@code ["a", "b", "c"]} is {@code "a/b/c"}
@@ -58,9 +58,9 @@ import org.apache.commons.lang3.StringUtils;
  */
 public final class DataverseName implements Serializable, Comparable<DataverseName> {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
-    public static final char CANONICAL_FORM_SEPARATOR_CHAR = '/';
+    public static final String CANONICAL_FORM_PART_SEPARATOR = "/";
 
     public static final char DISPLAY_FORM_SEPARATOR_CHAR = '.';
 
@@ -68,25 +68,12 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
 
     private static final char DISPLAY_FORM_ESCAPE_CHAR = '\\';
 
-    private static final char[] CANONICAL_FORM_SEPARATOR_AND_ESCAPE_CHARS =
-            new char[] { CANONICAL_FORM_SEPARATOR_CHAR };
-
-    private final boolean isMultiPart;
-
     private final String canonicalForm;
 
     private transient volatile String displayForm;
 
-    private DataverseName(String canonicalForm, boolean isMultiPart) {
+    private DataverseName(String canonicalForm) {
         this.canonicalForm = Objects.requireNonNull(canonicalForm);
-        this.isMultiPart = isMultiPart;
-    }
-
-    /**
-     * Returns whether this dataverse name contains multiple name parts or not.
-     */
-    public boolean isMultiPart() {
-        return isMultiPart;
     }
 
     /**
@@ -104,7 +91,7 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
      * Returns a new list containing dataverse name parts
      */
     public List<String> getParts() {
-        List<String> parts = new ArrayList<>(isMultiPart ? 4 : 1);
+        List<String> parts = new ArrayList<>(4);
         getParts(parts);
         return parts;
     }
@@ -113,26 +100,30 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
      * Appends dataverse name parts into a given output collection
      */
     public void getParts(Collection<? super String> outParts) {
-        getPartsFromCanonicalForm(canonicalForm, isMultiPart, outParts);
+        getPartsFromCanonicalFormImpl(canonicalForm, outParts);
     }
 
     /**
      * Appends dataverse name parts into a given output collection
      */
-    public static void getPartsFromCanonicalForm(String canonicalForm, Collection<? super String> outParts) {
-        getPartsFromCanonicalForm(canonicalForm, isMultiPartCanonicalForm(canonicalForm), outParts);
-    }
-
-    /**
-     * Appends dataverse name parts into a given output collection
-     */
-    private static void getPartsFromCanonicalForm(String canonicalForm, boolean isMultiPart,
-            Collection<? super String> outParts) {
-        if (isMultiPart) {
-            decodeCanonicalForm(canonicalForm, DataverseName::addPartToCollection, outParts);
-        } else {
-            outParts.add(decodeSinglePartNameFromCanonicalForm(canonicalForm));
+    public static void getPartsFromCanonicalForm(String canonicalForm, Collection<? super String> outParts)
+            throws AsterixException {
+        int partCount = getPartsFromCanonicalFormImpl(canonicalForm, outParts);
+        if (partCount <= 0) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, canonicalForm);
         }
+    }
+
+    public int getPartCount() {
+        return getPartCountFromCanonicalFormImpl(canonicalForm);
+    }
+
+    public static int getPartCountFromCanonicalForm(String canonicalForm) throws AsterixException {
+        int partCount = getPartCountFromCanonicalFormImpl(canonicalForm);
+        if (partCount <= 0) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, canonicalForm);
+        }
+        return partCount;
     }
 
     /**
@@ -154,21 +145,31 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
     }
 
     public void getDisplayForm(StringBuilder out) {
-        getDisplayFormFromCanonicalForm(canonicalForm, isMultiPart, out);
+        getDisplayFormFromCanonicalFormImpl(canonicalForm, out);
     }
 
-    public static void getDisplayFormFromCanonicalForm(String canonicalForm, StringBuilder out) {
-        getDisplayFormFromCanonicalForm(canonicalForm, isMultiPartCanonicalForm(canonicalForm), out);
-    }
-
-    private static void getDisplayFormFromCanonicalForm(String canonicalForm, boolean isMultiPart, StringBuilder out) {
-        if (isMultiPart) {
-            decodeCanonicalForm(canonicalForm, DataverseName::addPartToDisplayForm, out);
-        } else {
-            String singlePart = decodeSinglePartNameFromCanonicalForm(canonicalForm);
-            addPartToDisplayForm(singlePart, out);
+    public static void getDisplayFormFromCanonicalForm(String canonicalForm, StringBuilder out)
+            throws AsterixException {
+        int partCount = getDisplayFormFromCanonicalFormImpl(canonicalForm, out);
+        if (partCount <= 0) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, canonicalForm);
         }
-        out.setLength(out.length() - 1); // remove last separator char
+    }
+
+    private static int getPartsFromCanonicalFormImpl(String canonicalForm, Collection<? super String> outParts) {
+        return decodeCanonicalForm(canonicalForm, DataverseName::addPartToCollection, outParts);
+    }
+
+    private static int getPartCountFromCanonicalFormImpl(String canonicalForm) {
+        return decodeCanonicalForm(canonicalForm, null, null);
+    }
+
+    private static int getDisplayFormFromCanonicalFormImpl(String canonicalForm, StringBuilder out) {
+        int partCount = decodeCanonicalForm(canonicalForm, DataverseName::addPartToDisplayForm, out);
+        if (partCount > 0) {
+            out.setLength(out.length() - 1); // remove last separator char
+        }
+        return partCount;
     }
 
     @Override
@@ -194,7 +195,7 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
      * Creates a new dataverse name from a given list of name parts.
      * Equivalent to {@code create(parts, 0, parts.size())}.
      */
-    public static DataverseName create(List<String> parts) {
+    public static DataverseName create(List<String> parts) throws AsterixException {
         return create(parts, 0, parts.size());
     }
 
@@ -208,7 +209,7 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
      * @param toIndex
      *            index to stop at (exclusive, value at that index is not used)
      */
-    public static DataverseName create(List<String> parts, int fromIndex, int toIndex) {
+    public static DataverseName create(List<String> parts, int fromIndex, int toIndex) throws AsterixException {
         int partCount = toIndex - fromIndex;
         return partCount == 1 ? createSinglePartName(parts.get(fromIndex))
                 : createMultiPartName(parts, fromIndex, toIndex);
@@ -217,18 +218,21 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
     /**
      * Creates a new dataverse name from its scalar encoding (canonical form) returned by {@link #getCanonicalForm()}
      */
-    public static DataverseName createFromCanonicalForm(String canonicalForm) {
-        boolean isMultiPart = isMultiPartCanonicalForm(canonicalForm);
-        return new DataverseName(canonicalForm, isMultiPart);
+    public static DataverseName createFromCanonicalForm(String canonicalForm) throws AsterixException {
+        int partCount = getPartCountFromCanonicalFormImpl(canonicalForm);
+        if (partCount <= 0) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, canonicalForm);
+        }
+        return new DataverseName(canonicalForm);
     }
 
     /**
      * Creates a single-part dataverse name.
      * Equivalent to {@code create(Collections.singletonList(singlePart))}, but performs faster.
      */
-    public static DataverseName createSinglePartName(String singlePart) {
+    public static DataverseName createSinglePartName(String singlePart) throws AsterixException {
         String canonicalForm = encodeSinglePartNamePartIntoCanonicalForm(singlePart);
-        return new DataverseName(canonicalForm, false);
+        return new DataverseName(canonicalForm);
     }
 
     /**
@@ -236,87 +240,90 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
      * Validates that the canonical form of the created dataverse name is the same as its given single name part.
      */
     public static DataverseName createBuiltinDataverseName(String singlePart) {
-        if (StringUtils.containsAny(singlePart, CANONICAL_FORM_SEPARATOR_AND_ESCAPE_CHARS)) {
-            throw new IllegalArgumentException(singlePart);
+        try {
+            return createSinglePartName(singlePart); // 1-part name
+        } catch (AsterixException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
         }
-        DataverseName dataverseName = createSinglePartName(singlePart); // 1-part name
-        String canonicalForm = dataverseName.getCanonicalForm();
-        if (!canonicalForm.equals(singlePart)) {
-            throw new IllegalStateException(canonicalForm + "!=" + singlePart);
-        }
-        return dataverseName;
     }
 
-    private static DataverseName createMultiPartName(List<String> parts, int fromIndex, int toIndex) {
+    private static DataverseName createMultiPartName(List<String> parts, int fromIndex, int toIndex)
+            throws AsterixException {
         String canonicalForm = encodeMultiPartNameIntoCanonicalForm(parts, fromIndex, toIndex);
-        return new DataverseName(canonicalForm, true);
+        return new DataverseName(canonicalForm);
     }
 
-    private static String encodeMultiPartNameIntoCanonicalForm(List<String> parts, int fromIndex, int toIndex) {
+    private static String encodeMultiPartNameIntoCanonicalForm(List<String> parts, int fromIndex, int toIndex)
+            throws AsterixException {
         Objects.requireNonNull(parts);
         int partCount = toIndex - fromIndex;
         if (partCount <= 0) {
             throw new IllegalArgumentException(fromIndex + "," + toIndex);
         }
-        StringBuilder sb = new StringBuilder(32);
-        for (int i = 0; i < partCount; i++) {
-            if (i > 0) {
-                sb.append(CANONICAL_FORM_SEPARATOR_CHAR);
-            }
-            encodePartIntoCanonicalForm(parts.get(fromIndex + i), sb);
+        int canonicalFormLength = (partCount - 1) * CANONICAL_FORM_PART_SEPARATOR.length();
+        for (int i = fromIndex; i < toIndex; i++) {
+            canonicalFormLength += parts.get(i).length();
+        }
+        String sep = "";
+        StringBuilder sb = new StringBuilder(canonicalFormLength);
+        for (int i = fromIndex; i < toIndex; i++) {
+            sb.append(sep);
+            encodePartIntoCanonicalForm(parts.get(i), sb);
+            sep = CANONICAL_FORM_PART_SEPARATOR;
         }
         return sb.toString();
     }
 
-    private static String encodeSinglePartNamePartIntoCanonicalForm(String singlePart) {
-        if (StringUtils.indexOfAny(singlePart, CANONICAL_FORM_SEPARATOR_AND_ESCAPE_CHARS) < 0) {
-            // no escaping needed
-            return singlePart;
-        }
-        StringBuilder sb = new StringBuilder(singlePart.length() + 4);
-        encodePartIntoCanonicalForm(singlePart, sb);
-        return sb.toString();
+    private static String encodeSinglePartNamePartIntoCanonicalForm(String singlePart) throws AsterixException {
+        validatePart(singlePart);
+        return singlePart;
     }
 
-    private static void encodePartIntoCanonicalForm(String part, StringBuilder out) {
+    private static void encodePartIntoCanonicalForm(String part, StringBuilder out) throws AsterixException {
+        validatePart(part);
         out.append(part);
     }
 
-    private static <T> void decodeCanonicalForm(String canonicalForm, BiConsumer<CharSequence, T> partConsumer,
+    private static void validatePart(String part) throws AsterixException {
+        if (part.isEmpty() || part.contains(CANONICAL_FORM_PART_SEPARATOR)) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, part);
+        }
+    }
+
+    private static <T> int decodeCanonicalForm(String canonicalForm, DataverseNamePartConsumer<T> partConsumer,
             T partConsumerArg) {
-        int ln = canonicalForm.length();
-        StringBuilder sb = new StringBuilder(ln);
-        for (int i = 0; i < ln; i++) {
-            char c = canonicalForm.charAt(i);
-            if (c == CANONICAL_FORM_SEPARATOR_CHAR) {
-                partConsumer.accept(sb, partConsumerArg);
-                sb.setLength(0);
-            } else {
-                sb.append(c);
+        int partCount = 0, from = 0, to;
+        while ((to = canonicalForm.indexOf(CANONICAL_FORM_PART_SEPARATOR, from)) > from) {
+            if (partConsumer != null) {
+                partConsumer.accept(canonicalForm, from, to, partConsumerArg);
             }
+            partCount++;
+            from = to + CANONICAL_FORM_PART_SEPARATOR.length();
         }
-        if (sb.length() > 0) {
-            partConsumer.accept(sb, partConsumerArg);
+        boolean hasOneMore = from != to && from < canonicalForm.length();
+        if (!hasOneMore) {
+            return 0;
         }
+        if (partConsumer != null) {
+            partConsumer.accept(canonicalForm, from, canonicalForm.length(), partConsumerArg);
+        }
+        partCount++;
+        return partCount;
     }
 
-    // optimization for a single part name
-    private static String decodeSinglePartNameFromCanonicalForm(String canonicalForm) {
-        return canonicalForm;
+    @FunctionalInterface
+    private interface DataverseNamePartConsumer<T> {
+        void accept(String canonicalForm, int from, int to, T arg);
     }
 
-    private static boolean isMultiPartCanonicalForm(String canonicalForm) {
-        return canonicalForm.indexOf(CANONICAL_FORM_SEPARATOR_CHAR) != -1;
+    private static void addPartToCollection(String canonicalForm, int from, int to, Collection<? super String> out) {
+        out.add(canonicalForm.substring(from, to));
     }
 
-    private static void addPartToCollection(CharSequence part, Collection<? super String> out) {
-        out.add(part.toString());
-    }
-
-    private static void addPartToDisplayForm(CharSequence part, StringBuilder out) {
+    private static void addPartToDisplayForm(String canonicalForm, int from, int to, StringBuilder out) {
         boolean needQuote = false;
-        for (int i = 0, ln = part.length(); i < ln; i++) {
-            char c = part.charAt(i);
+        for (int i = from; i < to; i++) {
+            char c = canonicalForm.charAt(i);
             boolean noQuote = isLetter(c) || c == '_' || (i > 0 && (isDigit(c) || c == '$'));
             if (!noQuote) {
                 needQuote = true;
@@ -326,8 +333,8 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
         if (needQuote) {
             out.append(DISPLAY_FORM_QUOTE_CHAR);
         }
-        for (int i = 0, ln = part.length(); i < ln; i++) {
-            char c = part.charAt(i);
+        for (int i = from; i < to; i++) {
+            char c = canonicalForm.charAt(i);
             if (c == DISPLAY_FORM_ESCAPE_CHAR || c == DISPLAY_FORM_QUOTE_CHAR) {
                 out.append(DISPLAY_FORM_ESCAPE_CHAR);
             }

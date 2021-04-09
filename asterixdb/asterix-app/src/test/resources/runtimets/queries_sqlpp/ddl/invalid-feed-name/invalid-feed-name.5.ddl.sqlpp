@@ -18,23 +18,25 @@
  */
 
 /*
- * Invalid dataverse name in CREATE FEED -> Error
+ * Invalid dataverse name in DROP FEED -> Error
  */
 
-drop dataverse test if exists;
-create dataverse test;
+drop dataverse c.d if exists;
+create dataverse c.d;
 
-use test;
+use c.d;
 
 create type Tweet as closed
 {
   id: int64
 };
 
-create feed `a/b`.a with {
+create feed e with {
  "adapter-name" : "socket_adapter",
  "sockets" : "127.0.0.1:10001",
  "address-type" : "IP",
  "type-name" : "Tweet",
  "format" : "adm"
 };
+
+drop feed `c/d`.e;

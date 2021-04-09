@@ -18,23 +18,16 @@
  */
 
 /*
- * Invalid dataverse name in CREATE FEED -> Error
+ * Invalid dataverse name in DROP INDEX -> Error
  */
 
-drop dataverse test if exists;
-create dataverse test;
+drop dataverse c.d if exists;
+create dataverse c.d;
 
-use test;
+use c.d;
 
-create type Tweet as closed
-{
-  id: int64
-};
+create dataset e(id int not unknown, v int not unknown) primary key id;
 
-create feed `a/b`.a with {
- "adapter-name" : "socket_adapter",
- "sockets" : "127.0.0.1:10001",
- "address-type" : "IP",
- "type-name" : "Tweet",
- "format" : "adm"
-};
+create index i1 on e(v);
+
+drop index `c/d`.e.i1;

@@ -151,7 +151,8 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
         return field == null || !field.getHttpDataType().equals(InterfaceHttpData.HttpDataType.Attribute);
     }
 
-    protected Pair<DataverseName, String> decodeDvAndLibFromLocalPath(String localPath) throws RuntimeDataException {
+    protected Pair<DataverseName, String> decodeDvAndLibFromLocalPath(String localPath)
+            throws RuntimeDataException, AlgebricksException {
         String[] pathSegments = StringUtils.split(localPath, '/');
         if (pathSegments.length != 2) {
             throw RuntimeDataException.create(ErrorCode.PARAMETERS_REQUIRED,
@@ -205,7 +206,7 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
         }
         if (IFormattedException.matchesAny(e, ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNKNOWN_KIND,
                 ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND, ErrorCode.INVALID_REQ_PARAM_VAL,
-                ErrorCode.PARAMETERS_REQUIRED)) {
+                ErrorCode.PARAMETERS_REQUIRED, ErrorCode.INVALID_DATABASE_OBJECT_NAME)) {
             return HttpResponseStatus.BAD_REQUEST;
         }
         if (e instanceof AlgebricksException) {

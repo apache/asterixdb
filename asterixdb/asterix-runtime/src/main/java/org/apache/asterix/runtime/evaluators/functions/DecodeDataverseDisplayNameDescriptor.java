@@ -22,6 +22,7 @@ package org.apache.asterix.runtime.evaluators.functions;
 import java.io.IOException;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -56,11 +57,24 @@ public class DecodeDataverseDisplayNameDescriptor extends AbstractScalarFunction
                         String dataverseCanonicalName = inputString.toString();
 
                         sb.setLength(0);
-                        DataverseName.getDisplayFormFromCanonicalForm(dataverseCanonicalName, sb);
+                        try {
+                            DataverseName.getDisplayFormFromCanonicalForm(dataverseCanonicalName, sb);
+                        } catch (AsterixException e) {
+                            return; // writeResult() will emit NULL
+                        }
 
                         resultBuilder.reset(resultArray, inputString.getUTF8Length());
                         resultBuilder.appendString(sb);
                         resultBuilder.finish();
+                    }
+
+                    @Override
+                    void writeResult(IPointable resultPointable) throws IOException {
+                        if (sb.length() == 0) {
+                            PointableHelper.setNull(resultPointable);
+                        } else {
+                            super.writeResult(resultPointable);
+                        }
                     }
                 };
             }

@@ -71,7 +71,7 @@ public class IndexDropOperatorNodePushableTest {
     private static final int[] KEY_INDEXES = { 0 };
     private static final List<Integer> KEY_INDICATORS_LIST = Arrays.asList(new Integer[] { Index.RECORD_INDICATOR });
     private static final int DATASET_ID = 101;
-    private static final DataverseName DATAVERSE_NAME = DataverseName.createSinglePartName("TestDV");
+    private static final String DATAVERSE_NAME = "TestDV";
     private static final String DATASET_NAME = "TestDS";
     private static final String DATA_TYPE_NAME = "DUMMY";
     private static final String NODE_GROUP_NAME = "DEFAULT";
@@ -102,9 +102,10 @@ public class IndexDropOperatorNodePushableTest {
         try {
             nc.init();
             StorageComponentProvider storageManager = new StorageComponentProvider();
+            DataverseName dvName = DataverseName.createSinglePartName(DATAVERSE_NAME);
             List<List<String>> partitioningKeys = new ArrayList<>();
             partitioningKeys.add(Collections.singletonList("key"));
-            Dataset dataset = new Dataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
+            Dataset dataset = new Dataset(dvName, DATASET_NAME, dvName, DATA_TYPE_NAME, NODE_GROUP_NAME,
                     NoMergePolicyFactory.NAME, null,
                     new InternalDatasetDetails(null, InternalDatasetDetails.PartitioningStrategy.HASH, partitioningKeys,
                             null, null, null, false, null, null),

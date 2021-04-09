@@ -26,6 +26,7 @@ import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -69,7 +70,7 @@ public class AccessMethodJobGenParams {
         funcArgs.add(new MutableObject<>(AccessMethodUtils.createBooleanConstant(requiresBroadcast)));
     }
 
-    public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
+    public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) throws AlgebricksException {
         indexName = AccessMethodUtils.getStringConstant(funcArgs.get(0));
         indexType = IndexType.values()[AccessMethodUtils.getInt32Constant(funcArgs.get(1))];
         dataverseName = DataverseName.createFromCanonicalForm(AccessMethodUtils.getStringConstant(funcArgs.get(2)));

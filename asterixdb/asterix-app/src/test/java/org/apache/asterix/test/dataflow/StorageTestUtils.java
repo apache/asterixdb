@@ -42,6 +42,7 @@ import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -85,18 +86,26 @@ public class StorageTestUtils {
     public static final int TOTAL_NUM_OF_RECORDS = 10000;
     public static final int RECORDS_PER_COMPONENT = 1000;
     public static final int DATASET_ID = 101;
-    public static final DataverseName DATAVERSE_NAME = DataverseName.createSinglePartName("TestDV");
+    public static final String DATAVERSE_NAME = "TestDV";
     public static final String DATASET_NAME = "TestDS";
     public static final String DATA_TYPE_NAME = "DUMMY";
     public static final String NODE_GROUP_NAME = "DEFAULT";
     public static final StorageComponentProvider STORAGE_MANAGER = new StorageComponentProvider();
     public static final List<List<String>> PARTITIONING_KEYS =
             new ArrayList<>(Collections.singletonList(Collections.singletonList(RECORD_TYPE.getFieldNames()[0])));
-    public static final TestDataset DATASET =
-            new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
+    public static final TestDataset DATASET;
+
+    static {
+        try {
+            DataverseName dvName = DataverseName.createSinglePartName(DATAVERSE_NAME);
+            DATASET = new TestDataset(dvName, DATASET_NAME, dvName, DATA_TYPE_NAME, NODE_GROUP_NAME,
                     NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
                             PARTITIONING_KEYS, null, null, null, false, null, null),
                     null, DatasetType.INTERNAL, DATASET_ID, 0);
+        } catch (AsterixException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
 
     private StorageTestUtils() {
     }

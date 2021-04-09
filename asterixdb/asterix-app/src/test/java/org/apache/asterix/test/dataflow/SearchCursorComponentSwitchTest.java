@@ -88,7 +88,7 @@ public class SearchCursorComponentSwitchTest {
     private static final int TOTAL_NUM_OF_RECORDS = 2000;
     private static final int RECORDS_PER_COMPONENT = 1000;
     private static final int DATASET_ID = 101;
-    private static final DataverseName DATAVERSE_NAME = DataverseName.createSinglePartName("TestDV");
+    private static final String DATAVERSE_NAME = "TestDV";
     private static final String DATASET_NAME = "TestDS";
     private static final String DATA_TYPE_NAME = "DUMMY";
     private static final String NODE_GROUP_NAME = "DEFAULT";
@@ -122,9 +122,10 @@ public class SearchCursorComponentSwitchTest {
 
     @Before
     public void createIndex() throws Exception {
+        DataverseName dvName = DataverseName.createSinglePartName(DATAVERSE_NAME);
         List<List<String>> partitioningKeys = new ArrayList<>();
         partitioningKeys.add(Collections.singletonList("key"));
-        dataset = new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
+        dataset = new TestDataset(dvName, DATASET_NAME, dvName, DATA_TYPE_NAME, NODE_GROUP_NAME,
                 NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
                         partitioningKeys, null, null, null, false, null, null),
                 null, DatasetType.INTERNAL, DATASET_ID, 0);

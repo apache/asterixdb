@@ -65,6 +65,7 @@ import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.compression.CompressionManager;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -90,7 +91,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     }
 
     @Override
-    protected Dataset createMetadataEntityFromARecord(ARecord datasetRecord) {
+    protected Dataset createMetadataEntityFromARecord(ARecord datasetRecord) throws AlgebricksException {
         String dataverseCanonicalName =
                 ((AString) datasetRecord.getValueByPos(MetadataRecordTypes.DATASET_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();

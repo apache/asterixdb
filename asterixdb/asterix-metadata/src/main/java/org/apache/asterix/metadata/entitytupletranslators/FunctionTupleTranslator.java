@@ -198,7 +198,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
     }
 
     private List<TypeSignature> getParamTypes(ARecord functionRecord, DataverseName functionDataverseName)
-            throws AsterixException {
+            throws AlgebricksException {
         ARecordType functionRecordType = functionRecord.getType();
         int paramTypesFieldIdx = functionRecordType.getFieldIndex(FUNCTION_ARECORD_FUNCTION_PARAMTYPES_FIELD_NAME);
         if (paramTypesFieldIdx < 0) {
@@ -230,7 +230,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
     }
 
     private TypeSignature getTypeSignature(String typeName, String typeDataverseNameCanonical,
-            DataverseName functionDataverseName) {
+            DataverseName functionDataverseName) throws AlgebricksException {
         // back-compat: handle "any"
         if (BuiltinType.ANY.getTypeName().equals(typeName)) {
             return null; // == any
@@ -244,7 +244,8 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         return new TypeSignature(typeDataverseName, typeName);
     }
 
-    private Triple<DataverseName, String, String> getDependency(AOrderedList dependencySubnames) {
+    private Triple<DataverseName, String, String> getDependency(AOrderedList dependencySubnames)
+            throws AlgebricksException {
         String dataverseCanonicalName = ((AString) dependencySubnames.getItem(0)).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String second = null, third = null;

@@ -52,7 +52,7 @@ import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 
 public class LoadableDataSource extends DataSource {
 
-    private static final DataverseName LOADABLE_DV = DataverseName.createSinglePartName("loadable_dv"); // 1-part name
+    private static final String LOADABLE_DV = "loadable_dv";
     private static final String LOADABLE_DS = "loadable_ds";
 
     private final Dataset targetDataset;
@@ -63,7 +63,8 @@ public class LoadableDataSource extends DataSource {
 
     public LoadableDataSource(Dataset targetDataset, IAType itemType, IAType metaItemType, String adapter,
             Map<String, String> properties) throws AlgebricksException, IOException {
-        super(new DataSourceId(LOADABLE_DV, LOADABLE_DS), itemType, metaItemType, Type.LOADABLE, null);
+        super(new DataSourceId(DataverseName.createSinglePartName(LOADABLE_DV), LOADABLE_DS), itemType, metaItemType,
+                Type.LOADABLE, null);
         this.targetDataset = targetDataset;
         this.adapter = adapter;
         this.adapterProperties = properties;

@@ -282,7 +282,13 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
                     return FileVisitResult.SKIP_SUBTREE;
                 }
                 String candidateLib = tokens[currToken];
-                DataverseName candidateDv = DataverseName.create(dvParts);
+                DataverseName candidateDv;
+                try {
+                    candidateDv = DataverseName.create(dvParts);
+                } catch (AsterixException e) {
+                    // shouldn't happen
+                    throw HyracksDataException.create(e);
+                }
                 FileReference candidateLibPath = findLibraryRevDir(candidateDv, candidateLib);
                 if (candidateLibPath != null) {
                     libs.add(new Pair<>(candidateDv, candidateLib));
