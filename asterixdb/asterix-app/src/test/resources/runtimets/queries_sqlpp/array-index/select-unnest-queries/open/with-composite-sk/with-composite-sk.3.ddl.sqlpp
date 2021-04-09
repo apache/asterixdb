@@ -19,4 +19,4 @@
 
 USE TestYelp;
 
-CREATE INDEX IdxYelpCheckinDatesTimesBusiness ON YelpCheckin (UNNEST checkin_times SELECT date : string ?, time : string ?);
+CREATE INDEX IdxYelpCheckinDatesTimesBusiness ON YelpCheckin (UNNEST checkin_times SELECT date : string , time : string );

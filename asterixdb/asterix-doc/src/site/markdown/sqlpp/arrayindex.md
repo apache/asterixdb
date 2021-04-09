@@ -155,9 +155,9 @@ Note that we must specify the `indexnl` join hint to tell AsterixDB that we want
 Similar to atomic indexes, array indexes are not limited to closed fields.
 The following DDLs illustrate how we could express `CREATE INDEX` statements comparable to those above if the to-be-indexed fields were not included in the their dataset's type definitions.
 
-    CREATE INDEX pCategoriesIdx ON products (UNNEST categories : string?);
-    CREATE INDEX oItemsQtyPriceIdx ON orders (UNNEST items SELECT qty : int?, price : int?);
-    CREATE INDEX oProductIDIdx ON orders (UNNEST items SELECT productno : int?);
+    CREATE INDEX pCategoriesIdx ON products (UNNEST categories : string);
+    CREATE INDEX oItemsQtyPriceIdx ON orders (UNNEST items SELECT qty : int, price : int);
+    CREATE INDEX oProductIDIdx ON orders (UNNEST items SELECT productno : int);
 
 ### Arrays in Arrays
 

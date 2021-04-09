@@ -19,4 +19,4 @@
 
 USE TestYelp;
 
-CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST dates : string ?) ;
+CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST dates : string ) ;

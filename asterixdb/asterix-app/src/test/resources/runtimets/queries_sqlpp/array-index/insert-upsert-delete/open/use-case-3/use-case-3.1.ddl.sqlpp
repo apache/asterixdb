@@ -33,5 +33,5 @@ CREATE TYPE CheckinType AS {
 };
 
 CREATE DATASET YelpCheckin(CheckinType) PRIMARY KEY business_id;
-CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times SELECT date : string ?) ;
-CREATE INDEX IdxYelpCheckinTimes ON YelpCheckin (UNNEST checkin_times SELECT time : string ?) ;
+CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times SELECT date : string ) ;
+CREATE INDEX IdxYelpCheckinTimes ON YelpCheckin (UNNEST checkin_times SELECT time : string ) ;

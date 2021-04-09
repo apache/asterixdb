@@ -20,4 +20,4 @@
 USE TestYelp;
 
 DROP INDEX YelpCheckin.IdxYelpCheckinDates;
-CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times SELECT date : string ?, time : string ?) ;
+CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times SELECT date : string , time : string ) ;

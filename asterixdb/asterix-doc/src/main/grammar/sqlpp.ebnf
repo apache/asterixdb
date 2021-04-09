@@ -218,7 +218,8 @@ IndexedElement ::= ArrayIndexElement
                | IndexField
                | "(" ( ArrayIndexElement | IndexField ) ")"
 
-ArrayIndexElement ::= "UNNEST" NestedField ( "UNNEST" NestedField )* ( ( ":" TypeReference "?"? ) | ( "SELECT" IndexField ( "," IndexField )* ) )?
+ArrayIndexElement ::= "UNNEST" NestedField ( "UNNEST" NestedField )*
+                      ( ( ":" TypeReference ) | ( "SELECT" NestedField ( ":" TypeReference )? ( "," NestedField ( ":" TypeReference )? )* ) )?
 
 IndexField ::= NestedField ( ":" TypeReference "?"? )?
 

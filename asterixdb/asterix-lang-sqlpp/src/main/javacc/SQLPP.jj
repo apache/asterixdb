@@ -1190,21 +1190,27 @@ Pair<List<List<String>>, List<Pair<List<String>, IndexedTypeExpression>>> Indexe
   List<String> path = null;
   IndexedTypeExpression type = null;
   List<List<String>> unnestList = new ArrayList();
-  Pair<List<String>, IndexedTypeExpression> field = null;
   List<Pair<List<String>, IndexedTypeExpression>> projectList = new ArrayList();
 }
 {
   path = MultipartIdentifier() { unnestList.add(path); }
   ( <UNNEST> path = MultipartIdentifier() { unnestList.add(path); })*
   (
-    ( <COLON> type = IndexedTypeExpr()
+    ( <COLON> type = IndexedTypeExpr(false)
       {
         projectList.add(new Pair<List<String>, IndexedTypeExpression>(null, type));
       }
     ) |
     (
-      <SELECT> field = IndexedField() { projectList.add(field); }
-      ( <COMMA> field = IndexedField() { projectList.add(field); } )*
+      <SELECT> path = MultipartIdentifier() ( <COLON> type = IndexedTypeExpr(false) )?
+      {
+        projectList.add(new Pair<List<String>, IndexedTypeExpression>(path, type));
+      }
+      ( <COMMA> path = MultipartIdentifier() ( <COLON> type = IndexedTypeExpr(false) )?
+        {
+          projectList.add(new Pair<List<String>, IndexedTypeExpression>(path, type));
+        }
+      )*
     )
   )?
   {
@@ -1223,7 +1229,7 @@ Pair<List<String>, IndexedTypeExpression> IndexedField() throws ParseException:
   IndexedTypeExpression type = null;
 }
 {
-  path = MultipartIdentifier() ( <COLON> type = IndexedTypeExpr() )?
+  path = MultipartIdentifier() ( <COLON> type = IndexedTypeExpr(true) )?
   {
     return new Pair<List<String>, IndexedTypeExpression>(path, type);
   }
@@ -2523,14 +2529,21 @@ Pair<String, String> Property() throws ParseException:
     }
 }
 
-IndexedTypeExpression IndexedTypeExpr() throws ParseException:
+IndexedTypeExpression IndexedTypeExpr(boolean allowQues) throws ParseException:
 {
   TypeExpression typeExpr = null;
-  boolean isUnknownable = false;
+  boolean isUnknownable = !allowQues;
 }
 {
   typeExpr = TypeExpr(false)
-  ( <QUES> { isUnknownable = true; } )?
+  ( <QUES>
+    {
+      if (!allowQues) {
+        throw new SqlppParseException(getSourceLocation(token), "'?' quantifier is illegal for the type expression.");
+      }
+      isUnknownable = true;
+    }
+  )?
   {
     return new IndexedTypeExpression(typeExpr, isUnknownable);
   }
@@ -2770,7 +2783,7 @@ Pair<Integer, Pair<List<String>, IndexedTypeExpression>> OpenField() throws Pars
 }
 {
   fieldList = NestedField()
-  ( <COLON> fieldType = IndexedTypeExpr() )?
+  ( <COLON> fieldType = IndexedTypeExpr(true) )?
   {
     return new Pair<Integer, Pair<List<String>, IndexedTypeExpression>>
             (fieldList.first, new Pair<List<String>, IndexedTypeExpression>(fieldList.second, fieldType));

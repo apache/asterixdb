@@ -19,4 +19,4 @@
 
 USE TestYelp;
 
-CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_data.checkin_temporal.checkin_times.dates : string ?) ;
+CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_data.checkin_temporal.checkin_times.dates : string ) ;
