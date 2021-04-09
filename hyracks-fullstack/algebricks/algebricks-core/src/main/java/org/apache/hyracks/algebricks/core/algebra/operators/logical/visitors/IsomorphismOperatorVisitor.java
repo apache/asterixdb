@@ -601,13 +601,30 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         IndexInsertDeleteUpsertOperator insertOpArg = (IndexInsertDeleteUpsertOperator) copyAndSubstituteVar(op, arg);
-        boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getSchema(), insertOpArg.getSchema());
-        if (!isomorphic || !op.getDataSourceIndex().equals(insertOpArg.getDataSourceIndex())) {
+        if (!VariableUtilities.varListEqualUnordered(op.getSchema(), insertOpArg.getSchema())) {
+            return Boolean.FALSE;
+        }
+
+        // Verify that our index expressions and variables are equal.
+        if (!Objects.equals(op.getDataSourceIndex(), insertOpArg.getDataSourceIndex())
+                || !Objects.equals(op.getPrimaryKeyExpressions(), insertOpArg.getPrimaryKeyExpressions())
+                || !Objects.equals(op.getSecondaryKeyExpressions(), insertOpArg.getSecondaryKeyExpressions())
+                || !Objects.equals(op.getFilterExpression(), insertOpArg.getFilterExpression())
+                || !Objects.equals(op.getOperation(), insertOpArg.getOperation())
+                || (op.isBulkload() != insertOpArg.isBulkload())
+                || !Objects.equals(op.getAdditionalFilteringExpressions(),
+                        insertOpArg.getAdditionalFilteringExpressions())
+                || !Objects.equals(op.getPrevSecondaryKeyExprs(), insertOpArg.getPrevSecondaryKeyExprs())
+                || !Objects.equals(op.getPrevAdditionalFilteringExpression(),
+                        insertOpArg.getPrevAdditionalFilteringExpression())
+                || !Objects.equals(op.getUpsertIndicatorExpr(), insertOpArg.getUpsertIndicatorExpr())
+                || (op.getNumberOfAdditionalNonFilteringFields() != insertOpArg
+                        .getNumberOfAdditionalNonFilteringFields())) {
             return Boolean.FALSE;
         }
 
         // Check our nested plans as well.
-        return (!compareSubplans(op.getNestedPlans(), insertOpArg.getNestedPlans())) ? Boolean.TRUE : Boolean.FALSE;
+        return compareSubplans(op.getNestedPlans(), insertOpArg.getNestedPlans());
     }
 
     @Override
