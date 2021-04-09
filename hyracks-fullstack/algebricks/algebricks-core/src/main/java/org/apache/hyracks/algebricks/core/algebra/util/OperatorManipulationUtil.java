@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
@@ -155,6 +156,10 @@ public class OperatorManipulationUtil {
                     switch (inputOp.getExecutionMode()) {
                         case PARTITIONED: {
                             if (forceUnpartitioned) {
+                                break;
+                            }
+                            if ((inputOp.getOperatorTag() == LogicalOperatorTag.EXCHANGE)
+                                && (op.getOperatorTag() == LogicalOperatorTag.ORDER)) {
                                 break;
                             }
                             op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
