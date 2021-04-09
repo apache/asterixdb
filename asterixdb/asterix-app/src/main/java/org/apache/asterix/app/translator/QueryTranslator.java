@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.app.translator;
 
+import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 
@@ -583,7 +584,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 (ILSMMergePolicyFactory) Class.forName(compactionPolicyFactoryClassName).newInstance();
         if (isExternalDataset && mergePolicyFactory.getName().compareTo("correlated-prefix") == 0) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "The correlated-prefix merge policy cannot be used with external " + dataset() + "s");
+                    "The correlated-prefix merge policy cannot be used with external " + dataset(PLURAL));
         }
         if (compactionPolicyProperties == null) {
             if (mergePolicyFactory.getName().compareTo("no-merge") != 0) {
@@ -3067,7 +3068,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 (ActiveEntityEventsListener) activeNotificationHandler.getListener(feedId);
         if (listener != null && listener.getState() != ActivityState.STOPPED) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "Feed " + feedId + " is currently active and connected to the following " + dataset() + "(s) \n"
+                    "Feed " + feedId + " is currently active and connected to the following " + dataset(PLURAL) + "\n"
                             + listener.toString());
         } else if (listener != null) {
             listener.unregister();

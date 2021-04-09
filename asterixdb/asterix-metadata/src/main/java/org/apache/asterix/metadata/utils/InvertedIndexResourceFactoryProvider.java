@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.utils;
 
+import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.util.List;
@@ -78,7 +79,7 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         }
         if (numPrimaryKeys > 1) {
             throw new AsterixException(
-                    "Cannot create inverted index on " + dataset() + "s with composite primary key.");
+                    "Cannot create inverted index on " + dataset(PLURAL) + " with composite primary key.");
         }
         if (numSecondaryKeys > 1) {
             throw new AsterixException("Cannot create composite inverted index on multiple fields.");

@@ -19,6 +19,7 @@
 
 package org.apache.asterix.metadata;
 
+import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.rmi.RemoteException;
@@ -689,7 +690,7 @@ public class MetadataNode implements IMetadataNode {
             }
             throw new AsterixException(
                     org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "node group",
-                    nodeGroupName, dataset() + "(s)",
+                    nodeGroupName, dataset(PLURAL),
                     datasets.stream().map(DatasetUtil::getFullyQualifiedDisplayName).collect(Collectors.joining(", ")));
         }
         try {
