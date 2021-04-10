@@ -168,6 +168,9 @@ public class OperatorManipulationUtil {
                         }
                         case LOCAL: {
                             op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.LOCAL);
+                            if (inputOp.getOperatorTag() == LogicalOperatorTag.ORDER) {
+                                op.setExecutionMode(oldMode);
+                            }
                             break;
                         }
                     }
