@@ -2471,6 +2471,23 @@ public class TestExecutor {
                         + cUnit.getName() + "_qbc.adm");
     }
 
+    protected URI createLocalOnlyEndpointURI(String pathAndQuery) throws URISyntaxException {
+        InetSocketAddress endpoint;
+        if (!ncEndPointsList.isEmpty() && (pathAndQuery.equals(Servlets.QUERY_SERVICE)
+                || pathAndQuery.startsWith(Servlets.getAbsolutePath(Servlets.UDF)))) {
+            int endpointIdx = Math.abs(endpointSelector++ % ncEndPointsList.size());
+            endpoint = ncEndPointsList.get(endpointIdx);
+        } else if (isCcEndPointPath(pathAndQuery)) {
+            int endpointIdx = Math.abs(endpointSelector++ % endpoints.size());
+            endpoint = endpoints.get(endpointIdx);
+        } else {
+            throw new IllegalArgumentException("Invalid local endpoint format");
+        }
+        URI uri = URI.create("http://" + toHostPort("localhost", endpoint.getPort()) + pathAndQuery);
+        LOGGER.debug("Created endpoint URI: " + uri);
+        return uri;
+    }
+
     protected URI createEndpointURI(String pathAndQuery) throws URISyntaxException {
         InetSocketAddress endpoint;
         if (!ncEndPointsList.isEmpty() && (pathAndQuery.equals(Servlets.QUERY_SERVICE)
