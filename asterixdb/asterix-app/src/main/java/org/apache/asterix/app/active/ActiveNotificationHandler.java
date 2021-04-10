@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActiveEvent.Kind;
@@ -30,10 +29,8 @@ import org.apache.asterix.active.EntityId;
 import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.active.IActiveNotificationHandler;
 import org.apache.asterix.active.message.ActivePartitionMessage;
-import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.commons.lang3.tuple.Pair;
@@ -278,30 +275,13 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
     public void suspendForDdlOrHalt(IActiveEntityEventsListener listener, MetadataProvider metadataProvider,
             Dataset targetDataset) {
         try {
-            // write lock the listener
-            // exclusive lock all the datasets (except the target dataset)
-            IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
-            DataverseName dataverseName = listener.getEntityId().getDataverseName();
-            String entityName = listener.getEntityId().getEntityName();
-            if (LOGGER.isEnabled(level)) {
-                LOGGER.log(level, "Suspending " + listener.getEntityId());
-            }
-            LOGGER.log(level, "Acquiring locks");
-            lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), dataverseName, entityName);
-            Set<Dataset> datasets = ((ActiveEntityEventsListener) listener).getDatasets();
-            for (Dataset dataset : datasets) {
-                if (targetDataset != null && targetDataset.equals(dataset)) {
-                    // DDL operation already acquired the proper lock for the operation
-                    continue;
-                }
-                lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(),
-                        dataset.getDataverseName(), dataset.getDatasetName());
-            }
-            LOGGER.log(level, "locks acquired");
+            EntityId entityId = listener.getEntityId();
+            LOGGER.log(level, "Suspending {}", entityId);
+            LOGGER.log(level, "Acquiring locks for {}", entityId);
+            ((ActiveEntityEventsListener) listener).acquireSuspendLocks(metadataProvider, targetDataset);
+            LOGGER.log(level, "locks acquired for {}", entityId);
             ((ActiveEntityEventsListener) listener).suspend(metadataProvider);
-            if (LOGGER.isEnabled(level)) {
-                LOGGER.log(level, listener.getEntityId() + " suspended");
-            }
+            LOGGER.log(level, "{} suspended", entityId);
         } catch (Throwable th) { // NOSONAR must halt in case of any failure
             LOGGER.error("Suspend active failed", th);
             ExitUtil.halt(ExitUtil.EC_ACTIVE_SUSPEND_FAILURE);
