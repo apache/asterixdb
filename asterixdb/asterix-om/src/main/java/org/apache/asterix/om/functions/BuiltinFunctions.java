@@ -1262,6 +1262,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast-lax", 1);
     public static final FunctionIdentifier REFERENCE_TILE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "reference-tile", 6);
+    public static final FunctionIdentifier GET_INTERSECTION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-intersection", 2);
 
     public static final FunctionIdentifier CREATE_UUID =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-uuid", 0);
@@ -2189,6 +2191,7 @@ public class BuiltinFunctions {
         addFunction(SPATIAL_TILE, AInt32TypeComputer.INSTANCE, true);
         addFunction(SPATIAL_TILE2, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addFunction(REFERENCE_TILE, AInt32TypeComputer.INSTANCE, true);
+        addFunction(GET_INTERSECTION, ARectangleTypeComputer.INSTANCE, true);
         addFunction(SPATIAL_ATTACH, ARectangleTypeComputer.INSTANCE, true);
 
         //geo functions
