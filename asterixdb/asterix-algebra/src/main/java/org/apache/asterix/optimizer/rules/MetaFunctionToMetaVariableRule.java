@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -254,7 +256,7 @@ class LogicalExpressionReferenceTransform implements ILogicalExpressionReference
         // the user query provides zero parameter for the meta function.
         if (variableRequired) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, expr.getSourceLocation(),
-                    "Cannot resolve ambiguous meta function call. There are more than one dataset choice!");
+                    "Cannot resolve ambiguous meta function call. There are more than one " + dataset() + " choice");
         }
         VariableReferenceExpression metaVarRef = new VariableReferenceExpression(metaVar);
         metaVarRef.setSourceLocation(expr.getSourceLocation());

@@ -177,4 +177,8 @@ public interface ILSMIOOperation extends Callable<LSMIOOperationStatus>, IPageWr
      */
     boolean isActive();
 
+    /**
+     * @return whether this IO operation is completed
+     */
+    boolean isCompleted();
 }

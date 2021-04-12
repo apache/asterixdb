@@ -21,9 +21,14 @@ package org.apache.hyracks.api.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.ThrowingFunction;
+
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 /**
  * @author yingyib
@@ -132,5 +137,25 @@ public class ExceptionUtils {
 
     public static boolean causedByInterrupt(Throwable th) {
         return getRootCause(th) instanceof InterruptedException;
+    }
+
+    /**
+     * Convenience utility method to provide a form of {@link Map#computeIfAbsent(Object, Function)} which allows
+     * throwable mapping functions.  Any exceptions thrown by the mapping function is propagated as an instance of
+     * {@link HyracksDataException}
+     */
+    public static <K, V> V computeIfAbsent(Map<K, V> map, K key, ThrowingFunction<K, V> function)
+            throws HyracksDataException {
+        try {
+            return map.computeIfAbsent(key, k -> {
+                try {
+                    return function.process(k);
+                } catch (Exception e) {
+                    throw new UncheckedExecutionException(e);
+                }
+            });
+        } catch (UncheckedExecutionException e) {
+            throw HyracksDataException.create(e.getCause());
+        }
     }
 }

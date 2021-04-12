@@ -45,6 +45,8 @@ public class PhysicalOptimizationConfig {
     private static final String SUBPLAN_MERGE = "SUBPLAN_MERGE";
     private static final String SUBPLAN_NESTEDPUSHDOWN = "SUBPLAN_NESTEDPUSHDOWN";
     private static final String MIN_MEMORY_ALLOCATION = "MIN_MEMORY_ALLOCATION";
+    private static final String ARRAY_INDEX = "ARRAY_INDEX";
+    private static final String EXTERNAL_SCAN_BUFFER_SIZE = "EXTERNAL_SCAN_BUFFER_SIZE";
 
     private final Properties properties = new Properties();
 
@@ -224,6 +226,22 @@ public class PhysicalOptimizationConfig {
 
     public void setMinMemoryAllocation(boolean value) {
         setBoolean(MIN_MEMORY_ALLOCATION, value);
+    }
+
+    public boolean isArrayIndexEnabled() {
+        return getBoolean(ARRAY_INDEX, AlgebricksConfig.ARRAY_INDEX_DEFAULT);
+    }
+
+    public void setArrayIndexEnabled(boolean arrayIndex) {
+        setBoolean(ARRAY_INDEX, arrayIndex);
+    }
+
+    public int getExternalScanBufferSize() {
+        return getInt(EXTERNAL_SCAN_BUFFER_SIZE, AlgebricksConfig.EXTERNAL_SCAN_BUFFER_SIZE);
+    }
+
+    public void setExternalScanBufferSize(int bufferSize) {
+        setInt(EXTERNAL_SCAN_BUFFER_SIZE, bufferSize);
     }
 
     private void setInt(String property, int value) {

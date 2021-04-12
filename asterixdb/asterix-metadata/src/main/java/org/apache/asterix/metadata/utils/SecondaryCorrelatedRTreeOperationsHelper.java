@@ -75,15 +75,16 @@ public class SecondaryCorrelatedRTreeOperationsHelper extends SecondaryCorrelate
 
     @Override
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {
-        List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+        List<List<String>> secondaryKeyFields = indexDetails.getKeyFieldNames();
         int numSecondaryKeys = secondaryKeyFields.size();
-        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
+        boolean isOverridingKeyFieldTypes = indexDetails.isOverridingKeyFieldTypes();
         if (numSecondaryKeys != 1) {
             throw AsterixException.create(ErrorCode.INDEX_RTREE_MULTIPLE_FIELDS_NOT_ALLOWED, sourceLoc,
                     numSecondaryKeys);
         }
-        Pair<IAType, Boolean> spatialTypePair =
-                Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), itemType);
+        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(
+                indexDetails.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), itemType);
         IAType spatialType = spatialTypePair.first;
         anySecondaryKeyIsNullable = spatialTypePair.second;
         isPointMBR = spatialType.getTypeTag() == ATypeTag.POINT || spatialType.getTypeTag() == ATypeTag.POINT3D;
@@ -182,7 +183,7 @@ public class SecondaryCorrelatedRTreeOperationsHelper extends SecondaryCorrelate
         RecordDescriptor secondaryRecDescConsideringPointMBR = isPointMBR
                 ? getTaggedRecordDescriptor(secondaryRecDescForPointMBR) : getTaggedRecordDescriptor(secondaryRecDesc);
 
-        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
+        boolean isOverridingKeyFieldTypes = index.getIndexDetails().isOverridingKeyFieldTypes();
 
         assert dataset.getDatasetType() == DatasetType.INTERNAL;
 

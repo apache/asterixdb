@@ -32,7 +32,7 @@ WITH sum AS (
 )[0]
 
 
-SELECT ps_partkey, SUM(ps.ps_supplycost * ps.ps_availqty) AS part_value
+SELECT ps_partkey, part_value
 FROM Partsupp ps,
      (
         SELECT s.s_suppkey
@@ -42,6 +42,7 @@ FROM Partsupp ps,
     ) sn
 WHERE ps.ps_suppkey = sn.s_suppkey
 GROUP BY ps.ps_partkey
+LET part_value = SUM(ps.ps_supplycost * ps.ps_availqty)
 HAVING part_value > sum * 0.0001000
 ORDER BY part_value DESC
 ;

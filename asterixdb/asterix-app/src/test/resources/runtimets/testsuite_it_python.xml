@@ -29,6 +29,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
+      <compilation-unit name="mysentiment_multipart">
+        <output-dir compare="Text">mysentiment</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
       <compilation-unit name="python-fn-escape">
         <output-dir compare="Text">python-fn-escape</output-dir>
         <expected-error>ImportError: Module was not found in library</expected-error>
@@ -39,10 +44,40 @@
         <output-dir compare="Clean-JSON">py_nested_access</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="python_open_type_validation">
+        <output-dir compare="Clean-JSON">python_open_type_validation</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-library" check-warnings="true">
       <compilation-unit name="py_function_error">
         <output-dir compare="Clean-JSON">py_function_error</output-dir>
-        <expected-warn>ASX0201: External UDF returned exception. Returned exception was: ArithmeticError: oof</expected-warn>
+        <expected-warn>ASX0201: External UDF returned exception. Returned exception was: Traceback (most recent call last):
+  File "entrypoint.py", line 181, in handle_call
+    result[0].append(self.next_tuple(*arg, key=self.mid))
+  File "entrypoint.py", line 99, in next_tuple
+    return self.wrapped_fns[key](*args)
+  File "site-packages/roundtrip.py", line 29, in warning
+    raise ArithmeticError("oof")
+ArithmeticError: oof
+ (in line 28, at column 1)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="mysentiment_twitter">
+        <output-dir compare="Text">mysentiment_twitter</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="toplevel_fn">
+        <output-dir compare="Text">toplevel_fn</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library" check-warnings="true">
+      <compilation-unit name="crash">
+        <output-dir compare="Text">crash</output-dir>
+        <expected-warn>ASX0201: External UDF returned exception. Returned exception was: Function externallibtest:crash#0 failed to execute (in line 23, at column 1)</expected-warn>
+        <expected-warn>ASX0201: External UDF returned exception. Returned exception was: java.io.IOException: Python process exited with code: 1 (in line 23, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
   </test-group>

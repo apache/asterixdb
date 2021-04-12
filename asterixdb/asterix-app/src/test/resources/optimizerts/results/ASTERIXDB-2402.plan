@@ -50,7 +50,7 @@
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   -- HYBRID_HASH_JOIN [$$309][$$222]  |PARTITIONED|
                                                     -- HASH_PARTITION_EXCHANGE [$$309]  |PARTITIONED|
-                                                      -- ASSIGN  |PARTITIONED|
+                                                      -- RUNNING_AGGREGATE  |PARTITIONED|
                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                           -- UNNEST  |PARTITIONED|
                                                             -- STREAM_PROJECT  |PARTITIONED|
@@ -93,12 +93,13 @@
                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                   -- NESTED_LOOP  |PARTITIONED|
                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                      -- ASSIGN  |PARTITIONED|
-                                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                          -- DATASOURCE_SCAN (channels.EmergenciesNearMeChannelChannelSubscriptions)  |PARTITIONED|
-                                                                                                                            -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                                                                                              -- ASSIGN  |UNPARTITIONED|
-                                                                                                                                -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                                                                                                      -- RUNNING_AGGREGATE  |PARTITIONED|
+                                                                                                                        -- ASSIGN  |PARTITIONED|
+                                                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                            -- DATASOURCE_SCAN (channels.EmergenciesNearMeChannelChannelSubscriptions)  |PARTITIONED|
+                                                                                                                              -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                                                                                -- ASSIGN  |UNPARTITIONED|
+                                                                                                                                  -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
                                                                                                                     -- BROADCAST_EXCHANGE  |PARTITIONED|
                                                                                                                       -- ASSIGN  |PARTITIONED|
                                                                                                                         -- STREAM_SELECT  |PARTITIONED|
@@ -139,12 +140,13 @@
                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                             -- NESTED_LOOP  |PARTITIONED|
                                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                -- ASSIGN  |PARTITIONED|
-                                                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                    -- DATASOURCE_SCAN (channels.EmergenciesNearMeChannelChannelSubscriptions)  |PARTITIONED|
-                                                                                                                      -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                                                                                        -- ASSIGN  |UNPARTITIONED|
-                                                                                                                          -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                                                                                                -- RUNNING_AGGREGATE  |PARTITIONED|
+                                                                                                                  -- ASSIGN  |PARTITIONED|
+                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                      -- DATASOURCE_SCAN (channels.EmergenciesNearMeChannelChannelSubscriptions)  |PARTITIONED|
+                                                                                                                        -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                                                                          -- ASSIGN  |UNPARTITIONED|
+                                                                                                                            -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
                                                                                                               -- BROADCAST_EXCHANGE  |PARTITIONED|
                                                                                                                 -- ASSIGN  |PARTITIONED|
                                                                                                                   -- STREAM_SELECT  |PARTITIONED|

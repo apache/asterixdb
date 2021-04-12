@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -129,20 +128,21 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
             return FilesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS;
         }
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
         ITypeTraitProvider typeTraitProvider = metadataProvider.getStorageComponentProvider().getTypeTraitProvider();
         ITypeTraits[] secondaryTypeTraits = new ITypeTraits[numSecondaryKeys + numPrimaryKeys];
         for (int i = 0; i < numSecondaryKeys; i++) {
             ARecordType sourceType;
-            List<Integer> keySourceIndicators = index.getKeyFieldSourceIndicators();
+            List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
             if (keySourceIndicators == null || keySourceIndicators.get(i) == 0) {
                 sourceType = recordType;
             } else {
                 sourceType = metaType;
             }
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(i),
-                    index.getKeyFieldNames().get(i), sourceType);
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(
+                    indexDetails.getKeyFieldTypes().get(i), indexDetails.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;
             secondaryTypeTraits[i] = typeTraitProvider.getTypeTrait(keyType);
         }
@@ -163,22 +163,23 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
             return FilesIndexDescription.FILES_INDEX_COMP_FACTORIES;
         }
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
         IBinaryComparatorFactoryProvider cmpFactoryProvider =
                 metadataProvider.getStorageComponentProvider().getComparatorFactoryProvider();
         IBinaryComparatorFactory[] secondaryCmpFactories =
                 new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];
         for (int i = 0; i < numSecondaryKeys; i++) {
             ARecordType sourceType;
-            List<Integer> keySourceIndicators = index.getKeyFieldSourceIndicators();
+            List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
             if (keySourceIndicators == null || keySourceIndicators.get(i) == 0) {
                 sourceType = recordType;
             } else {
                 sourceType = metaType;
             }
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(i),
-                    index.getKeyFieldNames().get(i), sourceType);
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(
+                    indexDetails.getKeyFieldTypes().get(i), indexDetails.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;
             secondaryCmpFactories[i] = cmpFactoryProvider.getBinaryComparatorFactory(keyType, true);
         }
@@ -193,23 +194,34 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
         // both the Primary index and the Primary Key index have bloom filters
         if (index.isPrimaryIndex() || index.isPrimaryKeyIndex()) {
             return dataset.getPrimaryBloomFilterFields();
-        } else if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+        }
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             if (index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
                 return FilesIndexDescription.BLOOM_FILTER_FIELDS;
             } else {
-                return new int[] { index.getKeyFieldNames().size() };
+                Index.ValueIndexDetails indexDetails = ((Index.ValueIndexDetails) index.getIndexDetails());
+                return new int[] { indexDetails.getKeyFieldNames().size() };
             }
-        } else if (index.getIndexType() == IndexType.BTREE || index.getIndexType() == IndexType.RTREE) {
-            // secondary btrees and rtrees do not have bloom filters
-            return null;
-        } else {
-            // inverted indexes have bloom filters on deleted-key btrees
-            int numKeys = index.getKeyFieldNames().size();
-            int[] bloomFilterKeyFields = new int[numKeys];
-            for (int i = 0; i < numKeys; i++) {
-                bloomFilterKeyFields[i] = i;
-            }
-            return bloomFilterKeyFields;
+        }
+        switch (index.getIndexType()) {
+            case BTREE:
+            case RTREE:
+                // secondary btrees and rtrees do not have bloom filters
+                return null;
+            case LENGTH_PARTITIONED_NGRAM_INVIX:
+            case LENGTH_PARTITIONED_WORD_INVIX:
+            case SINGLE_PARTITION_NGRAM_INVIX:
+            case SINGLE_PARTITION_WORD_INVIX:
+                // inverted indexes have bloom filters on deleted-key btrees
+                int numKeys = ((Index.TextIndexDetails) index.getIndexDetails()).getKeyFieldNames().size();
+                int[] bloomFilterKeyFields = new int[numKeys];
+                for (int i = 0; i < numKeys; i++) {
+                    bloomFilterKeyFields[i] = i;
+                }
+                return bloomFilterKeyFields;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
+                        String.valueOf(index.getIndexType()));
         }
     }
 }

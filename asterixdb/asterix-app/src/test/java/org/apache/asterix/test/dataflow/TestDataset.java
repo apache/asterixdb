@@ -55,14 +55,14 @@ public class TestDataset extends Dataset {
     }
 
     @Override
-    public IPushRuntimeFactory getCommitRuntimeFactory(MetadataProvider metadataProvider,
-            int[] primaryKeyFieldPermutation, boolean isSink) throws AlgebricksException {
+    public IPushRuntimeFactory getCommitRuntimeFactory(MetadataProvider metadataProvider, int[] keyFieldPermutation,
+            boolean isSink) throws AlgebricksException {
         return new IPushRuntimeFactory() {
             @Override
             public IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
-                return new IPushRuntime[] { new CommitRuntime(ctx, new TxnId(ctx.getJobletContext().getJobId().getId()),
-                        getDatasetId(), primaryKeyFieldPermutation, true,
-                        ctx.getTaskAttemptId().getTaskId().getPartition(), true) };
+                return new IPushRuntime[] {
+                        new CommitRuntime(ctx, new TxnId(ctx.getJobletContext().getJobId().getId()), getDatasetId(),
+                                keyFieldPermutation, true, ctx.getTaskAttemptId().getTaskId().getPartition(), true) };
             }
         };
     }

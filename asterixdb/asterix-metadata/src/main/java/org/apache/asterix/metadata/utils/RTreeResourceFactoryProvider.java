@@ -71,15 +71,16 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
             ARecordType recordType, ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories) throws AlgebricksException {
-        if (index.getKeyFieldNames().size() != 1) {
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+        if (indexDetails.getKeyFieldNames().size() != 1) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_INDEX_NUM_OF_FIELD,
-                    index.getKeyFieldNames().size(), index.getIndexType(), 1);
+                    indexDetails.getKeyFieldNames().size(), index.getIndexType(), 1);
         }
-        IAType spatialType = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
-                index.getKeyFieldNames().get(0), recordType).first;
+        IAType spatialType = Index.getNonNullableOpenFieldType(indexDetails.getKeyFieldTypes().get(0),
+                indexDetails.getKeyFieldNames().get(0), recordType).first;
         if (spatialType == null) {
             throw new CompilationException(ErrorCode.COMPILATION_FIELD_NOT_FOUND,
-                    StringUtils.join(index.getKeyFieldNames().get(0), '.'));
+                    StringUtils.join(indexDetails.getKeyFieldNames().get(0), '.'));
         }
         List<List<String>> primaryKeyFields = dataset.getPrimaryKeys();
         int numPrimaryKeys = primaryKeyFields.size();
@@ -189,7 +190,8 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
     private static ITypeTraits[] getTypeTraits(MetadataProvider metadataProvider, Dataset dataset, Index index,
             ARecordType recordType, ARecordType metaType) throws AlgebricksException {
         ITypeTraitProvider ttProvider = metadataProvider.getStorageComponentProvider().getTypeTraitProvider();
-        List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+        List<List<String>> secondaryKeyFields = indexDetails.getKeyFieldNames();
         int numSecondaryKeys = secondaryKeyFields.size();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
         ITypeTraits[] primaryTypeTraits = dataset.getPrimaryTypeTraits(metadataProvider, recordType, metaType);
@@ -198,14 +200,14 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     + "There can be only one field as a key for the R-tree index.");
         }
         ARecordType sourceType;
-        List<Integer> keySourceIndicators = index.getKeyFieldSourceIndicators();
+        List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
         if (keySourceIndicators == null || keySourceIndicators.get(0) == 0) {
             sourceType = recordType;
         } else {
             sourceType = metaType;
         }
-        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
-                secondaryKeyFields.get(0), sourceType);
+        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(
+                indexDetails.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), sourceType);
         IAType spatialType = spatialTypePair.first;
         if (spatialType == null) {
             throw new AsterixException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");
@@ -227,21 +229,22 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
             ARecordType recordType, ARecordType metaType) throws AlgebricksException {
         IBinaryComparatorFactoryProvider cmpFactoryProvider =
                 metadataProvider.getStorageComponentProvider().getComparatorFactoryProvider();
-        List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+        List<List<String>> secondaryKeyFields = indexDetails.getKeyFieldNames();
         int numSecondaryKeys = secondaryKeyFields.size();
         if (numSecondaryKeys != 1) {
             throw new AsterixException("Cannot use " + numSecondaryKeys + " fields as a key for the R-tree index. "
                     + "There can be only one field as a key for the R-tree index.");
         }
-        List<Integer> keySourceIndicators = index.getKeyFieldSourceIndicators();
+        List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
         ARecordType sourceType;
         if (keySourceIndicators == null || keySourceIndicators.get(0) == 0) {
             sourceType = recordType;
         } else {
             sourceType = metaType;
         }
-        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
-                secondaryKeyFields.get(0), sourceType);
+        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(
+                indexDetails.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), sourceType);
         IAType spatialType = spatialTypePair.first;
         if (spatialType == null) {
             throw new AsterixException("Could not find field " + secondaryKeyFields.get(0) + " in the schema.");

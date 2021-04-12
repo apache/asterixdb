@@ -28,7 +28,9 @@ public class WarningUtil {
     private WarningUtil() {
     }
 
-    /** Merges the warnings from the collection argument into the warning collector argument. */
+    /**
+     * Merges the warnings from the collection argument into the warning collector argument.
+     */
     public static void mergeWarnings(Collection<Warning> warnings, IWarningCollector warningsCollector) {
         for (Warning warning : warnings) {
             if (warningsCollector.shouldWarn()) {

@@ -228,9 +228,9 @@ public class NCApplication extends BaseNCApplication {
                 new NCUdfApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext(),
                         sqlppCompilationProvider, apiServer.getScheme(), apiServer.getAddress().getPort()),
                 auth.getFirst(), auth.getSecond()));
-        apiServer.addServlet(new BasicAuthServlet(
-                apiServer.ctx(), new NCUdfRecoveryServlet(apiServer.ctx(), new String[] { UDF_RECOVERY },
-                        getApplicationContext(), apiServer.getScheme(), apiServer.getAddress().getPort()),
+        apiServer.addServlet(new BasicAuthServlet(apiServer.ctx(),
+                new NCUdfRecoveryServlet(apiServer.ctx(), new String[] { UDF_RECOVERY }, getApplicationContext(),
+                        sqlppCompilationProvider, apiServer.getScheme(), apiServer.getAddress().getPort()),
                 auth.getFirst(), auth.getSecond()));
         apiServer.addServlet(new QueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS));
         apiServer.addServlet(new QueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT));

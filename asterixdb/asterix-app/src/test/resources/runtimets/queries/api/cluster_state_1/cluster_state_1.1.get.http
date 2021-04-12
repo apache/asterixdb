@@ -22,4 +22,5 @@
  * Expected Result : Success
  * Date            : 7th September 2016
  */
+--prettifyjsonresult=true
 /admin/cluster

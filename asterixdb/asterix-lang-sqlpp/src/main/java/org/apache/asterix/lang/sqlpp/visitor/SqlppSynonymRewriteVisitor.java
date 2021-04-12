@@ -28,7 +28,7 @@ import org.apache.asterix.lang.common.statement.LoadStatement;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppAstVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
@@ -43,7 +43,7 @@ public class SqlppSynonymRewriteVisitor extends AbstractSqlppAstVisitor<Void, Me
 
     @Override
     public Void visit(LoadStatement loadStmt, MetadataProvider metadataProvider) throws CompilationException {
-        Pair<DataverseName, String> dsName = resolveDatasetNameUsingSynonyms(metadataProvider,
+        Triple<DataverseName, String, Boolean> dsName = resolveDatasetNameUsingSynonyms(metadataProvider,
                 loadStmt.getDataverseName(), loadStmt.getDatasetName(), loadStmt.getSourceLocation());
         if (dsName != null) {
             loadStmt.setDataverseName(dsName.first);
@@ -54,7 +54,7 @@ public class SqlppSynonymRewriteVisitor extends AbstractSqlppAstVisitor<Void, Me
 
     @Override
     public Void visit(InsertStatement insertStmt, MetadataProvider metadataProvider) throws CompilationException {
-        Pair<DataverseName, String> dsName = resolveDatasetNameUsingSynonyms(metadataProvider,
+        Triple<DataverseName, String, Boolean> dsName = resolveDatasetNameUsingSynonyms(metadataProvider,
                 insertStmt.getDataverseName(), insertStmt.getDatasetName(), insertStmt.getSourceLocation());
         if (dsName != null) {
             insertStmt.setDataverseName(dsName.first);
@@ -65,7 +65,7 @@ public class SqlppSynonymRewriteVisitor extends AbstractSqlppAstVisitor<Void, Me
 
     @Override
     public Void visit(DeleteStatement deleteStmt, MetadataProvider metadataProvider) throws CompilationException {
-        Pair<DataverseName, String> dsName = resolveDatasetNameUsingSynonyms(metadataProvider,
+        Triple<DataverseName, String, Boolean> dsName = resolveDatasetNameUsingSynonyms(metadataProvider,
                 deleteStmt.getDataverseName(), deleteStmt.getDatasetName(), deleteStmt.getSourceLocation());
         if (dsName != null) {
             deleteStmt.setDataverseName(dsName.first);
@@ -74,7 +74,7 @@ public class SqlppSynonymRewriteVisitor extends AbstractSqlppAstVisitor<Void, Me
         return null;
     }
 
-    private Pair<DataverseName, String> resolveDatasetNameUsingSynonyms(MetadataProvider metadataProvider,
+    private Triple<DataverseName, String, Boolean> resolveDatasetNameUsingSynonyms(MetadataProvider metadataProvider,
             DataverseName dataverseName, String datasetName, SourceLocation sourceLoc) throws CompilationException {
         try {
             return metadataProvider.resolveDatasetNameUsingSynonyms(dataverseName, datasetName);

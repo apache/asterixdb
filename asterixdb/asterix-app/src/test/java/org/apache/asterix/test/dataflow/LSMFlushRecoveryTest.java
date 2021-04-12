@@ -77,7 +77,7 @@ import org.junit.Test;
 
 public class LSMFlushRecoveryTest {
     public static final Logger LOGGER = LogManager.getLogger();
-    private static TestNodeController nc;
+    public static TestNodeController nc;
     private static Dataset dataset;
     private static PrimaryIndexInfo[] primaryIndexInfos;
     private static SecondaryIndexInfo[] secondaryIndexInfo;
@@ -156,6 +156,10 @@ public class LSMFlushRecoveryTest {
     }
 
     private void initializeNc(boolean cleanUpOnStart) throws Exception {
+        // disable global clean up for this test to allow internal index creation
+        List<Pair<IOption, Object>> opts = new ArrayList<>();
+        opts.add(Pair.of(Option.STORAGE_GLOBAL_CLEANUP, false));
+        nc.setOpts(opts);
         nc.init(cleanUpOnStart);
         ncAppCtx = nc.getAppRuntimeContext();
         // Override the LSMIOScheduler to avoid halting on failure and enable
@@ -173,11 +177,11 @@ public class LSMFlushRecoveryTest {
                     public void operationFailed(ILSMIOOperation operation, Throwable t) {
                         LOGGER.warn("IO Operation failed", t);
                     }
-                }));
+                }, Integer.MAX_VALUE, Integer.MAX_VALUE));
         dsLifecycleMgr = ncAppCtx.getDatasetLifecycleManager();
     }
 
-    private void createIndex() throws Exception {
+    public void createIndex() throws Exception {
         dataset = StorageTestUtils.DATASET;
         secondaryIndexEntity = new Index(dataset.getDataverseName(), dataset.getDatasetName(), SECONDARY_INDEX_NAME,
                 SECONDARY_INDEX_TYPE, SECONDARY_INDEX_FIELD_NAMES, SECONDARY_INDEX_FIELD_INDICATORS,
@@ -193,7 +197,7 @@ public class LSMFlushRecoveryTest {
 
     }
 
-    private void initializeTestCtx() throws Exception {
+    public void initializeTestCtx() throws Exception {
         JobId jobId = nc.newJobId();
         testCtxs = new IHyracksTaskContext[NUM_PARTITIONS];
         for (int i = 0; i < NUM_PARTITIONS; i++) {
@@ -203,7 +207,7 @@ public class LSMFlushRecoveryTest {
                 new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL));
     }
 
-    private void readIndex() throws HyracksDataException {
+    public void readIndex() throws HyracksDataException {
         primaryIndexDataflowHelpers = new IIndexDataflowHelper[NUM_PARTITIONS];
         primaryIndexes = new TestLsmBtree[NUM_PARTITIONS];
         for (int i = 0; i < NUM_PARTITIONS; i++) {

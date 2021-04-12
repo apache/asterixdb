@@ -46,20 +46,21 @@
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                           -- HYBRID_HASH_JOIN [$$146][$$153]  |PARTITIONED|
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              -- ASSIGN  |PARTITIONED|
-                                                                -- STREAM_PROJECT  |PARTITIONED|
-                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                    -- HYBRID_HASH_JOIN [$$phone_substr][$$148]  |PARTITIONED|
-                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                        -- STREAM_PROJECT  |PARTITIONED|
-                                                                          -- ASSIGN  |PARTITIONED|
-                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                              -- DATASOURCE_SCAN (tpch.Customer)  |PARTITIONED|
-                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                                      -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                                        -- UNNEST  |UNPARTITIONED|
-                                                                          -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                                              -- RUNNING_AGGREGATE  |PARTITIONED|
+                                                                -- ASSIGN  |PARTITIONED|
+                                                                  -- STREAM_PROJECT  |PARTITIONED|
+                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                      -- HYBRID_HASH_JOIN [$$phone_substr][$$148]  |PARTITIONED|
+                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                                            -- ASSIGN  |PARTITIONED|
+                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                -- DATASOURCE_SCAN (tpch.Customer)  |PARTITIONED|
+                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                        -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                          -- UNNEST  |UNPARTITIONED|
+                                                                            -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
                                                             -- HASH_PARTITION_EXCHANGE [$$153]  |PARTITIONED|
                                                               -- ASSIGN  |PARTITIONED|
                                                                 -- STREAM_PROJECT  |PARTITIONED|
@@ -112,20 +113,21 @@
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                     -- HYBRID_HASH_JOIN [$$146][$$153]  |PARTITIONED|
                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                        -- ASSIGN  |PARTITIONED|
-                                                                          -- STREAM_PROJECT  |PARTITIONED|
-                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                              -- HYBRID_HASH_JOIN [$$phone_substr][$$148]  |PARTITIONED|
-                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                  -- STREAM_PROJECT  |PARTITIONED|
-                                                                                    -- ASSIGN  |PARTITIONED|
-                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                        -- DATASOURCE_SCAN (tpch.Customer)  |PARTITIONED|
-                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                                                -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                                                  -- UNNEST  |UNPARTITIONED|
-                                                                                    -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                                                        -- RUNNING_AGGREGATE  |PARTITIONED|
+                                                                          -- ASSIGN  |PARTITIONED|
+                                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                -- HYBRID_HASH_JOIN [$$phone_substr][$$148]  |PARTITIONED|
+                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                                      -- ASSIGN  |PARTITIONED|
+                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                          -- DATASOURCE_SCAN (tpch.Customer)  |PARTITIONED|
+                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                  -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                                    -- UNNEST  |UNPARTITIONED|
+                                                                                      -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
                                                                       -- HASH_PARTITION_EXCHANGE [$$153]  |PARTITIONED|
                                                                         -- ASSIGN  |PARTITIONED|
                                                                           -- STREAM_PROJECT  |PARTITIONED|

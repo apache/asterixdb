@@ -131,7 +131,7 @@ public class VariableUtilities {
      *            a typing context that keeps track of types of each variable.
      * @throws AlgebricksException
      */
-    public static void substituteVariables(ILogicalOperator op, LinkedHashMap<LogicalVariable, LogicalVariable> varMap,
+    public static void substituteVariables(ILogicalOperator op, Map<LogicalVariable, LogicalVariable> varMap,
             ITypingContext ctx) throws AlgebricksException {
         for (Map.Entry<LogicalVariable, LogicalVariable> entry : varMap.entrySet()) {
             VariableUtilities.substituteVariables(op, entry.getKey(), entry.getValue(), ctx);

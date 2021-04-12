@@ -37,7 +37,13 @@ public class IsomorphismUtilities {
 
     public static void mapVariablesTopDown(ILogicalOperator op, ILogicalOperator arg,
             Map<LogicalVariable, LogicalVariable> variableMapping) throws AlgebricksException {
-        IsomorphismVariableMappingVisitor visitor = new IsomorphismVariableMappingVisitor(variableMapping);
+        mapVariablesTopDown(op, arg, variableMapping, true);
+    }
+
+    public static void mapVariablesTopDown(ILogicalOperator op, ILogicalOperator arg,
+            Map<LogicalVariable, LogicalVariable> variableMapping, boolean goThroughNts) throws AlgebricksException {
+        IsomorphismVariableMappingVisitor visitor =
+                new IsomorphismVariableMappingVisitor(variableMapping, goThroughNts);
         op.accept(visitor, arg);
     }
 

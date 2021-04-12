@@ -18,8 +18,10 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -30,101 +32,67 @@ import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class CreateIndexStatement extends AbstractStatement {
 
-    private Identifier indexName;
-    private DataverseName dataverseName;
-    private Identifier datasetName;
-    private List<Pair<List<String>, IndexedTypeExpression>> fieldExprs = new ArrayList<>();
-    private List<Integer> fieldIndexIndicators = new ArrayList<>();
-    private IndexType indexType = IndexType.BTREE;
-    private boolean enforced;
-    private boolean ifNotExists;
-
+    private final DataverseName dataverseName;
+    private final Identifier datasetName;
+    private final Identifier indexName;
+    private final IndexType indexType;
+    private final List<IndexedElement> indexedElements;
+    private final boolean enforced;
+    private final boolean ifNotExists;
     // Specific to NGram indexes.
-    private int gramLength = -1;
+    private final int gramLength;
     // Specific to FullText indexes.
-    private String fullTextConfigName;
+    private final String fullTextConfigName;
 
-    public CreateIndexStatement() {
-    }
-
-    public void setGramLength(int gramLength) {
+    public CreateIndexStatement(DataverseName dataverseName, Identifier datasetName, Identifier indexName,
+            IndexType indexType, List<IndexedElement> indexedElements, boolean enforced, int gramLength,
+            String fullTextConfigName, boolean ifNotExists) {
+        this.dataverseName = dataverseName;
+        this.datasetName = Objects.requireNonNull(datasetName);
+        this.indexName = Objects.requireNonNull(indexName);
+        this.indexType = Objects.requireNonNull(indexType);
+        this.indexedElements = Objects.requireNonNull(indexedElements);
+        this.enforced = enforced;
         this.gramLength = gramLength;
-    }
-
-    public int getGramLength() {
-        return gramLength;
-    }
-
-    public void setFullTextConfigName(String fullTextConfigName) {
+        this.ifNotExists = ifNotExists;
         this.fullTextConfigName = fullTextConfigName;
-        return;
     }
 
     public String getFullTextConfigName() {
         return fullTextConfigName;
     }
 
-    public Identifier getIndexName() {
-        return indexName;
-    }
-
-    public void setIndexName(Identifier indexName) {
-        this.indexName = indexName;
-    }
-
     public DataverseName getDataverseName() {
         return dataverseName;
-    }
-
-    public void setDataverseName(DataverseName dataverseName) {
-        this.dataverseName = dataverseName;
     }
 
     public Identifier getDatasetName() {
         return datasetName;
     }
 
-    public void setDatasetName(Identifier datasetName) {
-        this.datasetName = datasetName;
-    }
-
-    public List<Pair<List<String>, IndexedTypeExpression>> getFieldExprs() {
-        return fieldExprs;
-    }
-
-    public void addFieldExprPair(Pair<List<String>, IndexedTypeExpression> fp) {
-        this.fieldExprs.add(fp);
-    }
-
-    public List<Integer> getFieldSourceIndicators() {
-        return fieldIndexIndicators;
-    }
-
-    public void addFieldIndexIndicator(Integer index) {
-        fieldIndexIndicators.add(index);
+    public Identifier getIndexName() {
+        return indexName;
     }
 
     public IndexType getIndexType() {
         return indexType;
     }
 
-    public void setIndexType(IndexType indexType) {
-        this.indexType = indexType;
+    public List<IndexedElement> getIndexedElements() {
+        return indexedElements;
     }
 
     public boolean isEnforced() {
         return enforced;
     }
 
-    public void setEnforced(boolean isEnforced) {
-        this.enforced = isEnforced;
-    }
-
-    public void setIfNotExists(boolean ifNotExists) {
-        this.ifNotExists = ifNotExists;
+    public int getGramLength() {
+        return gramLength;
     }
 
     public boolean getIfNotExists() {
@@ -134,17 +102,6 @@ public class CreateIndexStatement extends AbstractStatement {
     @Override
     public Kind getKind() {
         return Statement.Kind.CREATE_INDEX;
-    }
-
-    public boolean hasMetaField() {
-        if (fieldIndexIndicators != null) {
-            for (Integer indicator : fieldIndexIndicators) {
-                if (indicator.intValue() != 0) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     @Override
@@ -157,4 +114,57 @@ public class CreateIndexStatement extends AbstractStatement {
         return Category.DDL;
     }
 
+    public static final class IndexedElement {
+
+        private final int sourceIndicator;
+
+        private final List<List<String>> unnestList;
+
+        private final List<Pair<List<String>, IndexedTypeExpression>> projectList;
+
+        private SourceLocation sourceLoc;
+
+        public IndexedElement(int sourceIndicator, List<List<String>> unnestList,
+                List<Pair<List<String>, IndexedTypeExpression>> projectList) {
+            if (Objects.requireNonNull(projectList).isEmpty()) {
+                throw new IllegalArgumentException();
+            }
+            this.sourceIndicator = sourceIndicator;
+            this.unnestList = unnestList != null ? unnestList : Collections.emptyList();
+            this.projectList = projectList;
+        }
+
+        public int getSourceIndicator() {
+            return sourceIndicator;
+        }
+
+        public boolean hasUnnest() {
+            return !unnestList.isEmpty();
+        }
+
+        public List<List<String>> getUnnestList() {
+            return unnestList;
+        }
+
+        public List<Pair<List<String>, IndexedTypeExpression>> getProjectList() {
+            return projectList;
+        }
+
+        public Triple<Integer, List<List<String>>, List<List<String>>> toIdentifier() {
+            List<List<String>> newProjectList = projectList.stream().map(Pair::getFirst).collect(Collectors.toList());
+            return new Triple<>(sourceIndicator, unnestList, newProjectList);
+        }
+
+        public SourceLocation getSourceLocation() {
+            return sourceLoc;
+        }
+
+        public void setSourceLocation(SourceLocation sourceLoc) {
+            this.sourceLoc = sourceLoc;
+        }
+
+        public String getProjectListDisplayForm() {
+            return projectList.stream().map(Pair::getFirst).map(String::valueOf).collect(Collectors.joining(", "));
+        }
+    }
 }

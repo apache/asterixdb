@@ -38,6 +38,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexPageWriteCallbackFactory;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
@@ -54,6 +55,7 @@ import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.declared.ArrayBTreeResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.BTreeResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
@@ -154,6 +156,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     private final long rebalanceCount;
     private int pendingOp;
     private final String compressionScheme;
+    private final DatasetFullyQualifiedName datasetFullyQualifiedName;
 
     public Dataset(DataverseName dataverseName, String datasetName, DataverseName recordTypeDataverseName,
             String recordTypeName, String nodeGroupName, String compactionPolicy,
@@ -203,6 +206,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         this.hints = hints;
         this.rebalanceCount = rebalanceCount;
         this.compressionScheme = compressionScheme;
+        datasetFullyQualifiedName = new DatasetFullyQualifiedName(dataverseName, datasetName);
     }
 
     @Override
@@ -471,6 +475,11 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                 recordType, metaType, mdProvider.getStorageComponentProvider().getComparatorFactoryProvider());
         IResourceFactory resourceFactory;
         switch (index.getIndexType()) {
+            case ARRAY:
+                resourceFactory = ArrayBTreeResourceFactoryProvider.INSTANCE.getResourceFactory(mdProvider, this, index,
+                        recordType, metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits,
+                        filterCmpFactories);
+                break;
             case BTREE:
                 resourceFactory = BTreeResourceFactoryProvider.INSTANCE.getResourceFactory(mdProvider, this, index,
                         recordType, metaType, mergePolicyFactory, mergePolicyProperties, filterTypeTraits,
@@ -574,7 +583,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             return new SecondaryIndexInstanctSearchOperationCallbackFactory(getDatasetId(),
                     primaryKeyFieldsInSecondaryIndex, storageComponentProvider.getTransactionSubsystemProvider(),
                     index.resourceType());
-        } else if (index.getKeyFieldNames().isEmpty()) {
+        } else if (index.isPrimaryKeyIndex()) {
             // this is the case where the index is secondary primary index and locking is required
             // since the secondary primary index replaces the dataset index (which locks)
             return new PrimaryIndexInstantSearchOperationCallbackFactory(getDatasetId(), primaryKeyFields,
@@ -877,4 +886,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public String getCompressionScheme() {
         return compressionScheme;
     }
+
+    public DatasetFullyQualifiedName getDatasetFullyQualifiedName() {
+        return datasetFullyQualifiedName;
+    }
+
 }

@@ -67,8 +67,16 @@ public class IndexUtil {
         if (index.isPrimaryIndex()) {
             return DatasetUtil.createBTreeFieldsWhenThereisAFilter(dataset);
         }
+        int numSecondaryKeys;
+        if (index.getIndexType() == DatasetConfig.IndexType.BTREE) {
+            numSecondaryKeys = ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldNames().size();
+        } else if (index.getIndexType() == DatasetConfig.IndexType.ARRAY) {
+            numSecondaryKeys = ((Index.ArrayIndexDetails) index.getIndexDetails()).getElementList().stream()
+                    .map(e -> e.getProjectList().size()).reduce(0, Integer::sum);
+        } else {
+            throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, index.getIndexType().toString());
+        }
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
-        int numSecondaryKeys = index.getKeyFieldNames().size();
         int[] btreeFields = new int[numSecondaryKeys + numPrimaryKeys];
         for (int k = 0; k < btreeFields.length; k++) {
             btreeFields[k] = k;
@@ -82,9 +90,14 @@ public class IndexUtil {
             return empty;
         }
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        int numSecondaryKeys;
         switch (index.getIndexType()) {
+            case ARRAY:
+                numSecondaryKeys = ((Index.ArrayIndexDetails) index.getIndexDetails()).getElementList().stream()
+                        .map(e -> e.getProjectList().size()).reduce(0, Integer::sum);
+                return new int[] { numPrimaryKeys + numSecondaryKeys };
             case BTREE:
+                numSecondaryKeys = ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldNames().size();
                 return new int[] { numPrimaryKeys + numSecondaryKeys };
             case RTREE:
             case LENGTH_PARTITIONED_NGRAM_INVIX:

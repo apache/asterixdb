@@ -228,6 +228,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String GROUPS = "GROUPS";
     private static final String IGNORE = "IGNORE";
     private static final String LAST = "LAST";
+    private static final String META = "META";
     private static final String NO = "NO";
     private static final String NULLS = "NULLS";
     private static final String OTHERS = "OTHERS";
@@ -1106,51 +1107,168 @@ CreateIndexStatement CreateIndexStatement(Token startStmtToken) throws ParseExce
 
 CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseException:
 {
-  CreateIndexStatement stmt = new CreateIndexStatement();
-  String indexName = null;
-  boolean ifNotExists = false;
   Pair<DataverseName,Identifier> nameComponents = null;
-  Pair<Integer, Pair<List<String>, IndexedTypeExpression>> fieldPair = null;
-  IndexParams indexType = null;
+  String indexName = null;
+  IndexParams indexParams = null;
+  CreateIndexStatement.IndexedElement indexedElement = null;
+  List<CreateIndexStatement.IndexedElement> indexedElementList = new ArrayList<CreateIndexStatement.IndexedElement>();
   boolean enforced = false;
+  boolean ifNotExists = false;
+  boolean hasUnnest = false;
+  String fullTextConfigName = null;
+  Token startElementToken = null;
 }
 {
   (
     indexName = Identifier() ifNotExists = IfNotExists()
     <ON> nameComponents = QualifiedName()
-    <LEFTPAREN> ( fieldPair = OpenField()
-      {
-        stmt.addFieldExprPair(fieldPair.second);
-        stmt.addFieldIndexIndicator(fieldPair.first);
+    <LEFTPAREN> { startElementToken  = token; }
+      indexedElement = IndexedElement(startElementToken) {
+        indexedElementList.add(indexedElement);
+        hasUnnest |= indexedElement.hasUnnest();
       }
-    ) (<COMMA> fieldPair = OpenField()
-      {
-        stmt.addFieldExprPair(fieldPair.second);
-        stmt.addFieldIndexIndicator(fieldPair.first);
-      }
-    )* <RIGHTPAREN> ( <TYPE> indexType = IndexType() )? ( <ENFORCED> { enforced = true; } )?
+      (<COMMA> { startElementToken = token; }
+        indexedElement = IndexedElement(startElementToken) {
+          indexedElementList.add(indexedElement);
+          hasUnnest |= indexedElement.hasUnnest();
+        }
+      )*
+    <RIGHTPAREN>
+    ( <TYPE> indexParams = IndexType() )? ( <ENFORCED> { enforced = true; } )?
   )
   {
-    stmt.setIndexName(new Identifier(indexName));
-    stmt.setIfNotExists(ifNotExists);
-    stmt.setDataverseName(nameComponents.first);
-    stmt.setDatasetName(nameComponents.second);
-    if (indexType != null) {
-      stmt.setIndexType(indexType.type);
-      stmt.setGramLength(indexType.gramLength);
-      stmt.setFullTextConfigName(indexType.fullTextConfig);
+    IndexType indexType;
+    int gramLength;
+    if (indexParams != null) {
+      indexType = indexParams.type;
+      gramLength = indexParams.gramLength;
+      fullTextConfigName = indexParams.fullTextConfig;
+    } else {
+      indexType = hasUnnest ? IndexType.ARRAY : IndexType.BTREE;
+      gramLength = -1;
+      fullTextConfigName = null;
     }
-    stmt.setEnforced(enforced);
+    CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
+      new Identifier(indexName), indexType, indexedElementList, enforced, gramLength, fullTextConfigName, ifNotExists);
     return addSourceLocation(stmt, startStmtToken);
+  }
+}
+
+CreateIndexStatement.IndexedElement IndexedElement(Token startElementToken) throws ParseException:
+{
+  Triple<Integer, List<List<String>>, List<Pair<List<String>, IndexedTypeExpression>>> element = null;
+  Pair<List<String>, IndexedTypeExpression> elementSimple = null;
+  int elementSimpleSource = 0;
+}
+{
+  (
+    element = IndexedElementUnnestSelect()
+    | (
+        LOOKAHEAD({ laIdentifier(META) && laToken(2, LEFTPAREN) && laToken(3, RIGHTPAREN) })
+        <IDENTIFIER> { expectToken(META); } <LEFTPAREN> <RIGHTPAREN>
+        <DOT> elementSimple = IndexedField()
+        { elementSimpleSource = 1; }
+      )
+    | elementSimple = IndexedField()
+    | <LEFTPAREN> ( element = IndexedElementUnnestSelect() | elementSimple = IndexedField() ) <RIGHTPAREN>
+  )
+  {
+    int source;
+    List<List<String>> unnestList;
+    List<Pair<List<String>, IndexedTypeExpression>> projectList;
+    if (elementSimple != null) {
+      source = elementSimpleSource;
+      unnestList = null;
+      projectList = Collections.singletonList(elementSimple);
+    } else {
+      source = element.first;
+      unnestList = element.second;
+      projectList = element.third;
+    }
+    CreateIndexStatement.IndexedElement ie = new CreateIndexStatement.IndexedElement(source, unnestList, projectList);
+    ie.setSourceLocation(getSourceLocation(startElementToken));
+    return ie;
+  }
+}
+
+Triple<Integer, List<List<String>>, List<Pair<List<String>, IndexedTypeExpression>>> IndexedElementUnnestSelect()
+  throws ParseException:
+{
+  int source = 0;
+  Pair<List<List<String>>, List<Pair<List<String>, IndexedTypeExpression>>> element = null;
+}
+{
+  <UNNEST>
+  (
+    (
+       LOOKAHEAD({ laIdentifier(META) && laToken(2, LEFTPAREN) && laToken(3, RIGHTPAREN) })
+       <IDENTIFIER> { expectToken(META); } <LEFTPAREN> <RIGHTPAREN>
+       <DOT> element = IndexedElementUnnestSelectBody() { source = 1; }
+    ) | element = IndexedElementUnnestSelectBody()
+  )
+  {
+    return new Triple<Integer, List<List<String>>, List<Pair<List<String>, IndexedTypeExpression>>>(
+      source, element.first, element.second
+    );
+  }
+}
+
+Pair<List<List<String>>, List<Pair<List<String>, IndexedTypeExpression>>> IndexedElementUnnestSelectBody()
+  throws ParseException:
+{
+  List<String> path = null;
+  IndexedTypeExpression type = null;
+  List<List<String>> unnestList = new ArrayList();
+  List<Pair<List<String>, IndexedTypeExpression>> projectList = new ArrayList();
+}
+{
+  path = MultipartIdentifier() { unnestList.add(path); }
+  ( <UNNEST> path = MultipartIdentifier() { unnestList.add(path); })*
+  (
+    ( <COLON> type = IndexedTypeExpr(false)
+      {
+        projectList.add(new Pair<List<String>, IndexedTypeExpression>(null, type));
+      }
+    ) |
+    (
+      <SELECT> path = MultipartIdentifier() ( <COLON> type = IndexedTypeExpr(false) )?
+      {
+        projectList.add(new Pair<List<String>, IndexedTypeExpression>(path, type));
+      }
+      ( <COMMA> path = MultipartIdentifier() ( <COLON> type = IndexedTypeExpr(false) )?
+        {
+          projectList.add(new Pair<List<String>, IndexedTypeExpression>(path, type));
+        }
+      )*
+    )
+  )?
+  {
+    if (projectList.isEmpty()) {
+      // To support the case (<UNNEST> IDENTIFIER)* IDENTIFIER w/o any type specification.
+      projectList.add(new Pair<List<String>, IndexedTypeExpression>(null, null));
+    }
+
+    return new Pair<List<List<String>>, List<Pair<List<String>, IndexedTypeExpression>>>(unnestList, projectList);
+  }
+}
+
+Pair<List<String>, IndexedTypeExpression> IndexedField() throws ParseException:
+{
+  List<String> path = null;
+  IndexedTypeExpression type = null;
+}
+{
+  path = MultipartIdentifier() ( <COLON> type = IndexedTypeExpr(true) )?
+  {
+    return new Pair<List<String>, IndexedTypeExpression>(path, type);
   }
 }
 
 CreateIndexStatement PrimaryIndexSpecification(Token startStmtToken) throws ParseException:
 {
-  CreateIndexStatement stmt = new CreateIndexStatement();
+  Pair<DataverseName,Identifier> nameComponents = null;
   String indexName = null;
   boolean ifNotExists = false;
-  Pair<DataverseName,Identifier> nameComponents = null;
 }
 {
   (indexName = Identifier())? ifNotExists = IfNotExists()
@@ -1159,10 +1277,8 @@ CreateIndexStatement PrimaryIndexSpecification(Token startStmtToken) throws Pars
     if (indexName == null) {
       indexName = "primary_idx_" + nameComponents.second;
     }
-    stmt.setIndexName(new Identifier(indexName));
-    stmt.setIfNotExists(ifNotExists);
-    stmt.setDataverseName(nameComponents.first);
-    stmt.setDatasetName(nameComponents.second);
+    CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
+      new Identifier(indexName), IndexType.BTREE, Collections.emptyList(), false, -1, null, ifNotExists);
     return addSourceLocation(stmt, startStmtToken);
   }
 }
@@ -1307,12 +1423,13 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
   {
      defaultDataverse = fctName.dataverse;
   }
-  ifNotExists = IfNotExists()
   paramsWithArity = FunctionParameters()
   {
     arity = paramsWithArity.first;
     params = paramsWithArity.second;
+    signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
   }
+  ifNotExists = IfNotExists()
   returnType = FunctionReturnType()
   (
     (
@@ -1327,13 +1444,10 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
         endPos = token;
         String functionBody = extractFragment(beginPos.beginLine, beginPos.beginColumn, endPos.beginLine,
           endPos.beginColumn);
-        signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
         getCurrentScope().addFunctionDescriptor(signature, false);
         removeCurrentScope();
-        defaultDataverse = currentDataverse;
         ensureNoTypeDeclsInFunction(fctName.function, params, returnType, startStmtToken);
         stmt = new CreateFunctionStatement(signature, params, functionBody, functionBodyExpr, orReplace, ifNotExists);
-        return addSourceLocation(stmt, startStmtToken);
       }
     )
   |
@@ -1342,18 +1456,22 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
       <AT> libraryName = QualifiedName()
       (<WITH> withOptions = RecordConstructor())?
       {
-        signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
-        defaultDataverse = currentDataverse;
         try {
           stmt = new CreateFunctionStatement(signature, params, returnType, libraryName.first,
             libraryName.second.getValue(), externalIdentifier, withOptions, orReplace, ifNotExists);
         } catch (AlgebricksException e) {
             throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
         }
-        return addSourceLocation(stmt, startStmtToken);
       }
     )
   )
+  {
+    if (orReplace && ifNotExists) {
+      throw new SqlppParseException(getSourceLocation(startStmtToken), "Unexpected IF NOT EXISTS");
+    }
+    defaultDataverse = currentDataverse;
+    return addSourceLocation(stmt, startStmtToken);
+  }
 }
 
 Pair<Integer, List<Pair<VarIdentifier, TypeExpression>>> FunctionParameters() :
@@ -2440,14 +2558,21 @@ Pair<String, String> Property() throws ParseException:
     }
 }
 
-IndexedTypeExpression IndexedTypeExpr() throws ParseException:
+IndexedTypeExpression IndexedTypeExpr(boolean allowQues) throws ParseException:
 {
   TypeExpression typeExpr = null;
-  boolean isUnknownable = false;
+  boolean isUnknownable = !allowQues;
 }
 {
   typeExpr = TypeExpr(false)
-  ( <QUES> { isUnknownable = true; } )?
+  ( <QUES>
+    {
+      if (!allowQues) {
+        throw new SqlppParseException(getSourceLocation(token), "'?' quantifier is illegal for the type expression.");
+      }
+      isUnknownable = true;
+    }
+  )?
   {
     return new IndexedTypeExpression(typeExpr, isUnknownable);
   }
@@ -2687,7 +2812,7 @@ Pair<Integer, Pair<List<String>, IndexedTypeExpression>> OpenField() throws Pars
 }
 {
   fieldList = NestedField()
-  ( <COLON> fieldType = IndexedTypeExpr() )?
+  ( <COLON> fieldType = IndexedTypeExpr(true) )?
   {
     return new Pair<Integer, Pair<List<String>, IndexedTypeExpression>>
             (fieldList.first, new Pair<List<String>, IndexedTypeExpression>(fieldList.second, fieldType));
@@ -4328,12 +4453,12 @@ JoinClause JoinClause(JoinType joinType) throws ParseException :
 UnnestClause UnnestClause(UnnestType unnestType) throws ParseException :
 {
     Token startToken = null;
-    Expression rightExpr;
-    VariableExpr rightVar;
+    Expression rightExpr = null;
+    VariableExpr rightVar = null;
     VariableExpr posVar = null;
 }
 {
-  (<UNNEST>|<CORRELATE>|<FLATTEN>) { startToken = token; } rightExpr = Expression() ((<AS>)? rightVar = Variable()) (<AT> posVar = Variable())?
+  (<UNNEST>|<CORRELATE>|<FLATTEN>) { startToken = token; } rightExpr = Expression() ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())?
   {
     if (rightVar == null) {
       rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);

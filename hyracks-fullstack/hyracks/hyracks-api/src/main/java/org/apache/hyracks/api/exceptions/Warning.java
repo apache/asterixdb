@@ -24,26 +24,29 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
 public class Warning implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final String component;
     private final SourceLocation srcLocation;
     private final int code;
     private final String message;
+    private final Serializable[] params;
 
-    private Warning(String component, SourceLocation srcLocation, int code, String message) {
+    private Warning(String component, SourceLocation srcLocation, int code, String message, Serializable... params) {
         this.component = component;
         this.srcLocation = srcLocation;
         this.code = code;
         this.message = message;
+        this.params = params;
     }
 
     public static Warning of(SourceLocation srcLocation, IError code, Serializable... params) {
         return new Warning(code.component(), srcLocation, code.intValue(), ErrorMessageUtil
-                .formatMessage(code.component(), code.intValue(), code.errorMessage(), srcLocation, params));
+                .formatMessage(code.component(), code.intValue(), code.errorMessage(), srcLocation, params), params);
     }
 
     public String getComponent() {
@@ -84,18 +87,34 @@ public class Warning implements Serializable {
         output.writeInt(code);
         output.writeUTF(message);
         SourceLocation.writeFields(srcLocation, output);
+        writeParams(output, params);
+    }
+
+    private static void writeParams(DataOutput output, Serializable[] params) throws IOException {
+        byte[] serialize = SerializationUtils.serialize(params);
+        output.writeInt(serialize.length);
+        output.write(serialize);
     }
 
     public static Warning create(DataInput input) throws IOException {
         String comp = input.readUTF();
         int code = input.readInt();
         String msg = input.readUTF();
-        return new Warning(comp, SourceLocation.create(input), code, msg);
+        SourceLocation sourceLocation = SourceLocation.create(input);
+        int paramsLen = input.readInt();
+        byte[] paramsBytes = new byte[paramsLen];
+        input.readFully(paramsBytes, 0, paramsBytes.length);
+        Serializable[] params = SerializationUtils.deserialize(paramsBytes);
+        return new Warning(comp, sourceLocation, code, msg, params);
     }
 
     @Override
     public String toString() {
         return "Warning{" + "component='" + component + '\'' + ", srcLocation=" + srcLocation + ", code=" + code
                 + ", message='" + message + '\'' + '}';
+    }
+
+    public Serializable[] getParams() {
+        return params;
     }
 }

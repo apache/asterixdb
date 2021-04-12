@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -301,6 +302,12 @@ public final class PlanStructureVerifier {
                 if (firstOp != null) {
                     raiseException(PlanStabilityVerifier.MSG_EXPRESSION_INSTANCE,
                             PlanStabilityVerifier.printExpression(expr, prettyPrinter), firstOp, currentOp);
+                }
+            }
+            if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                AbstractFunctionCallExpression callExpr = (AbstractFunctionCallExpression) expr;
+                for (Mutable<ILogicalExpression> argRef : callExpr.getArguments()) {
+                    transform(argRef);
                 }
             }
             return false;

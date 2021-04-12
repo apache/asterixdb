@@ -18,13 +18,7 @@
  */
 package org.apache.asterix.api.http.server;
 
-import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_JSON_VAL;
-import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_PARAM_VAL;
 import static org.apache.asterix.common.exceptions.ErrorCode.NO_STATEMENT_PROVIDED;
-import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_BAD_CLUSTER_STATE;
-import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_NODE_UNREGISTERED;
-import static org.apache.asterix.common.exceptions.ErrorCode.REQUEST_TIMEOUT;
-import static org.apache.hyracks.api.exceptions.ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -35,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
@@ -65,6 +60,7 @@ import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.lang.common.base.IParser;
@@ -86,7 +82,8 @@ import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.IError;
+import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.control.common.controllers.CCConfig;
@@ -283,10 +280,12 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             final ResultProperties resultProperties = new ResultProperties(delivery, param.getMaxResultReads());
             buildResponseHeaders(requestRef, sessionOutput, param, responsePrinter, delivery);
             responsePrinter.printHeaders();
-            validateStatement(param.getStatement());
-            String statementsText = param.getStatement() + ";";
+            String statement = param.getStatement();
+            statement = statement == null || (!statement.isEmpty() && statement.charAt(statement.length() - 1) == ';')
+                    ? statement : (statement + ";");
+            validateStatement(statement);
             if (param.isParseOnly()) {
-                ResultUtil.ParseOnlyResult parseOnlyResult = parseStatement(statementsText);
+                ResultUtil.ParseOnlyResult parseOnlyResult = parseStatement(statement);
                 setAccessControlHeaders(request, response);
                 executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
                 response.setStatus(executionState.getHttpStatus());
@@ -299,9 +298,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 IStatementExecutor.StatementProperties statementProperties =
                         new IStatementExecutor.StatementProperties();
                 response.setStatus(HttpResponseStatus.OK);
-                executeStatement(request, requestRef, statementsText, sessionOutput, resultProperties,
-                        statementProperties, stats, param, executionState, param.getOptionalParams(), statementParams,
-                        responsePrinter, warnings);
+                executeStatement(request, requestRef, statement, sessionOutput, resultProperties, statementProperties,
+                        stats, param, executionState, param.getOptionalParams(), statementParams, responsePrinter,
+                        warnings);
                 executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
             }
             errorCount = 0;
@@ -419,6 +418,38 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         buildResponseResults(responsePrinter, sessionOutput, translator.getExecutionPlans(), warnings);
     }
 
+    protected boolean handleIFormattedException(IError error, IFormattedException ex,
+            RequestExecutionState executionState, QueryServiceRequestParameters param) {
+        if (error instanceof ErrorCode) {
+            switch ((ErrorCode) error) {
+                case INVALID_REQ_PARAM_VAL:
+                case INVALID_REQ_JSON_VAL:
+                case NO_STATEMENT_PROVIDED:
+                    executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
+                    return true;
+                case REQUEST_TIMEOUT:
+                    LOGGER.info(() -> "handleException: request execution timed out: "
+                            + LogRedactionUtil.userData(param.toString()));
+                    executionState.setStatus(ResultStatus.TIMEOUT, HttpResponseStatus.OK);
+                    return true;
+                case REJECT_NODE_UNREGISTERED:
+                case REJECT_BAD_CLUSTER_STATE:
+                    LOGGER.warn(() -> "handleException: " + ex.getMessage() + ": "
+                            + LogRedactionUtil.userData(param.toString()));
+                    executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.SERVICE_UNAVAILABLE);
+                default:
+                    // fall-through
+            }
+        } else if (error instanceof org.apache.hyracks.api.exceptions.ErrorCode) {
+            switch ((org.apache.hyracks.api.exceptions.ErrorCode) error) {
+                case JOB_REQUIREMENTS_EXCEED_CAPACITY:
+                    executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
+                    return true;
+            }
+        }
+        return false;
+    }
+
     protected void handleExecuteStatementException(Throwable t, RequestExecutionState executionState,
             QueryServiceRequestParameters param) {
         if (t instanceof org.apache.asterix.lang.sqlpp.parser.TokenMgrError || t instanceof AlgebricksException) {
@@ -430,30 +461,17 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                         + LogRedactionUtil.statement(param.toString()));
             }
             executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
-        } else if (t instanceof HyracksException) {
-            HyracksException he = (HyracksException) t;
-            // TODO(mblow): reconsolidate
-            if (he.matchesAny(INVALID_REQ_PARAM_VAL, INVALID_REQ_JSON_VAL, NO_STATEMENT_PROVIDED,
-                    JOB_REQUIREMENTS_EXCEED_CAPACITY)) {
-                executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.BAD_REQUEST);
-            } else if (he.matches(REQUEST_TIMEOUT)) {
-                LOGGER.info(() -> "handleException: request execution timed out: "
-                        + LogRedactionUtil.userData(param.toString()));
-                executionState.setStatus(ResultStatus.TIMEOUT, HttpResponseStatus.OK);
-            } else if (he.matchesAny(REJECT_BAD_CLUSTER_STATE, REJECT_NODE_UNREGISTERED)) {
-                LOGGER.warn(() -> "handleException: " + he.getMessage() + ": "
-                        + LogRedactionUtil.userData(param.toString()));
-                executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.SERVICE_UNAVAILABLE);
-            } else {
-                LOGGER.warn(() -> "handleException: unexpected exception " + he.getMessage() + ": "
-                        + LogRedactionUtil.userData(param.toString()), he);
-                executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            return;
+        } else if (t instanceof IFormattedException) {
+            IFormattedException formattedEx = (IFormattedException) t;
+            Optional<IError> maybeError = formattedEx.getError();
+            if (maybeError.isPresent()
+                    && handleIFormattedException(maybeError.get(), (IFormattedException) t, executionState, param)) {
+                return;
             }
-        } else {
-            LOGGER.warn(() -> "handleException: unexpected exception: " + LogRedactionUtil.userData(param.toString()),
-                    t);
-            executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
+        LOGGER.warn(() -> "handleException: unexpected exception: " + LogRedactionUtil.userData(param.toString()), t);
+        executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.INTERNAL_SERVER_ERROR);
     }
 
     private void setSessionConfig(SessionOutput sessionOutput, QueryServiceRequestParameters param,

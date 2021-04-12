@@ -94,6 +94,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<>();
 
     static {
+        registerAccessMethod(ArrayBTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(BTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(RTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);

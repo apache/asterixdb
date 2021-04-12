@@ -194,4 +194,9 @@ class TracedIOOperation implements ILSMIOOperation {
     public boolean isActive() {
         return ioOp.isActive();
     }
+
+    @Override
+    public boolean isCompleted() {
+        return ioOp.isCompleted();
+    }
 }

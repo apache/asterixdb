@@ -19,7 +19,6 @@
 package org.apache.asterix.optimizer.rules;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
@@ -44,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
@@ -72,13 +72,13 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
         if (op2.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
             AggregateOperator aggOp = (AggregateOperator) op2;
             // Make sure the agg expr is a listify.
-            return pushAggregateFunction(aggOp, assignOp, context);
+            return pushAggregateFunction(assignOp, aggOp, context);
         } else if (op2.getOperatorTag() == LogicalOperatorTag.INNERJOIN
                 || op2.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
             AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) op2;
             // Tries to push aggregates through the join.
             if (containsAggregate(assignOp.getExpressions()) && pushableThroughJoin(join)) {
-                return pushAggregateFunctionThroughJoin(join, assignOp, context);
+                return pushAggregateFunctionThroughJoin(assignOp, join, context);
             }
         }
         return false;
@@ -87,7 +87,6 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
     /**
      * Recursively check whether the list of expressions contains an aggregate function.
      *
-     * @param exprRefs
      * @return true if the list contains an aggregate function and false otherwise.
      */
     private boolean containsAggregate(List<Mutable<ILogicalExpression>> exprRefs) {
@@ -116,7 +115,6 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
      * 1) the join condition is true;
      * 2) each join branch produces only one tuple.
      *
-     * @param join
      * @return true if pushable
      */
     private boolean pushableThroughJoin(AbstractBinaryJoinOperator join) {
@@ -144,100 +142,116 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
     /**
      * Does the actual push of aggregates for qualified joins.
      *
-     * @param join
      * @param assignOp
      *            that contains aggregate function calls.
      * @param context
      * @throws AlgebricksException
      */
-    private boolean pushAggregateFunctionThroughJoin(AbstractBinaryJoinOperator join, AssignOperator assignOp,
+    private boolean pushAggregateFunctionThroughJoin(AssignOperator assignOp, AbstractBinaryJoinOperator join,
             IOptimizationContext context) throws AlgebricksException {
         boolean applied = false;
         for (Mutable<ILogicalOperator> branchRef : join.getInputs()) {
             AbstractLogicalOperator branch = (AbstractLogicalOperator) branchRef.getValue();
             if (branch.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
                 AggregateOperator aggOp = (AggregateOperator) branch;
-                applied |= pushAggregateFunction(aggOp, assignOp, context);
+                applied |= pushAggregateFunction(assignOp, aggOp, context);
             } else if (branch.getOperatorTag() == LogicalOperatorTag.INNERJOIN
                     || branch.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
                 AbstractBinaryJoinOperator childJoin = (AbstractBinaryJoinOperator) branch;
-                applied |= pushAggregateFunctionThroughJoin(childJoin, assignOp, context);
+                applied |= pushAggregateFunctionThroughJoin(assignOp, childJoin, context);
             }
         }
         return applied;
     }
 
-    private boolean pushAggregateFunction(AggregateOperator aggOp, AssignOperator assignOp,
+    private boolean pushAggregateFunction(AssignOperator assignOp, AggregateOperator aggOp,
             IOptimizationContext context) throws AlgebricksException {
-        Mutable<ILogicalOperator> opRef3 = aggOp.getInputs().get(0);
-        AbstractLogicalOperator op3 = (AbstractLogicalOperator) opRef3.getValue();
+        Mutable<ILogicalOperator> aggChilldOpRef = aggOp.getInputs().get(0);
+        AbstractLogicalOperator aggChildOp = (AbstractLogicalOperator) aggChilldOpRef.getValue();
         // If there's a group by below the agg, then we want to have the agg pushed into the group by
-        if (op3.getOperatorTag() == LogicalOperatorTag.GROUP && !((GroupByOperator) op3).getNestedPlans().isEmpty()) {
-            return false;
-        }
-        if (aggOp.getVariables().size() != 1) {
-            return false;
-        }
-        ILogicalExpression aggExpr = aggOp.getExpressions().get(0).getValue();
-        if (aggExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return false;
-        }
-        AbstractFunctionCallExpression origAggFuncExpr = (AbstractFunctionCallExpression) aggExpr;
-        if (origAggFuncExpr.getFunctionIdentifier() != BuiltinFunctions.LISTIFY) {
+        if (aggChildOp.getOperatorTag() == LogicalOperatorTag.GROUP
+                && !((GroupByOperator) aggChildOp).getNestedPlans().isEmpty()) {
             return false;
         }
 
-        LogicalVariable aggVar = aggOp.getVariables().get(0);
-        List<LogicalVariable> used = new LinkedList<LogicalVariable>();
-        VariableUtilities.getUsedVariables(assignOp, used);
-        if (!used.contains(aggVar)) {
+        List<LogicalVariable> assignUsedVars = new ArrayList<>();
+        VariableUtilities.getUsedVariables(assignOp, assignUsedVars);
+
+        List<Mutable<ILogicalExpression>> assignScalarAggExprRefs = new ArrayList<>();
+        List<LogicalVariable> aggAddVars = null;
+        List<Mutable<ILogicalExpression>> aggAddExprs = null;
+
+        for (int i = 0, n = aggOp.getVariables().size(); i < n; i++) {
+            LogicalVariable aggVar = aggOp.getVariables().get(i);
+            Mutable<ILogicalExpression> aggExprRef = aggOp.getExpressions().get(i);
+            ILogicalExpression aggExpr = aggExprRef.getValue();
+            if (aggExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                continue;
+            }
+            AbstractFunctionCallExpression listifyCandidateExpr = (AbstractFunctionCallExpression) aggExpr;
+            if (listifyCandidateExpr.getFunctionIdentifier() != BuiltinFunctions.LISTIFY) {
+                continue;
+            }
+            if (!assignUsedVars.contains(aggVar)) {
+                continue;
+            }
+            assignScalarAggExprRefs.clear();
+            findScalarAggFuncExprRef(assignOp.getExpressions(), aggVar, assignScalarAggExprRefs);
+            if (assignScalarAggExprRefs.isEmpty()) {
+                continue;
+            }
+            // perform rewrite
+            if (aggAddVars == null) {
+                aggAddVars = new ArrayList<>();
+                aggAddExprs = new ArrayList<>();
+            }
+            for (Mutable<ILogicalExpression> assignScalarAggExprRef : assignScalarAggExprRefs) {
+                AbstractFunctionCallExpression assignScalarAggExpr =
+                        (AbstractFunctionCallExpression) assignScalarAggExprRef.getValue();
+                FunctionIdentifier aggFuncIdent =
+                        BuiltinFunctions.getAggregateFunction(assignScalarAggExpr.getFunctionIdentifier());
+
+                // Push the scalar aggregate function into the aggregate op.
+                int nArgs = assignScalarAggExpr.getArguments().size();
+                List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<>(nArgs);
+                aggArgs.add(
+                        new MutableObject<>(listifyCandidateExpr.getArguments().get(0).getValue().cloneExpression()));
+                aggArgs.addAll(OperatorManipulationUtil
+                        .cloneExpressions(assignScalarAggExpr.getArguments().subList(1, nArgs)));
+                AggregateFunctionCallExpression aggFuncExpr =
+                        BuiltinFunctions.makeAggregateFunctionExpression(aggFuncIdent, aggArgs);
+                aggFuncExpr.setSourceLocation(assignScalarAggExpr.getSourceLocation());
+
+                LogicalVariable newVar = context.newVar();
+                aggAddVars.add(newVar);
+                aggAddExprs.add(new MutableObject<>(aggFuncExpr));
+                // The assign now just "renames" the variable to make sure the upstream plan still works.
+                VariableReferenceExpression newVarRef = new VariableReferenceExpression(newVar);
+                newVarRef.setSourceLocation(assignScalarAggExpr.getSourceLocation());
+                assignScalarAggExprRef.setValue(newVarRef);
+            }
+        }
+
+        if (aggAddVars == null) {
             return false;
         }
 
-        List<Mutable<ILogicalExpression>> srcAssignExprRefs = new LinkedList<Mutable<ILogicalExpression>>();
-        findAggFuncExprRef(assignOp.getExpressions(), aggVar, srcAssignExprRefs);
-        if (srcAssignExprRefs.isEmpty()) {
-            return false;
-        }
+        // add new variables and expressions to the aggregate operator.
+        aggOp.getVariables().addAll(aggAddVars);
+        aggOp.getExpressions().addAll(aggAddExprs);
 
-        AbstractFunctionCallExpression aggOpExpr =
-                (AbstractFunctionCallExpression) aggOp.getExpressions().get(0).getValue();
-        aggOp.getExpressions().clear();
-        aggOp.getVariables().clear();
-
-        for (Mutable<ILogicalExpression> srcAssignExprRef : srcAssignExprRefs) {
-            AbstractFunctionCallExpression assignFuncExpr =
-                    (AbstractFunctionCallExpression) srcAssignExprRef.getValue();
-            FunctionIdentifier aggFuncIdent =
-                    BuiltinFunctions.getAggregateFunction(assignFuncExpr.getFunctionIdentifier());
-
-            // Push the agg func into the agg op.
-
-            List<Mutable<ILogicalExpression>> aggArgs = new ArrayList<Mutable<ILogicalExpression>>();
-            aggArgs.add(aggOpExpr.getArguments().get(0));
-            int sz = assignFuncExpr.getArguments().size();
-            aggArgs.addAll(assignFuncExpr.getArguments().subList(1, sz));
-            AggregateFunctionCallExpression aggFuncExpr =
-                    BuiltinFunctions.makeAggregateFunctionExpression(aggFuncIdent, aggArgs);
-
-            aggFuncExpr.setSourceLocation(assignFuncExpr.getSourceLocation());
-            LogicalVariable newVar = context.newVar();
-            aggOp.getVariables().add(newVar);
-            aggOp.getExpressions().add(new MutableObject<ILogicalExpression>(aggFuncExpr));
-
-            // The assign now just "renames" the variable to make sure the upstream plan still works.
-            VariableReferenceExpression newVarRef = new VariableReferenceExpression(newVar);
-            newVarRef.setSourceLocation(assignFuncExpr.getSourceLocation());
-            srcAssignExprRef.setValue(newVarRef);
-        }
+        // Note: we retain the original listify() call in the aggregate operator because
+        // the variable it is assigned to might be used upstream by other operators.
+        // If the variable is not used upstream then it'll later be removed
+        // by {@code RemoveUnusedAssignAndAggregateRule}
 
         context.computeAndSetTypeEnvironmentForOperator(aggOp);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
         return true;
     }
 
-    private void findAggFuncExprRef(List<Mutable<ILogicalExpression>> exprRefs, LogicalVariable aggVar,
-            List<Mutable<ILogicalExpression>> srcAssignExprRefs) {
+    private void findScalarAggFuncExprRef(List<Mutable<ILogicalExpression>> exprRefs, LogicalVariable aggVar,
+            List<Mutable<ILogicalExpression>> outScalarAggExprRefs) {
         for (Mutable<ILogicalExpression> exprRef : exprRefs) {
             ILogicalExpression expr = exprRef.getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
@@ -245,10 +259,10 @@ public class PushAggFuncIntoStandaloneAggregateRule implements IAlgebraicRewrite
                 FunctionIdentifier funcIdent = BuiltinFunctions.getAggregateFunction(funcExpr.getFunctionIdentifier());
                 if (funcIdent != null
                         && aggVar.equals(SqlppVariableUtil.getVariable(funcExpr.getArguments().get(0).getValue()))) {
-                    srcAssignExprRefs.add(exprRef);
+                    outScalarAggExprRefs.add(exprRef);
                 } else {
                     // Recursively look in func args.
-                    findAggFuncExprRef(funcExpr.getArguments(), aggVar, srcAssignExprRefs);
+                    findScalarAggFuncExprRef(funcExpr.getArguments(), aggVar, outScalarAggExprRefs);
                 }
             }
         }

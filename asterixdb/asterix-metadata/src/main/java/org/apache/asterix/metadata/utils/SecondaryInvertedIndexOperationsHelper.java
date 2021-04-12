@@ -82,14 +82,15 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
             SourceLocation sourceLoc) throws AlgebricksException {
         super(dataset, index, metadataProvider, sourceLoc);
         this.fullTextConfigEvaluatorFactory = FullTextUtil.fetchFilterAndCreateConfigEvaluator(metadataProvider,
-                index.getDataverseName(), index.getFullTextConfigName());
+                index.getDataverseName(), ((Index.TextIndexDetails) index.getIndexDetails()).getFullTextConfigName());
     }
 
     @Override
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {
-        int numSecondaryKeys = index.getKeyFieldNames().size();
         IndexType indexType = index.getIndexType();
-        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
+        Index.TextIndexDetails indexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
+        boolean isOverridingKeyFieldTypes = indexDetails.isOverridingKeyFieldTypes();
         // Sanity checks.
         if (numPrimaryKeys > 1) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_INDEX_FOR_DATASET_WITH_COMPOSITE_PRIMARY_INDEX,
@@ -118,9 +119,9 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         if (numSecondaryKeys > 0) {
             secondaryFieldAccessEvalFactories[0] = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
                     metadataProvider.getFunctionManager(), isOverridingKeyFieldTypes ? enforcedItemType : itemType,
-                    index.getKeyFieldNames().get(0), numPrimaryKeys, sourceLoc);
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
-                    index.getKeyFieldNames().get(0), itemType);
+                    indexDetails.getKeyFieldNames().get(0), numPrimaryKeys, sourceLoc);
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(
+                    indexDetails.getKeyFieldTypes().get(0), indexDetails.getKeyFieldNames().get(0), itemType);
             secondaryKeyType = keyTypePair.first;
             anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
             ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(secondaryKeyType);
@@ -155,7 +156,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         // TODO: We might want to expose the hashing option at the AQL level,
         // and add the choice to the index metadata.
         tokenizerFactory = NonTaggedFormatUtil.getBinaryTokenizerFactory(secondaryKeyType.getTypeTag(), indexType,
-                index.getGramLength());
+                ((Index.TextIndexDetails) indexDetails).getGramLength());
         // Type traits for inverted-list elements. Inverted lists contain
         // primary keys.
         invListsTypeTraits = new ITypeTraits[numPrimaryKeys];
@@ -223,8 +224,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         IOperatorDescriptor primaryScanOp = DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, dataset);
 
         IOperatorDescriptor sourceOp = primaryScanOp;
-        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        boolean isOverridingKeyFieldTypes = index.getIndexDetails().isOverridingKeyFieldTypes();
+        int numSecondaryKeys = ((Index.TextIndexDetails) index.getIndexDetails()).getKeyFieldNames().size();
         if (isOverridingKeyFieldTypes && !enforcedItemType.equals(itemType)) {
             sourceOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
             spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
@@ -274,7 +275,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
 
     private AbstractOperatorDescriptor createTokenizerOp(JobSpecification spec) {
         int docField = 0;
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        int numSecondaryKeys = ((Index.TextIndexDetails) index.getIndexDetails()).getKeyFieldNames().size();
         int[] primaryKeyFields = new int[numPrimaryKeys + numFilterFields];
         for (int i = 0; i < primaryKeyFields.length; i++) {
             primaryKeyFields[i] = numSecondaryKeys + i;

@@ -515,7 +515,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             }
             ActiveRuntimeId runtimeId = getActiveRuntimeId(partition++);
             messageBroker.sendApplicationMessageToNC(new ActiveManagerMessage(ActiveManagerMessage.Kind.STOP_ACTIVITY,
-                    new StopRuntimeParameters(runtimeId, timeout, unit)), location);
+                    runtimeId, new StopRuntimeParameters(timeout, unit)), location);
         }
     }
 

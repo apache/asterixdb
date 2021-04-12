@@ -2,29 +2,11 @@
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     -- STREAM_PROJECT  |UNPARTITIONED|
       -- ASSIGN  |UNPARTITIONED|
-        -- STREAM_PROJECT  |UNPARTITIONED|
-          -- SUBPLAN  |UNPARTITIONED|
-                  {
-                    -- AGGREGATE  |LOCAL|
-                      -- AGGREGATE  |LOCAL|
-                        -- STREAM_SELECT  |UNPARTITIONED|
-                          -- ASSIGN  |UNPARTITIONED|
-                            -- ASSIGN  |UNPARTITIONED|
-                              -- UNNEST  |UNPARTITIONED|
-                                -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
-                  }
-            -- SUBPLAN  |UNPARTITIONED|
-                    {
-                      -- AGGREGATE  |LOCAL|
-                        -- AGGREGATE  |LOCAL|
-                          -- STREAM_SELECT  |UNPARTITIONED|
-                            -- ASSIGN  |UNPARTITIONED|
-                              -- ASSIGN  |UNPARTITIONED|
-                                -- UNNEST  |UNPARTITIONED|
-                                  -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
-                    }
-              -- AGGREGATE  |UNPARTITIONED|
-                -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        -- AGGREGATE  |UNPARTITIONED|
+          -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            -- AGGREGATE  |PARTITIONED|
+              -- ASSIGN  |PARTITIONED|
+                -- STREAM_SELECT  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ASSIGN  |PARTITIONED|
                       -- STREAM_PROJECT  |PARTITIONED|

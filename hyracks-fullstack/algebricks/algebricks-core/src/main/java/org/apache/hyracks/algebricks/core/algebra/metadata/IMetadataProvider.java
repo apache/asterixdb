@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -108,6 +109,10 @@ public interface IMetadataProvider<S, I> {
      *            Job generation context.
      * @param spec
      *            Target job specification.
+     * @param secondaryKeysPipelines
+     *            Nested plans to extract secondary keys.
+     * @param pipelineTopSchema
+     *            Schema of the primary pipeline for secondary keys.
      * @return
      *         A Hyracks IOperatorDescriptor and its partition constraint.
      * @throws AlgebricksException
@@ -116,7 +121,9 @@ public interface IMetadataProvider<S, I> {
             IDataSourceIndex<I, S> dataSource, IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
             IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalNonKeyFields, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
-            JobGenContext context, JobSpecification spec, boolean bulkload) throws AlgebricksException;
+            JobGenContext context, JobSpecification spec, boolean bulkload,
+            List<List<AlgebricksPipeline>> secondaryKeysPipelines, IOperatorSchema pipelineTopSchema)
+            throws AlgebricksException;
 
     /**
      * Creates the delete runtime of IndexInsertDeletePOperator, which models
@@ -147,6 +154,10 @@ public interface IMetadataProvider<S, I> {
      *            Job generation context.
      * @param spec
      *            Target job specification.
+     * @param secondaryKeysPipelines
+     *            Nested plan to extract secondary keys.
+     * @param pipelineTopSchema
+     *            Schema of the primary pipeline for secondary keys.
      * @return
      *         A Hyracks IOperatorDescriptor and its partition constraint.
      * @throws AlgebricksException
@@ -155,7 +166,8 @@ public interface IMetadataProvider<S, I> {
             IDataSourceIndex<I, S> dataSource, IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
             IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalNonKeyFields, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
-            JobGenContext context, JobSpecification spec) throws AlgebricksException;
+            JobGenContext context, JobSpecification spec, List<List<AlgebricksPipeline>> secondaryKeysPipelines,
+            IOperatorSchema pipelineTopSchema) throws AlgebricksException;
 
     /**
      * Creates the TokenizeOperator for IndexInsertDeletePOperator, which tokenizes
@@ -209,7 +221,7 @@ public interface IMetadataProvider<S, I> {
             List<LogicalVariable> additionalFilteringKeys, ILogicalExpression filterExpr,
             LogicalVariable upsertIndicatorVar, List<LogicalVariable> prevSecondaryKeys,
             LogicalVariable prevAdditionalFilteringKeys, RecordDescriptor inputDesc, JobGenContext context,
-            JobSpecification spec) throws AlgebricksException;
+            JobSpecification spec, List<List<AlgebricksPipeline>> secondaryKeysPipelines) throws AlgebricksException;
 
     public ITupleFilterFactory createTupleFilterFactory(IOperatorSchema[] inputSchemas,
             IVariableTypeEnvironment typeEnv, ILogicalExpression filterExpr, JobGenContext context)

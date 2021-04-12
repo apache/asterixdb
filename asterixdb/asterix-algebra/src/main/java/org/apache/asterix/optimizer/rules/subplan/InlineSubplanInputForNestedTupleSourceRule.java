@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
@@ -33,6 +35,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -54,6 +57,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
+import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -365,24 +369,37 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         Mutable<ILogicalOperator> inputOpRef = subplanOp.getInputs().get(0);
         ILogicalOperator inputOpBackup = inputOpRef.getValue();
         // Creates parameters for the left outer join operator.
-        Pair<ILogicalOperator, Set<LogicalVariable>> primaryOpAndVars =
+        EquivalenceClassUtils.computePrimaryKeys(inputOpBackup, context);
+        Triple<Set<LogicalVariable>, ILogicalOperator, FunctionalDependency> primaryOpAndVars =
                 EquivalenceClassUtils.findOrCreatePrimaryKeyOpAndVariables(inputOpBackup, true, context);
-        ILogicalOperator inputOp = primaryOpAndVars.first;
-        Set<LogicalVariable> primaryKeyVars = primaryOpAndVars.second;
-        inputOpRef.setValue(inputOp);
+        Set<LogicalVariable> primaryKeyVars = primaryOpAndVars.first;
+        FunctionalDependency newPrimaryKeyFd = null;
+        ILogicalOperator inputOp;
+        if (primaryOpAndVars.second != null) {
+            // there's a new operator that generates a primary key
+            inputOp = primaryOpAndVars.second;
+            inputOpRef.setValue(inputOp);
+            newPrimaryKeyFd = primaryOpAndVars.third;
+        } else {
+            inputOp = inputOpBackup;
+        }
         Set<LogicalVariable> inputLiveVars = new HashSet<>();
         VariableUtilities.getLiveVariables(inputOp, inputLiveVars);
 
         Pair<Map<LogicalVariable, LogicalVariable>, List<Pair<IOrder, Mutable<ILogicalExpression>>>> varMapAndOrderExprs =
-                SubplanFlatteningUtil.inlineAllNestedTupleSource(subplanOp, context);
+                SubplanFlatteningUtil.inlineAllNestedTupleSource(subplanOp, context, newPrimaryKeyFd);
         Map<LogicalVariable, LogicalVariable> varMap = varMapAndOrderExprs.first;
         if (varMap == null) {
             inputOpRef.setValue(inputOpBackup);
             return new Pair<>(false, new LinkedHashMap<>());
         }
-
         Mutable<ILogicalOperator> lowestAggregateRefInSubplan =
                 SubplanFlatteningUtil.findLowestAggregate(subplanOp.getNestedPlans().get(0).getRoots().get(0));
+        if (lowestAggregateRefInSubplan == null) {
+            // not supposed to happen. SubplanFlatteningUtil.inlineAllNestedTupleSource() checks for it
+            throw new CompilationException(ErrorCode.ILLEGAL_STATE, subplanOp.getSourceLocation());
+        }
+
         Mutable<ILogicalOperator> rightInputOpRef = lowestAggregateRefInSubplan.getValue().getInputs().get(0);
         ILogicalOperator rightInputOp = rightInputOpRef.getValue();
 
@@ -520,21 +537,29 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
 
         ILogicalOperator inputOpBackup = inputOpRef.getValue();
         // Gets live variables and covering variables from the subplan's input operator.
-        Pair<ILogicalOperator, Set<LogicalVariable>> primaryOpAndVars =
+        EquivalenceClassUtils.computePrimaryKeys(inputOpBackup, context);
+        Triple<Set<LogicalVariable>, ILogicalOperator, FunctionalDependency> primaryOpAndVars =
                 EquivalenceClassUtils.findOrCreatePrimaryKeyOpAndVariables(inputOpBackup, false, context);
-        ILogicalOperator inputOp = primaryOpAndVars.first;
-        Set<LogicalVariable> primaryKeyVars = primaryOpAndVars.second;
-        inputOpRef.setValue(inputOp);
+        Set<LogicalVariable> primaryKeyVars = primaryOpAndVars.first;
+        FunctionalDependency newPrimaryKeyFd = null;
+        ILogicalOperator inputOp;
+        if (primaryOpAndVars.second != null) {
+            // there's a new operator that generates a primary key
+            inputOp = primaryOpAndVars.second;
+            inputOpRef.setValue(inputOp);
+            newPrimaryKeyFd = primaryOpAndVars.third;
+        } else {
+            inputOp = inputOpBackup;
+        }
         Set<LogicalVariable> liveVars = new HashSet<>();
         VariableUtilities.getLiveVariables(inputOp, liveVars);
 
         Pair<Set<LogicalVariable>, Mutable<ILogicalOperator>> notNullVarsAndTopJoinRef =
-                SubplanFlatteningUtil.inlineLeftNtsInSubplanJoin(subplanOp, context);
+                SubplanFlatteningUtil.inlineLeftNtsInSubplanJoin(subplanOp, context, newPrimaryKeyFd);
         if (notNullVarsAndTopJoinRef.first == null) {
             inputOpRef.setValue(inputOpBackup);
             return new Pair<>(false, replacedVarMap);
         }
-
         Set<LogicalVariable> notNullVars = notNullVarsAndTopJoinRef.first;
         Mutable<ILogicalOperator> topJoinRef = notNullVarsAndTopJoinRef.second;
 

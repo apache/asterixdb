@@ -27,25 +27,24 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AsterixInputStreamReader extends Reader {
     private final AsterixInputStream in;
     private final CharsetDecoder decoder;
-    private final byte[] bytes;
+    private byte[] bytes;
     protected final ByteBuffer byteBuffer;
     protected final CharBuffer charBuffer;
     protected boolean done = false;
     protected boolean remaining = false;
 
-    public AsterixInputStreamReader(AsterixInputStream in) {
+    public AsterixInputStreamReader(AsterixInputStream in, int bufferSize) {
         this.in = in;
         this.decoder = StandardCharsets.UTF_8.newDecoder();
-        bytes = new byte[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
-        byteBuffer = ByteBuffer.wrap(bytes);
-        charBuffer = CharBuffer.allocate(ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+        this.bytes = new byte[bufferSize];
+        this.byteBuffer = ByteBuffer.wrap(bytes);
+        this.charBuffer = CharBuffer.allocate(bufferSize);
         this.byteBuffer.flip();
     }
 

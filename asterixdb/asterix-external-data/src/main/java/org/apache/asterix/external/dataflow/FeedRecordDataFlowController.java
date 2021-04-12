@@ -21,6 +21,7 @@ package org.apache.asterix.external.dataflow;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IRawRecord;
@@ -42,6 +43,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     public static final String INCOMING_RECORDS_COUNT_FIELD_NAME = "incoming-records-count";
     public static final String FAILED_AT_PARSER_RECORDS_COUNT_FIELD_NAME = "failed-at-parser-records-count";
     public static final String READER_STATS_FIELD_NAME = "reader-stats";
+    public static final String TIMESTAMP_FIELD_NAME = "timestamp";
 
     public enum State {
         CREATED,
@@ -271,11 +273,17 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
         StringBuilder str = new StringBuilder();
         str.append("{");
         if (readerStats != null) {
-            str.append("\"").append(READER_STATS_FIELD_NAME).append("\":").append(readerStats).append(", ");
+            str.append("\"" + READER_STATS_FIELD_NAME + "\":").append(readerStats).append(",");
         }
-        str.append("\"").append(INCOMING_RECORDS_COUNT_FIELD_NAME).append("\": ").append(incomingRecordsCount)
-                .append(", \"").append(FAILED_AT_PARSER_RECORDS_COUNT_FIELD_NAME).append("\": ")
-                .append(failedRecordsCount).append("}");
+        str.append("\"" + TIMESTAMP_FIELD_NAME + "\":").append(System.currentTimeMillis()).append(",");
+        str.append("\"" + INCOMING_RECORDS_COUNT_FIELD_NAME + "\":").append(incomingRecordsCount)
+                .append(",\"" + FAILED_AT_PARSER_RECORDS_COUNT_FIELD_NAME + "\":").append(failedRecordsCount)
+                .append("}");
         return str.toString();
+    }
+
+    @Override
+    public void handleGenericEvent(ActiveManagerMessage event) {
+        recordReader.handleGenericEvent(event);
     }
 }

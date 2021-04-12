@@ -19,6 +19,7 @@
 package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.SYS_AUTH_HEADER;
+import static org.apache.asterix.common.library.LibraryDescriptor.FIELD_HASH;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -31,7 +32,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -44,6 +48,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IReceptionist;
 import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
+import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.MessageFuture;
@@ -53,21 +58,22 @@ import org.apache.asterix.external.util.ExternalLibraryUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
+import org.apache.hyracks.util.JSONUtil;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpScheme;
-import io.netty.handler.codec.http.multipart.FileUpload;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
-import io.netty.handler.codec.http.multipart.InterfaceHttpData;
 
 public class NCUdfApiServlet extends AbstractNCUdfServlet {
 
@@ -76,19 +82,23 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
 
     protected Path workingDir;
     protected String sysAuthHeader;
+    private ILibraryManager libraryManager;
+    private int timeout;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
     public NCUdfApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx,
             ILangCompilationProvider compilationProvider, HttpScheme httpServerProtocol, int httpServerPort) {
-        super(ctx, paths, appCtx, httpServerProtocol, httpServerPort);
+        super(ctx, paths, appCtx, compilationProvider, httpServerProtocol, httpServerPort);
         this.compilationProvider = compilationProvider;
         this.receptionist = appCtx.getReceptionist();
+        this.timeout = appCtx.getExternalProperties().getLibraryDeployTimeout();
     }
 
     @Override
     public void init() throws IOException {
         appCtx = (INcApplicationContext) plainAppCtx;
+        this.libraryManager = appCtx.getLibraryManager();
         srvCtx = this.appCtx.getServiceContext();
         workingDir = Paths.get(appCtx.getLibraryManager().getDistributionDir().getAbsolutePath()).normalize();
         initAuth();
@@ -119,33 +129,32 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
 
     private void doCreate(DataverseName dataverseName, String libraryName, ExternalFunctionLanguage language,
             String hash, URI downloadURI, boolean replaceIfExists, String sysAuthHeader,
-            IRequestReference requestReference, IServletRequest request, IServletResponse response) throws Exception {
+            IRequestReference requestReference, IServletRequest request) throws Exception {
         INCMessageBroker ncMb = (INCMessageBroker) srvCtx.getMessageBroker();
         MessageFuture responseFuture = ncMb.registerMessageFuture();
         CreateLibraryRequestMessage req = new CreateLibraryRequestMessage(srvCtx.getNodeId(),
                 responseFuture.getFutureId(), dataverseName, libraryName, language, hash, downloadURI, replaceIfExists,
                 sysAuthHeader, requestReference, additionalHttpHeadersFromRequest(request));
-        sendMessage(req, responseFuture, requestReference, request, response);
+        sendMessage(req, responseFuture);
     }
 
     private void doDrop(DataverseName dataverseName, String libraryName, boolean replaceIfExists,
-            IRequestReference requestReference, IServletRequest request, IServletResponse response) throws Exception {
+            IRequestReference requestReference, IServletRequest request) throws Exception {
         INCMessageBroker ncMb = (INCMessageBroker) srvCtx.getMessageBroker();
         MessageFuture responseFuture = ncMb.registerMessageFuture();
         DropLibraryRequestMessage req =
                 new DropLibraryRequestMessage(srvCtx.getNodeId(), responseFuture.getFutureId(), dataverseName,
                         libraryName, replaceIfExists, requestReference, additionalHttpHeadersFromRequest(request));
-        sendMessage(req, responseFuture, requestReference, request, response);
+        sendMessage(req, responseFuture);
     }
 
-    private void sendMessage(ICcAddressedMessage requestMessage, MessageFuture responseFuture,
-            IRequestReference requestReference, IServletRequest request, IServletResponse response) throws Exception {
+    private void sendMessage(ICcAddressedMessage requestMessage, MessageFuture responseFuture) throws Exception {
         // Running on NC -> send 'execute' message to CC
         INCMessageBroker ncMb = (INCMessageBroker) srvCtx.getMessageBroker();
         InternalRequestResponse responseMsg;
         try {
             ncMb.sendMessageToPrimaryCC(requestMessage);
-            responseMsg = (InternalRequestResponse) responseFuture.get(120000, TimeUnit.MILLISECONDS);
+            responseMsg = (InternalRequestResponse) responseFuture.get(timeout, TimeUnit.SECONDS);
         } finally {
             ncMb.deregisterMessageFuture(responseFuture.getFutureId());
         }
@@ -165,106 +174,124 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
         String localPath = localPath(request);
-        while (localPath.startsWith("/")) {
-            localPath = localPath.substring(1);
+        try {
+            if (localPath.equals("/") || localPath.equals("")) {
+                //TODO: nicer way to get this into display form?
+                Map<DataverseName, Map<String, String>> dvToLibHashes =
+                        ExternalLibraryUtils.produceLibraryListing(libraryManager);
+                List<Map<String, Object>> libraryList = new ArrayList<>();
+                for (Map.Entry<DataverseName, Map<String, String>> dvAndLibs : dvToLibHashes.entrySet()) {
+                    for (Map.Entry<String, String> libsInDv : dvAndLibs.getValue().entrySet()) {
+                        Map<String, Object> libraryEntry = new HashMap<>();
+                        List<String> dvParts = dvAndLibs.getKey().getParts();
+                        String dvKey = getDisplayFormDataverseParameter() == null ? getDataverseParameter()
+                                : getDisplayFormDataverseParameter();
+                        libraryEntry.put(dvKey, dvParts.size() > 1 ? dvParts : dvAndLibs.getKey().toString());
+                        libraryEntry.put(NAME_PARAMETER, libsInDv.getKey());
+                        libraryEntry.put(FIELD_HASH, libsInDv.getValue());
+                        libraryList.add(libraryEntry);
+                    }
+                }
+                JsonNode libraryListing = OBJECT_MAPPER.valueToTree(libraryList);
+                response.setStatus(HttpResponseStatus.OK);
+                HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
+                PrintWriter responseWriter = response.writer();
+                JSONUtil.writeNode(responseWriter, libraryListing);
+                responseWriter.flush();
+            } else if (localPath(request).startsWith(GET_UDF_DIST_ENDPOINT)) {
+                localPath = localPath(request).substring(GET_UDF_DIST_ENDPOINT.length());
+                while (localPath.startsWith("/")) {
+                    localPath = localPath.substring(1);
+                }
+                if (localPath.isEmpty()) {
+                    response.setStatus(HttpResponseStatus.BAD_REQUEST);
+                    return;
+                }
+                Path filePath = workingDir.resolve(localPath).normalize();
+                if (!filePath.startsWith(workingDir)) {
+                    response.setStatus(HttpResponseStatus.BAD_REQUEST);
+                    return;
+                }
+                readFromFile(filePath, response, HttpUtil.ContentType.APPLICATION_OCTET_STREAM, null);
+            } else {
+                response.setStatus(HttpResponseStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            response.setStatus(toHttpErrorStatus(e));
+            PrintWriter responseWriter = response.writer();
+            Map<String, String> error = Collections.singletonMap("error", e.getMessage());
+            String errorJson = "";
+            try {
+                errorJson = OBJECT_MAPPER.writeValueAsString(error);
+            } catch (JsonProcessingException ex) {
+                responseWriter.write("{ \"error\": \"Unable to process error message!\" }");
+            }
+            responseWriter.write(errorJson);
+            responseWriter.flush();
+            LOGGER.error("Error reading library", e);
         }
-        if (localPath.isEmpty()) {
-            response.setStatus(HttpResponseStatus.BAD_REQUEST);
-            return;
-        }
-        Path filePath = workingDir.resolve(localPath).normalize();
-        if (!filePath.startsWith(workingDir)) {
-            response.setStatus(HttpResponseStatus.BAD_REQUEST);
-            return;
-        }
-        readFromFile(filePath, response, HttpUtil.ContentType.APPLICATION_OCTET_STREAM, null);
     }
 
     @Override
     protected void post(IServletRequest request, IServletResponse response) {
         HttpRequest httpRequest = request.getHttpRequest();
-        Pair<DataverseName, String> libraryName = parseLibraryName(request);
-        if (libraryName == null) {
-            response.setStatus(HttpResponseStatus.BAD_REQUEST);
-            return;
-        }
         Path libraryTempFile = null;
         FileOutputStream libTmpOut = null;
         HttpPostRequestDecoder requestDecoder = new HttpPostRequestDecoder(httpRequest);
         try {
-            if (!requestDecoder.hasNext() || requestDecoder.getBodyHttpDatas().size() != 1) {
-                response.setStatus(HttpResponseStatus.BAD_REQUEST);
-                return;
-            }
-            InterfaceHttpData httpData = requestDecoder.getBodyHttpDatas().get(0);
-            if (!httpData.getHttpDataType().equals(InterfaceHttpData.HttpDataType.FileUpload)) {
-                response.setStatus(HttpResponseStatus.BAD_REQUEST);
-                return;
-            }
-            FileUpload fileUpload = (FileUpload) httpData;
-            String fileExt = FilenameUtils.getExtension(fileUpload.getFilename());
-            ExternalFunctionLanguage language = getLanguageByFileExtension(fileExt);
-            if (language == null) {
-                response.setStatus(HttpResponseStatus.BAD_REQUEST);
-                return;
-            }
-            try {
-                IRequestReference requestReference = receptionist.welcome(request);
+            LibraryUploadData uploadData = decodeMultiPartLibraryOptions(requestDecoder);
+            IRequestReference requestReference = receptionist.welcome(request);
+            if (uploadData.op == LibraryOperation.UPSERT) {
+                ExternalFunctionLanguage language = uploadData.type;
+                String fileExt = FilenameUtils.getExtension(uploadData.fileUpload.getFilename());
                 libraryTempFile = Files.createTempFile(workingDir, "lib_", '.' + fileExt);
                 if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Created temporary file " + libraryTempFile + " for library " + libraryName.first + "."
-                            + libraryName.second);
+                    LOGGER.debug("Created temporary file " + libraryTempFile + " for library " + uploadData.dataverse
+                            + "." + uploadData.name);
                 }
                 MessageDigest digest = MessageDigest.getInstance("MD5");
                 libTmpOut = new FileOutputStream(libraryTempFile.toFile());
-                OutputStream outStream = new DigestOutputStream(libTmpOut, digest);
-                InputStream uploadInput = new ByteBufInputStream(((FileUpload) httpData).getByteBuf());
-                IOUtils.copyLarge(uploadInput, outStream);
-                outStream.close();
+                try (OutputStream os = new DigestOutputStream(libTmpOut, digest);
+                        InputStream ui = new ByteBufInputStream((uploadData.fileUpload).getByteBuf())) {
+                    IOUtils.copyLarge(ui, os);
+                }
                 URI downloadURI = createDownloadURI(libraryTempFile);
-                doCreate(libraryName.first, libraryName.second, language,
+                doCreate(uploadData.dataverse, uploadData.name, language,
                         ExternalLibraryUtils.digestToHexString(digest), downloadURI, true, sysAuthHeader,
-                        requestReference, request, response);
-                response.setStatus(HttpResponseStatus.OK);
-            } catch (Exception e) {
-                response.setStatus(toHttpErrorStatus(e));
-                PrintWriter responseWriter = response.writer();
-                responseWriter.write(e.getMessage());
-                responseWriter.flush();
-                LOGGER.error("Error creating/updating library " + libraryName.first + "." + libraryName.second, e);
+                        requestReference, request);
+            } else if (uploadData.op == LibraryOperation.DELETE) {
+                doDrop(uploadData.dataverse, uploadData.name, uploadData.replaceIfExists, requestReference, request);
             }
+            response.setStatus(HttpResponseStatus.OK);
+            PrintWriter responseWriter = response.writer();
+            String emptyJson = "{}";
+            responseWriter.write(emptyJson);
+            responseWriter.flush();
+        } catch (Exception e) {
+            response.setStatus(toHttpErrorStatus(e));
+            PrintWriter responseWriter = response.writer();
+            Map<String, String> error = Collections.singletonMap("error", e.getMessage());
+            String errorJson = "";
+            try {
+                errorJson = OBJECT_MAPPER.writeValueAsString(error);
+            } catch (JsonProcessingException ex) {
+                responseWriter.write("{ \"error\": \"Unable to process error message!\" }");
+            }
+            responseWriter.write(errorJson);
+            responseWriter.flush();
+            LOGGER.error("Error modifying library", e);
         } finally {
             requestDecoder.destroy();
-            if (libraryTempFile != null) {
-                try {
+            try {
+                if (libraryTempFile != null) {
                     if (libTmpOut != null) {
                         libTmpOut.close();
                     }
                     Files.deleteIfExists(libraryTempFile);
-                } catch (IOException e) {
-                    LOGGER.warn("Could not delete temporary file " + libraryTempFile, e);
                 }
+            } catch (IOException e) {
+                LOGGER.warn("Could not delete temporary file " + libraryTempFile, e);
             }
-        }
-    }
-
-    @Override
-    protected void delete(IServletRequest request, IServletResponse response) {
-        Pair<DataverseName, String> libraryName = parseLibraryName(request);
-        if (libraryName == null) {
-            response.setStatus(HttpResponseStatus.BAD_REQUEST);
-            return;
-        }
-        try {
-            IRequestReference requestReference = receptionist.welcome(request);
-            doDrop(libraryName.first, libraryName.second, false, requestReference, request, response);
-            response.setStatus(HttpResponseStatus.OK);
-        } catch (Exception e) {
-            response.setStatus(toHttpErrorStatus(e));
-            PrintWriter responseWriter = response.writer();
-            responseWriter.write(e.getMessage());
-            responseWriter.flush();
-            LOGGER.error("Error deleting library " + libraryName.first + "." + libraryName.second, e);
         }
     }
 

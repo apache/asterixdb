@@ -139,7 +139,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
     private static Pair<ARecordType, ARecordType> getEnforcedType(Index index, ARecordType aRecordType,
             ARecordType metaRecordType) throws AlgebricksException {
-        return index.isOverridingKeyFieldTypes()
+        return index.getIndexDetails().isOverridingKeyFieldTypes()
                 ? TypeUtil.createEnforcedType(aRecordType, metaRecordType, Collections.singletonList(index))
                 : new Pair<>(null, null);
     }
@@ -155,6 +155,10 @@ public abstract class SecondaryIndexOperationsHelper {
 
         SecondaryIndexOperationsHelper indexOperationsHelper;
         switch (index.getIndexType()) {
+            case ARRAY:
+                indexOperationsHelper =
+                        new SecondaryArrayIndexBTreeOperationsHelper(dataset, index, metadataProvider, sourceLoc);
+                break;
             case BTREE:
                 indexOperationsHelper = new SecondaryBTreeOperationsHelper(dataset, index, metadataProvider, sourceLoc);
                 break;
@@ -227,7 +231,7 @@ public abstract class SecondaryIndexOperationsHelper {
         secondaryFilterFields = new int[numFilterFields];
         primaryFilterFields = new int[numFilterFields];
         primaryBTreeFields = new int[numPrimaryKeys + 1];
-        secondaryBTreeFields = new int[index.getKeyFieldNames().size() + numPrimaryKeys];
+        secondaryBTreeFields = new int[getNumSecondaryKeys() + numPrimaryKeys];
         for (int i = 0; i < primaryBTreeFields.length; i++) {
             primaryBTreeFields[i] = i;
         }

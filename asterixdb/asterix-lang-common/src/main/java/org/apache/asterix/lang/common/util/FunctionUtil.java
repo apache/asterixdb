@@ -276,16 +276,27 @@ public class FunctionUtil {
             Expression expression) throws CompilationException {
         Set<AbstractCallExpression> functionCalls = rewriter.getFunctionCalls(expression);
         //Get the List of used functions and used datasets
-        List<Triple<DataverseName, String, String>> datasourceDependencies = new ArrayList<>();
+        List<Triple<DataverseName, String, String>> datasetDependencies = new ArrayList<>();
         List<Triple<DataverseName, String, String>> functionDependencies = new ArrayList<>();
+        List<Triple<DataverseName, String, String>> typeDependencies = Collections.emptyList();
+        List<Triple<DataverseName, String, String>> synonymDependencies = new ArrayList<>();
         for (AbstractCallExpression functionCall : functionCalls) {
             switch (functionCall.getKind()) {
                 case CALL_EXPRESSION:
                     FunctionSignature signature = functionCall.getFunctionSignature();
                     if (isBuiltinDatasetFunction(signature)) {
-                        Pair<DataverseName, String> datasetReference =
-                                parseDatasetFunctionArguments((CallExpr) functionCall);
-                        datasourceDependencies.add(new Triple<>(datasetReference.first, datasetReference.second, null));
+                        CallExpr callExpr = (CallExpr) functionCall;
+                        if (callExpr.getExprList().size() > 2) {
+                            // resolved via synonym -> store synonym name as a dependency
+                            Pair<DataverseName, String> synonymReference = parseDatasetFunctionArguments(callExpr, 2);
+                            synonymDependencies
+                                    .add(new Triple<>(synonymReference.first, synonymReference.second, null));
+                        } else {
+                            // resolved directly -> store dataset name as a dependency
+                            Pair<DataverseName, String> datasetReference = parseDatasetFunctionArguments(callExpr, 0);
+                            datasetDependencies
+                                    .add(new Triple<>(datasetReference.first, datasetReference.second, null));
+                        }
                     } else if (BuiltinFunctions.getBuiltinFunctionInfo(signature.createFunctionIdentifier()) == null) {
                         functionDependencies.add(new Triple<>(signature.getDataverseName(), signature.getName(),
                                 Integer.toString(signature.getArity())));
@@ -299,26 +310,21 @@ public class FunctionUtil {
                             functionCall.getFunctionSignature().toString(false));
             }
         }
-        List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>(3);
-        dependencies.add(datasourceDependencies);
-        dependencies.add(functionDependencies);
-        dependencies.add(Collections.emptyList());
-        return dependencies;
+        return Function.createDependencies(datasetDependencies, functionDependencies, typeDependencies,
+                synonymDependencies);
     }
 
     public static List<List<Triple<DataverseName, String, String>>> getExternalFunctionDependencies(
             Collection<TypeSignature> dependentTypes) {
-        List<Triple<DataverseName, String, String>> datasourceDependencies = Collections.emptyList();
+        List<Triple<DataverseName, String, String>> datasetDependencies = Collections.emptyList();
         List<Triple<DataverseName, String, String>> functionDependencies = Collections.emptyList();
         List<Triple<DataverseName, String, String>> typeDependencies = new ArrayList<>(dependentTypes.size());
+        List<Triple<DataverseName, String, String>> synonymDependencies = Collections.emptyList();
         for (TypeSignature t : dependentTypes) {
             typeDependencies.add(new Triple<>(t.getDataverseName(), t.getName(), null));
         }
-        List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>(3);
-        dependencies.add(datasourceDependencies);
-        dependencies.add(functionDependencies);
-        dependencies.add(typeDependencies);
-        return dependencies;
+        return Function.createDependencies(datasetDependencies, functionDependencies, typeDependencies,
+                synonymDependencies);
     }
 
     public static boolean isBuiltinDatasetFunction(FunctionSignature fs) {
@@ -328,30 +334,31 @@ public class FunctionUtil {
 
     public static Pair<DataverseName, String> parseDatasetFunctionArguments(CallExpr datasetFn)
             throws CompilationException {
-        return parseDatasetFunctionArguments(datasetFn.getExprList(), datasetFn.getSourceLocation(),
+        return parseDatasetFunctionArguments(datasetFn, 0);
+    }
+
+    public static Pair<DataverseName, String> parseDatasetFunctionArguments(CallExpr datasetFn, int startPos)
+            throws CompilationException {
+        return parseDatasetFunctionArguments(datasetFn.getExprList(), startPos, datasetFn.getSourceLocation(),
                 ExpressionUtils::getStringLiteral);
     }
 
     public static Pair<DataverseName, String> parseDatasetFunctionArguments(AbstractFunctionCallExpression datasetFn)
             throws CompilationException {
-        return parseDatasetFunctionArguments(datasetFn.getArguments(), datasetFn.getSourceLocation(),
+        return parseDatasetFunctionArguments(datasetFn.getArguments(), 0, datasetFn.getSourceLocation(),
                 FunctionUtil::getStringConstant);
     }
 
-    private static <T> Pair<DataverseName, String> parseDatasetFunctionArguments(List<T> datasetFnArgs,
+    private static <T> Pair<DataverseName, String> parseDatasetFunctionArguments(List<T> datasetFnArgs, int startPos,
             SourceLocation sourceLoc, java.util.function.Function<T, String> argExtractFunction)
             throws CompilationException {
-        if (datasetFnArgs.size() != 2) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "Invalid number of arguments to dataset()");
-        }
-        String dataverseNameArg = argExtractFunction.apply(datasetFnArgs.get(0));
+        String dataverseNameArg = argExtractFunction.apply(datasetFnArgs.get(startPos));
         if (dataverseNameArg == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Invalid argument to dataset()");
         }
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseNameArg);
 
-        String datasetName = argExtractFunction.apply(datasetFnArgs.get(1));
+        String datasetName = argExtractFunction.apply(datasetFnArgs.get(startPos + 1));
         if (datasetName == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Invalid argument to dataset()");
         }

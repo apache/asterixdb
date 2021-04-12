@@ -19,8 +19,8 @@
 
 The `SET` statement can be used to override some cluster-wide configuration parameters for a specific request:
 
-### SetStmnt
-**![](../images/diagrams/SetStmnt.png)**
+##### SetStmnt
+![](../images/diagrams/SetStmnt.png)
 
 As parameter identifiers are qualified names (containing a '.') they have to be escaped using backticks (\`\`).
 Note that changing query parameters will not affect query correctness but only impact performance
@@ -32,7 +32,7 @@ in a cluster. A user can manually specify the maximum execution parallelism for 
 using the following parameter:
 
 *  **compiler.parallelism**: the maximum number of CPU cores can be used to process a query.
-There are three cases of the value *p* for compiler.parallelism:
+   There are three cases of the value *p* for compiler.parallelism:
 
      - *p* \< 0 or *p* \> the total number of cores in a cluster:  the system will use all available cores in the
        cluster;
@@ -51,6 +51,7 @@ There are three cases of the value *p* for compiler.parallelism:
     FROM customers c JOIN orders o ON c.custid = o.custid;
 
 ## <a id="Memory_parameters">Memory Parameters</a>
+
 In the system, each blocking runtime operator such as join, group-by and order-by
 works within a fixed memory budget, and can gracefully spill to disks if
 the memory budget is smaller than the amount of data they have to hold.

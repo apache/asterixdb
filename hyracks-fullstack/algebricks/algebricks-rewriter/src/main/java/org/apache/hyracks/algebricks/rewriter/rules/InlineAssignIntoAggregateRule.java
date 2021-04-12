@@ -138,7 +138,7 @@ public class InlineAssignIntoAggregateRule implements IAlgebraicRewriteRule {
                 ILogicalExpression e = eRef.getValue();
                 Pair<Boolean, ILogicalExpression> p = e.accept(this, arg);
                 if (p.first) {
-                    eRef.setValue(p.second);
+                    eRef.setValue(p.second.cloneExpression());
                     changed = true;
                 }
             }

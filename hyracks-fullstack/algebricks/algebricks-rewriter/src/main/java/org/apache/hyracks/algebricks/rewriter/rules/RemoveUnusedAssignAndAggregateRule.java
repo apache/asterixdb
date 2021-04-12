@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOper
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
@@ -50,7 +51,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * Removes unused variables from Assign, Unnest, Aggregate, UnionAll, and Group-by operators.
+ * Removes unused variables from Assign, Unnest, Aggregate, RunningAggregate, UnionAll, and Group-by operators.
  */
 public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule {
 
@@ -223,6 +224,13 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                     isTransformed = true;
                 }
                 return agg.getVariables().size();
+            case RUNNINGAGGREGATE:
+                RunningAggregateOperator ragg = (RunningAggregateOperator) op;
+                if (removeUnusedVarsAndExprs(toRemove, ragg.getVariables(), ragg.getExpressions())) {
+                    context.computeAndSetTypeEnvironmentForOperator(ragg);
+                    isTransformed = true;
+                }
+                return ragg.getVariables().size();
             case UNNEST:
                 UnnestOperator uOp = (UnnestOperator) op;
                 LogicalVariable pVar = uOp.getPositionalVariable();
@@ -352,6 +360,11 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
             case AGGREGATE:
                 AggregateOperator agg = (AggregateOperator) op;
                 assignVarsSetInThisOp.addAll(agg.getVariables());
+                targetOpFound = true;
+                break;
+            case RUNNINGAGGREGATE:
+                RunningAggregateOperator ragg = (RunningAggregateOperator) op;
+                assignVarsSetInThisOp.addAll(ragg.getVariables());
                 targetOpFound = true;
                 break;
             case UNNEST:

@@ -66,7 +66,8 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
 
-        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+        boolean isOverridingKeyFieldTypes = indexDetails.isOverridingKeyFieldTypes();
 
         assert dataset.getDatasetType() == DatasetType.INTERNAL;
 
@@ -89,7 +90,7 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
         }
         RecordDescriptor taggedSecondaryRecDesc = getTaggedRecordDescriptor(secondaryRecDesc);
         AlgebricksMetaOperatorDescriptor asterixAssignOp =
-                createAssignOp(spec, index.getKeyFieldNames().size(), taggedSecondaryRecDesc);
+                createAssignOp(spec, indexDetails.getKeyFieldNames().size(), taggedSecondaryRecDesc);
 
         // Generate compensate tuples for upsert
         IOperatorDescriptor processorOp =
@@ -122,12 +123,13 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
 
     @Override
     protected int getNumSecondaryKeys() {
-        return index.getKeyFieldNames().size();
+        return ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldNames().size();
     }
 
     @Override
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
         secondaryFieldAccessEvalFactories = new IScalarEvaluatorFactory[numSecondaryKeys + numFilterFields];
         secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];
         secondaryBloomFilterKeyFields = new int[numSecondaryKeys];
@@ -144,11 +146,11 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
                 metadataProvider.getDataFormat().getBinaryComparatorFactoryProvider();
         // Record column is 0 for external datasets, numPrimaryKeys for internal ones
         int recordColumn = NUM_TAG_FIELDS + numPrimaryKeys;
-        boolean isOverridingKeyTypes = index.isOverridingKeyFieldTypes();
+        boolean isOverridingKeyTypes = indexDetails.isOverridingKeyFieldTypes();
         for (int i = 0; i < numSecondaryKeys; i++) {
             ARecordType sourceType;
             int sourceColumn;
-            List<Integer> keySourceIndicators = index.getKeyFieldSourceIndicators();
+            List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
             if (keySourceIndicators == null || keySourceIndicators.get(i) == 0) {
                 sourceType = itemType;
                 sourceColumn = recordColumn;
@@ -158,9 +160,9 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
             }
             secondaryFieldAccessEvalFactories[i] = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
                     metadataProvider.getFunctionManager(), isOverridingKeyTypes ? enforcedItemType : sourceType,
-                    index.getKeyFieldNames().get(i), sourceColumn, sourceLoc);
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(i),
-                    index.getKeyFieldNames().get(i), sourceType);
+                    indexDetails.getKeyFieldNames().get(i), sourceColumn, sourceLoc);
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(
+                    indexDetails.getKeyFieldTypes().get(i), indexDetails.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;
             anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
             ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(keyType);

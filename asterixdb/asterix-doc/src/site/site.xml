@@ -97,6 +97,7 @@
       <item name="Support of Full-text Queries" href="sqlpp/fulltext.html"/>
       <item name="Support of Similarity Queries" href="sqlpp/similarity.html"/>
       <item name="Support of Interval Joins" href="interval_join.html"/>
+      <item name="Support of Array Indexes" href="sqlpp/arrayindex.html"/>
     </menu>
 
     <menu name="Deprecated">

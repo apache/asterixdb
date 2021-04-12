@@ -556,6 +556,17 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     public Void visitIndexInsertDeleteUpsertOperator(IndexInsertDeleteUpsertOperator op, IOptimizationContext ctx)
             throws AlgebricksException {
         propagateFDsAndEquivClasses(op, ctx);
+        if (!op.getNestedPlans().isEmpty()) {
+            Map<LogicalVariable, EquivalenceClass> equivalenceClasses = ctx.getEquivalenceClassMap(op);
+            List<FunctionalDependency> functionalDependencies = ctx.getFDList(op);
+            for (ILogicalPlan p : op.getNestedPlans()) {
+                for (Mutable<ILogicalOperator> r : p.getRoots()) {
+                    ILogicalOperator op2 = r.getValue();
+                    equivalenceClasses.putAll(getOrComputeEqClasses(op2, ctx));
+                    functionalDependencies.addAll(getOrComputeFDs(op2, ctx));
+                }
+            }
+        }
         return null;
     }
 

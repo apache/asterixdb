@@ -19,15 +19,14 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.runningaggregates.base.AbstractRunningAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluator;
+import org.apache.hyracks.algebricks.runtime.base.IRunningAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
@@ -35,31 +34,26 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 /**
  * Create global unique id within a query.
  */
-public class CreateQueryUIDDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class CreateQueryUIDDescriptor extends AbstractRunningAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new CreateQueryUIDDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = CreateQueryUIDDescriptor::new;
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
-        return new IScalarEvaluatorFactory() {
+    public IRunningAggregateEvaluatorFactory createRunningAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args) {
+        return new IRunningAggregateEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
             private static final int BINARY_LENGTH = 14;
             private static final int PAYLOAD_START = 2;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
+            public IRunningAggregateEvaluator createRunningAggregateEvaluator(IEvaluatorContext ctx) {
                 // Format: |TypeTag | PayloadLength | Payload |
                 // TypeTag: 1 byte
                 // PayloadLength: 1 byte
                 // Payload: 12 bytes:  |partition-id (4 bytes) | local-id (8 bytes) |
-                byte[] uidBytes = new byte[BINARY_LENGTH];
+                final byte[] uidBytes = new byte[BINARY_LENGTH];
                 // Writes the type tag.
                 uidBytes[0] = ATypeTag.SERIALIZED_BINARY_TYPE_TAG;
                 // Writes the payload size.
@@ -68,10 +62,13 @@ public class CreateQueryUIDDescriptor extends AbstractScalarFunctionDynamicDescr
                 IntegerPointable.setInteger(uidBytes, PAYLOAD_START,
                         ctx.getTaskContext().getTaskAttemptId().getTaskId().getPartition());
 
-                return new IScalarEvaluator() {
+                return new IRunningAggregateEvaluator() {
+                    @Override
+                    public void init() {
+                    }
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+                    public void step(IFrameTupleReference tuple, IPointable result) {
                         // Increments the Unique ID value.
                         for (int i = BINARY_LENGTH - 1; i >= PAYLOAD_START; i--) {
                             if (++uidBytes[i] != 0) {
@@ -89,5 +86,4 @@ public class CreateQueryUIDDescriptor extends AbstractScalarFunctionDynamicDescr
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.CREATE_QUERY_UID;
     }
-
 }

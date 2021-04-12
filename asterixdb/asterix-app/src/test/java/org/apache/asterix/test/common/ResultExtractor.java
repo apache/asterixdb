@@ -28,9 +28,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.testframework.context.TestCaseContext.OutputFormat;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -203,7 +205,15 @@ public class ResultExtractor {
 
         LOGGER.debug("+++++++\n" + resultStr + "\n+++++++\n");
 
-        final ObjectNode result = OBJECT_READER.readValue(resultStr);
+        final ObjectNode result;
+        try {
+            result = OBJECT_READER.readValue(resultStr);
+        } catch (Exception e) {
+            // whoops, not JSON (e.g. 404) - just include the body
+            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, resultStr);
+            throw new Exception(resultStr);
+        }
+
         final boolean isJsonFormat = isJsonFormat(fmt);
 
         // if we have errors field in the results, we will always return it

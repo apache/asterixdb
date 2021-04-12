@@ -82,9 +82,10 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
 
     @Override
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        Index.TextIndexDetails indexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
         IndexType indexType = index.getIndexType();
-        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
+        boolean isOverridingKeyFieldTypes = indexDetails.isOverridingKeyFieldTypes();
         // Sanity checks.
         if (numPrimaryKeys > 1) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_INDEX_FOR_DATASET_WITH_COMPOSITE_PRIMARY_INDEX,
@@ -114,9 +115,9 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
         if (numSecondaryKeys > 0) {
             secondaryFieldAccessEvalFactories[0] = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
                     metadataProvider.getFunctionManager(), isOverridingKeyFieldTypes ? enforcedItemType : itemType,
-                    index.getKeyFieldNames().get(0), recordColumn, sourceLoc);
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0),
-                    index.getKeyFieldNames().get(0), itemType);
+                    indexDetails.getKeyFieldNames().get(0), recordColumn, sourceLoc);
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(
+                    indexDetails.getKeyFieldTypes().get(0), indexDetails.getKeyFieldNames().get(0), itemType);
             secondaryKeyType = keyTypePair.first;
             anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
             ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(secondaryKeyType);
@@ -151,9 +152,9 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
         // TODO: We might want to expose the hashing option at the AQL level,
         // and add the choice to the index metadata.
         tokenizerFactory = NonTaggedFormatUtil.getBinaryTokenizerFactory(secondaryKeyType.getTypeTag(), indexType,
-                index.getGramLength());
+                indexDetails.getGramLength());
         fullTextConfigEvaluatorFactory = FullTextUtil.fetchFilterAndCreateConfigEvaluator(metadataProvider,
-                index.getDataverseName(), index.getFullTextConfigName());
+                index.getDataverseName(), indexDetails.getFullTextConfigName());
         // Type traits for inverted-list elements. Inverted lists contain
         // primary keys.
         invListsTypeTraits = new ITypeTraits[numPrimaryKeys];
@@ -222,8 +223,9 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
                 getTaggedRecordDescriptor(dataset.getPrimaryRecordDescriptor(metadataProvider)));
 
         IOperatorDescriptor sourceOp = primaryScanOp;
-        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        Index.TextIndexDetails indexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+        boolean isOverridingKeyFieldTypes = indexDetails.isOverridingKeyFieldTypes();
+        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
         if (isOverridingKeyFieldTypes && !enforcedItemType.equals(itemType)) {
             sourceOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
             spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
@@ -272,7 +274,7 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
 
     private AbstractOperatorDescriptor createTokenizerOp(JobSpecification spec) throws AlgebricksException {
         int docField = NUM_TAG_FIELDS;
-        int numSecondaryKeys = index.getKeyFieldNames().size();
+        int numSecondaryKeys = ((Index.TextIndexDetails) index.getIndexDetails()).getKeyFieldNames().size();
         int[] keyFields = new int[NUM_TAG_FIELDS + numPrimaryKeys + numFilterFields];
         // set tag fields
         for (int i = 0; i < NUM_TAG_FIELDS; i++) {

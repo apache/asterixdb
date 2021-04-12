@@ -35,26 +35,49 @@ public class AsynchronousScheduler extends AbstractAsynchronousScheduler {
     public static final ILSMIOOperationSchedulerFactory FACTORY = new ILSMIOOperationSchedulerFactory() {
         @Override
         public ILSMIOOperationScheduler createIoScheduler(ThreadFactory threadFactory,
-                IIoOperationFailedCallback callback) {
-            return new AsynchronousScheduler(threadFactory, callback);
+                IIoOperationFailedCallback callback, int maxNumRunningFlushes, int maxNumScheduledMerges,
+                int maxNumRunningMerges) {
+            return new AsynchronousScheduler(threadFactory, callback, maxNumRunningFlushes, maxNumRunningMerges);
         }
 
+        @Override
         public String getName() {
             return "async";
         }
     };
 
-    public AsynchronousScheduler(ThreadFactory threadFactory, IIoOperationFailedCallback callback) {
-        super(threadFactory, callback);
+    private final int maxNumRunningMerges;
+    private int numRunningMerges = 0;
+
+    public AsynchronousScheduler(ThreadFactory threadFactory, IIoOperationFailedCallback callback,
+            int maxNumRunningFlushes, int maxNumRunningMerges) {
+        super(threadFactory, callback, maxNumRunningFlushes);
+        this.maxNumRunningMerges = maxNumRunningMerges;
     }
 
     @Override
     protected void scheduleMerge(ILSMIOOperation operation) {
-        executor.submit(operation);
+        synchronized (executor) {
+            if (numRunningMerges >= maxNumRunningMerges) {
+                waitingMergeOperations.add(operation);
+            } else {
+                doScheduleMerge(operation);
+            }
+        }
     }
 
     @Override
-    public void completeOperation(ILSMIOOperation operation) {
-        // no op
+    protected void completeMerge(ILSMIOOperation operation) {
+        synchronized (executor) {
+            --numRunningMerges;
+            if (!waitingMergeOperations.isEmpty() && numRunningMerges < maxNumRunningMerges) {
+                doScheduleMerge(waitingMergeOperations.poll());
+            }
+        }
+    }
+
+    private void doScheduleMerge(ILSMIOOperation operation) {
+        ++numRunningMerges;
+        executor.submit(operation);
     }
 }

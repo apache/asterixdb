@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -34,6 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 
@@ -250,21 +250,11 @@ public final class PlanStabilityVerifier {
     }
 
     private static <T> int findItem(List<T> list, T item) {
-        return indexOf(list, (listItem, paramItem) -> listItem == paramItem, item);
+        return OperatorManipulationUtil.indexOf(list, (listItem, paramItem) -> listItem == paramItem, item);
     }
 
     private static <T> int findNonNull(List<T> list) {
-        return indexOf(list, (listItem, none) -> listItem != null, null);
-    }
-
-    private static <T, U> int indexOf(List<T> list, BiPredicate<T, U> predicate, U predicateParam) {
-        for (int i = 0, n = list.size(); i < n; i++) {
-            T listItem = list.get(i);
-            if (predicate.test(listItem, predicateParam)) {
-                return i;
-            }
-        }
-        return -1;
+        return OperatorManipulationUtil.indexOf(list, (listItem, none) -> listItem != null, null);
     }
 
     static String printOperator(Mutable<ILogicalOperator> opRef, IPlanPrettyPrinter printer) {

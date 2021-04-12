@@ -330,6 +330,9 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
                 op.getDataSourceIndex(), newPrimaryKeyExpressions, newSecondaryKeyExpressions, newFilterExpression,
                 op.getOperation(), op.isBulkload(), op.getNumberOfAdditionalNonFilteringFields());
         indexInsertDeleteOp.setAdditionalFilteringExpressions(newLSMComponentFilterExpressions);
+        for (ILogicalPlan plan : op.getNestedPlans()) {
+            indexInsertDeleteOp.getNestedPlans().add(OperatorManipulationUtil.deepCopy(plan, indexInsertDeleteOp));
+        }
         return indexInsertDeleteOp;
     }
 

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.translator;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -206,8 +208,8 @@ abstract class LangExpressionToPlanTranslator
                 validateDatasetInfo(metadataProvider, stmt.getDataverseName(), stmt.getDatasetName(), sourceLoc);
         List<List<String>> partitionKeys = targetDatasource.getDataset().getPrimaryKeys();
         if (dataset.hasMetaPart()) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    dataset.getDatasetName() + ": load dataset is not supported on Datasets with Meta records");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, dataset.getDatasetName() + ": load "
+                    + dataset() + " is not supported on " + dataset() + "s with meta records");
         }
 
         LoadableDataSource lds;
@@ -430,8 +432,8 @@ abstract class LangExpressionToPlanTranslator
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (targetDatasource.getDataset().hasMetaPart()) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    targetDatasource.getDataset().getDatasetName()
-                            + ": delete from dataset is not supported on Datasets with Meta records");
+                    targetDatasource.getDataset().getDatasetName() + ": delete from " + dataset()
+                            + " is not supported on " + dataset() + "s with meta records");
         }
 
         List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());
@@ -461,8 +463,8 @@ abstract class LangExpressionToPlanTranslator
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (!targetDatasource.getDataset().allow(topOp, DatasetUtil.OP_UPSERT)) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    targetDatasource.getDataset().getDatasetName()
-                            + ": upsert into dataset is not supported on Datasets with Meta records");
+                    targetDatasource.getDataset().getDatasetName() + ": upsert into " + dataset()
+                            + " is not supported on " + dataset() + "s with meta records");
         }
         ProjectOperator project = (ProjectOperator) topOp;
         CompiledUpsertStatement compiledUpsert = (CompiledUpsertStatement) stmt;
@@ -474,7 +476,7 @@ abstract class LangExpressionToPlanTranslator
         if (targetDatasource.getDataset().hasMetaPart()) {
             if (returnExpression != null) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "Returning not allowed on datasets with Meta records");
+                        "Returning not allowed on " + dataset() + "s with meta records");
             }
             List<LogicalVariable> metaAndKeysVars;
             List<Mutable<ILogicalExpression>> metaAndKeysExprs;
@@ -585,8 +587,8 @@ abstract class LangExpressionToPlanTranslator
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (targetDatasource.getDataset().hasMetaPart()) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    targetDatasource.getDataset().getDatasetName()
-                            + ": insert into dataset is not supported on Datasets with Meta records");
+                    targetDatasource.getDataset().getDatasetName() + ": insert into " + dataset()
+                            + " is not supported on " + dataset() + "s with meta records");
         }
 
         List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());
@@ -683,7 +685,7 @@ abstract class LangExpressionToPlanTranslator
         }
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "Cannot write output to an external dataset.");
+                    "Cannot write output to an external " + dataset());
         }
         DataSourceId sourceId = new DataSourceId(dataverseName, datasetName);
         IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
@@ -1972,10 +1974,10 @@ abstract class LangExpressionToPlanTranslator
     protected Mutable<ILogicalExpression> generateAndNotIsUnknownWrap(ILogicalExpression logicalExpr) {
         SourceLocation sourceLoc = logicalExpr.getSourceLocation();
         List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
-        arguments.add(new MutableObject<>(logicalExpr));
+        arguments.add(new MutableObject<>(logicalExpr.cloneExpression()));
         ScalarFunctionCallExpression isUnknownExpr =
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_UNKNOWN),
-                        new ArrayList<>(Collections.singletonList(new MutableObject<>(logicalExpr))));
+                        new ArrayList<>(Collections.singletonList(new MutableObject<>(logicalExpr.cloneExpression()))));
         isUnknownExpr.setSourceLocation(sourceLoc);
         ScalarFunctionCallExpression notExpr =
                 new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT),

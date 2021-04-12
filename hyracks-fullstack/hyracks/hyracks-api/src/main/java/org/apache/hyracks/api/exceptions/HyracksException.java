@@ -25,15 +25,15 @@ import java.util.Optional;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
 public class HyracksException extends IOException implements IFormattedException {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     public static final int UNKNOWN = 0;
     private final String component;
     private final int errorCode;
     private final Serializable[] params;
     private final String nodeId;
-    protected transient final IError error;
     private SourceLocation sourceLoc;
+    protected transient IError error;
     private transient volatile String msgCache;
 
     public static HyracksException create(Throwable cause) {
@@ -130,6 +130,7 @@ public class HyracksException extends IOException implements IFormattedException
         return errorCode;
     }
 
+    @Override
     public Serializable[] getParams() {
         return params;
     }
@@ -138,6 +139,7 @@ public class HyracksException extends IOException implements IFormattedException
         return nodeId;
     }
 
+    @Override
     public SourceLocation getSourceLocation() {
         return sourceLoc;
     }
@@ -166,7 +168,11 @@ public class HyracksException extends IOException implements IFormattedException
         return Optional.ofNullable(error);
     }
 
-    public boolean matches(ErrorCode errorCode) {
-        return component.equals(errorCode.component()) && getErrorCode() == errorCode.intValue();
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        ErrorMessageUtil.writeObjectWithError(error, out);
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        error = ErrorMessageUtil.readObjectWithError(in).orElse(null);
     }
 }

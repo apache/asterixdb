@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.algebricks.common.exceptions;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Optional;
 
@@ -28,7 +31,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
 public class AlgebricksException extends Exception implements IFormattedException {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     public static final int UNKNOWN = 0;
     private final String component;
@@ -36,7 +39,7 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
     private final Serializable[] params;
     private final String nodeId;
     private final SourceLocation sourceLoc;
-    protected final transient IError error;
+    protected transient IError error;
 
     @SuppressWarnings("squid:S1165") // exception class not final
     private transient volatile String msgCache;
@@ -110,6 +113,7 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
         return errorCode;
     }
 
+    @Override
     public Serializable[] getParams() {
         return params;
     }
@@ -118,6 +122,7 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
         return nodeId;
     }
 
+    @Override
     public SourceLocation getSourceLocation() {
         return sourceLoc;
     }
@@ -133,5 +138,13 @@ public class AlgebricksException extends Exception implements IFormattedExceptio
             msgCache = ErrorMessageUtil.formatMessage(component, errorCode, super.getMessage(), sourceLoc, params);
         }
         return msgCache;
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        ErrorMessageUtil.writeObjectWithError(error, out);
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        error = ErrorMessageUtil.readObjectWithError(in).orElse(null);
     }
 }

@@ -1689,7 +1689,7 @@ public class BuiltinFunctions {
         addFunction(CREATE_RECTANGLE, ARectangleTypeComputer.INSTANCE, true);
         addFunction(CREATE_UUID, AUUIDTypeComputer.INSTANCE, false);
         addFunction(UUID, AUUIDTypeComputer.INSTANCE, false);
-        addFunction(CREATE_QUERY_UID, ABinaryTypeComputer.INSTANCE, false);
+        addPrivateFunction(CREATE_QUERY_UID, ABinaryTypeComputer.INSTANCE, false);
         addFunction(UUID_CONSTRUCTOR, AUUIDTypeComputer.INSTANCE, true);
         addFunction(RANDOM, ADoubleTypeComputer.INSTANCE, false);
         addFunction(RANDOM_WITH_SEED, NumericUnaryTypeComputer.INSTANCE_DOUBLE, false);
@@ -1864,6 +1864,11 @@ public class BuiltinFunctions {
         addFunction(NEGINF_IF, DoubleIfTypeComputer.INSTANCE, true);
 
         // Aggregate Functions
+        ScalarVersionOfAggregateResultType scalarNumericSumTypeComputer =
+                new ScalarVersionOfAggregateResultType(NumericSumAggTypeComputer.INSTANCE);
+        ScalarVersionOfAggregateResultType scalarMinMaxTypeComputer =
+                new ScalarVersionOfAggregateResultType(MinMaxAggTypeComputer.INSTANCE);
+
         addPrivateFunction(LISTIFY, OrderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(SCALAR_ARRAYAGG, ScalarArrayAggTypeComputer.INSTANCE, true);
         addFunction(MAX, MinMaxAggTypeComputer.INSTANCE, true);
@@ -1913,7 +1918,7 @@ public class BuiltinFunctions {
 
         // SUM
         addFunction(SUM, NumericSumAggTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_SUM, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SUM, scalarNumericSumTypeComputer, true);
         addPrivateFunction(LOCAL_SUM, NumericSumAggTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SUM, NumericSumAggTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SUM, NumericSumAggTypeComputer.INSTANCE, true);
@@ -1929,8 +1934,8 @@ public class BuiltinFunctions {
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addFunction(SCALAR_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE, true);
-        addFunction(SCALAR_MAX, ScalarVersionOfAggregateResultType.INSTANCE, true);
-        addFunction(SCALAR_MIN, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_MAX, scalarMinMaxTypeComputer, true);
+        addFunction(SCALAR_MIN, scalarMinMaxTypeComputer, true);
         addPrivateFunction(INTERMEDIATE_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addFunction(SCALAR_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_STDDEV_SAMP, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
@@ -1972,7 +1977,7 @@ public class BuiltinFunctions {
 
         // SQL SUM
         addFunction(SQL_SUM, NumericSumAggTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_SQL_SUM, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SQL_SUM, scalarNumericSumTypeComputer, true);
         addPrivateFunction(LOCAL_SQL_SUM, NumericSumAggTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_SUM, NumericSumAggTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_SUM, NumericSumAggTypeComputer.INSTANCE, true);
@@ -1996,8 +2001,8 @@ public class BuiltinFunctions {
         addPrivateFunction(GLOBAL_SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
-        addFunction(SCALAR_SQL_MAX, ScalarVersionOfAggregateResultType.INSTANCE, true);
-        addFunction(SCALAR_SQL_MIN, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SQL_MAX, scalarMinMaxTypeComputer, true);
+        addFunction(SCALAR_SQL_MIN, scalarMinMaxTypeComputer, true);
         addPrivateFunction(INTERMEDIATE_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addFunction(SQL_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_STDDEV_SAMP, NullableDoubleTypeComputer.INSTANCE, true);
@@ -2077,9 +2082,9 @@ public class BuiltinFunctions {
         addFunction(SCALAR_SQL_COUNT_DISTINCT, AInt64TypeComputer.INSTANCE, true);
 
         addFunction(SUM_DISTINCT, NumericSumAggTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_SUM_DISTINCT, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SUM_DISTINCT, scalarNumericSumTypeComputer, true);
         addFunction(SQL_SUM_DISTINCT, NumericSumAggTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_SQL_SUM_DISTINCT, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SQL_SUM_DISTINCT, scalarNumericSumTypeComputer, true);
 
         addFunction(AVG_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_AVG_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
@@ -2087,14 +2092,14 @@ public class BuiltinFunctions {
         addFunction(SCALAR_SQL_AVG_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
 
         addFunction(MAX_DISTINCT, MinMaxAggTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_MAX_DISTINCT, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_MAX_DISTINCT, scalarMinMaxTypeComputer, true);
         addFunction(SQL_MAX_DISTINCT, MinMaxAggTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_SQL_MAX_DISTINCT, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SQL_MAX_DISTINCT, scalarMinMaxTypeComputer, true);
 
         addFunction(MIN_DISTINCT, MinMaxAggTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_MIN_DISTINCT, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_MIN_DISTINCT, scalarMinMaxTypeComputer, true);
         addFunction(SQL_MIN_DISTINCT, MinMaxAggTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_SQL_MIN_DISTINCT, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SQL_MIN_DISTINCT, scalarMinMaxTypeComputer, true);
 
         addFunction(STDDEV_SAMP_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_STDDEV_SAMP_DISTINCT, NullableDoubleTypeComputer.INSTANCE, true);

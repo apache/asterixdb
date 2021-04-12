@@ -40,6 +40,7 @@ import org.apache.asterix.optimizer.rules.CheckInsertUpsertReturningRule;
 import org.apache.asterix.optimizer.rules.ConstantFoldingRule;
 import org.apache.asterix.optimizer.rules.CountVarToCountOneRule;
 import org.apache.asterix.optimizer.rules.DisjunctivePredicateToJoinRule;
+import org.apache.asterix.optimizer.rules.ExtractBatchableExternalFunctionCallsRule;
 import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractWindowExpressionsRule;
@@ -186,6 +187,8 @@ public final class RuleCollections {
         normalization.add(new CheckInsertUpsertReturningRule());
         normalization.add(new IntroduceUnnestForCollectionToSequenceRule());
         normalization.add(new EliminateSubplanRule());
+        // The following rule must run before PushAggregateIntoNestedSubplanRule
+        normalization.add(new EliminateIsomorphicSubplanRule());
         normalization.add(new EnforceOrderByAfterSubplan());
         normalization.add(new BreakSelectIntoConjunctsRule());
         normalization.add(new ExtractGbyExpressionsRule());
@@ -222,7 +225,7 @@ public final class RuleCollections {
 
         condPushDownAndJoinInference.add(new PushSelectDownRule());
         condPushDownAndJoinInference.add(new PushSortDownRule());
-        condPushDownAndJoinInference.add(new RemoveRedundantListifyRule());
+        condPushDownAndJoinInference.add(new RemoveRedundantListifyRule(false));
         condPushDownAndJoinInference.add(new CancelUnnestWithNestedListifyRule());
         condPushDownAndJoinInference.add(new SimpleUnnestToProductRule());
         condPushDownAndJoinInference.add(new ComplexUnnestToProductRule());
@@ -237,9 +240,6 @@ public final class RuleCollections {
         condPushDownAndJoinInference
                 .add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.ASSIGN, LogicalOperatorTag.SELECT));
         condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
-        // The following rule must run before PushAggregateIntoNestedSubplanRule
-        // (before common subplans diverge due to aggregate pushdown)
-        condPushDownAndJoinInference.add(new EliminateIsomorphicSubplanRule());
 
         condPushDownAndJoinInference.add(new AsterixExtractFunctionsFromJoinConditionRule());
 
@@ -286,7 +286,7 @@ public final class RuleCollections {
     public static final List<IAlgebraicRewriteRule> buildConsolidationRuleCollection() {
         List<IAlgebraicRewriteRule> consolidation = new LinkedList<>();
         consolidation.add(new ConsolidateSelectsRule());
-        consolidation.add(new ConsolidateAssignsRule());
+        consolidation.add(new ConsolidateAssignsRule(false));
         consolidation.add(new InlineAssignIntoAggregateRule());
         consolidation.add(new RewriteDistinctAggregateRule());
         // The following rule should run after RewriteDistinctAggregateRule
@@ -299,7 +299,7 @@ public final class RuleCollections {
         consolidation.add(new RemoveRedundantGroupByDecorVarsRule());
         //PushUnnestThroughUnion => RemoveRedundantListifyRule cause these rules are correlated
         consolidation.add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.UNNEST));
-        consolidation.add(new RemoveRedundantListifyRule());
+        consolidation.add(new RemoveRedundantListifyRule(true));
         // Window operator consolidation rules
         consolidation.add(new AsterixConsolidateWindowOperatorsRule());
         consolidation.add(new ReuseWindowAggregateRule());
@@ -355,6 +355,7 @@ public final class RuleCollections {
     public static final List<IAlgebraicRewriteRule> buildPhysicalRewritesAllLevelsRuleCollection() {
         List<IAlgebraicRewriteRule> physicalRewritesAllLevels = new LinkedList<>();
         physicalRewritesAllLevels.add(new PullSelectOutOfEqJoin());
+        physicalRewritesAllLevels.add(new ExtractBatchableExternalFunctionCallsRule());
         //Turned off the following rule for now not to change OptimizerTest results.
         physicalRewritesAllLevels.add(new SetupCommitExtensionOpRule());
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
@@ -371,7 +372,7 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new IntroduceMaterializationForInsertWithSelfScanRule());
         physicalRewritesAllLevels.add(new InlineSingleReferenceVariablesRule());
         physicalRewritesAllLevels.add(new RemoveUnusedAssignAndAggregateRule());
-        physicalRewritesAllLevels.add(new ConsolidateAssignsRule());
+        physicalRewritesAllLevels.add(new ConsolidateAssignsRule(true));
         // After adding projects, we may need need to set physical operators again.
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
         // Optimized spatial join's query plan produces more join conditions, so we need to pull out these conditions

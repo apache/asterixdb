@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.translator;
 
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -57,6 +60,7 @@ import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -73,11 +77,12 @@ public abstract class AbstractLangTranslator {
 
     protected static final String INVALID_OPERATION_MESSAGE = "Invalid operation - %s";
 
-    protected static final String BAD_DATAVERSE_DML_MESSAGE = "%s operation is not permitted in dataverse %s";
+    protected static final String BAD_DATAVERSE_DML_MESSAGE = "%s operation is not permitted in " + dataverse() + " %s";
 
-    protected static final String BAD_DATAVERSE_DDL_MESSAGE = "Cannot %s dataverse: %s";
+    protected static final String BAD_DATAVERSE_DDL_MESSAGE = "Cannot %s " + dataverse() + ": %s";
 
-    protected static final String BAD_DATAVERSE_OBJECT_DDL_MESSAGE = "Cannot %s a %s belonging to the dataverse: %s";
+    protected static final String BAD_DATAVERSE_OBJECT_DDL_MESSAGE =
+            "Cannot %s a %s belonging to the " + dataverse() + ": %s";
 
     public void validateOperation(ICcApplicationContext appCtx, Dataverse defaultDataverse, Statement stmt)
             throws AlgebricksException {
@@ -210,7 +215,7 @@ public abstract class AbstractLangTranslator {
                 }
                 invalidOperation = isMetadataDataverse(dataverseName);
                 if (invalidOperation) {
-                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "dataset", dataverseName);
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", dataset(), dataverseName);
                 }
 
                 if (!invalidOperation) {
@@ -221,9 +226,9 @@ public abstract class AbstractLangTranslator {
                             Pair<Boolean, String> validationResult =
                                     DatasetHints.validate(appCtx, hint.getKey(), hint.getValue());
                             if (!validationResult.first) {
-                                errorMsgBuffer.append("Dataset: ").append(dsCreateStmt.getName().getValue())
-                                        .append(" error in processing hint: ").append(hint.getKey()).append(" ")
-                                        .append(validationResult.second);
+                                errorMsgBuffer.append(StringUtils.capitalize(dataset())).append(": ")
+                                        .append(dsCreateStmt.getName().getValue()).append(" error in processing hint: ")
+                                        .append(hint.getKey()).append(" ").append(validationResult.second);
                                 errorMsgBuffer.append(" \n");
                             }
                         }
@@ -242,7 +247,7 @@ public abstract class AbstractLangTranslator {
                 }
                 invalidOperation = isMetadataDataverse(dataverseName);
                 if (invalidOperation) {
-                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "drop", "dataset", dataverseName);
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "drop", dataset(), dataverseName);
                 }
                 break;
 

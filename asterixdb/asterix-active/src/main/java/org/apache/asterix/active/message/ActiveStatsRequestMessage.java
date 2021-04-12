@@ -18,14 +18,14 @@
  */
 package org.apache.asterix.active.message;
 
-import java.io.Serializable;
+import org.apache.asterix.active.ActiveRuntimeId;
 
 public class ActiveStatsRequestMessage extends ActiveManagerMessage {
     private static final long serialVersionUID = 1L;
     private final long reqId;
 
-    public ActiveStatsRequestMessage(Serializable payload, long reqId) {
-        super(Kind.REQUEST_STATS, payload);
+    public ActiveStatsRequestMessage(ActiveRuntimeId runtimeId, long reqId) {
+        super(Kind.REQUEST_STATS, runtimeId, null);
         this.reqId = reqId;
     }
 

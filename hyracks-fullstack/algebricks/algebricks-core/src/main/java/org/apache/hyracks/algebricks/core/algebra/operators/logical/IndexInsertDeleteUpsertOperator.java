@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -34,15 +35,49 @@ import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
-public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
+/**
+ * Logical operator for handling secondary index maintenance / loading.
+ * <p>
+ *
+ * In both cases (whether the index is on an atomic field or an array field):
+ * <p>
+ * Primary keys will be given in {@link #primaryKeyExprs}. {@link #operation} specifies the type of index maintenance to
+ * perform. In the case of bulk-loading, {@link #operation} will be INSERT and the {@link #bulkload} flag will be
+ * raised. {@link #additionalFilteringExpressions} and {@link #numberOfAdditionalNonFilteringFields} refers to the
+ * additionalFilteringExpressions, numberOfAdditionalNonFilteringFields found in the corresponding primary index
+ * {@link InsertDeleteUpsertOperator} (i.e. to specify LSM filters). {@link #upsertIndicatorExpr} also originates from
+ * {@link InsertDeleteUpsertOperator}, and is only set when the operation is of kind UPSERT.
+ * <p>
+ *
+ * If the SIDX is on an atomic field <b>or</b> on an array field w/ a bulk-load operation:
+ * <p>
+ * We specify secondary key information in {@link #secondaryKeyExprs}. If we may encounter nullable keys, then we
+ * specify a {@link #filterExpr} to be evaluated inside the runtime. If the operation is of kind UPSERT, then we must
+ * also specify previous secondary key information in {@link #prevSecondaryKeyExprs}. If
+ * {@link #additionalFilteringExpressions} has been set, then {@link #prevAdditionalFilteringExpression} should also be
+ * set.
+ *
+ * <p>
+ * If the SIDX is on an array field <b>and</b> we are not performing a bulk-load operation:
+ * <p>
+ * We <b>do not</b> specify secondary key information in {@link #secondaryKeyExprs} (this is null). Instead, we specify
+ * how to extract secondary keys using {@link #nestedPlans}. If we may encounter nullable keys, then we <b>do not</b>
+ * specify a {@link #filterExpr} (this is null). Instead, this filter must be attached to the top of the nested plan
+ * itself. If the operation is not of type UPSERT, then we must only have one nested plan. Otherwise, the second nested
+ * plan must specify how to extract secondary keys from the previous record. {@link #prevSecondaryKeyExprs} and
+ * {@link #prevAdditionalFilteringExpression} will always be null here, even if the operation is UPSERT.
+ *
+ */
+public class IndexInsertDeleteUpsertOperator extends AbstractOperatorWithNestedPlans {
 
     private final IDataSourceIndex<?, ?> dataSourceIndex;
     private final List<Mutable<ILogicalExpression>> primaryKeyExprs;
     // In the bulk-load case on ngram or keyword index,
     // it contains [token, number of token] or [token].
+    // In the non bulk-load array-index case, it contains nothing.
     // Otherwise, it contains secondary key information.
-    private final List<Mutable<ILogicalExpression>> secondaryKeyExprs;
-    private final Mutable<ILogicalExpression> filterExpr;
+    private List<Mutable<ILogicalExpression>> secondaryKeyExprs;
+    private Mutable<ILogicalExpression> filterExpr;
     private final Kind operation;
     private final boolean bulkload;
     private List<Mutable<ILogicalExpression>> additionalFilteringExpressions;
@@ -63,12 +98,6 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
         this.operation = operation;
         this.bulkload = bulkload;
         this.numberOfAdditionalNonFilteringFields = numberOfAdditionalNonFilteringFields;
-    }
-
-    @Override
-    public void recomputeSchema() throws AlgebricksException {
-        schema = new ArrayList<LogicalVariable>();
-        schema.addAll(inputs.get(0).getValue().getSchema());
     }
 
     @Override
@@ -125,8 +154,37 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
     }
 
     @Override
-    public boolean isMap() {
-        return false;
+    public void getUsedVariablesExceptNestedPlans(Collection<LogicalVariable> vars) {
+        for (Mutable<ILogicalExpression> e : getPrimaryKeyExpressions()) {
+            e.getValue().getUsedVariables(vars);
+        }
+        for (Mutable<ILogicalExpression> e : getSecondaryKeyExpressions()) {
+            e.getValue().getUsedVariables(vars);
+        }
+        if (getFilterExpression() != null) {
+            getFilterExpression().getValue().getUsedVariables(vars);
+        }
+        if (getAdditionalFilteringExpressions() != null) {
+            for (Mutable<ILogicalExpression> e : getAdditionalFilteringExpressions()) {
+                e.getValue().getUsedVariables(vars);
+            }
+        }
+        if (getPrevAdditionalFilteringExpression() != null) {
+            getPrevAdditionalFilteringExpression().getValue().getUsedVariables(vars);
+        }
+        if (getPrevSecondaryKeyExprs() != null) {
+            for (Mutable<ILogicalExpression> e : getPrevSecondaryKeyExprs()) {
+                e.getValue().getUsedVariables(vars);
+            }
+        }
+        if (getUpsertIndicatorExpr() != null) {
+            getUpsertIndicatorExpr().getValue().getUsedVariables(vars);
+        }
+    }
+
+    @Override
+    public void getProducedVariablesExceptNestedPlans(Collection<LogicalVariable> vars) {
+        // Do nothing (no variables are produced here).
     }
 
     @Override
@@ -142,6 +200,12 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         return createPropagatingAllInputsTypeEnvironment(ctx);
+    }
+
+    @Override
+    public void recomputeSchema() {
+        schema = new ArrayList<>();
+        schema.addAll(inputs.get(0).getValue().getSchema());
     }
 
     public List<Mutable<ILogicalExpression>> getPrimaryKeyExpressions() {
@@ -160,8 +224,16 @@ public class IndexInsertDeleteUpsertOperator extends AbstractLogicalOperator {
         return secondaryKeyExprs;
     }
 
+    public void setSecondaryKeyExprs(List<Mutable<ILogicalExpression>> secondaryKeyExprs) {
+        this.secondaryKeyExprs = secondaryKeyExprs;
+    }
+
     public Mutable<ILogicalExpression> getFilterExpression() {
         return filterExpr;
+    }
+
+    public void setFilterExpression(Mutable<ILogicalExpression> filterExpr) {
+        this.filterExpr = filterExpr;
     }
 
     public Kind getOperation() {

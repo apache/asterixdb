@@ -1,0 +1,13 @@
+{
+  "experiments.TweetFeed(Feed)": {
+    "Stats": [
+      {
+        "adapter-stats": {
+          "timestamp": "R{[0-9]+}",
+          "incoming-records-count": 13,
+          "failed-at-parser-records-count": 3
+        }
+      }
+    ]
+  }
+}

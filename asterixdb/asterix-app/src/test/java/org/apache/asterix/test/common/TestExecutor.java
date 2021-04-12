@@ -33,6 +33,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -81,6 +82,8 @@ import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.utils.Servlets;
+import org.apache.asterix.lang.common.base.IParserFactory;
+import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.lang.sqlpp.util.SqlppStatementUtil;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.utils.MetadataConstants;
@@ -103,14 +106,27 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicAuthCache;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
@@ -163,6 +179,8 @@ public class TestExecutor {
     private static final Pattern HANDLE_VARIABLE_PATTERN = Pattern.compile("handlevariable=(\\w+)");
     private static final Pattern RESULT_VARIABLE_PATTERN = Pattern.compile("resultvariable=(\\w+)");
     private static final Pattern COMPARE_UNORDERED_ARRAY_PATTERN = Pattern.compile("compareunorderedarray=(\\w+)");
+    private static final Pattern IGNORE_EXTRA_FIELDS_PATTERN = Pattern.compile("ignoreextrafields=(\\w+)");
+    private static final Pattern PRETTIFY_JSON_PATTERN = Pattern.compile("prettifyjsonresult=(\\w+)");
     private static final Pattern BODY_REF_PATTERN = Pattern.compile("bodyref=(.*)", Pattern.MULTILINE);
     private static final Pattern MACRO_PARAM_PATTERN =
             Pattern.compile("macro (?<name>[\\w-$]+)=(?<value>.*)", Pattern.MULTILINE);
@@ -170,6 +188,11 @@ public class TestExecutor {
     private static final Pattern VARIABLE_REF_PATTERN = Pattern.compile("\\$(\\w+)");
     private static final Pattern HTTP_PARAM_PATTERN =
             Pattern.compile("param (?<name>[\\w-$]+)(?::(?<type>\\w+))?=(?<value>.*)", Pattern.MULTILINE);
+    private static final Pattern HTTP_PARAMS_FROM_QUERY_PATTERN =
+            Pattern.compile("paramsfromquery (?<value>.*)", Pattern.MULTILINE);
+
+    private static final Pattern HTTP_AUTH_PATTERN =
+            Pattern.compile("auth (?<username>.*):(?<password>.*)", Pattern.MULTILINE);
     private static final Pattern HTTP_BODY_PATTERN = Pattern.compile("body=(.*)", Pattern.MULTILINE);
     private static final Pattern HTTP_STATUSCODE_PATTERN = Pattern.compile("statuscode (.*)", Pattern.MULTILINE);
     private static final Pattern MAX_RESULT_READS_PATTERN =
@@ -275,10 +298,12 @@ public class TestExecutor {
         if (expectedFile.getName().endsWith(".ignore")) {
             return; //skip the comparison
         }
+        boolean prettifyJsonResult = statement == null ? false : getPrettifyJsonResult(statement);
         try (BufferedReader readerExpected =
                 new BufferedReader(new InputStreamReader(new FileInputStream(expectedFile), UTF_8));
-                BufferedReader readerActual =
-                        new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), actualEncoding))) {
+                Reader rawReaderActual = new InputStreamReader(new FileInputStream(actualFile), actualEncoding);
+                BufferedReader readerActual = new BufferedReader(
+                        prettifyJsonResult ? TestHelper.asPrettyJson(rawReaderActual) : rawReaderActual)) {
             if (ComparisonEnum.BINARY.equals(compare)) {
                 if (!IOUtils.contentEquals(new FileInputStream(actualFile), new FileInputStream(expectedFile))) {
                     throw new Exception("Result for " + scriptFile + ": actual file did not match expected result");
@@ -291,8 +316,7 @@ public class TestExecutor {
                 runScriptAndCompareWithResultRegexAdm(scriptFile, readerExpected, readerActual);
                 return;
             } else if (actualFile.toString().endsWith(".regexjson")) {
-                boolean compareUnorderedArray = statement != null && getCompareUnorderedArray(statement);
-                runScriptAndCompareWithResultRegexJson(scriptFile, readerExpected, readerActual, compareUnorderedArray);
+                runScriptAndCompareWithResultRegexJson(scriptFile, readerExpected, readerActual, statement);
                 return;
             } else if (actualFile.toString().endsWith(".unorderedtxt")) {
                 runScriptAndCompareWithResultUnorderedLinesText(scriptFile, readerExpected, readerActual);
@@ -546,24 +570,28 @@ public class TestExecutor {
     }
 
     private static void runScriptAndCompareWithResultRegexJson(File scriptFile, BufferedReader readerExpected,
-            BufferedReader readerActual, boolean compareUnorderedArray) throws ComparisonException, IOException {
+            BufferedReader readerActual, String statement) throws ComparisonException, IOException {
+
+        boolean compareUnorderedArray = statement != null && getCompareUnorderedArray(statement);
+        boolean ignoreExtraFields = statement != null && getIgnoreExtraFields(statement);
+
         JsonNode expectedJson, actualJson;
         try {
             expectedJson = SINGLE_JSON_NODE_READER.readTree(readerExpected);
         } catch (JsonProcessingException e) {
-            throw new ComparisonException("Invalid expected JSON for: " + scriptFile);
+            throw new ComparisonException("Invalid expected JSON for: " + scriptFile, e);
         }
         try {
             actualJson = SINGLE_JSON_NODE_READER.readTree(readerActual);
         } catch (JsonProcessingException e) {
-            throw new ComparisonException("Invalid actual JSON for: " + scriptFile);
+            throw new ComparisonException("Invalid actual JSON for: " + scriptFile, e);
         }
         if (expectedJson == null) {
             throw new ComparisonException("No expected result for: " + scriptFile);
         } else if (actualJson == null) {
             throw new ComparisonException("No actual result for: " + scriptFile);
         }
-        if (!TestHelper.equalJson(expectedJson, actualJson, compareUnorderedArray)) {
+        if (!TestHelper.equalJson(expectedJson, actualJson, compareUnorderedArray, ignoreExtraFields, false, null)) {
             throw new ComparisonException("Result for " + scriptFile + " didn't match the expected JSON"
                     + "\nexpected result:\n" + expectedJson + "\nactual result:\n" + actualJson);
         }
@@ -611,6 +639,11 @@ public class TestExecutor {
         return checkResponse(executeHttpRequest(method), responseCodeValidator);
     }
 
+    protected HttpResponse executeAndCheckHttpRequest(HttpUriRequest method, Predicate<Integer> responseCodeValidator,
+            Pair<String, String> credentials) throws Exception {
+        return checkResponse(executeBasicAuthHttpRequest(method, credentials), responseCodeValidator);
+    }
+
     protected HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
         // https://issues.apache.org/jira/browse/ASTERIXDB-2315
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -619,6 +652,36 @@ public class TestExecutor {
         Future<HttpResponse> future = executor.submit(() -> {
             try {
                 return client.execute(method, getHttpContext());
+            } catch (Exception e) {
+                GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, "Failure executing {}", method, e);
+                throw e;
+            }
+        });
+        try {
+            return future.get();
+        } catch (Exception e) {
+            client.close();
+            throw e;
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    private HttpResponse executeBasicAuthHttpRequest(HttpUriRequest method, Pair<String, String> credentials)
+            throws Exception {
+        // https://issues.apache.org/jira/browse/ASTERIXDB-2315
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        CredentialsProvider cp = new BasicCredentialsProvider();
+        cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(credentials.first, credentials.second));
+        HttpClientContext hcCtx = HttpClientContext.create();
+        AuthCache ac = new BasicAuthCache();
+        ac.put(new HttpHost(method.getURI().getHost(), method.getURI().getPort(), "http"), new BasicScheme());
+        hcCtx.setAuthCache(ac);
+        CloseableHttpClient client = HttpClients.custom().setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE)
+                .setDefaultCredentialsProvider(cp).build();
+        Future<HttpResponse> future = executor.submit(() -> {
+            try {
+                return client.execute(method, hcCtx);
             } catch (Exception e) {
                 GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, "Failure executing {}", method, e);
                 throw e;
@@ -859,14 +922,38 @@ public class TestExecutor {
         return builder.build();
     }
 
+    private boolean isMultipart(Parameter p) {
+        return p != null && (ParameterTypeEnum.MULTIPART_TEXT == p.getType()
+                || ParameterTypeEnum.MULTIPART_BINARY == p.getType());
+    }
+
+    private void addMultipart(MultipartEntityBuilder multipartEntityBuilder, Parameter p) {
+        if (ParameterTypeEnum.MULTIPART_TEXT == p.getType()) {
+            multipartEntityBuilder.addTextBody(p.getName(), p.getValue());
+        } else if (ParameterTypeEnum.MULTIPART_BINARY == p.getType()) {
+            File binary = new File(p.getValue());
+            multipartEntityBuilder.addBinaryBody(p.getName(), binary, ContentType.DEFAULT_BINARY, binary.getName());
+        }
+    }
+
     private HttpUriRequest buildRequest(String method, URI uri, List<Parameter> params, Optional<String> body,
             ContentType contentType) {
         RequestBuilder builder = RequestBuilder.create(method);
         builder.setUri(uri);
+        Optional<MultipartEntityBuilder> mPartBuilder = params.stream()
+                .anyMatch(p -> p.getType() == ParameterTypeEnum.MULTIPART_BINARY
+                        || p.getType() == ParameterTypeEnum.MULTIPART_TEXT)
+                                ? Optional.of(MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT))
+                                : Optional.empty();
         for (Parameter param : params) {
-            builder.addParameter(param.getName(), param.getValue());
+            if (isMultipart(param)) {
+                addMultipart(mPartBuilder.get(), param);
+            } else {
+                builder.addParameter(param.getName(), param.getValue());
+            }
         }
         builder.setCharset(UTF_8);
+        mPartBuilder.ifPresent(mpb -> builder.setEntity(mpb.build()));
         body.ifPresent(s -> builder.setEntity(new StringEntity(s, contentType)));
         return builder.build();
     }
@@ -967,6 +1054,14 @@ public class TestExecutor {
             Predicate<Integer> responseCodeValidator, Optional<String> body, ContentType contentType) throws Exception {
         HttpUriRequest request = buildRequest(method, uri, fmt, params, body, contentType);
         HttpResponse response = executeAndCheckHttpRequest(request, responseCodeValidator);
+        return response.getEntity().getContent();
+    }
+
+    private InputStream executeJSON(OutputFormat fmt, String method, URI uri, List<Parameter> params,
+            Predicate<Integer> responseCodeValidator, Optional<String> body, ContentType contentType,
+            Pair<String, String> credentials) throws Exception {
+        HttpUriRequest request = buildRequest(method, uri, fmt, params, body, contentType);
+        HttpResponse response = executeAndCheckHttpRequest(request, responseCodeValidator, credentials);
         return response.getEntity().getContent();
     }
 
@@ -1231,30 +1326,37 @@ public class TestExecutor {
                 // TODO: make this case work well with entity names containing spaces by
                 // looking for \"
                 lines = stripAllComments(statement).trim().split("\n");
+                IParserFactory parserFactory = new SqlppParserFactory();
                 for (String line : lines) {
                     String[] command = line.trim().split(" ");
+                    URI path = createEndpointURI("/admin/udf/");
                     if (command.length < 2) {
                         throw new Exception("invalid library command: " + line);
                     }
-                    String dataverse = command[1];
-                    String library = command[2];
-                    String username = command[3];
-                    String pw = command[4];
                     switch (command[0]) {
                         case "install":
-                            if (command.length != 6) {
+                            if (command.length != 7) {
                                 throw new Exception("invalid library format");
                             }
-                            String libPath = command[5];
-                            URI create = createEndpointURI("/admin/udf/" + dataverse + "/" + library);
-                            librarian.install(create, libPath, new Pair<>(username, pw));
+                            List<String> dataverse = parserFactory.createParser(command[1]).parseMultipartIdentifier();
+                            String library = command[2];
+                            String type = command[3];
+                            String username = command[4];
+                            String pw = command[5];
+                            String libPath = command[6];
+                            librarian.install(path, "dataverse", DataverseName.create(dataverse), false, library, type,
+                                    libPath, new Pair<>(username, pw));
                             break;
                         case "uninstall":
                             if (command.length != 5) {
                                 throw new Exception("invalid library format");
                             }
-                            URI delete = createEndpointURI("/admin/udf/" + dataverse + "/" + library);
-                            librarian.uninstall(delete, new Pair<>(username, pw));
+                            dataverse = parserFactory.createParser(command[1]).parseMultipartIdentifier();
+                            library = command[2];
+                            username = command[3];
+                            pw = command[4];
+                            librarian.uninstall(path, "dataverse", DataverseName.create(dataverse), false, library,
+                                    new Pair<>(username, pw));
                             break;
                         default:
                             throw new Exception("invalid library format");
@@ -1374,9 +1476,16 @@ public class TestExecutor {
         if (!body.isPresent()) {
             body = getBodyFromReference(statement, variableCtx);
         }
+        final Pair<String, String> credentials = extractCredentials(statement);
         InputStream resultStream;
         if ("http".equals(extension)) {
-            resultStream = executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate, body, contentType);
+            if (credentials != null) {
+                resultStream = executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate, body,
+                        contentType, credentials);
+            } else {
+                resultStream =
+                        executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate, body, contentType);
+            }
         } else if ("uri".equals(extension)) {
             resultStream = executeURI(reqType, URI.create(variablesReplaced), fmt, params, statusCodePredicate, body,
                     contentType);
@@ -1756,6 +1865,16 @@ public class TestExecutor {
         return matcher.find() && Boolean.parseBoolean(matcher.group(1));
     }
 
+    protected static boolean getIgnoreExtraFields(String statement) {
+        final Matcher matcher = IGNORE_EXTRA_FIELDS_PATTERN.matcher(statement);
+        return matcher.find() && Boolean.parseBoolean(matcher.group(1));
+    }
+
+    protected static boolean getPrettifyJsonResult(String statement) {
+        final Matcher matcher = PRETTIFY_JSON_PATTERN.matcher(statement);
+        return matcher.find() && Boolean.parseBoolean(matcher.group(1));
+    }
+
     protected static String replaceVarRef(String statement, Map<String, Object> variableCtx) {
         String tmpStmt = statement;
         Matcher variableReferenceMatcher = VARIABLE_REF_PATTERN.matcher(tmpStmt);
@@ -1816,7 +1935,7 @@ public class TestExecutor {
 
     public static List<Parameter> extractParameters(String statement) {
         List<Parameter> params = new ArrayList<>();
-        final Matcher m = HTTP_PARAM_PATTERN.matcher(statement);
+        Matcher m = HTTP_PARAM_PATTERN.matcher(statement);
         while (m.find()) {
             final Parameter param = new Parameter();
             String name = m.group("name");
@@ -1834,7 +1953,28 @@ public class TestExecutor {
             }
             params.add(param);
         }
+        m = HTTP_PARAMS_FROM_QUERY_PATTERN.matcher(statement);
+        while (m.find()) {
+            String queryString = m.group("value");
+            for (NameValuePair queryParam : URLEncodedUtils.parse(queryString, UTF_8)) {
+                Parameter param = new Parameter();
+                param.setName(queryParam.getName());
+                param.setValue(queryParam.getValue());
+                params.add(param);
+            }
+        }
         return params;
+    }
+
+    public static Pair<String, String> extractCredentials(String statement) {
+        List<Parameter> params = new ArrayList<>();
+        final Matcher m = HTTP_AUTH_PATTERN.matcher(statement);
+        while (m.find()) {
+            String username = m.group("username");
+            String password = m.group("password");
+            return new Pair<>(username, password);
+        }
+        return null;
     }
 
     private static String extractHttpRequestType(String statement) {
@@ -1886,6 +2026,13 @@ public class TestExecutor {
         return executeURI(ctxType, uri, fmt, params, statusCodePredicate, body, contentType);
     }
 
+    private InputStream executeHttp(String ctxType, String endpoint, OutputFormat fmt, List<Parameter> params,
+            Predicate<Integer> statusCodePredicate, Optional<String> body, ContentType contentType,
+            Pair<String, String> credentials) throws Exception {
+        URI uri = createEndpointURI(endpoint);
+        return executeURI(ctxType, uri, fmt, params, statusCodePredicate, body, contentType, credentials);
+    }
+
     private InputStream executeURI(String ctxType, URI uri, OutputFormat fmt, List<Parameter> params) throws Exception {
         return executeJSON(fmt, ctxType.toUpperCase(), uri, params);
     }
@@ -1893,6 +2040,13 @@ public class TestExecutor {
     private InputStream executeURI(String ctxType, URI uri, OutputFormat fmt, List<Parameter> params,
             Predicate<Integer> responseCodeValidator, Optional<String> body, ContentType contentType) throws Exception {
         return executeJSON(fmt, ctxType.toUpperCase(), uri, params, responseCodeValidator, body, contentType);
+    }
+
+    private InputStream executeURI(String ctxType, URI uri, OutputFormat fmt, List<Parameter> params,
+            Predicate<Integer> responseCodeValidator, Optional<String> body, ContentType contentType,
+            Pair<String, String> credentials) throws Exception {
+        return executeJSON(fmt, ctxType.toUpperCase(), uri, params, responseCodeValidator, body, contentType,
+                credentials);
     }
 
     public void killNC(String nodeId, CompilationUnit cUnit) throws Exception {

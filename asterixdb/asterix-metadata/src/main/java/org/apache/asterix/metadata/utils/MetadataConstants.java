@@ -19,15 +19,20 @@
 
 package org.apache.asterix.metadata.utils;
 
+import java.util.regex.Pattern;
+
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.commons.lang3.SystemUtils;
 
 /**
  * Contains metadata constants
  */
 public class MetadataConstants {
 
-    public static final int DATAVERSE_NAME_PART_LENGTH_LIMIT_UTF8 = 255;
-    public static final int DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8 = 1023;
+    public static final int METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 = 251;
+    public static final int DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8 = METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 * 4;
+    public static final Pattern METADATA_OBJECT_NAME_INVALID_CHARS =
+            Pattern.compile(SystemUtils.IS_OS_WINDOWS ? "[\u0000-\u001F\u007F\"*/:<>\\\\|+,.;=\\[\\]\n]" : "[\u0000/]");
 
     // Name of the dataverse the metadata lives in.
     public static final DataverseName METADATA_DATAVERSE_NAME = DataverseName.createBuiltinDataverseName("Metadata");

@@ -16,4 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-install externallibtest testlib admin admin target/TweetSent.pyz
+install externallibtest testlib python admin admin target/TweetSent.pyz

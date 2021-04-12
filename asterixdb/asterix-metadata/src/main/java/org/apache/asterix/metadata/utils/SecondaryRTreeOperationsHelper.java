@@ -81,15 +81,16 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
 
     @Override
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {
-        List<List<String>> secondaryKeyFields = index.getKeyFieldNames();
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+        List<List<String>> secondaryKeyFields = indexDetails.getKeyFieldNames();
         int numSecondaryKeys = secondaryKeyFields.size();
-        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
+        boolean isOverridingKeyFieldTypes = indexDetails.isOverridingKeyFieldTypes();
         if (numSecondaryKeys != 1) {
             throw new AsterixException("Cannot use " + numSecondaryKeys + " fields as a key for the R-tree index. "
                     + "There can be only one field as a key for the R-tree index.");
         }
-        Pair<IAType, Boolean> spatialTypePair =
-                Index.getNonNullableOpenFieldType(index.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), itemType);
+        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(
+                indexDetails.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), itemType);
         IAType spatialType = spatialTypePair.first;
         anySecondaryKeyIsNullable = spatialTypePair.second;
         if (spatialType == null) {
@@ -198,7 +199,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
                 isPointMBR ? numNestedSecondaryKeyFields / 2 : numNestedSecondaryKeyFields;
         RecordDescriptor secondaryRecDescConsideringPointMBR =
                 isPointMBR ? secondaryRecDescForPointMBR : secondaryRecDesc;
-        boolean isOverridingKeyFieldTypes = index.isOverridingKeyFieldTypes();
+        boolean isOverridingKeyFieldTypes = index.getIndexDetails().isOverridingKeyFieldTypes();
         IIndexDataflowHelperFactory indexDataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {

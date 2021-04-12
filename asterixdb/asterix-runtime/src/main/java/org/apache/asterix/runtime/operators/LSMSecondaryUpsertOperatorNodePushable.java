@@ -60,11 +60,12 @@ import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDel
 public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
     private final PermutingFrameTupleReference prevValueTuple = new PermutingFrameTupleReference();
-    private final int upsertIndicatorFieldIndex;
-    private final IBinaryBooleanInspector upsertIndicatorInspector;
     private final int numberOfFields;
-    private AbstractIndexModificationOperationCallback abstractModCallback;
     private final boolean isPrimaryKeyIndex;
+
+    protected final int upsertIndicatorFieldIndex;
+    protected final IBinaryBooleanInspector upsertIndicatorInspector;
+    protected AbstractIndexModificationOperationCallback abstractModCallback;
 
     public LSMSecondaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, IModificationOperationCallbackFactory modCallbackFactory,
@@ -76,7 +77,7 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
         this.prevValueTuple.setFieldPermutation(prevValuePermutation);
         this.upsertIndicatorFieldIndex = upsertIndicatorFieldIndex;
         this.upsertIndicatorInspector = upsertIndicatorInspectorFactory.createBinaryBooleanInspector(ctx);
-        this.numberOfFields = prevValuePermutation.length;
+        this.numberOfFields = fieldPermutation.length;
         // a primary key index only has primary keys, and thus these two permutations are the same
         this.isPrimaryKeyIndex = Arrays.equals(fieldPermutation, prevValuePermutation);
     }
@@ -137,7 +138,12 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
         FrameUtils.flushFrame(writeBuffer.getBuffer(), writer);
     }
 
-    private boolean hasNullOrMissing(PermutingFrameTupleReference tuple) {
+    private static boolean isNullOrMissing(FrameTupleReference tuple, int fieldIdx) {
+        return TypeTagUtil.isType(tuple, fieldIdx, ATypeTag.SERIALIZED_NULL_TYPE_TAG)
+                || TypeTagUtil.isType(tuple, fieldIdx, ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+    }
+
+    protected static boolean hasNullOrMissing(FrameTupleReference tuple) {
         int fieldCount = tuple.getFieldCount();
         for (int i = 0; i < fieldCount; i++) {
             if (isNullOrMissing(tuple, i)) {
@@ -145,10 +151,5 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
             }
         }
         return false;
-    }
-
-    private static boolean isNullOrMissing(PermutingFrameTupleReference tuple, int fieldIdx) {
-        return TypeTagUtil.isType(tuple, fieldIdx, ATypeTag.SERIALIZED_NULL_TYPE_TAG)
-                || TypeTagUtil.isType(tuple, fieldIdx, ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
     }
 }

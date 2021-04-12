@@ -26,14 +26,16 @@ from struct import *
 import signal
 import msgpack
 import socket
+import traceback
 from importlib import import_module
 from pathlib import Path
 from enum import IntEnum
 from io import BytesIO
 
 PROTO_VERSION = 1
-HEADER_SZ = 8+8+1
-REAL_HEADER_SZ = 4+8+8+1
+HEADER_SZ = 8 + 8 + 1
+REAL_HEADER_SZ = 4 + 8 + 8 + 1
+FRAMESZ = 32768
 
 
 class MessageType(IntEnum):
@@ -57,19 +59,29 @@ class Wrapper(object):
     wrapped_module = None
     wrapped_class = None
     wrapped_fn = None
+    sz = None
+    mid = None
+    rmid = None
+    flag = None
+    resp = None
+    unpacked_msg = None
+    msg_type = None
     packer = msgpack.Packer(autoreset=False)
     unpacker = msgpack.Unpacker()
     response_buf = BytesIO()
     stdin_buf = BytesIO()
     wrapped_fns = {}
     alive = True
+    readbuf = bytearray(FRAMESZ)
+    readview = memoryview(readbuf)
+
 
     def init(self, module_name, class_name, fn_name):
         self.wrapped_module = import_module(module_name)
         # do not allow modules to be called that are not part of the uploaded module
         wrapped_fn = None
         if not self.check_module_path(self.wrapped_module):
-            wrapped_module = None
+            self.wrapped_module = None
             raise ImportError("Module was not found in library")
         if class_name is not None:
             self.wrapped_class = getattr(
@@ -77,12 +89,13 @@ class Wrapper(object):
         if self.wrapped_class is not None:
             wrapped_fn = getattr(self.wrapped_class, fn_name)
         else:
-            wrapped_fn = locals()[fn_name]
+            wrapped_fn = getattr(import_module(module_name), fn_name)
         if wrapped_fn is None:
-            raise ImportError("Could not find class or function in specified module")
-        self.wrapped_fns[self.rmid] = wrapped_fn
+            raise ImportError(
+                "Could not find class or function in specified module")
+        self.wrapped_fns[self.mid] = wrapped_fn
 
-    def nextTuple(self, *args, key=None):
+    def next_tuple(self, *args, key=None):
         return self.wrapped_fns[key](*args)
 
     def check_module_path(self, module):
@@ -92,14 +105,14 @@ class Wrapper(object):
 
     def read_header(self, readbuf):
         self.sz, self.mid, self.rmid, self.flag = unpack(
-            "!iqqb", readbuf[0:21])
+            "!iqqb", readbuf[0:REAL_HEADER_SZ])
         return True
 
     def write_header(self, response_buf, dlen):
         total_len = dlen + HEADER_SZ
         header = pack("!iqqb", total_len, int(-1), int(self.rmid), self.flag)
         self.response_buf.write(header)
-        return total_len+4
+        return total_len + 4
 
     def get_ver_hlen(self, hlen):
         return hlen + (PROTO_VERSION << 4)
@@ -118,14 +131,13 @@ class Wrapper(object):
         self.packer.reset()
 
     def helo(self):
-        #need to ack the connection back before sending actual HELO
+        # need to ack the connection back before sending actual HELO
         self.init_remote_ipc()
-
         self.flag = MessageFlags.NORMAL
         self.response_buf.seek(0)
         self.packer.pack(int(MessageType.HELO))
         self.packer.pack("HELO")
-        dlen = 5 #tag(1) + body(4)
+        dlen = 5  # tag(1) + body(4)
         resp_len = self.write_header(self.response_buf, dlen)
         self.response_buf.write(self.packer.bytes())
         self.resp = self.response_buf.getbuffer()[0:resp_len]
@@ -160,16 +172,19 @@ class Wrapper(object):
 
     def handle_call(self):
         self.flag = MessageFlags.NORMAL
-        args = self.unpacked_msg[1]
-        result = None
-        if args is None:
-            result = self.nextTuple(key=self.rmid)
-        else:
-            result = self.nextTuple(args, key=self.rmid)
+        result = ([], [])
+        if len(self.unpacked_msg) > 1:
+            args = self.unpacked_msg[1]
+            if args is not None:
+                for arg in args:
+                    try:
+                        result[0].append(self.next_tuple(*arg, key=self.mid))
+                    except BaseException as e:
+                        result[1].append(traceback.format_exc())
         self.packer.reset()
         self.response_buf.seek(0)
         body = msgpack.packb(result)
-        dlen = len(body)+1  # 1 for tag
+        dlen = len(body) + 1  # 1 for tag
         resp_len = self.write_header(self.response_buf, dlen)
         self.packer.pack(int(MessageType.CALL_RSP))
         self.response_buf.write(self.packer.bytes())
@@ -179,13 +194,12 @@ class Wrapper(object):
         self.packer.reset()
         return True
 
-    def handle_error(self,e):
+    def handle_error(self, e):
         self.flag = MessageFlags.NORMAL
-        result = type(e).__name__ + ": " + str(e)
         self.packer.reset()
         self.response_buf.seek(0)
-        body = msgpack.packb(result)
-        dlen = len(body)+1  # 1 for tag
+        body = msgpack.packb(e)
+        dlen = len(body) + 1  # 1 for tag
         resp_len = self.write_header(self.response_buf, dlen)
         self.packer.pack(int(MessageType.ERROR))
         self.response_buf.write(self.packer.bytes())
@@ -193,6 +207,7 @@ class Wrapper(object):
         self.resp = self.response_buf.getbuffer()[0:resp_len]
         self.send_msg()
         self.packer.reset()
+        self.alive = False
         return True
 
     type_handler = {
@@ -204,33 +219,47 @@ class Wrapper(object):
 
     def connect_sock(self, addr, port):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            self.sock.connect((addr, int(port)))
-        except socket.error as msg:
-            print(sys.stderr, msg)
+        self.sock.connect((addr, int(port)))
 
     def disconnect_sock(self, *args):
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
 
     def recv_msg(self):
-        completed = False
-        while not completed and self.alive:
-            readbuf = sys.stdin.buffer.read1(4096)
+        while self.alive:
+            pos = sys.stdin.buffer.readinto1(self.readbuf)
+            if pos <= 0:
+                self.alive = False
+                return
             try:
-                if(len(readbuf) < REAL_HEADER_SZ):
-                    while(len(readbuf) < REAL_HEADER_SZ):
-                        readbuf += sys.stdin.buffer.read1(4096)
-                self.read_header(readbuf)
-                if(self.sz > len(readbuf)):
-                    while(len(readbuf) < self.sz):
-                        readbuf += sys.stdin.buffer.read1(4096)
-                self.unpacker.feed(readbuf[21:])
+                while pos < REAL_HEADER_SZ:
+                    read = sys.stdin.buffer.readinto1(self.readview[pos:])
+                    if read <= 0:
+                        self.alive = False
+                        return
+                    pos += read
+                self.read_header(self.readview)
+                while pos < self.sz and len(self.readbuf) - pos > 0:
+                    read = sys.stdin.buffer.readinto1(self.readview[pos:])
+                    if read <= 0:
+                        self.alive = False
+                        return
+                    pos += read
+                while pos < self.sz:
+                    vszchunk = sys.stdin.buffer.read1()
+                    if len(vszchunk) == 0:
+                        self.alive = False
+                        return
+                    self.readview = None
+                    self.readbuf.extend(vszchunk)
+                    self.readview = memoryview(self.readbuf)
+                    pos += len(vszchunk)
+                self.unpacker.feed(self.readview[REAL_HEADER_SZ:self.sz])
                 self.unpacked_msg = list(self.unpacker)
-                self.type = MessageType(self.unpacked_msg[0])
-                completed = self.type_handler[self.type](self)
+                self.msg_type = MessageType(self.unpacked_msg[0])
+                self.type_handler[self.msg_type](self)
             except BaseException as e:
-                completed = self.handle_error(e)
+                self.handle_error(traceback.format_exc())
 
     def send_msg(self):
         self.sock.sendall(self.resp)

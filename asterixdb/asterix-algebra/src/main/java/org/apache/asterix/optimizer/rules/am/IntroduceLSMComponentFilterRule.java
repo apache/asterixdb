@@ -34,6 +34,7 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.ArrayIndexUtil;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -121,7 +122,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
 
             for (int i = 0; i < analysisCtx.getMatchedFuncExprs().size(); i++) {
                 IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(i);
-                boolean found = findMacthedExprFieldName(optFuncExpr, op, dataset, itemType, datasetIndexes, context,
+                boolean found = findMatchedExprFieldName(optFuncExpr, op, dataset, itemType, datasetIndexes, context,
                         filterSourceIndicator);
                 // the field name source should be consistent with the filter source indicator
                 if (found && optFuncExpr.getFieldName(0).equals(filterFieldName)
@@ -212,7 +213,9 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
                     FunctionIdentifier fid = f.getFunctionIdentifier();
                     if (!fid.equals(BuiltinFunctions.INDEX_SEARCH)) {
-                        throw new IllegalStateException();
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                unnestMapOp.getSourceLocation(),
+                                "Illegal function found, expected an " + "index-search.");
                     }
                     AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                     jobGenParams.readFromFuncArgs(f.getArguments());
@@ -308,14 +311,17 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     }
                     break;
                 case ORDER:
+                case DISTINCT:
                     ILogicalOperator child = intersectOrSortOrSplit.getValue().getInputs().get(0).getValue();
                     if (child.getOperatorTag().equals(LogicalOperatorTag.UNNEST_MAP)) {
                         UnnestMapOperator secondaryMap = (UnnestMapOperator) child;
 
-                        propagateFilterInSecondaryUnnsetMap(secondaryMap, filterType, context);
-
-                        setPrimaryFilterVar(primaryOp, secondaryMap.getPropagateIndexMinFilterVar(),
-                                secondaryMap.getPropagateIndexMaxFilterVar(), context);
+                        // If we are already propagating our index filter, do not repeat this action.
+                        if (!secondaryMap.propagateIndexFilter()) {
+                            propagateFilterInSecondaryUnnsetMap(secondaryMap, filterType, context);
+                            setPrimaryFilterVar(primaryOp, secondaryMap.getPropagateIndexMinFilterVar(),
+                                    secondaryMap.getPropagateIndexMaxFilterVar(), context);
+                        }
                     }
                     break;
 
@@ -495,7 +501,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private boolean findMacthedExprFieldName(IOptimizableFuncExpr optFuncExpr, AbstractLogicalOperator op,
+    private boolean findMatchedExprFieldName(IOptimizableFuncExpr optFuncExpr, AbstractLogicalOperator op,
             Dataset dataset, ARecordType filterSourceType, List<Index> datasetIndexes, IOptimizationContext context,
             Integer filterSourceIndicator) throws AlgebricksException {
         AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
@@ -557,7 +563,9 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) unnestExpr;
                         FunctionIdentifier fid = f.getFunctionIdentifier();
                         if (!fid.equals(BuiltinFunctions.INDEX_SEARCH)) {
-                            throw new IllegalStateException();
+                            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                    unnestMapOp.getSourceLocation(),
+                                    "Illegal function found, expected an " + "index-search.");
                         }
                         AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                         jobGenParams.readFromFuncArgs(f.getArguments());
@@ -568,6 +576,11 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                                 break;
                             }
                         }
+                    }
+                    if (index == null) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                unnestMapOp.getSourceLocation(),
+                                "Could not find the corresponding index for an" + " index search.");
                     }
 
                     IAType metaItemType = ((MetadataProvider) context.getMetadataProvider())
@@ -584,8 +597,40 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                         fieldName = dataset.getPrimaryKeys().get(idx);
                         keySource = getKeySource(DatasetUtil.getKeySourceIndicators(dataset), idx);
                     } else {
-                        fieldName = index.getKeyFieldNames().get(varIndex);
-                        keySource = getKeySource(index.getKeyFieldSourceIndicators(), varIndex);
+                        List<List<String>> keyFieldNames;
+                        List<Integer> keySources;
+                        switch (Index.IndexCategory.of(index.getIndexType())) {
+                            case ARRAY:
+                                Index.ArrayIndexDetails arrayIndexDetails =
+                                        (Index.ArrayIndexDetails) index.getIndexDetails();
+                                keyFieldNames = new ArrayList<>();
+                                keySources = new ArrayList<>();
+                                for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
+                                    for (List<String> project : e.getProjectList()) {
+                                        keyFieldNames.add(
+                                                ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project));
+                                        keySources.add(e.getSourceIndicator());
+                                    }
+                                }
+                                break;
+                            case VALUE:
+                                Index.ValueIndexDetails valueIndexDetails =
+                                        (Index.ValueIndexDetails) index.getIndexDetails();
+                                keyFieldNames = valueIndexDetails.getKeyFieldNames();
+                                keySources = valueIndexDetails.getKeyFieldSourceIndicators();
+                                break;
+                            case TEXT:
+                                Index.TextIndexDetails textIndexDetails =
+                                        (Index.TextIndexDetails) index.getIndexDetails();
+                                keyFieldNames = textIndexDetails.getKeyFieldNames();
+                                keySources = textIndexDetails.getKeyFieldSourceIndicators();
+                                break;
+                            default:
+                                throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
+                                        String.valueOf(index.getIndexType()));
+                        }
+                        fieldName = keyFieldNames.get(varIndex);
+                        keySource = getKeySource(keySources, varIndex);
                     }
                     if (fieldName == null) {
                         return false;

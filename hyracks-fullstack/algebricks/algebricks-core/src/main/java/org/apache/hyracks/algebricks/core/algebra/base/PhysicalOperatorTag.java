@@ -21,6 +21,7 @@ package org.apache.hyracks.algebricks.core.algebra.base;
 public enum PhysicalOperatorTag {
     AGGREGATE,
     ASSIGN,
+    ASSIGN_BATCH,
     BROADCAST_EXCHANGE,
     BTREE_SEARCH,
     BULKLOAD,
@@ -33,7 +34,6 @@ public enum PhysicalOperatorTag {
     FORWARD,
     HASH_PARTITION_EXCHANGE,
     HASH_PARTITION_MERGE_EXCHANGE,
-    HDFS_READER,
     HYBRID_HASH_JOIN,
     IN_MEMORY_HASH_JOIN,
     MICRO_STABLE_SORT,

@@ -202,6 +202,11 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
         return isActive.get();
     }
 
+    @Override
+    public synchronized boolean isCompleted() {
+        return completed;
+    }
+
     public void waitIfPaused() throws HyracksDataException {
         synchronized (this) {
             while (!isActive.get()) {

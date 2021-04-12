@@ -158,4 +158,9 @@ public class NoOpIoOperation implements ILSMIOOperation {
         return false;
     }
 
+    @Override
+    public boolean isCompleted() {
+        return true;
+    }
+
 }

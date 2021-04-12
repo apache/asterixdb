@@ -24,6 +24,8 @@ import java.util.Set;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
+import org.apache.hyracks.util.StorageUtil;
+
 public class ExternalDataConstants {
 
     private ExternalDataConstants() {
@@ -118,6 +120,7 @@ public class ExternalDataConstants {
     public static final String KEY_NULL_STR = "null";
     public static final String KEY_REDACT_WARNINGS = "redact-warnings";
     public static final String KEY_REQUESTED_FIELDS = "requested-fields";
+    public static final String KEY_EXTERNAL_SCAN_BUFFER_SIZE = "external-scan-buffer-size";
 
     /**
      * Keys for adapter name
@@ -257,7 +260,7 @@ public class ExternalDataConstants {
     /**
      * Size default values
      */
-    public static final int DEFAULT_BUFFER_SIZE = 4096;
+    public static final int DEFAULT_BUFFER_SIZE = StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.KILOBYTE);
     public static final float DEFAULT_BUFFER_INCREMENT_FACTOR = 1.5F;
     public static final int DEFAULT_QUEUE_SIZE = 64;
     public static final int MAX_RECORD_SIZE = 32000000;
@@ -286,6 +289,7 @@ public class ExternalDataConstants {
     public static final String INVALID_VAL = "invalid value";
 
     public static final String DEFINITION_FIELD_NAME = "definition";
+    public static final String CONTAINER_NAME_FIELD_NAME = "container";
 
     public static class AwsS3 {
         private AwsS3() {
@@ -296,8 +300,16 @@ public class ExternalDataConstants {
         public static final String ACCESS_KEY_ID_FIELD_NAME = "accessKeyId";
         public static final String SECRET_ACCESS_KEY_FIELD_NAME = "secretAccessKey";
         public static final String SESSION_TOKEN_FIELD_NAME = "sessionToken";
-        public static final String CONTAINER_NAME_FIELD_NAME = "container";
         public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";
+
+        // AWS S3 specific error codes
+        public static final String ERROR_INTERNAL_ERROR = "InternalError";
+        public static final String ERROR_SLOW_DOWN = "SlowDown";
+        public static final String ERROR_METHOD_NOT_IMPLEMENTED = "NotImplemented";
+
+        public static boolean isRetryableError(String errorCode) {
+            return errorCode.equals(ERROR_INTERNAL_ERROR) || errorCode.equals(ERROR_SLOW_DOWN);
+        }
     }
 
     public static class AzureBlob {
@@ -305,8 +317,6 @@ public class ExternalDataConstants {
             throw new AssertionError("do not instantiate");
         }
 
-        public static final String CONTAINER_NAME_FIELD_NAME = "container";
-        public static final String DEFINITION_FIELD_NAME = "definition";
         public static final String CONNECTION_STRING_FIELD_NAME = "connectionString";
         public static final String ACCOUNT_NAME_FIELD_NAME = "accountName";
         public static final String ACCOUNT_KEY_FIELD_NAME = "accountKey";

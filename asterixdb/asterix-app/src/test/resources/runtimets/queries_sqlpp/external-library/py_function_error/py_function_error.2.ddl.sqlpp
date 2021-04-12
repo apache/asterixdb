@@ -21,3 +21,9 @@ use test;
 
 create function warning()
   as "roundtrip", "Tests.warning" at testlib;
+
+create function roundtrip(s)
+  as "roundtrip", "Tests.roundtrip" at testlib;
+
+create function env_test(k)
+  as "roundtrip", "Tests.env_test" at testlib;

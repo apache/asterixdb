@@ -22,39 +22,48 @@ package org.apache.asterix.optimizer.rules.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.StatefulFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.PrimaryKeyVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
-import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 
 public class EquivalenceClassUtils {
+
+    // Controls whether to use create-query-uid() function when generating a primary key
+    // If disabled then use row_number() approach instead
+    public static final String REWRITE_INTERNAL_QUERYUID_PK = "rewrite_internal_queryuid_pk";
+    static final boolean REWRITE_INTERNAL_QUERYUID_PK_DEFAULT = true;
 
     /**
      * Adds equivalent classes for primary index accesses, including unnest-map for
@@ -148,16 +157,14 @@ public class EquivalenceClassUtils {
      *         a set of primary key variables at the operator.
      * @throws AlgebricksException
      */
-    public static Pair<ILogicalOperator, Set<LogicalVariable>> findOrCreatePrimaryKeyOpAndVariables(
+    public static Triple<Set<LogicalVariable>, ILogicalOperator, FunctionalDependency> findOrCreatePrimaryKeyOpAndVariables(
             ILogicalOperator operator, boolean usedForCorrelationJoin, IOptimizationContext context)
             throws AlgebricksException {
-        computePrimaryKeys(operator, context);
-
-        Set<LogicalVariable> liveVars = new HashSet<>();
+        Set<LogicalVariable> liveVars = new LinkedHashSet<>();
         VariableUtilities.getSubplanLocalLiveVariables(operator, liveVars);
 
-        Set<LogicalVariable> primaryKeyVars = new HashSet<>();
-        Set<LogicalVariable> noKeyVars = new HashSet<>();
+        Set<LogicalVariable> primaryKeyVars = new LinkedHashSet<>();
+        Set<LogicalVariable> noKeyVars = new LinkedHashSet<>();
         for (LogicalVariable liveVar : liveVars) {
             List<LogicalVariable> keyVars = context.findPrimaryKey(liveVar);
             if (keyVars != null) {
@@ -171,24 +178,57 @@ public class EquivalenceClassUtils {
         }
         primaryKeyVars.retainAll(liveVars);
         if (primaryKeyVars.containsAll(noKeyVars)) {
-            return new Pair<ILogicalOperator, Set<LogicalVariable>>(operator, primaryKeyVars);
+            return new Triple<>(primaryKeyVars, null, null);
+        } else if (!usedForCorrelationJoin && isQueryUidPkEnabled(context)) {
+            LogicalVariable idVar = context.newVar();
+            RunningAggregateOperator assignIdOp =
+                    new RunningAggregateOperator(idVar, new MutableObject<>(new StatefulFunctionCallExpression(
+                            BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.CREATE_QUERY_UID), null)));
+            assignIdOp.setSourceLocation(operator.getSourceLocation());
+            assignIdOp.getInputs().add(new MutableObject<>(operator));
+
+            context.computeAndSetTypeEnvironmentForOperator(assignIdOp);
+
+            FunctionalDependency primaryKeyFD =
+                    new FunctionalDependency(Collections.singletonList(idVar), new ArrayList<>(liveVars));
+
+            return new Triple<>(Collections.singleton(idVar), assignIdOp, primaryKeyFD);
         } else {
-            LogicalVariable assignVar = context.newVar();
-            ILogicalOperator assignOp = new AssignOperator(assignVar,
-                    new MutableObject<ILogicalExpression>(new StatefulFunctionCallExpression(
-                            FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_QUERY_UID), null)));
-            OperatorPropertiesUtil.markMovable(assignOp, !usedForCorrelationJoin);
-            assignOp.getInputs().add(new MutableObject<ILogicalOperator>(operator));
-            context.addPrimaryKey(new FunctionalDependency(Collections.singletonList(assignVar),
-                    new ArrayList<LogicalVariable>(liveVars)));
-            context.computeAndSetTypeEnvironmentForOperator(assignOp);
-            return new Pair<ILogicalOperator, Set<LogicalVariable>>(assignOp, Collections.singleton(assignVar));
+            noKeyVars.removeAll(primaryKeyVars);
+
+            List<Mutable<ILogicalExpression>> partitionVarRefs =
+                    new ArrayList<>(primaryKeyVars.size() + noKeyVars.size());
+            OperatorManipulationUtil.createVariableReferences(primaryKeyVars, operator.getSourceLocation(),
+                    partitionVarRefs);
+            OperatorManipulationUtil.createVariableReferences(noKeyVars, operator.getSourceLocation(),
+                    partitionVarRefs);
+            LogicalVariable rowNumVar = context.newVar();
+            AbstractFunctionCallExpression rowNumExpr = BuiltinFunctions
+                    .makeWindowFunctionExpression(BuiltinFunctions.ROW_NUMBER_IMPL, Collections.emptyList());
+            WindowOperator winOp = new WindowOperator(partitionVarRefs, Collections.emptyList());
+            winOp.getVariables().add(rowNumVar);
+            winOp.getExpressions().add(new MutableObject<>(rowNumExpr));
+            winOp.setSourceLocation(operator.getSourceLocation());
+            winOp.getInputs().add(new MutableObject<>(operator));
+
+            context.computeAndSetTypeEnvironmentForOperator(winOp);
+
+            primaryKeyVars.addAll(noKeyVars);
+            primaryKeyVars.add(rowNumVar);
+            FunctionalDependency primaryKeyFD =
+                    new FunctionalDependency(new ArrayList<>(primaryKeyVars), new ArrayList<>(liveVars));
+
+            return new Triple<>(primaryKeyVars, winOp, primaryKeyFD);
         }
     }
 
-    private static void computePrimaryKeys(ILogicalOperator op, IOptimizationContext ctx) throws AlgebricksException {
+    public static void computePrimaryKeys(ILogicalOperator op, IOptimizationContext ctx) throws AlgebricksException {
         PrimaryKeyVariablesVisitor visitor = new PrimaryKeyVariablesVisitor();
         PhysicalOptimizationsUtil.visitOperatorAndItsDescendants(op, visitor, ctx);
     }
 
+    private static boolean isQueryUidPkEnabled(IOptimizationContext context) {
+        MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
+        return metadataProvider.getBooleanProperty(REWRITE_INTERNAL_QUERYUID_PK, REWRITE_INTERNAL_QUERYUID_PK_DEFAULT);
+    }
 }

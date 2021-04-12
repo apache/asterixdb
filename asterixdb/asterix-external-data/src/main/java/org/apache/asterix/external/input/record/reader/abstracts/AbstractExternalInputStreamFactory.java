@@ -30,6 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
@@ -69,29 +70,16 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
         return partitionConstraint;
     }
 
+    protected int getPartitionsCount() {
+        return getPartitionConstraint().getLocations().length;
+    }
+
     @Override
-    public abstract void configure(IServiceContext ctx, Map<String, String> configuration,
-            IWarningCollector warningCollector) throws AlgebricksException;
-
-    /**
-     * Finds the smallest workload and returns it
-     *
-     * @return the smallest workload
-     */
-    protected PartitionWorkLoadBasedOnSize getSmallestWorkLoad() {
-        PartitionWorkLoadBasedOnSize smallest = partitionWorkLoadsBasedOnSize.get(0);
-        for (PartitionWorkLoadBasedOnSize partition : partitionWorkLoadsBasedOnSize) {
-            // If the current total size is 0, add the file directly as this is a first time partition
-            if (partition.getTotalSize() == 0) {
-                smallest = partition;
-                break;
-            }
-            if (partition.getTotalSize() < smallest.getTotalSize()) {
-                smallest = partition;
-            }
-        }
-
-        return smallest;
+    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
+            throws AlgebricksException {
+        this.configuration = configuration;
+        this.partitionConstraint =
+                ((ICcApplicationContext) ctx.getApplicationContext()).getClusterStateManager().getClusterLocations();
     }
 
     protected IncludeExcludeMatcher getIncludeExcludeMatchers() throws CompilationException {

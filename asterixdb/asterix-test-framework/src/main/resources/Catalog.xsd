@@ -298,6 +298,8 @@
       <xs:restriction base="xs:string">
          <xs:enumeration value="string"/>
          <xs:enumeration value="json"/>
+         <xs:enumeration value="multipart_text"/>
+         <xs:enumeration value="multipart_binary"/>
       </xs:restriction>
    </xs:simpleType>
 

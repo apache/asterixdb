@@ -35,7 +35,7 @@ WITH tmp1 AS
 ),
 tmp2 AS
 (
-    SELECT l2.l_orderkey,
+    SELECT l_orderkey,
            COUNT(l_suppkey) AS count_suppkey,
            MAX(l_suppkey) AS max_suppkey
     FROM  (
@@ -49,7 +49,7 @@ tmp2 AS
 
 SELECT t4.s_name, COUNT(*) AS numwait
 FROM  (
-    SELECT t3.s_name, l_suppkey, t2.l_orderkey, count_suppkey, max_suppkey
+    SELECT t3.s_name, t3.l_suppkey, t2.l_orderkey, t3.count_suppkey, t3.max_suppkey
     FROM  (
             SELECT ns.s_name, t1.l_orderkey, t1.l_suppkey
             FROM  LineItem l,
@@ -64,7 +64,7 @@ FROM  (
                   AND o.o_orderkey = t1.l_orderkey AND l.l_orderkey = t1.l_orderkey
                   AND o.o_orderstatus = 'F'
           ) AS t3
-     JOIN tmp2 AS t2 ON count_suppkey >= 0 AND t3.l_orderkey = t2.l_orderkey
+     JOIN tmp2 AS t2 ON t3.count_suppkey >= 0 AND t3.l_orderkey = t2.l_orderkey
 ) AS t4
 GROUP BY t4.s_name
 ORDER BY numwait DESC, t4.s_name

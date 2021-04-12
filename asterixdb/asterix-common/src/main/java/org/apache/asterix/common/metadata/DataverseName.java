@@ -36,15 +36,13 @@ import org.apache.commons.lang3.StringUtils;
  * <p>
  * Each dataverse name can be encoded into a single string (called a canonical form) by
  * {@link #getCanonicalForm()} and decoded back from it with {@link #createFromCanonicalForm(String)}.
- * The canonical form encoding concatenates name parts together with {@link #CANONICAL_FORM_SEPARATOR_CHAR '.'}
- * character. The {@link #CANONICAL_FORM_ESCAPE_CHAR '@'} character is used to escape
- * {@link #CANONICAL_FORM_SEPARATOR_CHAR '.'} and itself in each name part prior to concatenation.
+ * The canonical form encoding concatenates name parts together with {@link #CANONICAL_FORM_SEPARATOR_CHAR '/'}
+ * character.
  * <p>
- * E.g. the canonical form for a dataverse name {@code ["a", "b", "c"]} is {@code "a.b.c"}
+ * E.g. the canonical form for a dataverse name {@code ["a", "b", "c"]} is {@code "a/b/c"}
  * <p>
- * {@link #toString()} returns a display form which is a {@link #CANONICAL_FORM_SEPARATOR_CHAR '.'} separated
- * concatenation of name parts without escaping. In general it's impossible to reconstruct a dataverse name from
- * its display form.
+ * {@link #toString()} returns a display form which is suitable for error messages,
+ * and is a valid SQL++ multi-part identifier parsable by {@code IParser#parseMultipartIdentifier()}
  * <p>
  * Notes:
  * <li>
@@ -60,11 +58,9 @@ import org.apache.commons.lang3.StringUtils;
  */
 public final class DataverseName implements Serializable, Comparable<DataverseName> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    public static final char CANONICAL_FORM_SEPARATOR_CHAR = '.';
-
-    private static final char CANONICAL_FORM_ESCAPE_CHAR = '@';
+    public static final char CANONICAL_FORM_SEPARATOR_CHAR = '/';
 
     public static final char DISPLAY_FORM_SEPARATOR_CHAR = '.';
 
@@ -73,7 +69,7 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
     private static final char DISPLAY_FORM_ESCAPE_CHAR = '\\';
 
     private static final char[] CANONICAL_FORM_SEPARATOR_AND_ESCAPE_CHARS =
-            new char[] { CANONICAL_FORM_SEPARATOR_CHAR, CANONICAL_FORM_ESCAPE_CHAR };
+            new char[] { CANONICAL_FORM_SEPARATOR_CHAR };
 
     private final boolean isMultiPart;
 
@@ -283,13 +279,7 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
     }
 
     private static void encodePartIntoCanonicalForm(String part, StringBuilder out) {
-        for (int i = 0, ln = part.length(); i < ln; i++) {
-            char c = part.charAt(i);
-            if (c == CANONICAL_FORM_SEPARATOR_CHAR || c == CANONICAL_FORM_ESCAPE_CHAR) {
-                out.append(CANONICAL_FORM_ESCAPE_CHAR);
-            }
-            out.append(c);
-        }
+        out.append(part);
     }
 
     private static <T> void decodeCanonicalForm(String canonicalForm, BiConsumer<CharSequence, T> partConsumer,
@@ -298,18 +288,11 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
         StringBuilder sb = new StringBuilder(ln);
         for (int i = 0; i < ln; i++) {
             char c = canonicalForm.charAt(i);
-            switch (c) {
-                case CANONICAL_FORM_SEPARATOR_CHAR:
-                    partConsumer.accept(sb, partConsumerArg);
-                    sb.setLength(0);
-                    break;
-                case CANONICAL_FORM_ESCAPE_CHAR:
-                    i++;
-                    c = canonicalForm.charAt(i);
-                    // fall through to 'default'
-                default:
-                    sb.append(c);
-                    break;
+            if (c == CANONICAL_FORM_SEPARATOR_CHAR) {
+                partConsumer.accept(sb, partConsumerArg);
+                sb.setLength(0);
+            } else {
+                sb.append(c);
             }
         }
         if (sb.length() > 0) {
@@ -319,41 +302,11 @@ public final class DataverseName implements Serializable, Comparable<DataverseNa
 
     // optimization for a single part name
     private static String decodeSinglePartNameFromCanonicalForm(String canonicalForm) {
-        if (canonicalForm.indexOf(CANONICAL_FORM_ESCAPE_CHAR) < 0) {
-            // no escaping was done
-            return canonicalForm;
-        }
-
-        StringBuilder singlePart = new StringBuilder(canonicalForm.length());
-        for (int i = 0, ln = canonicalForm.length(); i < ln; i++) {
-            char c = canonicalForm.charAt(i);
-            switch (c) {
-                case CANONICAL_FORM_SEPARATOR_CHAR:
-                    throw new IllegalStateException(canonicalForm); // should never happen
-                case CANONICAL_FORM_ESCAPE_CHAR:
-                    i++;
-                    c = canonicalForm.charAt(i);
-                    // fall through to 'default'
-                default:
-                    singlePart.append(c);
-                    break;
-            }
-        }
-        return singlePart.toString();
+        return canonicalForm;
     }
 
     private static boolean isMultiPartCanonicalForm(String canonicalForm) {
-        for (int i = 0, ln = canonicalForm.length(); i < ln; i++) {
-            char c = canonicalForm.charAt(i);
-            switch (c) {
-                case CANONICAL_FORM_SEPARATOR_CHAR:
-                    return true;
-                case CANONICAL_FORM_ESCAPE_CHAR:
-                    i++;
-                    break;
-            }
-        }
-        return false;
+        return canonicalForm.indexOf(CANONICAL_FORM_SEPARATOR_CHAR) != -1;
     }
 
     private static void addPartToCollection(CharSequence part, Collection<? super String> out) {

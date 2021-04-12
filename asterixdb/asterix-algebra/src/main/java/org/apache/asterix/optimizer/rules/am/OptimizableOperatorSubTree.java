@@ -72,6 +72,7 @@ public class OptimizableOperatorSubTree {
     private Mutable<ILogicalOperator> rootRef = null;
     private final List<Mutable<ILogicalOperator>> assignsAndUnnestsRefs = new ArrayList<>();
     private final List<AbstractLogicalOperator> assignsAndUnnests = new ArrayList<>();
+    private final Pair<Integer, Integer> lastMatchedDataSourceVars = new Pair<>(-1, -1);
     private Mutable<ILogicalOperator> dataSourceRef = null;
     private DataSourceType dataSourceType = DataSourceType.NO_DATASOURCE;
 
@@ -389,6 +390,8 @@ public class OptimizableOperatorSubTree {
         setRecordType(null);
         setMetaRecordType(null);
         setIxJoinOuterAdditionalRecordTypes(null);
+        lastMatchedDataSourceVars.first = -1;
+        lastMatchedDataSourceVars.second = -1;
     }
 
     /**
@@ -590,4 +593,12 @@ public class OptimizableOperatorSubTree {
         return varsToFieldNameMap;
     }
 
+    public Pair<Integer, Integer> getLastMatchedDataSourceVars() {
+        return lastMatchedDataSourceVars;
+    }
+
+    public void setLastMatchedDataSourceVars(int varIndex, int optVarIndex) {
+        this.lastMatchedDataSourceVars.first = varIndex;
+        this.lastMatchedDataSourceVars.second = optVarIndex;
+    }
 }

@@ -134,7 +134,7 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas[0], context);
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> runtimeAndConstraints =
                 mp.getIndexInsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas, typeEnv, primaryKeys,
-                        secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context, spec, true);
+                        secondaryKeys, additionalFilteringKeys, filterExpr, inputDesc, context, spec, true, null, null);
         IOperatorDescriptor opDesc = runtimeAndConstraints.first;
         opDesc.setSourceLocation(indexInsertDeleteOp.getSourceLocation());
         builder.contributeHyracksOperator(indexInsertDeleteOp, opDesc);

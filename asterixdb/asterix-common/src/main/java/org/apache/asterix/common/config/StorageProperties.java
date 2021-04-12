@@ -18,8 +18,8 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.DOUBLE;
-import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
@@ -28,6 +28,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
@@ -49,13 +50,18 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_MEMORYCOMPONENT_PAGESIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(128, KILOBYTE)),
         STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS(POSITIVE_INTEGER, 2),
         STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD(DOUBLE, 0.9d),
-        STORAGE_MEMORYCOMPONENT_MAX_CONCURRENT_FLUSHES(INTEGER, 0),
+        STORAGE_MEMORYCOMPONENT_MAX_SCHEDULED_FLUSHES(NONNEGATIVE_INTEGER, 0),
         STORAGE_FILTERED_MEMORYCOMPONENT_MAX_SIZE(LONG_BYTE_UNIT, 0L),
         STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE(DOUBLE, 0.01d),
         STORAGE_COMPRESSION_BLOCK(STRING, "snappy"),
         STORAGE_DISK_FORCE_BYTES(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(16, MEGABYTE)),
         STORAGE_IO_SCHEDULER(STRING, "greedy"),
-        STORAGE_WRITE_RATE_LIMIT(LONG_BYTE_UNIT, 0l);
+        STORAGE_WRITE_RATE_LIMIT(LONG_BYTE_UNIT, 0l),
+        STORAGE_MAX_CONCURRENT_FLUSHES_PER_PARTITION(NONNEGATIVE_INTEGER, 2),
+        STORAGE_MAX_SCHEDULED_MERGES_PER_PARTITION(NONNEGATIVE_INTEGER, 8),
+        STORAGE_MAX_CONCURRENT_MERGES_PER_PARTITION(NONNEGATIVE_INTEGER, 2),
+        STORAGE_GLOBAL_CLEANUP(BOOLEAN, true),
+        STORAGE_GLOBAL_CLEANUP_TIMEOUT(POSITIVE_INTEGER, (int) TimeUnit.MINUTES.toSeconds(10));
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -70,6 +76,8 @@ public class StorageProperties extends AbstractProperties {
             switch (this) {
                 case STORAGE_COMPRESSION_BLOCK:
                 case STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE:
+                case STORAGE_GLOBAL_CLEANUP:
+                case STORAGE_GLOBAL_CLEANUP_TIMEOUT:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -93,8 +101,8 @@ public class StorageProperties extends AbstractProperties {
                     return "The page size in bytes for pages allocated to memory components";
                 case STORAGE_MEMORYCOMPONENT_NUMCOMPONENTS:
                     return "The number of memory components to be used per lsm index";
-                case STORAGE_MEMORYCOMPONENT_MAX_CONCURRENT_FLUSHES:
-                    return "The maximum number of concurrent flush operations. 0 means that the value will be "
+                case STORAGE_MEMORYCOMPONENT_MAX_SCHEDULED_FLUSHES:
+                    return "The maximum number of scheduled flush operations. 0 means that the value will be "
                             + "calculated as the number of partitions";
                 case STORAGE_MEMORYCOMPONENT_FLUSH_THRESHOLD:
                     return "The memory usage threshold when memory components should be flushed";
@@ -111,6 +119,16 @@ public class StorageProperties extends AbstractProperties {
                     return "The number of bytes before each disk force (fsync)";
                 case STORAGE_IO_SCHEDULER:
                     return "The I/O scheduler for LSM flush and merge operations";
+                case STORAGE_MAX_CONCURRENT_FLUSHES_PER_PARTITION:
+                    return "The maximum number of concurrently executed flushes per partition (0 means unlimited)";
+                case STORAGE_MAX_SCHEDULED_MERGES_PER_PARTITION:
+                    return "The maximum number of scheduled merges per partition (0 means unlimited)";
+                case STORAGE_MAX_CONCURRENT_MERGES_PER_PARTITION:
+                    return "The maximum number of concurrently executed merges per partition (0 means unlimited)";
+                case STORAGE_GLOBAL_CLEANUP:
+                    return "Indicates whether or not global storage cleanup is performed";
+                case STORAGE_GLOBAL_CLEANUP_TIMEOUT:
+                    return "The maximum time to wait for nodes to respond to global storage cleanup requests";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -129,6 +147,11 @@ public class StorageProperties extends AbstractProperties {
         @Override
         public String usageDefaultOverride(IApplicationConfig accessor, Function<IOption, String> optionPrinter) {
             return null;
+        }
+
+        @Override
+        public boolean hidden() {
+            return this == STORAGE_GLOBAL_CLEANUP;
         }
     }
 
@@ -180,8 +203,8 @@ public class StorageProperties extends AbstractProperties {
         return (int) (getBufferCacheSize() / (getBufferCachePageSize() + IBufferCache.RESERVED_HEADER_BYTES));
     }
 
-    public int getMaxConcurrentFlushes() {
-        return accessor.getInt(Option.STORAGE_MEMORYCOMPONENT_MAX_CONCURRENT_FLUSHES);
+    public int getMaxScheduledFlushes() {
+        return accessor.getInt(Option.STORAGE_MEMORYCOMPONENT_MAX_SCHEDULED_FLUSHES);
     }
 
     public long getJobExecutionMemoryBudget() {
@@ -202,6 +225,29 @@ public class StorageProperties extends AbstractProperties {
 
     public String getIoScheduler() {
         return accessor.getString(Option.STORAGE_IO_SCHEDULER);
+    }
+
+    public int geMaxConcurrentFlushes(int numPartitions) {
+        int value = accessor.getInt(Option.STORAGE_MAX_CONCURRENT_FLUSHES_PER_PARTITION);
+        return value != 0 ? value * numPartitions : Integer.MAX_VALUE;
+    }
+
+    public int getMaxScheduledMerges(int numPartitions) {
+        int value = accessor.getInt(Option.STORAGE_MAX_SCHEDULED_MERGES_PER_PARTITION);
+        return value != 0 ? value * numPartitions : Integer.MAX_VALUE;
+    }
+
+    public int getMaxConcurrentMerges(int numPartitions) {
+        int value = accessor.getInt(Option.STORAGE_MAX_CONCURRENT_MERGES_PER_PARTITION);
+        return value != 0 ? value * numPartitions : Integer.MAX_VALUE;
+    }
+
+    public boolean isStorageGlobalCleanup() {
+        return accessor.getBoolean(Option.STORAGE_GLOBAL_CLEANUP);
+    }
+
+    public int getStorageGlobalCleanupTimeout() {
+        return accessor.getInt(Option.STORAGE_GLOBAL_CLEANUP_TIMEOUT);
     }
 
     protected int getMetadataDatasets() {

@@ -19,9 +19,7 @@
 package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,20 +36,15 @@ import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.ArrayIndexUtil;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.MetadataUtil;
-import org.apache.asterix.om.base.AOrderedList;
-import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
-import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.asterix.optimizer.rules.am.OptimizableOperatorSubTree.DataSourceType;
 import org.apache.asterix.optimizer.rules.util.FullTextUtil;
@@ -59,6 +52,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -66,8 +60,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -83,7 +75,6 @@ import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * Class that embodies the commonalities between rewrite rules for access
@@ -92,15 +83,6 @@ import com.google.common.collect.ImmutableSet;
 public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRewriteRule {
 
     protected MetadataProvider metadataProvider;
-
-    // Function Identifier sets that retain the original field variable through each function's arguments
-    private final ImmutableSet<FunctionIdentifier> funcIDSetThatRetainFieldName =
-            ImmutableSet.of(BuiltinFunctions.WORD_TOKENS, BuiltinFunctions.GRAM_TOKENS, BuiltinFunctions.SUBSTRING,
-                    BuiltinFunctions.SUBSTRING_BEFORE, BuiltinFunctions.SUBSTRING_AFTER,
-                    BuiltinFunctions.CREATE_POLYGON, BuiltinFunctions.CREATE_MBR, BuiltinFunctions.CREATE_RECTANGLE,
-                    BuiltinFunctions.CREATE_CIRCLE, BuiltinFunctions.CREATE_LINE, BuiltinFunctions.CREATE_POINT,
-                    BuiltinFunctions.NUMERIC_ADD, BuiltinFunctions.NUMERIC_SUBTRACT, BuiltinFunctions.NUMERIC_MULTIPLY,
-                    BuiltinFunctions.NUMERIC_DIVIDE, BuiltinFunctions.NUMERIC_DIV, BuiltinFunctions.NUMERIC_MOD);
 
     public abstract Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods();
 
@@ -243,6 +225,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 boolean isNgramIndexChosen = indexType == IndexType.LENGTH_PARTITIONED_NGRAM_INVIX
                         || indexType == IndexType.SINGLE_PARTITION_NGRAM_INVIX;
                 if ((chosenAccessMethod == BTreeAccessMethod.INSTANCE && indexType == IndexType.BTREE)
+                        || (chosenAccessMethod == ArrayBTreeAccessMethod.INSTANCE && indexType == IndexType.ARRAY)
                         || (chosenAccessMethod == RTreeAccessMethod.INSTANCE && indexType == IndexType.RTREE)
                         // the inverted index will be utilized
                         // For Ngram, the full-text config used in the index and in the query are always the default one,
@@ -263,8 +246,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         // 1) the full-text ftcontains() function
                         // 2) functions that take keyword as an argument, e.g. edit_distance_check() when the threshold is 1
                         || (chosenAccessMethod == InvertedIndexAccessMethod.INSTANCE && isKeywordIndexChosen
-                                && isSameFullTextConfigInIndexAndQuery(analysisCtx,
-                                        chosenIndex.getFullTextConfigName()))) {
+                                && isSameFullTextConfigInIndexAndQuery(analysisCtx, chosenIndex.getIndexDetails()))) {
 
                     if (resultVarsToIndexTypesMap.containsKey(indexEntry.getValue())) {
                         List<IndexType> appliedIndexTypes = resultVarsToIndexTypesMap.get(indexEntry.getValue());
@@ -285,7 +267,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     }
 
     private boolean isSameFullTextConfigInIndexAndQuery(AccessMethodAnalysisContext analysisCtx,
-            String indexFullTextConfig) {
+            Index.IIndexDetails indexDetails) {
+        String indexFullTextConfig = ((Index.TextIndexDetails) indexDetails).getFullTextConfigName();
+
         IOptimizableFuncExpr expr = analysisCtx.getMatchedFuncExpr(0);
         if (FullTextUtil.isFullTextContainsFunctionExpr(expr)) {
             // ftcontains()
@@ -327,6 +311,39 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         while (indexExprAndVarIt.hasNext()) {
             Map.Entry<Index, List<Pair<Integer, Integer>>> indexExprAndVarEntry = indexExprAndVarIt.next();
             Index index = indexExprAndVarEntry.getKey();
+            IndexType indexType = index.getIndexType();
+            if (!accessMethod.matchIndexType(indexType)) {
+                indexExprAndVarIt.remove();
+                continue;
+            }
+            List<List<String>> keyFieldNames;
+            List<IAType> keyFieldTypes;
+            switch (Index.IndexCategory.of(indexType)) {
+                case ARRAY:
+                    Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) index.getIndexDetails();
+                    keyFieldNames = new ArrayList<>();
+                    keyFieldTypes = new ArrayList<>();
+                    for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
+                        for (int i = 0; i < e.getProjectList().size(); i++) {
+                            List<String> project = e.getProjectList().get(i);
+                            keyFieldNames.add(ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project));
+                            keyFieldTypes.add(e.getTypeList().get(i));
+                        }
+                    }
+                    break;
+                case VALUE:
+                    Index.ValueIndexDetails valueIndexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+                    keyFieldNames = valueIndexDetails.getKeyFieldNames();
+                    keyFieldTypes = valueIndexDetails.getKeyFieldTypes();
+                    break;
+                case TEXT:
+                    Index.TextIndexDetails textIndexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+                    keyFieldNames = textIndexDetails.getKeyFieldNames();
+                    keyFieldTypes = textIndexDetails.getKeyFieldTypes();
+                    break;
+                default:
+                    throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, String.valueOf(indexType));
+            }
 
             boolean allUsed = true;
             int lastFieldMatched = -1;
@@ -334,9 +351,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             // Used to keep track of matched expressions (added for prefix search)
             int numMatchedKeys = 0;
 
-            for (int i = 0; i < index.getKeyFieldNames().size(); i++) {
-                List<String> keyField = index.getKeyFieldNames().get(i);
-                final IAType keyType = index.getKeyFieldTypes().get(i);
+            for (int i = 0; i < keyFieldNames.size(); i++) {
+                List<String> keyField = keyFieldNames.get(i);
+                final IAType keyType = keyFieldTypes.get(i);
                 boolean foundKeyField = false;
                 Iterator<Pair<Integer, Integer>> exprsAndVarIter = indexExprAndVarEntry.getValue().iterator();
                 while (exprsAndVarIter.hasNext()) {
@@ -631,15 +648,52 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         List<Index> indexCandidates = new ArrayList<>();
         // Add an index to the candidates if one of the indexed fields is fieldName
         for (Index index : datasetIndexes) {
+            List<List<String>> keyFieldNames;
+            List<IAType> keyFieldTypes;
+            List<Integer> keySources;
+            boolean isOverridingKeyFieldTypes;
+            switch (Index.IndexCategory.of(index.getIndexType())) {
+                case ARRAY:
+                    Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) index.getIndexDetails();
+                    keyFieldNames = new ArrayList<>();
+                    keyFieldTypes = new ArrayList<>();
+                    keySources = new ArrayList<>();
+                    for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
+                        for (int i = 0; i < e.getProjectList().size(); i++) {
+                            List<String> project = e.getProjectList().get(i);
+                            keyFieldNames.add(ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project));
+                            keyFieldTypes.add(e.getTypeList().get(i).getType());
+                            keySources.add(e.getSourceIndicator());
+                        }
+                    }
+                    isOverridingKeyFieldTypes = arrayIndexDetails.isOverridingKeyFieldTypes();
+                    break;
+                case VALUE:
+                    Index.ValueIndexDetails valueIndexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+                    keyFieldNames = valueIndexDetails.getKeyFieldNames();
+                    keyFieldTypes = valueIndexDetails.getKeyFieldTypes();
+                    keySources = valueIndexDetails.getKeyFieldSourceIndicators();
+                    isOverridingKeyFieldTypes = valueIndexDetails.isOverridingKeyFieldTypes();
+                    break;
+                case TEXT:
+                    Index.TextIndexDetails textIndexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+                    keyFieldNames = textIndexDetails.getKeyFieldNames();
+                    keyFieldTypes = textIndexDetails.getKeyFieldTypes();
+                    keySources = textIndexDetails.getKeyFieldSourceIndicators();
+                    isOverridingKeyFieldTypes = textIndexDetails.isOverridingKeyFieldTypes();
+                    break;
+                default:
+                    throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
+                            String.valueOf(index.getIndexType()));
+            }
             // Need to also verify the index is pending no op
-            int keyIdx = index.getKeyFieldNames().indexOf(fieldName);
-            List<Integer> keySources = index.getKeyFieldSourceIndicators();
+            int keyIdx = keyFieldNames.indexOf(fieldName);
             if (keyIdx >= 0 && keySourceMatches(keySources, keyIdx, fieldSource)
                     && index.getPendingOp() == MetadataUtil.PENDING_NO_OP) {
                 indexCandidates.add(index);
                 boolean isFieldTypeUnknown = fieldType == BuiltinType.AMISSING || fieldType == BuiltinType.ANY;
-                if (isFieldTypeUnknown && (!index.isOverridingKeyFieldTypes() || index.isEnforced())) {
-                    IAType indexedType = index.getKeyFieldTypes().get(keyIdx);
+                if (isFieldTypeUnknown && (!isOverridingKeyFieldTypes || index.isEnforced())) {
+                    IAType indexedType = keyFieldTypes.get(keyIdx);
                     optFuncExpr.setFieldType(varIdx, indexedType);
                 }
                 analysisCtx.addIndexExpr(matchedSubTree.getDataset(), index, matchedFuncExprIndex, varIdx);
@@ -731,9 +785,13 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             varRef.setSourceLocation(unnestOp.getSourceLocation());
             optFuncExpr.setLogicalExpr(funcVarIndex, varRef);
         } else {
-            fieldName = getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0, subTree.getRecordType(),
-                    funcVarIndex, optFuncExpr.getFuncExpr().getArguments().get(funcVarIndex).getValue(),
-                    subTree.getMetaRecordType(), datasetMetaVar, fieldSource);
+            if (subTree.getDataSourceType() == DataSourceType.DATASOURCE_SCAN) {
+                subTree.setLastMatchedDataSourceVars(0, funcVarIndex);
+            }
+            fieldName = AccessMethodUtils.getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0,
+                    subTree.getRecordType(), funcVarIndex,
+                    optFuncExpr.getFuncExpr().getArguments().get(funcVarIndex).getValue(), subTree.getMetaRecordType(),
+                    datasetMetaVar, fieldSource, false);
             if (fieldName.isEmpty()) {
                 return;
             }
@@ -756,25 +814,40 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             OptimizableOperatorSubTree subTree, int assignOrUnnestIndex, LogicalVariable datasetMetaVar,
             IOptimizationContext context, List<Index> datasetIndexes, int optFuncExprIndex,
             AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
+        boolean doesArrayIndexQualify = context.getPhysicalOptimizationConfig().isArrayIndexEnabled()
+                && datasetIndexes.stream().anyMatch(i -> i.getIndexType() == IndexType.ARRAY)
+                && assignOrUnnestIndex == subTree.getAssignsAndUnnests().size() - 1;
         List<LogicalVariable> varList = assignOp.getVariables();
         MutableInt fieldSource = new MutableInt(0);
         for (int varIndex = 0; varIndex < varList.size(); varIndex++) {
             LogicalVariable var = varList.get(varIndex);
             int optVarIndex = optFuncExpr.findLogicalVar(var);
-            // No matching var in optFuncExpr.
             if (optVarIndex == -1) {
+                if (doesArrayIndexQualify && subTree.getDataSourceType() == DataSourceType.DATASOURCE_SCAN) {
+                    // We may be able to apply an array index to this variable.
+                    Triple<Integer, List<String>, IAType> fieldTriplet =
+                            AccessMethodUtils.analyzeVarForArrayIndexes(assignOp, optFuncExpr, subTree, datasetMetaVar,
+                                    context, datasetIndexes, analysisCtx.getMatchedFuncExprs(), varIndex);
+                    if (fieldTriplet != null && subTree.hasDataSource()) {
+                        fillIndexExprs(datasetIndexes, fieldTriplet.second, fieldTriplet.third, optFuncExpr,
+                                optFuncExprIndex, fieldTriplet.first, subTree, analysisCtx, fieldSource.intValue());
+                    }
+                }
                 continue;
             }
             // At this point we have matched the optimizable func
             // expr at optFuncExprIndex to an assigned variable.
             // Remember matching subtree.
             optFuncExpr.setOptimizableSubTree(optVarIndex, subTree);
+            if (subTree.getDataSourceType() == DataSourceType.DATASOURCE_SCAN) {
+                subTree.setLastMatchedDataSourceVars(varIndex, optVarIndex);
+            }
 
             fieldSource.setValue(0);
-            List<String> fieldName = getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, varIndex,
-                    subTree.getRecordType(), optVarIndex,
+            List<String> fieldName = AccessMethodUtils.getFieldNameFromSubTree(optFuncExpr, subTree,
+                    assignOrUnnestIndex, varIndex, subTree.getRecordType(), optVarIndex,
                     optFuncExpr.getFuncExpr().getArguments().get(optVarIndex).getValue(), subTree.getMetaRecordType(),
-                    datasetMetaVar, fieldSource);
+                    datasetMetaVar, fieldSource, false);
 
             IAType fieldType = (IAType) context.getOutputTypeEnvironment(assignOp).getVarType(var);
             // Set the fieldName in the corresponding matched
@@ -870,220 +943,6 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     }
 
     /**
-     * Returns the field name corresponding to the assigned variable at
-     * varIndex. Returns Collections.emptyList() if the expr at varIndex does not yield to a field
-     * access function after following a set of allowed functions.
-     *
-     * @throws AlgebricksException
-     */
-    protected List<String> getFieldNameFromSubTree(IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree subTree,
-            int opIndex, int assignVarIndex, ARecordType recordType, int funcVarIndex,
-            ILogicalExpression parentFuncExpr, ARecordType metaType, LogicalVariable metaVar, MutableInt fieldSource)
-            throws AlgebricksException {
-        // Get expression corresponding to opVar at varIndex.
-        AbstractLogicalExpression expr = null;
-        AbstractFunctionCallExpression childFuncExpr = null;
-        AbstractLogicalOperator op = subTree.getAssignsAndUnnests().get(opIndex);
-        if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-            AssignOperator assignOp = (AssignOperator) op;
-            expr = (AbstractLogicalExpression) assignOp.getExpressions().get(assignVarIndex).getValue();
-            // Can't get a field name from a constant expression. So, return null.
-            if (expr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                return Collections.emptyList();
-            }
-            childFuncExpr = (AbstractFunctionCallExpression) expr;
-        } else {
-            UnnestOperator unnestOp = (UnnestOperator) op;
-            expr = (AbstractLogicalExpression) unnestOp.getExpressionRef().getValue();
-            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                return Collections.emptyList();
-            }
-            childFuncExpr = (AbstractFunctionCallExpression) expr;
-            if (childFuncExpr.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
-                return Collections.emptyList();
-            }
-            expr = (AbstractLogicalExpression) childFuncExpr.getArguments().get(0).getValue();
-        }
-        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return Collections.emptyList();
-        }
-        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-        FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
-
-        boolean isByName = false;
-        boolean isFieldAccess = false;
-        String fieldName = null;
-        List<String> nestedAccessFieldName = null;
-        int fieldIndex = -1;
-        if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_NAME) {
-            fieldName = ConstantExpressionUtil.getStringArgument(funcExpr, 1);
-            if (fieldName == null) {
-                return Collections.emptyList();
-            }
-            isFieldAccess = true;
-            isByName = true;
-        } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
-            Integer idx = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
-            if (idx == null) {
-                return Collections.emptyList();
-            }
-            fieldIndex = idx;
-            isFieldAccess = true;
-        } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_NESTED) {
-            ILogicalExpression nameArg = funcExpr.getArguments().get(1).getValue();
-            if (nameArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                return Collections.emptyList();
-            }
-            ConstantExpression constExpr = (ConstantExpression) nameArg;
-            AOrderedList orderedNestedFieldName =
-                    (AOrderedList) ((AsterixConstantValue) constExpr.getValue()).getObject();
-            nestedAccessFieldName = new ArrayList<>();
-            for (int i = 0; i < orderedNestedFieldName.size(); i++) {
-                nestedAccessFieldName.add(((AString) orderedNestedFieldName.getItem(i)).getStringValue());
-            }
-            isFieldAccess = true;
-            isByName = true;
-        }
-        if (isFieldAccess) {
-            LogicalVariable sourceVar =
-                    ((VariableReferenceExpression) funcExpr.getArguments().get(0).getValue()).getVariableReference();
-            if (sourceVar.equals(metaVar)) {
-                fieldSource.setValue(1);
-            } else {
-                fieldSource.setValue(0);
-            }
-            if (optFuncExpr != null) {
-                optFuncExpr.setLogicalExpr(funcVarIndex, parentFuncExpr);
-            }
-            int[] assignAndExpressionIndexes = null;
-
-            //go forward through nested assigns until you find the relevant one
-            for (int i = opIndex + 1; i < subTree.getAssignsAndUnnests().size(); i++) {
-                AbstractLogicalOperator subOp = subTree.getAssignsAndUnnests().get(i);
-                List<LogicalVariable> varList;
-
-                if (subOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-                    //Nested was an assign
-                    varList = ((AssignOperator) subOp).getVariables();
-                } else if (subOp.getOperatorTag() == LogicalOperatorTag.UNNEST) {
-                    //Nested is not an assign
-                    varList = ((UnnestOperator) subOp).getVariables();
-                } else {
-                    break;
-                }
-
-                //Go through variables in assign to check for match
-                for (int varIndex = 0; varIndex < varList.size(); varIndex++) {
-                    LogicalVariable var = varList.get(varIndex);
-                    ArrayList<LogicalVariable> parentVars = new ArrayList<>();
-                    expr.getUsedVariables(parentVars);
-
-                    if (parentVars.contains(var)) {
-                        //Found the variable we are looking for.
-                        //return assign and index of expression
-                        int[] returnValues = { i, varIndex };
-                        assignAndExpressionIndexes = returnValues;
-                    }
-                }
-            }
-            if (assignAndExpressionIndexes != null && assignAndExpressionIndexes[0] > -1) {
-                //We found the nested assign
-
-                //Recursive call on nested assign
-                List<String> parentFieldNames = getFieldNameFromSubTree(optFuncExpr, subTree,
-                        assignAndExpressionIndexes[0], assignAndExpressionIndexes[1], recordType, funcVarIndex,
-                        parentFuncExpr, metaType, metaVar, fieldSource);
-
-                if (parentFieldNames.isEmpty()) {
-                    //Nested assign was not a field access.
-                    //We will not use index
-                    return Collections.emptyList();
-                }
-
-                if (!isByName) {
-                    IAType subFieldType = sourceVar.equals(metaVar) ? metaType.getSubFieldType(parentFieldNames)
-                            : recordType.getSubFieldType(parentFieldNames);
-                    // Sub-field type can be AUnionType in case if it's optional. Thus, needs to get the actual type.
-                    subFieldType = TypeComputeUtils.getActualType(subFieldType);
-                    if (subFieldType.getTypeTag() != ATypeTag.OBJECT) {
-                        throw CompilationException.create(ErrorCode.TYPE_CONVERT, subFieldType,
-                                ARecordType.class.getName());
-                    }
-                    fieldName = ((ARecordType) subFieldType).getFieldNames()[fieldIndex];
-                }
-                if (optFuncExpr != null) {
-                    optFuncExpr.setSourceVar(funcVarIndex, ((AssignOperator) op).getVariables().get(assignVarIndex));
-                }
-                //add fieldName to the nested fieldName, return
-                if (nestedAccessFieldName != null) {
-                    for (int i = 0; i < nestedAccessFieldName.size(); i++) {
-                        parentFieldNames.add(nestedAccessFieldName.get(i));
-                    }
-                } else {
-                    parentFieldNames.add(fieldName);
-                }
-                return (parentFieldNames);
-            }
-
-            if (optFuncExpr != null) {
-                optFuncExpr.setSourceVar(funcVarIndex, ((AssignOperator) op).getVariables().get(assignVarIndex));
-            }
-            //no nested assign, we are at the lowest level.
-            if (isByName) {
-                if (nestedAccessFieldName != null) {
-                    return nestedAccessFieldName;
-                }
-                return new ArrayList<>(Arrays.asList(fieldName));
-            }
-            return new ArrayList<>(Arrays.asList(sourceVar.equals(metaVar) ? metaType.getFieldNames()[fieldIndex]
-                    : recordType.getFieldNames()[fieldIndex]));
-
-        }
-
-        if (!funcIDSetThatRetainFieldName.contains(funcIdent)) {
-            return Collections.emptyList();
-        }
-        // We use a part of the field in edit distance computation
-        if (optFuncExpr != null
-                && optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE_CHECK) {
-            optFuncExpr.setPartialField(true);
-        }
-        // We expect the function's argument to be a variable, otherwise we
-        // cannot apply an index.
-        ILogicalExpression argExpr = funcExpr.getArguments().get(0).getValue();
-        if (argExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-            return Collections.emptyList();
-        }
-        LogicalVariable curVar = ((VariableReferenceExpression) argExpr).getVariableReference();
-        // We look for the assign or unnest operator that produces curVar below
-        // the current operator
-        for (int assignOrUnnestIndex = opIndex + 1; assignOrUnnestIndex < subTree.getAssignsAndUnnests()
-                .size(); assignOrUnnestIndex++) {
-            AbstractLogicalOperator curOp = subTree.getAssignsAndUnnests().get(assignOrUnnestIndex);
-            if (curOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-                AssignOperator assignOp = (AssignOperator) curOp;
-                List<LogicalVariable> varList = assignOp.getVariables();
-                for (int varIndex = 0; varIndex < varList.size(); varIndex++) {
-                    LogicalVariable var = varList.get(varIndex);
-                    if (var.equals(curVar) && optFuncExpr != null) {
-                        optFuncExpr.setSourceVar(funcVarIndex, var);
-                        return getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, varIndex, recordType,
-                                funcVarIndex, childFuncExpr, metaType, metaVar, fieldSource);
-                    }
-                }
-            } else {
-                UnnestOperator unnestOp = (UnnestOperator) curOp;
-                LogicalVariable var = unnestOp.getVariable();
-                if (var.equals(curVar)) {
-                    getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0, recordType, funcVarIndex,
-                            childFuncExpr, metaType, metaVar, fieldSource);
-                }
-            }
-        }
-        return Collections.emptyList();
-    }
-
-    /**
      * Finds the field name of each variable in the ASSIGN or UNNEST operators of the sub-tree.
      */
     protected void fillFieldNamesInTheSubTree(OptimizableOperatorSubTree subTree) throws AlgebricksException {
@@ -1107,9 +966,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
                     fieldSource.setValue(0);
-                    List<String> fieldName = getFieldNameFromSubTree(null, subTree, assignOrUnnestIndex, varIndex,
-                            subTree.getRecordType(), -1, null, subTree.getMetaRecordType(), datasetMetaVar,
-                            fieldSource);
+                    List<String> fieldName = AccessMethodUtils.getFieldNameFromSubTree(null, subTree,
+                            assignOrUnnestIndex, varIndex, subTree.getRecordType(), -1, null,
+                            subTree.getMetaRecordType(), datasetMetaVar, fieldSource, false);
                     if (fieldName != null && !fieldName.isEmpty()) {
                         subTree.getVarsToFieldNameMap().put(var, fieldName);
                     }
@@ -1122,8 +981,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
                     fieldSource.setValue(0);
-                    fieldName = getFieldNameFromSubTree(null, subTree, assignOrUnnestIndex, 0, subTree.getRecordType(),
-                            -1, null, subTree.getMetaRecordType(), datasetMetaVar, fieldSource);
+                    fieldName = AccessMethodUtils.getFieldNameFromSubTree(null, subTree, assignOrUnnestIndex, 0,
+                            subTree.getRecordType(), -1, null, subTree.getMetaRecordType(), datasetMetaVar, fieldSource,
+                            false);
                     if (fieldName != null && !fieldName.isEmpty()) {
                         subTree.getVarsToFieldNameMap().put(var, fieldName);
                     }
@@ -1149,9 +1009,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
                     fieldSource.setValue(0);
-                    List<String> fieldName = getFieldNameFromSubTree(null, subTree, assignOrUnnestIndex, varIndex,
-                            subTree.getRecordType(), -1, null, subTree.getMetaRecordType(), datasetMetaVar,
-                            fieldSource);
+                    List<String> fieldName = AccessMethodUtils.getFieldNameFromSubTree(null, subTree,
+                            assignOrUnnestIndex, varIndex, subTree.getRecordType(), -1, null,
+                            subTree.getMetaRecordType(), datasetMetaVar, fieldSource, false);
                     if (fieldName != null && !fieldName.isEmpty()) {
                         subTree.getVarsToFieldNameMap().put(var, fieldName);
                     }
@@ -1167,10 +1027,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 subTree.getPrimaryKeyVars(null, primaryKeyVarList);
 
                 Index primaryIndex = getPrimaryIndexFromDataSourceScanOp(subTree.getDataSourceRef().getValue());
-
+                List<List<String>> keyFieldNames =
+                        ((Index.ValueIndexDetails) primaryIndex.getIndexDetails()).getKeyFieldNames();
                 for (int i = 0; i < primaryKeyVarList.size(); i++) {
-                    subTree.getVarsToFieldNameMap().put(primaryKeyVarList.get(i),
-                            primaryIndex.getKeyFieldNames().get(i));
+                    subTree.getVarsToFieldNameMap().put(primaryKeyVarList.get(i), keyFieldNames.get(i));
                 }
             }
 

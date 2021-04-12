@@ -14,6 +14,11 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+import math
+import os
+
+def sqrt(num):
+    return math.sqrt(num)
 
 class Tests(object):
 
@@ -22,3 +27,6 @@ class Tests(object):
 
     def warning(self):
         raise ArithmeticError("oof")
+
+    def env_test(self, key):
+        return os.environ[key]

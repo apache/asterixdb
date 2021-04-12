@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.input.record.reader.azure;
 
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -43,15 +41,17 @@ import com.azure.storage.blob.models.BlobStorageException;
 public class AzureBlobInputStream extends AbstractExternalInputStream {
 
     private final BlobServiceClient client;
+    private final String container;
 
     public AzureBlobInputStream(Map<String, String> configuration, List<String> filePaths) throws HyracksDataException {
         super(configuration, filePaths);
         this.client = buildAzureClient(configuration);
+        this.container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
     }
 
     @Override
     protected boolean getInputStream() throws IOException {
-        String container = configuration.get(AzureBlob.CONTAINER_NAME_FIELD_NAME);
+        String fileName = filePaths.get(nextFileIndex);
         BlobContainerClient blobContainerClient;
         BlobClient blob;
         try {
@@ -60,9 +60,9 @@ public class AzureBlobInputStream extends AbstractExternalInputStream {
             in = blob.openInputStream();
 
             // Use gzip stream if needed
-            String filename = filePaths.get(nextFileIndex).toLowerCase();
-            if (filename.endsWith(".gz") || filename.endsWith(".gzip")) {
-                in = new GZIPInputStream(in = blob.openInputStream(), ExternalDataConstants.DEFAULT_BUFFER_SIZE);
+            String lowerCaseFileName = fileName.toLowerCase();
+            if (lowerCaseFileName.endsWith(".gz") || lowerCaseFileName.endsWith(".gzip")) {
+                in = new GZIPInputStream(in, ExternalDataConstants.DEFAULT_BUFFER_SIZE);
             }
         } catch (BlobStorageException ex) {
             if (ex.getErrorCode().equals(BlobErrorCode.BLOB_NOT_FOUND)) {

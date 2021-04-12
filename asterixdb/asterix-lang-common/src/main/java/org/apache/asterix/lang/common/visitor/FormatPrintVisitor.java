@@ -642,20 +642,52 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
         out.print(generateFullName(cis.getDataverseName(), cis.getDatasetName()));
 
         out.print(" (");
-        List<Pair<List<String>, IndexedTypeExpression>> fieldExprs = cis.getFieldExprs();
+        List<CreateIndexStatement.IndexedElement> indexedElements = cis.getIndexedElements();
         int index = 0;
-        int size = fieldExprs.size();
-        for (Pair<List<String>, IndexedTypeExpression> entry : fieldExprs) {
-            printNestField(entry.first);
-            IndexedTypeExpression typeExpr = entry.second;
-            if (typeExpr != null) {
-                out.print(":");
-                typeExpr.getType().accept(this, step);
-                if (typeExpr.isUnknownable()) {
-                    out.print('?');
+        for (CreateIndexStatement.IndexedElement element : indexedElements) {
+            List<Pair<List<String>, IndexedTypeExpression>> projectList = element.getProjectList();
+
+            if (element.hasUnnest()) {
+                int innerIndex = 0;
+                out.print("(");
+                for (List<String> unnest : element.getUnnestList()) {
+                    out.print(" unnest ");
+                    printNestField(unnest);
+                    if (++innerIndex < element.getUnnestList().size()) {
+                        out.print(" ");
+                    }
+                }
+
+                if (projectList.get(0).first != null) {
+                    innerIndex = 0;
+                    out.print(" select ");
+                    for (Pair<List<String>, IndexedTypeExpression> project : projectList) {
+                        printNestField(project.first);
+                        if (project.second != null) {
+                            out.print(":");
+                            project.second.getType().accept(this, step);
+                            if (project.second.isUnknownable()) {
+                                out.print('?');
+                            }
+                        }
+                        if (++innerIndex < element.getProjectList().size()) {
+                            out.print(",");
+                        }
+                    }
+                }
+                out.print(")");
+            } else {
+                printNestField(projectList.get(0).first);
+                IndexedTypeExpression typeExpr = projectList.get(0).second;
+                if (typeExpr != null) {
+                    out.print(":");
+                    typeExpr.getType().accept(this, step);
+                    if (typeExpr.isUnknownable()) {
+                        out.print('?');
+                    }
                 }
             }
-            if (++index < size) {
+            if (++index < indexedElements.size()) {
                 out.print(",");
             }
         }

@@ -21,6 +21,7 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -64,6 +65,14 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
     boolean analyzeFuncExprArgsAndUpdateAnalysisCtx(AbstractFunctionCallExpression funcExpr,
             List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException;
+
+    /**
+     * Indicates whether this access method is applicable for the given index type.
+     *
+     * @return boolean
+     * @param indexType
+     */
+    public boolean matchIndexType(IndexType indexType);
 
     /**
      * Indicates whether all index expressions must be matched in order for this

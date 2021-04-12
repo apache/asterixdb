@@ -21,13 +21,18 @@ package org.apache.asterix.external.util;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.security.MessageDigest;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
+import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.util.bytes.HexPrinter;
 
 public class ExternalLibraryUtils {
 
     private ExternalLibraryUtils() {
-
     }
 
     public static String digestToHexString(MessageDigest digest) throws IOException {
@@ -35,5 +40,16 @@ public class ExternalLibraryUtils {
         StringWriter hashBuilder = new StringWriter();
         HexPrinter.printHexString(hashBytes, 0, hashBytes.length, hashBuilder);
         return hashBuilder.toString();
+    }
+
+    public static Map<DataverseName, Map<String, String>> produceLibraryListing(ILibraryManager libraryManager)
+            throws IOException {
+        List<Pair<DataverseName, String>> libs = libraryManager.getLibraryListing();
+        Map<DataverseName, Map<String, String>> dvToLibHashes = new TreeMap<>();
+        for (Pair<DataverseName, String> lib : libs) {
+            dvToLibHashes.computeIfAbsent(lib.first, h -> new TreeMap<>()).put(lib.getSecond(),
+                    libraryManager.getLibraryHash(lib.first, lib.second));
+        }
+        return dvToLibHashes;
     }
 }

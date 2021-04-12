@@ -19,15 +19,15 @@
 
 package org.apache.asterix.external.library;
 
+import org.apache.asterix.om.functions.IExternalFunctionDescriptor;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
 public class ExternalScalarFunctionDescriptor extends AbstractScalarFunctionDynamicDescriptor
-        implements IFunctionDescriptor {
+        implements IExternalFunctionDescriptor {
 
     private static final long serialVersionUID = 2L;
     private final IExternalFunctionInfo finfo;
@@ -53,5 +53,15 @@ public class ExternalScalarFunctionDescriptor extends AbstractScalarFunctionDyna
     @Override
     public FunctionIdentifier getIdentifier() {
         return finfo.getFunctionIdentifier();
+    }
+
+    @Override
+    public IExternalFunctionInfo getFunctionInfo() {
+        return finfo;
+    }
+
+    @Override
+    public IAType[] getArgumentTypes() {
+        return argTypes;
     }
 }

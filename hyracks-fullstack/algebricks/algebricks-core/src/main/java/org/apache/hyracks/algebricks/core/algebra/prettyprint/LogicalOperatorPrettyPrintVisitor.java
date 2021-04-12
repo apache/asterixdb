@@ -461,7 +461,10 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
             buffer.append(" replace:");
             pprintExprList(op.getPrevSecondaryKeyExprs(), indent);
             buffer.append(" with:");
-            pprintExprList(op.getSecondaryKeyExpressions(), indent);
+        }
+        if (!op.getNestedPlans().isEmpty()) {
+            buffer.append("{");
+            printNestedPlans(op, indent);
         } else {
             pprintExprList(op.getSecondaryKeyExpressions(), indent);
         }

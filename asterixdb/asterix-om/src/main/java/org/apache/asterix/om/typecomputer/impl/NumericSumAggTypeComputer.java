@@ -18,39 +18,17 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.exceptions.UnsupportedTypeException;
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public class NumericSumAggTypeComputer extends AbstractResultTypeComputer {
+public class NumericSumAggTypeComputer extends AggregateResultTypeComputer {
     public static final NumericSumAggTypeComputer INSTANCE = new NumericSumAggTypeComputer();
 
     private NumericSumAggTypeComputer() {
-    }
-
-    @Override
-    protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
-            throws AlgebricksException {
-        ATypeTag tag = type.getTypeTag();
-        switch (tag) {
-            case DOUBLE:
-            case FLOAT:
-            case BIGINT:
-            case INTEGER:
-            case SMALLINT:
-            case TINYINT:
-            case ANY:
-                break;
-            default:
-                throw new UnsupportedTypeException(sourceLoc, funcId, tag);
-        }
     }
 
     @Override
@@ -61,15 +39,12 @@ public class NumericSumAggTypeComputer extends AbstractResultTypeComputer {
             case SMALLINT:
             case INTEGER:
             case BIGINT:
-                IAType int64Type = BuiltinType.AINT64;
-                return AUnionType.createNullableType(int64Type, "AggResult");
+                return AUnionType.createNullableType(BuiltinType.AINT64);
             case FLOAT:
             case DOUBLE:
-                IAType doubleType = BuiltinType.ADOUBLE;
-                return AUnionType.createNullableType(doubleType, "AggResult");
+                return AUnionType.createNullableType(BuiltinType.ADOUBLE);
             case ANY:
-                IAType anyType = strippedInputTypes[0];
-                return AUnionType.createNullableType(anyType, "AggResult");
+                return BuiltinType.ANY;
             default:
                 // All other possible cases.
                 return BuiltinType.ANULL;
