@@ -134,6 +134,7 @@ import org.apache.asterix.om.typecomputer.impl.ToObjectTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.TreatAsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryBinaryInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UniformInputTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.UnionMbrAggTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnorderedListConstructorTypeComputer;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -1868,6 +1869,8 @@ public class BuiltinFunctions {
                 new ScalarVersionOfAggregateResultType(NumericSumAggTypeComputer.INSTANCE);
         ScalarVersionOfAggregateResultType scalarMinMaxTypeComputer =
                 new ScalarVersionOfAggregateResultType(MinMaxAggTypeComputer.INSTANCE);
+        ScalarVersionOfAggregateResultType scalarUnionMbrTypeComputer =
+                new ScalarVersionOfAggregateResultType(UnionMbrAggTypeComputer.INSTANCE);
 
         addPrivateFunction(LISTIFY, OrderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(SCALAR_ARRAYAGG, ScalarArrayAggTypeComputer.INSTANCE, true);
@@ -1973,7 +1976,7 @@ public class BuiltinFunctions {
         addPrivateFunction(SERIAL_GLOBAL_SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_UNION_MBR, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_UNION_MBR, scalarUnionMbrTypeComputer, true);
 
         // SQL SUM
         addFunction(SQL_SUM, NumericSumAggTypeComputer.INSTANCE, true);
@@ -2038,7 +2041,7 @@ public class BuiltinFunctions {
         addPrivateFunction(LOCAL_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
-        addFunction(SCALAR_SQL_UNION_MBR, ScalarVersionOfAggregateResultType.INSTANCE, true);
+        addFunction(SCALAR_SQL_UNION_MBR, scalarUnionMbrTypeComputer, true);
 
         addPrivateFunction(SERIAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE, true);
