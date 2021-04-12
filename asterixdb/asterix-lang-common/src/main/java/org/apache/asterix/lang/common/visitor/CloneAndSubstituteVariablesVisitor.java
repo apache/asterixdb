@@ -178,7 +178,7 @@ public class CloneAndSubstituteVariablesVisitor extends
         }
 
         Pair<ILangExpression, VariableSubstitutionEnvironment> p1 = fd.getFuncBody().accept(this, env);
-        FunctionDecl newF = new FunctionDecl(fd.getSignature(), newList, (Expression) p1.first);
+        FunctionDecl newF = new FunctionDecl(fd.getSignature(), newList, (Expression) p1.first, fd.isStored());
         newF.setSourceLocation(fd.getSourceLocation());
         return new Pair<>(newF, env);
     }

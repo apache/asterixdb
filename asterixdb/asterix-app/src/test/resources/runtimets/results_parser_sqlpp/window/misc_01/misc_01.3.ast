@@ -198,18 +198,16 @@ Let Variable [ Name=$percent_rank_result_delta_raw ]
   ]
 Let Variable [ Name=$percent_rank_result_delta ]
   :=
-  CASE      LiteralExpr [TRUE]
-
-  WHEN       OperatorExpr [
-        Variable [ Name=$percent_rank_result_delta_raw ]
-        <
-        LiteralExpr [DOUBLE] [0.001]
-      ]
-  THEN       LiteralExpr [LONG] [0]
-
-  ELSE       Variable [ Name=$percent_rank_result_delta_raw ]
-
-  END
+  FunctionCall asterix.switch-case[
+    LiteralExpr [TRUE]
+    OperatorExpr [
+      Variable [ Name=$percent_rank_result_delta_raw ]
+      <
+      LiteralExpr [DOUBLE] [0.001]
+    ]
+    LiteralExpr [LONG] [0]
+    Variable [ Name=$percent_rank_result_delta_raw ]
+  ]
 Group All
   GROUP AS Variable [ Name=#1 ]
   (

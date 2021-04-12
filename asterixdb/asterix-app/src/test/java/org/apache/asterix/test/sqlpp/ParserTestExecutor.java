@@ -27,15 +27,17 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.config.GlobalConfig;
-import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.IParser;
@@ -187,8 +189,9 @@ public class ParserTestExecutor extends TestExecutor {
                 if (st.getKind() == Statement.Kind.QUERY) {
                     Query query = (Query) st;
                     IQueryRewriter rewriter = sqlppRewriterFactory.createQueryRewriter();
-                    rewrite(rewriter, functions, query, metadataProvider,
-                            new LangRewritingContext(query.getVarCounter(), TestUtils.NOOP_WARNING_COLLECTOR));
+                    LangRewritingContext rwContext = new LangRewritingContext(metadataProvider, functions,
+                            TestUtils.NOOP_WARNING_COLLECTOR, query.getVarCounter());
+                    rewrite(rewriter, query, rwContext);
 
                     // Tests deep copy and deep equality.
                     Query copiedQuery = (Query) SqlppRewriteUtil.deepCopy(query);
@@ -254,28 +257,38 @@ public class ParserTestExecutor extends TestExecutor {
     }
 
     // Rewrite queries.
-    // Note: we do not do inline function rewriting here because this needs real
-    // metadata access.
-    private void rewrite(IQueryRewriter rewriter, List<FunctionDecl> declaredFunctions, Query topExpr,
-            MetadataProvider metadataProvider, LangRewritingContext context) throws AsterixException {
-        PA.invokeMethod(rewriter,
-                "setup(java.util.List, org.apache.asterix.lang.common.base.IReturningStatement, "
-                        + "org.apache.asterix.metadata.declared.MetadataProvider, "
-                        + "org.apache.asterix.lang.common.rewrites.LangRewritingContext, " + "java.util.Collection)",
-                declaredFunctions, topExpr, metadataProvider, context, null);
-        PA.invokeMethod(rewriter, "resolveFunctionCalls()");
-        PA.invokeMethod(rewriter, "generateColumnNames()");
-        PA.invokeMethod(rewriter, "substituteGroupbyKeyExpression()");
-        PA.invokeMethod(rewriter, "rewriteGroupBys()");
-        PA.invokeMethod(rewriter, "rewriteSetOperations()");
-        PA.invokeMethod(rewriter, "inlineColumnAlias()");
-        PA.invokeMethod(rewriter, "rewriteWindowExpressions()");
-        PA.invokeMethod(rewriter, "rewriteGroupingSets()");
-        PA.invokeMethod(rewriter, "variableCheckAndRewrite()");
-        PA.invokeMethod(rewriter, "extractAggregatesFromCaseExpressions()");
-        PA.invokeMethod(rewriter, "rewriteGroupByAggregationSugar()");
-        PA.invokeMethod(rewriter, "rewriteWindowAggregationSugar()");
-        PA.invokeMethod(rewriter, "rewriteSpecialFunctionNames()");
+    // Note: we do not do inline function rewriting here because this needs real metadata access.
+    private void rewrite(IQueryRewriter rewriter, Query topExpr, LangRewritingContext context) throws Exception {
+        invokeMethod(rewriter, "setup", context, topExpr, null, true, false);
+        invokeMethod(rewriter, "resolveFunctionCalls");
+        invokeMethod(rewriter, "generateColumnNames");
+        invokeMethod(rewriter, "substituteGroupbyKeyExpression");
+        invokeMethod(rewriter, "rewriteGroupBys");
+        invokeMethod(rewriter, "rewriteSetOperations");
+        invokeMethod(rewriter, "inlineColumnAlias");
+        invokeMethod(rewriter, "rewriteWindowExpressions");
+        invokeMethod(rewriter, "rewriteGroupingSets");
+        invokeMethod(rewriter, "variableCheckAndRewrite");
+        invokeMethod(rewriter, "extractAggregatesFromCaseExpressions");
+        invokeMethod(rewriter, "rewriteGroupByAggregationSugar");
+        invokeMethod(rewriter, "rewriteWindowAggregationSugar");
+        invokeMethod(rewriter, "rewriteSpecialFunctionNames");
+        invokeMethod(rewriter, "rewriteOperatorExpression");
+        invokeMethod(rewriter, "rewriteCaseExpressions");
+        invokeMethod(rewriter, "rewriteListInputFunctions");
+        invokeMethod(rewriter, "rewriteRightJoins");
     }
 
+    private static void invokeMethod(Object instance, String methodName, Object... args) throws Exception {
+        PA.invokeMethod(instance, getMethodSignature(instance.getClass(), methodName), args);
+    }
+
+    private static String getMethodSignature(Class<?> cls, String methodName) throws Exception {
+        Method[] methods = cls.getDeclaredMethods();
+        Method method = Arrays.stream(methods).filter(m -> m.getName().equals(methodName)).findFirst()
+                .orElseThrow(NoSuchMethodException::new);
+        String parameterTypes =
+                Arrays.stream(method.getParameterTypes()).map(Class::getName).collect(Collectors.joining(","));
+        return String.format("%s(%s)", method.getName(), parameterTypes);
+    }
 }

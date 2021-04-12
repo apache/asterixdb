@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.app.function;
 
+import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.util.ArrayList;
@@ -69,7 +70,7 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         if (unnest.getPositionalVariable() != null) {
             // TODO remove this after enabling the support of positional variables in data scan
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, unnest.getSourceLocation(),
-                    "No positional variables are allowed over " + dataset() + "s");
+                    "No positional variables are allowed over " + dataset(PLURAL));
         }
 
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();

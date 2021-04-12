@@ -185,8 +185,9 @@ public class APIFramework {
     }
 
     public Pair<IReturningStatement, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
-            MetadataProvider metadataProvider, IReturningStatement q, SessionOutput output, boolean inlineUdfs,
-            Collection<VarIdentifier> externalVars, IWarningCollector warningCollector) throws CompilationException {
+            MetadataProvider metadataProvider, IReturningStatement q, SessionOutput output,
+            boolean allowNonStoredUdfCalls, boolean inlineUdfs, Collection<VarIdentifier> externalVars,
+            IWarningCollector warningCollector) throws CompilationException {
         if (q == null) {
             return null;
         }
@@ -195,8 +196,9 @@ public class APIFramework {
             generateExpressionTree(q);
         }
         IQueryRewriter rw = rewriterFactory.createQueryRewriter();
-        rw.rewrite(new ArrayList<>(declaredFunctions), q, metadataProvider,
-                new LangRewritingContext(q.getVarCounter(), warningCollector), inlineUdfs, externalVars);
+        LangRewritingContext rwCtx =
+                new LangRewritingContext(metadataProvider, declaredFunctions, warningCollector, q.getVarCounter());
+        rw.rewrite(rwCtx, q, allowNonStoredUdfCalls, inlineUdfs, externalVars);
         return new Pair<>(q, q.getVarCounter());
     }
 

@@ -16,10 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-# auth admin:admin
-# param dataverse:multipart_text=Default
-# param name:multipart_text=testlib
-# param type:multipart_text=java
-# param data:multipart_text=bogus
 
-/admin/udf
+/*
+ * Description  : Cannot call a declared function from
+ *                a stored function (varargs)
+ */
+
+use test;
+
+declare function f2a(...) { - args[0] - args[1] };
+
+create function f2b(...) { f2a(args[0], args[1]) + f2a(args[1], args[0]) };

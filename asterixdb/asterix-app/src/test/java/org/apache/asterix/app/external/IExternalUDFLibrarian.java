@@ -22,14 +22,10 @@ import java.io.IOException;
 import java.net.URI;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public interface IExternalUDFLibrarian {
+    void install(URI path, String type, String libPath, Pair<String, String> credentials) throws Exception;
 
-    void install(URI path, String dataverseKey, DataverseName dataverse, boolean useDisplayForm, String name,
-            String type, String libPath, Pair<String, String> credentials) throws Exception;
-
-    void uninstall(URI path, String dataverseKey, DataverseName dataverse, boolean useDisplayForm, String name,
-            Pair<String, String> credentials) throws IOException, AsterixException;
+    void uninstall(URI path, Pair<String, String> credentials) throws IOException, AsterixException;
 }

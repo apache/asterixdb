@@ -633,6 +633,10 @@ public class NodeControllerService implements IControllerService {
         getClusterController(ccId).sendApplicationMessageToCC(data, deploymentId, id);
     }
 
+    public void sendRealTimeApplicationMessageToCC(CcId ccId, byte[] data, DeploymentId deploymentId) throws Exception {
+        getClusterController(ccId).sendRealTimeApplicationMessageToCC(data, deploymentId, id);
+    }
+
     public IResultPartitionManager getResultPartitionManager() {
         return resultPartitionManager;
     }

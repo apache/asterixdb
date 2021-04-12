@@ -66,6 +66,8 @@ public interface IClusterController {
 
     void sendApplicationMessageToCC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception;
 
+    void sendRealTimeApplicationMessageToCC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception;
+
     void registerResultPartitionLocation(JobId jobId, ResultSetId rsId, IResultMetadata metadata, boolean emptyResult,
             int partition, int nPartitions, NetworkAddress networkAddress) throws Exception;
 

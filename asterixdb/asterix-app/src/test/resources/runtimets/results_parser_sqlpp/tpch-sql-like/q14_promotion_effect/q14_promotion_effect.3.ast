@@ -7,35 +7,26 @@ OperatorExpr [
   FunctionCall asterix.sum@1[
     (
       SELECT ELEMENT [
-      CASE          OperatorExpr [
+      FunctionCall asterix.switch-case[
+        LiteralExpr [TRUE]
+        LiteralExpr [TRUE]
+        OperatorExpr [
+          FieldAccessor [
+            Variable [ Name=$i ]
+            Field=l_extendedprice
+          ]
+          *
+          OperatorExpr [
+            Variable [ Name=$t ]
+            -
             FieldAccessor [
               Variable [ Name=$i ]
-              Field=p_type
-            ]
-            like
-            LiteralExpr [STRING] [PROMO%]
-          ]
-
-      WHEN           LiteralExpr [TRUE]
-      THEN           OperatorExpr [
-            FieldAccessor [
-              Variable [ Name=$i ]
-              Field=l_extendedprice
-            ]
-            *
-            OperatorExpr [
-              Variable [ Name=$t ]
-              -
-              FieldAccessor [
-                Variable [ Name=$i ]
-                Field=l_discount
-              ]
+              Field=l_discount
             ]
           ]
-
-      ELSE           LiteralExpr [DOUBLE] [0.0]
-
-      END
+        ]
+        LiteralExpr [DOUBLE] [0.0]
+      ]
       ]
       FROM [        (
           SELECT ELEMENT [

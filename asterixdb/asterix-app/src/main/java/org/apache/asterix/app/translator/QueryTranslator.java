@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.app.translator;
 
+import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 import static org.apache.asterix.lang.common.statement.CreateFullTextFilterStatement.FIELD_TYPE_STOPWORDS;
@@ -97,13 +98,17 @@ import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
+import org.apache.asterix.lang.common.literal.MissingLiteral;
 import org.apache.asterix.lang.common.statement.AdapterDropStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
@@ -607,7 +612,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 (ILSMMergePolicyFactory) Class.forName(compactionPolicyFactoryClassName).newInstance();
         if (isExternalDataset && mergePolicyFactory.getName().compareTo("correlated-prefix") == 0) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "The correlated-prefix merge policy cannot be used with external " + dataset() + "s");
+                    "The correlated-prefix merge policy cannot be used with external " + dataset(PLURAL));
         }
         if (compactionPolicyProperties == null) {
             if (mergePolicyFactory.getName().compareTo("no-merge") != 0) {
@@ -2563,16 +2568,30 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
                 }
 
-                //Check whether the function is use-able
+                // Check whether the function is usable:
+                // create a function declaration for this function,
+                // and a query body calls this function with each argument set to 'missing'
+                FunctionDecl fd = new FunctionDecl(functionSignature, paramVars, cfs.getFunctionBodyExpression(), true);
+                fd.setSourceLocation(sourceLoc);
+                CallExpr fcall = new CallExpr(functionSignature,
+                        Collections.nCopies(paramVars.size(), new LiteralExpr(MissingLiteral.INSTANCE)));
+                fcall.setSourceLocation(sourceLoc);
                 metadataProvider.setDefaultDataverse(dv);
                 Query wrappedQuery = new Query(false);
                 wrappedQuery.setSourceLocation(sourceLoc);
-                wrappedQuery.setBody(cfs.getFunctionBodyExpression());
+                wrappedQuery.setBody(fcall);
                 wrappedQuery.setTopLevel(false);
-                apiFramework.reWriteQuery(declaredFunctions, metadataProvider, wrappedQuery, sessionOutput, false,
-                        paramVars, warningCollector);
-                List<List<Triple<DataverseName, String, String>>> dependencies = FunctionUtil.getFunctionDependencies(
-                        rewriterFactory.createQueryRewriter(), cfs.getFunctionBodyExpression());
+                List<FunctionDecl> fdList = new ArrayList<>(declaredFunctions);
+                fdList.add(fd);
+                apiFramework.reWriteQuery(fdList, metadataProvider, wrappedQuery, sessionOutput, false, false,
+                        Collections.emptyList(), warningCollector);
+                Expression fdNormBody = fd.getNormalizedFuncBody();
+                if (fdNormBody == null) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                            functionSignature.toString());
+                }
+                List<List<Triple<DataverseName, String, String>>> dependencies =
+                        FunctionUtil.getFunctionDependencies(rewriterFactory.createQueryRewriter(), fdNormBody);
 
                 newInlineTypes = Collections.emptyMap();
                 function = new Function(functionSignature, paramNames, null, null, cfs.getFunctionBody(),
@@ -3269,7 +3288,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
         Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
-                metadataProvider, query, sessionOutput, true, externalVars.keySet(), warningCollector);
+                metadataProvider, query, sessionOutput, true, true, externalVars.keySet(), warningCollector);
 
         // Query Compilation (happens under the same ongoing metadata transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, (Query) rewrittenResult.first,
@@ -3286,7 +3305,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
         // Insert/upsert statement rewriting (happens under the same ongoing metadata transaction)
         Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
-                metadataProvider, insertUpsert, sessionOutput, true, externalVars.keySet(), warningCollector);
+                metadataProvider, insertUpsert, sessionOutput, true, true, externalVars.keySet(), warningCollector);
 
         InsertStatement rewrittenInsertUpsert = (InsertStatement) rewrittenResult.first;
         DataverseName dataverseName = getActiveDataverseName(rewrittenInsertUpsert.getDataverseName());
@@ -3454,7 +3473,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 (ActiveEntityEventsListener) activeNotificationHandler.getListener(feedId);
         if (listener != null && listener.getState() != ActivityState.STOPPED) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "Feed " + feedId + " is currently active and connected to the following " + dataset() + "(s) \n"
+                    "Feed " + feedId + " is currently active and connected to the following " + dataset(PLURAL) + "\n"
                             + listener.toString());
         } else if (listener != null) {
             listener.unregister();

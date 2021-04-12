@@ -18,48 +18,31 @@
  */
 package org.apache.asterix.lang.sqlpp.rewrites;
 
-import java.util.ArrayList;
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.lang.common.base.AbstractClause;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
-import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.AbstractCallExpression;
-import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.common.parser.FunctionParser;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
-import org.apache.asterix.lang.common.struct.Identifier;
+import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
-import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
-import org.apache.asterix.lang.sqlpp.clause.FromClause;
-import org.apache.asterix.lang.sqlpp.clause.FromTerm;
-import org.apache.asterix.lang.sqlpp.clause.HavingClause;
-import org.apache.asterix.lang.sqlpp.clause.JoinClause;
-import org.apache.asterix.lang.sqlpp.clause.NestClause;
-import org.apache.asterix.lang.sqlpp.clause.Projection;
-import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
-import org.apache.asterix.lang.sqlpp.clause.SelectClause;
-import org.apache.asterix.lang.sqlpp.clause.SelectElement;
-import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
-import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
-import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
-import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
-import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
-import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.GenerateColumnNameVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineColumnAliasVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineWithExpressionVisitor;
@@ -68,6 +51,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.SetOperationVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppCaseAggregateExtractionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppCaseExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppFunctionCallResolverVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGatherFunctionCallsVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByAggregationSugarVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupByVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppGroupingSetsVisitor;
@@ -79,12 +63,12 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppWindowAggregationSuga
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppWindowRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SubstituteGroupbyExpressionWithVariableVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.VariableCheckAndRewriteVisitor;
-import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppAstPrintUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
-import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
-import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.Function;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -96,41 +80,38 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     public static final String INLINE_WITH_OPTION = "inline_with";
     private static final boolean INLINE_WITH_OPTION_DEFAULT = true;
     private final IParserFactory parserFactory;
-    private final FunctionParser functionParser;
-    private IReturningStatement topExpr;
-    private List<FunctionDecl> declaredFunctions;
+    private SqlppFunctionBodyRewriter functionBodyRewriter;
+    private IReturningStatement topStatement;
     private LangRewritingContext context;
     private MetadataProvider metadataProvider;
     private Collection<VarIdentifier> externalVars;
+    private boolean allowNonStoredUdfCalls;
+    private boolean inlineUdfs;
     private boolean isLogEnabled;
 
     public SqlppQueryRewriter(IParserFactory parserFactory) {
         this.parserFactory = parserFactory;
-        functionParser = new FunctionParser(parserFactory);
     }
 
-    protected void setup(List<FunctionDecl> declaredFunctions, IReturningStatement topExpr,
-            MetadataProvider metadataProvider, LangRewritingContext context, Collection<VarIdentifier> externalVars)
+    protected void setup(LangRewritingContext context, IReturningStatement topStatement,
+            Collection<VarIdentifier> externalVars, boolean allowNonStoredUdfCalls, boolean inlineUdfs)
             throws CompilationException {
-        this.topExpr = topExpr;
         this.context = context;
-        this.declaredFunctions = declaredFunctions;
-        this.metadataProvider = metadataProvider;
+        this.metadataProvider = context.getMetadataProvider();
+        this.topStatement = topStatement;
         this.externalVars = externalVars != null ? externalVars : Collections.emptyList();
+        this.allowNonStoredUdfCalls = allowNonStoredUdfCalls;
+        this.inlineUdfs = inlineUdfs;
         this.isLogEnabled = LOGGER.isTraceEnabled();
         logExpression("Starting AST rewrites on", "");
     }
 
     @Override
-    public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
-            MetadataProvider metadataProvider, LangRewritingContext context, boolean inlineUdfs,
-            Collection<VarIdentifier> externalVars) throws CompilationException {
-        if (topStatement == null) {
-            return;
-        }
+    public void rewrite(LangRewritingContext context, IReturningStatement topStatement, boolean allowNonStoredUdfCalls,
+            boolean inlineUdfs, Collection<VarIdentifier> externalVars) throws CompilationException {
 
         // Sets up parameters.
-        setup(declaredFunctions, topStatement, metadataProvider, context, externalVars);
+        setup(context, topStatement, externalVars, allowNonStoredUdfCalls, inlineUdfs);
 
         // Resolves function calls
         resolveFunctionCalls();
@@ -182,7 +163,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         rewriteRightJoins();
 
         // Inlines functions.
-        inlineDeclaredUdfs(inlineUdfs);
+        loadAndInlineDeclaredUdfs();
 
         // Rewrites SQL++ core aggregate function names into internal names
         rewriteSpecialFunctionNames();
@@ -214,7 +195,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
     protected void resolveFunctionCalls() throws CompilationException {
         SqlppFunctionCallResolverVisitor visitor =
-                new SqlppFunctionCallResolverVisitor(metadataProvider, declaredFunctions);
+                new SqlppFunctionCallResolverVisitor(context, allowNonStoredUdfCalls);
         rewriteTopExpr(visitor, null);
     }
 
@@ -308,53 +289,40 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         rewriteTopExpr(visitor, null);
     }
 
-    protected void inlineDeclaredUdfs(boolean inlineUdfs) throws CompilationException {
-        List<FunctionSignature> funIds = new ArrayList<FunctionSignature>();
-        for (FunctionDecl fdecl : declaredFunctions) {
-            funIds.add(fdecl.getSignature());
-        }
-
-        List<FunctionDecl> usedStoredFunctionDecls = new ArrayList<>();
-        for (Expression topLevelExpr : topExpr.getDirectlyEnclosedExpressions()) {
-            usedStoredFunctionDecls.addAll(FunctionUtil.retrieveUsedStoredFunctions(metadataProvider, topLevelExpr,
-                    funIds, null, this::getFunctionCalls, functionParser, context.getWarningCollector()));
-        }
-        declaredFunctions.addAll(usedStoredFunctionDecls);
-        if (inlineUdfs && !declaredFunctions.isEmpty()) {
-            SqlppFunctionBodyRewriterFactory functionBodyRewriterFactory =
-                    new SqlppFunctionBodyRewriterFactory(parserFactory);
-            SqlppInlineUdfsVisitor visitor = new SqlppInlineUdfsVisitor(context, functionBodyRewriterFactory,
-                    declaredFunctions, metadataProvider);
-            while (rewriteTopExpr(visitor, declaredFunctions)) {
+    protected void loadAndInlineDeclaredUdfs() throws CompilationException {
+        Map<FunctionSignature, FunctionDecl> udfs = fetchUserDefinedSqlppFunctions(topStatement);
+        FunctionUtil.checkFunctionRecursion(udfs, SqlppGatherFunctionCallsVisitor::new,
+                topStatement.getSourceLocation());
+        if (!udfs.isEmpty() && inlineUdfs) {
+            SqlppInlineUdfsVisitor visitor = new SqlppInlineUdfsVisitor(context, udfs);
+            while (rewriteTopExpr(visitor, null)) {
                 // loop until no more changes
             }
         }
-        declaredFunctions.removeAll(usedStoredFunctionDecls);
     }
 
     private <R, T> R rewriteTopExpr(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
-        R result = topExpr.accept(visitor, arg);
+        R result = topStatement.accept(visitor, arg);
         logExpression(">>>> AST After", visitor.getClass().getSimpleName());
         return result;
     }
 
     private void logExpression(String p0, String p1) throws CompilationException {
         if (isLogEnabled) {
-            LOGGER.trace("{} {}\n{}", p0, p1, LogRedactionUtil.userData(SqlppAstPrintUtil.toString(topExpr)));
+            LOGGER.trace("{} {}\n{}", p0, p1, LogRedactionUtil.userData(SqlppAstPrintUtil.toString(topStatement)));
         }
     }
 
     @Override
-    public Set<AbstractCallExpression> getFunctionCalls(Expression expression) throws CompilationException {
-        GatherFunctionCalls gfc = new GatherFunctionCalls();
+    public void getFunctionCalls(Expression expression, Collection<? super AbstractCallExpression> outCalls)
+            throws CompilationException {
+        SqlppGatherFunctionCallsVisitor gfc = new SqlppGatherFunctionCallsVisitor(outCalls);
         expression.accept(gfc, null);
-        return gfc.getCalls();
     }
 
     @Override
     public Set<VariableExpr> getExternalVariables(Expression expr) throws CompilationException {
         Set<VariableExpr> freeVars = SqlppVariableUtil.getFreeVariables(expr);
-
         Set<VariableExpr> extVars = new HashSet<>();
         for (VariableExpr ve : freeVars) {
             if (SqlppVariableUtil.isExternalVariableReference(ve)) {
@@ -364,189 +332,107 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         return extVars;
     }
 
-    private static class GatherFunctionCalls extends GatherFunctionCallsVisitor implements ISqlppVisitor<Void, Void> {
+    private Map<FunctionSignature, FunctionDecl> fetchUserDefinedSqlppFunctions(IReturningStatement topExpr)
+            throws CompilationException {
+        Map<FunctionSignature, FunctionDecl> udfs = new LinkedHashMap<>();
 
-        public GatherFunctionCalls() {
+        Deque<AbstractCallExpression> workQueue = new ArrayDeque<>();
+        SqlppGatherFunctionCallsVisitor gfc = new SqlppGatherFunctionCallsVisitor(workQueue);
+        for (Expression expr : topExpr.getDirectlyEnclosedExpressions()) {
+            expr.accept(gfc, null);
+        }
+        AbstractCallExpression fnCall;
+        while ((fnCall = workQueue.poll()) != null) {
+            switch (fnCall.getKind()) {
+                case CALL_EXPRESSION:
+                    FunctionSignature fs = fnCall.getFunctionSignature();
+                    DataverseName fsDataverse = fs.getDataverseName();
+                    if (fsDataverse == null) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, fnCall.getSourceLocation(),
+                                fs);
+                    }
+                    if (FunctionUtil.isBuiltinFunctionSignature(fs) || udfs.containsKey(fs)) {
+                        continue;
+                    }
+                    FunctionDecl fd = context.getDeclaredFunctions().get(fs);
+                    if (fd == null) {
+                        Function function;
+                        try {
+                            function = metadataProvider.lookupUserDefinedFunction(fs);
+                        } catch (AlgebricksException e) {
+                            throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, fnCall.getSourceLocation(),
+                                    fs.toString());
+                        }
+                        if (function == null) {
+                            throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, fnCall.getSourceLocation(),
+                                    fs.toString());
+                        }
+                        if (function.isExternal()) {
+                            continue;
+                        }
+                        fd = FunctionUtil.parseStoredFunction(function, parserFactory, context.getWarningCollector(),
+                                fnCall.getSourceLocation());
+                    }
+                    prepareFunction(fd);
+                    udfs.put(fs, fd);
+                    fd.getNormalizedFuncBody().accept(gfc, null);
+                    break;
+                case WINDOW_EXPRESSION:
+                    // there cannot be used-defined window functions
+                    break;
+                default:
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, fnCall.getSourceLocation(),
+                            fnCall.getFunctionSignature().toString(false));
+            }
+        }
+        return udfs;
+    }
+
+    private void prepareFunction(FunctionDecl fd) throws CompilationException {
+        Expression fnNormBody = fd.getNormalizedFuncBody();
+        if (fnNormBody == null) {
+            fnNormBody = rewriteFunctionBody(fd);
+            fd.setNormalizedFuncBody(fnNormBody);
+        }
+    }
+
+    private Expression rewriteFunctionBody(FunctionDecl fnDecl) throws CompilationException {
+        DataverseName fnDataverseName = fnDecl.getSignature().getDataverseName();
+        Dataverse defaultDataverse = metadataProvider.getDefaultDataverse();
+        Dataverse fnDataverse;
+        if (fnDataverseName == null || fnDataverseName.equals(defaultDataverse.getDataverseName())) {
+            fnDataverse = defaultDataverse;
+        } else {
+            try {
+                fnDataverse = metadataProvider.findDataverse(fnDataverseName);
+            } catch (AlgebricksException e) {
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, fnDecl.getSourceLocation(),
+                        fnDataverseName);
+            }
         }
 
-        @Override
-        public Void visit(FromClause fromClause, Void arg) throws CompilationException {
-            for (FromTerm fromTerm : fromClause.getFromTerms()) {
-                fromTerm.accept(this, arg);
-            }
-            return null;
+        metadataProvider.setDefaultDataverse(fnDataverse);
+        try {
+            Query wrappedQuery = new Query(false);
+            wrappedQuery.setSourceLocation(fnDecl.getSourceLocation());
+            wrappedQuery.setBody(fnDecl.getFuncBody());
+            wrappedQuery.setTopLevel(false);
+            boolean allowNonStoredUdfCalls = !fnDecl.isStored();
+            getFunctionBodyRewriter().rewrite(context, wrappedQuery, allowNonStoredUdfCalls, false,
+                    fnDecl.getParamList());
+            return wrappedQuery.getBody();
+        } catch (CompilationException e) {
+            throw new CompilationException(ErrorCode.COMPILATION_BAD_FUNCTION_DEFINITION, e, fnDecl.getSignature(),
+                    e.getMessage());
+        } finally {
+            metadataProvider.setDefaultDataverse(defaultDataverse);
         }
+    }
 
-        @Override
-        public Void visit(FromTerm fromTerm, Void arg) throws CompilationException {
-            fromTerm.getLeftExpression().accept(this, arg);
-            for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
-                correlateClause.accept(this, arg);
-            }
-            return null;
+    protected SqlppFunctionBodyRewriter getFunctionBodyRewriter() {
+        if (functionBodyRewriter == null) {
+            functionBodyRewriter = new SqlppFunctionBodyRewriter(parserFactory);
         }
-
-        @Override
-        public Void visit(JoinClause joinClause, Void arg) throws CompilationException {
-            joinClause.getRightExpression().accept(this, arg);
-            joinClause.getConditionExpression().accept(this, arg);
-            return null;
-        }
-
-        @Override
-        public Void visit(NestClause nestClause, Void arg) throws CompilationException {
-            nestClause.getRightExpression().accept(this, arg);
-            nestClause.getConditionExpression().accept(this, arg);
-            return null;
-        }
-
-        @Override
-        public Void visit(Projection projection, Void arg) throws CompilationException {
-            if (!projection.star()) {
-                projection.getExpression().accept(this, arg);
-            }
-            return null;
-        }
-
-        @Override
-        public Void visit(SelectBlock selectBlock, Void arg) throws CompilationException {
-            if (selectBlock.hasFromClause()) {
-                selectBlock.getFromClause().accept(this, arg);
-            }
-            if (selectBlock.hasLetWhereClauses()) {
-                for (AbstractClause letWhereClause : selectBlock.getLetWhereList()) {
-                    letWhereClause.accept(this, arg);
-                }
-            }
-            if (selectBlock.hasGroupbyClause()) {
-                selectBlock.getGroupbyClause().accept(this, arg);
-            }
-            if (selectBlock.hasLetHavingClausesAfterGroupby()) {
-                for (AbstractClause letHavingClause : selectBlock.getLetHavingListAfterGroupby()) {
-                    letHavingClause.accept(this, arg);
-                }
-            }
-            selectBlock.getSelectClause().accept(this, arg);
-            return null;
-        }
-
-        @Override
-        public Void visit(SelectClause selectClause, Void arg) throws CompilationException {
-            if (selectClause.selectElement()) {
-                selectClause.getSelectElement().accept(this, arg);
-            } else {
-                selectClause.getSelectRegular().accept(this, arg);
-            }
-            return null;
-        }
-
-        @Override
-        public Void visit(SelectElement selectElement, Void arg) throws CompilationException {
-            selectElement.getExpression().accept(this, arg);
-            return null;
-        }
-
-        @Override
-        public Void visit(SelectRegular selectRegular, Void arg) throws CompilationException {
-            for (Projection projection : selectRegular.getProjections()) {
-                projection.accept(this, arg);
-            }
-            return null;
-        }
-
-        @Override
-        public Void visit(SelectSetOperation selectSetOperation, Void arg) throws CompilationException {
-            selectSetOperation.getLeftInput().accept(this, arg);
-            for (SetOperationRight setOperationRight : selectSetOperation.getRightInputs()) {
-                setOperationRight.getSetOperationRightInput().accept(this, arg);
-            }
-            return null;
-        }
-
-        @Override
-        public Void visit(SelectExpression selectStatement, Void arg) throws CompilationException {
-            if (selectStatement.hasLetClauses()) {
-                for (LetClause letClause : selectStatement.getLetList()) {
-                    letClause.accept(this, arg);
-                }
-            }
-            selectStatement.getSelectSetOperation().accept(this, arg);
-            if (selectStatement.hasOrderby()) {
-                selectStatement.getOrderbyClause().accept(this, arg);
-            }
-            if (selectStatement.hasLimit()) {
-                selectStatement.getLimitClause().accept(this, arg);
-            }
-            return null;
-        }
-
-        @Override
-        public Void visit(UnnestClause unnestClause, Void arg) throws CompilationException {
-            unnestClause.getRightExpression().accept(this, arg);
-            return null;
-        }
-
-        @Override
-        public Void visit(HavingClause havingClause, Void arg) throws CompilationException {
-            havingClause.getFilterExpression().accept(this, arg);
-            return null;
-        }
-
-        @Override
-        public Void visit(CaseExpression caseExpression, Void arg) throws CompilationException {
-            caseExpression.getConditionExpr().accept(this, arg);
-            for (Expression expr : caseExpression.getWhenExprs()) {
-                expr.accept(this, arg);
-            }
-            for (Expression expr : caseExpression.getThenExprs()) {
-                expr.accept(this, arg);
-            }
-            caseExpression.getElseExpr().accept(this, arg);
-            return null;
-        }
-
-        @Override
-        public Void visit(WindowExpression winExpr, Void arg) throws CompilationException {
-            calls.add(winExpr);
-            if (winExpr.hasPartitionList()) {
-                for (Expression expr : winExpr.getPartitionList()) {
-                    expr.accept(this, arg);
-                }
-            }
-            if (winExpr.hasOrderByList()) {
-                for (Expression expr : winExpr.getOrderbyList()) {
-                    expr.accept(this, arg);
-                }
-            }
-            if (winExpr.hasFrameStartExpr()) {
-                winExpr.getFrameStartExpr().accept(this, arg);
-            }
-            if (winExpr.hasFrameEndExpr()) {
-                winExpr.getFrameEndExpr().accept(this, arg);
-            }
-            if (winExpr.hasWindowFieldList()) {
-                for (Pair<Expression, Identifier> p : winExpr.getWindowFieldList()) {
-                    p.first.accept(this, arg);
-                }
-            }
-            if (winExpr.hasAggregateFilterExpr()) {
-                winExpr.getAggregateFilterExpr().accept(this, arg);
-            }
-            for (Expression expr : winExpr.getExprList()) {
-                expr.accept(this, arg);
-            }
-            return null;
-        }
-
-        @Override
-        public Void visit(ListSliceExpression expression, Void arg) throws CompilationException {
-            expression.getExpr().accept(this, arg);
-            expression.getStartIndexExpression().accept(this, arg);
-
-            if (expression.hasEndExpression()) {
-                expression.getEndIndexExpression().accept(this, arg);
-            }
-            return null;
-        }
+        return functionBodyRewriter;
     }
 }

@@ -13,41 +13,14 @@ RecordConstructor [
     FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
-        CASE            OperatorExpr [
-              OperatorExpr [
-                FieldAccessor [
-                  FieldAccessor [
-                    Variable [ Name=$i ]
-                    Field=o
-                  ]
-                  Field=o_orderpriority
-                ]
-                =
-                LiteralExpr [STRING] [1-URGENT]
-              ]
-              or
-              OperatorExpr [
-                FieldAccessor [
-                  FieldAccessor [
-                    Variable [ Name=$i ]
-                    Field=o
-                  ]
-                  Field=o_orderpriority
-                ]
-                =
-                LiteralExpr [STRING] [2-HIGH]
-              ]
-            ]
-
-        WHEN             LiteralExpr [TRUE]
-        THEN             LiteralExpr [LONG] [1]
-
-        WHEN             LiteralExpr [FALSE]
-        THEN             LiteralExpr [LONG] [0]
-
-        ELSE             LiteralExpr [NULL]
-
-        END
+        FunctionCall asterix.switch-case[
+          LiteralExpr [TRUE]
+          LiteralExpr [TRUE]
+          LiteralExpr [LONG] [1]
+          LiteralExpr [FALSE]
+          LiteralExpr [LONG] [0]
+          LiteralExpr [NULL]
+        ]
         ]
         FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]
@@ -61,41 +34,14 @@ RecordConstructor [
     FunctionCall asterix.sum@1[
       (
         SELECT ELEMENT [
-        CASE            OperatorExpr [
-              OperatorExpr [
-                FieldAccessor [
-                  FieldAccessor [
-                    Variable [ Name=$i ]
-                    Field=o
-                  ]
-                  Field=o_orderpriority
-                ]
-                =
-                LiteralExpr [STRING] [1-URGENT]
-              ]
-              or
-              OperatorExpr [
-                FieldAccessor [
-                  FieldAccessor [
-                    Variable [ Name=$i ]
-                    Field=o
-                  ]
-                  Field=o_orderpriority
-                ]
-                =
-                LiteralExpr [STRING] [2-HIGH]
-              ]
-            ]
-
-        WHEN             LiteralExpr [TRUE]
-        THEN             LiteralExpr [LONG] [0]
-
-        WHEN             LiteralExpr [FALSE]
-        THEN             LiteralExpr [LONG] [1]
-
-        ELSE             LiteralExpr [NULL]
-
-        END
+        FunctionCall asterix.switch-case[
+          LiteralExpr [TRUE]
+          LiteralExpr [TRUE]
+          LiteralExpr [LONG] [0]
+          LiteralExpr [FALSE]
+          LiteralExpr [LONG] [1]
+          LiteralExpr [NULL]
+        ]
         ]
         FROM [          Variable [ Name=$g ]
           AS Variable [ Name=$i ]

@@ -1,17 +1,15 @@
 Query:
 SELECT ELEMENT [
-CASE    LiteralExpr [TRUE]
-
-WHEN     OperatorExpr [
-      Variable [ Name=$i ]
-      >
-      Variable [ Name=$j ]
-    ]
-THEN     Variable [ Name=$i ]
-
-ELSE     Variable [ Name=$j ]
-
-END
+FunctionCall asterix.switch-case[
+  LiteralExpr [TRUE]
+  OperatorExpr [
+    Variable [ Name=$i ]
+    >
+    Variable [ Name=$j ]
+  ]
+  Variable [ Name=$i ]
+  Variable [ Name=$j ]
+]
 ]
 FROM [  OrderedListConstructor [
     LiteralExpr [LONG] [1]

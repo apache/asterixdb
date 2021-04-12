@@ -19,16 +19,23 @@
 
 package org.apache.asterix.common.utils;
 
+import static org.apache.asterix.common.api.IIdentifierMapper.Modifier;
+import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.NONE;
+
 public class IdentifierUtil {
 
     public static final String DATASET = "dataset";
     public static final String DATAVERSE = "dataverse";
 
     public static String dataset() {
-        return IdentifierMappingUtil.map(DATASET);
+        return IdentifierMappingUtil.map(DATASET, NONE);
+    }
+
+    public static String dataset(Modifier modifier) {
+        return IdentifierMappingUtil.map(DATASET, modifier);
     }
 
     public static String dataverse() {
-        return IdentifierMappingUtil.map(DATAVERSE);
+        return IdentifierMappingUtil.map(DATAVERSE, NONE);
     }
 }

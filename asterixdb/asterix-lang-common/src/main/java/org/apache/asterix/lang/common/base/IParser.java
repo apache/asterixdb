@@ -35,7 +35,8 @@ public interface IParser {
 
     List<String> parseMultipartIdentifier() throws CompilationException;
 
-    FunctionDecl parseFunctionBody(FunctionSignature signature, List<String> paramNames) throws CompilationException;
+    FunctionDecl parseFunctionBody(FunctionSignature signature, List<String> paramNames, boolean isStored)
+            throws CompilationException;
 
     /**
      * Gets the warnings generated during parsing

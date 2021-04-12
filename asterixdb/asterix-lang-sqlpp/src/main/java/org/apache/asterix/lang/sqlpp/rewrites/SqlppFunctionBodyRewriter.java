@@ -19,15 +19,13 @@
 package org.apache.asterix.lang.sqlpp.rewrites;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
-import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
-import org.apache.asterix.metadata.declared.MetadataProvider;
 
 class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
 
@@ -36,11 +34,16 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
     }
 
     @Override
-    public void rewrite(List<FunctionDecl> declaredFunctions, IReturningStatement topStatement,
-            MetadataProvider metadataProvider, LangRewritingContext context, boolean inlineUdfs,
-            Collection<VarIdentifier> externalVars) throws CompilationException {
+    public void rewrite(LangRewritingContext context, IReturningStatement topStatement, boolean allowNonStoredUdfCalls,
+            boolean inlineUdfs, Collection<VarIdentifier> externalVars) throws CompilationException {
+        if (inlineUdfs) {
+            // When rewriting function body we do not inline UDFs into it.
+            // The main query rewriter will inline everything later, when it processes the query
+            throw new CompilationException(ErrorCode.ILLEGAL_STATE, topStatement.getSourceLocation(), "inlineUdfs");
+        }
+
         // Sets up parameters.
-        setup(declaredFunctions, topStatement, metadataProvider, context, externalVars);
+        setup(context, topStatement, externalVars, allowNonStoredUdfCalls, inlineUdfs);
 
         // Resolves function calls
         resolveFunctionCalls();
@@ -93,8 +96,5 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
 
         // Rewrites RIGHT OUTER JOINs into LEFT OUTER JOINs if possible
         rewriteRightJoins();
-
-        // Inlines functions recursively.
-        inlineDeclaredUdfs(inlineUdfs);
     }
 }

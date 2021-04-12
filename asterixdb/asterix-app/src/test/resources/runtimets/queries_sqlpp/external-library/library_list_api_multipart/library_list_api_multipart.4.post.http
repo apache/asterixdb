@@ -17,11 +17,7 @@
  * under the License.
  */
 # auth admin:admin
-# param dataverse:multipart_text=externallibtest
-# param dataverse:multipart_text=foo
-# param dataverse:multipart_text=bar
-# param name:multipart_text=testlib
 # param type:multipart_text=java
 # param data:multipart_binary=target/data/externallib/asterix-external-data-testlib.zip
 
-/admin/udf
+/admin/udf/externallibtest%2Ffoo%2Fbar/testlib

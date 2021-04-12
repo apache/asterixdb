@@ -4855,7 +4855,7 @@
     <test-case FilePath="dml">
       <compilation-unit name="upsert-dataset-with-meta">
         <output-dir compare="Text">upsert-dataset-with-meta</output-dir>
-        <expected-error>upsert into dataset is not supported on datasets with meta record</expected-error>
+        <expected-error>upsert into dataset is not supported on datasets with meta records</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -12753,6 +12753,31 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf36_in_with">
         <output-dir compare="Text">udf36_in_with</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf37_recursion">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1149: Illegal function recursion (in line 24, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function recursion (in line 25, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function recursion (in line 26, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function recursion (in line 27, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function recursion (in line 28, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function recursion (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function recursion (in line 30, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function recursion (in line 31, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf38_no_recursion">
+        <output-dir compare="Text">udf38_no_recursion</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
+      <compilation-unit name="udf39_illegal_call">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1150: Illegal use of function test.f1a(1) (in line 32, at column 26)</expected-error>
+        <expected-error>ASX1150: Illegal use of function test.f2a(...) (in line 29, at column 28)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">

@@ -29,14 +29,18 @@ import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class FunctionDecl extends AbstractStatement {
-    private FunctionSignature signature;
-    private List<VarIdentifier> paramList;
+    private final FunctionSignature signature;
+    private final List<VarIdentifier> paramList;
     private Expression funcBody;
+    private Expression funcBodyNormalized;
+    private final boolean isStored;
 
-    public FunctionDecl(FunctionSignature signature, List<VarIdentifier> paramList, Expression funcBody) {
+    public FunctionDecl(FunctionSignature signature, List<VarIdentifier> paramList, Expression funcBody,
+            boolean isStored) {
         this.signature = signature;
         this.paramList = paramList;
         this.funcBody = funcBody;
+        this.isStored = isStored;
     }
 
     public FunctionSignature getSignature() {
@@ -53,14 +57,19 @@ public class FunctionDecl extends AbstractStatement {
 
     public void setFuncBody(Expression funcBody) {
         this.funcBody = funcBody;
+        this.funcBodyNormalized = null;
     }
 
-    public void setSignature(FunctionSignature signature) {
-        this.signature = signature;
+    public Expression getNormalizedFuncBody() {
+        return funcBodyNormalized;
     }
 
-    public void setParamList(List<VarIdentifier> paramList) {
-        this.paramList = paramList;
+    public void setNormalizedFuncBody(Expression funcBody) {
+        this.funcBodyNormalized = funcBody;
+    }
+
+    public boolean isStored() {
+        return isStored;
     }
 
     @Override

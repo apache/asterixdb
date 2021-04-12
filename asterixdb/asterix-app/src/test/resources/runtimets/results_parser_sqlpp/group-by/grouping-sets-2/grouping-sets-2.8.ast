@@ -8,20 +8,20 @@ FunctionCall asterix.field-access-by-name@2[
 ]
 FROM [  (
     SELECT [
-    OperatorExpr [
-      FunctionCall asterix.to-string@1[
-        FunctionCall asterix.if-null[
-          Variable [ Name=$two ]
-          LiteralExpr [STRING] [null]
+    FunctionCall asterix.string-concat@1[
+      OrderedListConstructor [
+        FunctionCall asterix.to-string@1[
+          FunctionCall asterix.if-null[
+            Variable [ Name=$two ]
+            LiteralExpr [STRING] [null]
+          ]
         ]
-      ]
-      ||
-      LiteralExpr [STRING] [,]
-      ||
-      FunctionCall asterix.to-string@1[
-        FunctionCall asterix.if-null[
-          Variable [ Name=$four ]
-          LiteralExpr [STRING] [null]
+        LiteralExpr [STRING] [,]
+        FunctionCall asterix.to-string@1[
+          FunctionCall asterix.if-null[
+            Variable [ Name=$four ]
+            LiteralExpr [STRING] [null]
+          ]
         ]
       ]
     ]
@@ -72,20 +72,20 @@ FROM [  (
       ]
     UNION
       SELECT [
-      OperatorExpr [
-        FunctionCall asterix.to-string@1[
-          FunctionCall asterix.if-null[
-            Variable [ Name=$two ]
-            LiteralExpr [STRING] [null]
+      FunctionCall asterix.string-concat@1[
+        OrderedListConstructor [
+          FunctionCall asterix.to-string@1[
+            FunctionCall asterix.if-null[
+              Variable [ Name=$two ]
+              LiteralExpr [STRING] [null]
+            ]
           ]
-        ]
-        ||
-        LiteralExpr [STRING] [,]
-        ||
-        FunctionCall asterix.to-string@1[
-          FunctionCall asterix.if-null[
-            Variable [ Name=$four ]
-            LiteralExpr [STRING] [null]
+          LiteralExpr [STRING] [,]
+          FunctionCall asterix.to-string@1[
+            FunctionCall asterix.if-null[
+              Variable [ Name=$four ]
+              LiteralExpr [STRING] [null]
+            ]
           ]
         ]
       ]
@@ -134,20 +134,20 @@ FROM [  (
         ]
     UNION
       SELECT [
-      OperatorExpr [
-        FunctionCall asterix.to-string@1[
-          FunctionCall asterix.if-null[
-            Variable [ Name=$two ]
-            LiteralExpr [STRING] [null]
+      FunctionCall asterix.string-concat@1[
+        OrderedListConstructor [
+          FunctionCall asterix.to-string@1[
+            FunctionCall asterix.if-null[
+              Variable [ Name=$two ]
+              LiteralExpr [STRING] [null]
+            ]
           ]
-        ]
-        ||
-        LiteralExpr [STRING] [,]
-        ||
-        FunctionCall asterix.to-string@1[
-          FunctionCall asterix.if-null[
-            Variable [ Name=$four ]
-            LiteralExpr [STRING] [null]
+          LiteralExpr [STRING] [,]
+          FunctionCall asterix.to-string@1[
+            FunctionCall asterix.if-null[
+              Variable [ Name=$four ]
+              LiteralExpr [STRING] [null]
+            ]
           ]
         ]
       ]
