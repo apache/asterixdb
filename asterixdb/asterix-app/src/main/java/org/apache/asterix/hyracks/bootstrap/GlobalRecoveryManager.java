@@ -150,7 +150,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
             requests.add(new StorageCleanupRequestMessage(reqId, validDatasetIds));
         }
         messageBroker.sendSyncRequestToNCs(reqId, ncs, requests,
-                TimeUnit.SECONDS.toMillis(storageGlobalCleanupTimeoutSecs));
+                TimeUnit.SECONDS.toMillis(storageGlobalCleanupTimeoutSecs), false);
     }
 
     protected MetadataTransactionContext doRecovery(ICcApplicationContext appCtx, MetadataTransactionContext mdTxnCtx)

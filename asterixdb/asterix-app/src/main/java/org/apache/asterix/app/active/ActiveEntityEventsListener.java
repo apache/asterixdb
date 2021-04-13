@@ -324,7 +324,8 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             requests.add(new ActiveStatsRequestMessage(new ActiveRuntimeId(entityId, runtimeName, i), reqId));
         }
         try {
-            List<String> responses = (List<String>) messageBroker.sendSyncRequestToNCs(reqId, ncs, requests, timeout);
+            List<String> responses =
+                    (List<String>) messageBroker.sendSyncRequestToNCs(reqId, ncs, requests, timeout, false);
             stats = formatStats(responses);
             statsTimestamp = System.currentTimeMillis();
             notifySubscribers(statsUpdatedEvent);

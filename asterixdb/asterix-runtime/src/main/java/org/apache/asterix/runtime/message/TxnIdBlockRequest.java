@@ -51,7 +51,7 @@ public class TxnIdBlockRequest implements ICcAddressedMessage {
             ICCMessageBroker broker = (ICCMessageBroker) appCtx.getServiceContext().getMessageBroker();
             long startingId = appCtx.getTxnIdFactory().getIdBlock(blockSizeRequested);
             TxnIdBlockResponse response = new TxnIdBlockResponse(startingId, blockSizeRequested);
-            broker.sendApplicationMessageToNC(response, nodeId);
+            broker.sendRealTimeApplicationMessageToNC(response, nodeId);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
