@@ -204,25 +204,23 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                             }
                             int projectFieldPos =
                                     complexSearchKeyRecordType.getFieldIndex(COMPLEXSEARCHKEY_PROJECT_FIELD_NAME);
-                            if (projectFieldPos < 0) {
-                                throw new AsterixException(ErrorCode.METADATA_ERROR, complexSearchKeyRecord.toJSON());
-                            }
-                            AOrderedList projectFieldList =
-                                    (AOrderedList) complexSearchKeyRecord.getValueByPos(projectFieldPos);
-                            List<List<String>> projectList = new ArrayList<>(projectFieldList.size());
-                            IACursor projectFieldListCursor = projectFieldList.getCursor();
-                            while (projectFieldListCursor.next()) {
-                                if (projectFieldListCursor.get().getType().getTypeTag().equals(ATypeTag.NULL)) {
-                                    projectList.add(null);
-                                    break;
+                            List<List<String>> projectList = new ArrayList<>();
+                            if (projectFieldPos >= 0) {
+                                AOrderedList projectFieldList =
+                                        (AOrderedList) complexSearchKeyRecord.getValueByPos(projectFieldPos);
+                                projectList = new ArrayList<>(projectFieldList.size());
+                                IACursor projectFieldListCursor = projectFieldList.getCursor();
+                                while (projectFieldListCursor.next()) {
+                                    AOrderedList innerList = (AOrderedList) projectFieldListCursor.get();
+                                    List<String> projectPath = new ArrayList<>(innerList.size());
+                                    IACursor innerListCursor = innerList.getCursor();
+                                    while (innerListCursor.next()) {
+                                        projectPath.add(((AString) innerListCursor.get()).getStringValue());
+                                    }
+                                    projectList.add(projectPath);
                                 }
-                                AOrderedList innerList = (AOrderedList) projectFieldListCursor.get();
-                                List<String> projectPath = new ArrayList<>(innerList.size());
-                                IACursor innerListCursor = innerList.getCursor();
-                                while (innerListCursor.next()) {
-                                    projectPath.add(((AString) innerListCursor.get()).getStringValue());
-                                }
-                                projectList.add(projectPath);
+                            } else {
+                                projectList.add(null);
                             }
                             searchElement = new Pair<>(unnestList, projectList);
                             break;
@@ -573,13 +571,15 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 listBuilder.write(itemValue.getDataOutput(), true);
                 complexSearchKeyNameRecordBuilder.addField(nameValue, itemValue);
 
-                nameValue.reset();
-                aString.setValue(COMPLEXSEARCHKEY_PROJECT_FIELD_NAME);
-                stringSerde.serialize(aString, nameValue.getDataOutput());
-                buildSearchKeyNameList(element.getProjectList());
-                itemValue.reset();
-                listBuilder.write(itemValue.getDataOutput(), true);
-                complexSearchKeyNameRecordBuilder.addField(nameValue, itemValue);
+                if (element.getProjectList().get(0) != null) {
+                    nameValue.reset();
+                    aString.setValue(COMPLEXSEARCHKEY_PROJECT_FIELD_NAME);
+                    stringSerde.serialize(aString, nameValue.getDataOutput());
+                    buildSearchKeyNameList(element.getProjectList());
+                    itemValue.reset();
+                    listBuilder.write(itemValue.getDataOutput(), true);
+                    complexSearchKeyNameRecordBuilder.addField(nameValue, itemValue);
+                }
 
                 itemValue.reset();
                 complexSearchKeyNameRecordBuilder.write(itemValue.getDataOutput(), true);

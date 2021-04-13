@@ -1,1 +1,1 @@
-{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "dates" ] ], "ProjectList": [ null ] }, [ [ "business_id" ] ] ] }
+{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "dates" ] ] }, [ [ "business_id" ] ] ] }

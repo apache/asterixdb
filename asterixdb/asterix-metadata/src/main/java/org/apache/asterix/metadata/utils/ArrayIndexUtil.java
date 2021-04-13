@@ -208,7 +208,7 @@ public class ArrayIndexUtil {
                 depthIndicatorPrefix.add(1);
             }
 
-            if (projectList == null || projectList.isEmpty()) {
+            if (projectList == null) {
                 // Stop here. The prefix is the indicator itself.
                 return depthIndicatorPrefix;
 
