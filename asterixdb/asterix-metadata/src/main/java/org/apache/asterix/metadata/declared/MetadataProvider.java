@@ -1896,7 +1896,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     private void validateDatabaseObjectNameImpl(String name, SourceLocation sourceLoc) throws AlgebricksException {
         if (name == null || name.isEmpty()) {
-            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, "<empty>");
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, "");
         }
         if (Character.isWhitespace(name.codePointAt(0)) || METADATA_OBJECT_NAME_INVALID_CHARS.matcher(name).find()) {
             throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, name);

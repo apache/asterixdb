@@ -17,4 +17,15 @@
  * under the License.
  */
 
+/*
+ * Invalid dataverse name in CREATE TYPE -> Error
+ */
+
 drop dataverse test if exists;
+create dataverse test;
+
+use test;
+
+create type `a/b`.a as closed {
+  id: int
+};

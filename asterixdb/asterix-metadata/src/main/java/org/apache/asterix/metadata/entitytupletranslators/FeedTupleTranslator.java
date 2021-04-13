@@ -37,6 +37,7 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.types.AUnorderedListType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -54,7 +55,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
     }
 
     @Override
-    protected Feed createMetadataEntityFromARecord(ARecord feedRecord) {
+    protected Feed createMetadataEntityFromARecord(ARecord feedRecord) throws AlgebricksException {
         String dataverseCanonicalName =
                 ((AString) feedRecord.getValueByPos(MetadataRecordTypes.FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX))
                         .getStringValue();

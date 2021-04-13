@@ -156,7 +156,7 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
         return changed;
     }
 
-    private boolean setLimitForScanOrUnnestMap(ILogicalOperator op, int outputLimit) {
+    private boolean setLimitForScanOrUnnestMap(ILogicalOperator op, int outputLimit) throws AlgebricksException {
         if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
             DataSourceScanOperator scan = (DataSourceScanOperator) op;
             if (isScanPushable(scan, Collections.emptySet())) {
@@ -173,7 +173,8 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    private boolean isUnnestMapPushable(UnnestMapOperator op, Set<LogicalVariable> selectedVariables) {
+    private boolean isUnnestMapPushable(UnnestMapOperator op, Set<LogicalVariable> selectedVariables)
+            throws AlgebricksException {
         if (op.getOutputLimit() >= 0) {
             // already pushed
             return false;

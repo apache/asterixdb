@@ -145,7 +145,7 @@ public class OptimizableOperatorSubTree {
         return initializeDataSource(searchOpRef);
     }
 
-    private boolean initializeDataSource(Mutable<ILogicalOperator> subTreeOpRef) {
+    private boolean initializeDataSource(Mutable<ILogicalOperator> subTreeOpRef) throws AlgebricksException {
         AbstractLogicalOperator subTreeOp = (AbstractLogicalOperator) subTreeOpRef.getValue();
 
         if (subTreeOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {

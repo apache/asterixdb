@@ -21,6 +21,11 @@
  * Invalid dataverse name in CREATE TYPE -> Error
  */
 
+drop dataverse test if exists;
+create dataverse test;
+
+use test;
+
 create type ` invalid`.a as closed {
   id: int
 };

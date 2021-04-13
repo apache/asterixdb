@@ -25,6 +25,7 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -88,7 +89,7 @@ public class BTreeJobGenParams extends AccessMethodJobGenParams {
         writeBoolean(isEqCondition, funcArgs);
     }
 
-    public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
+    public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) throws AlgebricksException {
         super.readFromFuncArgs(funcArgs);
         int index = super.getNumParams();
         lowKeyVarList = new ArrayList<LogicalVariable>();

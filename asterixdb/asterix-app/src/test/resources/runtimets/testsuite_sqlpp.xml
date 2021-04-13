@@ -4033,65 +4033,79 @@
     <test-case FilePath="ddl">
       <compilation-unit name="invalid-dataverse-name">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: ""</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
         <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create dataverse: asterix</expected-error>
         <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create dataverse: algebricks</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "" (in line 24, at column 16)</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "a/b" (in line 27, at column 16)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
       <compilation-unit name="invalid-dataset-name">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: ""</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "a/b" (in line 29, at column 16)</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "c/d" (in line 31, at column 14)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
       <compilation-unit name="invalid-feed-name">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: ""</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "a/b" (in line 34, at column 13)</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "c/d" (in line 42, at column 11)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
       <compilation-unit name="invalid-feed-policy-name">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: ""</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "a/b" (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "c/d" (in line 32, at column 23)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
       <compilation-unit name="invalid-index-name">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: ""</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "a/b" (in line 29, at column 19)</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "c/d" (in line 33, at column 12)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
       <compilation-unit name="invalid-nodegroup-name">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: ""</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
       <compilation-unit name="invalid-type-name">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: ""</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "a/b" (in line 29, at column 13)</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "c/d" (in line 33, at column 11)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
       <compilation-unit name="invalid-udf-name">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1115: Invalid name for a database object: "&lt;empty&gt;"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: ""</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " a"</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: " invalid"</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "a/b" (in line 29, at column 17)</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "c/d" (in line 33, at column 15)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">

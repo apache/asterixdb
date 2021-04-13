@@ -35,6 +35,7 @@ import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -51,7 +52,7 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
     }
 
     @Override
-    protected Library createMetadataEntityFromARecord(ARecord libraryRecord) {
+    protected Library createMetadataEntityFromARecord(ARecord libraryRecord) throws AlgebricksException {
         String dataverseCanonicalName =
                 ((AString) libraryRecord.getValueByPos(MetadataRecordTypes.LIBRARY_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();

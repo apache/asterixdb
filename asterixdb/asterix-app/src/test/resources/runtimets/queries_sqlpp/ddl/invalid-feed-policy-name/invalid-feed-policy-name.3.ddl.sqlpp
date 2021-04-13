@@ -17,4 +17,14 @@
  * under the License.
  */
 
+/*
+ * Invalid feed policy name -> Error
+ */
+
 drop dataverse test if exists;
+create dataverse test;
+
+use test;
+
+create ingestion policy `a/b` from path 'data/feed-policy/policy.properties'
+  definition 'someString';

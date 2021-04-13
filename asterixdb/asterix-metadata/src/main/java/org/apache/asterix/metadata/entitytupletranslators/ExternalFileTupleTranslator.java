@@ -35,6 +35,7 @@ import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -61,7 +62,7 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
     }
 
     @Override
-    protected ExternalFile createMetadataEntityFromARecord(ARecord externalFileRecord) {
+    protected ExternalFile createMetadataEntityFromARecord(ARecord externalFileRecord) throws AlgebricksException {
         String dataverseCanonicalName = ((AString) externalFileRecord
                 .getValueByPos(MetadataRecordTypes.EXTERNAL_FILE_ARECORD_DATAVERSENAME_FIELD_INDEX)).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);

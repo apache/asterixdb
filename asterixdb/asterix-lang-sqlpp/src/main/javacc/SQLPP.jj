@@ -67,6 +67,7 @@ import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.WarningCollector;
@@ -374,7 +375,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
         return parseImpl(new ParseFunction<List<String>>() {
             @Override
             public List<String> parse() throws ParseException {
-                return SQLPPParser.this.MultipartIdentifier();
+                return SQLPPParser.this.MultipartIdentifier().first;
             }
         });
     }
@@ -420,7 +421,15 @@ class SQLPPParser extends ScopeChecker implements IParser {
         try {
             return parseFunction.parse();
         } catch (SqlppParseException e) {
-            throw new CompilationException(ErrorCode.PARSE_ERROR, e.getSourceLocation(), LogRedactionUtil.userData(getMessage(e)));
+            if (e.getCause() instanceof AlgebricksException) {
+              AlgebricksException cause = (AlgebricksException) e.getCause();
+              if (cause.getError().isPresent() && cause.getError().get() instanceof ErrorCode) {
+                throw new CompilationException((ErrorCode) cause.getError().get(), e.getSourceLocation(),
+                  cause.getParams());
+              }
+            }
+            throw new CompilationException(ErrorCode.PARSE_ERROR, e.getSourceLocation(),
+              LogRedactionUtil.userData(getMessage(e)));
         } catch (ParseException e) {
             throw new CompilationException(ErrorCode.PARSE_ERROR, LogRedactionUtil.userData(getMessage(e)));
         } catch (Error e) {
@@ -669,6 +678,17 @@ class SQLPPParser extends ScopeChecker implements IParser {
             throw new SqlppParseException(expr.getSourceLocation(), errorPrefix + " should be an INTEGER");
         }
     }
+
+    private DataverseName createDataverseName(List<String> parts, int fromIndex, int toIndex, Token startToken)
+      throws SqlppParseException {
+      try {
+        return DataverseName.create(parts, fromIndex, toIndex);
+      } catch (AsterixException e) {
+        SqlppParseException pe = new SqlppParseException(getSourceLocation(startToken), e.getMessage());
+        pe.initCause(e);
+        throw pe;
+      }
+    }
 }
 
 PARSER_END(SQLPPParser)
@@ -745,12 +765,12 @@ Statement SingleStatement() throws ParseException:
 DataverseDecl DataverseDeclaration() throws ParseException:
 {
   Token startToken = null;
-  List<String> dvName = null;
+  DataverseName dvName = null;
 }
 {
-  <USE> { startToken = token; } dvName = MultipartIdentifier()
+  <USE> { startToken = token; } dvName = DataverseName()
     {
-      defaultDataverse = DataverseName.create(dvName);
+      defaultDataverse = dvName;
       DataverseDecl dvDecl = new DataverseDecl(defaultDataverse);
       return addSourceLocation(dvDecl, startToken);
     }
@@ -1187,14 +1207,14 @@ Triple<Integer, List<List<String>>, List<Pair<List<String>, IndexedTypeExpressio
 Pair<List<List<String>>, List<Pair<List<String>, IndexedTypeExpression>>> IndexedElementUnnestSelectBody()
   throws ParseException:
 {
-  List<String> path = null;
+  Triple<List<String>, Token, Token> path = null;
   IndexedTypeExpression type = null;
   List<List<String>> unnestList = new ArrayList();
   List<Pair<List<String>, IndexedTypeExpression>> projectList = new ArrayList();
 }
 {
-  path = MultipartIdentifier() { unnestList.add(path); }
-  ( <UNNEST> path = MultipartIdentifier() { unnestList.add(path); })*
+  path = MultipartIdentifier() { unnestList.add(path.first); }
+  ( <UNNEST> path = MultipartIdentifier() { unnestList.add(path.first); })*
   (
     ( <COLON> type = IndexedTypeExpr(false)
       {
@@ -1204,11 +1224,11 @@ Pair<List<List<String>>, List<Pair<List<String>, IndexedTypeExpression>>> Indexe
     (
       <SELECT> path = MultipartIdentifier() ( <COLON> type = IndexedTypeExpr(false) )?
       {
-        projectList.add(new Pair<List<String>, IndexedTypeExpression>(path, type));
+        projectList.add(new Pair<List<String>, IndexedTypeExpression>(path.first, type));
       }
       ( <COMMA> path = MultipartIdentifier() ( <COLON> type = IndexedTypeExpr(false) )?
         {
-          projectList.add(new Pair<List<String>, IndexedTypeExpression>(path, type));
+          projectList.add(new Pair<List<String>, IndexedTypeExpression>(path.first, type));
         }
       )*
     )
@@ -1225,13 +1245,13 @@ Pair<List<List<String>>, List<Pair<List<String>, IndexedTypeExpression>>> Indexe
 
 Pair<List<String>, IndexedTypeExpression> IndexedField() throws ParseException:
 {
-  List<String> path = null;
+  Triple<List<String>, Token, Token> path = null;
   IndexedTypeExpression type = null;
 }
 {
   path = MultipartIdentifier() ( <COLON> type = IndexedTypeExpr(true) )?
   {
-    return new Pair<List<String>, IndexedTypeExpression>(path, type);
+    return new Pair<List<String>, IndexedTypeExpression>(path.first, type);
   }
 }
 
@@ -1320,13 +1340,13 @@ CreateDataverseStatement CreateDataverseStatement(Token startStmtToken) throws P
 
 CreateDataverseStatement DataverseSpecification(Token startStmtToken) throws ParseException :
 {
-  List<String> dvName = null;
+  DataverseName dvName = null;
   boolean ifNotExists = false;
 }
 {
-  dvName = MultipartIdentifier() ifNotExists = IfNotExists()
+  dvName = DataverseName() ifNotExists = IfNotExists()
   {
-    CreateDataverseStatement stmt = new CreateDataverseStatement(DataverseName.create(dvName), null, ifNotExists);
+    CreateDataverseStatement stmt = new CreateDataverseStatement(dvName, null, ifNotExists);
     return addSourceLocation(stmt, startStmtToken);
   }
 }
@@ -1991,13 +2011,13 @@ DataverseDropStatement DropDataverseStatement(Token startStmtToken) throws Parse
 
 DataverseDropStatement DropDataverseSpecification(Token startStmtToken) throws ParseException:
 {
-  List<String> multipartId = null;
+  DataverseName dvName = null;
   boolean ifExists = false;
 }
 {
-  multipartId = MultipartIdentifier() ifExists = IfExists()
+  dvName = DataverseName() ifExists = IfExists()
   {
-    DataverseDropStatement stmt = new DataverseDropStatement(DataverseName.create(multipartId), ifExists);
+    DataverseDropStatement stmt = new DataverseDropStatement(dvName, ifExists);
     return addSourceLocation(stmt, startStmtToken);
   }
 }
@@ -2690,7 +2710,7 @@ UnorderedListTypeDefinition UnorderedListTypeDef(boolean allowRecordTypeDef) thr
 
 FunctionName FunctionName() throws ParseException:
 {
-  Triple<List<String>, SourceLocation, Token> prefix = null;
+  Triple<List<String>, Token, Token> prefix = null;
   String suffix = null;
 }
 {
@@ -2702,8 +2722,9 @@ FunctionName FunctionName() throws ParseException:
   )
   (<SHARP> suffix = Identifier())?
   {
+    Token startToken = prefix.second;
     FunctionName result = new FunctionName();
-    result.sourceLoc = prefix.second;
+    result.sourceLoc = getSourceLocation(startToken);
     result.hintToken = prefix.third;
     List<String> list = prefix.first;
     int ln = list.size();
@@ -2719,7 +2740,7 @@ FunctionName FunctionName() throws ParseException:
       result.function = suffix;
     }
     if (ln > 1) {
-      result.dataverse = DataverseName.create(list, 0, ln - 1);
+      result.dataverse = createDataverseName(list, 0, ln - 1, startToken);
     } else {
       result.dataverse = defaultDataverse;
     }
@@ -2861,49 +2882,64 @@ String StringLiteral() throws ParseException:
     }
 }
 
-List<String> MultipartIdentifier() throws ParseException:
+Triple<List<String>, Token, Token> MultipartIdentifier() throws ParseException:
 {
-  Triple<List<String>, SourceLocation, Token> result = null;
+  Triple<List<String>, Token, Token> result = null;
 }
 {
   result = MultipartIdentifierWithHints(null)
   {
-    return result.first;
+    return result;
   }
 }
 
-Triple<List<String>, SourceLocation, Token> MultipartIdentifierWithHints(SqlppHint... expectedHints)
+Triple<List<String>, Token, Token> MultipartIdentifierWithHints(SqlppHint... expectedHints)
   throws ParseException:
 {
   List<String> list = new ArrayList<String>();
   SourceLocation sourceLoc = null;
-  Token hint = null;
+  Token startToken, hintToken = null;
   String item = null;
 }
 {
   item = Identifier()
   {
     list.add(item);
-    sourceLoc = getSourceLocation(token);
+    startToken = token;
     if (expectedHints != null && expectedHints.length > 0) {
-      hint = fetchHint(token, expectedHints);
+      hintToken = fetchHint(token, expectedHints);
     }
   }
   (<DOT> item = Identifier() { list.add(item); } )*
   {
-    return new Triple<List<String>, SourceLocation, Token>(list, sourceLoc, hint);
+    return new Triple<List<String>, Token, Token>(list, startToken, hintToken);
+  }
+}
+
+DataverseName DataverseName() throws ParseException:
+{
+  Triple<List<String>, Token, Token> ident = null;
+}
+{
+  ident = MultipartIdentifier()
+  {
+    List<String> list = ident.first;
+    Token startToken = ident.second;
+    return createDataverseName(list, 0, list.size(), startToken);
   }
 }
 
 Pair<DataverseName,Identifier> QualifiedName() throws ParseException:
 {
-  List<String> list = null;
+  Triple<List<String>, Token, Token> ident = null;
 }
 {
-  list = MultipartIdentifier()
+  ident = MultipartIdentifier()
   {
+    List<String> list = ident.first;
+    Token startToken = ident.second;
     int len = list.size();
-    DataverseName id1 = len > 1 ? DataverseName.create(list, 0, len - 1) : null;
+    DataverseName id1 = len > 1 ? createDataverseName(list, 0, len - 1, startToken) : null;
     Identifier id2 = new Identifier(list.get(len - 1));
     return new Pair<DataverseName,Identifier>(id1, id2);
   }
@@ -2913,13 +2949,14 @@ Triple<DataverseName, Identifier, Identifier> DoubleQualifiedName() throws Parse
 {
   List<String> list = new ArrayList<String>();
   String item = null;
+  Token startToken = null;
 }
 {
-  item = Identifier() { list.add(item); }
+  item = Identifier() { list.add(item); startToken = token; }
   (<DOT> item = Identifier() { list.add(item); } )+
   {
     int len = list.size();
-    DataverseName id1 = len > 2 ? DataverseName.create(list, 0, len - 2) : null;
+    DataverseName id1 = len > 2 ? createDataverseName(list, 0, len - 2, startToken) : null;
     Identifier id2 = new Identifier(list.get(len - 2));
     Identifier id3 = new Identifier(list.get(len - 1));
     return new Triple<DataverseName,Identifier,Identifier>(id1, id2, id3);

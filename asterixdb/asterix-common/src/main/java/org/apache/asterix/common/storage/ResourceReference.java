@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
@@ -67,14 +68,22 @@ public class ResourceReference {
         String probablyPartition = tokens[--offset];
         if (dvParts.isEmpty()) {
             // root/partition/dataverse/dataset/rebalanceCount/index/fileName
-            dataverse = DataverseName.createSinglePartName(dvPart);
+            try {
+                dataverse = DataverseName.createSinglePartName(dvPart);
+            } catch (AsterixException e) {
+                throw new IllegalArgumentException("unable to parse path: '" + path + "'!", e);
+            }
             partition = probablyPartition;
             root = tokens[--offset];
         } else if (probablyPartition.startsWith(StorageConstants.PARTITION_DIR_PREFIX)) {
             // root/partition/dataverse_p1/^dataverse_p2/.../^dataverse_pn/dataset/rebalanceCount/index/fileName
             dvParts.add(dvPart);
             Collections.reverse(dvParts);
-            dataverse = DataverseName.create(dvParts);
+            try {
+                dataverse = DataverseName.create(dvParts);
+            } catch (AsterixException e) {
+                throw new IllegalArgumentException("unable to parse path: '" + path + "'!", e);
+            }
             partition = probablyPartition;
             root = tokens[--offset];
         } else if (dvPart.startsWith(StorageConstants.PARTITION_DIR_PREFIX)) {
@@ -82,8 +91,12 @@ public class ResourceReference {
             if (dvParts.size() != 1) {
                 throw new IllegalArgumentException("unable to parse path: '" + path + "'!");
             }
-            dataverse =
-                    DataverseName.createSinglePartName(StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + dvParts.get(0));
+            try {
+                dataverse = DataverseName
+                        .createSinglePartName(StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + dvParts.get(0));
+            } catch (AsterixException e) {
+                throw new IllegalArgumentException("unable to parse path: '" + path + "'!", e);
+            }
             LOGGER.info("legacy dataverse starting with ^ found: '{}'; this is not supported for new dataverses",
                     dataverse);
             partition = dvPart;

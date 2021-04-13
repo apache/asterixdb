@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
@@ -326,8 +327,12 @@ public class FunctionUtil {
         if (dataverseNameArg == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Invalid argument to dataset()");
         }
-        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseNameArg);
-
+        DataverseName dataverseName;
+        try {
+            dataverseName = DataverseName.createFromCanonicalForm(dataverseNameArg);
+        } catch (AsterixException e) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, e, "Invalid argument to dataset()");
+        }
         String datasetName = argExtractFunction.apply(datasetFnArgs.get(startPos + 1));
         if (datasetName == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Invalid argument to dataset()");

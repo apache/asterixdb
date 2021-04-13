@@ -25,8 +25,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -48,10 +49,6 @@ public class DataverseNameTest {
             AlgebricksBuiltinFunctions.ALGEBRICKS_NS,
             // dataverse for Asterix functions
             ASTERIX_NS);
-
-    private static final List<String> TEST_BUILTIN_DATAVERSE_INVALID_NAME_PARAMS = Arrays.asList(
-            // separator character is not allowed
-            "a/b");
 
     private static final List<Triple<String, String, String>> TEST_SINGLE_PART_NAME_PARAMS = Arrays.asList(
             // <1-part-name, canonical-form, display-form>
@@ -85,6 +82,15 @@ public class DataverseNameTest {
                     "`a@@a..`.`@@b..b@@`.`..c@@c`"),
             // with display form escape character
             new Triple<>(Arrays.asList("a\\b", "c\\d"), "a\\b/c\\d", "`a\\\\b`.`c\\\\d`"));
+
+    private static final List<String> TEST_INVALID_SINGLE_PART_PARAMS =
+            Arrays.asList("", "/", "//", "///", "a/", "a/b", "a/b/");
+
+    private static final List<List<String>> TEST_INVALID_MULTI_PART_PARAMS =
+            Arrays.asList(Arrays.asList("", ""), Arrays.asList("a", "", "d"), Arrays.asList("a", "b/c", "d"));
+
+    private static final List<String> TEST_INVALID_CANONICAL_FORM_PARAMS =
+            Arrays.asList("", "/", "//", "///", "/a", "a/", "a/b/");
 
     @Test
     public void testBuiltinDataverseName() throws Exception {
@@ -161,8 +167,7 @@ public class DataverseNameTest {
 
     protected void testDataverseNameImpl(DataverseName dataverseName, List<String> parts, String expectedCanonicalForm,
             String expectedDisplayForm) throws Exception {
-        boolean isMultiPart = parts.size() > 1;
-        Assert.assertEquals("is-multipart", isMultiPart, dataverseName.isMultiPart());
+        Assert.assertEquals("get-part-count", parts.size(), dataverseName.getPartCount());
 
         // test getParts()
         Assert.assertArrayEquals("get-parts-0", parts.toArray(), dataverseName.getParts().toArray());
@@ -184,7 +189,7 @@ public class DataverseNameTest {
     }
 
     @Test
-    public void testCompare() {
+    public void testCompare() throws Exception {
         List<DataverseName> dvList =
                 Arrays.asList(DataverseName.createSinglePartName("a"), DataverseName.create(Arrays.asList("a", "a")),
                         DataverseName.createSinglePartName("aa"), DataverseName.createSinglePartName("b"));
@@ -205,11 +210,7 @@ public class DataverseNameTest {
 
     @Test
     public void testExceptions() {
-        // 1. Invalid names for builtin dataverses
-        for (String p : TEST_BUILTIN_DATAVERSE_INVALID_NAME_PARAMS) {
-            testInvalidBuiltinDataverseNameImpl(p);
-        }
-        // 2. NullPointerException
+        // 1. NullPointerException
         testRuntimeException(() -> DataverseName.create(null), NullPointerException.class);
         testRuntimeException(() -> DataverseName.create(null, 0, 0), NullPointerException.class);
         testRuntimeException(() -> DataverseName.create(null, 0, 1), NullPointerException.class);
@@ -218,19 +219,61 @@ public class DataverseNameTest {
         testRuntimeException(() -> DataverseName.createBuiltinDataverseName(null), NullPointerException.class);
         testRuntimeException(() -> DataverseName.createFromCanonicalForm(null), NullPointerException.class);
         testRuntimeException(() -> DataverseName.create(Collections.singletonList(null)), NullPointerException.class);
-        // 3. IndexOutOfBoundsException
+
+        // 2. IndexOutOfBoundsException
         testRuntimeException(() -> DataverseName.create(Collections.emptyList(), 0, 1),
                 IndexOutOfBoundsException.class);
         testRuntimeException(() -> DataverseName.create(Collections.emptyList(), 0, 2),
                 IndexOutOfBoundsException.class);
-        // 4. IllegalArgumentException
+
+        // 3.1 IllegalArgumentException
         testRuntimeException(() -> DataverseName.create(Collections.emptyList()), IllegalArgumentException.class);
         testRuntimeException(() -> DataverseName.create(Collections.emptyList(), 0, 0), IllegalArgumentException.class);
         testRuntimeException(() -> DataverseName.create(Arrays.asList("a", "b", "c"), 2, 1),
                 IllegalArgumentException.class);
+
+        // 3.2 IllegalArgumentException -> invalid builtin dataverse name
+        for (String invalidForm : TEST_INVALID_SINGLE_PART_PARAMS) {
+            testRuntimeException(() -> DataverseName.createBuiltinDataverseName(invalidForm),
+                    IllegalArgumentException.class);
+        }
+
+        // 4.1 ErrorCode.INVALID_DATABASE_OBJECT_NAME (invalid single part name)
+        for (String invalidForm : TEST_INVALID_SINGLE_PART_PARAMS) {
+            testAsterixException(invalidForm, DataverseName::createSinglePartName,
+                    ErrorCode.INVALID_DATABASE_OBJECT_NAME);
+        }
+
+        // 4.2 ErrorCode.INVALID_DATABASE_OBJECT_NAME (invalid multi part name)
+        for (List<String> invalidForm : TEST_INVALID_MULTI_PART_PARAMS) {
+            testAsterixException(invalidForm, DataverseName::create, ErrorCode.INVALID_DATABASE_OBJECT_NAME);
+        }
+        testAsterixException(Arrays.asList("a", "", "d"), (arg) -> DataverseName.create(arg, 0, 2),
+                ErrorCode.INVALID_DATABASE_OBJECT_NAME);
+        testAsterixException(Arrays.asList("a", "b/c", "d"), (arg) -> DataverseName.create(arg, 0, 2),
+                ErrorCode.INVALID_DATABASE_OBJECT_NAME);
+
+        // 4.3 ErrorCode.INVALID_DATABASE_OBJECT_NAME (invalid canonical form)
+        for (String invalidForm : TEST_INVALID_CANONICAL_FORM_PARAMS) {
+            testAsterixException(invalidForm, DataverseName::createFromCanonicalForm,
+                    ErrorCode.INVALID_DATABASE_OBJECT_NAME);
+            testAsterixException(invalidForm, DataverseName::getPartCountFromCanonicalForm,
+                    ErrorCode.INVALID_DATABASE_OBJECT_NAME);
+            testAsterixException(invalidForm, this::getPartsFromCanonicalForm, ErrorCode.INVALID_DATABASE_OBJECT_NAME);
+            testAsterixException(invalidForm, this::getDisplayFormFromCanonicalForm,
+                    ErrorCode.INVALID_DATABASE_OBJECT_NAME);
+        }
     }
 
-    private <E extends RuntimeException> void testRuntimeException(Supplier<DataverseName> supplier,
+    private interface DataverseNameSupplier<R> {
+        R get() throws AsterixException;
+    }
+
+    private interface DataverseNameFunction<V, R> {
+        R get(V value) throws AsterixException;
+    }
+
+    private <R, E extends RuntimeException> void testRuntimeException(DataverseNameSupplier<R> supplier,
             Class<E> exceptionClass) {
         try {
             supplier.get();
@@ -245,15 +288,38 @@ public class DataverseNameTest {
                     throw ae;
                 }
             }
+        } catch (AsterixException e) {
+            Assert.fail("Expected to catch " + exceptionClass.getName() + ", but caught " + e.getClass().getName());
         }
     }
 
-    private void testInvalidBuiltinDataverseNameImpl(String singlePart) {
+    private <V, R> void testAsterixException(V supplierArg, DataverseNameFunction<V, R> supplier, ErrorCode errorCode) {
         try {
-            DataverseName.createBuiltinDataverseName(singlePart);
-            Assert.fail(singlePart);
-        } catch (IllegalArgumentException e) {
-            // this error is expected
+            supplier.get(supplierArg);
+            Assert.fail(
+                    "Did not get expected exception with error code " + errorCode.intValue() + " for " + supplierArg);
+        } catch (AsterixException e) {
+            if (e.getErrorCode() != errorCode.intValue()) {
+                try {
+                    Assert.fail("Expected to catch exception with error code " + errorCode.intValue()
+                            + ", but caught exceptionn with error code " + e.getErrorCode());
+                } catch (AssertionError ae) {
+                    ae.initCause(e);
+                    throw ae;
+                }
+            }
         }
+    }
+
+    private List<String> getPartsFromCanonicalForm(String canonicalForm) throws AsterixException {
+        ArrayList<String> list = new ArrayList<>();
+        DataverseName.getPartsFromCanonicalForm(canonicalForm, list);
+        return list;
+    }
+
+    private String getDisplayFormFromCanonicalForm(String canonicalForm) throws AsterixException {
+        StringBuilder sb = new StringBuilder();
+        DataverseName.getDisplayFormFromCanonicalForm(canonicalForm, sb);
+        return sb.toString();
     }
 }

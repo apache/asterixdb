@@ -17,4 +17,15 @@
  * under the License.
  */
 
+/*
+ * Invalid dataverse name in CREATE FUNCTION -> Error
+ */
+
 drop dataverse test if exists;
+create dataverse test;
+
+use test;
+
+create function `a/b`.a() {
+  1
+};

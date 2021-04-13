@@ -29,6 +29,7 @@ import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.client.result.ResultSet;
@@ -53,7 +54,8 @@ public class ServletUtil {
         return resultSet;
     }
 
-    public static DataverseName getDataverseName(IServletRequest request, String dataverseParameterName) {
+    public static DataverseName getDataverseName(IServletRequest request, String dataverseParameterName)
+            throws AlgebricksException {
         List<String> values = request.getParameterValues(dataverseParameterName);
         return !values.isEmpty() ? DataverseName.create(values) : null;
     }

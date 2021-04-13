@@ -89,7 +89,7 @@ public class FullTextFilterMetadataEntityTupleTranslator extends AbstractTupleTr
     }
 
     public FullTextFilterMetadataEntity createStopwordsFilterDescriptorFromARecord(AString dataverseName, AString name,
-            ARecord aRecord) {
+            ARecord aRecord) throws AlgebricksException {
         ImmutableList.Builder<String> stopwordsBuilder = ImmutableList.<String> builder();
         IACursor stopwordsCursor = ((AOrderedList) (aRecord
                 .getValueByPos(MetadataRecordTypes.FULLTEXT_ENTITY_ARECORD_STOPWORD_LIST_FIELD_INDEX))).getCursor();

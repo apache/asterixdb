@@ -29,6 +29,7 @@ import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -50,7 +51,7 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
     }
 
     @Override
-    protected Dataverse createMetadataEntityFromARecord(ARecord dataverseRecord) {
+    protected Dataverse createMetadataEntityFromARecord(ARecord dataverseRecord) throws AlgebricksException {
         String dataverseCanonicalName = ((AString) dataverseRecord.getValueByPos(0)).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String format = ((AString) dataverseRecord.getValueByPos(1)).getStringValue();
