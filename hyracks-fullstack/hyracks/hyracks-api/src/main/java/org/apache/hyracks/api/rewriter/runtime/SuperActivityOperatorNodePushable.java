@@ -55,7 +55,7 @@ import org.apache.hyracks.api.util.ExceptionUtils;
  * connected activities in a single thread.
  */
 public class SuperActivityOperatorNodePushable implements IOperatorNodePushable {
-    private static final String CLASS_ABBREVIATION = "SA";
+    private static final String CLASS_ABBREVIATION = "SAO";
     private final Map<ActivityId, IOperatorNodePushable> operatorNodePushables = new HashMap<>();
     private final List<IOperatorNodePushable> operatorNodePushablesBFSOrder = new ArrayList<>();
     private final Map<ActivityId, IActivity> startActivities;
@@ -222,9 +222,8 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
                 tasks.add(ctx.getExecutorService().submit(() -> {
                     startSemaphore.release();
                     try {
-                        Thread.currentThread()
-                                .setName(Thread.currentThread().getName() + ":" + ctx.getJobletContext().getJobId()
-                                        + ":" + ctx.getTaskAttemptId() + ":" + CLASS_ABBREVIATION);
+                        Thread.currentThread().setName(CLASS_ABBREVIATION + ":" + ctx.getJobletContext().getJobId()
+                                + ":" + ctx.getTaskAttemptId());
                         action.run(op);
                     } catch (Throwable th) { // NOSONAR: Must catch all causes of failure
                         failures.offer(th);
