@@ -29,7 +29,7 @@ public interface INCMessageBroker extends IMessageBroker {
      * @param message
      * @throws Exception
      */
-    public void sendMessageToPrimaryCC(ICcAddressedMessage message) throws Exception;
+    void sendMessageToPrimaryCC(ICcAddressedMessage message) throws Exception;
 
     /**
      * Sends application message from this NC to the CC.
@@ -37,7 +37,23 @@ public interface INCMessageBroker extends IMessageBroker {
      * @param message
      * @throws Exception
      */
-    public void sendMessageToCC(CcId ccId, ICcAddressedMessage message) throws Exception;
+    void sendMessageToCC(CcId ccId, ICcAddressedMessage message) throws Exception;
+
+    /**
+     * Sends high-priority application message from this NC to the primary CC.
+     *
+     * @param message
+     * @throws Exception
+     */
+    void sendRealTimeMessageToPrimaryCC(ICcAddressedMessage message) throws Exception;
+
+    /**
+     * Sends high-priority application message from this NC to the CC.
+     *
+     * @param message
+     * @throws Exception
+     */
+    void sendRealTimeMessageToCC(CcId ccId, ICcAddressedMessage message) throws Exception;
 
     /**
      * Sends application message from this NC to another NC.
@@ -45,14 +61,14 @@ public interface INCMessageBroker extends IMessageBroker {
      * @param message
      * @throws Exception
      */
-    public void sendMessageToNC(String nodeId, INcAddressedMessage message) throws Exception;
+    void sendMessageToNC(String nodeId, INcAddressedMessage message) throws Exception;
 
     /**
      * Queue a message to this {@link INCMessageBroker} for processing
      *
      * @param msg
      */
-    public void queueReceivedMessage(INcAddressedMessage msg);
+    void queueReceivedMessage(INcAddressedMessage msg);
 
     /**
      * Creates and registers a Future for a message that will be send through this broker
