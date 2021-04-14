@@ -20,13 +20,13 @@ package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.SYS_AUTH_HEADER;
 import static org.apache.asterix.common.library.LibraryDescriptor.FIELD_HASH;
-import static org.apache.hyracks.api.exceptions.IFormattedException.getError;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -295,14 +295,41 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
         responseWriter.flush();
     }
 
+    protected boolean isRequestPermittedForWrite(IServletRequest request, IServletResponse response) {
+        if (!isRequestOnLoopback(request)) {
+            rejectForbidden(response);
+            return false;
+        }
+        return true;
+    }
+
+    protected boolean isRequestOnLoopback(IServletRequest request) {
+        if (request.getLocalAddress() != null && request.getRemoteAddress() != null) {
+            InetAddress local = request.getLocalAddress().getAddress();
+            InetAddress remote = request.getRemoteAddress().getAddress();
+            return remote.isLoopbackAddress() && local.isLoopbackAddress();
+        } else {
+            return false;
+        }
+    }
+
+    protected static void rejectForbidden(IServletResponse response) {
+        response.setStatus(HttpResponseStatus.FORBIDDEN);
+        response.writer().write("{ \"error\": \"Forbidden\" }");
+    }
+
     @Override
     protected void post(IServletRequest request, IServletResponse response) {
-        handleModification(request, response, LibraryOperation.UPSERT);
+        if (isRequestPermittedForWrite(request, response)) {
+            handleModification(request, response, LibraryOperation.UPSERT);
+        }
     }
 
     @Override
     protected void delete(IServletRequest request, IServletResponse response) {
-        handleModification(request, response, LibraryOperation.DELETE);
+        if (isRequestPermittedForWrite(request, response)) {
+            handleModification(request, response, LibraryOperation.DELETE);
+        }
     }
 
 }

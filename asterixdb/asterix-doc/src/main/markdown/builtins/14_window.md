@@ -64,52 +64,63 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example:
 
-    For each author, find the cumulative distribution of all messages
-    in order of message ID.
+    For each customer, find the cumulative distribution of all orders
+    by order number.
 
-        SELECT m.messageId, m.authorId, CUME_DIST() OVER (
-          PARTITION BY m.authorId
-          ORDER BY m.messageId
+        FROM orders AS o
+        SELECT o.custid, o.orderno, CUME_DIST() OVER (
+          PARTITION BY o.custid
+          ORDER BY o.orderno
         ) AS `rank`
-        FROM GleambookMessages AS m;
+        ORDER BY o.custid, o.orderno;
 
 * The expected result is:
 
         [
           {
-            "rank": 0.2,
-            "messageId": 2,
-            "authorId": 1
-          },
-          {
-            "rank": 0.4,
-            "messageId": 4,
-            "authorId": 1
-          },
-          {
-            "rank": 0.6,
-            "messageId": 8,
-            "authorId": 1
-          },
-          {
-            "rank": 0.8,
-            "messageId": 10,
-            "authorId": 1
-          },
-          {
-            "rank": 1,
-            "messageId": 11,
-            "authorId": 1
+            "rank": 0.25,
+            "custid": "C13",
+            "orderno": 1002
           },
           {
             "rank": 0.5,
-            "messageId": 3,
-            "authorId": 2
+            "custid": "C13",
+            "orderno": 1007
+          },
+          {
+            "rank": 0.75,
+            "custid": "C13",
+            "orderno": 1008
           },
           {
             "rank": 1,
-            "messageId": 6,
-            "authorId": 2
+            "custid": "C13",
+            "orderno": 1009
+          },
+          {
+            "rank": 1,
+            "custid": "C31",
+            "orderno": 1003
+          },
+          {
+            "rank": 1,
+            "custid": "C35",
+            "orderno": 1004
+          },
+          {
+            "rank": 1,
+            "custid": "C37",
+            "orderno": 1005
+          },
+          {
+            "rank": 0.5,
+            "custid": "C41",
+            "orderno": 1001
+          },
+          {
+            "rank": 1,
+            "custid": "C41",
+            "orderno": 1006
           }
         ]
 
@@ -131,7 +142,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
     For this function, when any tuples have the same rank, the rank of the next
     tuple will be consecutive, so there will not be a gap in the sequence of
     returned values.
-    For example, if there are three tuples ranked 2, the next dense rank is 3.
+    For example, if there are five tuples ranked 3, the next dense rank is 4.
 
 * Arguments:
 
@@ -149,59 +160,62 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example:
 
-    For each author, find the dense rank of all messages in order of location.
+    Find the dense rank of all orders by number of items.
 
-        SELECT m.authorId, m.messageId, m.senderLocation[1] as longitude,
+        FROM orders AS o
+        SELECT o.orderno, LEN(o.items) AS items,
         DENSE_RANK() OVER (
-          PARTITION BY m.authorId
-          ORDER BY m.senderLocation[1]
+          ORDER BY LEN(o.items)
         ) AS `rank`
-        FROM GleambookMessages AS m;
+        ORDER BY `rank`, o.orderno;
 
 * The expected result is:
 
         [
           {
+            "items": 0,
             "rank": 1,
-            "authorId": 1,
-            "messageId": 10,
-            "longitude": 70.01
+            "orderno": 1009
           },
           {
+            "items": 1,
             "rank": 2,
-            "authorId": 1,
-            "messageId": 11,
-            "longitude": 77.49
+            "orderno": 1008
           },
           {
+            "items": 2,
             "rank": 3,
-            "authorId": 1,
-            "messageId": 2,
-            "longitude": 80.87
+            "orderno": 1001
           },
           {
+            "items": 2,
             "rank": 3,
-            "authorId": 1,
-            "messageId": 8,
-            "longitude": 80.87
+            "orderno": 1002
           },
           {
+            "items": 2,
+            "rank": 3,
+            "orderno": 1003
+          },
+          {
+            "items": 2,
+            "rank": 3,
+            "orderno": 1004
+          },
+          {
+            "items": 2,
+            "rank": 3,
+            "orderno": 1007
+          },
+          {
+            "items": 3,
             "rank": 4,
-            "authorId": 1,
-            "messageId": 4,
-            "longitude": 97.04
+            "orderno": 1006
           },
           {
-            "rank": 1,
-            "authorId": 2,
-            "messageId": 6,
-            "longitude": 75.56
-          },
-          {
-            "rank": 2,
-            "authorId": 2,
-            "messageId": 3,
-            "longitude": 81.01
+            "items": 4,
+            "rank": 5,
+            "orderno": 1005
           }
         ]
 
@@ -268,61 +282,76 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example:
 
-    For each author, show the length of each message, including the
-    length of the shortest message from that author.
+    For each order, show the customer and the value, including the
+    value of the smallest order from that customer.
 
-        SELECT m.authorId, m.messageId,
-        LENGTH(m.message) AS message_length,
-        FIRST_VALUE(LENGTH(m.message)) OVER (
-          PARTITION BY m.authorId
-          ORDER BY LENGTH(m.message)
-        ) AS shortest_message
-        FROM GleambookMessages AS m;
+        FROM orders AS o
+        LET revenue = ROUND((
+          FROM o.items
+          SELECT VALUE SUM(qty * price)
+        )[0], 2)
+        SELECT o.custid, o.orderno, revenue,
+        FIRST_VALUE(revenue) OVER (
+          PARTITION BY o.custid
+          ORDER BY revenue
+        ) AS smallest_order;
 
 * The expected result is:
 
         [
           {
-            "message_length": 31,
-            "shortest_message": 31,
-            "authorId": 1,
-            "messageId": 8
+            "custid": "C13",
+            "orderno": 1009,
+            "revenue": null,
+            "smallest_order": null
           },
           {
-            "message_length": 39,
-            "shortest_message": 31,
-            "authorId": 1,
-            "messageId": 11
+            "custid": "C13",
+            "orderno": 1007,
+            "revenue": 130.45,
+            "smallest_order": null
           },
           {
-            "message_length": 44,
-            "shortest_message": 31,
-            "authorId": 1,
-            "messageId": 4
+            "custid": "C13",
+            "orderno": 1008,
+            "revenue": 1999.8,
+            "smallest_order": null
           },
           {
-            "message_length": 45,
-            "shortest_message": 31,
-            "authorId": 1,
-            "messageId": 2
+            "custid": "C13",
+            "orderno": 1002,
+            "revenue": 10906.55,
+            "smallest_order": null
           },
           {
-            "message_length": 51,
-            "shortest_message": 31,
-            "authorId": 1,
-            "messageId": 10
+            "custid": "C31",
+            "orderno": 1003,
+            "revenue": 477.95,
+            "smallest_order": 477.95
           },
           {
-            "message_length": 35,
-            "shortest_message": 35,
-            "authorId": 2,
-            "messageId": 3
+            "custid": "C35",
+            "orderno": 1004,
+            "revenue": 199.94,
+            "smallest_order": 199.94
           },
           {
-            "message_length": 44,
-            "shortest_message": 35,
-            "authorId": 2,
-            "messageId": 6
+            "custid": "C37",
+            "orderno": 1005,
+            "revenue": 4639.92,
+            "smallest_order": 4639.92
+          },
+          {
+            "custid": "C41",
+            "orderno": 1001,
+            "revenue": 157.73,
+            "smallest_order": 157.73
+          },
+          {
+            "custid": "C41",
+            "orderno": 1006,
+            "revenue": 18847.58,
+            "smallest_order": 157.73
           }
         ]
 
@@ -380,61 +409,76 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example:
 
-    For each author, show the length of each message, including the
-    length of the next-shortest message.
+    For each order, show the customer and the value, including the
+    value of the next-smallest order from that customer.
 
-        SELECT m.authorId, m.messageId,
-        LENGTH(m.message) AS message_length,
-        LAG(LENGTH(m.message), 1, "No shorter message") OVER (
-          PARTITION BY m.authorId
-          ORDER BY LENGTH(m.message)
-        ) AS next_shortest_message
-        FROM GleambookMessages AS m;
+        FROM orders AS o
+        LET revenue = ROUND((
+          FROM o.items
+          SELECT VALUE SUM(qty * price)
+        )[0], 2)
+        SELECT o.custid, o.orderno, revenue,
+        LAG(revenue, 1, "No smaller order") OVER (
+          PARTITION BY o.custid
+          ORDER BY revenue
+        ) AS next_smallest_order;
 
 * The expected result is:
 
         [
           {
-            "message_length": 31,
-            "authorId": 1,
-            "messageId": 8,
-            "next_shortest_message": "No shorter message"
+            "custid": "C13",
+            "orderno": 1009,
+            "revenue": null,
+            "next_smallest_order": "No smaller order"
           },
           {
-            "message_length": 39,
-            "authorId": 1,
-            "messageId": 11,
-            "next_shortest_message": 31
+            "custid": "C13",
+            "orderno": 1007,
+            "revenue": 130.45,
+            "next_smallest_order": null
           },
           {
-            "message_length": 44,
-            "authorId": 1,
-            "messageId": 4,
-            "next_shortest_message": 39
+            "custid": "C13",
+            "orderno": 1008,
+            "revenue": 1999.8,
+            "next_smallest_order": 130.45
           },
           {
-            "message_length": 45,
-            "authorId": 1,
-            "messageId": 2,
-            "next_shortest_message": 44
+            "custid": "C13",
+            "orderno": 1002,
+            "revenue": 10906.55,
+            "next_smallest_order": 1999.8
           },
           {
-            "message_length": 51,
-            "authorId": 1,
-            "messageId": 10,
-            "next_shortest_message": 45
+            "custid": "C31",
+            "orderno": 1003,
+            "revenue": 477.95,
+            "next_smallest_order": "No smaller order"
           },
           {
-            "message_length": 35,
-            "authorId": 2,
-            "messageId": 3,
-            "next_shortest_message": "No shorter message"
+            "custid": "C35",
+            "orderno": 1004,
+            "revenue": 199.94,
+            "next_smallest_order": "No smaller order"
           },
           {
-            "message_length": 44,
-            "authorId": 2,
-            "messageId": 6,
-            "next_shortest_message": 35
+            "custid": "C37",
+            "orderno": 1005,
+            "revenue": 4639.92,
+            "next_smallest_order": "No smaller order"
+          },
+          {
+            "custid": "C41",
+            "orderno": 1001,
+            "revenue": 157.73,
+            "next_smallest_order": "No smaller order"
+          },
+          {
+            "custid": "C41",
+            "orderno": 1006,
+            "revenue": 18847.58,
+            "next_smallest_order": 157.73
           }
         ]
 
@@ -503,62 +547,77 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example:
 
-    For each author, show the length of each message, including the
-    length of the longest message from that author.
+    For each order, show the customer and the value, including the
+    value of the largest order from that customer.
 
-        SELECT m.authorId, m.messageId,
-        LENGTH(m.message) AS message_length,
-        LAST_VALUE(LENGTH(m.message)) OVER (
-          PARTITION BY m.authorId
-          ORDER BY LENGTH(m.message)
+        FROM orders AS o
+        LET revenue = ROUND((
+          FROM o.items
+          SELECT VALUE SUM(qty * price)
+        )[0], 2)
+        SELECT o.custid, o.orderno, revenue,
+        LAST_VALUE(revenue) OVER (
+          PARTITION BY o.custid
+          ORDER BY revenue
           ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING -- ➊
-        ) AS longest_message
-        FROM GleambookMessages AS m;
+        ) AS largest_order;
 
 * The expected result is:
 
         [
           {
-            "message_length": 31,
-            "longest_message": 51,
-            "authorId": 1,
-            "messageId": 8
+            "custid": "C13",
+            "orderno": 1009,
+            "revenue": null,
+            "largest_order": 10906.55
           },
           {
-            "message_length": 39,
-            "longest_message": 51,
-            "authorId": 1,
-            "messageId": 11
+            "custid": "C13",
+            "orderno": 1007,
+            "revenue": 130.45,
+            "largest_order": 10906.55
           },
           {
-            "message_length": 44,
-            "longest_message": 51,
-            "authorId": 1,
-            "messageId": 4
+            "custid": "C13",
+            "orderno": 1008,
+            "revenue": 1999.8,
+            "largest_order": 10906.55
           },
           {
-            "message_length": 45,
-            "longest_message": 51,
-            "authorId": 1,
-            "messageId": 2
+            "custid": "C13",
+            "orderno": 1002,
+            "revenue": 10906.55,
+            "largest_order": 10906.55
           },
           {
-            "message_length": 51,
-            "longest_message": 51,
-            "authorId": 1,
-            "messageId": 10
+            "custid": "C31",
+            "orderno": 1003,
+            "revenue": 477.95,
+            "largest_order": 477.95
           },
           {
-            "message_length": 35,
-            "longest_message": 44,
-            "authorId": 2,
-            "messageId": 3
+            "custid": "C35",
+            "orderno": 1004,
+            "revenue": 199.94,
+            "largest_order": 199.94
           },
           {
-            "message_length": 44,
-            "longest_message": 44,
-            "authorId": 2,
-            "messageId": 6
+            "custid": "C37",
+            "orderno": 1005,
+            "revenue": 4639.92,
+            "largest_order": 4639.92
+          },
+          {
+            "custid": "C41",
+            "orderno": 1001,
+            "revenue": 157.73,
+            "largest_order": 18847.58
+          },
+          {
+            "custid": "C41",
+            "orderno": 1006,
+            "revenue": 18847.58,
+            "largest_order": 18847.58
           }
         ]
 
@@ -566,8 +625,8 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
     end of the window partition.
     Without this clause, the end point of the window frame would always be the
     current tuple.
-    This would mean that the longest message would always be the same as the
-    current message.
+    This would mean that the largest order would always be the same as the
+    current order.
 
 ### lead ###
 
@@ -623,61 +682,76 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example:
 
-    For each author, show the length of each message, including the
-    length of the next-longest message.
+    For each order, show the customer and the value, including the
+    value of the next-largest order from that customer.
 
-        SELECT m.authorId, m.messageId,
-        LENGTH(m.message) AS message_length,
-        LEAD(LENGTH(m.message), 1, "No longer message") OVER (
-          PARTITION BY m.authorId
-          ORDER BY LENGTH(m.message)
-        ) AS next_longest_message
-        FROM GleambookMessages AS m;
+        FROM orders AS o
+        LET revenue = ROUND((
+          FROM o.items
+          SELECT VALUE SUM(qty * price)
+        )[0], 2)
+        SELECT o.custid, o.orderno, revenue,
+        LEAD(revenue, 1, "No larger order") OVER (
+          PARTITION BY o.custid
+          ORDER BY revenue
+        ) AS next_largest_order;
 
 * The expected result is:
 
         [
           {
-            "message_length": 31,
-            "authorId": 1,
-            "messageId": 8,
-            "next_longest_message": 39
+            "custid": "C13",
+            "orderno": 1009,
+            "revenue": null,
+            "next_largest_order": 130.45
           },
           {
-            "message_length": 39,
-            "authorId": 1,
-            "messageId": 11,
-            "next_longest_message": 44
+            "custid": "C13",
+            "orderno": 1007,
+            "revenue": 130.45,
+            "next_largest_order": 1999.8
           },
           {
-            "message_length": 44,
-            "authorId": 1,
-            "messageId": 4,
-            "next_longest_message": 45
+            "custid": "C13",
+            "orderno": 1008,
+            "revenue": 1999.8,
+            "next_largest_order": 10906.55
           },
           {
-            "message_length": 45,
-            "authorId": 1,
-            "messageId": 2,
-            "next_longest_message": 51
+            "custid": "C13",
+            "orderno": 1002,
+            "revenue": 10906.55,
+            "next_largest_order": "No larger order"
           },
           {
-            "message_length": 51,
-            "authorId": 1,
-            "messageId": 10,
-            "next_longest_message": "No longer message"
+            "custid": "C31",
+            "orderno": 1003,
+            "revenue": 477.95,
+            "next_largest_order": "No larger order"
           },
           {
-            "message_length": 35,
-            "authorId": 2,
-            "messageId": 3,
-            "next_longest_message": 44
+            "custid": "C35",
+            "orderno": 1004,
+            "revenue": 199.94,
+            "next_largest_order": "No larger order"
           },
           {
-            "message_length": 44,
-            "authorId": 2,
-            "messageId": 6,
-            "next_longest_message": "No longer message"
+            "custid": "C37",
+            "orderno": 1005,
+            "revenue": 4639.92,
+            "next_largest_order": "No larger order"
+          },
+          {
+            "custid": "C41",
+            "orderno": 1001,
+            "revenue": 157.73,
+            "next_largest_order": 18847.58
+          },
+          {
+            "custid": "C41",
+            "orderno": 1006,
+            "revenue": 18847.58,
+            "next_largest_order": "No larger order"
           }
         ]
 
@@ -756,62 +830,77 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example 1:
 
-    For each author, show the length of each message, including the
-    length of the second shortest message from that author.
+    For each order, show the customer and the value, including the
+    value of the second smallest order from that customer.
 
-        SELECT m.authorId, m.messageId,
-        LENGTH(m.message) AS message_length,
-        NTH_VALUE(LENGTH(m.message), 2) FROM FIRST OVER (
-          PARTITION BY m.authorId
-          ORDER BY LENGTH(m.message)
+        FROM orders AS o
+        LET revenue = ROUND((
+          FROM o.items
+          SELECT VALUE SUM(qty * price)
+        )[0], 2)
+        SELECT o.custid, o.orderno, revenue,
+        NTH_VALUE(revenue, 2) FROM FIRST OVER (
+          PARTITION BY o.custid
+          ORDER BY revenue
           ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING -- ➊
-        ) AS shortest_message_but_1
-        FROM GleambookMessages AS m;
+        ) AS smallest_order_but_1;
 
 * The expected result is:
 
         [
           {
-            "message_length": 31,
-            "shortest_message_but_1": 39,
-            "authorId": 1,
-            "messageId": 8
+            "custid": "C13",
+            "orderno": 1009,
+            "revenue": null,
+            "smallest_order_but_1": 130.45
           },
           {
-            "message_length": 39,
-            "shortest_message_but_1": 39,
-            "authorId": 1,
-            "messageId": 11 // ➋
+            "custid": "C13",
+            "orderno": 1007,
+            "revenue": 130.45, // ➋
+            "smallest_order_but_1": 130.45
           },
           {
-            "message_length": 44,
-            "shortest_message_but_1": 39,
-            "authorId": 1,
-            "messageId": 4
+            "custid": "C13",
+            "orderno": 1008,
+            "revenue": 1999.8,
+            "smallest_order_but_1": 130.45
           },
           {
-            "message_length": 45,
-            "shortest_message_but_1": 39,
-            "authorId": 1,
-            "messageId": 2
+            "custid": "C13",
+            "orderno": 1002,
+            "revenue": 10906.55,
+            "smallest_order_but_1": 130.45
           },
           {
-            "message_length": 51,
-            "shortest_message_but_1": 39,
-            "authorId": 1,
-            "messageId": 10
+            "custid": "C31",
+            "orderno": 1003,
+            "revenue": 477.95,
+            "smallest_order_but_1": null
           },
           {
-            "message_length": 35,
-            "shortest_message_but_1": 44,
-            "authorId": 2,
-            "messageId": 3
+            "custid": "C35",
+            "orderno": 1004,
+            "revenue": 199.94,
+            "smallest_order_but_1": null
           },
           {
-            "message_length": 44,
-            "shortest_message_but_1": 44,
-            "authorId": 2,
-            "messageId": 6 // ➋
+            "custid": "C37",
+            "orderno": 1005,
+            "revenue": 4639.92,
+            "smallest_order_but_1": null
+          },
+          {
+            "custid": "C41",
+            "orderno": 1001,
+            "revenue": 157.73,
+            "smallest_order_but_1": 18847.58
+          },
+          {
+            "custid": "C41",
+            "orderno": 1006,
+            "revenue": 18847.58, // ➋
+            "smallest_order_but_1": 18847.58
           }
         ]
 
@@ -819,69 +908,84 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
     end of the window partition.
     Without this clause, the end point of the window frame would always be the
     current tuple.
-    This would mean that for the shortest message, the function
-    would be unable to find the route with the second shortest message.
+    This would mean that for the smallest order, the function
+    would be unable to find the route with the second smallest order.
 
-    ➁ The second shortest message from this author.
+    ➁ The second smallest order from this customer.
 
 * Example 2:
 
-    For each author, show the length of each message, including the
-    length of the second longest message from that author.
+    For each order, show the customer and the value, including the
+    value of the second largest order from that customer.
 
-        SELECT m.authorId, m.messageId,
-        LENGTH(m.message) AS message_length,
-        NTH_VALUE(LENGTH(m.message), 2) FROM LAST OVER (
-          PARTITION BY m.authorId
-          ORDER BY LENGTH(m.message)
+        FROM orders AS o
+        LET revenue = ROUND((
+          FROM o.items
+          SELECT VALUE SUM(qty * price)
+        )[0], 2)
+        SELECT o.custid, o.orderno, revenue,
+        NTH_VALUE(revenue, 2) FROM LAST OVER (
+          PARTITION BY o.custid
+          ORDER BY revenue
           ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING -- ➊
-        ) AS longest_message_but_1
-        FROM GleambookMessages AS m;
+        ) AS largest_order_but_1;
 
 * The expected result is:
 
         [
           {
-            "message_length": 31,
-            "longest_message_but_1": 45,
-            "authorId": 1,
-            "messageId": 8
+            "custid": "C13",
+            "orderno": 1002,
+            "revenue": 10906.55,
+            "largest_order_but_1": 1999.8
           },
           {
-            "message_length": 39,
-            "longest_message_but_1": 45,
-            "authorId": 1,
-            "messageId": 11
+            "custid": "C13",
+            "orderno": 1008,
+            "revenue": 1999.8, // ➋
+            "largest_order_but_1": 1999.8
           },
           {
-            "message_length": 44,
-            "longest_message_but_1": 45,
-            "authorId": 1,
-            "messageId": 4
+            "custid": "C13",
+            "orderno": 1007,
+            "revenue": 130.45,
+            "largest_order_but_1": 1999.8
           },
           {
-            "message_length": 45,
-            "longest_message_but_1": 45,
-            "authorId": 1,
-            "messageId": 2 // ➋
+            "custid": "C13",
+            "orderno": 1009,
+            "revenue": null,
+            "largest_order_but_1": 1999.8
           },
           {
-            "message_length": 51,
-            "longest_message_but_1": 45,
-            "authorId": 1,
-            "messageId": 10
+            "custid": "C31",
+            "orderno": 1003,
+            "revenue": 477.95,
+            "largest_order_but_1": null
           },
           {
-            "message_length": 35,
-            "longest_message_but_1": 35,
-            "authorId": 2,
-            "messageId": 3 // ➋
+            "custid": "C35",
+            "orderno": 1004,
+            "revenue": 199.94,
+            "largest_order_but_1": null
           },
           {
-            "message_length": 44,
-            "longest_message_but_1": 35,
-            "authorId": 2,
-            "messageId": 6
+            "custid": "C37",
+            "orderno": 1005,
+            "revenue": 4639.92,
+            "largest_order_but_1": null
+          },
+          {
+            "custid": "C41",
+            "orderno": 1006,
+            "revenue": 18847.58,
+            "largest_order_but_1": 157.73
+          },
+          {
+            "custid": "C41",
+            "orderno": 1001,
+            "revenue": 157.73, // ➋
+            "largest_order_but_1": 157.73
           }
         ]
 
@@ -889,10 +993,10 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
     end of the window partition.
     Without this clause, the end point of the window frame would always be the
     current tuple.
-    This would mean the function would be unable to find the second longest
-    message for shorter messages.
+    This would mean the function would be unable to find the second largest
+    order for smaller orders.
 
-    ➁ The second longest message from this author.
+    ➁ The second largest order from this customer.
 
 ### ntile ###
 
@@ -932,51 +1036,65 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example:
 
-    Allocate each message to one of three tiles by length and message ID.
+    Allocate each order to one of three tiles by value.
 
-        SELECT m.messageId, LENGTH(m.message) AS `length`,
+        FROM orders AS o
+        LET revenue = ROUND((
+          FROM o.items
+          SELECT VALUE SUM(qty * price)
+        )[0], 2)
+        SELECT o.orderno, revenue,
         NTILE(3) OVER (
-          ORDER BY LENGTH(m.message), m.messageId
-        ) AS `ntile`
-        FROM GleambookMessages AS m;
+          ORDER BY revenue
+        ) AS `ntile`;
 
 * The expected result is:
 
         [
           {
-            "length": 31,
             "ntile": 1,
-            "messageId": 8
+            "orderno": 1009,
+            "revenue": null
           },
           {
-            "length": 35,
             "ntile": 1,
-            "messageId": 3
+            "orderno": 1007,
+            "revenue": 130.45
           },
           {
-            "length": 39,
             "ntile": 1,
-            "messageId": 11
+            "orderno": 1001,
+            "revenue": 157.73
           },
           {
-            "length": 44,
             "ntile": 2,
-            "messageId": 4
+            "orderno": 1004,
+            "revenue": 199.94
           },
           {
-            "length": 44,
             "ntile": 2,
-            "messageId": 6
+            "orderno": 1003,
+            "revenue": 477.95
           },
           {
-            "length": 45,
-            "ntile": 3,
-            "messageId": 2
+            "ntile": 2,
+            "orderno": 1008,
+            "revenue": 1999.8
           },
           {
-            "length": 51,
             "ntile": 3,
-            "messageId": 10
+            "orderno": 1005,
+            "revenue": 4639.92
+          },
+          {
+            "ntile": 3,
+            "orderno": 1002,
+            "revenue": 10906.55
+          },
+          {
+            "ntile": 3,
+            "orderno": 1006,
+            "revenue": 18847.58
           }
         ]
 
@@ -1011,52 +1129,61 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example:
 
-    For each author, find the percentile rank of all messages in order
-    of message ID.
+    For each customer, find the percentile rank of all orders by order number.
 
-        SELECT m.messageId, m.authorId, PERCENT_RANK() OVER (
-          PARTITION BY m.authorId
-          ORDER BY m.messageId
-        ) AS `rank`
-        FROM GleambookMessages AS m;
+        FROM orders AS o
+        SELECT o.custid, o.orderno, PERCENT_RANK() OVER (
+          PARTITION BY o.custid
+          ORDER BY o.orderno
+        ) AS `rank`;
 
 * The expected result is:
 
         [
           {
             "rank": 0,
-            "messageId": 2,
-            "authorId": 1
+            "custid": "C13",
+            "orderno": 1002
           },
           {
-            "rank": 0.25,
-            "messageId": 4,
-            "authorId": 1
+            "rank": 0.3333333333333333,
+            "custid": "C13",
+            "orderno": 1007
           },
           {
-            "rank": 0.5,
-            "messageId": 8,
-            "authorId": 1
-          },
-          {
-            "rank": 0.75,
-            "messageId": 10,
-            "authorId": 1
+            "rank": 0.6666666666666666,
+            "custid": "C13",
+            "orderno": 1008
           },
           {
             "rank": 1,
-            "messageId": 11,
-            "authorId": 1
+            "custid": "C13",
+            "orderno": 1009
           },
           {
             "rank": 0,
-            "messageId": 3,
-            "authorId": 2
+            "custid": "C31",
+            "orderno": 1003
+          },
+          {
+            "rank": 0,
+            "custid": "C35",
+            "orderno": 1004
+          },
+          {
+            "rank": 0,
+            "custid": "C37",
+            "orderno": 1005
+          },
+          {
+            "rank": 0,
+            "custid": "C41",
+            "orderno": 1001
           },
           {
             "rank": 1,
-            "messageId": 6,
-            "authorId": 2
+            "custid": "C41",
+            "orderno": 1006
           }
         ]
 
@@ -1077,7 +1204,7 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
     When any tuples have the same rank, the rank of the next tuple will include
     all preceding tuples, so there may be a gap in the sequence of returned
     values.
-    For example, if there are three tuples ranked 2, the next rank is 5.
+    For example, if there are five tuples ranked 3, the next rank is 8.
 
     To avoid gaps in the returned values, use the DENSE_RANK() function instead.
 
@@ -1097,59 +1224,61 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example:
 
-    For each author, find the rank of all messages in order of location.
+    Find the rank of all orders by number of items.
 
-        SELECT m.authorId, m.messageId, m.senderLocation[1] as longitude,
+        FROM orders AS o
+        SELECT o.orderno, LEN(o.items) AS items,
         RANK() OVER (
-          PARTITION BY m.authorId
-          ORDER BY m.senderLocation[1]
-        ) AS `rank`
-        FROM GleambookMessages AS m;
+          ORDER BY LEN(o.items)
+        ) AS `rank`;
 
 * The expected result is:
 
         [
           {
+            "items": 0,
             "rank": 1,
-            "authorId": 1,
-            "messageId": 10,
-            "longitude": 70.01
+            "orderno": 1009
           },
           {
+            "items": 1,
             "rank": 2,
-            "authorId": 1,
-            "messageId": 11,
-            "longitude": 77.49
+            "orderno": 1008
           },
           {
+            "items": 2,
             "rank": 3,
-            "authorId": 1,
-            "messageId": 2,
-            "longitude": 80.87
+            "orderno": 1004
           },
           {
+            "items": 2,
             "rank": 3,
-            "authorId": 1,
-            "messageId": 8,
-            "longitude": 80.87
+            "orderno": 1007
           },
           {
-            "rank": 5,
-            "authorId": 1,
-            "messageId": 4,
-            "longitude": 97.04
+            "items": 2,
+            "rank": 3,
+            "orderno": 1002
           },
           {
-            "rank": 1,
-            "authorId": 2,
-            "messageId": 6,
-            "longitude": 75.56
+            "items": 2,
+            "rank": 3,
+            "orderno": 1001
           },
           {
-            "rank": 2,
-            "authorId": 2,
-            "messageId": 3,
-            "longitude": 81.01
+            "items": 2,
+            "rank": 3,
+            "orderno": 1003
+          },
+          {
+            "items": 3,
+            "rank": 8,
+            "orderno": 1006
+          },
+          {
+            "items": 4,
+            "rank": 9,
+            "orderno": 1005
           }
         ]
 
@@ -1187,52 +1316,66 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example:
 
-    For each author, calculate the length of each message as a
-    fraction of the total length of all messages.
+    For each customer, calculate the value of each order as a
+    fraction of the total value of all orders.
 
-        SELECT m.messageId, m.authorId,
-        RATIO_TO_REPORT(LENGTH(m.message)) OVER (
-          PARTITION BY m.authorId
-        ) AS length_ratio
-        FROM GleambookMessages AS m;
+        FROM orders AS o
+        LET revenue = ROUND((
+          FROM o.items
+          SELECT VALUE SUM(qty * price)
+        )[0], 2)
+        SELECT o.custid, o.orderno,
+        RATIO_TO_REPORT(revenue) OVER (
+          PARTITION BY o.custid
+        ) AS fractional_ratio;
 
 * The expected result is:
 
         [
           {
-            "length_ratio": 0.21428571428571427,
-            "messageId": 2,
-            "authorId": 1
+            "custid": "C13",
+            "orderno": 1007,
+            "fractional_ratio": 0.010006289887088855
           },
           {
-            "length_ratio": 0.20952380952380953,
-            "messageId": 4,
-            "authorId": 1
+            "custid": "C13",
+            "orderno": 1002,
+            "fractional_ratio": 0.8365971710849288
           },
           {
-            "length_ratio": 0.14761904761904762,
-            "messageId": 8,
-            "authorId": 1
+            "custid": "C13",
+            "orderno": 1009,
+            "fractional_ratio": null
           },
           {
-            "length_ratio": 0.24285714285714285,
-            "messageId": 10,
-            "authorId": 1
+            "custid": "C13",
+            "orderno": 1008,
+            "fractional_ratio": 0.15339653902798234
           },
           {
-            "length_ratio": 0.18571428571428572,
-            "messageId": 11,
-            "authorId": 1
+            "custid": "C31",
+            "orderno": 1003,
+            "fractional_ratio": 1
           },
           {
-            "length_ratio": 0.4430379746835443,
-            "messageId": 3,
-            "authorId": 2
+            "custid": "C35",
+            "orderno": 1004,
+            "fractional_ratio": 1
           },
           {
-            "length_ratio": 0.5569620253164557,
-            "messageId": 6,
-            "authorId": 2
+            "custid": "C37",
+            "orderno": 1005,
+            "fractional_ratio": 1
+          },
+          {
+            "custid": "C41",
+            "orderno": 1006,
+            "fractional_ratio": 0.9917007404772666
+          },
+          {
+            "custid": "C41",
+            "orderno": 1001,
+            "fractional_ratio": 0.008299259522733382
           }
         ]
 
@@ -1265,52 +1408,66 @@ Window functions cannot appear in the FROM clause clause or LIMIT clause.
 
 * Example:
 
-    For each author, number all messages in order of length.
+    For each customer, number all orders by value.
 
-        SELECT m.messageId, m.authorId,
+        FROM orders AS o
+        LET revenue = ROUND((
+          FROM o.items
+          SELECT VALUE SUM(qty * price)
+        )[0], 2)
+        SELECT o.custid, o.orderno,
         ROW_NUMBER() OVER (
-          PARTITION BY m.authorId
-          ORDER BY LENGTH(m.message)
-        ) AS `row`
-        FROM GleambookMessages AS m;
+          PARTITION BY o.custid
+          ORDER BY revenue
+        ) AS `row`;
 
 * The expected result is:
 
         [
           {
             "row": 1,
-            "messageId": 8,
-            "authorId": 1
+            "custid": "C13",
+            "orderno": 1009
           },
           {
             "row": 2,
-            "messageId": 11,
-            "authorId": 1
+            "custid": "C13",
+            "orderno": 1007
           },
           {
             "row": 3,
-            "messageId": 4,
-            "authorId": 1
+            "custid": "C13",
+            "orderno": 1008
           },
           {
             "row": 4,
-            "messageId": 2,
-            "authorId": 1
-          },
-          {
-            "row": 5,
-            "messageId": 10,
-            "authorId": 1
+            "custid": "C13",
+            "orderno": 1002
           },
           {
             "row": 1,
-            "messageId": 3,
-            "authorId": 2
+            "custid": "C31",
+            "orderno": 1003
+          },
+          {
+            "row": 1,
+            "custid": "C35",
+            "orderno": 1004
+          },
+          {
+            "row": 1,
+            "custid": "C37",
+            "orderno": 1005
+          },
+          {
+            "row": 1,
+            "custid": "C41",
+            "orderno": 1001
           },
           {
             "row": 2,
-            "messageId": 6,
-            "authorId": 2
+            "custid": "C41",
+            "orderno": 1006
           }
         ]
 

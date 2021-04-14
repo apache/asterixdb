@@ -65,18 +65,34 @@ public class CCMessageBroker implements ICCMessageBroker {
     }
 
     @Override
-    public void sendApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception {
+    public boolean sendApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception {
+        return sendMessage(msg, nodeId, false);
+    }
+
+    @Override
+    public boolean sendRealTimeApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception {
+        return sendMessage(msg, nodeId, true);
+    }
+
+    private boolean sendMessage(INcAddressedMessage msg, String nodeId, boolean realTime) throws Exception {
         INodeManager nodeManager = ccs.getNodeManager();
         NodeControllerState state = nodeManager.getNodeControllerState(nodeId);
         if (msg instanceof ICcIdentifiedMessage) {
             ((ICcIdentifiedMessage) msg).setCcId(ccs.getCcId());
         }
         if (state != null) {
-            state.getNodeController().sendApplicationMessageToNC(JavaSerializationUtils.serialize(msg), null, nodeId);
+            byte[] payload = JavaSerializationUtils.serialize(msg);
+            if (realTime) {
+                state.getNodeController().sendRealTimeApplicationMessageToNC(payload, null, nodeId);
+            } else {
+                state.getNodeController().sendApplicationMessageToNC(payload, null, nodeId);
+            }
+            return true;
         } else {
             if (LOGGER.isWarnEnabled()) {
                 LOGGER.warn("Couldn't send message to unregistered node (" + nodeId + ")");
             }
+            return false;
         }
     }
 
@@ -87,7 +103,7 @@ public class CCMessageBroker implements ICCMessageBroker {
 
     @Override
     public Object sendSyncRequestToNCs(long reqId, List<String> ncs, List<? extends INcAddressedMessage> requests,
-            long timeout) throws Exception {
+            long timeout, boolean realTime) throws Exception {
         MutableInt numRequired = new MutableInt(0);
         MutablePair<MutableInt, MutablePair<ResponseState, Object>> pair =
                 MutablePair.of(numRequired, MutablePair.of(ResponseState.UNINITIALIZED, UNINITIALIZED));
@@ -101,7 +117,10 @@ public class CCMessageBroker implements ICCMessageBroker {
                     if (!(message instanceof ICcIdentifiedMessage)) {
                         throw new IllegalStateException("sync request message not cc identified: " + message);
                     }
-                    sendApplicationMessageToNC(message, nc);
+                    if (!(realTime ? sendRealTimeApplicationMessageToNC(message, nc)
+                            : sendApplicationMessageToNC(message, nc))) {
+                        throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "unable to send sync message to " + nc);
+                    }
                 }
                 long time = System.currentTimeMillis();
                 while (pair.getLeft().getValue() > 0) {

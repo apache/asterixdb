@@ -51,7 +51,7 @@ public class ResourceIdRequestMessage implements ICcAddressedMessage {
                     response.setException(new Exception("One or more nodes has not reported max resource id."));
                 }
             }
-            broker.sendApplicationMessageToNC(response, src);
+            broker.sendRealTimeApplicationMessageToNC(response, src);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
