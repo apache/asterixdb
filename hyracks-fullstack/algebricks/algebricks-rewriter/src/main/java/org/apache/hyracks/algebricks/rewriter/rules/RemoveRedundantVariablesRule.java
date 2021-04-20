@@ -36,7 +36,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
@@ -69,26 +68,33 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
 
     private final VariableSubstitutionVisitor substVisitor = new VariableSubstitutionVisitor();
-    private final Map<LogicalVariable, List<LogicalVariable>> equivalentVarsMap =
-            new HashMap<LogicalVariable, List<LogicalVariable>>();
+
+    private final Map<LogicalVariable, List<LogicalVariable>> equivalentVarsMap = new HashMap<>();
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
+        return false;
+    }
+
+    @Override
+    public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
         if (context.checkIfInDontApplySet(this, opRef.getValue())) {
             return false;
         }
-        boolean modified = removeRedundantVariables(opRef, context);
-        if (modified) {
-            context.computeAndSetTypeEnvironmentForOperator(opRef.getValue());
-        }
-        return modified;
+        clear();
+        return removeRedundantVariables(opRef, true, context);
+    }
+
+    private void clear() {
+        equivalentVarsMap.clear();
     }
 
     private void updateEquivalenceClassMap(LogicalVariable lhs, LogicalVariable rhs) {
         List<LogicalVariable> equivalentVars = equivalentVarsMap.get(rhs);
         if (equivalentVars == null) {
-            equivalentVars = new ArrayList<LogicalVariable>();
+            equivalentVars = new ArrayList<>();
             // The first element in the list is the bottom-most representative which will replace all equivalent vars.
             equivalentVars.add(rhs);
             equivalentVars.add(lhs);
@@ -97,11 +103,31 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
         equivalentVarsMap.put(lhs, equivalentVars);
     }
 
-    private boolean removeRedundantVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
-            throws AlgebricksException {
+    private LogicalVariable findEquivalentRepresentativeVar(LogicalVariable var) {
+        List<LogicalVariable> equivalentVars = equivalentVarsMap.get(var);
+        if (equivalentVars == null) {
+            return null;
+        }
+        LogicalVariable representativeVar = equivalentVars.get(0);
+        return var.equals(representativeVar) ? null : representativeVar;
+    }
+
+    private boolean removeRedundantVariables(Mutable<ILogicalOperator> opRef, boolean first,
+            IOptimizationContext context) throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        if (!first) {
+            context.addToDontApplySet(this, op);
+        }
+
         LogicalOperatorTag opTag = op.getOperatorTag();
         boolean modified = false;
+
+        // Recurse into children.
+        for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
+            if (removeRedundantVariables(inputOpRef, false, context)) {
+                modified = true;
+            }
+        }
 
         // Update equivalence class map.
         if (opTag == LogicalOperatorTag.ASSIGN) {
@@ -142,7 +168,7 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
             AbstractOperatorWithNestedPlans opWithNestedPlan = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan nestedPlan : opWithNestedPlan.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> rootRef : nestedPlan.getRoots()) {
-                    if (removeRedundantVariables(rootRef, context)) {
+                    if (removeRedundantVariables(rootRef, false, context)) {
                         modified = true;
                     }
                 }
@@ -158,14 +184,8 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
 
         if (modified) {
             context.computeAndSetTypeEnvironmentForOperator(op);
-            context.addToDontApplySet(this, op);
         }
 
-        // Clears the equivalent variable map if the current operator is the root operator
-        // in the query plan.
-        if (opTag == LogicalOperatorTag.DISTRIBUTE_RESULT || opTag == LogicalOperatorTag.SINK) {
-            equivalentVarsMap.clear();
-        }
         return modified;
     }
 
@@ -227,38 +247,34 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
      * We cannot use the VariableSubstitutionVisitor here because the project ops
      * maintain their variables as a list and not as expressions.
      */
-    private boolean replaceProjectVars(ProjectOperator op) throws AlgebricksException {
+    private boolean replaceProjectVars(ProjectOperator op) {
         List<LogicalVariable> vars = op.getVariables();
         int size = vars.size();
         boolean modified = false;
         for (int i = 0; i < size; i++) {
             LogicalVariable var = vars.get(i);
-            List<LogicalVariable> equivalentVars = equivalentVarsMap.get(var);
-            if (equivalentVars == null) {
-                continue;
-            }
-            // Replace with equivalence class representative.
-            LogicalVariable representative = equivalentVars.get(0);
-            if (representative != var) {
-                vars.set(i, equivalentVars.get(0));
+            LogicalVariable representativeVar = findEquivalentRepresentativeVar(var);
+            if (representativeVar != null) {
+                // Replace with equivalence class representative.
+                vars.set(i, representativeVar);
                 modified = true;
             }
         }
         return modified;
     }
 
-    private boolean replaceUnionAllVars(UnionAllOperator op) throws AlgebricksException {
+    private boolean replaceUnionAllVars(UnionAllOperator op) {
         boolean modified = false;
         for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> varMapping : op.getVariableMappings()) {
-            List<LogicalVariable> firstEquivalentVars = equivalentVarsMap.get(varMapping.first);
-            List<LogicalVariable> secondEquivalentVars = equivalentVarsMap.get(varMapping.second);
             // Replace variables with their representative.
-            if (firstEquivalentVars != null) {
-                varMapping.first = firstEquivalentVars.get(0);
+            LogicalVariable firstRepresentativeVar = findEquivalentRepresentativeVar(varMapping.first);
+            if (firstRepresentativeVar != null) {
+                varMapping.first = firstRepresentativeVar;
                 modified = true;
             }
-            if (secondEquivalentVars != null) {
-                varMapping.second = secondEquivalentVars.get(0);
+            LogicalVariable secondRepresentativeVar = findEquivalentRepresentativeVar(varMapping.second);
+            if (secondRepresentativeVar != null) {
+                varMapping.second = secondRepresentativeVar;
                 modified = true;
             }
         }
@@ -269,17 +285,13 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
         @Override
         public boolean transform(Mutable<ILogicalExpression> exprRef) {
             ILogicalExpression e = exprRef.getValue();
-            switch (((AbstractLogicalExpression) e).getExpressionTag()) {
+            switch (e.getExpressionTag()) {
                 case VARIABLE: {
                     // Replace variable references with their equivalent representative in the equivalence class map.
                     VariableReferenceExpression varRefExpr = (VariableReferenceExpression) e;
                     LogicalVariable var = varRefExpr.getVariableReference();
-                    List<LogicalVariable> equivalentVars = equivalentVarsMap.get(var);
-                    if (equivalentVars == null) {
-                        return false;
-                    }
-                    LogicalVariable representative = equivalentVars.get(0);
-                    if (representative != var) {
+                    LogicalVariable representative = findEquivalentRepresentativeVar(var);
+                    if (representative != null) {
                         varRefExpr.setVariable(representative);
                         return true;
                     }

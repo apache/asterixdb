@@ -66,12 +66,12 @@
                                                                                 -- SORT_MERGE_EXCHANGE [$$117(ASC), $$tokenGroupped(ASC) ]  |PARTITIONED|
                                                                                   -- STABLE_SORT [$$117(ASC), $$tokenGroupped(ASC)]  |PARTITIONED|
                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                      -- EXTERNAL_GROUP_BY[$$124]  |PARTITIONED|
+                                                                                      -- EXTERNAL_GROUP_BY[$$123]  |PARTITIONED|
                                                                                               {
                                                                                                 -- AGGREGATE  |LOCAL|
                                                                                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                               }
-                                                                                        -- HASH_PARTITION_EXCHANGE [$$124]  |PARTITIONED|
+                                                                                        -- HASH_PARTITION_EXCHANGE [$$123]  |PARTITIONED|
                                                                                           -- EXTERNAL_GROUP_BY[$$token]  |PARTITIONED|
                                                                                                   {
                                                                                                     -- AGGREGATE  |LOCAL|
@@ -121,12 +121,12 @@
                                                                               -- SORT_MERGE_EXCHANGE [$$117(ASC), $$tokenGroupped(ASC) ]  |PARTITIONED|
                                                                                 -- STABLE_SORT [$$117(ASC), $$tokenGroupped(ASC)]  |PARTITIONED|
                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                    -- EXTERNAL_GROUP_BY[$$124]  |PARTITIONED|
+                                                                                    -- EXTERNAL_GROUP_BY[$$123]  |PARTITIONED|
                                                                                             {
                                                                                               -- AGGREGATE  |LOCAL|
                                                                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                             }
-                                                                                      -- HASH_PARTITION_EXCHANGE [$$124]  |PARTITIONED|
+                                                                                      -- HASH_PARTITION_EXCHANGE [$$123]  |PARTITIONED|
                                                                                         -- EXTERNAL_GROUP_BY[$$token]  |PARTITIONED|
                                                                                                 {
                                                                                                   -- AGGREGATE  |LOCAL|
