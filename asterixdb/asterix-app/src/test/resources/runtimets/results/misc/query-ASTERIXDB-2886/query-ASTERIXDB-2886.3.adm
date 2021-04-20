@@ -1,0 +1,4 @@
+{ "DataverseName": "test1", "DatasetName": "a", "IsAnonymous": true, "indexes": [ { "IndexName": "a" }, { "IndexName": "ia2" }, { "IndexName": "ia3" } ] }
+{ "DataverseName": "test1", "DatasetName": "b", "IsAnonymous": true, "indexes": [ { "IndexName": "b" }, { "IndexName": "ib2" }, { "IndexName": "ib3" } ] }
+{ "DataverseName": "test2", "DatasetName": "a", "IsAnonymous": true, "indexes": [ { "IndexName": "a" }, { "IndexName": "ia2" }, { "IndexName": "ia3" } ] }
+{ "DataverseName": "test2", "DatasetName": "b", "IsAnonymous": true, "indexes": [ { "IndexName": "b" }, { "IndexName": "ib2" }, { "IndexName": "ib3" } ] }

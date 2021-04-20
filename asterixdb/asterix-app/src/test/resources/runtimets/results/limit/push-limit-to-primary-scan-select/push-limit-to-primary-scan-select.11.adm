@@ -2,9 +2,9 @@ distribute result [$$202]
 -- DISTRIBUTE_RESULT  |LOCAL|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-    aggregate [$$202] <- [agg-sql-sum($$235)]
+    aggregate [$$202] <- [agg-sql-sum($$231)]
     -- AGGREGATE  |LOCAL|
-      aggregate [$$235] <- [agg-sql-count(1)]
+      aggregate [$$231] <- [agg-sql-count(1)]
       -- AGGREGATE  |LOCAL|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
