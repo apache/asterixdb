@@ -18,14 +18,13 @@
  */
 package org.apache.asterix.metadata.declared;
 
-import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
-import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
@@ -103,17 +102,25 @@ public class MetadataManagerUtil {
         return adapter;
     }
 
-    public static Dataset findDataset(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName, String dataset)
-            throws AlgebricksException {
-        return MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, dataset);
+    public static Dataset findDataset(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
+            String datasetName, boolean includingViews) throws AlgebricksException {
+        Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
+        if (!includingViews && dataset != null && dataset.getDatasetType() == DatasetConfig.DatasetType.VIEW) {
+            return null;
+        }
+        return dataset;
+    }
+
+    public static Dataset findDataset(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
+        return findDataset(mdTxnCtx, dataverseName, datasetName, false);
     }
 
     public static Dataset findExistingDataset(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
             String datasetName) throws AlgebricksException {
         Dataset dataset = findDataset(mdTxnCtx, dataverseName, datasetName);
         if (dataset == null) {
-            throw new AlgebricksException(
-                    "Unknown " + dataset() + " " + datasetName + " in " + dataverse() + " " + dataverseName);
+            throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, datasetName, dataverseName);
         }
         return dataset;
     }
@@ -185,13 +192,25 @@ public class MetadataManagerUtil {
             MetadataTransactionContext mdTxnCtx, DataSourceId id) throws AlgebricksException {
         Dataset dataset = findDataset(mdTxnCtx, id.getDataverseName(), id.getDatasourceName());
         if (dataset == null) {
-            throw new AlgebricksException("Datasource with id " + id + " was not found.");
+            throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, id.getDatasourceName(),
+                    id.getDataverseName());
         }
+        byte datasourceType;
+        switch (dataset.getDatasetType()) {
+            case INTERNAL:
+                datasourceType = DataSource.Type.INTERNAL_DATASET;
+                break;
+            case EXTERNAL:
+                datasourceType = DataSource.Type.EXTERNAL_DATASET;
+                break;
+            default:
+                throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, id.getDatasourceName(),
+                        id.getDataverseName());
+        }
+
         IAType itemType = findType(mdTxnCtx, dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType = findType(mdTxnCtx, dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         INodeDomain domain = findNodeDomain(clusterStateManager, mdTxnCtx, dataset.getNodeGroupName());
-        byte datasourceType = dataset.getDatasetType().equals(DatasetType.EXTERNAL) ? DataSource.Type.EXTERNAL_DATASET
-                : DataSource.Type.INTERNAL_DATASET;
         return new DatasetDataSource(id, dataset, itemType, metaItemType, datasourceType, dataset.getDatasetDetails(),
                 domain);
     }

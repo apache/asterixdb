@@ -20,7 +20,6 @@ package org.apache.asterix.metadata.declared;
 
 import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
-import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 import static org.apache.asterix.metadata.utils.MetadataConstants.METADATA_OBJECT_NAME_INVALID_CHARS;
 
 import java.io.File;
@@ -360,13 +359,18 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public Dataset findDataset(DataverseName dataverseName, String datasetName) throws AlgebricksException {
+        return findDataset(dataverseName, datasetName, false);
+    }
+
+    public Dataset findDataset(DataverseName dataverseName, String datasetName, boolean includingViews)
+            throws AlgebricksException {
         DataverseName dvName = getActiveDataverseName(dataverseName);
         if (dvName == null) {
             return null;
         }
         appCtx.getMetadataLockManager().acquireDataverseReadLock(locks, dvName);
         appCtx.getMetadataLockManager().acquireDatasetReadLock(locks, dvName, datasetName);
-        return MetadataManagerUtil.findDataset(mdTxnCtx, dvName, datasetName);
+        return MetadataManagerUtil.findDataset(mdTxnCtx, dvName, datasetName, includingViews);
     }
 
     public INodeDomain findNodeDomain(String nodeGroupName) throws AlgebricksException {
@@ -436,13 +440,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public Triple<DataverseName, String, Boolean> resolveDatasetNameUsingSynonyms(DataverseName dataverseName,
-            String datasetName) throws AlgebricksException {
+            String datasetName, boolean includingViews) throws AlgebricksException {
         DataverseName dvName = getActiveDataverseName(dataverseName);
         if (dvName == null) {
             return null;
         }
         Synonym synonym = null;
-        while (MetadataManagerUtil.findDataset(mdTxnCtx, dvName, datasetName) == null) {
+        while (MetadataManagerUtil.findDataset(mdTxnCtx, dvName, datasetName, includingViews) == null) {
             synonym = findSynonym(dvName, datasetName);
             if (synonym == null) {
                 return null;
@@ -986,11 +990,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             List<LogicalVariable> primaryKeys, LogicalVariable payload, List<LogicalVariable> filterKeys,
             List<LogicalVariable> additionalNonFilterFields, RecordDescriptor recordDesc, JobGenContext context,
             JobSpecification spec) throws AlgebricksException {
+        DataverseName dataverseName = dataSource.getId().getDataverseName();
         String datasetName = dataSource.getId().getDatasourceName();
-        Dataset dataset = findDataset(dataSource.getId().getDataverseName(), datasetName);
+        Dataset dataset = findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new AlgebricksException("Unknown " + dataset() + " " + datasetName + " in " + dataverse() + " "
-                    + dataSource.getId().getDataverseName());
+            throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, datasetName, dataverseName);
         }
         int numKeys = primaryKeys.size();
         int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;

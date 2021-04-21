@@ -507,6 +507,10 @@ public class MetadataBootstrap {
 
     private static void recoverDataset(MetadataTransactionContext mdTxnCtx, Dataset dataset)
             throws AlgebricksException {
+        if (dataset.getDatasetType() == DatasetType.VIEW) {
+            // Views don't need any recovery and cannot be in a pending state
+            return;
+        }
         if (dataset.getPendingOp() != MetadataUtil.PENDING_NO_OP) {
             // drop pending dataset
             MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataset.getDataverseName(), dataset.getDatasetName(), true);

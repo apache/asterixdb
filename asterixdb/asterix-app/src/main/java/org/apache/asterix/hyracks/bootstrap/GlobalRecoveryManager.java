@@ -43,6 +43,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.ExternalIndexingOperations;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.api.application.ICCServiceContext;
@@ -137,7 +138,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         for (Dataverse dataverse : dataverses) {
             List<Dataset> dataverseDatasets =
                     MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dataverse.getDataverseName());
-            dataverseDatasets.stream().mapToInt(Dataset::getDatasetId).forEach(validDatasetIds::add);
+            dataverseDatasets.stream().filter(DatasetUtil::isNotView).mapToInt(Dataset::getDatasetId)
+                    .forEach(validDatasetIds::add);
         }
         ICcApplicationContext ccAppCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
         final List<String> ncs = new ArrayList<>(ccAppCtx.getClusterStateManager().getParticipantNodes());

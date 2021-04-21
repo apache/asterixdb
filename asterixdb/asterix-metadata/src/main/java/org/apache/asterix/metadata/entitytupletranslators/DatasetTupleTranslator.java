@@ -44,6 +44,7 @@ import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
+import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADateTime;
@@ -67,6 +68,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -200,7 +202,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 break;
             }
 
-            case EXTERNAL:
+            case EXTERNAL: {
                 ARecord datasetDetailsRecord = (ARecord) datasetRecord
                         .getValueByPos(MetadataRecordTypes.DATASET_ARECORD_EXTERNALDETAILS_FIELD_INDEX);
                 String adapter = ((AString) datasetDetailsRecord
@@ -229,6 +231,41 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                                 .getIntegerValue()];
 
                 datasetDetails = new ExternalDatasetDetails(adapter, properties, timestamp, state);
+                break;
+            }
+            case VIEW: {
+                int datasetDetailsFieldPos =
+                        datasetRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_VIEW_DETAILS);
+                ARecord datasetDetailsRecord = (ARecord) datasetRecord.getValueByPos(datasetDetailsFieldPos);
+
+                // Definition
+                int definitionFieldPos =
+                        datasetDetailsRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_DEFINITION);
+                String definition = ((AString) datasetDetailsRecord.getValueByPos(definitionFieldPos)).getStringValue();
+
+                // Dependencies
+                List<List<Triple<DataverseName, String, String>>> dependencies = Collections.emptyList();
+                int dependenciesFieldPos =
+                        datasetDetailsRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_DEPENDENCIES);
+                if (dependenciesFieldPos >= 0) {
+                    dependencies = new ArrayList<>();
+                    IACursor dependenciesCursor =
+                            ((AOrderedList) datasetDetailsRecord.getValueByPos(dependenciesFieldPos)).getCursor();
+                    while (dependenciesCursor.next()) {
+                        List<Triple<DataverseName, String, String>> dependencyList = new ArrayList<>();
+                        IACursor qualifiedDependencyCursor = ((AOrderedList) dependenciesCursor.get()).getCursor();
+                        while (qualifiedDependencyCursor.next()) {
+                            Triple<DataverseName, String, String> dependency =
+                                    getDependency((AOrderedList) qualifiedDependencyCursor.get());
+                            dependencyList.add(dependency);
+                        }
+                        dependencies.add(dependencyList);
+                    }
+                }
+
+                datasetDetails = new ViewDetails(definition, dependencies);
+                break;
+            }
         }
 
         Map<String, String> hints = getDatasetHints(datasetRecord);
@@ -359,8 +396,19 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 dataset.getCompactionPolicyProperties(), listBuilder, itemValue);
 
         // write field 8/9
-        fieldValue.reset();
-        writeDatasetDetailsRecordType(recordBuilder, dataset, fieldValue.getDataOutput());
+        switch (dataset.getDatasetType()) {
+            case INTERNAL:
+                fieldValue.reset();
+                dataset.getDatasetDetails().writeDatasetDetailsRecordType(fieldValue.getDataOutput());
+                recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_INTERNALDETAILS_FIELD_INDEX, fieldValue);
+                break;
+            case EXTERNAL:
+                fieldValue.reset();
+                dataset.getDatasetDetails().writeDatasetDetailsRecordType(fieldValue.getDataOutput());
+                recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_EXTERNALDETAILS_FIELD_INDEX, fieldValue);
+                break;
+            // VIEW details are written later by {@code writeOpenFields()}
+        }
 
         // write field 10
         UnorderedListBuilder uListBuilder = new UnorderedListBuilder();
@@ -441,6 +489,19 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         writeMetaPart(dataset);
         writeRebalanceCount(dataset);
         writeBlockLevelStorageCompression(dataset);
+        writeOpenDetails(dataset);
+    }
+
+    private void writeOpenDetails(Dataset dataset) throws HyracksDataException {
+        if (dataset.getDatasetType() == DatasetType.VIEW) {
+            // write ViewDetails field
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_VIEW_DETAILS);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            dataset.getDatasetDetails().writeDatasetDetailsRecordType(fieldValue.getDataOutput());
+            recordBuilder.addField(fieldName, fieldValue);
+        }
     }
 
     private void writeMetaPart(Dataset dataset) throws HyracksDataException {
@@ -498,20 +559,6 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             int64Serde.serialize(aInt64, fieldValue.getDataOutput());
             recordBuilder.addField(fieldName, fieldValue);
         }
-    }
-
-    protected void writeDatasetDetailsRecordType(IARecordBuilder recordBuilder, Dataset dataset, DataOutput dataOutput)
-            throws HyracksDataException {
-        dataset.getDatasetDetails().writeDatasetDetailsRecordType(dataOutput);
-        switch (dataset.getDatasetType()) {
-            case INTERNAL:
-                recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_INTERNALDETAILS_FIELD_INDEX, fieldValue);
-                break;
-            case EXTERNAL:
-                recordBuilder.addField(MetadataRecordTypes.DATASET_ARECORD_EXTERNALDETAILS_FIELD_INDEX, fieldValue);
-                break;
-        }
-
     }
 
     protected Map<String, String> getDatasetHints(ARecord datasetRecord) {

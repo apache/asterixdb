@@ -68,6 +68,7 @@ import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -977,8 +978,17 @@ abstract class LangExpressionToPlanTranslator
     }
 
     @Override
-    public Pair<ILogicalOperator, LogicalVariable> visit(FunctionDecl fd, Mutable<ILogicalOperator> tupSource) {
-        throw new IllegalStateException("Function declarations should be inlined at AST rewriting phase.");
+    public Pair<ILogicalOperator, LogicalVariable> visit(FunctionDecl fd, Mutable<ILogicalOperator> tupSource)
+            throws CompilationException {
+        // Function declarations should be inlined at AST rewriting phase
+        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, fd.getSourceLocation(), fd.getSignature());
+    }
+
+    @Override
+    public Pair<ILogicalOperator, LogicalVariable> visit(ViewDecl vd, Mutable<ILogicalOperator> tupSource)
+            throws CompilationException {
+        // View declarations should be inlined at AST rewriting phase
+        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, vd.getSourceLocation(), vd.getViewName());
     }
 
     @Override

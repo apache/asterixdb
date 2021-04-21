@@ -37,6 +37,7 @@ import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateIndexStatement;
 import org.apache.asterix.lang.common.statement.CreateLibraryStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
+import org.apache.asterix.lang.common.statement.CreateViewStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -63,6 +64,8 @@ import org.apache.asterix.lang.common.statement.SynonymDropStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
+import org.apache.asterix.lang.common.statement.ViewDecl;
+import org.apache.asterix.lang.common.statement.ViewDropStatement;
 import org.apache.asterix.lang.common.statement.WriteStatement;
 
 public abstract class AbstractQueryExpressionVisitor<R, T> implements ILangVisitor<R, T> {
@@ -289,6 +292,21 @@ public abstract class AbstractQueryExpressionVisitor<R, T> implements ILangVisit
 
     @Override
     public R visit(LibraryDropStatement del, T arg) throws CompilationException {
+        return null;
+    }
+
+    @Override
+    public R visit(CreateViewStatement cvs, T arg) throws CompilationException {
+        return null;
+    }
+
+    @Override
+    public R visit(ViewDropStatement vds, T arg) throws CompilationException {
+        return null;
+    }
+
+    @Override
+    public R visit(ViewDecl vd, T arg) throws CompilationException {
         return null;
     }
 }

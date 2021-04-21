@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.visitor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -52,6 +54,7 @@ import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
@@ -59,6 +62,7 @@ import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -68,12 +72,15 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
 
     protected final Map<FunctionSignature, FunctionDecl> usedUDFs;
 
+    protected final Map<DatasetFullyQualifiedName, ViewDecl> usedViews;
+
     protected final CloneAndSubstituteVariablesVisitor cloneVisitor;
 
     public AbstractInlineUdfsVisitor(LangRewritingContext context, Map<FunctionSignature, FunctionDecl> usedUDFs,
-            CloneAndSubstituteVariablesVisitor cloneVisitor) {
+            Map<DatasetFullyQualifiedName, ViewDecl> usedViews, CloneAndSubstituteVariablesVisitor cloneVisitor) {
         this.context = context;
         this.usedUDFs = usedUDFs;
+        this.usedViews = usedViews;
         this.cloneVisitor = cloneVisitor;
     }
 
@@ -89,15 +96,9 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
 
     @Override
     public Boolean visit(Query q, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(q.getBody());
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(q.getBody());
         q.setBody(p.second);
         return p.first;
-    }
-
-    @Override
-    public Boolean visit(FunctionDecl fd, Void arg) throws CompilationException {
-        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, fd.getSourceLocation(),
-                fd.getSignature().toString());
     }
 
     @Override
@@ -111,10 +112,10 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     public Boolean visit(RecordConstructor rc, Void arg) throws CompilationException {
         boolean changed = false;
         for (FieldBinding b : rc.getFbList()) {
-            Pair<Boolean, Expression> leftExprInlined = inlineUdfsInExpr(b.getLeftExpr());
+            Pair<Boolean, Expression> leftExprInlined = inlineUdfsAndViewsInExpr(b.getLeftExpr());
             b.setLeftExpr(leftExprInlined.second);
             changed = changed || leftExprInlined.first;
-            Pair<Boolean, Expression> rightExprInlined = inlineUdfsInExpr(b.getRightExpr());
+            Pair<Boolean, Expression> rightExprInlined = inlineUdfsAndViewsInExpr(b.getRightExpr());
             b.setRightExpr(rightExprInlined.second);
             changed = changed || rightExprInlined.first;
         }
@@ -127,7 +128,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         callExpr.setExprList(p.second);
         boolean changed = p.first;
         if (callExpr.hasAggregateFilterExpr()) {
-            Pair<Boolean, Expression> be = inlineUdfsInExpr(callExpr.getAggregateFilterExpr());
+            Pair<Boolean, Expression> be = inlineUdfsAndViewsInExpr(callExpr.getAggregateFilterExpr());
             callExpr.setAggregateFilterExpr(be.second);
             changed |= be.first;
         }
@@ -143,25 +144,25 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
 
     @Override
     public Boolean visit(FieldAccessor fa, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(fa.getExpr());
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(fa.getExpr());
         fa.setExpr(p.second);
         return p.first;
     }
 
     @Override
     public Boolean visit(IndexAccessor fa, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(fa.getExpr());
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(fa.getExpr());
         fa.setExpr(p.second);
         return p.first;
     }
 
     @Override
     public Boolean visit(IfExpr ifexpr, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> p1 = inlineUdfsInExpr(ifexpr.getCondExpr());
+        Pair<Boolean, Expression> p1 = inlineUdfsAndViewsInExpr(ifexpr.getCondExpr());
         ifexpr.setCondExpr(p1.second);
-        Pair<Boolean, Expression> p2 = inlineUdfsInExpr(ifexpr.getThenExpr());
+        Pair<Boolean, Expression> p2 = inlineUdfsAndViewsInExpr(ifexpr.getThenExpr());
         ifexpr.setThenExpr(p2.second);
-        Pair<Boolean, Expression> p3 = inlineUdfsInExpr(ifexpr.getElseExpr());
+        Pair<Boolean, Expression> p3 = inlineUdfsAndViewsInExpr(ifexpr.getElseExpr());
         ifexpr.setElseExpr(p3.second);
         return p1.first || p2.first || p3.first;
     }
@@ -170,27 +171,27 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     public Boolean visit(QuantifiedExpression qe, Void arg) throws CompilationException {
         boolean changed = false;
         for (QuantifiedPair t : qe.getQuantifiedList()) {
-            Pair<Boolean, Expression> p = inlineUdfsInExpr(t.getExpr());
+            Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(t.getExpr());
             t.setExpr(p.second);
             if (p.first) {
                 changed = true;
             }
         }
-        Pair<Boolean, Expression> p2 = inlineUdfsInExpr(qe.getSatisfiesExpr());
+        Pair<Boolean, Expression> p2 = inlineUdfsAndViewsInExpr(qe.getSatisfiesExpr());
         qe.setSatisfiesExpr(p2.second);
         return changed || p2.first;
     }
 
     @Override
     public Boolean visit(LetClause lc, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(lc.getBindingExpr());
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(lc.getBindingExpr());
         lc.setBindingExpr(p.second);
         return p.first;
     }
 
     @Override
     public Boolean visit(WhereClause wc, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(wc.getWhereExpr());
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(wc.getWhereExpr());
         wc.setWhereExpr(p.second);
         return p.first;
     }
@@ -235,12 +236,12 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     public Boolean visit(LimitClause lc, Void arg) throws CompilationException {
         boolean changed = false;
         if (lc.hasLimitExpr()) {
-            Pair<Boolean, Expression> p1 = inlineUdfsInExpr(lc.getLimitExpr());
+            Pair<Boolean, Expression> p1 = inlineUdfsAndViewsInExpr(lc.getLimitExpr());
             lc.setLimitExpr(p1.second);
             changed = p1.first;
         }
         if (lc.hasOffset()) {
-            Pair<Boolean, Expression> p2 = inlineUdfsInExpr(lc.getOffset());
+            Pair<Boolean, Expression> p2 = inlineUdfsAndViewsInExpr(lc.getOffset());
             lc.setOffset(p2.second);
             changed |= p2.first;
         }
@@ -267,53 +268,101 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         boolean changed = false;
         Expression returnExpression = insert.getReturnExpression();
         if (returnExpression != null) {
-            Pair<Boolean, Expression> rewrittenReturnExpr = inlineUdfsInExpr(returnExpression);
+            Pair<Boolean, Expression> rewrittenReturnExpr = inlineUdfsAndViewsInExpr(returnExpression);
             insert.setReturnExpression(rewrittenReturnExpr.second);
             changed |= rewrittenReturnExpr.first;
         }
-        Pair<Boolean, Expression> rewrittenBodyExpression = inlineUdfsInExpr(insert.getBody());
+        Pair<Boolean, Expression> rewrittenBodyExpression = inlineUdfsAndViewsInExpr(insert.getBody());
         insert.setBody(rewrittenBodyExpression.second);
         return changed || rewrittenBodyExpression.first;
     }
 
-    protected Pair<Boolean, Expression> inlineUdfsInExpr(Expression expr) throws CompilationException {
+    protected Pair<Boolean, Expression> inlineUdfsAndViewsInExpr(Expression expr) throws CompilationException {
         if (expr.getKind() != Kind.CALL_EXPRESSION) {
             boolean r = expr.accept(this, null);
             return new Pair<>(r, expr);
         }
         CallExpr f = (CallExpr) expr;
         boolean r = expr.accept(this, null);
+
+        List<LetClause> letClauses;
+        VariableSubstitutionEnvironment bodyVarSubst;
+        Expression normBodyExpr;
+
         FunctionSignature fs = f.getFunctionSignature();
         if (FunctionUtil.isBuiltinFunctionSignature(fs)) {
-            return new Pair<>(r, expr);
+            if (!FunctionUtil.isBuiltinDatasetFunction(fs)) {
+                return new Pair<>(r, expr);
+            }
+            Triple<DatasetFullyQualifiedName, Boolean, DatasetFullyQualifiedName> dsArgs =
+                    FunctionUtil.parseDatasetFunctionArguments(f);
+            if (!Boolean.TRUE.equals(dsArgs.second)) {
+                // not a view
+                return new Pair<>(r, expr);
+            }
+            DatasetFullyQualifiedName viewName = dsArgs.first;
+            ViewDecl implem = usedViews.get(viewName);
+            if (implem == null) {
+                throw new CompilationException(ErrorCode.UNKNOWN_VIEW, f.getSourceLocation(), viewName);
+            }
+            // it's one of the views we want to inline
+            letClauses = Collections.emptyList();
+            bodyVarSubst = new VariableSubstitutionEnvironment();
+            normBodyExpr = implem.getNormalizedViewBody();
+            if (normBodyExpr == null) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, f.getSourceLocation(),
+                        viewName.toString());
+            }
+        } else {
+            FunctionDecl implem = usedUDFs.get(fs);
+            if (implem == null) {
+                throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, f.getSourceLocation(), fs.toString());
+            }
+            // it's one of the functions we want to inline
+            boolean isVarargs = implem.getSignature().getArity() == FunctionIdentifier.VARARGS;
+            Pair<List<LetClause>, VariableSubstitutionEnvironment> clausesAndSubst =
+                    createFunctionParametersSubstitution(implem.getParamList(), isVarargs, f.getExprList(),
+                            f.getSourceLocation());
+            letClauses = clausesAndSubst.first;
+            bodyVarSubst = clausesAndSubst.second;
+            normBodyExpr = implem.getNormalizedFuncBody();
+            if (normBodyExpr == null) {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, f.getSourceLocation(),
+                        fs.toString());
+            }
         }
+
         if (f.hasAggregateFilterExpr()) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_FILTER_CLAUSE, f.getSourceLocation());
         }
-        FunctionDecl implem = usedUDFs.get(fs);
-        if (implem == null) {
-            throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, f.getSourceLocation(), fs.toString());
-        }
-        // it's one of the functions we want to inline
-        List<Expression> argList = f.getExprList();
+
+        Pair<ILangExpression, VariableSubstitutionEnvironment> p2 = normBodyExpr.accept(cloneVisitor, bodyVarSubst);
+        Expression resExpr = letClauses.isEmpty() ? (Expression) p2.first
+                : generateQueryExpression(letClauses, (Expression) p2.first);
+        return new Pair<>(true, resExpr);
+    }
+
+    private Pair<List<LetClause>, VariableSubstitutionEnvironment> createFunctionParametersSubstitution(
+            List<VarIdentifier> paramList, boolean isVarargs, List<Expression> argList, SourceLocation sourceLoc)
+            throws CompilationException {
         int argCount = argList.size();
         List<LetClause> clauses = new ArrayList<>(argCount + 1);
         List<Expression> argVars = new ArrayList<>(argCount);
-        for (Expression e : f.getExprList()) {
+        for (Expression e : argList) {
             // Obs: we could do smth about passing also literals, or let
             // variable inlining to take care of this.
             VarIdentifier argVar;
             if (e.getKind() == Kind.VARIABLE_EXPRESSION) {
                 argVar = ((VariableExpr) e).getVar();
             } else {
-                SourceLocation sourceLoc = e.getSourceLocation();
+                SourceLocation argSourceLoc = e.getSourceLocation();
                 argVar = context.newVariable();
                 Pair<ILangExpression, VariableSubstitutionEnvironment> p1 =
                         e.accept(cloneVisitor, new VariableSubstitutionEnvironment());
                 VariableExpr newVRef1 = new VariableExpr(argVar);
-                newVRef1.setSourceLocation(sourceLoc);
+                newVRef1.setSourceLocation(argSourceLoc);
                 LetClause c = new LetClause(newVRef1, (Expression) p1.first);
-                c.setSourceLocation(sourceLoc);
+                c.setSourceLocation(argSourceLoc);
                 clauses.add(c);
             }
 
@@ -323,49 +372,34 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         }
 
         VariableSubstitutionEnvironment subst = new VariableSubstitutionEnvironment();
-        List<VarIdentifier> paramList = implem.getParamList();
-        if (implem.getSignature().getArity() == FunctionIdentifier.VARARGS) {
+        if (isVarargs) {
             if (paramList.size() != 1) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, expr.getSourceLocation(),
-                        paramList.size());
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, paramList.size());
             }
             VarIdentifier paramVarargs = paramList.get(0);
             CallExpr argsListExpr =
                     new CallExpr(new FunctionSignature(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR), argVars);
-            argsListExpr.setSourceLocation(expr.getSourceLocation());
+            argsListExpr.setSourceLocation(sourceLoc);
 
             VarIdentifier argsVar = context.newVariable();
             VariableExpr argsVarRef1 = new VariableExpr(argsVar);
-            argsVarRef1.setSourceLocation(expr.getSourceLocation());
+            argsVarRef1.setSourceLocation(sourceLoc);
             LetClause c = new LetClause(argsVarRef1, argsListExpr);
-            c.setSourceLocation(expr.getSourceLocation());
+            c.setSourceLocation(sourceLoc);
             clauses.add(c);
 
             VariableExpr argsVarRef2 = new VariableExpr(argsVar);
-            argsVarRef2.setSourceLocation(expr.getSourceLocation());
+            argsVarRef2.setSourceLocation(sourceLoc);
             subst.addSubstituion(new VariableExpr(paramVarargs), argsVarRef2);
         } else {
             if (paramList.size() != argCount) {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, expr.getSourceLocation(),
-                        paramList.size());
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, paramList.size());
             }
             for (int i = 0; i < argCount; i++) {
                 subst.addSubstituion(new VariableExpr(paramList.get(i)), argVars.get(i));
             }
         }
-
-        Expression funcBodyNorm = implem.getNormalizedFuncBody();
-        if (funcBodyNorm == null) {
-            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, f.getSourceLocation(), fs.toString());
-        }
-        Pair<ILangExpression, VariableSubstitutionEnvironment> p2 = funcBodyNorm.accept(cloneVisitor, subst);
-        Expression resExpr;
-        if (clauses.isEmpty()) {
-            resExpr = (Expression) p2.first;
-        } else {
-            resExpr = generateQueryExpression(clauses, (Expression) p2.first);
-        }
-        return new Pair<>(true, resExpr);
+        return new Pair<>(clauses, subst);
     }
 
     protected Pair<Boolean, List<Expression>> inlineUdfsInExprList(List<Expression> exprList)
@@ -373,7 +407,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         List<Expression> newList = new ArrayList<>(exprList.size());
         boolean changed = false;
         for (Expression e : exprList) {
-            Pair<Boolean, Expression> be = inlineUdfsInExpr(e);
+            Pair<Boolean, Expression> be = inlineUdfsAndViewsInExpr(e);
             newList.add(be.second);
             changed |= be.first;
         }
@@ -385,7 +419,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         List<GbyVariableExpressionPair> newList = new ArrayList<>(gbyPairList.size());
         boolean changed = false;
         for (GbyVariableExpressionPair p : gbyPairList) {
-            Pair<Boolean, Expression> be = inlineUdfsInExpr(p.getExpr());
+            Pair<Boolean, Expression> be = inlineUdfsAndViewsInExpr(p.getExpr());
             newList.add(new GbyVariableExpressionPair(p.getVar(), be.second));
             changed |= be.first;
         }
@@ -397,7 +431,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         List<Pair<Expression, Identifier>> newList = new ArrayList<>(fieldList.size());
         boolean changed = false;
         for (Pair<Expression, Identifier> p : fieldList) {
-            Pair<Boolean, Expression> be = inlineUdfsInExpr(p.first);
+            Pair<Boolean, Expression> be = inlineUdfsAndViewsInExpr(p.first);
             newList.add(new Pair<>(be.second, p.second));
             changed |= be.first;
         }
@@ -409,7 +443,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         Map<Expression, VariableExpr> newMap = new HashMap<>();
         boolean changed = false;
         for (Map.Entry<Expression, VariableExpr> me : varMap.entrySet()) {
-            Pair<Boolean, Expression> be = inlineUdfsInExpr(me.getKey());
+            Pair<Boolean, Expression> be = inlineUdfsAndViewsInExpr(me.getKey());
             newMap.put(be.second, me.getValue());
             changed |= be.first;
         }

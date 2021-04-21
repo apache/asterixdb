@@ -39,6 +39,7 @@ import org.apache.asterix.common.context.TransactionSubsystemProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.external.indexing.IndexingConstants;
@@ -369,8 +370,7 @@ public class DatasetUtil {
         DataverseName dataverseName = dataverse.getDataverseName();
         Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
         if (dataset == null) {
-            throw new AsterixException(
-                    "Could not find " + dataset() + " " + datasetName + " in " + dataverse() + " " + dataverseName);
+            throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, datasetName, dataverseName);
         }
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
@@ -621,4 +621,11 @@ public class DatasetUtil {
         return nodeGroup;
     }
 
+    public static String getDatasetTypeDisplayName(DatasetType datasetType) {
+        return datasetType == DatasetType.VIEW ? "view" : dataset();
+    }
+
+    public static boolean isNotView(Dataset dataset) {
+        return dataset.getDatasetType() != DatasetType.VIEW;
+    }
 }

@@ -22,10 +22,10 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
@@ -59,6 +59,7 @@ import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 
 public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVisitor<Void, Integer> {
 
@@ -252,8 +253,10 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
         FunctionSignature functionSignature = callExpr.getFunctionSignature();
         //TODO(MULTI_PART_DATAVERSE_NAME):temporary workaround to preserve AST reference results
         if (FunctionUtil.isBuiltinDatasetFunction(functionSignature)) {
-            String singleArg = callExpr.getExprList().stream().map(LiteralExpr.class::cast).map(LiteralExpr::getValue)
-                    .map(StringLiteral.class::cast).map(StringLiteral::getValue).collect(Collectors.joining("."));
+            Triple<DatasetFullyQualifiedName, Boolean, DatasetFullyQualifiedName> dsArgs =
+                    FunctionUtil.parseDatasetFunctionArguments(callExpr);
+            String singleArg =
+                    String.join(".", dsArgs.first.getDataverseName().getParts()) + "." + dsArgs.first.getDatasetName();
             printFunctionCall(functionSignature, 1,
                     Collections.singletonList(new LiteralExpr(new StringLiteral(singleArg))),
                     callExpr.getAggregateFilterExpr(), step);

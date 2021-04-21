@@ -354,7 +354,7 @@ public class RebalanceUtil {
     // Drops dataset files of a given dataset.
     private static void dropDatasetFiles(Dataset dataset, MetadataProvider metadataProvider,
             IHyracksClientConnection hcc) throws Exception {
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL || dataset.getDatasetType() == DatasetType.VIEW) {
             return;
         }
         List<JobSpecification> jobs = new ArrayList<>();

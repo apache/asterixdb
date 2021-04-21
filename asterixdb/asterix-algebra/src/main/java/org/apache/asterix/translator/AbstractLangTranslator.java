@@ -46,6 +46,7 @@ import org.apache.asterix.lang.common.statement.CreateFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateLibraryStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
+import org.apache.asterix.lang.common.statement.CreateViewStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
@@ -338,6 +339,17 @@ public abstract class AbstractLangTranslator {
                 invalidOperation = isMetadataDataverse(dataverseName);
                 if (invalidOperation) {
                     message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "adapter", dataverseName);
+                }
+                break;
+
+            case CREATE_VIEW:
+                CreateViewStatement viewCreateStmt = (CreateViewStatement) stmt;
+                if (viewCreateStmt.getDataverseName() != null) {
+                    dataverseName = viewCreateStmt.getDataverseName();
+                }
+                invalidOperation = isMetadataDataverse(dataverseName);
+                if (invalidOperation) {
+                    message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "view", dataverseName);
                 }
                 break;
 

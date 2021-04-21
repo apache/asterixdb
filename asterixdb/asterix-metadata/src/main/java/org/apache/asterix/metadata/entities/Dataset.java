@@ -389,7 +389,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             mdTxnCtx.setValue(MetadataManager.INSTANCE.beginTransaction());
             bActiveTxn.setValue(true);
             metadataProvider.setMetadataTxnContext(mdTxnCtx.getValue());
-        } else {
+        } else if (getDatasetType() == DatasetType.EXTERNAL) {
             // External dataset
             ExternalDatasetsRegistry.INSTANCE.removeDatasetInfo(this);
             // #. prepare jobs to drop the datatset and the indexes in NC

@@ -47,7 +47,6 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -240,11 +239,6 @@ public abstract class GatherFunctionCallsVisitor extends AbstractQueryExpression
         if (returnExpression != null) {
             returnExpression.accept(this, arg);
         }
-        return null;
-    }
-
-    @Override
-    public Void visit(FunctionDecl fd, Void arg) throws CompilationException {
         return null;
     }
 }

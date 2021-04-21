@@ -64,6 +64,7 @@ import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
+import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.sqlpp.rewrites.SqlppQueryRewriter;
@@ -186,9 +187,9 @@ public class APIFramework {
     }
 
     public Pair<IReturningStatement, Integer> reWriteQuery(List<FunctionDecl> declaredFunctions,
-            MetadataProvider metadataProvider, IReturningStatement q, SessionOutput output,
-            boolean allowNonStoredUdfCalls, boolean inlineUdfs, Collection<VarIdentifier> externalVars,
-            IWarningCollector warningCollector) throws CompilationException {
+            List<ViewDecl> declaredViews, MetadataProvider metadataProvider, IReturningStatement q,
+            SessionOutput output, boolean allowNonStoredUdfCalls, boolean inlineUdfsAndViews,
+            Collection<VarIdentifier> externalVars, IWarningCollector warningCollector) throws CompilationException {
         if (q == null) {
             return null;
         }
@@ -197,9 +198,9 @@ public class APIFramework {
             generateExpressionTree(q);
         }
         IQueryRewriter rw = rewriterFactory.createQueryRewriter();
-        LangRewritingContext rwCtx =
-                new LangRewritingContext(metadataProvider, declaredFunctions, warningCollector, q.getVarCounter());
-        rw.rewrite(rwCtx, q, allowNonStoredUdfCalls, inlineUdfs, externalVars);
+        LangRewritingContext rwCtx = new LangRewritingContext(metadataProvider, declaredFunctions, declaredViews,
+                warningCollector, q.getVarCounter());
+        rw.rewrite(rwCtx, q, allowNonStoredUdfCalls, inlineUdfsAndViews, externalVars);
         return new Pair<>(q, q.getVarCounter());
     }
 

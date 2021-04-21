@@ -24,15 +24,16 @@ import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.functions.IFunctionToDataSourceRewriter;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
@@ -41,7 +42,6 @@ import org.apache.asterix.optimizer.rules.UnnestToDataScanRule;
 import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -75,15 +75,25 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
 
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         Dataset dataset = fetchDataset(metadataProvider, f);
-        DataSourceId dsid = new DataSourceId(dataset.getDataverseName(), dataset.getDatasetName());
         List<LogicalVariable> variables = new ArrayList<>();
-        if (dataset.getDatasetType() == DatasetType.INTERNAL) {
-            int numPrimaryKeys = dataset.getPrimaryKeys().size();
-            for (int i = 0; i < numPrimaryKeys; i++) {
-                variables.add(context.newVar());
-            }
+        switch (dataset.getDatasetType()) {
+            case INTERNAL:
+                int numPrimaryKeys = dataset.getPrimaryKeys().size();
+                for (int i = 0; i < numPrimaryKeys; i++) {
+                    variables.add(context.newVar());
+                }
+                break;
+            case EXTERNAL:
+                break;
+            default:
+                // VIEWS are not expected at this point
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, unnest.getSourceLocation(),
+                        "Unexpected dataset type " + dataset.getDatasetType() + " for dataset "
+                                + DatasetUtil.getFullyQualifiedDisplayName(dataset));
         }
         variables.add(unnest.getVariable());
+
+        DataSourceId dsid = new DataSourceId(dataset.getDataverseName(), dataset.getDatasetName());
         DataSource dataSource = metadataProvider.findDataSource(dsid);
         boolean hasMeta = dataSource.hasMeta();
         if (hasMeta) {
@@ -132,9 +142,9 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
 
     public static Dataset fetchDataset(MetadataProvider metadataProvider, AbstractFunctionCallExpression datasetFnCall)
             throws CompilationException {
-        Pair<DataverseName, String> datasetReference = FunctionUtil.parseDatasetFunctionArguments(datasetFnCall);
-        DataverseName dataverseName = datasetReference.first;
-        String datasetName = datasetReference.second;
+        DatasetFullyQualifiedName datasetReference = FunctionUtil.parseDatasetFunctionArguments(datasetFnCall);
+        DataverseName dataverseName = datasetReference.getDataverseName();
+        String datasetName = datasetReference.getDatasetName();
         Dataset dataset;
         try {
             dataset = metadataProvider.findDataset(dataverseName, datasetName);

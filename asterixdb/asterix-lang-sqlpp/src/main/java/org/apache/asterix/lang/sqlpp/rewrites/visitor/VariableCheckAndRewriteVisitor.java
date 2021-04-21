@@ -25,10 +25,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
@@ -38,8 +40,11 @@ import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.FalseLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
+import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
+import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
@@ -169,15 +174,30 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             return null;
         }
         SourceLocation sourceLoc = varExpr.getSourceLocation();
-        Pair<Dataset, Boolean> datasetSynonymPair = findDataset(dataverseName, datasetName, sourceLoc);
-        if (datasetSynonymPair == null) {
-            throw createUnresolvableError(dataverseName, datasetName, sourceLoc);
+        DataverseName resolvedDataverseName;
+        String resolvedDatasetName;
+        boolean viaSynonym, isView;
+        ViewDecl viewDecl = findDeclaredView(dataverseName, datasetName);
+        if (viewDecl != null) {
+            resolvedDataverseName = viewDecl.getViewName().getDataverseName();
+            resolvedDatasetName = viewDecl.getViewName().getDatasetName();
+            viaSynonym = false;
+            isView = true;
+        } else {
+            Pair<Dataset, Boolean> p = findDataset(dataverseName, datasetName, true, sourceLoc);
+            if (p == null) {
+                throw createUnresolvableError(dataverseName, datasetName, sourceLoc);
+            }
+            Dataset resolvedDataset = p.first;
+            resolvedDataverseName = resolvedDataset.getDataverseName();
+            resolvedDatasetName = resolvedDataset.getDatasetName();
+            viaSynonym = p.second;
+            isView = resolvedDataset.getDatasetType() == DatasetConfig.DatasetType.VIEW;
         }
-        Dataset dataset = datasetSynonymPair.first;
-        boolean viaSynonym = datasetSynonymPair.second;
-        List<Expression> argList = new ArrayList<>(4);
-        argList.add(new LiteralExpr(new StringLiteral(dataset.getDataverseName().getCanonicalForm())));
-        argList.add(new LiteralExpr(new StringLiteral(dataset.getDatasetName())));
+        List<Expression> argList = new ArrayList<>(3 + (viaSynonym ? 2 : 0));
+        argList.add(new LiteralExpr(new StringLiteral(resolvedDataverseName.getCanonicalForm())));
+        argList.add(new LiteralExpr(new StringLiteral(resolvedDatasetName)));
+        argList.add(new LiteralExpr(isView ? TrueLiteral.INSTANCE : FalseLiteral.INSTANCE));
         if (viaSynonym) {
             argList.add(new LiteralExpr(new StringLiteral(dataverseName.getCanonicalForm())));
             argList.add(new LiteralExpr(new StringLiteral(datasetName)));
@@ -241,22 +261,28 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                 dataverseName == null ? defaultDataverseName : dataverseName);
     }
 
-    private Pair<Dataset, Boolean> findDataset(DataverseName dataverseName, String datasetName,
+    private Pair<Dataset, Boolean> findDataset(DataverseName dataverseName, String datasetName, boolean includingViews,
             SourceLocation sourceLoc) throws CompilationException {
         try {
             Boolean viaSynonym = false;
             Triple<DataverseName, String, Boolean> dsName =
-                    metadataProvider.resolveDatasetNameUsingSynonyms(dataverseName, datasetName);
+                    metadataProvider.resolveDatasetNameUsingSynonyms(dataverseName, datasetName, includingViews);
             if (dsName != null) {
                 dataverseName = dsName.first;
                 datasetName = dsName.second;
                 viaSynonym = dsName.third;
             }
-            Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+            Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName, includingViews);
             return dataset == null ? null : new Pair<>(dataset, viaSynonym);
         } catch (AlgebricksException e) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
         }
+    }
+
+    private ViewDecl findDeclaredView(DataverseName dataverseName, String viewName) {
+        Map<DatasetFullyQualifiedName, ViewDecl> declaredViews = context.getDeclaredViews();
+        return declaredViews.isEmpty() ? null
+                : declaredViews.get(new DatasetFullyQualifiedName(dataverseName, viewName));
     }
 
     @Override

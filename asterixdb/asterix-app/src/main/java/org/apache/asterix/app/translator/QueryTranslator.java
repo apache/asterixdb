@@ -85,6 +85,7 @@ import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.utils.JobUtils;
@@ -97,17 +98,14 @@ import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
-import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
-import org.apache.asterix.lang.common.literal.MissingLiteral;
 import org.apache.asterix.lang.common.statement.AdapterDropStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
@@ -121,6 +119,7 @@ import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateIndexStatement;
 import org.apache.asterix.lang.common.statement.CreateLibraryStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
+import org.apache.asterix.lang.common.statement.CreateViewStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -149,10 +148,13 @@ import org.apache.asterix.lang.common.statement.StopFeedStatement;
 import org.apache.asterix.lang.common.statement.SynonymDropStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
+import org.apache.asterix.lang.common.statement.ViewDecl;
+import org.apache.asterix.lang.common.statement.ViewDropStatement;
 import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.lang.common.util.ViewUtil;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -178,6 +180,7 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.entities.Synonym;
+import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
@@ -418,6 +421,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         break;
                     case SYNONYM_DROP:
                         handleDropSynonymStatement(metadataProvider, stmt);
+                        break;
+                    case CREATE_VIEW:
+                        handleCreateViewStatement(metadataProvider, stmt, stmtRewriter, requestParameters);
+                        break;
+                    case VIEW_DROP:
+                        handleViewDropStatement(metadataProvider, stmt);
                         break;
                     case LOAD:
                         handleLoadStatement(metadataProvider, stmt, hcc);
@@ -731,8 +740,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             IDatasetDetails datasetDetails;
-            Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
+            Dataset ds = metadataProvider.findDataset(dataverseName, datasetName, true);
             if (ds != null) {
+                if (ds.getDatasetType() == DatasetType.VIEW) {
+                    throw new CompilationException(ErrorCode.VIEW_EXISTS, sourceLoc,
+                            DatasetUtil.getFullyQualifiedDisplayName(ds));
+                }
                 if (dd.getIfNotExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return;
@@ -1844,23 +1857,31 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             List<Dataset> datasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dataverseName);
             for (Dataset dataset : datasets) {
                 String datasetName = dataset.getDatasetName();
-                List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
                 DatasetType dsType = dataset.getDatasetType();
-                if (dsType == DatasetType.INTERNAL) {
-                    for (Index index : indexes) {
-                        jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset, sourceLoc));
-                    }
-                } else if (dsType == DatasetType.EXTERNAL) {
-                    for (Index index : indexes) {
-                        if (ExternalIndexingOperations.isFileIndex(index)) {
-                            jobsToExecute.add(
-                                    ExternalIndexingOperations.buildDropFilesIndexJobSpec(metadataProvider, dataset));
-                        } else {
+                switch (dsType) {
+                    case INTERNAL:
+                        List<Index> indexes =
+                                MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
+                        for (Index index : indexes) {
                             jobsToExecute
                                     .add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset, sourceLoc));
                         }
-                    }
-                    externalDatasetsToDeregister.add(dataset);
+                        break;
+                    case EXTERNAL:
+                        indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
+                        for (Index index : indexes) {
+                            if (ExternalIndexingOperations.isFileIndex(index)) {
+                                jobsToExecute.add(ExternalIndexingOperations
+                                        .buildDropFilesIndexJobSpec(metadataProvider, dataset));
+                            } else {
+                                jobsToExecute.add(
+                                        IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset, sourceLoc));
+                            }
+                        }
+                        externalDatasetsToDeregister.add(dataset);
+                        break;
+                    case VIEW:
+                        break;
                 }
             }
 
@@ -2009,7 +2030,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
                 }
             }
-            ds = metadataProvider.findDataset(dataverseName, datasetName);
+            ds = metadataProvider.findDataset(dataverseName, datasetName, true);
             if (ds == null) {
                 if (ifExists) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
@@ -2018,6 +2039,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
                             dataverseName);
                 }
+            } else if (ds.getDatasetType() == DatasetType.VIEW) {
+                throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                        dataverseName);
             }
             validateDatasetState(metadataProvider, ds, sourceLoc);
 
@@ -2412,6 +2436,140 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
+    public void handleCreateViewStatement(MetadataProvider metadataProvider, Statement stmt,
+            IStatementRewriter stmtRewriter, IRequestParameters requestParameters) throws Exception {
+        CreateViewStatement cvs = (CreateViewStatement) stmt;
+        metadataProvider.validateDatabaseObjectName(cvs.getDataverseName(), cvs.getViewName(),
+                stmt.getSourceLocation());
+        DataverseName dataverseName = getActiveDataverseName(cvs.getDataverseName());
+        lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, cvs.getViewName(),
+                MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDataverseName(),
+                MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDatatypeName(), false, null, null, false, null, null,
+                true, DatasetType.VIEW, null);
+        try {
+            doCreateView(metadataProvider, cvs, dataverseName, cvs.getViewName(), stmtRewriter, requestParameters);
+        } finally {
+            metadataProvider.getLocks().unlock();
+            metadataProvider.setDefaultDataverse(activeDataverse);
+        }
+    }
+
+    protected void doCreateView(MetadataProvider metadataProvider, CreateViewStatement cvs, DataverseName dataverseName,
+            String viewName, IStatementRewriter stmtRewriter, IRequestParameters requestParameters) throws Exception {
+        SourceLocation sourceLoc = cvs.getSourceLocation();
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        try {
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
+            if (dv == null) {
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+            }
+            Dataset existingDataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, viewName);
+            if (existingDataset != null) {
+                if (DatasetUtil.isNotView(existingDataset)) {
+                    throw new CompilationException(ErrorCode.DATASET_EXISTS, sourceLoc,
+                            existingDataset.getDatasetName(), existingDataset.getDataverseName());
+                }
+                if (cvs.getIfNotExists()) {
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return;
+                } else if (!cvs.getReplaceIfExists()) {
+                    throw new CompilationException(ErrorCode.VIEW_EXISTS, sourceLoc,
+                            existingDataset.getDatasetFullyQualifiedName());
+                }
+            }
+
+            // Check whether the view is usable:
+            // create a view declaration for this function,
+            // and a query body that queries this view:
+            ViewDecl viewDecl =
+                    new ViewDecl(new DatasetFullyQualifiedName(dataverseName, viewName), cvs.getViewBodyExpression());
+            viewDecl.setSourceLocation(sourceLoc);
+            IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
+            Query wrappedQuery = queryRewriter.createViewAccessorQuery(viewDecl);
+            metadataProvider.setDefaultDataverse(dv);
+            apiFramework.reWriteQuery(declaredFunctions, Collections.singletonList(viewDecl), metadataProvider,
+                    wrappedQuery, sessionOutput, false, false, Collections.emptyList(), warningCollector);
+
+            List<List<Triple<DataverseName, String, String>>> dependencies =
+                    ViewUtil.getViewDependencies(viewDecl, queryRewriter);
+
+            ViewDetails viewDetails = new ViewDetails(cvs.getViewBody(), dependencies);
+
+            Dataset view =
+                    new Dataset(dataverseName, viewName, MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDataverseName(),
+                            MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDatatypeName(),
+                            MetadataConstants.METADATA_NODEGROUP_NAME, "", Collections.emptyMap(), viewDetails,
+                            Collections.emptyMap(), DatasetType.VIEW, 0, MetadataUtil.PENDING_NO_OP);
+            if (existingDataset == null) {
+                MetadataManager.INSTANCE.addDataset(mdTxnCtx, view);
+            } else {
+                MetadataManager.INSTANCE.updateDataset(mdTxnCtx, view);
+            }
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            abort(e, e, mdTxnCtx);
+            throw e;
+        }
+    }
+
+    public void handleViewDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+        ViewDropStatement stmtDrop = (ViewDropStatement) stmt;
+        SourceLocation sourceLoc = stmtDrop.getSourceLocation();
+        String viewName = stmtDrop.getViewName().getValue();
+        metadataProvider.validateDatabaseObjectName(stmtDrop.getDataverseName(), viewName, sourceLoc);
+        DataverseName dataverseName = getActiveDataverseName(stmtDrop.getDataverseName());
+        lockUtil.dropDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, viewName);
+        try {
+            doDropView(metadataProvider, stmtDrop, dataverseName, viewName);
+        } finally {
+            metadataProvider.getLocks().unlock();
+            ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
+        }
+    }
+
+    protected boolean doDropView(MetadataProvider metadataProvider, ViewDropStatement stmtViewDrop,
+            DataverseName dataverseName, String viewName) throws Exception {
+        SourceLocation sourceLoc = stmtViewDrop.getSourceLocation();
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        try {
+            // Check if the dataverse exists
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
+            if (dv == null) {
+                if (stmtViewDrop.getIfExists()) {
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(stmtViewDrop.getSourceLocation(), ErrorCode.UNKNOWN_DATAVERSE,
+                                dataverseName));
+                    }
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return false;
+                } else {
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                }
+            }
+            Dataset dataset = metadataProvider.findDataset(dataverseName, viewName, true);
+            if (dataset == null) {
+                if (stmtViewDrop.getIfExists()) {
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return false;
+                } else {
+                    throw new CompilationException(ErrorCode.UNKNOWN_VIEW, sourceLoc,
+                            DatasetUtil.getFullyQualifiedDisplayName(dataverseName, viewName));
+                }
+            } else if (DatasetUtil.isNotView(dataset)) {
+                throw new CompilationException(ErrorCode.UNKNOWN_VIEW, sourceLoc,
+                        DatasetUtil.getFullyQualifiedDisplayName(dataverseName, viewName));
+            }
+            MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, viewName, false);
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return true;
+        } catch (Exception e) {
+            abort(e, e, mdTxnCtx);
+            throw e;
+        }
+    }
+
     protected void handleDeclareFunctionStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         FunctionDecl fds = (FunctionDecl) stmt;
         FunctionSignature signature = fds.getSignature();
@@ -2475,6 +2633,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 existingInlineTypes = Collections.emptyList();
             }
 
+            IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
             Map<TypeSignature, Datatype> newInlineTypes;
             Function function;
             if (cfs.isExternal()) {
@@ -2514,7 +2673,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         newInlineTypes.put(paramTypeSignature, paramInlineTypeEntity);
                     }
                     VarIdentifier paramName = paramPair.getFirst();
-                    paramNames.add(stmtRewriter.toFunctionParameterName(paramName));
+                    paramNames.add(queryRewriter.toFunctionParameterName(paramName));
                 }
 
                 TypeSignature returnTypeSignature;
@@ -2569,7 +2728,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 for (Pair<VarIdentifier, TypeExpression> paramPair : paramList) {
                     VarIdentifier paramName = paramPair.getFirst();
                     paramVars.add(paramName);
-                    paramNames.add(stmtRewriter.toFunctionParameterName(paramName));
+                    paramNames.add(queryRewriter.toFunctionParameterName(paramName));
                     if (paramPair.getSecond() != null) {
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
                                 paramName.toString());
@@ -2581,25 +2740,17 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 // and a query body calls this function with each argument set to 'missing'
                 FunctionDecl fd = new FunctionDecl(functionSignature, paramVars, cfs.getFunctionBodyExpression(), true);
                 fd.setSourceLocation(sourceLoc);
-                CallExpr fcall = new CallExpr(functionSignature,
-                        Collections.nCopies(paramVars.size(), new LiteralExpr(MissingLiteral.INSTANCE)));
-                fcall.setSourceLocation(sourceLoc);
-                metadataProvider.setDefaultDataverse(dv);
-                Query wrappedQuery = new Query(false);
-                wrappedQuery.setSourceLocation(sourceLoc);
-                wrappedQuery.setBody(fcall);
-                wrappedQuery.setTopLevel(false);
-                List<FunctionDecl> fdList = new ArrayList<>(declaredFunctions);
+
+                Query wrappedQuery = queryRewriter.createFunctionAccessorQuery(fd);
+                List<FunctionDecl> fdList = new ArrayList<>(declaredFunctions.size() + 1);
+                fdList.addAll(declaredFunctions);
                 fdList.add(fd);
-                apiFramework.reWriteQuery(fdList, metadataProvider, wrappedQuery, sessionOutput, false, false,
+                metadataProvider.setDefaultDataverse(dv);
+                apiFramework.reWriteQuery(fdList, null, metadataProvider, wrappedQuery, sessionOutput, false, false,
                         Collections.emptyList(), warningCollector);
-                Expression fdNormBody = fd.getNormalizedFuncBody();
-                if (fdNormBody == null) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
-                            functionSignature.toString());
-                }
+
                 List<List<Triple<DataverseName, String, String>>> dependencies =
-                        FunctionUtil.getFunctionDependencies(rewriterFactory.createQueryRewriter(), fdNormBody);
+                        FunctionUtil.getFunctionDependencies(fd, queryRewriter);
 
                 newInlineTypes = Collections.emptyMap();
                 function = new Function(functionSignature, paramNames, null, null, cfs.getFunctionBody(),
@@ -2630,13 +2781,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 MetadataManager.INSTANCE.updateFunction(mdTxnCtx, function);
             }
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Installed function: " + functionSignature);
-            }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
+        }
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Installed function: " + functionSignature);
         }
     }
 
@@ -3231,7 +3382,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             try {
                 metadataProvider.setWriteTransaction(true);
                 final JobSpecification jobSpec =
-                        rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert, stmtParams, stmtRewriter);
+                        rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert, stmtParams);
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
                 return jobSpec;
@@ -3286,8 +3437,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(stmtDelete.getVariableExpr(), dataverseName,
                     datasetName, stmtDelete.getCondition(), stmtDelete.getVarCounter(), stmtDelete.getQuery());
             clfrqs.setSourceLocation(stmt.getSourceLocation());
-            JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, clfrqs.getQuery(), clfrqs, stmtParams,
-                    stmtRewriter, null);
+            JobSpecification jobSpec =
+                    rewriteCompileQuery(hcc, metadataProvider, clfrqs.getQuery(), clfrqs, stmtParams, null);
             afterCompile();
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -3310,13 +3461,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     @Override
     public JobSpecification rewriteCompileQuery(IClusterInfoCollector clusterInfoCollector,
             MetadataProvider metadataProvider, Query query, ICompiledDmlStatement stmt,
-            Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter, IRequestParameters requestParameters)
+            Map<String, IAObject> stmtParams, IRequestParameters requestParameters)
             throws AlgebricksException, ACIDException {
 
-        Map<VarIdentifier, IAObject> externalVars = createExternalVariables(stmtParams, stmtRewriter);
+        Map<VarIdentifier, IAObject> externalVars = createExternalVariables(stmtParams);
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
-        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
+        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions, null,
                 metadataProvider, query, sessionOutput, true, true, externalVars.keySet(), warningCollector);
 
         // Query Compilation (happens under the same ongoing metadata transaction)
@@ -3326,14 +3477,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     private JobSpecification rewriteCompileInsertUpsert(IClusterInfoCollector clusterInfoCollector,
-            MetadataProvider metadataProvider, InsertStatement insertUpsert, Map<String, IAObject> stmtParams,
-            IStatementRewriter stmtRewriter) throws AlgebricksException, ACIDException {
+            MetadataProvider metadataProvider, InsertStatement insertUpsert, Map<String, IAObject> stmtParams)
+            throws AlgebricksException, ACIDException {
         SourceLocation sourceLoc = insertUpsert.getSourceLocation();
 
-        Map<VarIdentifier, IAObject> externalVars = createExternalVariables(stmtParams, stmtRewriter);
+        Map<VarIdentifier, IAObject> externalVars = createExternalVariables(stmtParams);
 
         // Insert/upsert statement rewriting (happens under the same ongoing metadata transaction)
-        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
+        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions, null,
                 metadataProvider, insertUpsert, sessionOutput, true, true, externalVars.keySet(), warningCollector);
 
         InsertStatement rewrittenInsertUpsert = (InsertStatement) rewrittenResult.first;
@@ -3825,8 +3976,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             boolean bActiveTxn = true;
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             try {
-                final JobSpecification jobSpec = rewriteCompileQuery(hcc, metadataProvider, query, null, stmtParams,
-                        stmtRewriter, requestParameters);
+                final JobSpecification jobSpec =
+                        rewriteCompileQuery(hcc, metadataProvider, query, null, stmtParams, requestParameters);
                 // update stats with count of compile-time warnings. needs to be adapted for multi-statement.
                 stats.updateTotalWarningsCount(warningCollector.getTotalWarningsCount());
                 afterCompile();
@@ -4377,18 +4528,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return i == 0;
     }
 
-    private Map<VarIdentifier, IAObject> createExternalVariables(Map<String, IAObject> stmtParams,
-            IStatementRewriter stmtRewriter) {
+    private Map<VarIdentifier, IAObject> createExternalVariables(Map<String, IAObject> stmtParams) {
         if (stmtParams == null || stmtParams.isEmpty()) {
             return Collections.emptyMap();
         }
+        IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
         Map<VarIdentifier, IAObject> m = new HashMap<>();
         for (Map.Entry<String, IAObject> me : stmtParams.entrySet()) {
-            String paramName = me.getKey();
-            String extVarName = stmtRewriter.toExternalVariableName(paramName);
-            if (extVarName != null) {
-                m.put(new VarIdentifier(extVarName), me.getValue());
-            }
+            m.put(queryRewriter.toExternalVariableName(me.getKey()), me.getValue());
         }
         return m;
     }

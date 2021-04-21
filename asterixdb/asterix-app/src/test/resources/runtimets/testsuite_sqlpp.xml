@@ -4239,6 +4239,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
+      <compilation-unit name="invalid-view-name">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1115: Invalid name for a database object: "" (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " a" (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: " invalid" (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "a/b" (in line 29, at column 13)</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: "c/d" (in line 32, at column 11)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
       <compilation-unit name="dataset-and-index-same-dataverse">
         <output-dir compare="Text">dataset-and-index-same-dataverse</output-dir>
       </compilation-unit>
@@ -12602,7 +12612,7 @@
         <expected-error>ASX1001: Syntax error: Unexpected type declaration for parameter a in function myfn001</expected-error>
         <expected-error>ASX1001: Syntax error: Unexpected return type declaration for function myfn002</expected-error>
         <expected-error>ASX1001: Syntax error: Unexpected return type declaration for function myfn003</expected-error>
-        <expected-error>ASX1001: Syntax error: Unexpected IF NOT EXISTS (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1001: Syntax error: Unexpected IF NOT EXISTS (in line 29, at column 45)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12628,8 +12638,8 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="drop-dependency-2">
         <output-dir compare="Text">drop-dependency-2</output-dir>
-        <expected-error>ASX1147: Cannot drop dataverse: dataset C.TweetMessages being used by function B.f2(2)</expected-error>
-        <expected-error>ASX1147: Cannot drop dataverse: dataset C.TweetMessages being used by function B.f3(...)</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: dataset (or view) C.TweetMessages being used by function B.f2(2)</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: dataset (or view) C.TweetMessages being used by function B.f3(...)</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -12912,14 +12922,14 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="udf37_recursion">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1149: Illegal function recursion (in line 24, at column 1)</expected-error>
-        <expected-error>ASX1149: Illegal function recursion (in line 25, at column 1)</expected-error>
-        <expected-error>ASX1149: Illegal function recursion (in line 26, at column 1)</expected-error>
-        <expected-error>ASX1149: Illegal function recursion (in line 27, at column 1)</expected-error>
-        <expected-error>ASX1149: Illegal function recursion (in line 28, at column 1)</expected-error>
-        <expected-error>ASX1149: Illegal function recursion (in line 29, at column 1)</expected-error>
-        <expected-error>ASX1149: Illegal function recursion (in line 30, at column 1)</expected-error>
-        <expected-error>ASX1149: Illegal function recursion (in line 31, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function or view recursion (in line 24, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function or view recursion (in line 25, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function or view recursion (in line 26, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function or view recursion (in line 27, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function or view recursion (in line 28, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function or view recursion (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function or view recursion (in line 30, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function or view recursion (in line 31, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -12962,6 +12972,70 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-ASTERIXDB-1317">
         <output-dir compare="Text">query-ASTERIXDB-1317</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="view">
+    <test-case FilePath="view">
+      <compilation-unit name="create-view-1">
+        <output-dir compare="Text">create-view-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view">
+      <compilation-unit name="create-view-2-negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1063: Cannot find dataverse with name test (in line 24, at column 1)</expected-error>
+        <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1 as select * from range(1,2) r order by;<< Encountered ";" at column 59]]></expected-error>
+        <expected-error>ASX1081: Cannot find function with signature test.undefined_range(2) (in line 25, at column 38)</expected-error>
+        <expected-error>ASX1160: A view with this name test.v1 already exists (in line 26, at column 1)</expected-error>
+        <expected-error>ASX1072: A dataset with name ds1 already exists in dataverse test (in line 30, at column 1)</expected-error>
+        <expected-error>ASX1072: A dataset with name ds2 already exists in dataverse test (in line 30, at column 1)</expected-error>
+        <expected-error>ASX1160: A view with this name test.ds1 already exists (in line 27, at column 1)</expected-error>
+        <expected-error><![CDATA[ASX1001: Syntax error: Unexpected IF NOT EXISTS (in line 25, at column 39)]]></expected-error>
+        <expected-error>ASX1149: Illegal function or view recursion (in line 31, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function or view recursion (in line 32, at column 1)</expected-error>
+        <expected-error>ASX1149: Illegal function or view recursion (in line 33, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view">
+      <compilation-unit name="drop-dataverse-1">
+        <output-dir compare="Text">none</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view">
+      <compilation-unit name="drop-dataverse-2-negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1147: Cannot drop dataverse: dataset (or view) test2.v2 being used by view test1.v1</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: dataset (or view) test2.v2 being used by function test1.f1()</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: dataset (or view) test2.ds2 being used by view test1.v1</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: function test2.f2() being used by view test1.v1</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: synonym test2.s3 being used by view test1.v1</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view">
+      <compilation-unit name="drop-view-1">
+        <output-dir compare="Text">drop-view-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view">
+      <compilation-unit name="drop-view-2-negative">
+        <output-dir compare="Text">drop-view-2-negative</output-dir>
+        <expected-error>ASX1063: Cannot find dataverse with name test (in line 24, at column 1)</expected-error>
+        <expected-error>ASX1159: Cannot find view with name test.v1 (in line 25, at column 1)</expected-error>
+        <expected-error>ASX1050: Cannot find dataset with name v1 in dataverse test (in line 27, at column 1)</expected-error>
+        <expected-error>ASX1159: Cannot find view with name test.ds1 (in line 30, at column 1)</expected-error>
+        <expected-error>ASX1148: Cannot drop dataset test2.ds2 being used by view test1.v1</expected-error>
+        <expected-error>ASX1148: Cannot drop function test2.f2() being used by view test1.v1</expected-error>
+        <expected-error>ASX1148: Cannot drop synonym test2.s2 being used by view test1.v1</expected-error>
+        <expected-error>ASX1148: Cannot drop view test2.v2 being used by view test1.v1</expected-error>
+        <expected-error>ASX1148: Cannot drop view test2.v2 being used by function test1.f1()</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view">
+      <compilation-unit name="view-1">
+        <output-dir compare="Text">view-1</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

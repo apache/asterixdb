@@ -27,6 +27,9 @@ import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 
+/**
+ * This rewriter is used to rewrite body expression of user defined functions and views
+ */
 class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
 
     public SqlppFunctionBodyRewriter(IParserFactory parserFactory) {
@@ -35,15 +38,15 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
 
     @Override
     public void rewrite(LangRewritingContext context, IReturningStatement topStatement, boolean allowNonStoredUdfCalls,
-            boolean inlineUdfs, Collection<VarIdentifier> externalVars) throws CompilationException {
-        if (inlineUdfs) {
-            // When rewriting function body we do not inline UDFs into it.
+            boolean inlineUdfsAndViews, Collection<VarIdentifier> externalVars) throws CompilationException {
+        if (inlineUdfsAndViews) {
+            // When rewriting function or view body we do not inline UDFs or views into it.
             // The main query rewriter will inline everything later, when it processes the query
-            throw new CompilationException(ErrorCode.ILLEGAL_STATE, topStatement.getSourceLocation(), "inlineUdfs");
+            throw new CompilationException(ErrorCode.ILLEGAL_STATE, topStatement.getSourceLocation(), "");
         }
 
         // Sets up parameters.
-        setup(context, topStatement, externalVars, allowNonStoredUdfCalls, inlineUdfs);
+        setup(context, topStatement, externalVars, allowNonStoredUdfCalls, inlineUdfsAndViews);
 
         // Resolves function calls
         resolveFunctionCalls();

@@ -74,6 +74,7 @@ import org.apache.asterix.common.exceptions.WarningCollector;
 import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.AbstractLangExpression;
 import org.apache.asterix.lang.common.base.AbstractStatement;
@@ -135,6 +136,7 @@ import org.apache.asterix.lang.common.statement.CreateIndexStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
 import org.apache.asterix.lang.common.statement.CreateFullTextFilterStatement;
 import org.apache.asterix.lang.common.statement.CreateFullTextConfigStatement;
+import org.apache.asterix.lang.common.statement.CreateViewStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -162,6 +164,8 @@ import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
+import org.apache.asterix.lang.common.statement.ViewDecl;
+import org.apache.asterix.lang.common.statement.ViewDropStatement;
 import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
@@ -410,6 +414,22 @@ class SQLPPParser extends ScopeChecker implements IParser {
                 removeCurrentScope();
                 defaultDataverse = dataverse;
                 return new FunctionDecl(signature, paramVars, functionBodyExpr, isStored);
+            }
+        });
+    }
+
+    @Override
+    public ViewDecl parseViewBody(DatasetFullyQualifiedName viewName) throws CompilationException {
+        return parseImpl(new ParseFunction<ViewDecl>() {
+            @Override
+            public ViewDecl parse() throws ParseException {
+                DataverseName dataverse = defaultDataverse;
+                defaultDataverse = viewName.getDataverseName();
+                createNewScope();
+                Expression viewBodyExpr = SQLPPParser.this.ViewBody();
+                removeCurrentScope();
+                defaultDataverse = dataverse;
+                return new ViewDecl(viewName, viewBodyExpr);
             }
         });
     }
@@ -796,6 +816,7 @@ Statement CreateStatement() throws ParseException:
     | stmt = CreateFeedStatement(startToken)
     | stmt = CreateFeedPolicyStatement(startToken)
     | stmt = CreateFullTextStatement(startToken)
+    | stmt = CreateViewStatement(startToken, false)
   )
   {
     return stmt;
@@ -811,6 +832,7 @@ Statement CreateOrReplaceStatement(Token startStmtToken) throws ParseException:
   <OR> <IDENTIFIER> { replaceToken = token; }
   (
     stmt = CreateFunctionStatement(startStmtToken, true)
+    | stmt = CreateViewStatement(startStmtToken, true)
   )
   {
     // check expected token here to make the grammar extension plugin happy
@@ -1381,6 +1403,65 @@ CreateAdapterStatement AdapterSpecification(Token startStmtToken) throws ParseEx
   }
 }
 
+CreateViewStatement CreateViewStatement(Token startStmtToken, boolean orReplace) throws ParseException:
+{
+  CreateViewStatement stmt = null;
+}
+{
+  <VIEW> stmt = ViewSpecification(startStmtToken, orReplace)
+  {
+    return stmt;
+  }
+}
+
+CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) throws ParseException:
+{
+  Pair<DataverseName, Identifier> nameComponents = null;
+  boolean ifNotExists = false;
+  Token beginPos = null, endPos = null;
+  Expression viewBodyExpr = null;
+  DataverseName currentDataverse = defaultDataverse;
+}
+{
+  nameComponents = QualifiedName()
+  ifNotExists = IfNotExists()
+  {
+    if (orReplace && ifNotExists) {
+      throw new SqlppParseException(getSourceLocation(token), "Unexpected IF NOT EXISTS");
+    }
+  }
+  <AS>
+  {
+    beginPos = token;
+    createNewScope();
+    if (nameComponents.first != null) {
+      defaultDataverse = nameComponents.first;
+    }
+  }
+  viewBodyExpr = ViewBody()
+  {
+    endPos = token;
+    String viewBody = extractFragment(beginPos.beginLine, beginPos.beginColumn + 1, endPos.endLine,
+      endPos.endColumn + 1);
+    removeCurrentScope();
+    defaultDataverse = currentDataverse;
+    CreateViewStatement stmt = new CreateViewStatement(nameComponents.first, nameComponents.second.getValue(), viewBody,
+      viewBodyExpr, orReplace, ifNotExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
+}
+
+Expression ViewBody() throws ParseException:
+{
+  Expression viewBodyExpr = null;
+}
+{
+  viewBodyExpr = SelectExpression(true)
+  {
+    return viewBodyExpr;
+  }
+}
+
 CreateFunctionStatement CreateFunctionStatement(Token startStmtToken, boolean orReplace) throws ParseException:
 {
   CreateFunctionStatement stmt = null;
@@ -1421,6 +1502,11 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
     signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
   }
   ifNotExists = IfNotExists()
+  {
+    if (orReplace && ifNotExists) {
+      throw new SqlppParseException(getSourceLocation(token), "Unexpected IF NOT EXISTS");
+    }
+  }
   returnType = FunctionReturnType()
   (
     (
@@ -1457,9 +1543,6 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
     )
   )
   {
-    if (orReplace && ifNotExists) {
-      throw new SqlppParseException(getSourceLocation(startStmtToken), "Unexpected IF NOT EXISTS");
-    }
     defaultDataverse = currentDataverse;
     return addSourceLocation(stmt, startStmtToken);
   }
@@ -1852,6 +1935,7 @@ Statement DropStatement() throws ParseException:
     | stmt = DropFeedPolicyStatement(startToken)
     | stmt = DropSynonymStatement(startToken)
     | stmt = DropFullTextStatement(startToken)
+    | stmt = DropViewStatement(startToken)
   )
   {
     return stmt;
@@ -1878,6 +1962,30 @@ DropDatasetStatement DropDatasetSpecification(Token startStmtToken) throws Parse
   pairId = QualifiedName() ifExists = IfExists()
   {
     DropDatasetStatement stmt = new DropDatasetStatement(pairId.first, pairId.second, ifExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
+}
+
+ViewDropStatement DropViewStatement(Token startStmtToken) throws ParseException:
+{
+  ViewDropStatement stmt = null;
+}
+{
+  <VIEW> stmt = DropViewSpecification(startStmtToken)
+  {
+    return stmt;
+  }
+}
+
+ViewDropStatement DropViewSpecification(Token startStmtToken) throws ParseException:
+{
+  Pair<DataverseName,Identifier> pairId = null;
+  boolean ifExists = false;
+}
+{
+  pairId = QualifiedName() ifExists = IfExists()
+  {
+    ViewDropStatement stmt = new ViewDropStatement(pairId.first, pairId.second, ifExists);
     return addSourceLocation(stmt, startStmtToken);
   }
 }
@@ -4988,6 +5096,7 @@ TOKEN [IGNORE_CASE]:
   | <USING : "using">
   | <VALUE : "value">
   | <VALUED : "valued">
+  | <VIEW : "view">
   | <WHEN : "when">
   | <WHERE : "where">
   | <WITH : "with">

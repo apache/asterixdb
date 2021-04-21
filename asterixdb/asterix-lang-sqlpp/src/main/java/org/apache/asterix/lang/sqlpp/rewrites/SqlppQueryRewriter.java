@@ -24,24 +24,35 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.expression.AbstractCallExpression;
+import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.FieldAccessor;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.MissingLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.statement.ViewDecl;
+import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.lang.common.util.ViewUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.GenerateColumnNameVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineColumnAliasVisitor;
@@ -66,9 +77,16 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.VariableCheckAndRewriteVis
 import org.apache.asterix.lang.sqlpp.util.SqlppAstPrintUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.metadata.entities.ViewDetails;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -80,13 +98,13 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     public static final String INLINE_WITH_OPTION = "inline_with";
     private static final boolean INLINE_WITH_OPTION_DEFAULT = true;
     private final IParserFactory parserFactory;
-    private SqlppFunctionBodyRewriter functionBodyRewriter;
+    private SqlppFunctionBodyRewriter functionAndViewBodyRewriter;
     private IReturningStatement topStatement;
     private LangRewritingContext context;
     private MetadataProvider metadataProvider;
     private Collection<VarIdentifier> externalVars;
     private boolean allowNonStoredUdfCalls;
-    private boolean inlineUdfs;
+    private boolean inlineUdfsAndViews;
     private boolean isLogEnabled;
 
     public SqlppQueryRewriter(IParserFactory parserFactory) {
@@ -94,24 +112,24 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     }
 
     protected void setup(LangRewritingContext context, IReturningStatement topStatement,
-            Collection<VarIdentifier> externalVars, boolean allowNonStoredUdfCalls, boolean inlineUdfs)
+            Collection<VarIdentifier> externalVars, boolean allowNonStoredUdfCalls, boolean inlineUdfsAndViews)
             throws CompilationException {
         this.context = context;
         this.metadataProvider = context.getMetadataProvider();
         this.topStatement = topStatement;
         this.externalVars = externalVars != null ? externalVars : Collections.emptyList();
         this.allowNonStoredUdfCalls = allowNonStoredUdfCalls;
-        this.inlineUdfs = inlineUdfs;
+        this.inlineUdfsAndViews = inlineUdfsAndViews;
         this.isLogEnabled = LOGGER.isTraceEnabled();
         logExpression("Starting AST rewrites on", "");
     }
 
     @Override
     public void rewrite(LangRewritingContext context, IReturningStatement topStatement, boolean allowNonStoredUdfCalls,
-            boolean inlineUdfs, Collection<VarIdentifier> externalVars) throws CompilationException {
+            boolean inlineUdfsAndViews, Collection<VarIdentifier> externalVars) throws CompilationException {
 
         // Sets up parameters.
-        setup(context, topStatement, externalVars, allowNonStoredUdfCalls, inlineUdfs);
+        setup(context, topStatement, externalVars, allowNonStoredUdfCalls, inlineUdfsAndViews);
 
         // Resolves function calls
         resolveFunctionCalls();
@@ -162,8 +180,8 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Rewrites RIGHT OUTER JOINs into LEFT OUTER JOINs if possible
         rewriteRightJoins();
 
-        // Inlines functions.
-        loadAndInlineDeclaredUdfs();
+        // Inlines functions and views
+        loadAndInlineUdfsAndViews();
 
         // Rewrites SQL++ core aggregate function names into internal names
         rewriteSpecialFunctionNames();
@@ -289,12 +307,21 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         rewriteTopExpr(visitor, null);
     }
 
-    protected void loadAndInlineDeclaredUdfs() throws CompilationException {
-        Map<FunctionSignature, FunctionDecl> udfs = fetchUserDefinedSqlppFunctions(topStatement);
-        FunctionUtil.checkFunctionRecursion(udfs, SqlppGatherFunctionCallsVisitor::new,
-                topStatement.getSourceLocation());
-        if (!udfs.isEmpty() && inlineUdfs) {
-            SqlppInlineUdfsVisitor visitor = new SqlppInlineUdfsVisitor(context, udfs);
+    protected void loadAndInlineUdfsAndViews() throws CompilationException {
+        Pair<Map<FunctionSignature, FunctionDecl>, Map<DatasetFullyQualifiedName, ViewDecl>> udfAndViewDecls =
+                loadUdfsAndViews(topStatement);
+        Map<FunctionSignature, FunctionDecl> udfs = udfAndViewDecls.first;
+        Map<DatasetFullyQualifiedName, ViewDecl> views = udfAndViewDecls.second;
+        if (udfs.isEmpty() && views.isEmpty()) {
+            // nothing to do
+            return;
+        }
+        if (ExpressionUtils.hasFunctionOrViewRecursion(udfs, views, SqlppGatherFunctionCallsVisitor::new)) {
+            throw new CompilationException(ErrorCode.ILLEGAL_FUNCTION_OR_VIEW_RECURSION,
+                    topStatement.getSourceLocation());
+        }
+        if (inlineUdfsAndViews) {
+            SqlppInlineUdfsVisitor visitor = new SqlppInlineUdfsVisitor(context, udfs, views);
             while (rewriteTopExpr(visitor, null)) {
                 // loop until no more changes
             }
@@ -332,14 +359,24 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         return extVars;
     }
 
-    private Map<FunctionSignature, FunctionDecl> fetchUserDefinedSqlppFunctions(IReturningStatement topExpr)
-            throws CompilationException {
-        Map<FunctionSignature, FunctionDecl> udfs = new LinkedHashMap<>();
+    @Override
+    public VarIdentifier toExternalVariableName(String statementParameterName) {
+        return SqlppVariableUtil.toExternalVariableIdentifier(statementParameterName);
+    }
 
+    @Override
+    public String toFunctionParameterName(VarIdentifier paramVar) {
+        return SqlppVariableUtil.toUserDefinedName(paramVar.getValue());
+    }
+
+    private Pair<Map<FunctionSignature, FunctionDecl>, Map<DatasetFullyQualifiedName, ViewDecl>> loadUdfsAndViews(
+            IReturningStatement topExpr) throws CompilationException {
+        Map<FunctionSignature, FunctionDecl> udfs = new LinkedHashMap<>();
+        Map<DatasetFullyQualifiedName, ViewDecl> views = new LinkedHashMap<>();
         Deque<AbstractCallExpression> workQueue = new ArrayDeque<>();
-        SqlppGatherFunctionCallsVisitor gfc = new SqlppGatherFunctionCallsVisitor(workQueue);
+        SqlppGatherFunctionCallsVisitor callVisitor = new SqlppGatherFunctionCallsVisitor(workQueue);
         for (Expression expr : topExpr.getDirectlyEnclosedExpressions()) {
-            expr.accept(gfc, null);
+            expr.accept(callVisitor, null);
         }
         AbstractCallExpression fnCall;
         while ((fnCall = workQueue.poll()) != null) {
@@ -351,31 +388,30 @@ public class SqlppQueryRewriter implements IQueryRewriter {
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, fnCall.getSourceLocation(),
                                 fs);
                     }
-                    if (FunctionUtil.isBuiltinFunctionSignature(fs) || udfs.containsKey(fs)) {
-                        continue;
+                    if (FunctionUtil.isBuiltinFunctionSignature(fs)) {
+                        if (FunctionUtil.isBuiltinDatasetFunction(fs)) {
+                            Triple<DatasetFullyQualifiedName, Boolean, DatasetFullyQualifiedName> dsArgs =
+                                    FunctionUtil.parseDatasetFunctionArguments(fnCall);
+                            if (Boolean.TRUE.equals(dsArgs.second)) {
+                                DatasetFullyQualifiedName viewName = dsArgs.first;
+                                if (!views.containsKey(viewName)) {
+                                    ViewDecl viewDecl = fetchViewDecl(viewName, fnCall.getSourceLocation());
+                                    if (viewDecl != null) {
+                                        views.put(viewName, viewDecl);
+                                        viewDecl.getNormalizedViewBody().accept(callVisitor, null);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        if (!udfs.containsKey(fs)) {
+                            FunctionDecl fd = fetchFunctionDecl(fs, fnCall.getSourceLocation());
+                            if (fd != null) {
+                                udfs.put(fs, fd);
+                                fd.getNormalizedFuncBody().accept(callVisitor, null);
+                            }
+                        }
                     }
-                    FunctionDecl fd = context.getDeclaredFunctions().get(fs);
-                    if (fd == null) {
-                        Function function;
-                        try {
-                            function = metadataProvider.lookupUserDefinedFunction(fs);
-                        } catch (AlgebricksException e) {
-                            throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, fnCall.getSourceLocation(),
-                                    fs.toString());
-                        }
-                        if (function == null) {
-                            throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, fnCall.getSourceLocation(),
-                                    fs.toString());
-                        }
-                        if (function.isExternal()) {
-                            continue;
-                        }
-                        fd = FunctionUtil.parseStoredFunction(function, parserFactory, context.getWarningCollector(),
-                                fnCall.getSourceLocation());
-                    }
-                    prepareFunction(fd);
-                    udfs.put(fs, fd);
-                    fd.getNormalizedFuncBody().accept(gfc, null);
                     break;
                 case WINDOW_EXPRESSION:
                     // there cannot be used-defined window functions
@@ -385,54 +421,145 @@ public class SqlppQueryRewriter implements IQueryRewriter {
                             fnCall.getFunctionSignature().toString(false));
             }
         }
-        return udfs;
+        return new Pair<>(udfs, views);
     }
 
-    private void prepareFunction(FunctionDecl fd) throws CompilationException {
-        Expression fnNormBody = fd.getNormalizedFuncBody();
-        if (fnNormBody == null) {
-            fnNormBody = rewriteFunctionBody(fd);
-            fd.setNormalizedFuncBody(fnNormBody);
+    private FunctionDecl fetchFunctionDecl(FunctionSignature fs, SourceLocation sourceLoc) throws CompilationException {
+        FunctionDecl fd = context.getDeclaredFunctions().get(fs);
+        if (fd == null) {
+            Function function;
+            try {
+                function = metadataProvider.lookupUserDefinedFunction(fs);
+            } catch (AlgebricksException e) {
+                throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, fs.toString());
+            }
+            if (function == null) {
+                throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, sourceLoc, fs.toString());
+            }
+            if (function.isExternal()) {
+                return null;
+            }
+            fd = FunctionUtil.parseStoredFunction(function, parserFactory, context.getWarningCollector(), sourceLoc);
         }
+        Expression normBody = fd.getNormalizedFuncBody();
+        if (normBody == null) {
+            normBody = rewriteFunctionBody(fd);
+            fd.setNormalizedFuncBody(normBody);
+        }
+        return fd;
+    }
+
+    private ViewDecl fetchViewDecl(DatasetFullyQualifiedName viewName, SourceLocation sourceLoc)
+            throws CompilationException {
+        ViewDecl viewDecl = context.getDeclaredViews().get(viewName);
+        if (viewDecl == null) {
+            Dataset dataset;
+            try {
+                dataset = metadataProvider.findDataset(viewName.getDataverseName(), viewName.getDatasetName(), true);
+            } catch (AlgebricksException e) {
+                throw new CompilationException(ErrorCode.UNKNOWN_VIEW, e, sourceLoc, viewName);
+            }
+            if (dataset == null || DatasetUtil.isNotView(dataset)) {
+                throw new CompilationException(ErrorCode.UNKNOWN_VIEW, sourceLoc, viewName);
+            }
+            ViewDetails viewDetails = (ViewDetails) dataset.getDatasetDetails();
+            viewDecl = ViewUtil.parseStoredView(viewName, viewDetails, parserFactory, context.getWarningCollector(),
+                    sourceLoc);
+        }
+        Expression normBody = viewDecl.getNormalizedViewBody();
+        if (normBody == null) {
+            normBody = rewriteViewBody(viewDecl);
+            viewDecl.setNormalizedViewBody(normBody);
+        }
+        return viewDecl;
     }
 
     private Expression rewriteFunctionBody(FunctionDecl fnDecl) throws CompilationException {
-        DataverseName fnDataverseName = fnDecl.getSignature().getDataverseName();
+        FunctionSignature fs = fnDecl.getSignature();
+        return rewriteFunctionOrViewBody(fs.getDataverseName(), fs, fnDecl.getFuncBody(), fnDecl.getParamList(),
+                !fnDecl.isStored(), fnDecl.getSourceLocation());
+    }
+
+    private Expression rewriteViewBody(ViewDecl viewDecl) throws CompilationException {
+        DatasetFullyQualifiedName viewName = viewDecl.getViewName();
+        return rewriteFunctionOrViewBody(viewName.getDataverseName(), viewName, viewDecl.getViewBody(),
+                Collections.emptyList(), false, viewDecl.getSourceLocation());
+    }
+
+    private Expression rewriteFunctionOrViewBody(DataverseName entityDataverseName, Object entityDisplayName,
+            Expression bodyExpr, List<VarIdentifier> externalVars, boolean allowNonStoredUdfCalls,
+            SourceLocation sourceLoc) throws CompilationException {
         Dataverse defaultDataverse = metadataProvider.getDefaultDataverse();
-        Dataverse fnDataverse;
-        if (fnDataverseName == null || fnDataverseName.equals(defaultDataverse.getDataverseName())) {
-            fnDataverse = defaultDataverse;
+        Dataverse targetDataverse;
+        if (entityDataverseName == null || entityDataverseName.equals(defaultDataverse.getDataverseName())) {
+            targetDataverse = defaultDataverse;
         } else {
             try {
-                fnDataverse = metadataProvider.findDataverse(fnDataverseName);
+                targetDataverse = metadataProvider.findDataverse(entityDataverseName);
             } catch (AlgebricksException e) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, fnDecl.getSourceLocation(),
-                        fnDataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc, entityDataverseName);
             }
         }
 
-        metadataProvider.setDefaultDataverse(fnDataverse);
+        metadataProvider.setDefaultDataverse(targetDataverse);
         try {
-            Query wrappedQuery = new Query(false);
-            wrappedQuery.setSourceLocation(fnDecl.getSourceLocation());
-            wrappedQuery.setBody(fnDecl.getFuncBody());
-            wrappedQuery.setTopLevel(false);
-            boolean allowNonStoredUdfCalls = !fnDecl.isStored();
-            getFunctionBodyRewriter().rewrite(context, wrappedQuery, allowNonStoredUdfCalls, false,
-                    fnDecl.getParamList());
+            Query wrappedQuery = createWrappedQuery(bodyExpr, sourceLoc);
+            getFunctionAndViewBodyRewriter().rewrite(context, wrappedQuery, allowNonStoredUdfCalls, false,
+                    externalVars);
             return wrappedQuery.getBody();
         } catch (CompilationException e) {
-            throw new CompilationException(ErrorCode.COMPILATION_BAD_FUNCTION_DEFINITION, e, fnDecl.getSignature(),
-                    e.getMessage());
+            throw new CompilationException(ErrorCode.COMPILATION_BAD_FUNCTION_DEFINITION, e,
+                    entityDisplayName.toString(), e.getMessage());
         } finally {
             metadataProvider.setDefaultDataverse(defaultDataverse);
         }
     }
 
-    protected SqlppFunctionBodyRewriter getFunctionBodyRewriter() {
-        if (functionBodyRewriter == null) {
-            functionBodyRewriter = new SqlppFunctionBodyRewriter(parserFactory);
+    protected SqlppFunctionBodyRewriter getFunctionAndViewBodyRewriter() {
+        if (functionAndViewBodyRewriter == null) {
+            functionAndViewBodyRewriter = new SqlppFunctionBodyRewriter(parserFactory);
         }
-        return functionBodyRewriter;
+        return functionAndViewBodyRewriter;
+    }
+
+    @Override
+    public Query createFunctionAccessorQuery(FunctionDecl functionDecl) {
+        // dataverse_name.function_name(MISSING, ... MISSING)
+        FunctionSignature functionSignature = functionDecl.getSignature();
+        int arity = functionSignature.getArity();
+        List<Expression> args = arity == FunctionIdentifier.VARARGS ? Collections.emptyList()
+                : Collections.nCopies(arity, new LiteralExpr(MissingLiteral.INSTANCE));
+        CallExpr fcall = new CallExpr(functionSignature, args);
+        fcall.setSourceLocation(functionDecl.getSourceLocation());
+
+        return createWrappedQuery(fcall, functionDecl.getSourceLocation());
+    }
+
+    @Override
+    public Query createViewAccessorQuery(ViewDecl viewDecl) {
+        // dataverse_name.view_name
+        DataverseName dataverseName = viewDecl.getViewName().getDataverseName();
+        String viewName = viewDecl.getViewName().getDatasetName();
+        SourceLocation sourceLoc = viewDecl.getSourceLocation();
+        List<String> dataverseNameParts = dataverseName.getParts();
+        AbstractExpression vAccessExpr = null;
+        for (int i = 0, n = dataverseNameParts.size(); i < n; i++) {
+            String part = dataverseNameParts.get(i);
+            vAccessExpr = i == 0 ? new VariableExpr(new VarIdentifier(SqlppVariableUtil.toInternalVariableName(part)))
+                    : new FieldAccessor(vAccessExpr, new Identifier(part));
+            vAccessExpr.setSourceLocation(sourceLoc);
+        }
+        vAccessExpr = new FieldAccessor(vAccessExpr, new Identifier(viewName));
+        vAccessExpr.setSourceLocation(sourceLoc);
+
+        return createWrappedQuery(vAccessExpr, viewDecl.getSourceLocation());
+    }
+
+    private static Query createWrappedQuery(Expression expr, SourceLocation sourceLoc) {
+        Query wrappedQuery = new Query(false);
+        wrappedQuery.setSourceLocation(sourceLoc);
+        wrappedQuery.setBody(expr);
+        wrappedQuery.setTopLevel(false);
+        return wrappedQuery;
     }
 }

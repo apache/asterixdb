@@ -23,7 +23,9 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 
@@ -37,6 +39,8 @@ public interface IParser {
 
     FunctionDecl parseFunctionBody(FunctionSignature signature, List<String> paramNames, boolean isStored)
             throws CompilationException;
+
+    ViewDecl parseViewBody(DatasetFullyQualifiedName viewName) throws CompilationException;
 
     /**
      * Gets the warnings generated during parsing

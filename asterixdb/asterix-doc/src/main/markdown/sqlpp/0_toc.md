@@ -81,6 +81,7 @@
 			* [Create Index](#Indices)
 			* [Create Synonym](#Synonyms)
 			* [Create Function](#Create_function)
+			* [Create View](#Create_view)
 		   * [Drop Statement](#Removal)
 		   * [Load Statement](#Load_statement)
       * [Modification Statements](#Modification_statements)

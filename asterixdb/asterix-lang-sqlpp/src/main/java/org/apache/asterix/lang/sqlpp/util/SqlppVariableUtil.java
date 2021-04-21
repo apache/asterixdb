@@ -103,6 +103,10 @@ public class SqlppVariableUtil {
         return EXTERNAL_VAR_PREFIX + varName;
     }
 
+    public static VarIdentifier toExternalVariableIdentifier(String idName) {
+        return new VarIdentifier(toExternalVariableName(idName));
+    }
+
     public static boolean isPositionalVariableIdentifier(VarIdentifier varId) {
         try {
             Integer.parseInt(toUserDefinedName(varId.getValue()));

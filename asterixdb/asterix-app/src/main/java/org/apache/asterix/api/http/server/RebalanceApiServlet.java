@@ -45,9 +45,12 @@ import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.rebalance.NoOpDatasetRebalanceCallback;
 import org.apache.asterix.utils.RebalanceUtil;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.IterableUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.http.api.IServletRequest;
@@ -181,7 +184,7 @@ public class RebalanceApiServlet extends AbstractServlet {
 
             if (datasetName == null) {
                 // Rebalances datasets in a given dataverse or all non-metadata datasets.
-                List<Dataset> datasets = dataverseName == null ? getAllDatasetsForRebalance()
+                Iterable<Dataset> datasets = dataverseName == null ? getAllDatasetsForRebalance()
                         : getAllDatasetsForRebalance(dataverseName);
                 for (Dataset dataset : datasets) {
                     // By the time rebalanceDataset(...) is called, the dataset could have been dropped.
@@ -212,8 +215,8 @@ public class RebalanceApiServlet extends AbstractServlet {
     }
 
     // Lists all datasets that should be rebalanced in a given datavserse.
-    private List<Dataset> getAllDatasetsForRebalance(DataverseName dataverseName) throws Exception {
-        List<Dataset> datasets;
+    private Iterable<Dataset> getAllDatasetsForRebalance(DataverseName dataverseName) throws Exception {
+        Iterable<Dataset> datasets;
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         try {
             datasets = getDatasetsInDataverseForRebalance(dataverseName, mdTxnCtx);
@@ -226,13 +229,13 @@ public class RebalanceApiServlet extends AbstractServlet {
     }
 
     // Lists all datasets that should be rebalanced.
-    private List<Dataset> getAllDatasetsForRebalance() throws Exception {
+    private Iterable<Dataset> getAllDatasetsForRebalance() throws Exception {
         List<Dataset> datasets = new ArrayList<>();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         try {
             List<Dataverse> dataverses = MetadataManager.INSTANCE.getDataverses(mdTxnCtx);
             for (Dataverse dv : dataverses) {
-                datasets.addAll(getDatasetsInDataverseForRebalance(dv.getDataverseName(), mdTxnCtx));
+                CollectionUtils.addAll(datasets, getDatasetsInDataverseForRebalance(dv.getDataverseName(), mdTxnCtx));
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
@@ -243,10 +246,11 @@ public class RebalanceApiServlet extends AbstractServlet {
     }
 
     // Gets all datasets in a dataverse for the rebalance operation, with a given metadata transaction context.
-    private List<Dataset> getDatasetsInDataverseForRebalance(DataverseName dvName, MetadataTransactionContext mdTxnCtx)
-            throws Exception {
+    private Iterable<Dataset> getDatasetsInDataverseForRebalance(DataverseName dvName,
+            MetadataTransactionContext mdTxnCtx) throws Exception {
         return MetadataConstants.METADATA_DATAVERSE_NAME.equals(dvName) ? Collections.emptyList()
-                : MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dvName);
+                : IterableUtils.filteredIterable(MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dvName),
+                        DatasetUtil::isNotView);
     }
 
     // Rebalances a given dataset.

@@ -1,0 +1,1 @@
+{ "DataverseName": "test1", "DatasetName": "vA", "DatatypeDataverseName": "Metadata", "DatatypeName": "AnyObject", "ViewDetails": { "Definition": "select r from range(3,4) r", "Dependencies": [ [  ], [  ], [  ] ] } }

@@ -27,7 +27,7 @@
       <compilation-unit name="bad-ext-function-ddl-1">
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1079: Compilation error: Variable number of parameters is not supported for external functions</expected-error>
-        <expected-error>ASX1001: Syntax error: Unexpected IF NOT EXISTS (in line 25, at column 1)</expected-error>
+        <expected-error>ASX1001: Syntax error: Unexpected IF NOT EXISTS (in line 25, at column 57)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">

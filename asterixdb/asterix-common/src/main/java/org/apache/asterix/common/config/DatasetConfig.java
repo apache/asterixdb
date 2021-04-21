@@ -30,7 +30,8 @@ public class DatasetConfig {
      */
     public enum DatasetType {
         INTERNAL,
-        EXTERNAL
+        EXTERNAL,
+        VIEW
     }
 
     public enum IndexType {

@@ -451,9 +451,10 @@ The primary-key index can be identified by the fact that the `SearchKey` field i
 ##### CreateSynonym
 ![](../images/diagrams/CreateSynonym.png)
 
-The `CREATE SYNONYM` statement creates a synonym for a given dataset.
-This synonym may be used instead of the dataset name in `SELECT`, `INSERT`, `UPSERT`, `DELETE`, and `LOAD` statements.
-The target dataset does not need to exist when the synonym is created.
+The `CREATE SYNONYM` statement creates a synonym for a given dataset or a view.
+This synonym may be used instead of the dataset name in `SELECT`, `INSERT`, `UPSERT`, `DELETE`, and `LOAD` statements, 
+or instead of the view name in `SELECT` statements.
+The target dataset or view does not need to exist when the synonym is created.
 A synonym may be created for another synonym.
 
 ##### Example
@@ -519,6 +520,25 @@ would be as follows
 
     CREATE FUNCTION sentiment(a) AS "sentiment_mod", "sent_model.sentiment" AT pylib;
 
+#### <a id="Create_view">Create View</a>
+
+The `CREATE VIEW` statement creates a **named** view that can then be used in queries.
+The body of a view can be any `SELECT` statement.
+
+##### CreateView
+![](../images/diagrams/CreateView.png)
+
+##### Example
+
+    CREATE DATASET customers(customersType) PRIMARY KEY custid;
+
+    CREATE VIEW customersView AS 
+        SELECT c.custid, c.name
+        FROM customers AS c 
+        WHERE c.address.city = "Boston, MA";
+
+    SELECT * FROM customersView;
+
 ### <a id="Removal">Drop Statement</a>
 
 ##### DropStmnt
@@ -554,6 +574,8 @@ The following examples illustrate some uses of the `DROP` statement.
     DROP FUNCTION nameSearch@1;
 
     DROP SYNONYM customersSynonym;
+
+    DROP VIEW customersView;
 
     DROP DATAVERSE CommerceData;
 

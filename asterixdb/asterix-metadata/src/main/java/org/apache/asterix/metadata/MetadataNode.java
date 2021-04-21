@@ -20,7 +20,6 @@
 package org.apache.asterix.metadata;
 
 import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
-import static org.apache.asterix.common.exceptions.ErrorCode.FULL_TEXT_DEFAULT_CONFIG_CANNOT_BE_DELETED_OR_CREATED;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.rmi.RemoteException;
@@ -68,6 +67,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.DependencyKind;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
@@ -80,6 +80,7 @@ import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.entities.Synonym;
+import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.metadata.entitytupletranslators.CompactionPolicyTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatasetTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatasourceAdapterTupleTranslator;
@@ -772,15 +773,16 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName, boolean force)
             throws AlgebricksException {
-        if (!force) {
-            confirmDatasetCanBeDeleted(txnId, dataverseName, datasetName);
-        }
-
         Dataset dataset = getDataset(txnId, dataverseName, datasetName);
         if (dataset == null) {
             throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE,
                     datasetName, dataverseName);
         }
+        if (!force) {
+            String datasetTypeDisplayName = DatasetUtil.getDatasetTypeDisplayName(dataset.getDatasetType());
+            confirmDatasetCanBeDeleted(txnId, datasetTypeDisplayName, dataverseName, datasetName);
+        }
+
         try {
             // Delete entry from the 'datasets' dataset.
             ITupleReference searchKey = createTuple(dataverseName, datasetName);
@@ -790,25 +792,37 @@ public class MetadataNode implements IMetadataNode {
             try {
                 datasetTuple = getTupleToBeDeleted(txnId, MetadataPrimaryIndexes.DATASET_DATASET, searchKey);
 
-                // Delete entry(s) from the 'indexes' dataset.
-                List<Index> datasetIndexes = getDatasetIndexes(txnId, dataverseName, datasetName);
-                if (datasetIndexes != null) {
-                    for (Index index : datasetIndexes) {
-                        dropIndex(txnId, dataverseName, datasetName, index.getIndexName());
-                    }
-                }
-
-                if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
-                    // Delete External Files
-                    // As a side effect, acquires an S lock on the 'ExternalFile' dataset
-                    // on behalf of txnId.
-                    List<ExternalFile> datasetFiles = getExternalFiles(txnId, dataset);
-                    if (datasetFiles != null && !datasetFiles.isEmpty()) {
-                        // Drop all external files in this dataset.
-                        for (ExternalFile file : datasetFiles) {
-                            dropExternalFile(txnId, dataverseName, file.getDatasetName(), file.getFileNumber());
+                switch (dataset.getDatasetType()) {
+                    case INTERNAL:
+                        // Delete entry(s) from the 'indexes' dataset.
+                        List<Index> datasetIndexes = getDatasetIndexes(txnId, dataverseName, datasetName);
+                        if (datasetIndexes != null) {
+                            for (Index index : datasetIndexes) {
+                                dropIndex(txnId, dataverseName, datasetName, index.getIndexName());
+                            }
                         }
-                    }
+                        break;
+                    case EXTERNAL:
+                        // Delete entry(s) from the 'indexes' dataset.
+                        datasetIndexes = getDatasetIndexes(txnId, dataverseName, datasetName);
+                        if (datasetIndexes != null) {
+                            for (Index index : datasetIndexes) {
+                                dropIndex(txnId, dataverseName, datasetName, index.getIndexName());
+                            }
+                        }
+                        // Delete External Files
+                        // As a side effect, acquires an S lock on the 'ExternalFile' dataset
+                        // on behalf of txnId.
+                        List<ExternalFile> datasetFiles = getExternalFiles(txnId, dataset);
+                        if (datasetFiles != null && !datasetFiles.isEmpty()) {
+                            // Drop all external files in this dataset.
+                            for (ExternalFile file : datasetFiles) {
+                                dropExternalFile(txnId, dataverseName, file.getDatasetName(), file.getFileNumber());
+                            }
+                        }
+                        break;
+                    case VIEW:
+                        break;
                 }
             } catch (HyracksDataException hde) {
                 // ignore this exception and continue deleting all relevant
@@ -1124,44 +1138,60 @@ public class MetadataNode implements IMetadataNode {
         // uses a type from this dataverse
         // throw an error
         List<Dataset> datasets = getAllDatasets(txnId);
-        for (Dataset set : datasets) {
-            if (set.getDataverseName().equals(dataverseName)) {
+        for (Dataset dataset : datasets) {
+            if (dataset.getDataverseName().equals(dataverseName)) {
                 continue;
             }
-            if (set.getItemTypeDataverseName().equals(dataverseName)) {
+            if (dataset.getItemTypeDataverseName().equals(dataverseName)) {
                 throw new AsterixException(
                         org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS, "type",
-                        TypeUtil.getFullyQualifiedDisplayName(set.getItemTypeDataverseName(), set.getItemTypeName()),
-                        dataset(), DatasetUtil.getFullyQualifiedDisplayName(set));
+                        TypeUtil.getFullyQualifiedDisplayName(dataset.getItemTypeDataverseName(),
+                                dataset.getItemTypeName()),
+                        dataset(), DatasetUtil.getFullyQualifiedDisplayName(dataset));
             }
-            if (set.getMetaItemTypeDataverseName() != null
-                    && set.getMetaItemTypeDataverseName().equals(dataverseName)) {
+            if (dataset.hasMetaPart() && dataset.getMetaItemTypeDataverseName().equals(dataverseName)) {
                 throw new AsterixException(
                         org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS, "type",
-                        TypeUtil.getFullyQualifiedDisplayName(set.getMetaItemTypeDataverseName(),
-                                set.getMetaItemTypeName()),
-                        dataset(), DatasetUtil.getFullyQualifiedDisplayName(set));
+                        TypeUtil.getFullyQualifiedDisplayName(dataset.getMetaItemTypeDataverseName(),
+                                dataset.getMetaItemTypeName()),
+                        dataset(), DatasetUtil.getFullyQualifiedDisplayName(dataset));
+            }
+            if (dataset.getDatasetType() == DatasetType.VIEW) {
+                ViewDetails viewDetails = (ViewDetails) dataset.getDatasetDetails();
+                List<DependencyKind> dependenciesSchema = ViewDetails.DEPENDENCIES_SCHEMA;
+                List<List<Triple<DataverseName, String, String>>> dependencies = viewDetails.getDependencies();
+                for (int i = 0, n = dependencies.size(); i < n; i++) {
+                    for (Triple<DataverseName, String, String> dependency : dependencies.get(i)) {
+                        if (dependency.first.equals(dataverseName)) {
+                            DependencyKind dependencyKind = dependenciesSchema.get(i);
+                            throw new AsterixException(
+                                    org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
+                                    dependencyKind, dependencyKind.getDependencyDisplayName(dependency), "view",
+                                    DatasetUtil.getFullyQualifiedDisplayName(dataset));
+                        }
+                    }
+                }
             }
         }
 
         // If a function from a DIFFERENT dataverse
         // uses datasets, functions, datatypes, or synonyms from this dataverse
         // throw an error
-        Function.FunctionDependencyKind[] functionDependencyKinds = Function.FunctionDependencyKind.values();
         List<Function> functions = getAllFunctions(txnId);
         for (Function function : functions) {
             if (function.getDataverseName().equals(dataverseName)) {
                 continue;
             }
+            List<DependencyKind> dependenciesSchema = Function.DEPENDENCIES_SCHEMA;
             List<List<Triple<DataverseName, String, String>>> dependencies = function.getDependencies();
             for (int i = 0, n = dependencies.size(); i < n; i++) {
                 for (Triple<DataverseName, String, String> dependency : dependencies.get(i)) {
                     if (dependency.first.equals(dataverseName)) {
-                        Function.FunctionDependencyKind functionDependencyKind = functionDependencyKinds[i];
+                        DependencyKind dependencyKind = dependenciesSchema.get(i);
                         throw new AsterixException(
                                 org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
-                                functionDependencyKind, functionDependencyKind.getDependencyDisplayName(dependency),
-                                "function", function.getSignature());
+                                dependencyKind, dependencyKind.getDependencyDisplayName(dependency), "function",
+                                function.getSignature());
                     }
                 }
             }
@@ -1186,6 +1216,7 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void confirmFunctionCanBeDeleted(TxnId txnId, FunctionSignature signature) throws AlgebricksException {
+        confirmFunctionIsUnusedByViews(txnId, signature);
         confirmFunctionIsUnusedByFunctions(txnId, signature);
 
         // if any other feed connection uses this function, throw an error
@@ -1200,18 +1231,34 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmFunctionIsUnusedByFunctions(TxnId txnId, FunctionSignature signature)
-            throws AlgebricksException {
-        confirmObjectIsUnusedByFunctions(txnId, Function.FunctionDependencyKind.FUNCTION, signature.getDataverseName(),
+    private void confirmFunctionIsUnusedByViews(TxnId txnId, FunctionSignature signature) throws AlgebricksException {
+        confirmObjectIsUnusedByViews(txnId, "function", DependencyKind.FUNCTION, signature.getDataverseName(),
                 signature.getName(), Integer.toString(signature.getArity()));
     }
 
-    private void confirmObjectIsUnusedByFunctions(TxnId txnId, Function.FunctionDependencyKind dependencyKind,
-            DataverseName dataverseName, String objectName, String objectArg) throws AlgebricksException {
+    private void confirmFunctionIsUnusedByFunctions(TxnId txnId, FunctionSignature signature)
+            throws AlgebricksException {
+        confirmObjectIsUnusedByFunctions(txnId, "function", DependencyKind.FUNCTION, signature.getDataverseName(),
+                signature.getName(), Integer.toString(signature.getArity()));
+    }
+
+    private void confirmObjectIsUnusedByFunctions(TxnId txnId, String objectKindDisplayName,
+            DependencyKind dependencyKind, DataverseName dataverseName, String objectName, String objectArg)
+            throws AlgebricksException {
         // If any function uses this object, throw an error
-        int functionDependencyIdx = dependencyKind.ordinal();
         List<Function> functions = getAllFunctions(txnId);
-        for (Function function : functions) {
+        confirmObjectIsUnusedByFunctionsImpl(functions, objectKindDisplayName, dependencyKind, dataverseName,
+                objectName, objectArg);
+    }
+
+    private void confirmObjectIsUnusedByFunctionsImpl(List<Function> allFunctions, String objectKindDisplayName,
+            DependencyKind dependencyKind, DataverseName dataverseName, String objectName, String objectArg)
+            throws AlgebricksException {
+        int functionDependencyIdx = Function.DEPENDENCIES_SCHEMA.indexOf(dependencyKind);
+        if (functionDependencyIdx < 0) {
+            throw new AlgebricksException(ErrorCode.ILLEGAL_STATE);
+        }
+        for (Function function : allFunctions) {
             List<List<Triple<DataverseName, String, String>>> functionDependencies = function.getDependencies();
             if (functionDependencyIdx < functionDependencies.size()) {
                 List<Triple<DataverseName, String, String>> functionObjectDependencies =
@@ -1222,9 +1269,46 @@ public class MetadataNode implements IMetadataNode {
                                 && (objectArg == null || objectArg.equals(dependency.third))) {
                             throw new AsterixException(
                                     org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS,
-                                    dependencyKind.toString().toLowerCase(),
-                                    dependencyKind.getDependencyDisplayName(dependency), "function",
-                                    function.getSignature());
+                                    objectKindDisplayName, dependencyKind.getDependencyDisplayName(dependency),
+                                    "function", function.getSignature());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void confirmObjectIsUnusedByViews(TxnId txnId, String objectKindDisplayName, DependencyKind dependencyKind,
+            DataverseName dataverseName, String objectName, String objectArg) throws AlgebricksException {
+        // If any function uses this object, throw an error
+        List<Dataset> datasets = getAllDatasets(txnId);
+        confirmObjectIsUnusedByViewsImpl(datasets, objectKindDisplayName, dependencyKind, dataverseName, objectName,
+                objectArg);
+    }
+
+    private void confirmObjectIsUnusedByViewsImpl(List<Dataset> allDatasets, String objectKindDisplayName,
+            DependencyKind dependencyKind, DataverseName dataverseName, String objectName, String objectArg)
+            throws AlgebricksException {
+        int viewDependencyIdx = ViewDetails.DEPENDENCIES_SCHEMA.indexOf(dependencyKind);
+        if (viewDependencyIdx < 0) {
+            throw new AlgebricksException(ErrorCode.ILLEGAL_STATE);
+        }
+        for (Dataset dataset : allDatasets) {
+            if (dataset.getDatasetType() == DatasetType.VIEW) {
+                ViewDetails viewDetails = (ViewDetails) dataset.getDatasetDetails();
+                List<List<Triple<DataverseName, String, String>>> viewDependencies = viewDetails.getDependencies();
+                if (viewDependencyIdx < viewDependencies.size()) {
+                    List<Triple<DataverseName, String, String>> viewObjectDependencies =
+                            viewDependencies.get(viewDependencyIdx);
+                    if (viewObjectDependencies != null) {
+                        for (Triple<DataverseName, String, String> dependency : viewObjectDependencies) {
+                            if (dependency.first.equals(dataverseName) && dependency.second.equals(objectName)
+                                    && (objectArg == null || objectArg.equals(dependency.third))) {
+                                throw new AsterixException(
+                                        org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS,
+                                        objectKindDisplayName, dependencyKind.getDependencyDisplayName(dependency),
+                                        "view", DatasetUtil.getFullyQualifiedDisplayName(dataset));
+                            }
                         }
                     }
                 }
@@ -1235,7 +1319,8 @@ public class MetadataNode implements IMetadataNode {
     private void confirmFullTextConfigCanBeDeleted(TxnId txnId, DataverseName dataverseNameFullTextConfig,
             String configName) throws AlgebricksException {
         if (Strings.isNullOrEmpty(configName)) {
-            throw new MetadataException(FULL_TEXT_DEFAULT_CONFIG_CANNOT_BE_DELETED_OR_CREATED);
+            throw new MetadataException(
+                    org.apache.asterix.common.exceptions.ErrorCode.FULL_TEXT_DEFAULT_CONFIG_CANNOT_BE_DELETED_OR_CREATED);
         }
 
         // If any index uses this full-text config, throw an error
@@ -1263,14 +1348,21 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmDatasetCanBeDeleted(TxnId txnId, DataverseName dataverseName, String datasetName)
-            throws AlgebricksException {
-        confirmDatasetIsUnusedByFunctions(txnId, dataverseName, datasetName);
+    private void confirmDatasetCanBeDeleted(TxnId txnId, String datasetTypeDisplayName, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
+        confirmDatasetIsUnusedByFunctions(txnId, datasetTypeDisplayName, dataverseName, datasetName);
+        confirmDatasetIsUnusedByViews(txnId, datasetTypeDisplayName, dataverseName, datasetName);
     }
 
-    private void confirmDatasetIsUnusedByFunctions(TxnId txnId, DataverseName dataverseName, String datasetName)
-            throws AlgebricksException {
-        confirmObjectIsUnusedByFunctions(txnId, Function.FunctionDependencyKind.DATASET, dataverseName, datasetName,
+    private void confirmDatasetIsUnusedByFunctions(TxnId txnId, String datasetKindDisplayName,
+            DataverseName dataverseName, String datasetName) throws AlgebricksException {
+        confirmObjectIsUnusedByFunctions(txnId, datasetKindDisplayName, DependencyKind.DATASET, dataverseName,
+                datasetName, null);
+    }
+
+    private void confirmDatasetIsUnusedByViews(TxnId txnId, String datasetKindDisplayName, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
+        confirmObjectIsUnusedByViews(txnId, datasetKindDisplayName, DependencyKind.DATASET, dataverseName, datasetName,
                 null);
     }
 
@@ -1320,14 +1412,21 @@ public class MetadataNode implements IMetadataNode {
             throws AlgebricksException {
         // If any dataset uses this type, throw an error
         List<Dataset> datasets = getAllDatasets(txnId);
-        for (Dataset set : datasets) {
-            if (set.getItemTypeName().equals(datatypeName) && set.getItemTypeDataverseName().equals(dataverseName)) {
+        for (Dataset dataset : datasets) {
+            if ((dataset.getItemTypeName().equals(datatypeName)
+                    && dataset.getItemTypeDataverseName().equals(dataverseName))
+                    || ((dataset.hasMetaPart() && dataset.getMetaItemTypeName().equals(datatypeName)
+                            && dataset.getMetaItemTypeDataverseName().equals(dataverseName)))) {
                 throw new AsterixException(
                         org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "type",
                         TypeUtil.getFullyQualifiedDisplayName(dataverseName, datatypeName), dataset(),
-                        DatasetUtil.getFullyQualifiedDisplayName(set));
+                        DatasetUtil.getFullyQualifiedDisplayName(dataset));
             }
         }
+
+        // additionally, if a view uses this type, throw an error
+        // Note: for future use. currently views don't have any type dependencies
+        confirmObjectIsUnusedByViewsImpl(datasets, null, DependencyKind.TYPE, dataverseName, datatypeName, null);
     }
 
     private void confirmDatatypeIsUnusedByDatatypes(TxnId txnId, DataverseName dataverseName, String datatypeName)
@@ -1357,8 +1456,7 @@ public class MetadataNode implements IMetadataNode {
 
     private void confirmDatatypeIsUnusedByFunctions(TxnId txnId, DataverseName dataverseName, String dataTypeName)
             throws AlgebricksException {
-        confirmObjectIsUnusedByFunctions(txnId, Function.FunctionDependencyKind.TYPE, dataverseName, dataTypeName,
-                null);
+        confirmObjectIsUnusedByFunctions(txnId, "datatype", DependencyKind.TYPE, dataverseName, dataTypeName, null);
     }
 
     private void confirmFullTextFilterCanBeDeleted(TxnId txnId, DataverseName dataverseName, String fullTextFilterName)
@@ -2300,12 +2398,17 @@ public class MetadataNode implements IMetadataNode {
     private void confirmSynonymCanBeDeleted(TxnId txnId, DataverseName dataverseName, String synonymName)
             throws AlgebricksException {
         confirmSynonymIsUnusedByFunctions(txnId, dataverseName, synonymName);
+        confirmSynonymIsUnusedByViews(txnId, dataverseName, synonymName);
     }
 
     private void confirmSynonymIsUnusedByFunctions(TxnId txnId, DataverseName dataverseName, String synonymName)
             throws AlgebricksException {
-        confirmObjectIsUnusedByFunctions(txnId, Function.FunctionDependencyKind.SYNONYM, dataverseName, synonymName,
-                null);
+        confirmObjectIsUnusedByFunctions(txnId, "synonym", DependencyKind.SYNONYM, dataverseName, synonymName, null);
+    }
+
+    private void confirmSynonymIsUnusedByViews(TxnId txnId, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException {
+        confirmObjectIsUnusedByViews(txnId, "synonym", DependencyKind.SYNONYM, dataverseName, synonymName, null);
     }
 
     @Override

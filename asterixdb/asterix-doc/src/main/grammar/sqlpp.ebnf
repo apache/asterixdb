@@ -149,6 +149,7 @@ CreateStmnt ::= CreateDataverse
               | CreateIndex
               | CreateSynonym
               | CreateFunction
+              | CreateView
 
 DataverseName ::= Identifier ("." Identifier)*
 
@@ -240,8 +241,10 @@ FunctionParameters ::=  ( Identifier ((":")? TypeExpr)? ("," Identifier ((":")? 
 
 ExternalFunctionDef ::= ("RETURNS" TypeExpr)? "AS" StringLiteral ("," StringLiteral )* "AT" QualifiedName ("WITH" ObjectConstructor)?
 
+CreateView ::= "CREATE" ("OR" "REPLACE")? "VIEW" QualifiedName ("IF" "NOT" "EXISTS")? "AS" Selection
+
 DropStmnt ::= "DROP" ("DATAVERSE" DataverseName
-                     | ("TYPE" |"DATASET" | "SYNONYM") QualifiedName
+                     | ("TYPE" |"DATASET" |"SYNONYM" |"VIEW") QualifiedName
                      | "INDEX" DoubleQualifiedName
                      | "FUNCTION" FunctionSignature ) ("IF" "EXISTS")?
 

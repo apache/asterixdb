@@ -36,7 +36,6 @@ import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -272,8 +271,6 @@ public interface IStatementExecutor {
      *            The data modification statement when the query results in a modification to a dataset
      * @param statementParameters
      *            Statement parameters
-     * @param statementRewriter
-     *            The statement rewriter
      * @param requestParameters
      *            The request parameters
      * @return the compiled {@code JobSpecification}
@@ -284,8 +281,7 @@ public interface IStatementExecutor {
      */
     JobSpecification rewriteCompileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
             Query query, ICompiledDmlStatement dmlStatement, Map<String, IAObject> statementParameters,
-            IStatementRewriter statementRewriter, IRequestParameters requestParameters)
-            throws RemoteException, AlgebricksException, ACIDException;
+            IRequestParameters requestParameters) throws RemoteException, AlgebricksException, ACIDException;
 
     /**
      * returns the active dataverse for an entity or a statement

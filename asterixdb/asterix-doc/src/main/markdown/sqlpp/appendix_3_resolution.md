@@ -215,7 +215,7 @@ The process of name resolution begins with the leftmost identifier in the name.
 The rules for resolving the leftmost identifier are:
 
 1.  _In a `FROM` clause_: Names in a `FROM` clause identify the collections over which the query block will iterate.
-    These collections may be stored datasets or may be the results of nested query blocks.
+    These collections may be stored datasets, views, synonyms, or may be the results of nested query blocks.
     A stored dataset may be in a named dataverse or in the default dataverse.
     Thus, if the two-part name `a.b` is in a `FROM` clause, a might represent a dataverse and `b` might represent a dataset in that dataverse.
     Another example of a two-part name in a `FROM` clause is `FROM orders AS o, o.items AS i`.
@@ -229,12 +229,13 @@ The rules for resolving the leftmost identifier are:
     - (1B):  Otherwise, if the identifier is the first part of a two-part name like `a.b`, the name is treated as `dataverse.dataset`.
         If the identifier stands alone as a one-part name, it is treated as the name of a dataset in the default dataverse.
         If the designated dataset exists then the identifier is resolved to that dataset,
-        otherwise if a synonym with given name exists then the identifier is resolved to the target dataset of that
+        othwerise if a view with given name exists then the identifier is resolved to that view,
+        otherwise if a synonym with given name exists then the identifier is resolved to the target dataset or the target view of that
         synonym (potentially recursively if this synonym points to another synonym). An error will result if the designated
-        dataset or a synonym with this name does not exist.
+        dataset, view, or a synonym with this name does not exist.
 
-        Datasets take precedence over synonyms, so if both a dataset and a synonym have the same name then the
-        resolution is to the dataset.
+        Datasets and views take precedence over synonyms, so if both a dataset (or a view) and a synonym have the same name then the
+        resolution is to the dataset. Note that there cannot be a dataset and a view with the same name.
 
 2.  _Elsewhere in a query block_: In clauses other than `FROM`, a name typically identifies a field of some object.
     For example, if the expression `a.b` is in a `SELECT` or `WHERE` clause, it's likely that `a` represents an object and `b` represents a field in that object.

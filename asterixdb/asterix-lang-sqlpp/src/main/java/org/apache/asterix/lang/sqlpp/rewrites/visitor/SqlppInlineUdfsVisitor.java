@@ -24,12 +24,14 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.AbstractInlineUdfsVisitor;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -61,9 +63,12 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
      *            manages ids of variables and guarantees uniqueness of variables.
      * @param usedUDFs,
      *            user defined functions used by this query.
+     * @param usedViews,
+     *            views used by this query.
      */
-    public SqlppInlineUdfsVisitor(LangRewritingContext context, Map<FunctionSignature, FunctionDecl> usedUDFs) {
-        super(context, usedUDFs, new SqlppCloneAndSubstituteVariablesVisitor(context));
+    public SqlppInlineUdfsVisitor(LangRewritingContext context, Map<FunctionSignature, FunctionDecl> usedUDFs,
+            Map<DatasetFullyQualifiedName, ViewDecl> usedViews) {
+        super(context, usedUDFs, usedViews, new SqlppCloneAndSubstituteVariablesVisitor(context));
     }
 
     @Override
@@ -85,7 +90,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
     @Override
     public Boolean visit(FromTerm fromTerm, Void arg) throws CompilationException {
         boolean changed = false;
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(fromTerm.getLeftExpression());
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(fromTerm.getLeftExpression());
         fromTerm.setLeftExpression(p.second);
         changed |= p.first;
         for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
@@ -96,18 +101,18 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
 
     @Override
     public Boolean visit(JoinClause joinClause, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> p1 = inlineUdfsInExpr(joinClause.getRightExpression());
+        Pair<Boolean, Expression> p1 = inlineUdfsAndViewsInExpr(joinClause.getRightExpression());
         joinClause.setRightExpression(p1.second);
-        Pair<Boolean, Expression> p2 = inlineUdfsInExpr(joinClause.getConditionExpression());
+        Pair<Boolean, Expression> p2 = inlineUdfsAndViewsInExpr(joinClause.getConditionExpression());
         joinClause.setConditionExpression(p2.second);
         return p1.first || p2.first;
     }
 
     @Override
     public Boolean visit(NestClause nestClause, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> p1 = inlineUdfsInExpr(nestClause.getRightExpression());
+        Pair<Boolean, Expression> p1 = inlineUdfsAndViewsInExpr(nestClause.getRightExpression());
         nestClause.setRightExpression(p1.second);
-        Pair<Boolean, Expression> p2 = inlineUdfsInExpr(nestClause.getConditionExpression());
+        Pair<Boolean, Expression> p2 = inlineUdfsAndViewsInExpr(nestClause.getConditionExpression());
         nestClause.setConditionExpression(p2.second);
         return p1.first || p2.first;
     }
@@ -117,7 +122,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
         if (projection.star()) {
             return false;
         }
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(projection.getExpression());
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(projection.getExpression());
         projection.setExpression(p.second);
         return p.first;
     }
@@ -158,7 +163,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
 
     @Override
     public Boolean visit(SelectElement selectElement, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(selectElement.getExpression());
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(selectElement.getExpression());
         selectElement.setExpression(p.second);
         return p.first;
     }
@@ -202,21 +207,21 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
 
     @Override
     public Boolean visit(UnnestClause unnestClause, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(unnestClause.getRightExpression());
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(unnestClause.getRightExpression());
         unnestClause.setRightExpression(p.second);
         return p.first;
     }
 
     @Override
     public Boolean visit(HavingClause havingClause, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(havingClause.getFilterExpression());
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(havingClause.getFilterExpression());
         havingClause.setFilterExpression(p.second);
         return p.first;
     }
 
     @Override
     public Boolean visit(CaseExpression caseExpr, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> result = inlineUdfsInExpr(caseExpr.getConditionExpr());
+        Pair<Boolean, Expression> result = inlineUdfsAndViewsInExpr(caseExpr.getConditionExpr());
         caseExpr.setConditionExpr(result.second);
         boolean inlined = result.first;
 
@@ -228,7 +233,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
         inlined = inlined || inlinedList.first;
         caseExpr.setThenExprs(inlinedList.second);
 
-        result = inlineUdfsInExpr(caseExpr.getElseExpr());
+        result = inlineUdfsAndViewsInExpr(caseExpr.getElseExpr());
         caseExpr.setElseExpr(result.second);
         return inlined || result.first;
     }
@@ -247,12 +252,12 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
             inlined |= inlinedList.first;
         }
         if (winExpr.hasFrameStartExpr()) {
-            Pair<Boolean, Expression> inlinedExpr = inlineUdfsInExpr(winExpr.getFrameStartExpr());
+            Pair<Boolean, Expression> inlinedExpr = inlineUdfsAndViewsInExpr(winExpr.getFrameStartExpr());
             winExpr.setFrameStartExpr(inlinedExpr.second);
             inlined |= inlinedExpr.first;
         }
         if (winExpr.hasFrameEndExpr()) {
-            Pair<Boolean, Expression> inlinedExpr = inlineUdfsInExpr(winExpr.getFrameEndExpr());
+            Pair<Boolean, Expression> inlinedExpr = inlineUdfsAndViewsInExpr(winExpr.getFrameEndExpr());
             winExpr.setFrameEndExpr(inlinedExpr.second);
             inlined |= inlinedExpr.first;
         }
@@ -263,7 +268,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
             inlined |= inlinedList.first;
         }
         if (winExpr.hasAggregateFilterExpr()) {
-            Pair<Boolean, Expression> inlinedExpr = inlineUdfsInExpr(winExpr.getAggregateFilterExpr());
+            Pair<Boolean, Expression> inlinedExpr = inlineUdfsAndViewsInExpr(winExpr.getAggregateFilterExpr());
             winExpr.setAggregateFilterExpr(inlinedExpr.second);
             inlined |= inlinedExpr.first;
         }
@@ -275,17 +280,19 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
 
     @Override
     public Boolean visit(ListSliceExpression expression, Void arg) throws CompilationException {
-        Pair<Boolean, Expression> expressionResult = inlineUdfsInExpr(expression.getExpr());
+        Pair<Boolean, Expression> expressionResult = inlineUdfsAndViewsInExpr(expression.getExpr());
         expression.setExpr(expressionResult.second);
         boolean inlined = expressionResult.first;
 
-        Pair<Boolean, Expression> startIndexExpressResult = inlineUdfsInExpr(expression.getStartIndexExpression());
+        Pair<Boolean, Expression> startIndexExpressResult =
+                inlineUdfsAndViewsInExpr(expression.getStartIndexExpression());
         expression.setStartIndexExpression(startIndexExpressResult.second);
         inlined |= startIndexExpressResult.first;
 
         // End index expression can be null (optional)
         if (expression.hasEndExpression()) {
-            Pair<Boolean, Expression> endIndexExpressionResult = inlineUdfsInExpr(expression.getEndIndexExpression());
+            Pair<Boolean, Expression> endIndexExpressionResult =
+                    inlineUdfsAndViewsInExpr(expression.getEndIndexExpression());
             expression.setEndIndexExpression(endIndexExpressionResult.second);
             inlined |= endIndexExpressionResult.first;
         }

@@ -25,6 +25,9 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.expression.AbstractCallExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
+import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.Query;
+import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 
 public interface IQueryRewriter {
@@ -37,13 +40,12 @@ public interface IQueryRewriter {
      *          rewriting context
      * @param allowNonStoredUdfCalls
      *          whether calls to non-stored user-defined functions should be resolved
-     * @param inlineUdfs
+     * @param inlineUdfsAndViews
      *          whether user defined functions should be inlines
      * @param externalVars
-     *          statement parameters (external variables)
      */
     void rewrite(LangRewritingContext context, IReturningStatement topExpr, boolean allowNonStoredUdfCalls,
-            boolean inlineUdfs, Collection<VarIdentifier> externalVars) throws CompilationException;
+            boolean inlineUdfsAndViews, Collection<VarIdentifier> externalVars) throws CompilationException;
 
     /**
      * Find the function calls used by a given expression
@@ -55,4 +57,12 @@ public interface IQueryRewriter {
      * Find all external variables (positional and named variables) in given expression
      */
     Set<VariableExpr> getExternalVariables(Expression expr) throws CompilationException;
+
+    VarIdentifier toExternalVariableName(String statementParameterName);
+
+    String toFunctionParameterName(VarIdentifier paramVar);
+
+    Query createFunctionAccessorQuery(FunctionDecl functionDecl);
+
+    Query createViewAccessorQuery(ViewDecl viewDecl);
 }

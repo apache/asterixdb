@@ -22,9 +22,11 @@ package org.apache.asterix.metadata.entitytupletranslators;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
+import java.util.Collection;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.api.IMetadataEntityTupleTranslator;
 import org.apache.asterix.metadata.api.IMetadataIndex;
@@ -33,11 +35,13 @@ import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -113,4 +117,30 @@ public abstract class AbstractTupleTranslator<T> implements IMetadataEntityTuple
 
     protected abstract T createMetadataEntityFromARecord(ARecord aRecord)
             throws HyracksDataException, AlgebricksException;
+
+    public static void getDependencySubNames(Triple<DataverseName, String, String> dependency,
+            Collection<? super String> outSubnames) {
+        outSubnames.add(dependency.first.getCanonicalForm());
+        if (dependency.second != null) {
+            outSubnames.add(dependency.second);
+        }
+        if (dependency.third != null) {
+            outSubnames.add(dependency.third);
+        }
+    }
+
+    public static Triple<DataverseName, String, String> getDependency(AOrderedList dependencySubnames)
+            throws AlgebricksException {
+        String dataverseCanonicalName = ((AString) dependencySubnames.getItem(0)).getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        String second = null, third = null;
+        int ln = dependencySubnames.size();
+        if (ln > 1) {
+            second = ((AString) dependencySubnames.getItem(1)).getStringValue();
+            if (ln > 2) {
+                third = ((AString) dependencySubnames.getItem(2)).getStringValue();
+            }
+        }
+        return new Triple<>(dataverseName, second, third);
+    }
 }

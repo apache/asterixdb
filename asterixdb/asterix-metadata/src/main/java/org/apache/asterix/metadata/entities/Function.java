@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.metadata.entities;
 
-import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,9 +28,6 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
-import org.apache.asterix.metadata.utils.DatasetUtil;
-import org.apache.asterix.metadata.utils.MetadataUtil;
-import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 
@@ -166,12 +161,15 @@ public class Function implements IMetadataEntity<Function> {
         return cache.dropFunction(this);
     }
 
+    public static List<DependencyKind> DEPENDENCIES_SCHEMA =
+            Arrays.asList(DependencyKind.DATASET, DependencyKind.FUNCTION, DependencyKind.TYPE, DependencyKind.SYNONYM);
+
     public static List<List<Triple<DataverseName, String, String>>> createDependencies(
             List<Triple<DataverseName, String, String>> datasetDependencies,
             List<Triple<DataverseName, String, String>> functionDependencies,
             List<Triple<DataverseName, String, String>> typeDependencies,
             List<Triple<DataverseName, String, String>> synonymDependencies) {
-        List<List<Triple<DataverseName, String, String>>> depList = new ArrayList<>(4);
+        List<List<Triple<DataverseName, String, String>>> depList = new ArrayList<>(DEPENDENCIES_SCHEMA.size());
         depList.add(datasetDependencies);
         depList.add(functionDependencies);
         depList.add(typeDependencies);
@@ -179,30 +177,5 @@ public class Function implements IMetadataEntity<Function> {
             depList.add(synonymDependencies);
         }
         return depList;
-    }
-
-    public enum FunctionDependencyKind {
-        DATASET(dependency -> DatasetUtil.getFullyQualifiedDisplayName(dependency.first, dependency.second)),
-        FUNCTION(
-                dependency -> new FunctionSignature(dependency.first, dependency.second,
-                        Integer.parseInt(dependency.third)).toString()),
-        TYPE(dependency -> TypeUtil.getFullyQualifiedDisplayName(dependency.first, dependency.second)),
-        SYNONYM(dependency -> MetadataUtil.getFullyQualifiedDisplayName(dependency.first, dependency.second));
-
-        private final java.util.function.Function<Triple<DataverseName, String, String>, String> dependencyDisplayNameAccessor;
-
-        FunctionDependencyKind(
-                java.util.function.Function<Triple<DataverseName, String, String>, String> dependencyDisplayNameAccessor) {
-            this.dependencyDisplayNameAccessor = dependencyDisplayNameAccessor;
-        }
-
-        public String getDependencyDisplayName(Triple<DataverseName, String, String> dependency) {
-            return dependencyDisplayNameAccessor.apply(dependency);
-        }
-
-        @Override
-        public String toString() {
-            return this == DATASET ? dataset() : name().toLowerCase();
-        }
     }
 }

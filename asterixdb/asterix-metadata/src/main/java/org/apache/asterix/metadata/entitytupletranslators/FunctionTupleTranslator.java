@@ -244,21 +244,6 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         return new TypeSignature(typeDataverseName, typeName);
     }
 
-    private Triple<DataverseName, String, String> getDependency(AOrderedList dependencySubnames)
-            throws AlgebricksException {
-        String dataverseCanonicalName = ((AString) dependencySubnames.getItem(0)).getStringValue();
-        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
-        String second = null, third = null;
-        int ln = dependencySubnames.size();
-        if (ln > 1) {
-            second = ((AString) dependencySubnames.getItem(1)).getStringValue();
-            if (ln > 2) {
-                third = ((AString) dependencySubnames.getItem(2)).getStringValue();
-            }
-        }
-        return new Triple<>(dataverseName, second, third);
-    }
-
     private Map<String, String> getResources(ARecord functionRecord, String resourcesFieldName) {
         Map<String, String> adaptorConfiguration = null;
         final ARecordType functionType = functionRecord.getType();
@@ -381,11 +366,14 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         dependenciesListBuilder.reset((AOrderedListType) MetadataRecordTypes.FUNCTION_RECORDTYPE
                 .getFieldTypes()[MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEPENDENCIES_FIELD_INDEX]);
         List<List<Triple<DataverseName, String, String>>> dependenciesList = function.getDependencies();
+        List<String> subNames = new ArrayList<>();
         for (List<Triple<DataverseName, String, String>> dependencies : dependenciesList) {
             dependencyListBuilder.reset(listOfLists);
             for (Triple<DataverseName, String, String> dependency : dependencies) {
                 dependencyNameListBuilder.reset(stringList);
-                for (String subName : getDependencySubNames(dependency)) {
+                subNames.clear();
+                getDependencySubNames(dependency, subNames);
+                for (String subName : subNames) {
                     itemValue.reset();
                     aString.setValue(subName);
                     stringSerde.serialize(aString, itemValue.getDataOutput());
@@ -609,18 +597,6 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         }
 
         propertyRecordBuilder.write(out, true);
-    }
-
-    private List<String> getDependencySubNames(Triple<DataverseName, String, String> dependency) {
-        dependencySubnames.clear();
-        dependencySubnames.add(dependency.first.getCanonicalForm());
-        if (dependency.second != null) {
-            dependencySubnames.add(dependency.second);
-        }
-        if (dependency.third != null) {
-            dependencySubnames.add(dependency.third);
-        }
-        return dependencySubnames;
     }
 
     // back-compat

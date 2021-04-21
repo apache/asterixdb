@@ -18,14 +18,16 @@
  */
 package org.apache.asterix.lang.common.rewrites;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
-import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -34,15 +36,17 @@ public final class LangRewritingContext {
     private final MetadataProvider metadataProvider;
     private final IWarningCollector warningCollector;
     private final Map<FunctionSignature, FunctionDecl> declaredFunctions;
+    private final Map<DatasetFullyQualifiedName, ViewDecl> declaredViews;
     private final Counter varCounter;
     private int systemVarCounter = 1;
     private final Map<Integer, VarIdentifier> oldVarIdToNewVarId = new HashMap<>();
 
     public LangRewritingContext(MetadataProvider metadataProvider, List<FunctionDecl> declaredFunctions,
-            IWarningCollector warningCollector, int varCounter) {
+            List<ViewDecl> declaredViews, IWarningCollector warningCollector, int varCounter) {
         this.metadataProvider = metadataProvider;
         this.warningCollector = warningCollector;
-        this.declaredFunctions = FunctionUtil.getFunctionMap(declaredFunctions);
+        this.declaredFunctions = createMap(declaredFunctions, FunctionDecl::getSignature);
+        this.declaredViews = createMap(declaredViews, ViewDecl::getViewName);
         this.varCounter = new Counter(varCounter);
     }
 
@@ -92,5 +96,20 @@ public final class LangRewritingContext {
 
     public Map<FunctionSignature, FunctionDecl> getDeclaredFunctions() {
         return declaredFunctions;
+    }
+
+    public Map<DatasetFullyQualifiedName, ViewDecl> getDeclaredViews() {
+        return declaredViews;
+    }
+
+    private static <K, V> Map<K, V> createMap(List<V> values, java.util.function.Function<V, K> keyMapper) {
+        if (values == null || values.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<K, V> result = new HashMap<>();
+        for (V v : values) {
+            result.put(keyMapper.apply(v), v);
+        }
+        return Collections.unmodifiableMap(result);
     }
 }

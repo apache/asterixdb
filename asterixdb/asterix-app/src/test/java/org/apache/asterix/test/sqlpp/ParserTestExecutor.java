@@ -19,6 +19,9 @@
 package org.apache.asterix.test.sqlpp;
 
 import static org.apache.hyracks.util.file.FileUtil.canonicalize;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -159,7 +162,17 @@ public class ParserTestExecutor extends TestExecutor {
                     return mockDataverse;
                 }
             });
-            when(metadataProvider.findDataset(Mockito.<DataverseName> any(), Mockito.<String> any()))
+            when(metadataProvider.findDataset(any(DataverseName.class), anyString())).thenAnswer(new Answer<Dataset>() {
+                @Override
+                public Dataset answer(InvocationOnMock invocation) {
+                    Object[] args = invocation.getArguments();
+                    final Dataset mockDataset = mock(Dataset.class);
+                    when(mockDataset.getDataverseName()).thenReturn((DataverseName) args[0]);
+                    when(mockDataset.getDatasetName()).thenReturn((String) args[1]);
+                    return mockDataset;
+                }
+            });
+            when(metadataProvider.findDataset(any(DataverseName.class), anyString(), anyBoolean()))
                     .thenAnswer(new Answer<Dataset>() {
                         @Override
                         public Dataset answer(InvocationOnMock invocation) {
@@ -170,7 +183,7 @@ public class ParserTestExecutor extends TestExecutor {
                             return mockDataset;
                         }
                     });
-            when(metadataProvider.lookupUserDefinedFunction(Mockito.<FunctionSignature> any()))
+            when(metadataProvider.lookupUserDefinedFunction(any(FunctionSignature.class)))
                     .thenAnswer(new Answer<Function>() {
                         @Override
                         public Function answer(InvocationOnMock invocation) {
@@ -189,7 +202,7 @@ public class ParserTestExecutor extends TestExecutor {
                 if (st.getKind() == Statement.Kind.QUERY) {
                     Query query = (Query) st;
                     IQueryRewriter rewriter = sqlppRewriterFactory.createQueryRewriter();
-                    LangRewritingContext rwContext = new LangRewritingContext(metadataProvider, functions,
+                    LangRewritingContext rwContext = new LangRewritingContext(metadataProvider, functions, null,
                             TestUtils.NOOP_WARNING_COLLECTOR, query.getVarCounter());
                     rewrite(rewriter, query, rwContext);
 

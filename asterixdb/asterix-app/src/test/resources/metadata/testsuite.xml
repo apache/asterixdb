@@ -363,6 +363,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
+      <compilation-unit name="exception_create_system_view">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Invalid operation - Cannot create a view belonging to the dataverse: Metadata (in line 20, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="exception">
       <compilation-unit name="exception_declare_system_function">
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1079: Compilation error: Invalid operation - Cannot declare a function belonging to the dataverse: Metadata (in line 22, at column 1)</expected-error>
