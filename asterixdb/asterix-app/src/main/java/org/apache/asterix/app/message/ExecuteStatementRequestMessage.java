@@ -87,12 +87,24 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
     private final ProfileType profileType;
     private final IRequestReference requestReference;
     private final boolean forceDropDataset;
+    private final boolean skipAdmissionPolicy;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
             String clientContextID, String handleUrl, Map<String, String> optionalParameters,
             Map<String, byte[]> statementParameters, boolean multiStatement, ProfileType profileType,
             int statementCategoryRestrictionMask, IRequestReference requestReference, boolean forceDropDataset) {
+        this(requestNodeId, requestMessageId, lang, statementsText, sessionConfig, resultProperties, clientContextID,
+                handleUrl, optionalParameters, statementParameters, multiStatement, profileType,
+                statementCategoryRestrictionMask, requestReference, forceDropDataset, false);
+    }
+
+    protected ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
+            String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
+            String clientContextID, String handleUrl, Map<String, String> optionalParameters,
+            Map<String, byte[]> statementParameters, boolean multiStatement, ProfileType profileType,
+            int statementCategoryRestrictionMask, IRequestReference requestReference, boolean forceDropDataset,
+            boolean skipAdmissionPolicy) {
         this.requestNodeId = requestNodeId;
         this.requestMessageId = requestMessageId;
         this.lang = lang;
@@ -108,6 +120,7 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
         this.profileType = profileType;
         this.requestReference = requestReference;
         this.forceDropDataset = forceDropDataset;
+        this.skipAdmissionPolicy = skipAdmissionPolicy;
     }
 
     @Override
@@ -150,9 +163,10 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
             final IStatementExecutor.StatementProperties statementProperties =
                     new IStatementExecutor.StatementProperties();
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
-            final IRequestParameters requestParameters = new RequestParameters(requestReference, statementsText, null,
-                    resultProperties, stats, statementProperties, outMetadata, clientContextID, optionalParameters,
-                    stmtParams, multiStatement, statementCategoryRestrictionMask, forceDropDataset);
+            final IRequestParameters requestParameters =
+                    new RequestParameters(requestReference, statementsText, null, resultProperties, stats,
+                            statementProperties, outMetadata, clientContextID, optionalParameters, stmtParams,
+                            multiStatement, statementCategoryRestrictionMask, forceDropDataset, skipAdmissionPolicy);
             translator.compileAndExecute(ccApp.getHcc(), requestParameters);
             translator.getWarnings(warnings, maxWarnings - warnings.size());
             stats.updateTotalWarningsCount(parserTotalWarningsCount);
