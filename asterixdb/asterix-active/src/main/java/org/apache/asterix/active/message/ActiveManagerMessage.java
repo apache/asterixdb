@@ -64,6 +64,6 @@ public class ActiveManagerMessage extends CcIdentifiedMessage implements INcAddr
 
     @Override
     public String toString() {
-        return getClass().getSimpleName();
+        return getClass().getSimpleName() + "{" + "kind=" + kind + ", runtimeId=" + runtimeId + '}';
     }
 }
