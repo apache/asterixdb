@@ -191,11 +191,13 @@ public class HttpUtil {
     }
 
     public static void handleStreamInterruptibly(CloseableHttpResponse response,
-            ThrowingConsumer<Reader> streamProcessor, ExecutorService executor, Supplier<String> taskDescription)
+            ThrowingConsumer<Reader> streamProcessor, ExecutorService executor, Supplier<String> descriptionSupplier)
             throws IOException, InterruptedException, ExecutionException {
         // we have to consume the stream in a separate thread, as it not stop on interrupt; we need to
         // instead close the connection to achieve the interrupt
+        String description = descriptionSupplier.get();
         Future<Void> readFuture = executor.submit(() -> {
+            Thread.currentThread().setName(description);
             InputStreamReader reader = new InputStreamReader(response.getEntity().getContent(), StandardCharsets.UTF_8);
             streamProcessor.process(new Reader() {
                 @Override
@@ -219,10 +221,10 @@ public class HttpUtil {
             try {
                 readFuture.get(1, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
-                LOGGER.warn("{} did not exit on stream close due to interrupt after 1s", taskDescription);
+                LOGGER.warn("{} did not exit on stream close due to interrupt after 1s", description);
                 readFuture.cancel(true);
             } catch (ExecutionException ee) {
-                LOGGER.debug("ignoring exception awaiting aborted {} shutdown", taskDescription, ee);
+                LOGGER.debug("ignoring exception awaiting aborted {} shutdown", description, ee);
             }
             throw ex;
         }
