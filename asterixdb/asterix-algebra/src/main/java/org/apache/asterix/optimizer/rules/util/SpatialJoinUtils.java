@@ -368,7 +368,6 @@ public class SpatialJoinUtils {
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.REFERENCE_TILE),
                 new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
                 new MutableObject<>(new VariableReferenceExpression(rightInputVar)), finalMBRExpr,
-            finalMBRExpr,
                 new MutableObject<>(
                         new ConstantExpression(new AsterixConstantValue(new AInt64(spatialJoinAnn.getNumRows())))),
                 new MutableObject<>(
@@ -393,7 +392,7 @@ public class SpatialJoinUtils {
                         new MutableObject<>(new VariableReferenceExpression(leftInputVar)),
                         new MutableObject<>(new VariableReferenceExpression(rightInputVar)));
         //        conditionExprs.add(new MutableObject<>(spatialIntersectCondition1));
-                conditionExprs.add(new MutableObject<>(spatialIntersectCondition2));
+//                conditionExprs.add(new MutableObject<>(spatialIntersectCondition2));
         //        conditionExprs.add(new MutableObject<>(new ConstantExpression(new AsterixConstantValue(ABoolean.TRUE))));
 
         conditionExprs.add(new MutableObject<>(tileIdEquiJoinCondition));
