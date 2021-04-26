@@ -110,8 +110,8 @@ public class ReferenceTileDescriptor extends AbstractScalarFunctionDynamicDescri
                         ATypeTag tag3 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes3[offset3]);
                         ATypeTag tag4 = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes4[offset4]);
 
-                        if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.RECTANGLE) && (tag2 == ATypeTag.RECTANGLE) && (tag3 == ATypeTag.BIGINT)
-                                && (tag4 == ATypeTag.BIGINT)) {
+                        if ((tag0 == ATypeTag.RECTANGLE) && (tag1 == ATypeTag.RECTANGLE) && (tag2 == ATypeTag.RECTANGLE)
+                                && (tag3 == ATypeTag.BIGINT) && (tag4 == ATypeTag.BIGINT)) {
                             double ax1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1
                                     + ARectangleSerializerDeserializer.getBottomLeftCoordinateOffset(Coordinate.X));
                             double ay1 = ADoubleSerializerDeserializer.getDouble(bytes0, offset0 + 1

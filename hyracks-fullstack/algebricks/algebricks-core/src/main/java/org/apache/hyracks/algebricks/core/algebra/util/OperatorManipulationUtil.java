@@ -159,7 +159,7 @@ public class OperatorManipulationUtil {
                                 break;
                             }
                             if ((inputOp.getOperatorTag() == LogicalOperatorTag.EXCHANGE)
-                                    && (op.getOperatorTag() == LogicalOperatorTag.ORDER)) {
+                                && (op.getOperatorTag() == LogicalOperatorTag.ORDER)) {
                                 break;
                             }
                             op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
