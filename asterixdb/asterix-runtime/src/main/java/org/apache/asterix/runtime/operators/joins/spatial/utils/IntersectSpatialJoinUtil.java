@@ -79,10 +79,8 @@ public class IntersectSpatialJoinUtil implements ISpatialJoinUtil {
         int probeTileId = SpatialJoinUtil.getTileId(probeAccessor, probeTupleIndex, idProbe[0]);
         ARectangle rectBuild = SpatialJoinUtil.getRectangle(buildAccessor, buildTupleIndex, idBuild[1]);
         ARectangle rectProbe = SpatialJoinUtil.getRectangle(probeAccessor, probeTupleIndex, idProbe[1]);
-        ARectangle mbr = SpatialJoinUtil.getRectangle(buildAccessor, buildTupleIndex, idBuild[2]);
 
         if (buildTileId == probeTileId) {
-            //            return compareRectangle(rectBuild, rectProbe, mbr, buildTileId, 30, 30);
             return compareRectangle(rectBuild, rectProbe);
         } else {
             return false;
