@@ -1592,8 +1592,6 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier DECODE_DATAVERSE_NAME =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "decode-dataverse-name", 1);
-    public static final FunctionIdentifier DECODE_DATAVERSE_DISPLAY_NAME =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "decode-dataverse-display-name", 1);
 
     static {
         // first, take care of Algebricks builtin functions
@@ -2366,7 +2364,6 @@ public class BuiltinFunctions {
         addPrivateFunction(META_KEY, AnyTypeComputer.INSTANCE, false);
 
         addFunction(DECODE_DATAVERSE_NAME, OrderedListOfAStringTypeComputer.INSTANCE_NULLABLE, true);
-        addFunction(DECODE_DATAVERSE_DISPLAY_NAME, AStringTypeComputer.INSTANCE_NULLABLE, true);
 
         addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE, true);
 

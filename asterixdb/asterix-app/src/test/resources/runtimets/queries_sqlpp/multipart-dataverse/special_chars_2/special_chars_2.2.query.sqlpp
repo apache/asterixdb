@@ -18,7 +18,6 @@
  */
 
 select DataverseName as CanonicalName,
-  decode_dataverse_display_name(DataverseName) as DisplayName,
   decode_dataverse_name(DataverseName) as NameParts
 from Metadata.`Dataverse`
 order by DataverseName;
