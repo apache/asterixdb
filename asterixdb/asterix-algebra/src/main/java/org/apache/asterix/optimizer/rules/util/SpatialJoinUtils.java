@@ -273,8 +273,8 @@ public class SpatialJoinUtils {
             ExchangeOperator exchMBRToForwardLeft = createBroadcastExchangeOp(unionMBRReplicateOperator, context);
             MutableObject<ILogicalOperator> exchMBRToForwardLeftRef = new MutableObject<>(exchMBRToForwardLeft);
             Pair<LogicalVariable, Mutable<ILogicalOperator>> createLeftAssignProjectOperatorResult =
-                createAssignProjectOperator(op, finalMBR, unionMBRReplicateOperator, exchMBRToForwardLeftRef,
-                    context);
+                    createAssignProjectOperator(op, finalMBR, unionMBRReplicateOperator, exchMBRToForwardLeftRef,
+                            context);
             leftUnionMBRVar = createLeftAssignProjectOperatorResult.getFirst();
             Mutable<ILogicalOperator> leftProjectOperatorRef = createLeftAssignProjectOperatorResult.getSecond();
 
@@ -282,8 +282,8 @@ public class SpatialJoinUtils {
             ExchangeOperator exchMBRToForwardRight = createBroadcastExchangeOp(unionMBRReplicateOperator, context);
             MutableObject<ILogicalOperator> exchMBRToForwardRightRef = new MutableObject<>(exchMBRToForwardRight);
             Pair<LogicalVariable, Mutable<ILogicalOperator>> createRightAssignProjectOperatorResult =
-                createAssignProjectOperator(op, finalMBR, unionMBRReplicateOperator, exchMBRToForwardRightRef,
-                    context);
+                    createAssignProjectOperator(op, finalMBR, unionMBRReplicateOperator, exchMBRToForwardRightRef,
+                            context);
             rightUnionMBRVar = createRightAssignProjectOperatorResult.getFirst();
             Mutable<ILogicalOperator> rightProjectOperatorRef = createRightAssignProjectOperatorResult.getSecond();
 
@@ -330,8 +330,8 @@ public class SpatialJoinUtils {
                     new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
                             new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))));
             finalMBRExpr = new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-                    new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))));
+                    new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                            new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))));
         }
 
         // Inject unnest operator to add tile ID to the left and right branch of the join operator
@@ -352,9 +352,9 @@ public class SpatialJoinUtils {
 
         // Reference point test condition
         ScalarFunctionCallExpression referenceIdEquiJoinCondition =
-            new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
-                new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
-                new MutableObject<>(referenceTileId));
+                new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ),
+                        new MutableObject<>(new VariableReferenceExpression(leftTileIdVar)),
+                        new MutableObject<>(referenceTileId));
 
         // Update the join conditions with the tile Id equality condition
         ScalarFunctionCallExpression tileIdEquiJoinCondition =
@@ -382,7 +382,7 @@ public class SpatialJoinUtils {
 
         if (useDynamicMBR) {
             InnerJoinOperator spatialJoinOp =
-                new InnerJoinOperator(new MutableObject<>(updatedJoinCondition), leftInputOp, rightInputOp);
+                    new InnerJoinOperator(new MutableObject<>(updatedJoinCondition), leftInputOp, rightInputOp);
             spatialJoinOp.setSourceLocation(op.getSourceLocation());
             SpatialJoinUtils.setSpatialJoinOp(spatialJoinOp, keysLeftBranch, keysRightBranch, context);
             spatialJoinOp.setSchema(op.getSchema());

@@ -158,19 +158,19 @@ public class OperatorManipulationUtil {
                             if (forceUnpartitioned) {
                                 break;
                             }
-                            if ((inputOp.getOperatorTag() == LogicalOperatorTag.EXCHANGE)
-                                && (op.getOperatorTag() == LogicalOperatorTag.ORDER)) {
-                                break;
-                            }
+                            //                            if ((inputOp.getOperatorTag() == LogicalOperatorTag.EXCHANGE)
+                            //                                && (op.getOperatorTag() == LogicalOperatorTag.ORDER)) {
+                            //                                break;
+                            //                            }
                             op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
                             exit = true;
                             break;
                         }
                         case LOCAL: {
                             op.setExecutionMode(AbstractLogicalOperator.ExecutionMode.LOCAL);
-                            if (inputOp.getOperatorTag() == LogicalOperatorTag.ORDER) {
-                                op.setExecutionMode(oldMode);
-                            }
+                            //                            if (inputOp.getOperatorTag() == LogicalOperatorTag.ORDER) {
+                            //                                op.setExecutionMode(oldMode);
+                            //                            }
                             break;
                         }
                     }
