@@ -65,7 +65,6 @@ create  index msgNgramIx  on TweetMessages (`message-text`) type ngram (3);
 
 create  index topicKeywordIx  on TweetMessages (`referred-topics`) type keyword;
 
-write output to asterix_nc1:"rttest/inverted-index-join_leftouterjoin-probe-pidx-with-join-jaccard-check_idx_01.adm";
 set `compiler.sort.parallel` "true";
 
 select element {'tweet':{'id':t1.tweetid,'topics':t1.`referred-topics`},'similar-tweets':(

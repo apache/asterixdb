@@ -57,7 +57,6 @@ DatasetDecl LineItems(LineItemType) partitioned by [[l_orderkey], [l_linenumber]
 DatasetDecl Orders(OrderType) partitioned by [[o_orderkey]]
 DatasetDecl Customers(CustomerType) partitioned by [[c_custkey]]
 DatasetDecl PartSupp(PartSuppType) partitioned by [[ps_partkey], [ps_suppkey]]
-WriteOutputTo asterix_nc1:/tmp/nested_loj.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

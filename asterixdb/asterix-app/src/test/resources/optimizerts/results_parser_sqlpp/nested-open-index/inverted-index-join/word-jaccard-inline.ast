@@ -13,7 +13,6 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
-WriteOutputTo asterix_nc1:rttest/inverted-index-join-noeqjoin_word-jaccard-inline.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

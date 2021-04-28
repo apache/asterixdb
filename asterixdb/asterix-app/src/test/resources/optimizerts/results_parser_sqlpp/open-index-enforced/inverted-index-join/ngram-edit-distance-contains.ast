@@ -18,7 +18,6 @@ TypeDecl CSXType [
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
 DatasetDecl CSX(CSXType) partitioned by [[id]]
-WriteOutputTo asterix_nc1:rttest/inverted-index-join_ngram-edit-distance-contains.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

@@ -78,7 +78,6 @@ create  dataset Orders(OrderType) primary key o_orderkey WITH {"node-group":{"na
 
 create  dataset Customers(CustomerType) primary key c_custkey WITH {"node-group":{"name":"group1"}};
 
-write output to asterix_nc1:"/tmp/nested_loj.adm";
 select element {'cust':c,'orders':orders}
 from  Customers as c
 with  orders as (

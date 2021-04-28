@@ -61,7 +61,6 @@ create  dataset CSX(CSXType) primary key nested.id;
 
 create  index keyword_index  on CSX (nested.title:string?) type keyword enforced;
 
-write output to asterix_nc1:"rttest/inverted-index-join_word-fuzzyeq-jaccard_01.adm";
 set `simfunction` `jaccard`;
 
 set `simthreshold` `0.5f`;

@@ -479,9 +479,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleExternalDatasetRefreshStatement(metadataProvider, stmt, hcc);
                         break;
                     case WRITE:
-                        Pair<IAWriterFactory, FileSplit> result = handleWriteStatement(stmt);
-                        writerFactory = (result.first != null) ? result.first : writerFactory;
-                        outputFile = result.second;
+                        //Deprecated.
                         break;
                     case FUNCTION_DECL:
                         handleDeclareFunctionStatement(metadataProvider, stmt);

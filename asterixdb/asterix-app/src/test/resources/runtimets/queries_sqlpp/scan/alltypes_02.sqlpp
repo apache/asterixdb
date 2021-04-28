@@ -59,7 +59,6 @@ create type test.AllType as
 
 create external  dataset `All`(AllType) using localfs((`path`=`asterix_nc1://data/nontagged/allData.json`),(`format`=`adm`));
 
-write output to asterix_nc1:`rttest/scan_alltypes_02.adm`
 select element a
 from  `All` as a
 ;

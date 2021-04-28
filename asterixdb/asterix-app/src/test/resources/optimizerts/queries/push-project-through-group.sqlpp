@@ -38,7 +38,6 @@ create  nodegroup group1 if not exists  on
 ;
 create  dataset DBLP(DBLPType) primary key id WITH {"node-group":{"name":"group1"}};
 
-write output to asterix_nc1:"rttest/fuzzyjoin_080.adm";
 select element {'id':paperDBLP.id,'matches':matches}
 from  DBLP as paperDBLP
 with  matches as (

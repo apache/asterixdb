@@ -46,7 +46,6 @@ create  dataset DBLP(DBLPType) primary key id WITH {"node-group":{"name":"group1
 
 create  dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) primary key rank WITH {"node-group":{"name":"group1"}};
 
-write output to asterix_nc1:"rttest/unnest_list_in_subplan.adm";
 select element {'id':idDBLP,'tokens':tokensDBLP}
 from  DBLP as paperDBLP
 with  idDBLP as paperDBLP.id,

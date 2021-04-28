@@ -35,7 +35,6 @@ create  nodegroup group1 if not exists  on
 ;
 create  dataset TOKENSRANKEDADM(TOKENSRANKEDADMType) primary key rank WITH {"node-group":{"name":"group1"}};
 
-write output to asterix_nc1:"rttest/introhashpartitionmerge.adm";
 select element token2.rank
 from  TOKENSRANKEDADM as token1,
       (

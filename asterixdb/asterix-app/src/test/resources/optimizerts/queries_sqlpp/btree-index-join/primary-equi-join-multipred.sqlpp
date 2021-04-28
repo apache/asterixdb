@@ -65,7 +65,6 @@ create  dataset Customers(CustomerType) primary key cid;
 
 create  dataset Orders(OrderType) primary key oid;
 
-write output to asterix_nc1:"rttest/btree-index-join_primary-equi-join-multipred.adm";
 select element {'customer':c,'order':o}
 from  Customers as c,
       Orders as o

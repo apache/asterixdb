@@ -88,7 +88,6 @@ create  nodegroup group1 if not exists  on
     asterix_nc1,
     asterix_nc2
 ;
-write output to asterix_nc1:"/tmp/loj-super-key_01.adm";
 create  dataset LineItems(LineItemType) primary key l_partkey,l_linenumber WITH {"node-group":{"name":"group1"}};
 
 create  dataset PartSupp(PartSuppType) primary key ps_partkey,ps_suppkey WITH {"node-group":{"name":"group1"}};

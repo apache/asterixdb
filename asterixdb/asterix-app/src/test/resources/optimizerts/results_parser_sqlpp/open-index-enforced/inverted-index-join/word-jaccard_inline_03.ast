@@ -8,7 +8,6 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
-WriteOutputTo asterix_nc1:rttest/inverted-index-join_word-jaccard_04.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

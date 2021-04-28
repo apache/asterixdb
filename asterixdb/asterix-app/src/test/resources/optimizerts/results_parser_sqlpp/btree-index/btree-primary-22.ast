@@ -1,5 +1,4 @@
 DataverseUse test
-WriteOutputTo asterix_nc1:rttest/btree-index_btree-primary-22.adm
 TypeDecl TestType [
   open RecordType {
     fname : string,

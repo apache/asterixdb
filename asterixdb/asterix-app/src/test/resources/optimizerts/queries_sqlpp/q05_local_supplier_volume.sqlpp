@@ -110,7 +110,6 @@ create  dataset Nations(NationType) primary key n_nationkey WITH {"node-group":{
 
 create  dataset Regions(RegionType) primary key r_regionkey WITH {"node-group":{"name":"group1"}};
 
-write output to asterix_nc1:"/tmp/q5_local_supplier.adm";
 select element {'n_name':n_name,'revenue':revenue}
 from  Customers as c,
       (

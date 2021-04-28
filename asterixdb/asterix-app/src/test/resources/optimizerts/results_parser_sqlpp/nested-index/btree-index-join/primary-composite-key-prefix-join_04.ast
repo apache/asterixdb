@@ -11,7 +11,6 @@ TypeDecl Name [
   }
 ]
 DatasetDecl Names(Name) partitioned by [[nested, fname], [nested, lname]]
-WriteOutputTo asterix_nc1:rttest/btree-index-join_primary-composite-key-prefix-prefix-join_04.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

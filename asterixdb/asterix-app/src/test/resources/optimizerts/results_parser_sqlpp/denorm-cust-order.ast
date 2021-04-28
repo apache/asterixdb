@@ -31,7 +31,6 @@ TypeDecl OrderType [
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[cid]]
 DatasetDecl Orders(OrderType) partitioned by [[oid]]
-WriteOutputTo asterix_nc1:/tmp/custorder.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

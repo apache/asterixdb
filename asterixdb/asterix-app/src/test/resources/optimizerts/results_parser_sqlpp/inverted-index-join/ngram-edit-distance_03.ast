@@ -9,7 +9,6 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
-WriteOutputTo asterix_nc1:rttest/inverted-index-join_ngram-edit-distance_03.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

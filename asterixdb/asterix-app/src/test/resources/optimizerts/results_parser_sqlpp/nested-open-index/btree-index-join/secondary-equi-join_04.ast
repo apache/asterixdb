@@ -13,7 +13,6 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[nested, id]]
-WriteOutputTo asterix_nc1:rttest/btree-index-join_title-secondary-equi-join_04.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

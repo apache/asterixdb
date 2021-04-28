@@ -54,7 +54,6 @@ create  dataset Customers(CustomerType) primary key cid;
 
 create  index interests_index  on Customers (interests) type keyword;
 
-write output to asterix_nc1:"rttest/inverted-index-complex_olist-edit-distance-check-let.adm";
 set `compiler.sort.parallel` "true";
 
 select element c

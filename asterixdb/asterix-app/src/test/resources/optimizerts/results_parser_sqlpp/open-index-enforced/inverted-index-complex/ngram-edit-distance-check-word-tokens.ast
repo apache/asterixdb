@@ -8,7 +8,6 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
-WriteOutputTo asterix_nc1:rttest/inverted-index-complex_ngram-edit-distance-check-word-tokens.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

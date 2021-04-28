@@ -89,7 +89,6 @@ create  dataset Customers(CustomerType) primary key c_custkey WITH {"node-group"
 
 create  dataset PartSupp(PartSuppType) primary key ps_partkey,ps_suppkey WITH {"node-group":{"name":"group1"}};
 
-write output to asterix_nc1:"/tmp/nested_loj.adm";
 select element {'cust':c,'orders':orders}
 from  Customers as c
 with  orders as (

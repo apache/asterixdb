@@ -56,7 +56,6 @@ load  dataset LineItem using localfs ((`path`=`asterix_nc1://data/tpch0.001/line
 delete from LineItem
  where l_orderkey >= 10;
 
-write output to asterix_nc1:`rttest/dml_delete-syntax-change.adm`
 select element c
 from  LineItem as c
 order by c.l_orderkey,c.l_linenumber

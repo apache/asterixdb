@@ -41,7 +41,6 @@ create  nodegroup group1 if not exists  on
 ;
 create  dataset Customers(CustomerType) primary key c_custkey WITH {"node-group":{"name":"group1"}};
 
-write output to asterix_nc1:"/tmp/.adm";
 select element name
 from  Customers as c
 group by c.c_name as name

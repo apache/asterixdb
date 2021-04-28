@@ -1,5 +1,4 @@
 DataverseUse test
-WriteOutputTo asterix_nc1:rttest/filter-nested.adm
 TypeDecl TestTypetmp [
   open RecordType {
     fname : string,

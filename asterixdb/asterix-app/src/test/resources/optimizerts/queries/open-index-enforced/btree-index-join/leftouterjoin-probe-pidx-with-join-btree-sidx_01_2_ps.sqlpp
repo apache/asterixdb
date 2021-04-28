@@ -55,7 +55,6 @@ create  index msgCountAIx  on TweetMessages (countA:integer?) type btree enforce
 
 create  index msgCountBIx  on TweetMessages (countB:integer?) type btree enforced;
 
-write output to asterix_nc1:"rttest/btree-index-join_leftouterjoin-probe-pidx-with-join-btree-sidx_01.adm";
 set `compiler.sort.parallel` "true";
 
 select element {'tweetid1':t1.tweetid,'count1':t1.countA,'t2info':(

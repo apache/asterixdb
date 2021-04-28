@@ -19,7 +19,6 @@ TypeDecl CSXType [
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
 DatasetDecl CSX(CSXType) partitioned by [[id]]
-WriteOutputTo asterix_nc1:rttest/inverted-index-join_ngram-jaccard-check_02.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

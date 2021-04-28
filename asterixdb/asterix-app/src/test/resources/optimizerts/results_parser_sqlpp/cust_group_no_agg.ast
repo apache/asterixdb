@@ -12,7 +12,6 @@ TypeDecl CustomerType [
   }
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[c_custkey]]
-WriteOutputTo asterix_nc1:/tmp/.adm
 Query:
 SELECT ELEMENT [
 Variable [ Name=$name ]

@@ -40,7 +40,6 @@ create  dataset DBLP(DBLPType) primary key id;
 
 create  index keyword_index  on DBLP (title:string?) type keyword enforced;
 
-write output to asterix_nc1:"rttest/inverted-index-basic_word-contains.adm";
 set `compiler.sort.parallel` "true";
 
 select element o

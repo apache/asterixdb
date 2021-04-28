@@ -1,5 +1,4 @@
 DataverseUse test
-WriteOutputTo asterix_nc1:rttest/unnest-to-join_02.adm
 Query:
 SELECT ELEMENT [
 QuantifiedExpression SOME [

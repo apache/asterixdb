@@ -6,7 +6,6 @@ TypeDecl TOKENSRANKEDADMType [
   }
 ]
 DatasetDecl TOKENSRANKEDADM(TOKENSRANKEDADMType) partitioned by [[rank]]
-WriteOutputTo asterix_nc1:rttest/introhashpartitionmerge.adm
 Query:
 SELECT ELEMENT [
 FieldAccessor [

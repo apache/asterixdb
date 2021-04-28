@@ -23,7 +23,6 @@
  */
 use custord;
 
-write output to asterix_nc1:"mdtest/transaction_verify_failure_previous_success.adm";
 
 SELECT VALUE t
 FROM Metadata.`Datatype` t

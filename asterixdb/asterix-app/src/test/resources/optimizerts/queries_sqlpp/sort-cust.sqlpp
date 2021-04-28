@@ -49,7 +49,6 @@ create  nodegroup group1 if not exists  on
 ;
 create  dataset Customers(CustomerType) primary key cid WITH {"node-group":{"name":"group1"}};
 
-write output to asterix_nc1:"/tmp/custlimit.adm";
 select element {'custname':c.name,'custage':c.age}
 from  Customers as c
 order by c.age

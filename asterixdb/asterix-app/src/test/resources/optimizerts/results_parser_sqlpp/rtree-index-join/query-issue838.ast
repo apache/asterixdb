@@ -14,7 +14,6 @@ TypeDecl TweetHistorySubscription [
 ]
 DatasetDecl TweetHistorySubscriptions(TweetHistorySubscription) partitioned by [[subscription-id]]
 DatasetDecl TweetMessages(TweetMessageType) partitioned by [[tweetid]]
-WriteOutputTo asterix_nc1:rttest/query-issue838.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

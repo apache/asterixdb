@@ -12,7 +12,6 @@ TypeDecl CustomerType [
   }
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[c_custkey]]
-WriteOutputTo asterix_nc1:rttest/consolidate-selects-simple.aql
 Query:
 SELECT ELEMENT [
 Variable [ Name=$c ]

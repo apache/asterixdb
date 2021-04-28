@@ -61,7 +61,6 @@ create  dataset Customers(CustomerType) primary key cid WITH {"node-group":{"nam
 
 create  dataset Orders(OrderType) primary key oid WITH {"node-group":{"name":"group1"}};
 
-write output to asterix_nc1:"/tmp/custorder.adm";
 select element {'cid':cid,'cust':(from g select c),'cnt-orders':count(o),'orders': (from g select o)}
 from  Customers as c,
       Orders as o

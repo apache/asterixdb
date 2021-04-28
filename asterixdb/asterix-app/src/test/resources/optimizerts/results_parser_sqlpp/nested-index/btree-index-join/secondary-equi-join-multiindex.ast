@@ -43,7 +43,6 @@ TypeDecl FacebookMessageType [
 ]
 DatasetDecl FacebookUsers(FacebookUserType) partitioned by [[nested, id]]
 DatasetDecl FacebookMessages(FacebookMessageType) partitioned by [[nested, message-id]]
-WriteOutputTo asterix_nc1:rttest/btree-index-join_title-secondary-equi-join-multiindex.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

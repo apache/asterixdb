@@ -49,7 +49,6 @@ create  nodegroup group1 if not exists  on
 ;
 create  dataset Customers(CustomerType) primary key cid WITH {"node-group":{"name":"group1"}};
 
-write output to asterix_nc1:"rttest/gby-using-orderby-desc.adm";
 set `compiler.sort.parallel` "true";
 
 select element {'name':name,'age':age}

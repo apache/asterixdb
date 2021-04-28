@@ -29,7 +29,6 @@ create  dataverse test;
 use test;
 
 
-write output to asterix_nc1:"rttest/btree-index_btree-primary-04.adm";
 create type test.TestTypetmp as
 {
   fname : string,

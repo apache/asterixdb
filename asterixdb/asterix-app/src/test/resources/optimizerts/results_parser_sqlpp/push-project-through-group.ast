@@ -9,7 +9,6 @@ TypeDecl DBLPType [
   }
 ]
 DatasetDecl DBLP(DBLPType) partitioned by [[id]]
-WriteOutputTo asterix_nc1:rttest/fuzzyjoin_080.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

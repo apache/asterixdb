@@ -39,7 +39,6 @@ create type test.DBLPType as
 
 create  dataset DBLP(DBLPType) primary key id;
 
-write output to asterix_nc1:"rttest/similarity_fuzzyeq-to-jaccard-check.adm";
 set `simfunction` `jaccard`;
 
 set `simthreshold` `0.8f`;

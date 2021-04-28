@@ -51,7 +51,6 @@ create  nodegroup group1 if not exists  on
 ;
 create  dataset User(UserType) primary key name WITH {"node-group":{"name":"group1"}};
 
-write output to asterix_nc1:"/tmp/q1.adm";
 select element {'name':user.name}
 from  User as user
 where some i in user.interests satisfies (i = 'movies')

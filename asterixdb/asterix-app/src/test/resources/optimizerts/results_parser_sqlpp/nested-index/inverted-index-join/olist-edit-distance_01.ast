@@ -29,7 +29,6 @@ TypeDecl CustomerType [
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[nested, cid]]
 DatasetDecl Customers2(CustomerType) partitioned by [[nested, cid]]
-WriteOutputTo asterix_nc1:rttest/inverted-index-join_olist-edit-distance_01.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [

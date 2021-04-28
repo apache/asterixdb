@@ -41,7 +41,6 @@ TypeDecl OrderType [
 ]
 DatasetDecl Customers(CustomerType) partitioned by [[nested, cid]]
 DatasetDecl Orders(OrderType) partitioned by [[nested, oid]]
-WriteOutputTo asterix_nc1:rttest/btree-index-join_primary-equi-join_05.adm
 Query:
 SELECT ELEMENT [
 RecordConstructor [
