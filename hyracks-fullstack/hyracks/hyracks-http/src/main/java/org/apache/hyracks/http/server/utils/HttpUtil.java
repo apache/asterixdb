@@ -43,6 +43,7 @@ import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.BaseRequest;
 import org.apache.hyracks.http.server.FormUrlEncodedRequest;
+import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.util.ThrowingConsumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -228,6 +229,11 @@ public class HttpUtil {
             }
             throw ex;
         }
+    }
+
+    public static HttpScheme getScheme(HttpServer server, FullHttpRequest request) {
+        return server.getScheme() == HttpScheme.HTTPS || "https".equals(request.headers().get(X_FORWARDED_PROTO))
+                ? HttpScheme.HTTPS : HttpScheme.HTTP;
     }
 
     public static class ContentType {
