@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.library.msgpack.MessageUnpackerToADM;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -77,9 +78,11 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
         for (int i = 0; i < argValues.length; i++) {
             argValues[i] = VoidPointable.FACTORY.createPointable();
         }
-        //TODO: these should be dynamic
-        this.argHolder = ByteBuffer.wrap(new byte[Short.MAX_VALUE * 2]);
-        this.outputWrapper = ByteBuffer.wrap(new byte[Short.MAX_VALUE * 2]);
+        //TODO: these should be dynamic. this static size picking is a temporary bodge until this works like
+        //      v-size frames do or these construction buffers are removed entirely
+        int maxArgSz = ExternalDataUtils.getArgBufferSize();
+        this.argHolder = ByteBuffer.wrap(new byte[maxArgSz]);
+        this.outputWrapper = ByteBuffer.wrap(new byte[maxArgSz]);
         this.evaluatorContext = ctx;
         this.sourceLocation = sourceLoc;
         this.unpackerInput = new ArrayBufferInput(new byte[0]);

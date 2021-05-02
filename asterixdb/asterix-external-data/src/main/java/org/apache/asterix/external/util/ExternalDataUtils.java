@@ -80,6 +80,7 @@ import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
+import org.apache.hyracks.util.StorageUtil;
 
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
@@ -106,6 +107,8 @@ import software.amazon.awssdk.services.s3.model.S3Response;
 public class ExternalDataUtils {
 
     private static final Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = new EnumMap<>(ATypeTag.class);
+    private static final int DEFAULT_MAX_ARGUMENT_SZ = 1024 * 1024;
+    private static final int HEADER_FUDGE = 64;
 
     static {
         valueParserFactoryMap.put(ATypeTag.INTEGER, IntegerParserFactory.INSTANCE);
@@ -996,5 +999,21 @@ public class ExternalDataUtils {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
             }
         }
+    }
+
+    public static int roundUpToNearestFrameSize(int size, int framesize) {
+        return ((size / framesize) + 1) * framesize;
+    }
+
+    public static int getArgBufferSize() {
+        int maxArgSz = DEFAULT_MAX_ARGUMENT_SZ + HEADER_FUDGE;
+        String userArgSz = System.getProperty("udf.buf.size");
+        if (userArgSz != null) {
+            long parsedSize = StorageUtil.getByteValue(userArgSz) + HEADER_FUDGE;
+            if (parsedSize < Integer.MAX_VALUE && parsedSize > 0) {
+                maxArgSz = (int) parsedSize;
+            }
+        }
+        return maxArgSz;
     }
 }
