@@ -97,7 +97,7 @@ public class SpatialJoinPOperator extends AbstractJoinPOperator {
         IPartitioningProperty pp;
         AbstractLogicalOperator op = (AbstractLogicalOperator) iop;
 
-        if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
+        if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.LOCAL) {
             AbstractLogicalOperator op0 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
             IPhysicalPropertiesVector pv0 = op0.getPhysicalOperator().getDeliveredProperties();
             AbstractLogicalOperator op1 = (AbstractLogicalOperator) op.getInputs().get(1).getValue();

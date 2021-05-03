@@ -20,7 +20,6 @@ package org.apache.asterix.optimizer.rules.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -28,17 +27,11 @@ import org.apache.asterix.algebra.operators.physical.SpatialJoinPOperator;
 import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt64;
-import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.base.ARectangle;
 import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.base.AUnorderedList;
-import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.types.AOrderedListType;
-import org.apache.asterix.om.types.AUnorderedListType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.operators.joins.spatial.utils.ISpatialJoinUtilFactory;
 import org.apache.asterix.runtime.operators.joins.spatial.utils.IntersectSpatialJoinUtilFactory;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -64,7 +57,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ForwardOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -76,7 +68,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AssignPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.BroadcastExchangePOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.EmptyTupleSourcePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.NestedLoopJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.OneToOneExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
@@ -326,13 +317,11 @@ public class SpatialJoinUtils {
 
         Mutable<ILogicalExpression> leftUnionMBRExpr;
         Mutable<ILogicalExpression> rightUnionMBRExpr;
-        Mutable<ILogicalExpression> finalMBRExpr;
-        MutableObject<ILogicalOperator> rightBranchOfReferencePointTestJoin;
+        Mutable<ILogicalExpression> finalMBRExpr = null;
         if (useDynamicMBR) {
             leftUnionMBRExpr = new MutableObject<>(new VariableReferenceExpression(leftUnionMBRVar));
             rightUnionMBRExpr = new MutableObject<>(new VariableReferenceExpression(rightUnionMBRVar));
             finalMBRExpr = new MutableObject<>(new VariableReferenceExpression(finalMBR));
-            rightBranchOfReferencePointTestJoin = exchMBRToReferencePointTestRef;
         } else {
             leftUnionMBRExpr = new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
                     new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
@@ -340,33 +329,9 @@ public class SpatialJoinUtils {
             rightUnionMBRExpr = new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
                     new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
                             new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))));
-            List<IAObject> finalMbrSingletonList = new ArrayList<>();
-            finalMbrSingletonList.add(new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
-                new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())));
             finalMBRExpr = new MutableObject<>(new ConstantExpression(new AsterixConstantValue(
-                new AUnorderedList(new AUnorderedListType(BuiltinType.ARECTANGLE, null), finalMbrSingletonList))));
-
-            EmptyTupleSourceOperator emptyTupleSourceOperator = new EmptyTupleSourceOperator();
-            emptyTupleSourceOperator.setSourceLocation(op.getSourceLocation());
-            emptyTupleSourceOperator.setExecutionMode(op.getExecutionMode());
-            emptyTupleSourceOperator.setPhysicalOperator(new EmptyTupleSourcePOperator());
-
-            LogicalVariable finalMBRVar = context.newVar();
-            UnnestingFunctionCallExpression funcExpr = new UnnestingFunctionCallExpression(
-                BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SCAN_COLLECTION), finalMBRExpr);
-            UnnestOperator unnestOperator = new UnnestOperator(finalMBRVar, new MutableObject<>(funcExpr));
-            unnestOperator.setSourceLocation(op.getSourceLocation());
-            unnestOperator.setExecutionMode(op.getExecutionMode());
-            unnestOperator.getInputs().add(new MutableObject<>(emptyTupleSourceOperator));
-
-            context.computeAndSetTypeEnvironmentForOperator(emptyTupleSourceOperator);
-            emptyTupleSourceOperator.recomputeSchema();
-
-            context.computeAndSetTypeEnvironmentForOperator(unnestOperator);
-            unnestOperator.recomputeSchema();
-
-            finalMBRExpr = new MutableObject<>(new VariableReferenceExpression(finalMBRVar));
-            rightBranchOfReferencePointTestJoin = new MutableObject<>(unnestOperator);
+                    new ARectangle(new APoint(spatialJoinAnn.getMinX(), spatialJoinAnn.getMinY()),
+                            new APoint(spatialJoinAnn.getMaxX(), spatialJoinAnn.getMaxY())))));
         }
 
         // Inject unnest operator to add tile ID to the left and right branch of the join operator
@@ -398,12 +363,15 @@ public class SpatialJoinUtils {
                         new MutableObject<>(new VariableReferenceExpression(rightTileIdVar)));
         conditionExprs.add(new MutableObject<>(tileIdEquiJoinCondition));
 
+        if (!useDynamicMBR) {
+            conditionExprs.add(new MutableObject<>(referenceIdEquiJoinCondition));
+        }
+
         ScalarFunctionCallExpression updatedJoinCondition = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND), conditionExprs);
         Mutable<ILogicalExpression> joinConditionRef = op.getCondition();
         joinConditionRef.setValue(updatedJoinCondition);
 
-        // Set up left and right branch of the spatial join operator
         List<LogicalVariable> keysLeftBranch = new ArrayList<>();
         keysLeftBranch.add(leftTileIdVar);
         keysLeftBranch.add(leftInputVar);
@@ -412,32 +380,35 @@ public class SpatialJoinUtils {
         keysRightBranch.add(rightTileIdVar);
         keysRightBranch.add(rightInputVar);
 
-        InnerJoinOperator spatialJoinOp =
-            new InnerJoinOperator(new MutableObject<>(updatedJoinCondition), leftInputOp, rightInputOp);
-        spatialJoinOp.setSourceLocation(op.getSourceLocation());
-        SpatialJoinUtils.setSpatialJoinOp(spatialJoinOp, keysLeftBranch, keysRightBranch, context);
-        spatialJoinOp.setSchema(op.getSchema());
-        context.computeAndSetTypeEnvironmentForOperator(spatialJoinOp);
+        if (useDynamicMBR) {
+            InnerJoinOperator spatialJoinOp =
+                    new InnerJoinOperator(new MutableObject<>(updatedJoinCondition), leftInputOp, rightInputOp);
+            spatialJoinOp.setSourceLocation(op.getSourceLocation());
+            SpatialJoinUtils.setSpatialJoinOp(spatialJoinOp, keysLeftBranch, keysRightBranch, context);
+            spatialJoinOp.setSchema(op.getSchema());
+            context.computeAndSetTypeEnvironmentForOperator(spatialJoinOp);
 
-        Mutable<ILogicalOperator> opRef = new MutableObject<>(op);
-        Mutable<ILogicalOperator> spatialJoinOpRef = new MutableObject<>(spatialJoinOp);
+            Mutable<ILogicalOperator> opRef = new MutableObject<>(op);
+            Mutable<ILogicalOperator> spatialJoinOpRef = new MutableObject<>(spatialJoinOp);
 
-        InnerJoinOperator referencePointTestJoinOp =
-            new InnerJoinOperator(new MutableObject<>(referenceIdEquiJoinCondition), spatialJoinOpRef,
-                rightBranchOfReferencePointTestJoin);
-        referencePointTestJoinOp.setPhysicalOperator(new NestedLoopJoinPOperator(
-            AbstractBinaryJoinOperator.JoinKind.INNER, AbstractJoinPOperator.JoinPartitioningType.BROADCAST));
-        MutableObject<ILogicalOperator> referencePointTestJoinOpRef = new MutableObject<>(referencePointTestJoinOp);
-        referencePointTestJoinOp.setSourceLocation(op.getSourceLocation());
-        referencePointTestJoinOp.recomputeSchema();
-        context.computeAndSetTypeEnvironmentForOperator(referencePointTestJoinOp);
-
-        opRef.setValue(referencePointTestJoinOpRef.getValue());
-        op.getInputs().clear();
-        op.getInputs().addAll(referencePointTestJoinOp.getInputs());
-        op.setSchema(referencePointTestJoinOp.getSchema());
-        op.setPhysicalOperator(referencePointTestJoinOp.getPhysicalOperator());
-        op.getCondition().setValue(referencePointTestJoinOp.getCondition().getValue());
+            InnerJoinOperator referencePointTestJoinOp =
+                    new InnerJoinOperator(new MutableObject<>(referenceIdEquiJoinCondition), spatialJoinOpRef,
+                            exchMBRToReferencePointTestRef);
+            referencePointTestJoinOp.setPhysicalOperator(new NestedLoopJoinPOperator(
+                    AbstractBinaryJoinOperator.JoinKind.INNER, AbstractJoinPOperator.JoinPartitioningType.BROADCAST));
+            MutableObject<ILogicalOperator> referencePointTestJoinOpRef = new MutableObject<>(referencePointTestJoinOp);
+            referencePointTestJoinOp.setSourceLocation(op.getSourceLocation());
+            referencePointTestJoinOp.recomputeSchema();
+            context.computeAndSetTypeEnvironmentForOperator(referencePointTestJoinOp);
+            opRef.setValue(referencePointTestJoinOpRef.getValue());
+            op.getInputs().clear();
+            op.getInputs().addAll(referencePointTestJoinOp.getInputs());
+            op.setSchema(referencePointTestJoinOp.getSchema());
+            op.setPhysicalOperator(referencePointTestJoinOp.getPhysicalOperator());
+            op.getCondition().setValue(referencePointTestJoinOp.getCondition().getValue());
+        } else {
+            SpatialJoinUtils.setSpatialJoinOp(op, keysLeftBranch, keysRightBranch, context);
+        }
     }
 
     private static Pair<LogicalVariable, Mutable<ILogicalOperator>> createAssignProjectOperator(
