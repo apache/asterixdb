@@ -33,6 +33,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URIUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -78,7 +79,7 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
 
     private HttpClientContext createHttpClientContext(URI path, Pair<String, String> credentials) {
         HttpClientContext hcCtx = HttpClientContext.create();
-        HttpHost h = new HttpHost(path.getHost(), path.getPort(), "http");
+        HttpHost h = URIUtils.extractHost(path);
         CredentialsProvider cp = new BasicCredentialsProvider();
         cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(credentials.first, credentials.second));
         hcCtx.setCredentialsProvider(cp);

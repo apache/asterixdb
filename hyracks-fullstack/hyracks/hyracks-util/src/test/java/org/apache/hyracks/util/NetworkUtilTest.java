@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.util;
 
+import java.net.URI;
+
+import org.apache.http.client.utils.URIUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
@@ -38,5 +41,13 @@ public class NetworkUtilTest {
         Assert.assertEquals("localhost.localdomain.local:1234",
                 NetworkUtil.defaultPort("localhost.localdomain.local:1234", 9999));
 
+        Assert.assertEquals("[::1]:1234",
+                NetworkUtil.toHostPort(URIUtils.extractHost(URI.create("http://[::1]:1234"))));
+        Assert.assertEquals("[::1]:80", NetworkUtil.toHostPort(URIUtils.extractHost(URI.create("http://[::1]"))));
+        Assert.assertEquals("[::1]:443", NetworkUtil.toHostPort(URIUtils.extractHost(URI.create("https://[::1]"))));
+        Assert.assertEquals("[::1]:1234",
+                NetworkUtil.toHostPort(URIUtils.extractHost(URI.create("https://[::1]:1234")), 18091));
+        Assert.assertEquals("[::1]:8091",
+                NetworkUtil.toHostPort(URIUtils.extractHost(URI.create("http://[::1]")), 8091));
     }
 }
