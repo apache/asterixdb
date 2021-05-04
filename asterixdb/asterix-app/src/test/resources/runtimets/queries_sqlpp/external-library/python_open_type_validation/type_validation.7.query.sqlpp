@@ -18,8 +18,6 @@
  */
 use externallibtest;
 
-create function typeValidation(a, b, c, d, e, f, g, h)
-  as "roundtrip", "Tests.roundtrip" at testlib;
+typeValidation(907, 9.07, "907", 9.07, true, unix_time_from_date_in_days(date("2013-01-01")),
+               unix_time_from_datetime_in_secs(datetime("1989-09-07T12:13:14.039Z")), missing);
 
-create function typeValidationNullCall(a, b, c, d, e, f, g, h)
-  as "roundtrip", "Tests.roundtrip" at testlib with {"null-call": true};
