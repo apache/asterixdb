@@ -115,6 +115,13 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
         if (op.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
         }
-        return op.acceptExpressionTransform(expr -> rewriteFunctionArgs(op, expr, context));
+        if (context.checkIfInDontApplySet(this, op)) {
+            return false;
+        }
+        boolean applied = op.acceptExpressionTransform(expr -> rewriteFunctionArgs(op, expr, context));
+        if (applied) {
+            context.addToDontApplySet(this, op);
+        }
+        return applied;
     }
 }

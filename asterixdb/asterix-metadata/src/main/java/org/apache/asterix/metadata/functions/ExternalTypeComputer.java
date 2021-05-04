@@ -33,8 +33,9 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ExternalTypeComputer extends AbstractResultTypeComputer {
 
-    private IAType resultType;
-    private List<IAType> paramPrimeTypes;
+    private final IAType resultType;
+    private final List<IAType> paramPrimeTypes;
+    private final boolean nullCall;
 
     @Override
     protected void checkArgType(FunctionIdentifier funcId, int argIndex, IAType type, SourceLocation sourceLoc)
@@ -47,14 +48,20 @@ public class ExternalTypeComputer extends AbstractResultTypeComputer {
         }
     }
 
-    public ExternalTypeComputer(IAType resultPrimeType, List<IAType> paramPrimeTypes) {
+    public ExternalTypeComputer(IAType resultPrimeType, List<IAType> paramPrimeTypes, boolean nullCall) {
         this.resultType = resultPrimeType.getTypeTag() == ATypeTag.ANY ? resultPrimeType
                 : AUnionType.createUnknownableType(resultPrimeType);
         this.paramPrimeTypes = paramPrimeTypes;
+        this.nullCall = nullCall;
     }
 
     @Override
     protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) {
         return resultType;
+    }
+
+    @Override
+    protected boolean propagateNullAndMissing() {
+        return !nullCall;
     }
 }

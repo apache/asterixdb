@@ -42,6 +42,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
+      <compilation-unit name="type_name">
+        <output-dir compare="Text">type_name</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
       <compilation-unit name="type_validation">
         <output-dir compare="Text">type_validation</output-dir>
       </compilation-unit>

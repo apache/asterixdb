@@ -69,7 +69,7 @@ public class ExternalFunctionCompilerUtil {
 
         IAType returnType = getType(function.getReturnType(), metadataProvider);
 
-        IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, paramTypes);
+        IResultTypeComputer typeComputer = new ExternalTypeComputer(returnType, paramTypes, function.getNullCall());
 
         ExternalFunctionLanguage lang = getExternalFunctionLanguage(function.getLanguage());
 
