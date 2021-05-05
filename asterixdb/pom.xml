@@ -46,7 +46,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <file.encoding>UTF-8</file.encoding>
     <jvm.extraargs />
-    <source.jdk.version>1.8</source.jdk.version>
+    <source.jdk.version>11</source.jdk.version>
+    <target.jdk.version>11</target.jdk.version>
     <javac.xlint.value>all</javac.xlint.value>
     <source-format.goal>format</source-format.goal>
     <source-format.skip>false</source-format.skip>
@@ -315,6 +316,20 @@
                 <requireMavenVersion>
                   <version>[3.3.9,)</version>
                 </requireMavenVersion>
+                <requireJavaVersion>
+                  <version>[11,)</version>
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+          <execution>
+            <id>ensure-no-duplicate-deps</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <banDuplicatePomDependencyVersions/>
               </rules>
             </configuration>
           </execution>
@@ -529,7 +544,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.21.0</version>
+          <version>3.0.0-M5</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -577,7 +592,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-dependency-plugin</artifactId>
-          <version>3.1.1</version>
+          <version>3.1.2</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -626,6 +641,11 @@
           <artifactId>impsort-maven-plugin</artifactId>
           <version>1.2.0</version>
         </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>3.0.0-M3</version>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -670,7 +690,7 @@
         </property>
       </activation>
       <properties>
-        <test.heap.size>2048</test.heap.size>
+        <test.heap.size>4096</test.heap.size>
       </properties>
     </profile>
 
@@ -683,7 +703,7 @@
         </property>
       </activation>
       <properties>
-        <test.heap.size>3072</test.heap.size>
+        <test.heap.size>4096</test.heap.size>
       </properties>
     </profile>
     <profile>
@@ -831,40 +851,6 @@
         <test.includes/>
         <failIfNoTests>false</failIfNoTests>
       </properties>
-    </profile>
-    <profile>
-      <id>java8</id>
-      <activation>
-        <jdk>[1.8,)</jdk>
-      </activation>
-      <properties>
-        <target.jdk.version>8</target.jdk.version>
-      </properties>
-    </profile>
-    <profile>
-      <id>java8-bootclasspath</id>
-      <activation>
-        <property>
-          <name>java8-bootclasspath</name>
-        </property>
-      </activation>
-      <properties>
-        <target.jdk.version>8</target.jdk.version>
-      </properties>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <configuration>
-              <compilerArgs combine.children="append">
-                <arg>-bootclasspath</arg>
-                <arg>${java8-bootclasspath}</arg>
-              </compilerArgs>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
     </profile>
   </profiles>
 

@@ -38,6 +38,28 @@
     <root.dir>${basedir}/..</root.dir>
   </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <parallel>all</parallel>
+            <forkCount>4</forkCount>
+            <reuseForks>false</reuseForks>
+            <threadCount>1</threadCount>
+            <argLine>
+              -enableassertions -Xmx${test.heap.size}m
+              -Dfile.encoding=UTF-8
+              -DrunSlowAQLTests=${runSlowAQLTests}
+              -Xdebug
+              ${coverageArgLine}
+            </argLine>
+          </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.asterix</groupId>
@@ -61,7 +83,7 @@
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
+      <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

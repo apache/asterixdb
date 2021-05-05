@@ -19,7 +19,6 @@
 package org.apache.asterix.test.sqlpp;
 
 import static org.apache.hyracks.util.file.FileUtil.canonicalize;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -58,6 +57,7 @@ import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.hyracks.test.support.TestUtils;
 import org.junit.Assert;
+import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -136,16 +136,17 @@ public class ParserTestExecutor extends TestExecutor {
             when(metadataProvider.getDefaultDataverseName()).thenReturn(dvName);
             when(metadataProvider.getConfig()).thenReturn(config);
             when(config.get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");
-            when(metadataProvider.findDataset(anyString(), anyString())).thenAnswer(new Answer<Dataset>() {
-                @Override
-                public Dataset answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    final Dataset mockDataset = mock(Dataset.class);
-                    String fullyQualifiedName = args[0] != null ? args[0] + "." + args[1] : (String) args[1];
-                    when(mockDataset.getFullyQualifiedName()).thenReturn(fullyQualifiedName);
-                    return mockDataset;
-                }
-            });
+            when(metadataProvider.findDataset(Mockito.<String> any(), Mockito.<String> any()))
+                    .thenAnswer(new Answer<Dataset>() {
+                        @Override
+                        public Dataset answer(InvocationOnMock invocation) {
+                            Object[] args = invocation.getArguments();
+                            final Dataset mockDataset = mock(Dataset.class);
+                            String fullyQualifiedName = args[0] != null ? args[0] + "." + args[1] : (String) args[1];
+                            when(mockDataset.getFullyQualifiedName()).thenReturn(fullyQualifiedName);
+                            return mockDataset;
+                        }
+                    });
 
             for (Statement st : statements) {
                 if (st.getKind() == Statement.Kind.QUERY) {

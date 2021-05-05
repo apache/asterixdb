@@ -21,16 +21,16 @@ package org.apache.hyracks.test.http;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
-import java.lang.reflect.Field;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.ByteBufAllocatorMetric;
+import io.netty.buffer.ByteBufAllocatorMetricProvider;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.util.internal.PlatformDependent;
 
 public class HttpTestUtil {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -66,14 +66,12 @@ public class HttpTestUtil {
         report.append("---------------------------- Netty ----------------------------");
         report.append('\n');
         try {
-            Field field = PlatformDependent.class.getDeclaredField("DIRECT_MEMORY_COUNTER");
-            field.setAccessible(true);
-            AtomicLong usedDirectMemory = (AtomicLong) field.get(null);
-            long used = usedDirectMemory.get();
-            report.append("Current PlatformDependent.DIRECT_MEMORY_COUNTER: ");
+            ByteBufAllocatorMetric memUsage = ((ByteBufAllocatorMetricProvider) ByteBufAllocator.DEFAULT).metric();
+            long used = memUsage.usedDirectMemory();
+            report.append("Current default allocator direct buffer usage: ");
             report.append(used);
             report.append('\n');
-            report.append("Maximum PlatformDependent.DIRECT_MEMORY_COUNTER: ");
+            report.append("Maximum default allocator direct buffer usage: ");
             maxMemUsage = Math.max(maxMemUsage, used);
             report.append(maxMemUsage);
             report.append('\n');
