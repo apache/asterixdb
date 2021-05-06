@@ -18,32 +18,46 @@
  */
 package org.apache.asterix.external.parser.jackson;
 
+import java.util.ArrayDeque;
+import java.util.Queue;
+
 import org.apache.asterix.om.util.container.IObjectFactory;
 
 /**
  * Object pool for DFS traversal mode, which allows to recycle objects
  * as soon as it is not needed.
  */
-public class ObjectPool<E, T> extends AbstractObjectPool<E, T, E> {
-    public ObjectPool() {
-        this(null, null);
+public abstract class AbstractObjectPool<E, T, Q> implements IObjectPool<E> {
+    private final IObjectFactory<E, T> objectFactory;
+    private final Queue<Q> recycledObjects;
+    private final T param;
+
+    protected AbstractObjectPool(IObjectFactory<E, T> objectFactory, T param) {
+        this.objectFactory = objectFactory;
+        recycledObjects = new ArrayDeque<>();
+        this.param = param;
     }
 
-    public ObjectPool(IObjectFactory<E, T> objectFactory) {
-        this(objectFactory, null);
+    public E getInstance() {
+        E instance = unwrap(recycledObjects.poll());
+        if (objectFactory != null && instance == null) {
+            instance = objectFactory.create(param);
+        }
+        return instance;
     }
 
-    public ObjectPool(IObjectFactory<E, T> objectFactory, T param) {
-        super(objectFactory, param);
+    public void recycle(E object) {
+        if (object != null) {
+            recycledObjects.add(wrap(object));
+        }
     }
+
+    protected abstract E unwrap(Q element);
+
+    protected abstract Q wrap(E element);
 
     @Override
-    protected E unwrap(E wrapped) {
-        return wrapped;
-    }
-
-    @Override
-    protected E wrap(E element) {
-        return element;
+    public String toString() {
+        return recycledObjects.toString();
     }
 }

@@ -21,11 +21,12 @@ package org.apache.hyracks.util.string;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.ref.SoftReference;
 
 public class UTF8StringWriter implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    transient byte[] tempBytes;
+    transient SoftReference<byte[]> tempBytesRef;
 
     public final void writeUTF8(CharSequence str, DataOutput out) throws IOException {
         UTF8StringUtil.writeUTF8(str, out, this);

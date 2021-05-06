@@ -51,7 +51,7 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 public class ParserContext {
     private static final int SERIALIZED_FIELDNAME_MAP_MAX_SIZE = 128;
 
-    private final ObjectPool<IARecordBuilder, ATypeTag> objectBuilderPool;
+    private final IObjectPool<IARecordBuilder> objectBuilderPool;
     private final ObjectPool<IAsterixListBuilder, ATypeTag> arrayBuilderPool;
 
     /**
@@ -61,7 +61,7 @@ public class ParserContext {
      * <p>
      * Scalar value 5 is written 4 times in tempBuffer("d") then tempBuffer("c") ... tempBuffer("a")
      */
-    private final ObjectPool<IMutableValueStorage, ATypeTag> tempBufferPool;
+    private final IObjectPool<IMutableValueStorage> tempBufferPool;
     private final ObjectPool<BitSet, Void> nullBitmapPool;
     private final Map<String, IMutableValueStorage> serializedFieldNames;
     private final ISerializerDeserializer<AString> stringSerDe;
@@ -76,9 +76,9 @@ public class ParserContext {
 
     @SuppressWarnings("unchecked")
     public ParserContext(boolean allocateModfiedUTF8Writer) {
-        objectBuilderPool = new ObjectPool<>(new RecordBuilderFactory());
+        objectBuilderPool = new SoftObjectPool<>(new RecordBuilderFactory());
         arrayBuilderPool = new ObjectPool<>(new ListBuilderFactory(), ATypeTag.ARRAY);
-        tempBufferPool = new ObjectPool<>(new AbvsBuilderFactory());
+        tempBufferPool = new SoftObjectPool<>(new AbvsBuilderFactory());
         nullBitmapPool = new ObjectPool<>();
         serializedFieldNames = new LRUMap<>(SERIALIZED_FIELDNAME_MAP_MAX_SIZE);
         stringSerDe = SerializerDeserializerProvider.INSTANCE.getAStringSerializerDeserializer();

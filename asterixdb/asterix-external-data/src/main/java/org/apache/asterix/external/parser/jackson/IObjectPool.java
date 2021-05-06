@@ -18,32 +18,12 @@
  */
 package org.apache.asterix.external.parser.jackson;
 
-import org.apache.asterix.om.util.container.IObjectFactory;
-
 /**
  * Object pool for DFS traversal mode, which allows to recycle objects
  * as soon as it is not needed.
  */
-public class ObjectPool<E, T> extends AbstractObjectPool<E, T, E> {
-    public ObjectPool() {
-        this(null, null);
-    }
+public interface IObjectPool<E> {
+    E getInstance();
 
-    public ObjectPool(IObjectFactory<E, T> objectFactory) {
-        this(objectFactory, null);
-    }
-
-    public ObjectPool(IObjectFactory<E, T> objectFactory, T param) {
-        super(objectFactory, param);
-    }
-
-    @Override
-    protected E unwrap(E wrapped) {
-        return wrapped;
-    }
-
-    @Override
-    protected E wrap(E element) {
-        return element;
-    }
+    void recycle(E object);
 }

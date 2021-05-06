@@ -18,32 +18,34 @@
  */
 package org.apache.asterix.external.parser.jackson;
 
+import java.lang.ref.SoftReference;
+
 import org.apache.asterix.om.util.container.IObjectFactory;
 
 /**
  * Object pool for DFS traversal mode, which allows to recycle objects
  * as soon as it is not needed.
  */
-public class ObjectPool<E, T> extends AbstractObjectPool<E, T, E> {
-    public ObjectPool() {
+public class SoftObjectPool<E, T> extends AbstractObjectPool<E, T, SoftReference<E>> {
+    public SoftObjectPool() {
         this(null, null);
     }
 
-    public ObjectPool(IObjectFactory<E, T> objectFactory) {
+    public SoftObjectPool(IObjectFactory<E, T> objectFactory) {
         this(objectFactory, null);
     }
 
-    public ObjectPool(IObjectFactory<E, T> objectFactory, T param) {
-        super(objectFactory, param);
+    public SoftObjectPool(IObjectFactory<E, T> objectFactory, T element) {
+        super(objectFactory, element);
     }
 
     @Override
-    protected E unwrap(E wrapped) {
-        return wrapped;
+    protected E unwrap(SoftReference<E> wrapped) {
+        return wrapped == null ? null : wrapped.get();
     }
 
     @Override
-    protected E wrap(E element) {
-        return element;
+    protected SoftReference<E> wrap(E element) {
+        return new SoftReference<>(element);
     }
 }
