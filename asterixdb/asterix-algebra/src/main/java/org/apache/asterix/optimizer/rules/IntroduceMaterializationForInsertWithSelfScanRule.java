@@ -83,7 +83,8 @@ public class IntroduceMaterializationForInsertWithSelfScanRule implements IAlgeb
 
     }
 
-    private boolean checkIfInsertAndScanDatasetsSame(AbstractLogicalOperator op, String insertDatasetName) {
+    private boolean checkIfInsertAndScanDatasetsSame(AbstractLogicalOperator op, String insertDatasetName)
+            throws AlgebricksException {
         boolean sameDataset = false;
         for (int i = 0; i < op.getInputs().size(); ++i) {
             AbstractLogicalOperator descendantOp = (AbstractLogicalOperator) op.getInputs().get(i).getValue();

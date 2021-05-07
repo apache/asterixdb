@@ -25,6 +25,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -42,7 +43,7 @@ public final class SynonymTupleTranslator extends AbstractTupleTranslator<Synony
     }
 
     @Override
-    protected Synonym createMetadataEntityFromARecord(ARecord synonymRecord) {
+    protected Synonym createMetadataEntityFromARecord(ARecord synonymRecord) throws AlgebricksException {
         String dataverseCanonicalName =
                 ((AString) synonymRecord.getValueByPos(MetadataRecordTypes.SYNONYM_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();

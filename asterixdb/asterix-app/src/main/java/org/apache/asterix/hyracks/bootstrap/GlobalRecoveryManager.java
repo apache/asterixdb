@@ -47,11 +47,9 @@ import org.apache.asterix.metadata.utils.ExternalIndexingOperations;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.util.ExitUtil;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -95,15 +93,19 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
             synchronized (this) {
                 if (!recovering) {
                     recovering = true;
-                    /**
+                    /*
                      * Perform recovery on a different thread to avoid deadlocks in
                      * {@link org.apache.asterix.common.cluster.IClusterStateManager}
                      */
                     serviceCtx.getControllerService().getExecutor().submit(() -> {
                         try {
                             recover(appCtx);
-                        } catch (HyracksDataException e) {
-                            LOGGER.log(Level.ERROR, "Global recovery failed. Shutting down...", e);
+                        } catch (Throwable e) {
+                            try {
+                                LOGGER.fatal("Global recovery failed. Shutting down...", e);
+                            } catch (Throwable ignore) {
+                                // ignoring exception trying to log, just do the halt
+                            }
                             ExitUtil.exit(ExitUtil.EC_FAILED_TO_RECOVER);
                         }
                     });
@@ -112,24 +114,20 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         }
     }
 
-    protected void recover(ICcApplicationContext appCtx) throws HyracksDataException {
-        try {
-            LOGGER.info("Starting Global Recovery");
-            MetadataManager.INSTANCE.init();
-            MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-            if (appCtx.getStorageProperties().isStorageGlobalCleanup()) {
-                int storageGlobalCleanupTimeout = appCtx.getStorageProperties().getStorageGlobalCleanupTimeout();
-                performGlobalStorageCleanup(mdTxnCtx, storageGlobalCleanupTimeout);
-            }
-            mdTxnCtx = doRecovery(appCtx, mdTxnCtx);
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-            recoveryCompleted = true;
-            recovering = false;
-            LOGGER.info("Global Recovery Completed. Refreshing cluster state...");
-            appCtx.getClusterStateManager().refreshState();
-        } catch (Exception e) {
-            throw HyracksDataException.create(e);
+    protected void recover(ICcApplicationContext appCtx) throws Exception {
+        LOGGER.info("Starting Global Recovery");
+        MetadataManager.INSTANCE.init();
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        if (appCtx.getStorageProperties().isStorageGlobalCleanup()) {
+            int storageGlobalCleanupTimeout = appCtx.getStorageProperties().getStorageGlobalCleanupTimeout();
+            performGlobalStorageCleanup(mdTxnCtx, storageGlobalCleanupTimeout);
         }
+        mdTxnCtx = doRecovery(appCtx, mdTxnCtx);
+        MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        recoveryCompleted = true;
+        recovering = false;
+        LOGGER.info("Global Recovery Completed. Refreshing cluster state...");
+        appCtx.getClusterStateManager().refreshState();
     }
 
     protected void performGlobalStorageCleanup(MetadataTransactionContext mdTxnCtx, int storageGlobalCleanupTimeoutSecs)
@@ -150,7 +148,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
             requests.add(new StorageCleanupRequestMessage(reqId, validDatasetIds));
         }
         messageBroker.sendSyncRequestToNCs(reqId, ncs, requests,
-                TimeUnit.SECONDS.toMillis(storageGlobalCleanupTimeoutSecs));
+                TimeUnit.SECONDS.toMillis(storageGlobalCleanupTimeoutSecs), false);
     }
 
     protected MetadataTransactionContext doRecovery(ICcApplicationContext appCtx, MetadataTransactionContext mdTxnCtx)

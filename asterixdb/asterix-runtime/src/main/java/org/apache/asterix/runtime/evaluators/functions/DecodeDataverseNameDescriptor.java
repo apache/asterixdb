@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableString;
@@ -101,8 +102,13 @@ public final class DecodeDataverseNameDescriptor extends AbstractScalarFunctionD
                         strPtr.set(bytes, offset + 1, len - 1);
                         String dataverseCanonicalName = strPtr.toString();
 
-                        dataverseNameParts.clear();
-                        DataverseName.getPartsFromCanonicalForm(dataverseCanonicalName, dataverseNameParts);
+                        try {
+                            dataverseNameParts.clear();
+                            DataverseName.getPartsFromCanonicalForm(dataverseCanonicalName, dataverseNameParts);
+                        } catch (AsterixException e) {
+                            PointableHelper.setNull(result);
+                            return;
+                        }
 
                         resultStorage.reset();
                         listBuilder.reset(listType);

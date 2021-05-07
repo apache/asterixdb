@@ -21,6 +21,7 @@ package org.apache.asterix.common.functions;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -132,7 +133,11 @@ public class FunctionSignature implements Serializable {
             case AlgebricksBuiltinFunctions.ALGEBRICKS_NS:
                 return FunctionConstants.ALGEBRICKS_DV;
             default:
-                return DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+                try {
+                    return DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+                } catch (AsterixException e) {
+                    throw new IllegalArgumentException(dataverseCanonicalName);
+                }
         }
     }
 }

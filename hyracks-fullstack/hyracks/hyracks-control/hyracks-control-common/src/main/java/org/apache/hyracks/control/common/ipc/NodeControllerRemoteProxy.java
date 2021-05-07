@@ -129,7 +129,14 @@ public class NodeControllerRemoteProxy implements INodeController {
 
     @Override
     public void sendApplicationMessageToNC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception {
-        SendApplicationMessageFunction fn = new SendApplicationMessageFunction(data, deploymentId, nodeId);
+        SendApplicationMessageFunction fn = new SendApplicationMessageFunction(data, deploymentId, false, nodeId);
+        ipcHandle.send(-1, fn, null);
+    }
+
+    @Override
+    public void sendRealTimeApplicationMessageToNC(byte[] data, DeploymentId deploymentId, String nodeId)
+            throws Exception {
+        SendApplicationMessageFunction fn = new SendApplicationMessageFunction(data, deploymentId, true, nodeId);
         ipcHandle.send(-1, fn, null);
     }
 

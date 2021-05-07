@@ -19,10 +19,9 @@
 
 package org.apache.asterix.lang.common.visitor;
 
-import java.util.LinkedHashSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
@@ -56,9 +55,13 @@ import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<Void, Void> {
+public abstract class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<Void, Void> {
 
-    protected final Set<AbstractCallExpression> calls = new LinkedHashSet<>();
+    protected final Collection<? super AbstractCallExpression> calls;
+
+    protected GatherFunctionCallsVisitor(Collection<? super AbstractCallExpression> calls) {
+        this.calls = calls;
+    }
 
     @Override
     public Void visit(CallExpr callExpr, Void arg) throws CompilationException {
@@ -238,10 +241,6 @@ public class GatherFunctionCallsVisitor extends AbstractQueryExpressionVisitor<V
             returnExpression.accept(this, arg);
         }
         return null;
-    }
-
-    public Set<AbstractCallExpression> getCalls() {
-        return calls;
     }
 
     @Override

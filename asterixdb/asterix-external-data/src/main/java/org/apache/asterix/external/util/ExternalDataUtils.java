@@ -201,7 +201,7 @@ public class ExternalDataUtils {
         }
     }
 
-    public static DataverseName getDatasetDataverse(Map<String, String> configuration) {
+    public static DataverseName getDatasetDataverse(Map<String, String> configuration) throws AsterixException {
         return DataverseName.createFromCanonicalForm(configuration.get(ExternalDataConstants.KEY_DATASET_DATAVERSE));
     }
 

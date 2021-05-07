@@ -103,7 +103,7 @@ public class MultiPartitionLSMIndexTest {
     private static final int TOTAL_NUM_OF_RECORDS = 5000;
     private static final int RECORDS_PER_COMPONENT = 500;
     private static final int DATASET_ID = 101;
-    private static final DataverseName DATAVERSE_NAME = DataverseName.createSinglePartName("TestDV");
+    private static final String DATAVERSE_NAME = "TestDV";
     private static final String DATASET_NAME = "TestDS";
     private static final String INDEX_NAME = "TestIdx";
     private static final String DATA_TYPE_NAME = "DUMMY";
@@ -153,13 +153,14 @@ public class MultiPartitionLSMIndexTest {
 
     @Before
     public void createIndex() throws Exception {
+        DataverseName dvName = DataverseName.createSinglePartName(DATAVERSE_NAME);
         List<List<String>> partitioningKeys = new ArrayList<>();
         partitioningKeys.add(Collections.singletonList("key"));
-        dataset = new TestDataset(DATAVERSE_NAME, DATASET_NAME, DATAVERSE_NAME, DATA_TYPE_NAME, NODE_GROUP_NAME,
+        dataset = new TestDataset(dvName, DATASET_NAME, dvName, DATA_TYPE_NAME, NODE_GROUP_NAME,
                 NoMergePolicyFactory.NAME, null, new InternalDatasetDetails(null, PartitioningStrategy.HASH,
                         partitioningKeys, null, null, null, false, null, null),
                 null, DatasetType.INTERNAL, DATASET_ID, 0);
-        secondaryIndex = new Index(DATAVERSE_NAME, DATASET_NAME, INDEX_NAME, INDEX_TYPE, INDEX_FIELD_NAMES,
+        secondaryIndex = new Index(dvName, DATASET_NAME, INDEX_NAME, INDEX_TYPE, INDEX_FIELD_NAMES,
                 INDEX_FIELD_INDICATORS, INDEX_FIELD_TYPES, false, false, false, 0);
         taskCtxs = new IHyracksTaskContext[NUM_PARTITIONS];
         primaryIndexDataflowHelpers = new IIndexDataflowHelper[NUM_PARTITIONS];

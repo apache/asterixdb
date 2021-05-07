@@ -24,7 +24,6 @@ import java.util.List;
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.lang3.SystemUtils;
@@ -60,21 +59,21 @@ public class MetadataManagerWindowsOsTest {
     public void testInvalidCharacters() throws Exception {
         TestCaseContext.OutputFormat cleanJson = TestCaseContext.OutputFormat.CLEAN_JSON;
 
-        List<DataverseName> dvNameBadCharsList = new ArrayList<>();
+        List<String> dvNameBadCharsList = new ArrayList<>();
 
         for (char c = 0; c <= 0x1F; c++) {
             dvNameBadCharsList.add(badCharName(c));
         }
         dvNameBadCharsList.add(badCharName('\u007f'));
-        dvNameBadCharsList.add(badCharName('\\'));
+        dvNameBadCharsList.add(badCharName("\\\\"));
         dvNameBadCharsList.add(badCharName('/'));
         dvNameBadCharsList.add(badCharName('>'));
         dvNameBadCharsList.add(badCharName('\n'));
         dvNameBadCharsList.add(badCharName('|'));
 
         ErrorCode invalidNameErrCode = ErrorCode.INVALID_DATABASE_OBJECT_NAME;
-        for (DataverseName dvNameOk : dvNameBadCharsList) {
-            String sql = String.format("create dataverse %s;", dvNameOk);
+        for (String dvName : dvNameBadCharsList) {
+            String sql = String.format("create dataverse `%s`;", dvName);
             try {
                 testExecutor.executeSqlppUpdateOrDdl(sql, cleanJson);
                 Assert.fail("Expected failure: " + invalidNameErrCode);
@@ -86,7 +85,12 @@ public class MetadataManagerWindowsOsTest {
     }
 
     @NotNull
-    protected DataverseName badCharName(char c) {
-        return DataverseName.createSinglePartName("abc" + c + "def");
+    protected String badCharName(char c) {
+        return badCharName(String.valueOf(c));
+    }
+
+    @NotNull
+    protected String badCharName(String s) {
+        return "abc" + s + "def";
     }
 }

@@ -17,4 +17,13 @@
  * under the License.
  */
 
+/*
+ * Invalid dataverse name in CREATE INDEX -> Error
+ */
+
 drop dataverse test if exists;
+create dataverse test;
+
+use test;
+
+create index a on `a/b`.t1(x);

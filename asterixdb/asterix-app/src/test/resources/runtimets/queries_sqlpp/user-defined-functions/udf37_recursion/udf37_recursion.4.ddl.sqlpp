@@ -16,9 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-# auth admin:admin
-# param dataverse:multipart_text=Default
-# param name:multipart_text=testlib
-# param type:multipart_text=java
-
-/admin/udf
+/*
+ * Description  : Recursion in CREATE FUNCTION
+ * Expected Res : Failure
+ */
+use test;
+create function f4a(a) { -a };
+create function f4b(b) { f4a(b) };
+create or replace function f4a(a) { f4b(a) };

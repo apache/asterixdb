@@ -93,13 +93,14 @@ FROM [  (
                       ]
                     ]
                     and
-                    OperatorExpr [
-                      FieldAccessor [
-                        Variable [ Name=$o ]
-                        Field=o_comment
+                    FunctionCall algebricks.not@1[
+                      FunctionCall asterix.like@2[
+                        FieldAccessor [
+                          Variable [ Name=$o ]
+                          Field=o_comment
+                        ]
+                        LiteralExpr [STRING] [%special%requests%]
                       ]
-                      not_like
-                      LiteralExpr [STRING] [%special%requests%]
                     ]
                   ]
               )

@@ -44,12 +44,14 @@ import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.asterix.active.message.ActivePartitionMessage.Event;
 import org.apache.asterix.active.message.ActiveStatsRequestMessage;
 import org.apache.asterix.active.message.StopRuntimeParameters;
+import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.external.feed.watch.WaitForStateSubscriber;
 import org.apache.asterix.metadata.api.IActiveEntityController;
@@ -58,6 +60,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
@@ -321,7 +324,8 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             requests.add(new ActiveStatsRequestMessage(new ActiveRuntimeId(entityId, runtimeName, i), reqId));
         }
         try {
-            List<String> responses = (List<String>) messageBroker.sendSyncRequestToNCs(reqId, ncs, requests, timeout);
+            List<String> responses =
+                    (List<String>) messageBroker.sendSyncRequestToNCs(reqId, ncs, requests, timeout, false);
             stats = formatStats(responses);
             statsTimestamp = System.currentTimeMillis();
             notifySubscribers(statsUpdatedEvent);
@@ -702,6 +706,29 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     protected RecoveryTask createRecoveryTask() {
         return new RecoveryTask(appCtx, this, retryPolicyFactory);
+    }
+
+    public void acquireSuspendLocks(MetadataProvider metadataProvider, Dataset targetDataset)
+            throws AlgebricksException {
+        // write lock the listener
+        // exclusive lock all the datasets (except the target dataset)
+        IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
+        DataverseName dataverseName = entityId.getDataverseName();
+        String entityName = entityId.getEntityName();
+        lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), dataverseName, entityName);
+        acquireSuspendDatasetsLocks(metadataProvider, lockManager, targetDataset);
+    }
+
+    protected void acquireSuspendDatasetsLocks(MetadataProvider metadataProvider, IMetadataLockManager lockManager,
+            Dataset targetDataset) throws AlgebricksException {
+        for (Dataset dataset : getDatasets()) {
+            if (targetDataset != null && targetDataset.equals(dataset)) {
+                // DDL operation already acquired the proper lock for the operation
+                continue;
+            }
+            lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), dataset.getDataverseName(),
+                    dataset.getDatasetName());
+        }
     }
 
     @Override

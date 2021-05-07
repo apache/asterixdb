@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 
@@ -48,7 +49,7 @@ public class RTreeJobGenParams extends AccessMethodJobGenParams {
         writeVarList(keyVarList, funcArgs);
     }
 
-    public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
+    public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) throws AlgebricksException {
         super.readFromFuncArgs(funcArgs);
         int index = super.getNumParams();
         keyVarList = new ArrayList<LogicalVariable>();

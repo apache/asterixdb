@@ -175,22 +175,21 @@ public class MetadataManagerTest {
     public void testInvalidCharacters() throws Exception {
         TestCaseContext.OutputFormat cleanJson = TestCaseContext.OutputFormat.CLEAN_JSON;
 
-        List<DataverseName> dvNameBadCharsList = Arrays.asList(
+        List<List<String>> dvNameBadCharsList = Arrays.asList(
                 // #1. nul characters
-                DataverseName.createSinglePartName("abc\u0000def"),
+                Collections.singletonList("abc\u0000def"),
                 // #2. leading whitespace
-                DataverseName.createSinglePartName(" abcdef"),
+                Collections.singletonList(" abcdef"),
                 // #3. file separator
-                DataverseName.createSinglePartName("abc" + File.separatorChar + "def"),
+                Collections.singletonList("abc" + File.separatorChar + "def"),
                 // #4. single-part starting with ^
-                DataverseName.createSinglePartName(StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "abcdef"),
+                Collections.singletonList(StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "abcdef"),
                 // #5. multi-part w/ first part starting with ^
-                DataverseName
-                        .create(Arrays.asList(StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "abcdef", "abcdef")));
+                Arrays.asList(StoragePathUtil.DATAVERSE_CONTINUATION_MARKER + "abcdef", "abcdef"));
 
         ErrorCode invalidNameErrCode = ErrorCode.INVALID_DATABASE_OBJECT_NAME;
-        for (DataverseName dvNameOk : dvNameBadCharsList) {
-            String sql = String.format("create dataverse %s;", dvNameOk);
+        for (List<String> dvName : dvNameBadCharsList) {
+            String sql = String.format("create dataverse `%s`;", StringUtils.join(dvName, "`.`"));
             try {
                 testExecutor.executeSqlppUpdateOrDdl(sql, cleanJson);
                 Assert.fail("Expected failure: " + invalidNameErrCode);

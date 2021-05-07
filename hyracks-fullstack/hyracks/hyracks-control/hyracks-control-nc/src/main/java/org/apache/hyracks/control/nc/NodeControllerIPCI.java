@@ -61,8 +61,13 @@ final class NodeControllerIPCI implements IIPCI {
         switch (fn.getFunctionId()) {
             case SEND_APPLICATION_MESSAGE:
                 CCNCFunctions.SendApplicationMessageFunction amf = (CCNCFunctions.SendApplicationMessageFunction) fn;
-                ncs.getWorkQueue().schedule(
-                        new ApplicationMessageWork(ncs, amf.getMessage(), amf.getDeploymentId(), amf.getNodeId()));
+                ApplicationMessageWork amfw =
+                        new ApplicationMessageWork(ncs, amf.getMessage(), amf.getDeploymentId(), amf.getNodeId());
+                if (amf.isRealTime()) {
+                    ncs.getExecutor().submit(amfw);
+                } else {
+                    ncs.getWorkQueue().schedule(amfw);
+                }
                 return;
             case START_TASKS:
                 CCNCFunctions.StartTasksFunction stf = (CCNCFunctions.StartTasksFunction) fn;

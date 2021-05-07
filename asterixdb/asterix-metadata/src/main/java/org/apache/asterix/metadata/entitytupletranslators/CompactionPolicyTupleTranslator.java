@@ -25,6 +25,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -41,7 +42,8 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
     }
 
     @Override
-    protected CompactionPolicy createMetadataEntityFromARecord(ARecord compactionPolicyRecord) {
+    protected CompactionPolicy createMetadataEntityFromARecord(ARecord compactionPolicyRecord)
+            throws AlgebricksException {
         String dataverseCanonicalName = ((AString) compactionPolicyRecord
                 .getValueByPos(MetadataRecordTypes.COMPACTION_POLICY_ARECORD_DATAVERSE_NAME_FIELD_INDEX))
                         .getStringValue();

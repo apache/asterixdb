@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
-import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.ListSliceExpression;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
@@ -52,26 +52,18 @@ import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.SqlppCloneAndSubstituteVariablesVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
-import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
-public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
-        implements ISqlppVisitor<Boolean, List<FunctionDecl>> {
+public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements ISqlppVisitor<Boolean, Void> {
 
     /**
      * @param context,
      *            manages ids of variables and guarantees uniqueness of variables.
-     * @param rewriterFactory,
-     *            a rewrite factory for rewriting user-defined functions.
-     * @param declaredFunctions,
-     *            a list of declared functions associated with the query.
-     * @param metadataProvider,
-     *            providing the definition of created (i.e., stored) user-defined functions.
+     * @param usedUDFs,
+     *            user defined functions used by this query.
      */
-    public SqlppInlineUdfsVisitor(LangRewritingContext context, IRewriterFactory rewriterFactory,
-            List<FunctionDecl> declaredFunctions, MetadataProvider metadataProvider) {
-        super(context, rewriterFactory, declaredFunctions, metadataProvider,
-                new SqlppCloneAndSubstituteVariablesVisitor(context));
+    public SqlppInlineUdfsVisitor(LangRewritingContext context, Map<FunctionSignature, FunctionDecl> usedUDFs) {
+        super(context, usedUDFs, new SqlppCloneAndSubstituteVariablesVisitor(context));
     }
 
     @Override
@@ -82,220 +74,218 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor
     }
 
     @Override
-    public Boolean visit(FromClause fromClause, List<FunctionDecl> func) throws CompilationException {
+    public Boolean visit(FromClause fromClause, Void arg) throws CompilationException {
         boolean changed = false;
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
-            changed |= fromTerm.accept(this, func);
+            changed |= fromTerm.accept(this, arg);
         }
         return changed;
     }
 
     @Override
-    public Boolean visit(FromTerm fromTerm, List<FunctionDecl> func) throws CompilationException {
+    public Boolean visit(FromTerm fromTerm, Void arg) throws CompilationException {
         boolean changed = false;
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(fromTerm.getLeftExpression(), func);
+        Pair<Boolean, Expression> p = inlineUdfsInExpr(fromTerm.getLeftExpression());
         fromTerm.setLeftExpression(p.second);
         changed |= p.first;
         for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
-            changed |= correlateClause.accept(this, func);
+            changed |= correlateClause.accept(this, arg);
         }
         return changed;
     }
 
     @Override
-    public Boolean visit(JoinClause joinClause, List<FunctionDecl> funcs) throws CompilationException {
-        Pair<Boolean, Expression> p1 = inlineUdfsInExpr(joinClause.getRightExpression(), funcs);
+    public Boolean visit(JoinClause joinClause, Void arg) throws CompilationException {
+        Pair<Boolean, Expression> p1 = inlineUdfsInExpr(joinClause.getRightExpression());
         joinClause.setRightExpression(p1.second);
-        Pair<Boolean, Expression> p2 = inlineUdfsInExpr(joinClause.getConditionExpression(), funcs);
+        Pair<Boolean, Expression> p2 = inlineUdfsInExpr(joinClause.getConditionExpression());
         joinClause.setConditionExpression(p2.second);
         return p1.first || p2.first;
     }
 
     @Override
-    public Boolean visit(NestClause nestClause, List<FunctionDecl> funcs) throws CompilationException {
-        Pair<Boolean, Expression> p1 = inlineUdfsInExpr(nestClause.getRightExpression(), funcs);
+    public Boolean visit(NestClause nestClause, Void arg) throws CompilationException {
+        Pair<Boolean, Expression> p1 = inlineUdfsInExpr(nestClause.getRightExpression());
         nestClause.setRightExpression(p1.second);
-        Pair<Boolean, Expression> p2 = inlineUdfsInExpr(nestClause.getConditionExpression(), funcs);
+        Pair<Boolean, Expression> p2 = inlineUdfsInExpr(nestClause.getConditionExpression());
         nestClause.setConditionExpression(p2.second);
         return p1.first || p2.first;
     }
 
     @Override
-    public Boolean visit(Projection projection, List<FunctionDecl> funcs) throws CompilationException {
+    public Boolean visit(Projection projection, Void arg) throws CompilationException {
         if (projection.star()) {
             return false;
         }
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(projection.getExpression(), funcs);
+        Pair<Boolean, Expression> p = inlineUdfsInExpr(projection.getExpression());
         projection.setExpression(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(SelectBlock selectBlock, List<FunctionDecl> funcs) throws CompilationException {
+    public Boolean visit(SelectBlock selectBlock, Void arg) throws CompilationException {
         boolean changed = false;
         if (selectBlock.hasFromClause()) {
-            changed |= selectBlock.getFromClause().accept(this, funcs);
+            changed |= selectBlock.getFromClause().accept(this, arg);
         }
         if (selectBlock.hasLetWhereClauses()) {
             for (AbstractClause letWhereClause : selectBlock.getLetWhereList()) {
-                changed |= letWhereClause.accept(this, funcs);
+                changed |= letWhereClause.accept(this, arg);
             }
         }
         if (selectBlock.hasGroupbyClause()) {
-            changed |= selectBlock.getGroupbyClause().accept(this, funcs);
+            changed |= selectBlock.getGroupbyClause().accept(this, arg);
         }
         if (selectBlock.hasLetHavingClausesAfterGroupby()) {
             for (AbstractClause letHavingClause : selectBlock.getLetHavingListAfterGroupby()) {
-                changed |= letHavingClause.accept(this, funcs);
+                changed |= letHavingClause.accept(this, arg);
             }
         }
-        changed |= selectBlock.getSelectClause().accept(this, funcs);
+        changed |= selectBlock.getSelectClause().accept(this, arg);
         return changed;
     }
 
     @Override
-    public Boolean visit(SelectClause selectClause, List<FunctionDecl> funcs) throws CompilationException {
+    public Boolean visit(SelectClause selectClause, Void arg) throws CompilationException {
         boolean changed = false;
         if (selectClause.selectElement()) {
-            changed |= selectClause.getSelectElement().accept(this, funcs);
+            changed |= selectClause.getSelectElement().accept(this, arg);
         } else {
-            changed |= selectClause.getSelectRegular().accept(this, funcs);
+            changed |= selectClause.getSelectRegular().accept(this, arg);
         }
         return changed;
     }
 
     @Override
-    public Boolean visit(SelectElement selectElement, List<FunctionDecl> funcs) throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(selectElement.getExpression(), funcs);
+    public Boolean visit(SelectElement selectElement, Void arg) throws CompilationException {
+        Pair<Boolean, Expression> p = inlineUdfsInExpr(selectElement.getExpression());
         selectElement.setExpression(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(SelectRegular selectRegular, List<FunctionDecl> funcs) throws CompilationException {
+    public Boolean visit(SelectRegular selectRegular, Void arg) throws CompilationException {
         boolean changed = false;
         for (Projection projection : selectRegular.getProjections()) {
-            changed |= projection.accept(this, funcs);
+            changed |= projection.accept(this, arg);
         }
         return changed;
     }
 
     @Override
-    public Boolean visit(SelectSetOperation selectSetOperation, List<FunctionDecl> funcs) throws CompilationException {
+    public Boolean visit(SelectSetOperation selectSetOperation, Void arg) throws CompilationException {
         boolean changed = false;
-        changed |= selectSetOperation.getLeftInput().accept(this, funcs);
+        changed |= selectSetOperation.getLeftInput().accept(this, arg);
         for (SetOperationRight right : selectSetOperation.getRightInputs()) {
-            changed |= right.getSetOperationRightInput().accept(this, funcs);
+            changed |= right.getSetOperationRightInput().accept(this, arg);
         }
         return changed;
     }
 
     @Override
-    public Boolean visit(SelectExpression selectExpression, List<FunctionDecl> funcs) throws CompilationException {
+    public Boolean visit(SelectExpression selectExpression, Void arg) throws CompilationException {
         boolean changed = false;
         if (selectExpression.hasLetClauses()) {
             for (LetClause letClause : selectExpression.getLetList()) {
-                changed |= letClause.accept(this, funcs);
+                changed |= letClause.accept(this, arg);
             }
         }
-        changed |= selectExpression.getSelectSetOperation().accept(this, funcs);
+        changed |= selectExpression.getSelectSetOperation().accept(this, arg);
         if (selectExpression.hasOrderby()) {
-            changed |= selectExpression.getOrderbyClause().accept(this, funcs);
+            changed |= selectExpression.getOrderbyClause().accept(this, arg);
         }
         if (selectExpression.hasLimit()) {
-            changed |= selectExpression.getLimitClause().accept(this, funcs);
+            changed |= selectExpression.getLimitClause().accept(this, arg);
         }
         return changed;
     }
 
     @Override
-    public Boolean visit(UnnestClause unnestClause, List<FunctionDecl> funcs) throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(unnestClause.getRightExpression(), funcs);
+    public Boolean visit(UnnestClause unnestClause, Void arg) throws CompilationException {
+        Pair<Boolean, Expression> p = inlineUdfsInExpr(unnestClause.getRightExpression());
         unnestClause.setRightExpression(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(HavingClause havingClause, List<FunctionDecl> funcs) throws CompilationException {
-        Pair<Boolean, Expression> p = inlineUdfsInExpr(havingClause.getFilterExpression(), funcs);
+    public Boolean visit(HavingClause havingClause, Void arg) throws CompilationException {
+        Pair<Boolean, Expression> p = inlineUdfsInExpr(havingClause.getFilterExpression());
         havingClause.setFilterExpression(p.second);
         return p.first;
     }
 
     @Override
-    public Boolean visit(CaseExpression caseExpr, List<FunctionDecl> funcs) throws CompilationException {
-        Pair<Boolean, Expression> result = inlineUdfsInExpr(caseExpr.getConditionExpr(), funcs);
+    public Boolean visit(CaseExpression caseExpr, Void arg) throws CompilationException {
+        Pair<Boolean, Expression> result = inlineUdfsInExpr(caseExpr.getConditionExpr());
         caseExpr.setConditionExpr(result.second);
         boolean inlined = result.first;
 
-        Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(caseExpr.getWhenExprs(), funcs);
+        Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(caseExpr.getWhenExprs());
         inlined = inlined || inlinedList.first;
         caseExpr.setWhenExprs(inlinedList.second);
 
-        inlinedList = inlineUdfsInExprList(caseExpr.getThenExprs(), funcs);
+        inlinedList = inlineUdfsInExprList(caseExpr.getThenExprs());
         inlined = inlined || inlinedList.first;
         caseExpr.setThenExprs(inlinedList.second);
 
-        result = inlineUdfsInExpr(caseExpr.getElseExpr(), funcs);
+        result = inlineUdfsInExpr(caseExpr.getElseExpr());
         caseExpr.setElseExpr(result.second);
         return inlined || result.first;
     }
 
     @Override
-    public Boolean visit(WindowExpression winExpr, List<FunctionDecl> funcs) throws CompilationException {
+    public Boolean visit(WindowExpression winExpr, Void arg) throws CompilationException {
         boolean inlined = false;
         if (winExpr.hasPartitionList()) {
-            Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(winExpr.getPartitionList(), funcs);
+            Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(winExpr.getPartitionList());
             winExpr.setPartitionList(inlinedList.second);
             inlined = inlinedList.first;
         }
         if (winExpr.hasOrderByList()) {
-            Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(winExpr.getOrderbyList(), funcs);
+            Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(winExpr.getOrderbyList());
             winExpr.setOrderbyList(inlinedList.second);
             inlined |= inlinedList.first;
         }
         if (winExpr.hasFrameStartExpr()) {
-            Pair<Boolean, Expression> inlinedExpr = inlineUdfsInExpr(winExpr.getFrameStartExpr(), funcs);
+            Pair<Boolean, Expression> inlinedExpr = inlineUdfsInExpr(winExpr.getFrameStartExpr());
             winExpr.setFrameStartExpr(inlinedExpr.second);
             inlined |= inlinedExpr.first;
         }
         if (winExpr.hasFrameEndExpr()) {
-            Pair<Boolean, Expression> inlinedExpr = inlineUdfsInExpr(winExpr.getFrameEndExpr(), funcs);
+            Pair<Boolean, Expression> inlinedExpr = inlineUdfsInExpr(winExpr.getFrameEndExpr());
             winExpr.setFrameEndExpr(inlinedExpr.second);
             inlined |= inlinedExpr.first;
         }
         if (winExpr.hasWindowFieldList()) {
             Pair<Boolean, List<Pair<Expression, Identifier>>> inlinedList =
-                    inlineUdfsInFieldList(winExpr.getWindowFieldList(), funcs);
+                    inlineUdfsInFieldList(winExpr.getWindowFieldList());
             winExpr.setWindowFieldList(inlinedList.second);
             inlined |= inlinedList.first;
         }
         if (winExpr.hasAggregateFilterExpr()) {
-            Pair<Boolean, Expression> inlinedExpr = inlineUdfsInExpr(winExpr.getAggregateFilterExpr(), funcs);
+            Pair<Boolean, Expression> inlinedExpr = inlineUdfsInExpr(winExpr.getAggregateFilterExpr());
             winExpr.setAggregateFilterExpr(inlinedExpr.second);
             inlined |= inlinedExpr.first;
         }
-        Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(winExpr.getExprList(), funcs);
+        Pair<Boolean, List<Expression>> inlinedList = inlineUdfsInExprList(winExpr.getExprList());
         winExpr.setExprList(inlinedList.second);
         inlined |= inlinedList.first;
         return inlined;
     }
 
     @Override
-    public Boolean visit(ListSliceExpression expression, List<FunctionDecl> funcs) throws CompilationException {
-        Pair<Boolean, Expression> expressionResult = inlineUdfsInExpr(expression.getExpr(), funcs);
+    public Boolean visit(ListSliceExpression expression, Void arg) throws CompilationException {
+        Pair<Boolean, Expression> expressionResult = inlineUdfsInExpr(expression.getExpr());
         expression.setExpr(expressionResult.second);
         boolean inlined = expressionResult.first;
 
-        Pair<Boolean, Expression> startIndexExpressResult =
-                inlineUdfsInExpr(expression.getStartIndexExpression(), funcs);
+        Pair<Boolean, Expression> startIndexExpressResult = inlineUdfsInExpr(expression.getStartIndexExpression());
         expression.setStartIndexExpression(startIndexExpressResult.second);
         inlined |= startIndexExpressResult.first;
 
         // End index expression can be null (optional)
         if (expression.hasEndExpression()) {
-            Pair<Boolean, Expression> endIndexExpressionResult =
-                    inlineUdfsInExpr(expression.getEndIndexExpression(), funcs);
+            Pair<Boolean, Expression> endIndexExpressionResult = inlineUdfsInExpr(expression.getEndIndexExpression());
             expression.setEndIndexExpression(endIndexExpressionResult.second);
             inlined |= endIndexExpressionResult.first;
         }

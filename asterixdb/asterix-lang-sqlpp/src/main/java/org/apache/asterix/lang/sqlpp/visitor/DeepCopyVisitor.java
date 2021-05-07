@@ -257,8 +257,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public FunctionDecl visit(FunctionDecl fd, Void arg) throws CompilationException {
-        FunctionDecl copy =
-                new FunctionDecl(fd.getSignature(), fd.getParamList(), (Expression) fd.getFuncBody().accept(this, arg));
+        FunctionDecl copy = new FunctionDecl(fd.getSignature(), fd.getParamList(),
+                (Expression) fd.getFuncBody().accept(this, arg), fd.isStored());
         copy.setSourceLocation(fd.getSourceLocation());
         return copy;
     }

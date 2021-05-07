@@ -41,8 +41,10 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.MessageFormat;
@@ -82,8 +84,6 @@ import org.apache.asterix.common.api.Duration;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.utils.Servlets;
-import org.apache.asterix.lang.common.base.IParserFactory;
-import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.lang.sqlpp.util.SqlppStatementUtil;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.utils.MetadataConstants;
@@ -1326,10 +1326,12 @@ public class TestExecutor {
                 // TODO: make this case work well with entity names containing spaces by
                 // looking for \"
                 lines = stripAllComments(statement).trim().split("\n");
-                IParserFactory parserFactory = new SqlppParserFactory();
                 for (String line : lines) {
                     String[] command = line.trim().split(" ");
-                    URI path = createEndpointURI("/admin/udf/");
+                    //TODO: this is not right. URLEncoder does not properly encode paths.
+                    String dataverse = URLEncoder.encode(command[1], StandardCharsets.US_ASCII.name());
+                    String library = URLEncoder.encode(command[2], StandardCharsets.US_ASCII.name());
+                    URI path = createEndpointURI("/admin/udf/" + dataverse + "/" + library);
                     if (command.length < 2) {
                         throw new Exception("invalid library command: " + line);
                     }
@@ -1338,25 +1340,19 @@ public class TestExecutor {
                             if (command.length != 7) {
                                 throw new Exception("invalid library format");
                             }
-                            List<String> dataverse = parserFactory.createParser(command[1]).parseMultipartIdentifier();
-                            String library = command[2];
                             String type = command[3];
                             String username = command[4];
                             String pw = command[5];
                             String libPath = command[6];
-                            librarian.install(path, "dataverse", DataverseName.create(dataverse), false, library, type,
-                                    libPath, new Pair<>(username, pw));
+                            librarian.install(path, type, libPath, new Pair<>(username, pw));
                             break;
                         case "uninstall":
                             if (command.length != 5) {
                                 throw new Exception("invalid library format");
                             }
-                            dataverse = parserFactory.createParser(command[1]).parseMultipartIdentifier();
-                            library = command[2];
                             username = command[3];
                             pw = command[4];
-                            librarian.uninstall(path, "dataverse", DataverseName.create(dataverse), false, library,
-                                    new Pair<>(username, pw));
+                            librarian.uninstall(path, new Pair<>(username, pw));
                             break;
                         default:
                             throw new Exception("invalid library format");
@@ -2473,6 +2469,23 @@ public class TestExecutor {
         return new File(
                 actualPath + File.separator + testCaseCtx.getTestCase().getFilePath().replace(File.separator, "_") + "_"
                         + cUnit.getName() + "_qbc.adm");
+    }
+
+    protected URI createLocalOnlyEndpointURI(String pathAndQuery) throws URISyntaxException {
+        InetSocketAddress endpoint;
+        if (!ncEndPointsList.isEmpty() && (pathAndQuery.equals(Servlets.QUERY_SERVICE)
+                || pathAndQuery.startsWith(Servlets.getAbsolutePath(Servlets.UDF)))) {
+            int endpointIdx = Math.abs(endpointSelector++ % ncEndPointsList.size());
+            endpoint = ncEndPointsList.get(endpointIdx);
+        } else if (isCcEndPointPath(pathAndQuery)) {
+            int endpointIdx = Math.abs(endpointSelector++ % endpoints.size());
+            endpoint = endpoints.get(endpointIdx);
+        } else {
+            throw new IllegalArgumentException("Invalid local endpoint format");
+        }
+        URI uri = URI.create("http://" + toHostPort("localhost", endpoint.getPort()) + pathAndQuery);
+        LOGGER.debug("Created endpoint URI: " + uri);
+        return uri;
     }
 
     protected URI createEndpointURI(String pathAndQuery) throws URISyntaxException {

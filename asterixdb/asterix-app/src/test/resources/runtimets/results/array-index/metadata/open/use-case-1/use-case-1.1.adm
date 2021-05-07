@@ -1,1 +1,1 @@
-{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "dates" ] ], "ProjectList": [ null ] } ], "SearchKeyType": [ [ "string" ] ] }
+{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "dates" ] ] } ], "SearchKeyType": [ [ "string" ] ] }

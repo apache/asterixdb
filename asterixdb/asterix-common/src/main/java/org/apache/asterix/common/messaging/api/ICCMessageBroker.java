@@ -36,7 +36,16 @@ public interface ICCMessageBroker extends IMessageBroker {
      * @param nodeId
      * @throws Exception
      */
-    void sendApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception;
+    boolean sendApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception;
+
+    /**
+     * Sends the passed message to the specified {@code nodeId}
+     *
+     * @param msg
+     * @param nodeId
+     * @throws Exception
+     */
+    boolean sendRealTimeApplicationMessageToNC(INcAddressedMessage msg, String nodeId) throws Exception;
 
     /**
      * Sends the passed requests to all NCs and wait for the response
@@ -44,10 +53,11 @@ public interface ICCMessageBroker extends IMessageBroker {
      * @param ncs
      * @param requests
      * @param timeout
+     * @param realTime
      * @throws Exception
      */
     Object sendSyncRequestToNCs(long reqId, List<String> ncs, List<? extends INcAddressedMessage> requests,
-            long timeout) throws Exception;
+            long timeout, boolean realTime) throws Exception;
 
     /**
      * respond to a sync request

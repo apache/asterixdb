@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.net.URI;
 
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
@@ -31,6 +30,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.ContentType;
@@ -56,20 +56,11 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
     }
 
     @Override
-    public void install(URI path, String dataverseKey, DataverseName dataverse, boolean useDisplayForm, String name,
-            String type, String libPath, Pair<String, String> credentials) throws Exception {
+    public void install(URI path, String type, String libPath, Pair<String, String> credentials) throws Exception {
         HttpClientContext hcCtx = createHttpClientContext(path, credentials);
         HttpPost post = new HttpPost(path);
         File lib = new File(libPath);
         MultipartEntityBuilder entity = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT);
-        if (!useDisplayForm) {
-            for (String dvPart : dataverse.getParts()) {
-                entity.addTextBody(dataverseKey, dvPart);
-            }
-        } else {
-            entity.addTextBody(dataverseKey, dataverse.toString());
-        }
-        entity.addTextBody("name", name);
         entity.addTextBody("type", type);
         entity.addBinaryBody("data", lib, ContentType.DEFAULT_BINARY, lib.getName()).build();
         post.setEntity(entity.build());
@@ -78,22 +69,10 @@ public class ExternalUDFLibrarian implements IExternalUDFLibrarian {
     }
 
     @Override
-    public void uninstall(URI path, String dataverseKey, DataverseName dataverse, boolean useDisplayForm, String name,
-            Pair<String, String> credentials) throws IOException, AsterixException {
+    public void uninstall(URI path, Pair<String, String> credentials) throws IOException, AsterixException {
         HttpClientContext hcCtx = createHttpClientContext(path, credentials);
-        HttpPost post = new HttpPost(path);
-        MultipartEntityBuilder entity = MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT);
-        if (!useDisplayForm) {
-            for (String dvPart : dataverse.getParts()) {
-                entity.addTextBody(dataverseKey, dvPart);
-            }
-        } else {
-            entity.addTextBody(dataverseKey, dataverse.toString());
-        }
-        entity.addTextBody("name", name);
-        entity.addTextBody("delete", "true");
-        post.setEntity(entity.build());
-        HttpResponse response = hc.execute(post, hcCtx);
+        HttpDelete del = new HttpDelete(path);
+        HttpResponse response = hc.execute(del, hcCtx);
         handleResponse(response);
     }
 

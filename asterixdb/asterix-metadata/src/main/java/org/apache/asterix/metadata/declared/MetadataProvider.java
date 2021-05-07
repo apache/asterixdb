@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.declared;
 
+import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 import static org.apache.asterix.metadata.utils.MetadataConstants.METADATA_OBJECT_NAME_INVALID_CHARS;
@@ -1037,7 +1038,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             JobSpecification jobSpec, IAType itemType, ITypedAdapterFactory adapterFactory,
             ITupleFilterFactory tupleFilterFactory, long outputLimit) throws AlgebricksException {
         if (itemType.getTypeTag() != ATypeTag.OBJECT) {
-            throw new AlgebricksException("Can only scan " + dataset() + "s of records.");
+            throw new AlgebricksException("Can only scan " + dataset(PLURAL) + "of records.");
         }
 
         ISerializerDeserializer<?> payloadSerde =
@@ -1534,7 +1535,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         // Sanity checks.
         if (primaryKeys.size() > 1) {
             throw new AlgebricksException(
-                    "Cannot create inverted index on " + dataset() + "s with composite primary key.");
+                    "Cannot create inverted index on " + dataset(PLURAL) + "with composite primary key.");
         }
         // The size of secondaryKeys can be two if it receives input from its
         // TokenizeOperator- [token, number of token]
@@ -1895,7 +1896,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     private void validateDatabaseObjectNameImpl(String name, SourceLocation sourceLoc) throws AlgebricksException {
         if (name == null || name.isEmpty()) {
-            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, "<empty>");
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, "");
         }
         if (Character.isWhitespace(name.codePointAt(0)) || METADATA_OBJECT_NAME_INVALID_CHARS.matcher(name).find()) {
             throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, name);

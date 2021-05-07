@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.app.function;
 
+import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.SINGULAR;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.util.ArrayList;
@@ -132,7 +133,7 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
             String metaTypeName = FeedUtils.getFeedMetaTypeName(sourceFeed.getConfiguration());
             if (metaTypeName == null) {
                 throw new AlgebricksException(
-                        "Feed to a " + dataset() + " with metadata doesn't have meta type specified");
+                        "Feed to " + dataset(SINGULAR) + " with metadata doesn't have meta type specified");
             }
             metaType = (ARecordType) metadataProvider.findType(id.getDataverseName(), metaTypeName);
         }

@@ -21,6 +21,11 @@
  * Invalid dataverse name in CREATE FUNCTION -> Error
  */
 
+drop dataverse test if exists;
+create dataverse test;
+
+use test;
+
 create function ` invalid`.a() {
   1
 };

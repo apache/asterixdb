@@ -16,9 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-# auth admin:admin
-# param dataverse:multipart_text=Default
-# param name:multipart_text=testlib
-# param data:multipart_binary=target/data/externallib/asterix-external-data-testlib.zip
+/*
+ * Description  : Recursion in DECLARE FUNCTION
+ * Expected Res : Failure
+ */
+use test;
 
-/admin/udf
+declare function f7a(a) { f7b(a) + f7b(-a) };
+declare function f7b(b) { f7a(-b) + f7a(b) };
+declare function f7c(c) { f7b(c) };
+
+f7c(1);

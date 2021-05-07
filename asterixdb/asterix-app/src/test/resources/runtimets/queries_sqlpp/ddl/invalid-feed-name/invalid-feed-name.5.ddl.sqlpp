@@ -16,10 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-# auth admin:admin
-# param dataverse:multipart_text=Default
-# param name:multipart_text=testlib
-# param type:multipart_text=badType
-# param data:multipart_binary=target/data/externallib/asterix-external-data-testlib.zip
 
-/admin/udf
+/*
+ * Invalid dataverse name in DROP FEED -> Error
+ */
+
+drop dataverse c.d if exists;
+create dataverse c.d;
+
+use c.d;
+
+create type Tweet as closed
+{
+  id: int64
+};
+
+create feed e with {
+ "adapter-name" : "socket_adapter",
+ "sockets" : "127.0.0.1:10001",
+ "address-type" : "IP",
+ "type-name" : "Tweet",
+ "format" : "adm"
+};
+
+drop feed `c/d`.e;

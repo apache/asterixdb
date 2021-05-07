@@ -66,6 +66,8 @@ public interface INodeController {
 
     void sendApplicationMessageToNC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception;
 
+    void sendRealTimeApplicationMessageToNC(byte[] data, DeploymentId deploymentId, String nodeId) throws Exception;
+
     void takeThreadDump(String requestId) throws Exception;
 
     /**

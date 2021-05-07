@@ -32,6 +32,7 @@ import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.StorageProperties.Option;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TransactionOptions;
@@ -190,15 +191,15 @@ public class GlobalVirtualBufferCacheTest {
     }
 
     private void createIndex() throws Exception {
-        dataset = new TestDataset(StorageTestUtils.DATAVERSE_NAME, "ds", StorageTestUtils.DATAVERSE_NAME,
-                StorageTestUtils.DATA_TYPE_NAME, StorageTestUtils.NODE_GROUP_NAME, NoMergePolicyFactory.NAME,
+        DataverseName dvName = DataverseName.createSinglePartName(StorageTestUtils.DATAVERSE_NAME);
+        dataset = new TestDataset(dvName, "ds", dvName, StorageTestUtils.DATA_TYPE_NAME,
+                StorageTestUtils.NODE_GROUP_NAME, NoMergePolicyFactory.NAME,
                 null, new InternalDatasetDetails(null, PartitioningStrategy.HASH, StorageTestUtils.PARTITIONING_KEYS,
                         null, null, null, false, null, null),
                 null, DatasetType.INTERNAL, StorageTestUtils.DATASET_ID, 0);
 
-        filteredDataset = new TestDataset(StorageTestUtils.DATAVERSE_NAME, "filtered_ds",
-                StorageTestUtils.DATAVERSE_NAME, StorageTestUtils.DATA_TYPE_NAME, StorageTestUtils.NODE_GROUP_NAME,
-                NoMergePolicyFactory.NAME, null,
+        filteredDataset = new TestDataset(dvName, "filtered_ds", dvName, StorageTestUtils.DATA_TYPE_NAME,
+                StorageTestUtils.NODE_GROUP_NAME, NoMergePolicyFactory.NAME, null,
                 new InternalDatasetDetails(null, PartitioningStrategy.HASH, StorageTestUtils.PARTITIONING_KEYS, null,
                         null, null, false, 0, Collections.singletonList("value")),
                 null, DatasetType.INTERNAL, StorageTestUtils.DATASET_ID + 1, 0);

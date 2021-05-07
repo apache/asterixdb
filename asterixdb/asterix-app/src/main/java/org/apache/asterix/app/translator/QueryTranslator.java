@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.app.translator;
 
+import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 import static org.apache.asterix.lang.common.statement.CreateFullTextFilterStatement.FIELD_TYPE_STOPWORDS;
@@ -97,13 +98,17 @@ import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
 import org.apache.asterix.lang.common.base.IStatementRewriter;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
+import org.apache.asterix.lang.common.literal.MissingLiteral;
 import org.apache.asterix.lang.common.statement.AdapterDropStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
@@ -401,13 +406,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleCreateFunctionStatement(metadataProvider, stmt, stmtRewriter, requestParameters);
                         break;
                     case FUNCTION_DROP:
-                        handleFunctionDropStatement(metadataProvider, stmt);
+                        handleFunctionDropStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case CREATE_LIBRARY:
                         handleCreateLibraryStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case LIBRARY_DROP:
-                        handleLibraryDropStatement(metadataProvider, stmt, hcc);
+                        handleLibraryDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case CREATE_SYNONYM:
                         handleCreateSynonymStatement(metadataProvider, stmt);
@@ -479,7 +484,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         outputFile = result.second;
                         break;
                     case FUNCTION_DECL:
-                        handleDeclareFunctionStatement(stmt);
+                        handleDeclareFunctionStatement(metadataProvider, stmt);
                         break;
                     case EXTENSION:
                         final ExtensionStatement extStmt = (ExtensionStatement) stmt;
@@ -607,7 +612,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 (ILSMMergePolicyFactory) Class.forName(compactionPolicyFactoryClassName).newInstance();
         if (isExternalDataset && mergePolicyFactory.getName().compareTo("correlated-prefix") == 0) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "The correlated-prefix merge policy cannot be used with external " + dataset() + "s");
+                    "The correlated-prefix merge policy cannot be used with external " + dataset(PLURAL));
         }
         if (compactionPolicyProperties == null) {
             if (mergePolicyFactory.getName().compareTo("no-merge") != 0) {
@@ -1779,6 +1784,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DataverseDropStatement stmtDropDataverse = (DataverseDropStatement) stmt;
         SourceLocation sourceLoc = stmtDropDataverse.getSourceLocation();
         DataverseName dataverseName = stmtDropDataverse.getDataverseName();
+        metadataProvider.validateDataverseName(dataverseName, sourceLoc);
         if (dataverseName.equals(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME)
                 || dataverseName.equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -1969,8 +1975,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         DropDatasetStatement stmtDelete = (DropDatasetStatement) stmt;
         SourceLocation sourceLoc = stmtDelete.getSourceLocation();
-        DataverseName dataverseName = getActiveDataverseName(stmtDelete.getDataverseName());
         String datasetName = stmtDelete.getDatasetName().getValue();
+        metadataProvider.validateDatabaseObjectName(stmtDelete.getDataverseName(), datasetName, sourceLoc);
+        DataverseName dataverseName = getActiveDataverseName(stmtDelete.getDataverseName());
         lockUtil.dropDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
         try {
             doDropDataset(dataverseName, datasetName, metadataProvider, stmtDelete.getIfExists(), hcc,
@@ -2067,6 +2074,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleIndexDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         IndexDropStatement stmtIndexDrop = (IndexDropStatement) stmt;
+        metadataProvider.validateDatabaseObjectName(stmtIndexDrop.getDataverseName(),
+                stmtIndexDrop.getIndexName().getValue(), stmtIndexDrop.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(stmtIndexDrop.getDataverseName());
         String datasetName = stmtIndexDrop.getDatasetName().getValue();
         lockUtil.dropIndexBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
@@ -2337,9 +2346,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleTypeDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         TypeDropStatement stmtTypeDrop = (TypeDropStatement) stmt;
         SourceLocation sourceLoc = stmtTypeDrop.getSourceLocation();
-        DataverseName dataverseName = getActiveDataverseName(stmtTypeDrop.getDataverseName());
         String typeName = stmtTypeDrop.getTypeName().getValue();
-
+        metadataProvider.validateDatabaseObjectName(stmtTypeDrop.getDataverseName(), typeName, sourceLoc);
+        DataverseName dataverseName = getActiveDataverseName(stmtTypeDrop.getDataverseName());
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         lockUtil.dropTypeBegin(lockManager, metadataProvider.getLocks(), dataverseName, typeName);
@@ -2379,6 +2388,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         NodeGroupDropStatement stmtDelete = (NodeGroupDropStatement) stmt;
         SourceLocation sourceLoc = stmtDelete.getSourceLocation();
         String nodegroupName = stmtDelete.getNodeGroupName().getValue();
+        metadataProvider.validateDatabaseObjectName(null, nodegroupName, sourceLoc);
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         lockManager.acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodegroupName);
@@ -2401,9 +2411,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleDeclareFunctionStatement(Statement stmt) {
+    protected void handleDeclareFunctionStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         FunctionDecl fds = (FunctionDecl) stmt;
         FunctionSignature signature = fds.getSignature();
+        metadataProvider.validateDatabaseObjectName(signature.getDataverseName(), signature.getName(),
+                stmt.getSourceLocation());
         signature.setDataverseName(getActiveDataverseName(signature.getDataverseName()));
         declaredFunctions.add(fds);
     }
@@ -2563,16 +2575,30 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
                 }
 
-                //Check whether the function is use-able
+                // Check whether the function is usable:
+                // create a function declaration for this function,
+                // and a query body calls this function with each argument set to 'missing'
+                FunctionDecl fd = new FunctionDecl(functionSignature, paramVars, cfs.getFunctionBodyExpression(), true);
+                fd.setSourceLocation(sourceLoc);
+                CallExpr fcall = new CallExpr(functionSignature,
+                        Collections.nCopies(paramVars.size(), new LiteralExpr(MissingLiteral.INSTANCE)));
+                fcall.setSourceLocation(sourceLoc);
                 metadataProvider.setDefaultDataverse(dv);
                 Query wrappedQuery = new Query(false);
                 wrappedQuery.setSourceLocation(sourceLoc);
-                wrappedQuery.setBody(cfs.getFunctionBodyExpression());
+                wrappedQuery.setBody(fcall);
                 wrappedQuery.setTopLevel(false);
-                apiFramework.reWriteQuery(declaredFunctions, metadataProvider, wrappedQuery, sessionOutput, false,
-                        paramVars, warningCollector);
-                List<List<Triple<DataverseName, String, String>>> dependencies = FunctionUtil.getFunctionDependencies(
-                        rewriterFactory.createQueryRewriter(), cfs.getFunctionBodyExpression());
+                List<FunctionDecl> fdList = new ArrayList<>(declaredFunctions);
+                fdList.add(fd);
+                apiFramework.reWriteQuery(fdList, metadataProvider, wrappedQuery, sessionOutput, false, false,
+                        Collections.emptyList(), warningCollector);
+                Expression fdNormBody = fd.getNormalizedFuncBody();
+                if (fdNormBody == null) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                            functionSignature.toString());
+                }
+                List<List<Triple<DataverseName, String, String>>> dependencies =
+                        FunctionUtil.getFunctionDependencies(rewriterFactory.createQueryRewriter(), fdNormBody);
 
                 newInlineTypes = Collections.emptyMap();
                 function = new Function(functionSignature, paramNames, null, null, cfs.getFunctionBody(),
@@ -2658,21 +2684,24 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return new Triple<>(paramTypeSignature, depTypeSignature, paramInlineTypeEntity);
     }
 
-    protected void handleFunctionDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleFunctionDropStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
         FunctionDropStatement stmtDropFunction = (FunctionDropStatement) stmt;
         FunctionSignature signature = stmtDropFunction.getFunctionSignature();
+        metadataProvider.validateDatabaseObjectName(signature.getDataverseName(), signature.getName(),
+                stmtDropFunction.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(signature.getDataverseName());
         signature.setDataverseName(dataverseName);
         lockUtil.dropFunctionBegin(lockManager, metadataProvider.getLocks(), dataverseName, signature.getName());
         try {
-            doDropFunction(metadataProvider, stmtDropFunction, signature);
+            doDropFunction(metadataProvider, stmtDropFunction, signature, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
     protected boolean doDropFunction(MetadataProvider metadataProvider, FunctionDropStatement stmtDropFunction,
-            FunctionSignature signature) throws Exception {
+            FunctionSignature signature, IRequestParameters requestParameters) throws Exception {
         DataverseName dataverseName = signature.getDataverseName();
         SourceLocation sourceLoc = stmtDropFunction.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -2713,13 +2742,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void handleCreateAdapterStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         CreateAdapterStatement cas = (CreateAdapterStatement) stmt;
+        String adapterName = cas.getAdapterName();
+        metadataProvider.validateDatabaseObjectName(cas.getDataverseName(), adapterName, cas.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(cas.getDataverseName());
         DataverseName libraryDataverseName = cas.getLibraryDataverseName();
         if (libraryDataverseName == null) {
             libraryDataverseName = dataverseName;
         }
         String libraryName = cas.getLibraryName();
-        lockUtil.createAdapterBegin(lockManager, metadataProvider.getLocks(), dataverseName, cas.getAdapterName(),
+        lockUtil.createAdapterBegin(lockManager, metadataProvider.getLocks(), dataverseName, adapterName,
                 libraryDataverseName, libraryName);
         try {
             doCreateAdapter(metadataProvider, cas);
@@ -2785,8 +2816,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void handleAdapterDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         AdapterDropStatement stmtDropAdapter = (AdapterDropStatement) stmt;
-        DataverseName dataverseName = getActiveDataverseName(stmtDropAdapter.getDataverseName());
+        SourceLocation sourceLoc = stmtDropAdapter.getSourceLocation();
         String adapterName = stmtDropAdapter.getAdapterName();
+        metadataProvider.validateDatabaseObjectName(stmtDropAdapter.getDataverseName(), adapterName, sourceLoc);
+        DataverseName dataverseName = getActiveDataverseName(stmtDropAdapter.getDataverseName());
         lockUtil.dropAdapterBegin(lockManager, metadataProvider.getLocks(), dataverseName, adapterName);
         try {
             doDropAdapter(metadataProvider, stmtDropAdapter, dataverseName, adapterName);
@@ -2832,6 +2865,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleCreateLibraryStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         CreateLibraryStatement cls = (CreateLibraryStatement) stmt;
+        metadataProvider.validateDatabaseObjectName(cls.getDataverseName(), cls.getLibraryName(),
+                cls.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(cls.getDataverseName());
         String libraryName = cls.getLibraryName();
         String libraryHash = cls.getHash();
@@ -2956,20 +2991,23 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleLibraryDropStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         LibraryDropStatement stmtDropLibrary = (LibraryDropStatement) stmt;
-        DataverseName dataverseName = getActiveDataverseName(stmtDropLibrary.getDataverseName());
         String libraryName = stmtDropLibrary.getLibraryName();
+        metadataProvider.validateDatabaseObjectName(stmtDropLibrary.getDataverseName(), libraryName,
+                stmtDropLibrary.getSourceLocation());
+        DataverseName dataverseName = getActiveDataverseName(stmtDropLibrary.getDataverseName());
         lockUtil.dropLibraryBegin(lockManager, metadataProvider.getLocks(), dataverseName, libraryName);
         try {
-            doDropLibrary(metadataProvider, stmtDropLibrary, dataverseName, libraryName, hcc);
+            doDropLibrary(metadataProvider, stmtDropLibrary, dataverseName, libraryName, hcc, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
     protected boolean doDropLibrary(MetadataProvider metadataProvider, LibraryDropStatement stmtDropLibrary,
-            DataverseName dataverseName, String libraryName, IHyracksClientConnection hcc) throws Exception {
+            DataverseName dataverseName, String libraryName, IHyracksClientConnection hcc,
+            IRequestParameters requestParameters) throws Exception {
         JobUtils.ProgressState progress = ProgressState.NO_PROGRESS;
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -3046,6 +3084,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void handleCreateSynonymStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         CreateSynonymStatement css = (CreateSynonymStatement) stmt;
+        metadataProvider.validateDatabaseObjectName(css.getDataverseName(), css.getSynonymName(),
+                css.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(css.getDataverseName());
         String synonymName = css.getSynonymName();
         DataverseName objectDataverseName =
@@ -3093,8 +3133,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void handleDropSynonymStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         SynonymDropStatement stmtSynDrop = (SynonymDropStatement) stmt;
-        DataverseName dataverseName = getActiveDataverseName(stmtSynDrop.getDataverseName());
         String synonymName = stmtSynDrop.getSynonymName();
+        metadataProvider.validateDatabaseObjectName(stmtSynDrop.getDataverseName(), synonymName,
+                stmtSynDrop.getSourceLocation());
+        DataverseName dataverseName = getActiveDataverseName(stmtSynDrop.getDataverseName());
         lockUtil.dropSynonymBegin(lockManager, metadataProvider.getLocks(), dataverseName, synonymName);
         try {
             doDropSynonym(metadataProvider, stmtSynDrop, dataverseName, synonymName);
@@ -3128,8 +3170,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleLoadStatement(MetadataProvider metadataProvider, Statement stmt, IHyracksClientConnection hcc)
             throws Exception {
         LoadStatement loadStmt = (LoadStatement) stmt;
-        DataverseName dataverseName = getActiveDataverseName(loadStmt.getDataverseName());
         String datasetName = loadStmt.getDatasetName();
+        metadataProvider.validateDatabaseObjectName(loadStmt.getDataverseName(), datasetName,
+                loadStmt.getSourceLocation());
+        DataverseName dataverseName = getActiveDataverseName(loadStmt.getDataverseName());
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -3164,12 +3208,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ResultMetadata outMetadata, Stats stats, boolean compileOnly, IRequestParameters requestParameters,
             Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter) throws Exception {
         InsertStatement stmtInsertUpsert = (InsertStatement) stmt;
+        String datasetName = stmtInsertUpsert.getDatasetName();
+        metadataProvider.validateDatabaseObjectName(stmtInsertUpsert.getDataverseName(), datasetName,
+                stmtInsertUpsert.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(stmtInsertUpsert.getDataverseName());
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
             public void lock() throws AlgebricksException {
-                lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), dataverseName,
-                        stmtInsertUpsert.getDatasetName());
+                lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
             }
 
             @Override
@@ -3226,17 +3272,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IHyracksClientConnection hcc, boolean compileOnly, Map<String, IAObject> stmtParams,
             IStatementRewriter stmtRewriter) throws Exception {
         DeleteStatement stmtDelete = (DeleteStatement) stmt;
+        String datasetName = stmtDelete.getDatasetName();
+        metadataProvider.validateDatabaseObjectName(stmtDelete.getDataverseName(), datasetName,
+                stmt.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(stmtDelete.getDataverseName());
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), dataverseName,
-                stmtDelete.getDatasetName());
+        lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
         try {
             metadataProvider.setWriteTransaction(true);
             CompiledDeleteStatement clfrqs = new CompiledDeleteStatement(stmtDelete.getVariableExpr(), dataverseName,
-                    stmtDelete.getDatasetName(), stmtDelete.getCondition(), stmtDelete.getVarCounter(),
-                    stmtDelete.getQuery());
+                    datasetName, stmtDelete.getCondition(), stmtDelete.getVarCounter(), stmtDelete.getQuery());
             clfrqs.setSourceLocation(stmt.getSourceLocation());
             JobSpecification jobSpec =
                     rewriteCompileQuery(hcc, metadataProvider, clfrqs.getQuery(), clfrqs, stmtParams, stmtRewriter);
@@ -3269,7 +3316,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
         Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
-                metadataProvider, query, sessionOutput, true, externalVars.keySet(), warningCollector);
+                metadataProvider, query, sessionOutput, true, true, externalVars.keySet(), warningCollector);
 
         // Query Compilation (happens under the same ongoing metadata transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, (Query) rewrittenResult.first,
@@ -3286,7 +3333,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
         // Insert/upsert statement rewriting (happens under the same ongoing metadata transaction)
         Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions,
-                metadataProvider, insertUpsert, sessionOutput, true, externalVars.keySet(), warningCollector);
+                metadataProvider, insertUpsert, sessionOutput, true, true, externalVars.keySet(), warningCollector);
 
         InsertStatement rewrittenInsertUpsert = (InsertStatement) rewrittenResult.first;
         DataverseName dataverseName = getActiveDataverseName(rewrittenInsertUpsert.getDataverseName());
@@ -3419,8 +3466,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IHyracksClientConnection hcc) throws Exception {
         FeedDropStatement stmtFeedDrop = (FeedDropStatement) stmt;
         SourceLocation sourceLoc = stmtFeedDrop.getSourceLocation();
-        DataverseName dataverseName = getActiveDataverseName(stmtFeedDrop.getDataverseName());
         String feedName = stmtFeedDrop.getFeedName().getValue();
+        metadataProvider.validateDatabaseObjectName(stmtFeedDrop.getDataverseName(), feedName, sourceLoc);
+        DataverseName dataverseName = getActiveDataverseName(stmtFeedDrop.getDataverseName());
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         lockUtil.dropFeedBegin(lockManager, metadataProvider.getLocks(), dataverseName, feedName);
@@ -3454,7 +3502,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 (ActiveEntityEventsListener) activeNotificationHandler.getListener(feedId);
         if (listener != null && listener.getState() != ActivityState.STOPPED) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "Feed " + feedId + " is currently active and connected to the following " + dataset() + "(s) \n"
+                    "Feed " + feedId + " is currently active and connected to the following " + dataset(PLURAL) + "\n"
                             + listener.toString());
         } else if (listener != null) {
             listener.unregister();
@@ -3469,12 +3517,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleDropFeedPolicyStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
-        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
         FeedPolicyDropStatement stmtFeedPolicyDrop = (FeedPolicyDropStatement) stmt;
         SourceLocation sourceLoc = stmtFeedPolicyDrop.getSourceLocation();
-        DataverseName dataverseName = getActiveDataverseName(stmtFeedPolicyDrop.getDataverseName());
         String policyName = stmtFeedPolicyDrop.getPolicyName().getValue();
+        metadataProvider.validateDatabaseObjectName(stmtFeedPolicyDrop.getDataverseName(), policyName, sourceLoc);
+        DataverseName dataverseName = getActiveDataverseName(stmtFeedPolicyDrop.getDataverseName());
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
         lockUtil.dropFeedPolicyBegin(lockManager, metadataProvider.getLocks(), dataverseName, policyName);
         try {
             FeedPolicyEntity feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverseName, policyName);

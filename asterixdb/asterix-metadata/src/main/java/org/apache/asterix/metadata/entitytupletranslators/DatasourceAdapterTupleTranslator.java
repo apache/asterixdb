@@ -29,6 +29,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
@@ -42,7 +43,7 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
     }
 
     @Override
-    protected DatasourceAdapter createMetadataEntityFromARecord(ARecord adapterRecord) {
+    protected DatasourceAdapter createMetadataEntityFromARecord(ARecord adapterRecord) throws AlgebricksException {
         String dataverseCanonicalName = ((AString) adapterRecord
                 .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_DATAVERSENAME_FIELD_INDEX))
                         .getStringValue();

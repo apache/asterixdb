@@ -16,11 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-# auth admin:admin
-# param dataverse:multipart_text=Default
-# param name:multipart_text=testlib
-# param type:multipart_text=java
-# param delete:multipart_text=true
-# param data:multipart_binary=target/data/externallib/asterix-external-data-testlib.zip
 
-/admin/udf
+/*
+ * Description  : No recursion
+ */
+
+use test;
+
+create function f3a(a) { -a };
+
+create function f3b(b) { f3a(b) };
+
+create function f3c(c) { f3a(c) + f3b(c) };
+
+create function f3d(d) { f3a(d) + f3b(d) + f3c(d) };
+
+create function f3e(e) { f3a(e) + f3b(e) + f3c(e) + f3d(e) };
+
+create function f3f(f) { f3a(f) + f3b(f) + f3c(f) + f3d(f) + f3e(f) };

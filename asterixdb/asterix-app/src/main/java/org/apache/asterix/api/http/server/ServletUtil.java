@@ -20,12 +20,16 @@ package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.RESULTSET_ATTR;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.net.URLCodec;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.client.result.ResultSet;
@@ -50,8 +54,18 @@ public class ServletUtil {
         return resultSet;
     }
 
-    public static DataverseName getDataverseName(IServletRequest request, String dataverseParameterName) {
+    public static DataverseName getDataverseName(IServletRequest request, String dataverseParameterName)
+            throws AlgebricksException {
         List<String> values = request.getParameterValues(dataverseParameterName);
         return !values.isEmpty() ? DataverseName.create(values) : null;
+    }
+
+    public static String decodeUriSegment(String uriSegment) {
+        try {
+            return new String(URLCodec.decodeUrl(uriSegment.getBytes(StandardCharsets.US_ASCII)),
+                    StandardCharsets.UTF_8);
+        } catch (DecoderException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 }

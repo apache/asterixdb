@@ -224,13 +224,14 @@ public class NCApplication extends BaseNCApplication {
                 parseCredentialMap(((NodeControllerService) ncServiceCtx.getControllerService()).getConfiguration()
                         .getCredentialFilePath()));
         Pair<Map<String, String>, Map<String, String>> auth = BasicAuthServlet.generateSysAuthHeader(apiServer.ctx());
-        apiServer.addServlet(new BasicAuthServlet(apiServer.ctx(),
-                new NCUdfApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext(),
-                        sqlppCompilationProvider, apiServer.getScheme(), apiServer.getAddress().getPort()),
-                auth.getFirst(), auth.getSecond()));
-        apiServer.addServlet(new BasicAuthServlet(apiServer.ctx(),
-                new NCUdfRecoveryServlet(apiServer.ctx(), new String[] { UDF_RECOVERY }, getApplicationContext(),
-                        sqlppCompilationProvider, apiServer.getScheme(), apiServer.getAddress().getPort()),
+        apiServer
+                .addServlet(new BasicAuthServlet(apiServer.ctx(),
+                        new NCUdfApiServlet(apiServer.ctx(), new String[] { UDF }, getApplicationContext(),
+                                apiServer.getScheme(), apiServer.getAddress().getPort()),
+                        auth.getFirst(), auth.getSecond()));
+        apiServer.addServlet(new BasicAuthServlet(
+                apiServer.ctx(), new NCUdfRecoveryServlet(apiServer.ctx(), new String[] { UDF_RECOVERY },
+                        getApplicationContext(), apiServer.getScheme(), apiServer.getAddress().getPort()),
                 auth.getFirst(), auth.getSecond()));
         apiServer.addServlet(new QueryStatusApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_STATUS));
         apiServer.addServlet(new QueryResultApiServlet(apiServer.ctx(), getApplicationContext(), QUERY_RESULT));

@@ -140,7 +140,8 @@ public class ActiveManager {
             IActiveRuntime runtime = runtimes.get(runtimeId);
             long reqId = message.getReqId();
             if (runtime == null) {
-                LOGGER.warn("Request stats of a runtime that is not registered " + runtimeId);
+                LOGGER.warn("Request stats of a runtime that is not registered {}; sending failure response",
+                        runtimeId);
                 // Send a failure message
                 ((NodeControllerService) serviceCtx.getControllerService()).sendApplicationMessageToCC(
                         message.getCcId(),
@@ -150,9 +151,10 @@ public class ActiveManager {
                 return;
             }
             String stats = runtime.getStats();
+            LOGGER.debug("Sending stats response for {} ", runtimeId);
             ActiveStatsResponse response = new ActiveStatsResponse(reqId, stats, null);
-            ((NodeControllerService) serviceCtx.getControllerService()).sendApplicationMessageToCC(message.getCcId(),
-                    JavaSerializationUtils.serialize(response), null);
+            ((NodeControllerService) serviceCtx.getControllerService()).sendRealTimeApplicationMessageToCC(
+                    message.getCcId(), JavaSerializationUtils.serialize(response), null);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }

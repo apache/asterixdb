@@ -2992,11 +2992,6 @@ public class AccessMethodUtils {
                             ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project);
                     List<Integer> arrayIndicator = ArrayIndexUtil.getArrayDepthIndicator(e.getUnnestList(), project);
 
-                    // Do not match a variable that we have previously matched.
-                    if (matchedFuncExprs.stream().anyMatch(f -> f.findFieldName(flattenedFieldName) != -1)) {
-                        continue;
-                    }
-
                     Triple<Integer, List<String>, IAType> fieldTriplet =
                             matchAssignFieldInUnnestAssignStack(assignOp.getVariables().get(assignVarIndex),
                                     assignVarIndex, optFuncExpr, subTree, datasetMetaVar, context, arrayIndicator,

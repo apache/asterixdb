@@ -22,6 +22,12 @@ package org.apache.asterix.common.api;
 @FunctionalInterface
 public interface IIdentifierMapper {
 
-    String map(String identifier);
+    enum Modifier {
+        SINGULAR,
+        PLURAL,
+        NONE
+    }
+
+    String map(String identifier, Modifier modifier);
 
 }

@@ -79,6 +79,16 @@ public class NCMessageBroker implements INCMessageBroker {
     }
 
     @Override
+    public void sendRealTimeMessageToCC(CcId ccId, ICcAddressedMessage message) throws Exception {
+        ncs.sendRealTimeApplicationMessageToCC(ccId, JavaSerializationUtils.serialize(message), null);
+    }
+
+    @Override
+    public void sendRealTimeMessageToPrimaryCC(ICcAddressedMessage message) throws Exception {
+        sendRealTimeMessageToCC(ncs.getPrimaryCcId(), message);
+    }
+
+    @Override
     public void sendMessageToNC(String nodeId, INcAddressedMessage message) throws Exception {
         IChannelControlBlock messagingChannel = ncs.getMessagingNetworkManager().getMessagingChannel(nodeId);
         sendMessageToChannel(messagingChannel, message);

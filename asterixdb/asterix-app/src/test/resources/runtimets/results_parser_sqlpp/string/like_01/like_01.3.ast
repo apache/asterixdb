@@ -2,24 +2,20 @@ DataverseUse test
 Query:
 SELECT ELEMENT [
 OrderedListConstructor [
-  OperatorExpr [
+  FunctionCall asterix.like@2[
     LiteralExpr [STRING] [A6BBB]
-    like
     LiteralExpr [STRING] [_6%]
   ]
-  OperatorExpr [
+  FunctionCall asterix.like@2[
     LiteralExpr [STRING] [A8BBB]
-    like
     LiteralExpr [STRING] [_6%]
   ]
-  OperatorExpr [
+  FunctionCall asterix.like@2[
     LiteralExpr [STRING] [+0300]
-    like
     LiteralExpr [STRING] [+03%]
   ]
-  OperatorExpr [
+  FunctionCall asterix.like@2[
     LiteralExpr [STRING] [?0300]
-    like
     LiteralExpr [STRING] [?03%]
   ]
 ]

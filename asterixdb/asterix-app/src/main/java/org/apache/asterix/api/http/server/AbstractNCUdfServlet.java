@@ -28,21 +28,18 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.compiler.provider.ILangCompilationProvider;
-import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.IFormattedException;
@@ -61,7 +58,6 @@ import io.netty.handler.codec.http.multipart.MixedAttribute;
 
 public abstract class AbstractNCUdfServlet extends AbstractServlet {
 
-    private final IParserFactory parserFactory;
     INcApplicationContext appCtx;
     INCServiceContext srvCtx;
 
@@ -70,80 +66,37 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
     private final int httpServerPort;
 
     public static final String GET_UDF_DIST_ENDPOINT = "/dist";
-    public static final String DATAVERSE_PARAMETER = "dataverse";
-    public static final String NAME_PARAMETER = "name";
     public static final String TYPE_PARAMETER = "type";
-    public static final String DELETE_PARAMETER = "delete";
-    public static final String IFEXISTS_PARAMETER = "ifexists";
     public static final String DATA_PARAMETER = "data";
+    public static final String NAME_KEY = "name";
+    public static final String DATAVERSE_KEY = "dataverse";
 
-    protected enum LibraryOperation {
-        UPSERT,
-        DELETE
-    }
-
-    protected final static class LibraryUploadData {
-
-        final LibraryOperation op;
-        final DataverseName dataverse;
-        final String name;
+    protected static final class LibraryUploadData {
         final ExternalFunctionLanguage type;
         final boolean replaceIfExists;
         final FileUpload fileUpload;
 
-        private LibraryUploadData(LibraryOperation op, List<InterfaceHttpData> dataverse, MixedAttribute name,
-                MixedAttribute type, boolean replaceIfExists, InterfaceHttpData fileUpload) throws IOException {
-            this.op = op;
-            List<String> dataverseParts = new ArrayList<>(dataverse.size());
-            for (InterfaceHttpData attr : dataverse) {
-                dataverseParts.add(((MixedAttribute) attr).getValue());
-            }
-            this.dataverse = DataverseName.create(dataverseParts);
-            this.name = name.getValue();
+        private LibraryUploadData(MixedAttribute type, boolean replaceIfExists, InterfaceHttpData fileUpload)
+                throws IOException {
             this.type = type != null ? getLanguageByTypeParameter(type.getValue()) : null;
             this.replaceIfExists = replaceIfExists;
             this.fileUpload = (FileUpload) fileUpload;
         }
 
-        private LibraryUploadData(LibraryOperation op, DataverseName dataverse, MixedAttribute name,
-                MixedAttribute type, boolean replaceIfExists, InterfaceHttpData fileUpload) throws IOException {
-            this.op = op;
-            this.dataverse = dataverse;
-            this.name = name.getValue();
-            this.type = type != null ? getLanguageByTypeParameter(type.getValue()) : null;
-            this.replaceIfExists = replaceIfExists;
-            this.fileUpload = (FileUpload) fileUpload;
+        public static LibraryUploadData libraryCreationUploadData(MixedAttribute type, InterfaceHttpData fileUpload)
+                throws IOException {
+            //POST imples replaceIfExists
+            return new LibraryUploadData(type, true, fileUpload);
         }
 
-        public static LibraryUploadData libraryCreationUploadData(List<InterfaceHttpData> dataverse,
-                MixedAttribute name, MixedAttribute type, InterfaceHttpData fileUpload) throws IOException {
-            return new LibraryUploadData(LibraryOperation.UPSERT, dataverse, name, type, true, fileUpload);
-        }
-
-        public static LibraryUploadData libraryDeletionUploadData(List<InterfaceHttpData> dataverse,
-                MixedAttribute name, boolean replaceIfExists) throws IOException {
-            return new LibraryUploadData(LibraryOperation.DELETE, dataverse, name, null, replaceIfExists, null);
-        }
-
-        public static LibraryUploadData libraryCreationUploadData(DataverseName dataverse, MixedAttribute name,
-                MixedAttribute type, InterfaceHttpData fileUpload) throws IOException {
-            return new LibraryUploadData(LibraryOperation.UPSERT, dataverse, name, type, true, fileUpload);
-        }
-
-        public static LibraryUploadData libraryDeletionUploadData(DataverseName dataverse, MixedAttribute name,
-                boolean replaceIfExists) throws IOException {
-            return new LibraryUploadData(LibraryOperation.DELETE, dataverse, name, null, replaceIfExists, null);
-        }
     }
 
     public AbstractNCUdfServlet(ConcurrentMap<String, Object> ctx, String[] paths, IApplicationContext appCtx,
-            ILangCompilationProvider compilationProvider, HttpScheme httpServerProtocol, int httpServerPort) {
-
+            HttpScheme httpServerProtocol, int httpServerPort) {
         super(ctx, paths);
         this.plainAppCtx = appCtx;
         this.httpServerProtocol = httpServerProtocol;
         this.httpServerPort = httpServerPort;
-        this.parserFactory = compilationProvider.getParserFactory();
     }
 
     void readFromFile(Path filePath, IServletResponse response, String contentType, OpenOption opt) throws Exception {
@@ -176,6 +129,10 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
         }
     }
 
+    protected String getDataverseKey() {
+        return DATAVERSE_KEY;
+    }
+
     URI createDownloadURI(Path file) throws Exception {
         String path = paths[0].substring(0, trims[0]) + GET_UDF_DIST_ENDPOINT + '/' + file.getFileName();
         String host = getHyracksClientConnection().getHost();
@@ -190,67 +147,30 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
         return hcc;
     }
 
-    protected String getDisplayFormDataverseParameter() {
-        return null;
-    }
-
-    protected String getDataverseParameter() {
-        return DATAVERSE_PARAMETER;
-    }
-
     private boolean isNotAttribute(InterfaceHttpData field) {
         return field == null || !field.getHttpDataType().equals(InterfaceHttpData.HttpDataType.Attribute);
     }
 
-    private boolean areNotAttributes(List<InterfaceHttpData> fields) {
-        return fields == null || fields.stream().map(InterfaceHttpData::getHttpDataType)
-                .anyMatch(httpDataType -> !httpDataType.equals(InterfaceHttpData.HttpDataType.Attribute));
+    protected Pair<DataverseName, String> decodeDvAndLibFromLocalPath(String localPath)
+            throws RuntimeDataException, AlgebricksException {
+        String[] pathSegments = StringUtils.split(localPath, '/');
+        if (pathSegments.length != 2) {
+            throw RuntimeDataException.create(ErrorCode.PARAMETERS_REQUIRED,
+                    "The URL-encoded " + getDataverseKey() + " name and library name in the request path");
+        }
+        DataverseName dvName = DataverseName.createFromCanonicalForm(ServletUtil.decodeUriSegment(pathSegments[0]));
+        String libName = ServletUtil.decodeUriSegment(pathSegments[1]);
+        return new Pair<>(dvName, libName);
     }
 
     protected LibraryUploadData decodeMultiPartLibraryOptions(HttpPostRequestDecoder requestDecoder)
-            throws IOException, CompilationException {
-        List<InterfaceHttpData> dataverseAttributeParts = requestDecoder.getBodyHttpDatas(DATAVERSE_PARAMETER);
-        InterfaceHttpData displayFormDataverseAttribute = null;
-        if (getDisplayFormDataverseParameter() != null) {
-            displayFormDataverseAttribute = requestDecoder.getBodyHttpData(getDisplayFormDataverseParameter());
-        }
-        if (displayFormDataverseAttribute != null && dataverseAttributeParts != null) {
-            throw RuntimeDataException.create(ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME,
-                    getDisplayFormDataverseParameter(), getDataverseParameter());
-        }
-        InterfaceHttpData nameAtrribute = requestDecoder.getBodyHttpData(NAME_PARAMETER);
+            throws IOException {
         InterfaceHttpData typeAttribute = requestDecoder.getBodyHttpData(TYPE_PARAMETER);
-        InterfaceHttpData deleteAttribute = requestDecoder.getBodyHttpData(DELETE_PARAMETER);
-        InterfaceHttpData replaceIfExistsAttribute = requestDecoder.getBodyHttpData(IFEXISTS_PARAMETER);
-        if ((isNotAttribute(displayFormDataverseAttribute)) && (areNotAttributes(dataverseAttributeParts))) {
-            throw RuntimeDataException.create(ErrorCode.PARAMETERS_REQUIRED, getDataverseParameter());
-        } else if (isNotAttribute(nameAtrribute)) {
-            throw RuntimeDataException.create(ErrorCode.PARAMETERS_REQUIRED, NAME_PARAMETER);
-        } else if ((typeAttribute == null && deleteAttribute == null)) {
-            throw RuntimeDataException.create(ErrorCode.PARAMETERS_REQUIRED,
-                    TYPE_PARAMETER + " or " + DELETE_PARAMETER);
-        } else if (typeAttribute != null && deleteAttribute != null) {
-            throw RuntimeDataException.create(ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME, TYPE_PARAMETER,
-                    DELETE_PARAMETER);
+        if (typeAttribute == null) {
+            throw RuntimeDataException.create(ErrorCode.PARAMETERS_REQUIRED, TYPE_PARAMETER);
         }
 
-        if (!isNotAttribute(deleteAttribute)) {
-            boolean replace = false;
-            if (replaceIfExistsAttribute != null) {
-                replace = Boolean.TRUE.toString()
-                        .equalsIgnoreCase(((MixedAttribute) replaceIfExistsAttribute).getValue());
-            }
-            if (displayFormDataverseAttribute == null) {
-                return LibraryUploadData.libraryDeletionUploadData(dataverseAttributeParts,
-                        (MixedAttribute) nameAtrribute, replace);
-            } else {
-                DataverseName dataverseName = DataverseName
-                        .create(parserFactory.createParser(((MixedAttribute) displayFormDataverseAttribute).getValue())
-                                .parseMultipartIdentifier());
-                return LibraryUploadData.libraryDeletionUploadData(dataverseName, (MixedAttribute) nameAtrribute,
-                        replace);
-            }
-        } else if (!isNotAttribute(typeAttribute)) {
+        else if (!isNotAttribute(typeAttribute)) {
             InterfaceHttpData libraryData = requestDecoder.getBodyHttpData(DATA_PARAMETER);
             if (libraryData == null) {
                 throw RuntimeDataException.create(ErrorCode.PARAMETERS_REQUIRED, DATA_PARAMETER);
@@ -258,27 +178,15 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
                 throw RuntimeDataException.create(ErrorCode.INVALID_REQ_PARAM_VAL, DATA_PARAMETER,
                         libraryData.getHttpDataType());
             }
-            LibraryUploadData uploadData;
-            if (displayFormDataverseAttribute == null) {
-                uploadData = LibraryUploadData.libraryCreationUploadData(dataverseAttributeParts,
-                        (MixedAttribute) nameAtrribute, (MixedAttribute) typeAttribute, libraryData);
-            } else {
-                DataverseName dataverseName = DataverseName
-                        .create(parserFactory.createParser(((MixedAttribute) displayFormDataverseAttribute).getValue())
-                                .parseMultipartIdentifier());
-                uploadData = LibraryUploadData.libraryCreationUploadData(dataverseName, (MixedAttribute) nameAtrribute,
-                        (MixedAttribute) typeAttribute, libraryData);
-            }
+            LibraryUploadData uploadData =
+                    LibraryUploadData.libraryCreationUploadData((MixedAttribute) typeAttribute, libraryData);
             if (uploadData.type == null) {
                 throw RuntimeDataException.create(ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND,
                         ((MixedAttribute) typeAttribute).getValue());
             }
             return uploadData;
         } else {
-            if (!typeAttribute.getHttpDataType().equals(InterfaceHttpData.HttpDataType.Attribute)) {
-                throw RuntimeDataException.create(ErrorCode.PARAMETERS_REQUIRED, TYPE_PARAMETER);
-            }
-            throw RuntimeDataException.create(ErrorCode.PARAMETERS_REQUIRED, DELETE_PARAMETER);
+            throw RuntimeDataException.create(ErrorCode.PARAMETERS_REQUIRED, TYPE_PARAMETER);
         }
     }
 
@@ -298,7 +206,7 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
         }
         if (IFormattedException.matchesAny(e, ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNKNOWN_KIND,
                 ErrorCode.LIBRARY_EXTERNAL_FUNCTION_UNSUPPORTED_KIND, ErrorCode.INVALID_REQ_PARAM_VAL,
-                ErrorCode.PARAMETERS_REQUIRED)) {
+                ErrorCode.PARAMETERS_REQUIRED, ErrorCode.INVALID_DATABASE_OBJECT_NAME)) {
             return HttpResponseStatus.BAD_REQUEST;
         }
         if (e instanceof AlgebricksException) {

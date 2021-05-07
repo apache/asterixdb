@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -91,7 +92,13 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             } else {
                 String dataverseNamePart =
                         SqlppVariableUtil.toUserDefinedVariableName(leadingVarExpr.getVar().getValue()).getValue();
-                DataverseName dataverseName = DataverseName.createSinglePartName(dataverseNamePart); // 1-part name
+                DataverseName dataverseName; // 1-part name
+                try {
+                    dataverseName = DataverseName.createSinglePartName(dataverseNamePart);
+                } catch (AsterixException e) {
+                    throw new CompilationException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, fa.getSourceLocation(),
+                            dataverseNamePart);
+                }
                 String datasetName = fa.getIdent().getValue();
                 CallExpr datasetExpr = resolveAsDataset(dataverseName, datasetName, parent, leadingVarExpr);
                 if (datasetExpr != null) {
@@ -110,7 +117,13 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                 if (resolveAsVariableReference(topVarExpr)) {
                     return fa;
                 } else {
-                    DataverseName dataverseName = DataverseName.create(dataverseNameParts);
+                    DataverseName dataverseName;
+                    try {
+                        dataverseName = DataverseName.create(dataverseNameParts);
+                    } catch (AsterixException e) {
+                        throw new CompilationException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, fa.getSourceLocation(),
+                                dataverseNameParts.toString());
+                    }
                     String datasetName = fa.getIdent().getValue();
                     CallExpr datasetExpr = resolveAsDataset(dataverseName, datasetName, parent, topVarExpr);
                     if (datasetExpr != null) {
