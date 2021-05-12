@@ -133,15 +133,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         this.locations = locations;
         this.numRegistered = 0;
         this.numDeRegistered = 0;
-        this.handler =
-                (ActiveNotificationHandler) metadataProvider.getApplicationContext().getActiveNotificationHandler();
+        this.handler = (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         handler.registerListener(this);
     }
 
     protected synchronized void setState(ActivityState newState) {
-        if (LOGGER.isEnabled(level)) {
-            LOGGER.log(level, "State of " + getEntityId() + "is being set to " + newState + " from " + state);
-        }
+        LOGGER.log(level, "State of {} is being set to {} from {}", getEntityId(), newState, state);
         this.prevState = state;
         this.state = newState;
         if (newState == ActivityState.STARTING || newState == ActivityState.RECOVERING
