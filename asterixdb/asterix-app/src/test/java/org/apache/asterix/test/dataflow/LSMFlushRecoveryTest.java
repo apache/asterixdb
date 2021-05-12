@@ -23,7 +23,9 @@ import java.lang.reflect.Field;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 import org.apache.asterix.app.bootstrap.TestNodeController;
@@ -62,6 +64,7 @@ import org.apache.hyracks.storage.am.lsm.btree.impl.AllowTestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.ITestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
 import org.apache.hyracks.storage.am.lsm.common.api.IIoOperationFailedCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -143,8 +146,7 @@ public class LSMFlushRecoveryTest {
         checkComponentIds();
         // insert more records
         createInsertOps();
-        insertRecords(PARTITION_0, StorageTestUtils.RECORDS_PER_COMPONENT, StorageTestUtils.RECORDS_PER_COMPONENT,
-                true);
+        insertRecords(PARTITION_0, StorageTestUtils.TOTAL_NUM_OF_RECORDS, StorageTestUtils.RECORDS_PER_COMPONENT, true);
 
         dsInfo.waitForIO();
         checkComponentIds();
@@ -487,8 +489,14 @@ public class LSMFlushRecoveryTest {
         List<ILSMDiskComponent> secondaryDiskComponents = secondaryIndexes[partitionIndex].getDiskComponents();
 
         Assert.assertEquals(primaryDiskComponents.size(), secondaryDiskComponents.size());
+        Set<ILSMComponentId> uniqueIds = new HashSet<>();
         for (int i = 0; i < primaryDiskComponents.size(); i++) {
             Assert.assertEquals(primaryDiskComponents.get(i).getId(), secondaryDiskComponents.get(i).getId());
+            ILSMComponentId id = primaryDiskComponents.get(i).getId();
+            boolean added = uniqueIds.add(id);
+            if (!added) {
+                throw new IllegalStateException("found duplicate component ids: " + id);
+            }
         }
     }
 

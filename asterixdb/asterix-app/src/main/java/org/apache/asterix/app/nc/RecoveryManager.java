@@ -173,15 +173,14 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         deleteRecoveryTemporaryFiles();
 
         //get active partitions on this node
-        replayPartitionsLogs(partitions, logMgr.getLogReader(true), lowWaterMarkLSN);
+        replayPartitionsLogs(partitions, logMgr.getLogReader(true), lowWaterMarkLSN, true);
     }
 
-    @Override
-    public synchronized void replayPartitionsLogs(Set<Integer> partitions, ILogReader logReader, long lowWaterMarkLSN)
-            throws IOException, ACIDException {
+    public synchronized void replayPartitionsLogs(Set<Integer> partitions, ILogReader logReader, long lowWaterMarkLSN,
+            boolean closeOnFlushRedo) throws IOException, ACIDException {
         try {
             Set<Long> winnerJobSet = startRecoverysAnalysisPhase(partitions, logReader, lowWaterMarkLSN);
-            startRecoveryRedoPhase(partitions, logReader, lowWaterMarkLSN, winnerJobSet);
+            startRecoveryRedoPhase(partitions, logReader, lowWaterMarkLSN, winnerJobSet, closeOnFlushRedo);
         } finally {
             logReader.close();
             deleteRecoveryTemporaryFiles();
@@ -277,7 +276,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     }
 
     private synchronized void startRecoveryRedoPhase(Set<Integer> partitions, ILogReader logReader,
-            long lowWaterMarkLSN, Set<Long> winnerTxnSet) throws IOException, ACIDException {
+            long lowWaterMarkLSN, Set<Long> winnerTxnSet, boolean closeOnFlushRedo) throws IOException, ACIDException {
         int redoCount = 0;
         long txnId = 0;
 
@@ -299,6 +298,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         TxnEntityId tempKeyTxnEntityId = new TxnEntityId(-1, -1, -1, null, -1, false);
 
         ILogRecord logRecord = null;
+        Set<Integer> flushRedoDatasets = new HashSet<>();
         try {
             logReader.setPosition(lowWaterMarkLSN);
             logRecord = logReader.next();
@@ -409,6 +409,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
                                                 && !index.isCurrentMutableComponentEmpty()) {
                                             // schedule flush
                                             redoFlush(index, logRecord);
+                                            flushRedoDatasets.add(datasetId);
                                             redoCount++;
                                         } else {
                                             // TODO: update checkpoint file?
@@ -440,6 +441,11 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             Set<Long> resourceIdList = resourceId2MaxLSNMap.keySet();
             for (long r : resourceIdList) {
                 datasetLifecycleManager.close(resourcesMap.get(r).getPath());
+            }
+            if (closeOnFlushRedo) {
+                // close datasets of indexes to ensure any cached state that might've been changed by recovery is cleared
+                // e.g. when redoing a flush, the component id generator needs to be reinitialized
+                datasetLifecycleManager.closeDatasets(flushRedoDatasets);
             }
         }
     }
@@ -525,7 +531,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             if (minLSN < readableSmallestLSN) {
                 minLSN = readableSmallestLSN;
             }
-            replayPartitionsLogs(partitions, logMgr.getLogReader(true), minLSN);
+            replayPartitionsLogs(partitions, logMgr.getLogReader(true), minLSN, false);
             if (flush) {
                 appCtx.getDatasetLifecycleManager().flushAllDatasets();
             }
