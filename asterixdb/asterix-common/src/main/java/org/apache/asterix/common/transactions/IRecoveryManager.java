@@ -85,17 +85,6 @@ public interface IRecoveryManager {
     long getLocalMinFirstLSN() throws HyracksDataException;
 
     /**
-     * Replay the logs that belong to the passed {@code partitions} starting from the {@code lowWaterMarkLSN}
-     *
-     * @param partitions
-     * @param lowWaterMarkLSN
-     * @throws IOException
-     * @throws ACIDException
-     */
-    void replayPartitionsLogs(Set<Integer> partitions, ILogReader logReader, long lowWaterMarkLSN)
-            throws IOException, ACIDException;
-
-    /**
      * Creates a temporary file to be used during recovery
      *
      * @param txnId

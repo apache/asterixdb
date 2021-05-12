@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
@@ -471,6 +472,16 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         }
         removeDatasetFromCache(dsInfo.getDatasetID());
         dsInfo.setOpen(false);
+    }
+
+    @Override
+    public synchronized void closeDatasets(Set<Integer> datasetsToClose) throws HyracksDataException {
+        ArrayList<DatasetResource> openDatasets = new ArrayList<>(datasets.values());
+        for (DatasetResource dsr : openDatasets) {
+            if (dsr.isOpen() && datasetsToClose.contains(dsr.getDatasetID())) {
+                closeDataset(dsr);
+            }
+        }
     }
 
     @Override
