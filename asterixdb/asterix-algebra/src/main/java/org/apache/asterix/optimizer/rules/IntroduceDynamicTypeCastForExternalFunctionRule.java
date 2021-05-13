@@ -22,6 +22,7 @@ package org.apache.asterix.optimizer.rules;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.ExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -82,6 +83,9 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
             if (reqArgType.getTypeTag() == ATypeTag.OBJECT) {
                 castFlag = !IntroduceDynamicTypeCastRule.compatible((ARecordType) reqArgType, inputType,
                         argExpr.getValue().getSourceLocation());
+            } else if (reqArgType.getTypeTag() == ATypeTag.ANY) {
+                IAType inputPrimeType = TypeComputeUtils.getActualType(inputType);
+                castFlag = inputPrimeType.getTypeTag().isDerivedType();
             } else {
                 castFlag = !reqArgType.equals(inputType);
             }
