@@ -20,10 +20,13 @@ package org.apache.hyracks.util;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class StorageUtil {
 
     public static final int BASE = 1024;
+    private static final Pattern PATTERN = Pattern.compile("^(-?[.0-9]+)([A-Z]{0,2})$");
 
     public enum StorageUnit {
         BYTE("B", "b", 1),
@@ -96,43 +99,27 @@ public class StorageUtil {
      * @throws IllegalArgumentException
      */
     public static double getSizeInBytes(String s) {
-        String sSpaceRemoved = s.replaceAll(" ", "");
-        String sUpper = sSpaceRemoved.toUpperCase();
-
-        // Default type
-        StorageUtil.StorageUnit unitType;
-
-        // If the length is 1, it should only contain a digit number.
-        if (sUpper.length() == 1) {
-            if (Character.isDigit(sUpper.charAt(0))) {
-                unitType = StorageUnit.BYTE;
-            } else {
-                throw invalidFormatException(s);
-            }
-        } else if (sUpper.length() > 1) {
-            String checkStr = sUpper.substring(sUpper.length() - 2);
-            unitType = StorageUnit.lookupBySuffix(checkStr);
-
-            if (unitType == null) {
-                // The last suffix should be at least "B" or a digit to be qualified as byte unit string.
-                char lastChar = sUpper.charAt(sUpper.length() - 1);
-                if (sUpper.substring(sUpper.length() - 1).equals(StorageUnit.BYTE.toString())
-                        || Character.isDigit(lastChar)) {
-                    unitType = StorageUnit.BYTE;
-                } else {
-                    throw invalidFormatException(s);
-                }
-            }
-        } else {
-            // String length is zero. We can't parse this string.
+        String valueAndUnit = s.replace(" ", "").toUpperCase();
+        Matcher matcher = PATTERN.matcher(valueAndUnit);
+        if (!matcher.find()) {
             throw invalidFormatException(s);
         }
 
-        // Strip all unit suffixes such as KB, MB ...
-        String sFinalVal = sUpper.replaceAll("[^-\\.0123456789]", "");
+        String value = matcher.group(1);
+        String unit = matcher.group(2);
 
-        // Return the bytes.
-        return unitType.toBytes(Double.parseDouble(sFinalVal));
+        // Default to bytes or find provided unit
+        StorageUnit unitType = !unit.isEmpty() ? StorageUnit.lookupBySuffix(unit) : StorageUnit.BYTE;
+        if (unitType == null) {
+            throw invalidFormatException(s);
+        }
+
+        try {
+            // Return the bytes.
+            return unitType.toBytes(Double.parseDouble(value));
+        } catch (NumberFormatException ex) {
+            throw invalidFormatException(s);
+        }
     }
 
     private static IllegalArgumentException invalidFormatException(String s) {
