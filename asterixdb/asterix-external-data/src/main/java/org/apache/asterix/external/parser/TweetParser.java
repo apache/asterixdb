@@ -199,7 +199,7 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
                 DataOutput fieldOutput = fieldValueBuffer.getDataOutput();
                 if (obj.get(curFNames[iter1]).isNull() && !(curTypes[iter1] instanceof AUnionType)) {
                     if (curRecType.isClosedField(curFNames[iter1])) {
-                        throw new RuntimeDataException(ErrorCode.PARSER_TWEET_PARSER_CLOSED_FIELD_NULL,
+                        throw new RuntimeDataException(ErrorCode.PARSER_EXT_DATA_PARSER_CLOSED_FIELD_NULL,
                                 curFNames[iter1]);
                     } else {
                         continue;

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.parser;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.PARSER_DATA_PARSER_UNEXPECTED_TOKEN;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,7 +78,9 @@ public class JSONDataParser extends AbstractJsonDataParser implements IStreamDat
             //TODO(wyk): find a way to reset byte[] instead of creating a new parser for each record.
             jsonParser = jsonFactory.createParser(record.get(), 0, record.size());
             geometryCoParser.reset(jsonParser);
-            nextToken();
+            if (nextToken() != ADMToken.OBJECT_START) {
+                throw new ParseException(PARSER_DATA_PARSER_UNEXPECTED_TOKEN, currentToken(), ADMToken.OBJECT_START);
+            }
             parseObject(rootType, out);
             return true;
         } catch (IOException e) {

@@ -84,4 +84,8 @@ public class ParseException extends HyracksDataException {
         }
         return msg.append(": ").append(super.getMessage()).toString();
     }
+
+    public String getOriginalMessage() {
+        return super.getMessage();
+    }
 }

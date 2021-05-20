@@ -102,12 +102,15 @@ public class ErrorMessageUtil {
         try (Formatter fmt = new Formatter()) {
             if (!NONE.equals(component)) {
                 fmt.format("%1$s%2$04d: ", component, errorCode);
+
+                // if the message is already formatted, just return it
+                if (message.startsWith(fmt.toString())) {
+                    return message;
+                }
             }
-            // if the message is already formatted, just return it
-            if (!fmt.toString().isEmpty() && message.startsWith(fmt.toString())) {
-                return message;
+            if (message != null) {
+                fmt.format(message, (Object[]) params);
             }
-            fmt.format(message == null ? "null" : message, (Object[]) params);
             if (sourceLoc != null) {
                 fmt.out().append(" (in line ").append(String.valueOf(sourceLoc.getLine())).append(", at column ")
                         .append(String.valueOf(sourceLoc.getColumn())).append(')');

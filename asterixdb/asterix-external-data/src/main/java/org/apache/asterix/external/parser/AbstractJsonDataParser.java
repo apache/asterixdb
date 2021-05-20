@@ -212,7 +212,7 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
 
                 //fail fast if the current field is not nullable
                 if (currentToken() == ADMToken.NULL && !isNullableType(fieldType)) {
-                    throw new RuntimeDataException(ErrorCode.PARSER_TWEET_PARSER_CLOSED_FIELD_NULL, fieldName);
+                    throw new RuntimeDataException(ErrorCode.PARSER_EXT_DATA_PARSER_CLOSED_FIELD_NULL, fieldName);
                 }
 
                 nullBitMap.set(fieldIndex);
@@ -415,13 +415,18 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
         }
     }
 
-    protected HyracksDataException createException(IOException e) {
+    protected HyracksDataException createException(Exception e) {
         if (jsonParser != null) {
             String msg;
             if (e instanceof JsonParseException) {
                 msg = ((JsonParseException) e).getOriginalMessage();
             } else {
-                msg = ExceptionUtils.getRootCause(e).getMessage();
+                Throwable rootCause = ExceptionUtils.getRootCause(e);
+                if (rootCause instanceof ParseException) {
+                    msg = ((ParseException) rootCause).getOriginalMessage();
+                } else {
+                    msg = ExceptionUtils.getRootCause(e).getMessage();
+                }
             }
             if (msg == null) {
                 msg = ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM.errorMessage();
