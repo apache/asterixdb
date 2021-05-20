@@ -16,7 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util;
+package org.apache.hyracks.util;
+
+import java.util.StringJoiner;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -29,7 +31,24 @@ public class ParseUtil {
 
     public static void warn(IWarningCollector warningCollector, String dataSourceName, long lineNum, int fieldNum,
             String warnMessage) {
-        warningCollector
-                .warn(Warning.of(null, ErrorCode.PARSING_ERROR, dataSourceName, lineNum, fieldNum, warnMessage));
+        warningCollector.warn(Warning.of(null, ErrorCode.PARSING_ERROR,
+                asLocationDetailString(dataSourceName, lineNum, fieldNum), warnMessage));
+    }
+
+    public static String asLocationDetailString(String dataSource, long lineNum, Object fieldIdentifier) {
+        StringJoiner details = new StringJoiner(" ");
+        details.setEmptyValue("N/A");
+        if (dataSource != null && !dataSource.isEmpty()) {
+            details.add(dataSource);
+        }
+        if (lineNum >= 0) {
+            details.add("line " + lineNum);
+        }
+        if (fieldIdentifier instanceof Number) {
+            details.add("field " + fieldIdentifier);
+        } else if (fieldIdentifier instanceof String && !((String) fieldIdentifier).isEmpty()) {
+            details.add("field '" + fieldIdentifier + "'");
+        }
+        return "at " + details;
     }
 }

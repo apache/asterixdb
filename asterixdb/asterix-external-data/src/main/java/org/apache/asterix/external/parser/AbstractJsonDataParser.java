@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.parser;
 
+import static org.apache.hyracks.api.exceptions.ErrorCode.PARSING_ERROR;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.BitSet;
@@ -46,6 +48,7 @@ import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
+import org.apache.hyracks.util.ParseUtil;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -433,18 +436,13 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
             }
             long lineNum = lineNumber.getAsLong() + jsonParser.getCurrentLocation().getLineNr() - 1;
             JsonStreamContext parsingContext = jsonParser.getParsingContext();
-            String fieldName = "N/A";
-            while (parsingContext != null) {
-                String currentFieldName = parsingContext.getCurrentName();
-                if (currentFieldName != null) {
-                    fieldName = currentFieldName;
-                    break;
-                }
+            String fieldName = null;
+            while (parsingContext != null && fieldName == null) {
+                fieldName = parsingContext.getCurrentName();
                 parsingContext = parsingContext.getParent();
             }
-
-            return HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.PARSING_ERROR,
-                    dataSourceName.get(), lineNum, fieldName, msg);
+            final String locationDetails = ParseUtil.asLocationDetailString(dataSourceName.get(), lineNum, fieldName);
+            return HyracksDataException.create(PARSING_ERROR, locationDetails, msg);
         }
         return new RuntimeDataException(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM, e);
     }
