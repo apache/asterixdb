@@ -31,7 +31,6 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.common.transactions.ILockManager;
 import org.apache.asterix.common.transactions.ILogManager;
@@ -113,7 +112,7 @@ public class LogManagerTest {
                     logManager.log(logRecord);
                 }
             } catch (ACIDException e) {
-                Throwable rootCause = ExceptionUtils.getRootCause(e);
+                Throwable rootCause = org.apache.hyracks.api.util.ExceptionUtils.getRootCause(e);
                 if (rootCause instanceof java.lang.InterruptedException) {
                     interrupted.set(true);
                 }

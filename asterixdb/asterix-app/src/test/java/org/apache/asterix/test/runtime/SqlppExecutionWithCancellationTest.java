@@ -20,9 +20,9 @@ package org.apache.asterix.test.runtime;
 
 import java.util.Collection;
 
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.test.common.CancellationTestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;

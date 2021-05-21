@@ -34,7 +34,6 @@ import org.apache.asterix.active.IActiveEntityEventsListener;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.JobUtils;
@@ -182,7 +181,7 @@ public class RebalanceUtil {
                 work.run();
                 done = true;
             } catch (Exception e) {
-                Throwable rootCause = ExceptionUtils.getRootCause(e);
+                Throwable rootCause = org.apache.hyracks.api.util.ExceptionUtils.getRootCause(e);
                 if (rootCause instanceof java.lang.InterruptedException) {
                     interruptedException = (InterruptedException) rootCause;
                     // clear the interrupted state from the thread
