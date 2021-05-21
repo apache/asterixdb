@@ -110,6 +110,28 @@ public class NetworkUtil {
         return address != null ? toHostPort(address.getHostString(), address.getPort()) : null;
     }
 
+    public static String toHostPort(HttpHost httpHost) {
+        if (httpHost == null) {
+            return null;
+        }
+        int port = httpHost.getPort();
+        if (port == -1) {
+            port = "https".equalsIgnoreCase(httpHost.getSchemeName()) ? 443 : 80;
+        }
+        return toHostPort(httpHost.getHostName(), port);
+    }
+
+    public static String toHostPort(HttpHost httpHost, int defaultPort) {
+        if (httpHost == null) {
+            return null;
+        }
+        int port = httpHost.getPort();
+        if (port == -1) {
+            port = defaultPort;
+        }
+        return toHostPort(httpHost.getHostName(), port);
+    }
+
     public static InetSocketAddress parseInetSocketAddress(String hostPortString) {
         int lastColon = hostPortString.lastIndexOf(':');
         String host = decodeIPv6LiteralHost(lastColon < 0 ? hostPortString : hostPortString.substring(0, lastColon));

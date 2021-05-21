@@ -19,6 +19,7 @@
 
 package org.apache.asterix.external.library;
 
+import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
 import static org.msgpack.core.MessagePack.Code.FIXARRAY_PREFIX;
 
 import java.io.DataOutput;
@@ -28,6 +29,7 @@ import java.nio.ByteBuffer;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.library.msgpack.MessageUnpackerToADM;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -76,9 +78,11 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
         for (int i = 0; i < argValues.length; i++) {
             argValues[i] = VoidPointable.FACTORY.createPointable();
         }
-        //TODO: these should be dynamic
-        this.argHolder = ByteBuffer.wrap(new byte[Short.MAX_VALUE * 2]);
-        this.outputWrapper = ByteBuffer.wrap(new byte[Short.MAX_VALUE * 2]);
+        //TODO: these should be dynamic. this static size picking is a temporary bodge until this works like
+        //      v-size frames do or these construction buffers are removed entirely
+        int maxArgSz = ExternalDataUtils.getArgBufferSize();
+        this.argHolder = ByteBuffer.wrap(new byte[maxArgSz]);
+        this.outputWrapper = ByteBuffer.wrap(new byte[maxArgSz]);
         this.evaluatorContext = ctx;
         this.sourceLocation = sourceLoc;
         this.unpackerInput = new ArrayBufferInput(new byte[0]);
@@ -88,16 +92,30 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         argHolder.clear();
+        boolean nullCall = finfo.getNullCall();
+        boolean hasNullArg = false;
         for (int i = 0, ln = argEvals.length; i < ln; i++) {
             argEvals[i].evaluate(tuple, argValues[i]);
-            if (!finfo.getNullCall() && PointableHelper.checkAndSetMissingOrNull(result, argValues[i])) {
-                return;
+            if (!nullCall) {
+                byte[] argBytes = argValues[i].getByteArray();
+                int argStart = argValues[i].getStartOffset();
+                ATypeTag argType = ATYPETAGDESERIALIZER.deserialize(argBytes[argStart]);
+                if (argType == ATypeTag.MISSING) {
+                    PointableHelper.setMissing(result);
+                    return;
+                } else if (argType == ATypeTag.NULL) {
+                    hasNullArg = true;
+                }
             }
             try {
-                PythonLibraryEvaluator.setArgument(argTypes[i], argValues[i], argHolder, finfo.getNullCall());
+                PythonLibraryEvaluator.setArgument(argTypes[i], argValues[i], argHolder, nullCall);
             } catch (IOException e) {
                 throw new HyracksDataException("Error evaluating Python UDF", e);
             }
+        }
+        if (!nullCall && hasNullArg) {
+            PointableHelper.setNull(result);
+            return;
         }
         try {
             ByteBuffer res = libraryEvaluator.callPython(fnId, argHolder, argTypes.length);

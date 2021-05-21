@@ -53,20 +53,20 @@ public abstract class AbstractServlet implements IServlet {
 
     protected final String[] paths;
     protected final ConcurrentMap<String, Object> ctx;
-    protected final int[] trims;
+    protected final int[] servletPathLengths;
 
     public AbstractServlet(ConcurrentMap<String, Object> ctx, String... paths) {
         this.paths = paths;
         this.ctx = ctx;
-        trims = new int[paths.length];
+        servletPathLengths = new int[paths.length];
         for (int i = 0; i < paths.length; i++) {
             String path = paths[i];
             if (path.endsWith("/*")) {
-                trims[i] = path.indexOf("/*");
+                servletPathLengths[i] = path.indexOf("/*");
             } else if (path.endsWith("/")) {
-                trims[i] = path.length() - 1;
+                servletPathLengths[i] = path.length() - 1;
             } else {
-                trims[i] = path.length();
+                servletPathLengths[i] = path.length();
             }
         }
     }
@@ -175,26 +175,27 @@ public abstract class AbstractServlet implements IServlet {
     public String localPath(IServletRequest request) {
         final String uri = request.getHttpRequest().uri();
         int queryStart = uri.indexOf('?');
-        return queryStart == -1 ? uri.substring(trim(uri)) : uri.substring(trim(uri), queryStart);
+        return queryStart == -1 ? uri.substring(servletLength(uri)) : uri.substring(servletLength(uri), queryStart);
     }
 
     public String servletPath(IServletRequest request) {
         final String uri = request.getHttpRequest().uri();
-        return uri.substring(0, trim(uri));
+        return uri.substring(0, servletLength(uri));
     }
 
-    protected int trim(final String uri) {
+    protected int servletLength(final String uri) {
         int trim = -1;
         if (paths.length > 1) {
             for (int i = 0; i < paths.length; i++) {
-                String path = paths[i].indexOf('*') >= 0 ? paths[i].substring(0, paths[i].indexOf('*')) : paths[i];
+                int wildCardIdx = paths[i].indexOf("/*");
+                String path = wildCardIdx >= 0 ? paths[i].substring(0, wildCardIdx) : paths[i];
                 if (uri.indexOf(path) == 0) {
-                    trim = trims[i];
+                    trim = servletPathLengths[i];
                     break;
                 }
             }
         } else {
-            trim = trims[0];
+            trim = servletPathLengths[0];
         }
         return trim;
     }

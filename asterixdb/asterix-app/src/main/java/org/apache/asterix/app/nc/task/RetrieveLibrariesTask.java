@@ -33,12 +33,14 @@ import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.client.utils.URIUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,7 +53,7 @@ public class RetrieveLibrariesTask implements INCLifecycleTask {
 
     public RetrieveLibrariesTask(List<Pair<URI, String>> nodes) {
         this.nodes = nodes;
-        if (nodes.size() <= 0) {
+        if (nodes.isEmpty()) {
             throw new IllegalArgumentException("No nodes specified to retrieve from");
         }
     }
@@ -62,7 +64,8 @@ public class RetrieveLibrariesTask implements INCLifecycleTask {
         boolean success = false;
         for (Pair<URI, String> referenceNode : nodes) {
             try {
-                LOGGER.info("Retrieving UDFs from " + referenceNode.getFirst().getHost());
+                LOGGER.info("Retrieving UDFs from "
+                        + NetworkUtil.toHostPort(URIUtils.extractHost(referenceNode.getFirst())));
                 retrieveLibrary(referenceNode.getFirst(), referenceNode.getSecond(), appContext);
                 success = true;
                 break;

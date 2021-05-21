@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.http.server;
 
-import static org.apache.hyracks.http.server.utils.HttpUtil.X_FORWARDED_PROTO;
-
 import java.io.IOException;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
@@ -143,9 +141,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
     private void submit(ChannelHandlerContext ctx, IServlet servlet, FullHttpRequest request) throws IOException {
         IServletRequest servletRequest;
         try {
-            HttpScheme scheme =
-                    server.getScheme() == HttpScheme.HTTPS || "https".equals(request.headers().get(X_FORWARDED_PROTO))
-                            ? HttpScheme.HTTPS : HttpScheme.HTTP;
+            HttpScheme scheme = HttpUtil.getScheme(server, request);
             servletRequest = createServletRequest(ctx, request, scheme);
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.WARN, "Failure Decoding Request", e);
@@ -166,7 +162,7 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
         }
     }
 
-    protected void handleServletNotFound(ChannelHandlerContext ctx, FullHttpRequest request) {
+    protected void handleServletNotFound(ChannelHandlerContext ctx, FullHttpRequest request) throws IOException {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("No servlet for " + request.uri());
         }

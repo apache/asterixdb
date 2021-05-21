@@ -57,7 +57,6 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     protected final AtomicBoolean closed = new AtomicBoolean(false);
     protected static final long INTERVAL = 1000;
     protected State state = State.CREATED;
-    protected long incomingRecordsCount = 0;
     protected long failedRecordsCount = 0;
 
     public FeedRecordDataFlowController(IHyracksTaskContext ctx, FeedLogManager feedLogManager, int numOfOutputFields,
@@ -265,6 +264,10 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
 
     public IRecordDataParser<T> getParser() {
         return dataParser;
+    }
+
+    public long getFailedRecordsCount() {
+        return failedRecordsCount;
     }
 
     @Override

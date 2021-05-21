@@ -6,7 +6,7 @@ distribute result [$$t]
     -- STREAM_LIMIT  |UNPARTITIONED|
       exchange
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        union ($$151, $$310, $$t)
+        union ($$151, $$178, $$t)
         -- UNION_ALL  |PARTITIONED|
           exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -58,7 +58,7 @@ distribute result [$$t]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
           exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            union ($$345, $$356, $$310)
+            union ($$345, $$354, $$178)
             -- UNION_ALL  |PARTITIONED|
               exchange
               -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
@@ -84,9 +84,9 @@ distribute result [$$t]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
               exchange
               -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
-                project ([$$356])
+                project ([$$354])
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$356] <- [{"two": $$186}]
+                  assign [$$354] <- [{"two": $$186}]
                   -- ASSIGN  |PARTITIONED|
                     limit 4
                     -- STREAM_LIMIT  |PARTITIONED|

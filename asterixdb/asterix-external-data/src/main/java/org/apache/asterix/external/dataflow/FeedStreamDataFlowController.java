@@ -32,7 +32,6 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
 
     private final IStreamDataParser dataParser;
     private final AsterixInputStream stream;
-    protected long incomingRecordsCount = 0;
 
     public FeedStreamDataFlowController(IHyracksTaskContext ctx, FeedLogManager feedLogManager,
             IStreamDataParser streamParser, AsterixInputStream inputStream) {

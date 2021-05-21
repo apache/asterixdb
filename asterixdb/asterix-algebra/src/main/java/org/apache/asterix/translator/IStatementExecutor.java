@@ -273,6 +273,9 @@ public interface IStatementExecutor {
      * @param statementParameters
      *            Statement parameters
      * @param statementRewriter
+     *            The statement rewriter
+     * @param requestParameters
+     *            The request parameters
      * @return the compiled {@code JobSpecification}
      * @throws AsterixException
      * @throws RemoteException
@@ -281,7 +284,8 @@ public interface IStatementExecutor {
      */
     JobSpecification rewriteCompileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
             Query query, ICompiledDmlStatement dmlStatement, Map<String, IAObject> statementParameters,
-            IStatementRewriter statementRewriter) throws RemoteException, AlgebricksException, ACIDException;
+            IStatementRewriter statementRewriter, IRequestParameters requestParameters)
+            throws RemoteException, AlgebricksException, ACIDException;
 
     /**
      * returns the active dataverse for an entity or a statement

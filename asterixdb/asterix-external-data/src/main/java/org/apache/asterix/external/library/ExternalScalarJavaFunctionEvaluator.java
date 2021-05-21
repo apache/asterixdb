@@ -19,7 +19,7 @@
 
 package org.apache.asterix.external.library;
 
-import java.io.IOException;
+import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -27,7 +27,9 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionFactory;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -78,23 +80,36 @@ class ExternalScalarJavaFunctionEvaluator extends ExternalScalarFunctionEvaluato
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         try {
-            setArguments(tuple);
-            resultBuffer.reset();
-            externalFunctionInstance.evaluate(functionHelper);
-            if (!functionHelper.isValidResult()) {
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_UDF_RESULT_TYPE_ERROR);
+            boolean nullCall = finfo.getNullCall();
+            boolean hasNullArg = false;
+            for (int i = 0; i < argEvals.length; i++) {
+                argEvals[i].evaluate(tuple, inputVal);
+                if (!nullCall) {
+                    byte[] inputValBytes = inputVal.getByteArray();
+                    int inputValStartOffset = inputVal.getStartOffset();
+                    ATypeTag typeTag = ATYPETAGDESERIALIZER.deserialize(inputValBytes[inputValStartOffset]);
+                    if (typeTag == ATypeTag.MISSING) {
+                        PointableHelper.setMissing(result);
+                        return;
+                    } else if (typeTag == ATypeTag.NULL) {
+                        hasNullArg = true;
+                    }
+                }
+                functionHelper.setArgument(i, inputVal);
             }
-            result.set(resultBuffer.getByteArray(), resultBuffer.getStartOffset(), resultBuffer.getLength());
-            functionHelper.reset();
+            if (!nullCall && hasNullArg) {
+                PointableHelper.setNull(result);
+            } else {
+                resultBuffer.reset();
+                externalFunctionInstance.evaluate(functionHelper);
+                if (!functionHelper.isValidResult()) {
+                    throw new RuntimeDataException(ErrorCode.EXTERNAL_UDF_RESULT_TYPE_ERROR);
+                }
+                result.set(resultBuffer.getByteArray(), resultBuffer.getStartOffset(), resultBuffer.getLength());
+                functionHelper.reset();
+            }
         } catch (Exception e) {
             throw HyracksDataException.create(e);
-        }
-    }
-
-    public void setArguments(IFrameTupleReference tuple) throws IOException {
-        for (int i = 0; i < argEvals.length; i++) {
-            argEvals[i].evaluate(tuple, inputVal);
-            functionHelper.setArgument(i, inputVal);
         }
     }
 }

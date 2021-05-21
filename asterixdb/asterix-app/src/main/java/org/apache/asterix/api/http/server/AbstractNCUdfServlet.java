@@ -134,7 +134,7 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
     }
 
     URI createDownloadURI(Path file) throws Exception {
-        String path = paths[0].substring(0, trims[0]) + GET_UDF_DIST_ENDPOINT + '/' + file.getFileName();
+        String path = paths[0].substring(0, servletPathLengths[0]) + GET_UDF_DIST_ENDPOINT + '/' + file.getFileName();
         String host = getHyracksClientConnection().getHost();
         return new URI(httpServerProtocol.toString(), null, host, httpServerPort, path, null, null);
     }

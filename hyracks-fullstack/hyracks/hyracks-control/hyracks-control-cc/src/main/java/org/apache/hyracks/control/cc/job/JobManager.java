@@ -84,7 +84,7 @@ public class JobManager implements IJobManager {
         }
         activeRunMap = new HashMap<>();
         runMapArchive = new LinkedHashMap<JobId, JobRun>() {
-            private static final long serialVersionUID = 1L;
+            private static final long serialVersionUID = -1406441385508773629L;
 
             @Override
             protected boolean removeEldestEntry(Map.Entry<JobId, JobRun> eldest) {
@@ -92,7 +92,7 @@ public class JobManager implements IJobManager {
             }
         };
         runMapHistory = new LinkedHashMap<JobId, List<Exception>>() {
-            private static final long serialVersionUID = 1L;
+            private static final long serialVersionUID = 7572062687032652986L;
             /** history size + 1 is for the case when history size = 0 */
             private final int allowedSize = 100 * (ccConfig.getJobHistorySize() + 1);
 

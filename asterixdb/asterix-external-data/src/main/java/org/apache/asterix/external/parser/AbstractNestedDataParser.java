@@ -116,7 +116,7 @@ public abstract class AbstractNestedDataParser<T> extends AbstractDataParser {
     protected void checkOptionalConstraints(ARecordType recordType, BitSet nullBitmap) throws RuntimeDataException {
         for (int i = 0; i < recordType.getFieldTypes().length; i++) {
             if (!nullBitmap.get(i) && !isMissableType(recordType.getFieldTypes()[i])) {
-                throw new RuntimeDataException(ErrorCode.PARSER_TWEET_PARSER_CLOSED_FIELD_NULL,
+                throw new RuntimeDataException(ErrorCode.PARSER_EXT_DATA_PARSER_CLOSED_FIELD_NULL,
                         recordType.getFieldNames()[i]);
             }
         }

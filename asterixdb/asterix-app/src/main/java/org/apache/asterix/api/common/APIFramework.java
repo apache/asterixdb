@@ -77,6 +77,7 @@ import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.ExecutionPlans;
+import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.asterix.translator.SqlppExpressionToPlanTranslator;
@@ -205,7 +206,8 @@ public class APIFramework {
     public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
             Query query, int varCounter, String outputDatasetName, SessionOutput output,
             ICompiledDmlStatement statement, Map<VarIdentifier, IAObject> externalVars, IResponsePrinter printer,
-            IWarningCollector warningCollector) throws AlgebricksException, ACIDException {
+            IWarningCollector warningCollector, IRequestParameters requestParameters)
+            throws AlgebricksException, ACIDException {
 
         // establish facts
         final boolean isQuery = query != null;
@@ -307,15 +309,17 @@ public class APIFramework {
         JobSpecification spec = compiler.createJob(metadataProvider.getApplicationContext(), jobEventListenerFactory);
 
         if (isQuery) {
-            // Sets a required capacity, only for read-only queries.
-            // DDLs and DMLs are considered not that frequent.
-            // limit the computation locations to the locations that will be used in the query
-            final INodeJobTracker nodeJobTracker = metadataProvider.getApplicationContext().getNodeJobTracker();
-            final AlgebricksAbsolutePartitionConstraint jobLocations =
-                    getJobLocations(spec, nodeJobTracker, computationLocations);
-            final IClusterCapacity jobRequiredCapacity =
-                    ResourceUtils.getRequiredCapacity(plan, jobLocations, physOptConf);
-            spec.setRequiredClusterCapacity(jobRequiredCapacity);
+            if (requestParameters == null || !requestParameters.isSkipAdmissionPolicy()) {
+                // Sets a required capacity, only for read-only queries.
+                // DDLs and DMLs are considered not that frequent.
+                // limit the computation locations to the locations that will be used in the query
+                final INodeJobTracker nodeJobTracker = metadataProvider.getApplicationContext().getNodeJobTracker();
+                final AlgebricksAbsolutePartitionConstraint jobLocations =
+                        getJobLocations(spec, nodeJobTracker, computationLocations);
+                final IClusterCapacity jobRequiredCapacity =
+                        ResourceUtils.getRequiredCapacity(plan, jobLocations, physOptConf);
+                spec.setRequiredClusterCapacity(jobRequiredCapacity);
+            }
         }
         if (isQuery && conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
             generateJob(spec);

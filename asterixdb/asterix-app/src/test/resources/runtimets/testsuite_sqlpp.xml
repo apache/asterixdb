@@ -6846,6 +6846,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-2886">
+        <output-dir compare="Text">query-ASTERIXDB-2886</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="unsupported_parameter">
         <output-dir compare="Text">none</output-dir>
         <expected-error>Query parameter compiler.joinmem is not supported</expected-error>

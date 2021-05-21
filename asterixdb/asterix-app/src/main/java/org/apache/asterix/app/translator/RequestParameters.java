@@ -59,6 +59,7 @@ public class RequestParameters implements IRequestParameters {
     private final int statementCategoryRestrictionMask;
     private final String statement;
     private final boolean forceDropDataset;
+    private final boolean skipAdmissionPolicy;
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
@@ -83,6 +84,16 @@ public class RequestParameters implements IRequestParameters {
             IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
             Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement,
             int statementCategoryRestrictionMask, boolean forceDropDataset) {
+        this(requestReference, statement, resultSet, resultProperties, stats, statementProperties, outMetadata,
+                clientContextId, optionalParameters, statementParameters, multiStatement,
+                statementCategoryRestrictionMask, forceDropDataset, false);
+    }
+
+    public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
+            ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
+            IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
+            Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement,
+            int statementCategoryRestrictionMask, boolean forceDropDataset, boolean skipAdmissionPolicy) {
         this.requestReference = requestReference;
         this.statement = statement;
         this.resultSet = resultSet;
@@ -96,6 +107,7 @@ public class RequestParameters implements IRequestParameters {
         this.multiStatement = multiStatement;
         this.statementCategoryRestrictionMask = statementCategoryRestrictionMask;
         this.forceDropDataset = forceDropDataset;
+        this.skipAdmissionPolicy = skipAdmissionPolicy;
     }
 
     @Override
@@ -146,6 +158,11 @@ public class RequestParameters implements IRequestParameters {
     @Override
     public int getStatementCategoryRestrictionMask() {
         return statementCategoryRestrictionMask;
+    }
+
+    @Override
+    public boolean isSkipAdmissionPolicy() {
+        return skipAdmissionPolicy;
     }
 
     @Override

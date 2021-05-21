@@ -19,6 +19,7 @@
 package org.apache.asterix.common.api;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import org.apache.asterix.common.context.DatasetInfo;
@@ -122,6 +123,14 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
      * @return
      */
     List<IVirtualBufferCache> getVirtualBufferCaches(int datasetId, int ioDeviceNum);
+
+    /**
+     * Attempts to close the datasets in {@code datasetsToClose}
+     *
+     * @param datasetsToClose
+     * @throws HyracksDataException
+     */
+    void closeDatasets(Set<Integer> datasetsToClose) throws HyracksDataException;
 
     /**
      * Flushes then closes all open datasets

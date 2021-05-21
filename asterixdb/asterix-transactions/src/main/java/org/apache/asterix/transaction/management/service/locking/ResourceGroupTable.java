@@ -41,7 +41,7 @@ class ResourceGroupTable {
 
     ResourceGroup get(int dId, int entityHashValue) {
         // TODO ensure good properties of hash function
-        return table[Math.abs(dId ^ entityHashValue) % size];
+        return table[Math.abs((dId ^ entityHashValue) % size)];
     }
 
     ResourceGroup get(int i) {

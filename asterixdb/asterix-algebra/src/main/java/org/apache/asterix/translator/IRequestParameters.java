@@ -73,4 +73,6 @@ public interface IRequestParameters extends ICommonRequestParameters {
      * inconsistent.
      */
     boolean isForceDropDataset();
+
+    boolean isSkipAdmissionPolicy();
 }

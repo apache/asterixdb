@@ -18,6 +18,8 @@
  */
 use externallibtest;
 
-create function typeValidation(a, b, c, d, e, f, g)
+create function typeValidation(a, b, c, d, e, f, g, h)
   as "roundtrip", "Tests.roundtrip" at testlib;
 
+create function typeValidationNullCall(a, b, c, d, e, f, g, h)
+  as "roundtrip", "Tests.roundtrip" at testlib with {"null-call": true};

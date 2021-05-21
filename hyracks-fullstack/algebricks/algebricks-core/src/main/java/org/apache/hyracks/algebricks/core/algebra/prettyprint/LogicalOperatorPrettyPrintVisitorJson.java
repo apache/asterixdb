@@ -411,8 +411,13 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     @Override
     public Void visitSubplanOperator(SubplanOperator op, Void indent) throws AlgebricksException {
-        if (!op.getNestedPlans().isEmpty()) {
-            writeNestedPlans(op, indent);
+        try {
+            if (!op.getNestedPlans().isEmpty()) {
+                jsonGenerator.writeStringField(OPERATOR_FIELD, "subplan");
+                writeNestedPlans(op, indent);
+            }
+        } catch (IOException e) {
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
         return null;
     }

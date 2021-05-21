@@ -190,13 +190,11 @@ public class ExtractBatchableExternalFunctionCallsRule implements IAlgebraicRewr
             if (!assignVars.isEmpty()) {
                 usedVarList.clear();
                 expr.getUsedVariables(usedVarList);
-                for (int i = 0, ln = assignVars.size(); i < ln; i++) {
-                    List<LogicalVariable> candidateVarList = assignVars.get(i);
-                    if (OperatorPropertiesUtil.disjoint(candidateVarList, usedVarList)) {
-                        assignVarList = candidateVarList;
-                        assignExprList = assignExprs.get(i);
-                        break;
-                    }
+                int candidateVarListIdx = assignVars.size() - 1;
+                List<LogicalVariable> candidateVarList = assignVars.get(candidateVarListIdx);
+                if (OperatorPropertiesUtil.disjoint(candidateVarList, usedVarList)) {
+                    assignVarList = candidateVarList;
+                    assignExprList = assignExprs.get(candidateVarListIdx);
                 }
             }
 

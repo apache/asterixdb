@@ -54,6 +54,11 @@ public class SuperActivity extends OneToOneConnectedActivityCluster implements I
     }
 
     @Override
+    public String getDisplayName() {
+        return "SA";
+    }
+
+    @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             final IRecordDescriptorProvider recordDescProvider, final int partition, final int nPartitions)
             throws HyracksDataException {

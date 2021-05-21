@@ -45,7 +45,7 @@ public abstract class BuiltinType implements IAType {
     /** the type of all types */
     public static final BuiltinType ALL_TYPE = new BuiltinType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -6449893468153263063L;
 
         @Override
         public ATypeTag getTypeTag() {
@@ -83,7 +83,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType AINT8 = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -3548486253352636441L;
 
         @Override
         public String getDisplayName() {
@@ -116,7 +116,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType AINT16 = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 7372637344359144146L;
 
         @Override
         public String getDisplayName() {
@@ -149,7 +149,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType AINT32 = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -2019098705812691759L;
 
         @Override
         public String getDisplayName() {
@@ -182,7 +182,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType AINT64 = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -1512324312146380842L;
 
         @Override
         public ATypeTag getTypeTag() {
@@ -215,7 +215,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ABINARY = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 6267661034873713699L;
 
         @Override
         public String getDisplayName() {
@@ -248,7 +248,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType AFLOAT = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 3677347396583352706L;
 
         @Override
         public String getDisplayName() {
@@ -281,7 +281,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ADOUBLE = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -4541634684505456336L;
 
         @Override
         public String getDisplayName() {
@@ -314,7 +314,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ASTRING = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -7772076532516609205L;
 
         @Override
         public String getDisplayName() {
@@ -347,7 +347,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType AMISSING = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 7776297133205477953L;
 
         @Override
         public String getDisplayName() {
@@ -380,7 +380,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ANULL = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -8499117420923359476L;
 
         @Override
         public String getDisplayName() {
@@ -413,7 +413,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ABOOLEAN = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -3974299905945243639L;
 
         @Override
         public String getDisplayName() {
@@ -446,7 +446,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ATIME = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 4868038022671454583L;
 
         @Override
         public String getDisplayName() {
@@ -479,7 +479,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ADATE = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 4037452728204123123L;
 
         @Override
         public String getDisplayName() {
@@ -512,7 +512,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ADATETIME = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 8133030540756758494L;
 
         @Override
         public String getDisplayName() {
@@ -545,7 +545,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ADURATION = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2724423960287103412L;
 
         @Override
         public String getDisplayName() {
@@ -578,7 +578,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType AYEARMONTHDURATION = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -5424462543021800169L;
 
         @Override
         public String getDisplayName() {
@@ -611,7 +611,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ADAYTIMEDURATION = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1605907151536226966L;
 
         @Override
         public String getDisplayName() {
@@ -644,7 +644,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType AINTERVAL = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 6503802193278692294L;
 
         @Override
         public String getDisplayName() {
@@ -674,7 +674,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType APOINT = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -8095235249315628525L;
 
         @Override
         public ATypeTag getTypeTag() {
@@ -707,7 +707,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType APOINT3D = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 8511348838989487264L;
 
         @Override
         public ATypeTag getTypeTag() {
@@ -740,7 +740,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ALINE = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -5081002479268381298L;
 
         @Override
         public String getDisplayName() {
@@ -773,7 +773,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType APOLYGON = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -1150256493732890410L;
 
         @Override
         public String getDisplayName() {
@@ -806,7 +806,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType AGEOMETRY = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1561894254022047509L;
 
         @Override
         public String getDisplayName() {
@@ -838,7 +838,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ACIRCLE = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2609452848446856772L;
 
         @Override
         public String getDisplayName() {
@@ -871,7 +871,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ARECTANGLE = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 3751474563396177041L;
 
         @Override
         public String getDisplayName() {
@@ -904,7 +904,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final IAType ABITARRAY = new LowerCaseConstructorType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 9071500011277554477L;
 
         @Override
         public ATypeTag getTypeTag() {
@@ -936,7 +936,7 @@ public abstract class BuiltinType implements IAType {
     };
 
     public static final BuiltinType AUUID = new LowerCaseConstructorType() {
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -8403791895909921192L;
 
         @Override
         public ATypeTag getTypeTag() {
@@ -969,7 +969,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType ANY = new BuiltinType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -4041457851203593309L;
 
         @Override
         public ATypeTag getTypeTag() {
@@ -1007,7 +1007,7 @@ public abstract class BuiltinType implements IAType {
 
     public static final BuiltinType SHORTWITHOUTTYPEINFO = new BuiltinType() {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = -1769780932699820665L;
 
         @Override
         public ATypeTag getTypeTag() {

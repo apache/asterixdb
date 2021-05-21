@@ -17,6 +17,7 @@
  * under the License.
  */
 use externallibtest;
+
 typeValidation(907, 9.07, "907", 9.07, true, unix_time_from_date_in_days(date("2013-01-01")),
-               unix_time_from_datetime_in_secs(datetime("1989-09-07T12:13:14.039Z")));
+               unix_time_from_datetime_in_secs(datetime("1989-09-07T12:13:14.039Z")), null);
 

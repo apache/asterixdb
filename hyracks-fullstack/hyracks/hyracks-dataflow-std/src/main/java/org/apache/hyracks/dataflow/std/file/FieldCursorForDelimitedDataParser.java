@@ -23,9 +23,8 @@ import java.io.Reader;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
-import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.util.ParseUtil;
 
 public class FieldCursorForDelimitedDataParser {
 
@@ -448,6 +447,6 @@ public class FieldCursorForDelimitedDataParser {
     }
 
     private void warn(String message) {
-        warnings.warn(Warning.of(null, ErrorCode.PARSING_ERROR, dataSourceName.get(), lineCount, fieldCount, message));
+        ParseUtil.warn(warnings, dataSourceName.get(), lineCount, fieldCount, message);
     }
 }

@@ -521,4 +521,8 @@ public abstract class SecondaryIndexOperationsHelper {
     public IFileSplitProvider getSecondaryFileSplitProvider() {
         return secondaryFileSplitProvider;
     }
+
+    public AlgebricksPartitionConstraint getSecondaryPartitionConstraint() {
+        return secondaryPartitionConstraint;
+    }
 }

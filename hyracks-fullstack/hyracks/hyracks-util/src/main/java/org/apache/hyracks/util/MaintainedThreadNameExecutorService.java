@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.util;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -28,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MaintainedThreadNameExecutorService extends ThreadPoolExecutor {
 
-    private final Map<Thread, String> threadNames = new ConcurrentHashMap<>();
+    private static final ThreadLocal<String> savedName = new ThreadLocal<>();
 
     private MaintainedThreadNameExecutorService(ThreadFactory threadFactory) {
         super(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), threadFactory);
@@ -40,17 +38,13 @@ public class MaintainedThreadNameExecutorService extends ThreadPoolExecutor {
 
     @Override
     protected void beforeExecute(Thread t, Runnable r) {
-        threadNames.put(t, t.getName());
+        savedName.set(t.getName());
         super.beforeExecute(t, r);
     }
 
     @Override
     protected void afterExecute(Runnable r, Throwable t) {
         super.afterExecute(r, t);
-        final Thread thread = Thread.currentThread();
-        final String originalThreadName = threadNames.remove(thread);
-        if (originalThreadName != null) {
-            thread.setName(originalThreadName);
-        }
+        Thread.currentThread().setName(savedName.get());
     }
 }

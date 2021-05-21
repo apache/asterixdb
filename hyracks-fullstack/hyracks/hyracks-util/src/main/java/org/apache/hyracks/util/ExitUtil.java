@@ -103,9 +103,11 @@ public class ExitUtil {
 
     public static synchronized void halt(int status, Level logLevel) {
         try {
+            boolean interrupted = Thread.interrupted();
+            LOGGER.log(logLevel, "JVM halting with status {} (halting thread {}, interrupted {})", status,
+                    Thread.currentThread(), interrupted);
             Future<?> future = haltThreadDumpExecutor.submit(() -> {
-                LOGGER.log(logLevel, "JVM halting with status {}; thread dump at halt: {}", status,
-                        ThreadDumpUtil.takeDumpString());
+                LOGGER.log(logLevel, "Thread dump at halt: {}", ThreadDumpUtil.takeDumpString());
                 // try to give time for the log to be emitted...
                 LogManager.shutdown();
             });

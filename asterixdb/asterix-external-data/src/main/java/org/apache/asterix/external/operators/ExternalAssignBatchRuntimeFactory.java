@@ -36,6 +36,7 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.library.PythonLibraryEvaluator;
 import org.apache.asterix.external.library.PythonLibraryEvaluatorFactory;
 import org.apache.asterix.external.library.msgpack.MessageUnpackerToADM;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.functions.IExternalFunctionDescriptor;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -61,6 +62,8 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
     private final IExternalFunctionDescriptor[] fnDescs;
     private final int[][] fnArgColumns;
 
+    private int rpcBufferSize;
+
     public ExternalAssignBatchRuntimeFactory(int[] outColumns, IExternalFunctionDescriptor[] fnDescs,
             int[][] fnArgColumns, int[] projectionList) {
         super(projectionList);
@@ -73,6 +76,9 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
     public AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(IHyracksTaskContext ctx) {
 
         final int[] projectionToOutColumns = new int[projectionList.length];
+        //this is a temporary bodge. these buffers need to work like vsize frames, or be absent entirely
+        int maxArgSz = ExternalDataUtils.getArgBufferSize();
+        rpcBufferSize = ExternalDataUtils.roundUpToNearestFrameSize(maxArgSz, ctx.getInitialFrameSize());
         for (int j = 0; j < projectionList.length; j++) {
             projectionToOutColumns[j] = Arrays.binarySearch(outColumns, projectionList[j]);
         }
@@ -110,14 +116,14 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                 }
                 argHolders = new ArrayList<>(fnArgColumns.length);
                 for (int i = 0; i < fnArgColumns.length; i++) {
-                    argHolders.add(ctx.allocateFrame());
+                    argHolders.add(ctx.allocateFrame(rpcBufferSize));
                 }
                 outputWrapper = ctx.allocateFrame();
                 nullCalls = new ATypeTag[argHolders.size()][0];
                 numCalls = new int[fnArgColumns.length];
                 batchResults = new ArrayList<>(argHolders.size());
                 for (int i = 0; i < argHolders.size(); i++) {
-                    batchResults.add(new Pair<>(ctx.allocateFrame(), new Counter(-1)));
+                    batchResults.add(new Pair<>(ctx.allocateFrame(rpcBufferSize), new Counter(-1)));
                 }
                 unpackerInput = new ArrayBufferInput(new byte[0]);
                 unpacker = MessagePack.newDefaultUnpacker(unpackerInput);
@@ -230,7 +236,8 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                         if (columnResult != null) {
                             Pair<ByteBuffer, Counter> resultholder = batchResults.get(argHolderIdx);
                             if (resultholder.getFirst().capacity() < columnResult.capacity()) {
-                                resultholder.setFirst(ctx.allocateFrame(columnResult.capacity()));
+                                resultholder.setFirst(ctx.allocateFrame(ExternalDataUtils.roundUpToNearestFrameSize(
+                                        columnResult.capacity(), ctx.getInitialFrameSize())));
                             }
                             ByteBuffer resultBuf = resultholder.getFirst();
                             resultBuf.clear();
@@ -262,6 +269,12 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                                 outputWrapper.clear();
                                 outputWrapper.position(0);
                                 Pair<ByteBuffer, Counter> result = batchResults.get(k);
+                                if (result.getFirst() != null) {
+                                    if (result.getFirst().capacity() > outputWrapper.capacity()) {
+                                        outputWrapper = ctx.allocateFrame(ExternalDataUtils.roundUpToNearestFrameSize(
+                                                outputWrapper.capacity(), ctx.getInitialFrameSize()));
+                                    }
+                                }
                                 int start = outputWrapper.arrayOffset();
                                 ATypeTag functionCalled = nullCalls[k][i];
                                 if (functionCalled == ATypeTag.TYPE) {

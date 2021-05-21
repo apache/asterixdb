@@ -16,20 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.util;
 
-import org.apache.hyracks.api.exceptions.ErrorCode;
-import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.Warning;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-public class ParseUtil {
+drop type test if exists;
+create type test as open {
+};
 
-    private ParseUtil() {
-    }
-
-    public static void warn(IWarningCollector warningCollector, String dataSourceName, long lineNum, int fieldNum,
-            String warnMessage) {
-        warningCollector
-                .warn(Warning.of(null, ErrorCode.PARSING_ERROR, dataSourceName, lineNum, fieldNum, warnMessage));
-    }
-}
+drop dataset test if exists;
+CREATE EXTERNAL DATASET test(test) USING S3 (
+("accessKeyId"="dummyAccessKey"),
+("region"="us-west-2"),
+("serviceEndpoint"="http://localhost:8001"),
+("container"="playground"),
+("definition"="json-data/reviews/single-line/json"),
+("format"="json")
+);

@@ -106,7 +106,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -119,6 +118,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.client.utils.URIUtils;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
@@ -207,10 +207,7 @@ public class TestExecutor {
     private static final int MAX_NON_UTF_8_STATEMENT_SIZE = 64 * 1024;
     private static final ContentType TEXT_PLAIN_UTF8 = ContentType.create(HttpUtil.ContentType.APPLICATION_JSON, UTF_8);
 
-    private final IPollTask plainExecutor = (testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
-            queryCount, expectedResultFileCtxs, testFile, actualPath, expectedWarnings) -> executeTestFile(testCaseCtx,
-                    ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount, expectedResultFileCtxs,
-                    testFile, actualPath, expectedWarnings);
+    private final IPollTask plainExecutor = this::executeTestFile;
 
     public static final String DELIVERY_ASYNC = "async";
     public static final String DELIVERY_DEFERRED = "deferred";
@@ -675,7 +672,7 @@ public class TestExecutor {
         cp.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(credentials.first, credentials.second));
         HttpClientContext hcCtx = HttpClientContext.create();
         AuthCache ac = new BasicAuthCache();
-        ac.put(new HttpHost(method.getURI().getHost(), method.getURI().getPort(), "http"), new BasicScheme());
+        ac.put(URIUtils.extractHost(method.getURI()), new BasicScheme());
         hcCtx.setAuthCache(ac);
         CloseableHttpClient client = HttpClients.custom().setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE)
                 .setDefaultCredentialsProvider(cp).build();
