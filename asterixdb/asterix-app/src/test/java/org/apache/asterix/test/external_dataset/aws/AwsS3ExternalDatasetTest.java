@@ -18,15 +18,17 @@
  */
 package org.apache.asterix.test.external_dataset.aws;
 
+import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setDataPaths;
+import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setUploaders;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.BitSet;
 import java.util.Collection;
@@ -39,6 +41,7 @@ import java.util.zip.GZIPOutputStream;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.test.common.TestExecutor;
+import org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -50,7 +53,6 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -91,7 +93,6 @@ public class AwsS3ExternalDatasetTest {
     private static final String JSON_DATA_PATH = joinPath("data", "json");
     private static final String CSV_DATA_PATH = joinPath("data", "csv");
     private static final String TSV_DATA_PATH = joinPath("data", "tsv");
-    private static final String MIXED_DATA_PATH = joinPath("data", "mixed");
 
     // Service endpoint
     private static final int MOCK_SERVER_PORT = 8001;
@@ -99,30 +100,26 @@ public class AwsS3ExternalDatasetTest {
 
     // Region, bucket and definitions
     private static final String MOCK_SERVER_REGION = "us-west-2";
-    private static final String MOCK_SERVER_BUCKET = "playground";
-    private static final String FIXED_DATA_BUCKET = "fixed-data"; // Do not use, has fixed data
-    private static final String INCLUDE_EXCLUDE_BUCKET = "include-exclude"; // include & exclude bucket
-    private static final String JSON_DEFINITION = "json-data/reviews/"; // data resides here
-    private static final String CSV_DEFINITION = "csv-data/reviews/"; // data resides here
-    private static final String TSV_DEFINITION = "tsv-data/reviews/"; // data resides here
-
-    // This is used for a test to generate over 1000 number of files
-    private static final String OVER_1000_OBJECTS_PATH = "over-1000-objects";
-    private static final int OVER_1000_OBJECTS_COUNT = 2999;
 
     private static final Set<String> fileNames = new HashSet<>();
     private static final CreateBucketRequest.Builder CREATE_BUCKET_BUILDER = CreateBucketRequest.builder();
     private static final DeleteBucketRequest.Builder DELETE_BUCKET_BUILDER = DeleteBucketRequest.builder();
     private static final PutObjectRequest.Builder PUT_OBJECT_BUILDER = PutObjectRequest.builder();
 
-    // IMPORTANT: The following values must be used in the AWS S3 test case
     private static S3Mock s3MockServer;
     private static S3Client client;
-    private static final PutObjectRequest.Builder builder = PutObjectRequest.builder().bucket(MOCK_SERVER_BUCKET);
-    private static final PutObjectRequest.Builder includeExcludeBuilder =
-            PutObjectRequest.builder().bucket(INCLUDE_EXCLUDE_BUCKET);
 
     protected TestCaseContext tcCtx;
+
+    public static final String PLAYGROUND_CONTAINER = "playground";
+    public static final String FIXED_DATA_CONTAINER = "fixed-data"; // Do not use, has fixed data
+    public static final String INCLUDE_EXCLUDE_CONTAINER = "include-exclude";
+    public static final PutObjectRequest.Builder playgroundBuilder =
+            PutObjectRequest.builder().bucket(PLAYGROUND_CONTAINER);
+    public static final PutObjectRequest.Builder fixedDataBuilder =
+            PutObjectRequest.builder().bucket(FIXED_DATA_CONTAINER);
+    public static final PutObjectRequest.Builder includeExcludeBuilder =
+            PutObjectRequest.builder().bucket(INCLUDE_EXCLUDE_CONTAINER);
 
     public AwsS3ExternalDatasetTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
@@ -156,9 +153,9 @@ public class AwsS3ExternalDatasetTest {
         SUITE_TESTS = "testsuite_external_dataset_s3.xml";
         ONLY_TESTS = "only_external_dataset.xml";
         TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
-        PREPARE_BUCKET = AwsS3ExternalDatasetTest::prepareS3Bucket;
-        PREPARE_FIXED_DATA_BUCKET = AwsS3ExternalDatasetTest::prepareFixedDataBucket;
-        PREPARE_MIXED_DATA_BUCKET = AwsS3ExternalDatasetTest::prepareMixedDataBucket;
+        PREPARE_BUCKET = ExternalDatasetTestUtils::preparePlaygroundContainer;
+        PREPARE_FIXED_DATA_BUCKET = ExternalDatasetTestUtils::prepareFixedDataContainer;
+        PREPARE_MIXED_DATA_BUCKET = ExternalDatasetTestUtils::prepareMixedDataContainer;
         return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
@@ -197,312 +194,56 @@ public class AwsS3ExternalDatasetTest {
         builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
                 .endpointOverride(endpoint);
         client = builder.build();
+        client.createBucket(CreateBucketRequest.builder().bucket(PLAYGROUND_CONTAINER).build());
+        client.createBucket(CreateBucketRequest.builder().bucket(FIXED_DATA_CONTAINER).build());
+        client.createBucket(CreateBucketRequest.builder().bucket(INCLUDE_EXCLUDE_CONTAINER).build());
         LOGGER.info("Client created successfully");
 
         // Create the bucket and upload some json files
+        setDataPaths(JSON_DATA_PATH, CSV_DATA_PATH, TSV_DATA_PATH);
+        setUploaders(AwsS3ExternalDatasetTest::loadPlaygroundData, AwsS3ExternalDatasetTest::loadFixedData,
+                AwsS3ExternalDatasetTest::loadMixedData);
         PREPARE_BUCKET.run();
         PREPARE_FIXED_DATA_BUCKET.run();
         PREPARE_MIXED_DATA_BUCKET.run();
     }
 
-    /**
-     * Creates a bucket and fills it with some files for testing purpose.
-     */
-    private static void prepareS3Bucket() {
-        LOGGER.info("creating bucket " + MOCK_SERVER_BUCKET);
-        client.createBucket(CreateBucketRequest.builder().bucket(MOCK_SERVER_BUCKET).build());
-        LOGGER.info("bucket created successfully");
-
-        LOGGER.info("Adding JSON files to the bucket");
-        loadJsonFiles();
-        LOGGER.info("JSON Files added successfully");
-
-        LOGGER.info("Adding CSV files to the bucket");
-        loadCsvFiles();
-        LOGGER.info("CSV Files added successfully");
-
-        LOGGER.info("Adding TSV files to the bucket");
-        loadTsvFiles();
-        LOGGER.info("TSV Files added successfully");
-
-        LOGGER.info("Loading " + OVER_1000_OBJECTS_COUNT + " into " + OVER_1000_OBJECTS_PATH);
-        loadLargeNumberOfFiles();
-        LOGGER.info("Added " + OVER_1000_OBJECTS_COUNT + " files into " + OVER_1000_OBJECTS_PATH + " successfully");
+    private static void loadPlaygroundData(String key, String content, boolean fromFile, boolean gzipped) {
+        client.putObject(playgroundBuilder.key(key).build(), getRequestBody(content, fromFile, gzipped));
     }
 
-    /**
-     * This bucket is being filled by fixed data, a test is counting all records in this bucket. If this bucket is
-     * changed, the test case will fail and its result will need to be updated each time
-     */
-    private static void prepareFixedDataBucket() {
-        LOGGER.info("creating bucket " + FIXED_DATA_BUCKET);
-        client.createBucket(CreateBucketRequest.builder().bucket(FIXED_DATA_BUCKET).build());
-        LOGGER.info("bucket " + FIXED_DATA_BUCKET + " created successfully");
-
-        LOGGER.info("Loading fixed data to " + FIXED_DATA_BUCKET);
-
-        // Files data
-        RequestBody requestBody = RequestBody.fromFile(Paths.get(JSON_DATA_PATH, "single-line", "20-records.json"));
-        client.putObject(builder.bucket(FIXED_DATA_BUCKET).key("1.json").build(), requestBody);
-        client.putObject(builder.bucket(FIXED_DATA_BUCKET).key("2.json").build(), requestBody);
-        client.putObject(builder.bucket(FIXED_DATA_BUCKET).key("lvl1/3.json").build(), requestBody);
-        client.putObject(builder.bucket(FIXED_DATA_BUCKET).key("lvl1/4.json").build(), requestBody);
-        client.putObject(builder.bucket(FIXED_DATA_BUCKET).key("lvl1/lvl2/5.json").build(), requestBody);
+    private static void loadFixedData(String key, String content, boolean fromFile, boolean gzipped) {
+        client.putObject(fixedDataBuilder.key(key).build(), getRequestBody(content, fromFile, gzipped));
     }
 
-    private static void loadJsonFiles() {
-        String dataBasePath = JSON_DATA_PATH;
-        String definition = JSON_DEFINITION;
-
-        // Normal format
-        String definitionSegment = "json";
-        loadData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
-                false);
-
-        definitionSegment = "json-array-of-objects";
-        loadData(dataBasePath, "single-line", "array_of_objects.json", "json-data/", definitionSegment, false, false);
-
-        // gz compressed format
-        definitionSegment = "gz";
-        loadGzData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
-                false);
-
-        // Mixed normal and gz compressed format
-        definitionSegment = "mixed";
-        loadData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
-                false);
-        loadGzData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
-                false);
+    private static void loadMixedData(String key, String content, boolean fromFile, boolean gzipped) {
+        client.putObject(includeExcludeBuilder.key(key).build(), getRequestBody(content, fromFile, gzipped));
     }
 
-    private static void loadCsvFiles() {
-        String dataBasePath = CSV_DATA_PATH;
-        String definition = CSV_DEFINITION;
+    private static RequestBody getRequestBody(String content, boolean fromFile, boolean gzipped) {
+        RequestBody body;
 
-        // Normal format
-        String definitionSegment = "csv";
-        loadData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
-        loadData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
-
-        // gz compressed format
-        definitionSegment = "gz";
-        loadGzData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
-
-        // Mixed normal and gz compressed format
-        definitionSegment = "mixed";
-        loadData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
-        loadData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
-    }
-
-    private static void loadTsvFiles() {
-        String dataBasePath = TSV_DATA_PATH;
-        String definition = TSV_DEFINITION;
-
-        // Normal format
-        String definitionSegment = "tsv";
-        loadData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
-        loadData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
-
-        // gz compressed format
-        definitionSegment = "gz";
-        loadGzData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
-
-        // Mixed normal and gz compressed format
-        definitionSegment = "mixed";
-        loadData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
-        loadData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
-    }
-
-    private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,
-            String definitionSegment, boolean removeExtension) {
-        loadData(fileBasePath, filePathSegment, filename, definition, definitionSegment, removeExtension, true);
-    }
-
-    private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,
-            String definitionSegment, boolean removeExtension, boolean copyToSubLevels) {
-        // Files data
-        Path filePath = Paths.get(fileBasePath, filePathSegment, filename);
-        RequestBody requestBody = RequestBody.fromFile(filePath);
-
-        // Keep or remove the file extension
-        Assert.assertFalse("Files with no extension are not supported yet for external datasets", removeExtension);
-        String finalFileName;
-        if (removeExtension) {
-            finalFileName = FilenameUtils.removeExtension(filename);
+        // Content is string
+        if (!fromFile) {
+            body = RequestBody.fromString(content);
         } else {
-            finalFileName = filename;
-        }
-
-        // Files base definition
-        filePathSegment = filePathSegment.isEmpty() ? "" : filePathSegment + "/";
-        definitionSegment = definitionSegment.isEmpty() ? "" : definitionSegment + "/";
-        String basePath = definition + filePathSegment + definitionSegment;
-
-        // Load the data
-        client.putObject(builder.key(basePath + finalFileName).build(), requestBody);
-        if (copyToSubLevels) {
-            client.putObject(builder.key(basePath + "level1a/" + finalFileName).build(), requestBody);
-            client.putObject(builder.key(basePath + "level1b/" + finalFileName).build(), requestBody);
-            client.putObject(builder.key(basePath + "level1a/level2a/" + finalFileName).build(), requestBody);
-            client.putObject(builder.key(basePath + "level1a/level2b/" + finalFileName).build(), requestBody);
-        }
-    }
-
-    private static void loadGzData(String fileBasePath, String filePathSegment, String filename, String definition,
-            String definitionSegment, boolean removeExtension) {
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
-
-            // Files data
-            Path filePath = Paths.get(fileBasePath, filePathSegment, filename);
-
-            // Get the compressed data
-            gzipOutputStream.write(Files.readAllBytes(filePath));
-            gzipOutputStream.close(); // Need to close or data will be invalid
-            byte[] gzipBytes = byteArrayOutputStream.toByteArray();
-            RequestBody requestBody = RequestBody.fromBytes(gzipBytes);
-
-            // Keep or remove the file extension
-            Assert.assertFalse("Files with no extension are not supported yet for external datasets", removeExtension);
-            String finalFileName;
-            if (removeExtension) {
-                finalFileName = FilenameUtils.removeExtension(filename);
+            // Content is a file path
+            if (!gzipped) {
+                body = RequestBody.fromFile(Paths.get(content));
             } else {
-                finalFileName = filename;
+                try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+                    gzipOutputStream.write(Files.readAllBytes(Paths.get(content)));
+                    gzipOutputStream.close(); // Need to close or data will be invalid
+                    byte[] gzipBytes = byteArrayOutputStream.toByteArray();
+                    body = RequestBody.fromBytes(gzipBytes);
+                } catch (IOException ex) {
+                    throw new IllegalArgumentException(ex.toString());
+                }
             }
-            finalFileName += ".gz";
-
-            // Files base definition
-            filePathSegment = filePathSegment.isEmpty() ? "" : filePathSegment + "/";
-            definitionSegment = definitionSegment.isEmpty() ? "" : definitionSegment + "/";
-            String basePath = definition + filePathSegment + definitionSegment;
-
-            // Load the data
-            client.putObject(builder.key(basePath + finalFileName).build(), requestBody);
-            client.putObject(builder.key(basePath + "level1a/" + finalFileName).build(), requestBody);
-            client.putObject(builder.key(basePath + "level1b/" + finalFileName).build(), requestBody);
-            client.putObject(builder.key(basePath + "level1a/level2a/" + finalFileName).build(), requestBody);
-            client.putObject(builder.key(basePath + "level1a/level2b/" + finalFileName).build(), requestBody);
-        } catch (Exception ex) {
-            LOGGER.error(ex.getMessage());
         }
-    }
 
-    /**
-     * Generates over 1000 objects and upload them to S3 mock server, 1 record per object
-     */
-    private static void loadLargeNumberOfFiles() {
-        for (int i = 0; i < OVER_1000_OBJECTS_COUNT; i++) {
-            RequestBody body = RequestBody.fromString("{\"id\":" + i + "}");
-            client.putObject(builder.key(OVER_1000_OBJECTS_PATH + "/" + i + ".json").build(), body);
-        }
-    }
-
-    /**
-     * Loads a combination of different file formats in the same path
-     */
-    private static void prepareMixedDataBucket() {
-        LOGGER.info("creating bucket " + INCLUDE_EXCLUDE_BUCKET);
-        client.createBucket(CreateBucketRequest.builder().bucket(INCLUDE_EXCLUDE_BUCKET).build());
-        LOGGER.info("bucket " + INCLUDE_EXCLUDE_BUCKET + " created successfully");
-
-        // JSON
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/extension/" + "hello-world-2018.json").build(),
-                RequestBody.fromString("{\"id\":" + 1 + "}"));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/extension/" + "hello-world-2019.json").build(),
-                RequestBody.fromString("{\"id\":" + 2 + "}"));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/extension/" + "hello-world-2020.json").build(),
-                RequestBody.fromString("{\"id\":" + 3 + "}"));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/EXTENSION/" + "goodbye-world-2018.json").build(),
-                RequestBody.fromString("{\"id\":" + 4 + "}"));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/EXTENSION/" + "goodbye-world-2019.json").build(),
-                RequestBody.fromString("{\"id\":" + 5 + "}"));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/EXTENSION/" + "goodbye-world-2020.json").build(),
-                RequestBody.fromString("{\"id\":" + 6 + "}"));
-
-        // CSV
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/csv/extension/" + "hello-world-2018.csv").build(),
-                RequestBody.fromString("7,\"good\""));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/csv/extension/" + "hello-world-2019.csv").build(),
-                RequestBody.fromString("8,\"good\""));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/csv/extension/" + "hello-world-2020.csv").build(),
-                RequestBody.fromString("{9,\"good\""));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/csv/EXTENSION/" + "goodbye-world-2018.csv").build(),
-                RequestBody.fromString("10,\"good\""));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/csv/EXTENSION/" + "goodbye-world-2019.csv").build(),
-                RequestBody.fromString("11,\"good\""));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/csv/EXTENSION/" + "goodbye-world-2020.csv").build(),
-                RequestBody.fromString("12,\"good\""));
-
-        // TSV
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/tsv/extension/" + "hello-world-2018.tsv").build(),
-                RequestBody.fromString("13\t\"good\""));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/tsv/extension/" + "hello-world-2019.tsv").build(),
-                RequestBody.fromString("14\t\"good\""));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/tsv/extension/" + "hello-world-2020.tsv").build(),
-                RequestBody.fromString("15\t\"good\""));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/tsv/EXTENSION/" + "goodbye-world-2018.tsv").build(),
-                RequestBody.fromString("16\t\"good\""));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/tsv/EXTENSION/" + "goodbye-world-2019.tsv").build(),
-                RequestBody.fromString("17\t\"good\""));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/tsv/EXTENSION/" + "goodbye-world-2020.tsv").build(),
-                RequestBody.fromString("18\t\"good\""));
-
-        // JSON no extension
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/no-extension/" + "hello-world-2018").build(),
-                RequestBody.fromString("{\"id\":" + 1 + "}"));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/no-extension/" + "hello-world-2019").build(),
-                RequestBody.fromString("{\"id\":" + 2 + "}"));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/no-extension/" + "hello-world-2020").build(),
-                RequestBody.fromString("{\"id\":" + 3 + "}"));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/NO-EXTENSION/" + "goodbye-world-2018").build(),
-                RequestBody.fromString("{\"id\":" + 4 + "}"));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/NO-EXTENSION/" + "goodbye-world-2019").build(),
-                RequestBody.fromString("{\"id\":" + 5 + "}"));
-        client.putObject(
-                includeExcludeBuilder.key(MIXED_DATA_PATH + "/json/NO-EXTENSION/" + "goodbye-world-2020").build(),
-                RequestBody.fromString("{\"id\":" + 6 + "}"));
+        return body;
     }
 
     static class AwsTestExecutor extends TestExecutor {

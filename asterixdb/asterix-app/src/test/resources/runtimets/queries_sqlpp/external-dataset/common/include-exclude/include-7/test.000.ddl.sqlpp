@@ -29,8 +29,8 @@ drop dataset test if exists;
 CREATE EXTERNAL DATASET test(test) USING %adapter% (
 %template%,
 ("container"="include-exclude"),
-("definition"="data/mixed/"),
+("definition"="mixed-data/reviews/"),
 ("format"="json"),
-("include"="data/mixed/json/NO-EXTENSION*"),
-("include#0"="data/mixed/json/EXTENSION*")
+("include"="mixed-data/reviews/json/NO-EXTENSION*"),
+("include#0"="mixed-data/reviews/json/EXTENSION*")
 );
