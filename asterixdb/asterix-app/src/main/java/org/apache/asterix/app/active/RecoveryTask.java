@@ -125,7 +125,7 @@ public class RecoveryTask {
                     try {
                         if (!cancelRecovery && listener.getState() == ActivityState.TEMPORARILY_FAILED) {
                             listener.setState(ActivityState.RECOVERING);
-                            listener.doStart(metadataProvider);
+                            listener.doRecover(metadataProvider);
                         }
                         LOGGER.log(level, "Recovery completed successfully");
                         return null;
@@ -141,7 +141,7 @@ public class RecoveryTask {
                 releaseRecoveryLocks(metadataProvider);
             }
         } while (policy.retry(failure));
-        // Recovery task is essntially over now either through failure or through cancellation(stop)
+        // Recovery task is essentially over now either through failure or through cancellation(stop)
         synchronized (listener) {
             listener.notifyAll();
             if (listener.getState() != ActivityState.TEMPORARILY_FAILED
