@@ -23,12 +23,5 @@ import * as appActions from '../shared/actions/app.actions'
 })
 
 export class AppBarComponent {
-    sideMenuVisible = false;
-
     constructor(private store: Store <any> ) {}
-
-    showMetadata() {
-        this.sideMenuVisible = !this.sideMenuVisible;
-        this.store.dispatch(new appActions.setSideMenuVisible(this.sideMenuVisible));
-    }
 }

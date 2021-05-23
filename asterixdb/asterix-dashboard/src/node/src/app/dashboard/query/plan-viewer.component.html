@@ -1,0 +1,184 @@
+<!--/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/ -->
+<div *ngIf="plan_" class="plan-graph" id={{planName}}>
+  <div *ngIf="planFormat=='JSON'" class='panel' #navBar [class.sticky]="sticky" [class.collapsed]="collapsed">
+    <div class="plan-explorer-title">
+      <h2 class="heading-title">Plan Explorer</h2>
+    </div>
+    <div class="orientation">
+      <mat-form-field>
+        <h3 class="heading-title">View:</h3>
+        <mat-select [(ngModel)]="planOrientation" (ngModelChange)="setOrientation($event)">
+          <mat-option *ngFor="let orientation of orientations" [value]="orientation.value">
+            {{orientation.label}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <button mat-raised-button class="zoomFit-button other-buttons" (click)="fitGraph()" matTooltip="Zoom out to Fit Whole Plan">Zoom To Fit</button>
+    <h3 class="heading-title">Navigation:</h3>
+    <mat-checkbox class="detailed-checkbox" [checked]="detailed" (change)="setDetail($event.checked)">Detailed</mat-checkbox>
+    <h4 class="heading-title">Node:</h4>
+    <div>
+      <div class="node-nav">
+        <mat-form-field>
+          <mat-select [(ngModel)]="selectedNode" (ngModelChange)="panToNode($event)">
+            <mat-option *ngFor="let node of nodeIdsArr" [value]="node.value">
+              {{node.label}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="node-mover">
+          <button mat-icon-button class="inc-dec" (click)="decrementNode()" matTooltip="Move Up a Node" [disabled]="nodeIdx == 0"><mat-icon>keyboard_arrow_up</mat-icon></button>
+          <button mat-icon-button class="inc-dec" (click)="incrementNode()" matTooltip="Move Down a Node" [disabled]="nodeIdx == nodesArr.length - 1"><mat-icon>keyboard_arrow_down</mat-icon></button>
+        </div>
+      </div>
+    </div>
+    <h4 class="heading-title" *ngIf="detailed">Variable:</h4>
+    <div class="variable-nav" *ngIf="detailed">
+      <div class="variable-select-move">
+        <mat-form-field class="variable-select">
+          <mat-label *ngIf="selectedVariableOccurrences == undefined">See Variable Occurrences</mat-label>
+          <mat-label *ngIf="selectedVariableOccurrences">Variable Occurrences ({{this.occurrenceArrayIdx+1}}/{{this.selectedVariableOccurrencesArray.length}})</mat-label>
+          <mat-select [(ngModel)]="selectedVariableOccurrences" (ngModelChange)="setSelectedVariableOccurrences($event)">
+            <mat-option *ngFor="let variable of variables" [value]="variable">
+              {{variable}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <div class="node-mover">
+          <button mat-icon-button class="inc-dec" [disabled]="!selectedVariableOccurrences" (click)="decrementOccurrence()" matTooltip="Move Up an Occurrence"><mat-icon>keyboard_arrow_up</mat-icon></button>
+          <button mat-icon-button class="inc-dec" [disabled]="!selectedVariableOccurrences" (click)="incrementOccurrence()" matTooltip="Move Down an Occurrence"><mat-icon>keyboard_arrow_down</mat-icon></button>
+        </div>
+      </div>
+      <div class="declaration-back-btns">
+        <button mat-raised-button class="other-buttons" [disabled]="!selectedVariableOccurrences"(click)="jumpToDeclaration()" matTooltip="Skip to Declaration">DECLARATION</button>
+        <button mat-raised-button class="undo-buttons" matTooltip="Jump back to Previous Node" [disabled]="previousNodeId == undefined" (click)="jumpBack()">BACK</button>
+      </div>
+    </div>
+    <h4 class="heading-title" *ngIf="detailed">Search:</h4>
+    <div class="search" *ngIf="detailed">
+      <div class="search-nav">
+        <mat-form-field>
+          <mat-label *ngIf="!matchesFound">Search</mat-label>
+          <mat-label *ngIf="matchesFound">Matches ({{this.matchIdx+1}}/{{this.searchMatches.length}})</mat-label>
+          <input matInput [(ngModel)]="searchRegex">
+        </mat-form-field>
+        <div class="node-mover">
+          <button mat-icon-button class="inc-dec" [disabled]="!matchesFound" (click)="decrementMatch()" matTooltip="Move up a Match"><mat-icon>keyboard_arrow_up</mat-icon></button>
+          <button mat-icon-button class="inc-dec" [disabled]="!matchesFound" (click)="incrementMatch()" matTooltip="Move down a Match"><mat-icon>keyboard_arrow_down</mat-icon></button>
+        </div>
+      </div>
+      <button class="search-btn" mat-raised-button (click)="onClickSearch()" [disabled]="searchRegex == ''">SEARCH</button>
+    </div>
+    <button class="clear-btn" mat-raised-button (click)="clearSelections()">CLEAR</button>
+  </div>
+  <div class="divider">
+    <div *ngIf="!jsonVisible" class="plan">
+      <ngx-graph
+        layout="dagre"
+        [view]="[850,800]"
+        [showMiniMap]="true"
+        [zoomToFit$]="zoomToFit$"
+        [center$]="center$"
+        [panToNode$]="panToNode$"
+        [enableZoom]="true"
+        [links]="edgesArr"
+        [nodes]="nodesArr"
+        [draggingEnabled]="false"
+        [zoomSpeed]="0.025"
+        [update$]="update$"
+        [layoutSettings]="{
+                orientation: planOrientation,
+                alignment: 'C',
+                nodePadding: 250,
+                rankPadding: 50
+              }">
+        <ng-template #defsTemplate>
+          <svg:marker id="arrow" viewBox="0 -5 10 10" refX="8" refY="0" markerWidth="5" markerHeight="5" orient="auto">
+            <svg:path d="M0,-5L10,0L0,5" class="arrow-head" />
+          </svg:marker>
+        </ng-template>
+
+        <ng-template #nodeTemplate let-node>
+          <svg:g class="node">
+            <svg:rect *ngIf="!node.selected"
+                      [attr.width]="node.dimension.width"
+                      [attr.height]="node.dimension.height"
+                      [attr.rx] = "15"
+                      [attr.fill]="node.color"
+                      fill-opacity="0.2"
+                      stroke="black"
+                      stroke-width="1.5"
+            />
+            <svg:rect *ngIf="node.selected"
+                      [attr.width]="node.dimension.width"
+                      [attr.height]="node.dimension.height"
+                      [attr.rx] = "15"
+                      [attr.fill] = "node.color"
+                      fill-opacity="0.0"
+                      stroke="black"
+                      stroke-width="4.5"
+            />
+            <svg:rect *ngIf="node.selected"
+                      [attr.width]="node.dimension.width"
+                      [attr.height]="node.dimension.height"
+                      [attr.rx] = "15"
+                      [attr.fill]="node.color"
+                      fill-opacity="0.2"
+                      stroke="red"
+                      stroke-width="3"
+            />
+            <svg:text *ngIf="!detailed" dominant-baseline="middle" text-anchor="middle" [attr.y]="node.dimension.height / 2" [attr.x]="node.dimension.width / 2" >
+              {{node.label}}
+            </svg:text>
+
+            <svg:text *ngIf="detailed" alignment-baseline="top" text-anchor="middle">
+              <svg:tspan [attr.x]="node.dimension.width / 2" dy="1.5em">
+
+              </svg:tspan>
+              <svg:tspan [attr.x]="node.dimension.width / 2" dy="1.5em">
+                {{node.detailed_label}}
+              </svg:tspan>
+              <svg:tspan [attr.x]="node.dimension.width / 2" dy="1.5em">
+                {{node.physical_operator}}
+              </svg:tspan>
+              <svg:tspan [attr.x]="node.dimension.width / 2" dy="1.5em">
+                {{node.execution_mode}}
+              </svg:tspan>
+              <ng-container *ngFor="let details of node.details | keyvalue">
+                <svg:tspan [attr.x]="node.dimension.width / 2" dy="1.5em">
+                  {{details.value}}
+                </svg:tspan>
+              </ng-container>
+              <svg:tspan [attr.x]="node.dimension.width / 2" dy="1.5em">
+                _
+              </svg:tspan>
+            </svg:text>
+          </svg:g>
+        </ng-template>
+        <ng-template #linkTemplate let-link>
+          <svg:g class="edge">
+            <svg:path class="line" stroke-width="2" marker-end="url(#arrow)"></svg:path>
+          </svg:g>
+        </ng-template>
+      </ngx-graph>
+    </div>
+    <div *ngIf="jsonVisible" class="json">
+      <div class='center'>
+        <pre class="json-content">{{jsonPlan}}</pre>
+      </div>
+    </div>
+  </div>
+</div>

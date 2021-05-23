@@ -15,6 +15,8 @@ limitations under the License.
 // Include material core styles.
 @import '~@angular/material/theming';
 @include mat-core();
+// Include codemirror styles
+@import '~codemirror/addon/hint/show-hint';
 // Define the light theme.
 $primary: mat-palette($mat-grey);
 $accent : mat-palette($mat-orange, A200, A100, A400);

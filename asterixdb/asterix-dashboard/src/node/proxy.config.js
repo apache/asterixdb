@@ -17,6 +17,11 @@ const PROXY_CONFIG = {
         "secure": false,
         logLevel: "debug",
         pathRewrite: function (path) { return path.replace('/query-service', '/query/service')}
+    },
+    "/admin/requests/running": {
+      "target": "http://localhost:19002",
+      "secure": false,
+      logLevel: "debug"
     }
 }
 

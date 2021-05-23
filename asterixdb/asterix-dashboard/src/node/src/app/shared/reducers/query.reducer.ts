@@ -26,12 +26,14 @@ export interface State {
     errorHash: {},
     sqlQueryString: string,
     sqlQueryPlanFormat: string,
+    sqlQueryOutputFormat: string,
     sqlQueryStringHash: {},
     sqlQueryPlanFormatHash: {},
     sqlQueryResultHash: {},
     sqlQueryErrorHash: {},
     sqlQueryPrepared: {},
-    sqlQueryMetrics: {}
+    sqlQueryMetrics: {},
+    sqlQueryWarnings: {}
 };
 
 const initialState: State = {
@@ -42,12 +44,14 @@ const initialState: State = {
     errorHash: {},
     sqlQueryString: "",
     sqlQueryPlanFormat: "",
+    sqlQueryOutputFormat: "",
     sqlQueryStringHash: {},
     sqlQueryPlanFormatHash: {},
     sqlQueryResultHash: {},
     sqlQueryErrorHash: {},
     sqlQueryPrepared: {},
-    sqlQueryMetrics: {}
+    sqlQueryMetrics: {},
+    sqlQueryWarnings: {}
 };
 
 /*
@@ -66,6 +70,7 @@ export function sqlReducer(state = initialState, action: Action) {
                 sqlQueryStringHash: state.sqlQueryStringHash,
                 sqlQueryPlanFormatHash: { ...state.sqlQueryPlanFormatHash, [action.payload.editorId]: action.payload.planFormat },
                 sqlQueryMetrics: state.sqlQueryMetrics,
+                sqlQueryWarnings: state.sqlQueryWarnings,
                 currentRequestId: state.currentRequestId
             });
         }
@@ -81,6 +86,7 @@ export function sqlReducer(state = initialState, action: Action) {
                 sqlQueryResultHash: { ...state.sqlQueryResultHash, [action.payload.editorId]: {} },
                 sqlQueryErrorHash: { ...state.sqlQueryErrorHash, [action.payload.editorId]: [] },
                 sqlQueryMetrics: { ...state.sqlQueryMetrics, [action.payload.editorId]: {} },
+                sqlQueryWarnings: { ...state.sqlQueryWarnings, [action.payload.editorId]: []},
                 currentRequestId: action.payload.editorId
             });
         }
@@ -98,11 +104,13 @@ export function sqlReducer(state = initialState, action: Action) {
                 errorHash: { ...state.errorHash, [action.payload.requestId]: false },
                 sqlQueryString: action.payload.queryString,
                 sqlQueryPlanFormat: action.payload.planFormat,
+                sqlQueryOutputFormat: action.payload.format,
                 sqlQueryStringHash: { ...state.sqlQueryStringHash, [action.payload.requestId]: action.payload.queryString },
                 sqlQueryPlanFormatHash: { ...state.sqlQueryPlanFormatHash, [action.payload.requestId]: action.payload.planFormat },
                 sqlQueryResultHash: { ...state.sqlQueryResultHash, [action.payload.requestId]: [] },
                 sqlQueryErrorHash: { ...state.sqlQueryErrorHash, [action.payload.requestId]: [] },
                 sqlQueryMetrics: { ...state.sqlQueryMetrics, [action.payload.requestId]: [] },
+                sqlQueryWarnings: { ...state.sqlQueryWarnings, [action.payload.requestId]: []},
                });
         }
 
@@ -122,7 +130,8 @@ export function sqlReducer(state = initialState, action: Action) {
                 sqlQueryStringHash: { ...state.sqlQueryStringHash, [state.currentRequestId]: state.sqlQueryString },
                 sqlQueryResultHash: { ...state.sqlQueryResultHash, [state.currentRequestId]: action.payload },
                 sqlQueryErrorHash: { ...state.sqlQueryErrorHash, [state.currentRequestId]: [] },
-                sqlQueryMetrics: { ...state.sqlQueryMetrics, [state.currentRequestId]: action.payload.metrics }
+                sqlQueryMetrics: { ...state.sqlQueryMetrics, [state.currentRequestId]: action.payload.metrics },
+                sqlQueryWarnings: { ...state.sqlQueryWarnings, [state.currentRequestId]: action.payload.warnings},
             })
         }
 
@@ -143,6 +152,7 @@ export function sqlReducer(state = initialState, action: Action) {
                 sqlQueryResultHash: { ...state.sqlQueryResultHash, [state.currentRequestId]: [] },
                 sqlQueryErrorHash: { ...state.sqlQueryErrorHash, [state.currentRequestId]: action.payload.errors },
                 sqlQueryMetrics: { ...state.sqlQueryMetrics, [state.currentRequestId]: [] },
+                sqlQueryWarnings: { ...state.sqlQueryWarnings, [action.payload.requestId]: []},
             })
         }
 

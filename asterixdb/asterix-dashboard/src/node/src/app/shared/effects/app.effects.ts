@@ -16,7 +16,7 @@ import { Action } from '@ngrx/store';
 import { Actions } from '@ngrx/effects';
 import * as appActions from '../actions/app.actions';
 
-export type Action = appActions.All
+export type Action_type = appActions.All
 
 @Injectable()
 export class AppEffects {

@@ -13,13 +13,14 @@ limitations under the License.
 */
 
 $results-spacing-unit: 5px;
+
 .sql-results-card {
+    display: block;
+    margin: 0 0px 0 0px;
+    padding: 0;
     margin: ($results-spacing-unit);
-    display: flex;
-    flex-flow: column;
+    border-radius: 4px;
     width: 100%;
-    padding: 0px;
-    border: none !important;
 }
 
 .content-area {

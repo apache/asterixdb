@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { Component } from '@angular/core';
+import {Component, Input, OnChanges, SimpleChange} from '@angular/core';
 import { Observable } from 'rxjs';
 import { Store } from '@ngrx/store';
 
@@ -24,6 +24,10 @@ import { Store } from '@ngrx/store';
 
 
 export class QueryOutputComponent {
+    @Input('inputToOutput') inputToOutput: Object;
+    @Input('isError') isError: boolean;
+    @Input('hideOutput') hideOutput: boolean;
+
     data: any[];
     currentQueryActive$: Observable < any > ;
     currentQueryActive: string;
@@ -37,7 +41,14 @@ export class QueryOutputComponent {
     SQLresults: any;
     queryId: any = "";
     observedPlanFormat = "";
+    queryError: boolean;
+    currentQuery: any = 0;
 
+    ngOnChanges(changes: SimpleChange) {
+      this.inputToOutput = this.inputToOutput;
+      this.isError = this.isError;
+      this.hideOutput = this.hideOutput;
+    }
 
     constructor(private store: Store <any>) {
         let key = '1';
@@ -54,7 +65,7 @@ export class QueryOutputComponent {
                 this.currentQueryActive = "0";
             }
         })
-        /* this is the output when the quey runs for the first time */
+        /* this is the output when the query runs for the first time */
         this.results$ = this.store.select(s => s.sqlQuery.sqlQueryResultHash);
         this.results$.subscribe((data: any) => {
             if (Object.keys(data).length !== 0 && data[this.currentQueryActive]) {

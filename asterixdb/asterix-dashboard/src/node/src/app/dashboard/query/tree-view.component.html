@@ -14,22 +14,23 @@ limitations under the License.
 <div id='top' *ngIf='treeData' class='tree-card'>
     <mat-expansion-panel hideToggle [expanded]="true">
         <mat-expansion-panel-header class='header header-centered-v'>
-            <mat-panel-title>OUTPUT DATA</mat-panel-title>
+            <mat-panel-title>QUERY OUTPUT</mat-panel-title>
             <mat-icon>format_list_numbered_rtl</mat-icon>
         </mat-expansion-panel-header>
         <mat-panel-description class='content'>
             <div class='panel'>
-                <!--<span class='summary' >Items: {{metrics.resultCount}} Size: {{metrics.resultSizeKb}} Kb</span>-->
-                <mat-paginator [showFirstLastButtons]="true" [length]='metrics.resultCount' [pageSize]='pagedefaults.pageSize' [pageSizeOptions]='pageSizeOptions' (page)='showResults($event, false)'>
-                    </mat-paginator>
                 <span class='options'>
-                    <button mat-button class='button' (click)='dataExpand()' [disabled]= 'checkView()' matTooltip="Expand Data"><mat-icon>add_circle</mat-icon></button>
-                    <button mat-button class='button' (click)='dataCollapse()' [disabled]= 'checkView()' matTooltip="Collapse Data"><mat-icon>remove_circle_outline</mat-icon></button>
-                    <button mat-button class='button button-json' (click)='showTable()' matTooltip="Show Table View">TABLE</button>
-                    <button mat-button class='button button-json' (click)='showTree()' matTooltip="Show Tree View">TREE</button>
-                    <button mat-button class='button button-json' (click)='showJSON()' matTooltip="Show JSON View">JSON</button>
-                    <button id='export' mat-button class='button' (click)='exportToText()' matTooltip="Export JSON file to Computer">EXPORT</button>
+                    <button mat-button [ngClass]="this.tableVisible === true ? 'button button-json selected' : 'button button-json'" (click)='showTable()' matTooltip="Show Table View">TABLE</button>
+                    <button mat-button *ngIf="isCSV == false;" [ngClass]="this.jsonVisible === true ? 'button button-json selected' : 'button button-json'" (click)='showJSON()' matTooltip="Show JSON View">JSON</button>
+                    <button mat-button *ngIf="isCSV == false;" [ngClass]="this.treeVisible === true ? 'button button-json selected' : 'button button-json'" (click)='showTree()' matTooltip="Show Tree View">TREE</button>
+
+                    <button mat-button [ngClass]="this.planVisible === true ? 'button button-json selected' : 'button button-json'" (click)='showPlan()' matTooltip="Show Plan Viewer">PLAN</button>
+
+                    <button *ngIf="isCSV" mat-button class='button export' (click)='openJSONExportPicker()' matTooltip="Export CSV file to Computer">EXPORT</button>
+                    <button *ngIf="isCSV == false" mat-button class='button export' (click)='openJSONExportPicker()' matTooltip="Export JSON/JSONL file to Computer">EXPORT</button>
                 </span>
+                <mat-paginator *ngIf="this.planVisible === false" [showFirstLastButtons]="true" [length]='metrics.resultCount' [pageSize]='pagedefaults.pageSize' [pageSizeOptions]='pageSizeOptions' (page)='showResults($event, false)'>
+                </mat-paginator>
             </div>
             <div *ngIf='treeVisible' class='navi-data' class='navi-data'>
                 <mat-icon class='navi-path'>link</mat-icon>
@@ -37,7 +38,7 @@ limitations under the License.
             </div>
             <div class='divider'>
                 <div *ngIf='tableVisible'>
-                    <table mat-table [dataSource]="dataSource" class='items-table table-responsive'>
+                    <table mat-table *ngIf='dataSource' [dataSource]="dataSource" class='items-table table-responsive'>
                         <ng-container matColumnDef="{{col}}" *ngFor="let col of displayedColumns">
                             <th mat-header-cell *matHeaderCellDef class='cell'>{{col}}</th>
                             <td mat-cell *matCellDef="let element"class='cell' >{{element[col]}}</td>
@@ -51,6 +52,9 @@ limitations under the License.
                 </div>
                 <div *ngIf='jsonVisible' class='json'>
                     <pre>{{jsonData}}</pre>
+                </div>
+                <div *ngIf="planVisible" class="plan">
+                  <plan-viewer [planFormat]="planFormat" [jsonPlan]="jsonPlan" [plan]="plan" [planName]="planName"></plan-viewer>
                 </div>
                 <div id='bottom'></div>
             </div>

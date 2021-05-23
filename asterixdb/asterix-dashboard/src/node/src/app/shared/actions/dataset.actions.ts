@@ -29,7 +29,9 @@ export const DROP_DATASET             = '[Dataset Collection] Drop Dataset';
 export const DROP_DATASET_SUCCESS     = '[Dataset Collection] Drop Dataset Success';
 export const DROP_DATASET_FAIL        = '[Dataset Collection] Drop Dataset Fail';
 export const GUIDE_SELECT_DATASET     = '[Dataset Collection] Guide Select Dataset';
-
+export const SAMPLE_DATASET           = '[Dataset Collection] Sample Dataset';
+export const SAMPLE_DATASET_SUCCESS   = '[Dataset Collection] Sample Dataset Success';
+export const SAMPLE_DATASET_FAIL      = '[Dataset Collection] Sample Dataset Fail';
 
 /*
 * Guide Select Datasets for UI Helpers
@@ -112,6 +114,24 @@ export class DropDatasetFail implements Action {
 }
 
 /*
+* Sample Dataset
+ */
+export class SampleDataset implements Action {
+    readonly type = SAMPLE_DATASET;
+    constructor(public payload: any) {}
+}
+
+export class SampleDatasetSuccess implements Action {
+    readonly type = SAMPLE_DATASET_SUCCESS;
+    constructor(public payload: any) {}
+}
+
+export class SampleDatasetFail implements Action {
+    readonly type = SAMPLE_DATASET_FAIL;
+    constructor(public payload: any) {}
+}
+
+/*
 * Exports of datasets actions
 */
 export type All = SelectDatasets |
@@ -126,4 +146,7 @@ export type All = SelectDatasets |
     DropDataset |
     DropDatasetSuccess |
     DropDatasetFail |
+    SampleDataset |
+    SampleDatasetSuccess |
+    SampleDatasetFail |
     GuideSelectDatasets;

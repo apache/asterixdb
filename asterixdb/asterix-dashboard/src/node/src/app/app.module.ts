@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { AppComponent } from './app.component';
 import { AppEffects } from './shared/effects/app.effects';
 import { BrowserModule } from '@angular/platform-browser';
@@ -22,6 +22,7 @@ import { DataverseEffects } from './shared/effects/dataverse.effects';
 import { DatasetEffects } from './shared/effects/dataset.effects';
 import { DatatypeEffects } from './shared/effects/datatype.effects';
 import { IndexEffects } from './shared/effects/index.effects';
+import { FunctionEffects } from "./shared/effects/function.effects";
 import { SQLQueryEffects } from './shared/effects/query.effects';
 import { AppBarComponent }  from './dashboard/appbar.component';
 import { DialogMetadataInspector, MetadataComponent }  from './dashboard/query/metadata.component';
@@ -35,10 +36,12 @@ import { FormsModule } from '@angular/forms';
 import { MaterialModule } from './material.module';
 import { StoreModule,  } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
-import { PlanViewComponent } from './dashboard/query/plan-view.component';
-import { PlanNodeSVGComponent } from './dashboard/query/plan-node-svg.component';
+import { NgxGraphModule } from "@swimlane/ngx-graph";
+import { NgxChartsModule } from "@swimlane/ngx-charts";
+import { PlanViewerComponent } from "./dashboard/query/plan-viewer.component";
 import { TreeNodeComponent } from './dashboard/query/tree-node.component';
-import { TreeViewComponent } from './dashboard/query/tree-view.component';
+import { DialogExportPicker, TreeViewComponent } from './dashboard/query/tree-view.component';
+import {SQLCancelEffects} from "./shared/effects/cancel.effects";
 
 @NgModule({
     declarations: [
@@ -50,25 +53,36 @@ import { TreeViewComponent } from './dashboard/query/tree-view.component';
         QueryContainerComponent,
         AppTabComponent,
         DialogMetadataInspector,
-        PlanNodeSVGComponent,
-        PlanViewComponent,
+        PlanViewerComponent,
         TreeNodeComponent,
+        DialogExportPicker,
         TreeViewComponent,
     ],
     imports: [
         FormsModule,
         BrowserModule,
         BrowserAnimationsModule,
-        EffectsModule.forRoot([AppEffects, DataverseEffects, DatasetEffects, DatatypeEffects, IndexEffects, SQLQueryEffects]),
+        EffectsModule.forRoot([AppEffects, DataverseEffects, DatasetEffects, DatatypeEffects, IndexEffects, FunctionEffects, SQLQueryEffects, SQLCancelEffects]),
         HttpClientModule,
         MaterialModule,
-        StoreModule.forRoot(reducers),
+        StoreModule.forRoot(reducers, {
+          runtimeChecks: {
+            strictStateImmutability: false,
+            strictActionImmutability: false,
+            strictStateSerializability: false,
+            strictActionSerializability: false,
+          },
+        }),
         StoreDevtoolsModule.instrument({
             maxAge: 10
-        })
+        }),
+        NgxGraphModule,
+        NgxChartsModule
     ],
+    schemas: [CUSTOM_ELEMENTS_SCHEMA],
     entryComponents: [
-        DialogMetadataInspector
+        DialogMetadataInspector,
+        DialogExportPicker,
     ],
     providers: [SQLService],
     bootstrap: [AppComponent]

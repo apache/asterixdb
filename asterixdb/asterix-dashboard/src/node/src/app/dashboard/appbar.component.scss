@@ -61,7 +61,7 @@ limitations under the License.
 }
 
 .menu {
-    /deep/ .mat-tab-label {
+    >>> .mat-tab-label {
         font-size: 0.80rem !important;
         font-weight: 500 !important;
     }

@@ -14,7 +14,7 @@ limitations under the License.
 <mat-expansion-panel class="card" hideToggle [expanded]="true">
     <mat-expansion-panel-header class="header" >
         <mat-panel-title>
-            <mat-panel-title>SQL++ INPUT ({{currentQuery+1}}/{{preparedQueryCount}})
+            <mat-panel-title>QUERY INPUT ({{currentQuery+1}}/{{preparedQueryCount}})
             </mat-panel-title>
             <mat-panel-description></mat-panel-description>
             <mat-spinner *ngIf="querySpinnerVisible" [color]="blue" [diameter]="15" class="spinner"></mat-spinner>
@@ -25,8 +25,7 @@ limitations under the License.
             <div class='dataverses'>
                 <div class='d1'>
                     <mat-form-field>
-                        <mat-select placeholder="USE DATAVERSE" [(ngModel)]="selected" (selectionChange)="dataverseSelected()">
-                        <mat-option value='None'>None</mat-option>
+                        <mat-select placeholder="Default" [(ngModel)]="selected" (selectionChange)="dataverseSelected()">
                         <mat-option *ngFor="let dataverse of dataverses" [value]="dataverse.DataverseName">
                             {{dataverse.DataverseName}}
                         </mat-option>
@@ -34,19 +33,34 @@ limitations under the License.
                     </mat-form-field>
                 </div>
                 <div class='d1'>
-                    <mat-form-field>
-                        <mat-select placeholder="PLAN FORMAT" [(ngModel)]="formatOptions">
+                    <mat-form-field class="plan-output-format">
+                        <mat-select id="plan-format" placeholder="PLAN FORMAT" [(ngModel)]="formatOptions">
                             <mat-option value="JSON">JSON</mat-option>
                             <mat-option value="STRING">STRING</mat-option>
                         </mat-select>
                     </mat-form-field>
                 </div>
+                <div class="d1">
+                  <mat-form-field class="plan-output-format">
+                    <mat-select class="mat-select output-format" placeholder="OUTPUT FORMAT" [(ngModel)]="outputOptions">
+                      <mat-option value="JSON">JSON</mat-option>
+                      <mat-option id="csv-option" value="CSV">CSV (no header)</mat-option>
+                      <mat-option value="CSV_header">CSV (header)</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
                 <div class='d1'>
                     <mat-form-field class='sql-history'>
-                        <mat-select placeholder="SQL++ HISTORY" [(ngModel)]="historyStringSelected" (selectionChange)="historySelected()">
-                        <mat-option *ngFor="let query of history" [value]="query">{{query}}</mat-option>
+                        <mat-select placeholder="QUERY HISTORY" [(ngModel)]="historyIdxSelected" (ngModelChange)="historySelected($event)">
+                        <mat-option *ngFor="let query of history" [value]="query.index">
+                          {{query.query}}
+                        </mat-option>
                         </mat-select>
                     </mat-form-field>
+                </div>
+                <div class="space">
+                  <button mat-icon-button class='input-button next-prev-btn' (click)="onClickNext()" [disabled]="checkNext()" matTooltip="Next Query Input"><mat-icon>keyboard_arrow_right</mat-icon></button>
+                  <button mat-icon-button class='input-button next-prev-btn' (click)="onClickPrevious()" [disabled]="checkPrevious()" matTooltip="Previous Query Input"><mat-icon>keyboard_arrow_left</mat-icon></button>
                 </div>
             </div>
         </div>
@@ -55,15 +69,33 @@ limitations under the License.
         </div>
     </mat-panel-description>
     <div class="message">
-        <span *ngIf="querySuccess" class="metrics">{{metricsString}}</span>
+        <span *ngIf="querySuccess==true && queryWarningsShow==false" class="metrics">{{metricsString}}</span>
         <span *ngIf="queryError" class="queryErrorMessage">{{queryErrorMessageString}}</span>
+        <span *ngIf="querySuccess==true && queryWarningsShow==true" class="queryWarningMessage" matTooltip="{{queryWarningsMessages}}">{{metricsString}}</span>
+        <mat-divider></mat-divider>
+        <div class="obj-returned-div">
+          <span *ngIf="querySuccess" class="obj-returned-cnt">Objects Returned: {{objectsReturned}}</span>
+        </div>
+        <mat-divider *ngIf="querySuccess"></mat-divider>
+        <mat-expansion-panel [disabled]="queryWarningsCount == 0" class="tree-node mat-elevation-z0">
+          <mat-expansion-panel-header>
+            <div>
+              <b>WARNINGS({{queryWarningsCount}})</b>
+            </div>
+          </mat-expansion-panel-header>
+          <mat-panel-description class="content">
+            <div class="warning-msgs">
+              <pre *ngFor="let warning of queryWarningsMessages">{{warning}}</pre>
+            </div>
+          </mat-panel-description>
+        </mat-expansion-panel>
     </div>
     <mat-action-row>
+      <button mat-button class='input-button clear' (click)="onClickClear()" matTooltip="Clear Query Input">CLEAR</button>
         <div class="space"></div>
-        <button mat-button class='input-button' (click)="onClickNew()" matTooltip="New Query Input">NEW</button>
-        <button mat-button class='input-button' (click)="onClickClear()" matTooltip="Clear Query Input">CLEAR</button>
-        <button mat-button class='input-button run' (click)="onClickRun()" matTooltip="Execute Query Input">RUN</button>
-        <button mat-button class='input-button' (click)="onClickPrevious()" [disabled]="checkPrevious()" matTooltip="Previous Query Input">PREVIOUS</button>
-        <button mat-button class='input-button' (click)="onClickNext()" [disabled]="checkNext()" matTooltip="Next Query Input">NEXT</button>
+        <button mat-button class="input-button explain" (click)="onClickExplain()" matTooltip="Explain Query">EXPLAIN</button>
+        <!--<button mat-button class='input-button run' (click)="onClickRun()" matTooltip="Execute Query Input">EXECUTE</button>-->
+      <button mat-icon-button class='input-button stop' (click)="onClickStop()" [disabled]="!querySpinnerVisible" matTooltip="Cancel Query"><mat-icon>stop</mat-icon></button>
+      <button mat-icon-button class='input-button run' (click)="onClickRun()" matTooltip="Execute Query"><mat-icon>play_arrow</mat-icon></button>
     </mat-action-row>
 </mat-expansion-panel>

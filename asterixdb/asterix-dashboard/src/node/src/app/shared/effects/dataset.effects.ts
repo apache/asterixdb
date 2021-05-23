@@ -13,13 +13,13 @@ limitations under the License.
 */
 import { Injectable } from '@angular/core';
 import { Action } from '@ngrx/store';
-import { Effect, Actions } from '@ngrx/effects';
+import { Effect, Actions, ofType} from '@ngrx/effects';
 import { Observable ,  of } from 'rxjs';
+import { switchMap, map, catchError } from "rxjs/operators";
 import * as datasetActions from '../actions/dataset.actions';
 import { SQLService } from '../services/async-query.service';
-import 'rxjs/add/operator/switchMap'
 
-export type Action = datasetActions.All
+export type ActionType = datasetActions.All
 
 @Injectable()
 export class DatasetEffects {
@@ -29,33 +29,52 @@ export class DatasetEffects {
     /* Effect to load a collection of all Datasets from AsterixDB
     */
     @Effect()
-    selectDatasets$: Observable<Action> = this.actions
-        .ofType(datasetActions.SELECT_DATASETS)
-        .switchMap(query => {
-            return this.sqlService.selectDatasets()
-                .map(dataset => new datasetActions.SelectDatasetsSuccess(dataset))
-                .catch(err => of(new datasetActions.SelectDatasetsFail(err)));
-    });
+    selectDatasets$: Observable<ActionType> = this.actions.pipe(
+      ofType(datasetActions.SELECT_DATASETS),
+      switchMap(query => {
+        return this.sqlService.selectDatasets().pipe(
+          map(dataset => new datasetActions.SelectDatasetsSuccess(dataset)),
+          catchError(err => of(new datasetActions.SelectDatasetsFail(err)))
+        )
+      })
+    );
 
     /* Effect to create a Datasets from AsterixDB
     */
     @Effect()
-    createDatasets$: Observable<Action> = this.actions
-        .ofType(datasetActions.CREATE_DATASET)
-        .switchMap(dataset => {
-            return this.sqlService.createDataset((dataset as any).payload)
-                .map(dataset => new datasetActions.CreateDatasetSuccess(dataset))
-                .catch(err => of(new datasetActions.CreateDatasetFail(err)));
-    });
+    createDatasets$: Observable<ActionType> = this.actions.pipe(
+      ofType(datasetActions.CREATE_DATASET),
+      switchMap(dataset => {
+        return this.sqlService.createDataset((dataset as any).payload).pipe(
+          map(dataset => new datasetActions.CreateDatasetSuccess(dataset)),
+          catchError(err => of(new datasetActions.CreateDatasetFail(err)))
+        )
+      })
+    );
 
     /* Effect to drop a Datasets from AsterixDB
     */
     @Effect()
-    dropDatasets$: Observable<Action> = this.actions
-        .ofType(datasetActions.DROP_DATASET)
-        .switchMap(dataset => {
-            return this.sqlService.dropDataset((dataset as any).payload)
-                .map(dataset => new datasetActions.DropDatasetSuccess(dataset))
-                .catch(err => of(new datasetActions.DropDatasetFail(err)));
-    });
+    dropDatasets$: Observable<ActionType> = this.actions.pipe(
+      ofType(datasetActions.DROP_DATASET),
+      switchMap(dataset => {
+        return this.sqlService.dropDataset((dataset as any).payload).pipe(
+          map(dataset => new datasetActions.DropDatasetSuccess(dataset)),
+          catchError(err => of(new datasetActions.DropDatasetFail(err)))
+        )
+      })
+    );
+
+    /* Effect of sampling a datasets from AsterixDB
+    */
+    @Effect()
+    sampleDataset$: Observable<ActionType> = this.actions.pipe(
+      ofType(datasetActions.SAMPLE_DATASET),
+      switchMap(dataset => {
+        return this.sqlService.sampleDataset((dataset as any).payload.dataset).pipe(
+          map(dataset => new datasetActions.SampleDatasetSuccess(dataset)),
+          catchError(err => of(new datasetActions.SampleDatasetFail(err)))
+        )
+      })
+    );
 }

@@ -12,19 +12,91 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+::ng-deep.mat-dialog-container {
+    resize: both !important;
+    overflow: auto;
+}
+
 .inspector-dialog {
     font-size: 0.80rem;
     font-weight: 500;
 }
 
 .header {
-    font-size: 1.0rem;
+    font-size: 1.5rem;
     font-weight: 500;
     color: blue;
-    border-bottom: 1px solid rgb(145, 152, 158);
 }
 
 .content {
     margin-left: auto !important;
     margin-right: auto !important;
+}
+
+.list-title {
+    margin-bottom: 1px;
+}
+
+.metadata-inspector {
+    font-size: 1.0rem;
+}
+
+.metadata-inspector b {
+    color: blue !important;
+}
+
+.spacer {
+    margin-bottom: 30px;
+}
+
+.mat-expansion-panel {
+    margin-bottom: 1px;
+}
+
+.tree-node {
+    width: 100%;
+}
+
+.not-nested-title {
+    color: black !important;
+}
+
+.not-nested-options {
+    color: rgba(0, 0, 0, 0.54) !important;
+}
+
+.mat-tree-node {
+    min-height: 25px;
+}
+
+.mat-expansion-panel-header-description {
+    display: flex;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+    padding-right: 5px;
+}
+
+.anon-note {
+    font-size: 15px;
+    color: #9e9e9e;
+}
+
+.sample-card {
+    max-height: 250px;
+    overflow:auto;
+    padding-bottom: 15px;
+}
+
+.list-tag {
+    margin-top: 0px !important;
+}
+
+.top-row {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid rgb(145, 152, 158);
+  cursor: move;
+  text-align: center;
 }

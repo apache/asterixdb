@@ -12,8 +12,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 import { Injectable } from '@angular/core';
-import { Effect, Actions } from '@ngrx/effects';
+import { Effect, Actions, ofType } from '@ngrx/effects';
 import { Observable ,  of } from 'rxjs';
+import { map, switchMap, catchError } from "rxjs/operators";
 import * as datatypeActions from '../actions/datatype.actions';
 import { SQLService } from '../services/async-query.service';
 
@@ -26,33 +27,38 @@ export class DatatypeEffects {
 
     /* Effect to load a collection of all Datatypes from AsterixDB */
     @Effect()
-    selectDatatypes$: Observable<Action> = this.actions
-        .ofType(datatypeActions.SELECT_DATATYPES)
-        .switchMap(query => {
-            return this.sqlService.selectDatatypes()
-                .map(datatype => new datatypeActions.SelectDatatypesSuccess(datatype))
-                .catch(err => of(new datatypeActions.SelectDatatypesFail(err)));
-    });
+    selectDatatypes$: Observable<Action> = this.actions.pipe(
+      ofType(datatypeActions.SELECT_DATATYPES),
+      switchMap(query => {
+        return this.sqlService.selectDatatypes().pipe(
+          map(datatype => new datatypeActions.SelectDatatypesSuccess(datatype)),
+          catchError(err => of(new datatypeActions.SelectDatatypesFail(err)))
+        )
+      })
+    );
 
     /* Effect to create a Datatype from AsterixDB
     */
     @Effect()
-    createDatatypes$: Observable<Action> = this.actions
-        .ofType(datatypeActions.CREATE_DATATYPE)
-        .switchMap(datatype => {
-            return this.sqlService.createDatatype((datatype as any).payload)
-                .map(datatype => new datatypeActions.CreateDatatypeSuccess(datatype))
-                .catch(err => of(new datatypeActions.CreateDatatypeFail(err)));
-    });
-
+    createDatatypes$: Observable<Action> = this.actions.pipe(
+      ofType(datatypeActions.CREATE_DATATYPE),
+      switchMap(datatype => {
+        return this.sqlService.createDatatype((datatype as any).payload).pipe(
+          map(datatype => new datatypeActions.CreateDatatypeSuccess(datatype)),
+          catchError(err => of(new datatypeActions.CreateDatatypeFail(err)))
+        )
+      })
+    );
     /* Effect to drop a Datatype from AsterixDB
     */
     @Effect()
-    dropDatatypes$: Observable<Action> = this.actions
-        .ofType(datatypeActions.DROP_DATATYPE)
-        .switchMap(datatype => {
-            return this.sqlService.dropDatatype((datatype as any).payload)
-                .map(datatype => new datatypeActions.DropDatatypeSuccess(datatype))
-                .catch(err => of(new datatypeActions.DropDatatypeFail(err)));
-    });
+    dropDatatypes$: Observable<Action> = this.actions.pipe(
+      ofType(datatypeActions.DROP_DATATYPE),
+      switchMap(datatype => {
+        return this.sqlService.dropDatatype((datatype as any).payload).pipe(
+          map(datatype => new datatypeActions.DropDatatypeSuccess(datatype)),
+          catchError(err => of(new datatypeActions.DropDatatypeFail(err)))
+        )
+      })
+    );
 }

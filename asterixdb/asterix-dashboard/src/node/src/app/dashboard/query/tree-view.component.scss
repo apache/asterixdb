@@ -23,6 +23,7 @@ limitations under the License.
     display: flex;
     flex-flow: row;
     align-items: center;
+    justify-content: space-between;
     font-size: 12px;
     padding-top: 15px;
     border-bottom: 1px dashed gray;
@@ -53,6 +54,7 @@ limitations under the License.
     border: 1px dashed gainsboro;
     padding: 20px;
     overflow: auto;
+    min-width: 0;
 }
 
 .content {
@@ -82,6 +84,10 @@ limitations under the License.
     color: blue !important;
 }
 
+.selected {
+    border: 2px solid blue !important;
+}
+
 .navi-data {
     display: flex;
     flex-flow: row;
@@ -108,6 +114,10 @@ limitations under the License.
     bottom: 50px;
     right: 100px;
     font-size: 14px;
+}
+
+.export {
+  align-self: flex-end !important;
 }
 
 .summary {
@@ -169,4 +179,12 @@ tr.example-element-row:not(.example-expanded-row):active {
         overflow: hidden;
         vertical-align: middle;
     }
+}
+
+.plan {
+  width: 100%;
+}
+
+.plan-new-tab {
+  margin-left: auto;
 }

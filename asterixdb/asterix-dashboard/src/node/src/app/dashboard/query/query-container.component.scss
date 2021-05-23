@@ -33,7 +33,10 @@
 }
 
 .content {
+    display: flex;
+    flex-flow: column;
     width: 100%;
+    overflow: auto;
 }
 
 .query-card {

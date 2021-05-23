@@ -13,51 +13,64 @@ limitations under the License.
 */ -->
 <div class="wrapper">
     <mat-expansion-panel hideToggle [expanded]="true">
-        <mat-expansion-panel-header class="header-dataverse">
-        <mat-icon>developer_board</mat-icon>
-        <mat-panel-title>DATAVERSES</mat-panel-title>
-        <mat-panel-description></mat-panel-description>
-        </mat-expansion-panel-header>
-        <section class="section">
-        <li *ngFor="let dataverse of dataverses; index as i">
-            <mat-checkbox [labelPosition]="before" class="margin" (change)="generateFilter(dataverse.DataverseName, $event, value, i)" [(ngModel)]="dataverse.active">{{dataverse.DataverseName}}</mat-checkbox>
-        </li>
-        <div class="refresh">
-            <button mat-button class="refresh-button" (click)="refreshMetadata()" matTooltip="Click to refresh changes in AsterixDB"><mat-icon class="list-icon">cached</mat-icon>REFRESH</button>
-        </div>
-        </section>
-    </mat-expansion-panel>
-    <mat-expansion-panel hideToggle [expanded]="panelOpenState">
-        <mat-expansion-panel-header #datasetsPanel class="header">
-            <mat-icon>developer_board</mat-icon>
+      <mat-expansion-panel-header class="metadata-inspector-header">
+        <mat-panel-title>METADATA INSPECTOR</mat-panel-title>
+      </mat-expansion-panel-header>
+      <section>
+        <mat-expansion-panel hideToggle [expanded]="true">
+          <mat-expansion-panel-header class="header-dataverse">
+            <mat-panel-title class="title">DATAVERSES</mat-panel-title>
+          </mat-expansion-panel-header>
+          <section class="section">
+            <li *ngFor="let dataverse of dataverses; index as i">
+              <mat-checkbox [labelPosition]="'after'" class="margin" (change)="generateFilter(dataverse.DataverseName, $event, i)" [(ngModel)]="dataverse.active">{{dataverse.DataverseName}}</mat-checkbox>
+            </li>
+            <div class="refresh">
+              <button mat-button class="refresh-button" (click)="refreshMetadata()" matTooltip="Click to refresh changes in AsterixDB"><mat-icon class="list-icon">cached</mat-icon>REFRESH</button>
+            </div>
+          </section>
+        </mat-expansion-panel>
+        <mat-expansion-panel hideToggle [expanded]="panelOpenState">
+          <mat-expansion-panel-header #datasetsPanel class="header">
             <mat-panel-title class="title">DATASETS</mat-panel-title>
             <mat-panel-description></mat-panel-description>
-        </mat-expansion-panel-header>
-        <section class="section">
-        <li *ngFor="let dataset of datasetsFiltered" (click)="openMetadataInspectorDialog(dataset)">
-            {{dataset.DatasetName}}</li>
-        </section>
-    </mat-expansion-panel>
-    <mat-expansion-panel hideToggle [expanded]="panelOpenState">
-        <mat-expansion-panel-header class="header">
-            <mat-icon>developer_board</mat-icon>
+          </mat-expansion-panel-header>
+          <section class="section">
+            <li *ngFor="let dataset of datasetsFiltered" (click)="openMetadataInspectorDialog(dataset, 'dataset')">
+              {{dataset.DatasetName}}</li>
+          </section>
+        </mat-expansion-panel>
+        <mat-expansion-panel hideToggle [expanded]="panelOpenState">
+          <mat-expansion-panel-header class="header">
             <mat-panel-title class="title">DATATYPES</mat-panel-title>
             <mat-panel-description></mat-panel-description>
-        </mat-expansion-panel-header>
-        <section class="section">
-        <li *ngFor="let datatype of datatypesFiltered" (click)="openMetadataInspectorDialog(datatype)">
-            {{datatype.DatatypeName}}</li>
-        </section>
-    </mat-expansion-panel>
-    <mat-expansion-panel hideToggle [expanded]="panelOpenState">
-        <mat-expansion-panel-header class="header">
-            <mat-icon>developer_board</mat-icon>
+          </mat-expansion-panel-header>
+          <section class="section">
+            <li *ngFor="let datatype of datatypesFiltered" (click)="openMetadataInspectorDialog(datatype, 'datatype')">
+              {{datatype.DatatypeName}}</li>
+          </section>
+        </mat-expansion-panel>
+        <mat-expansion-panel hideToggle [expanded]="panelOpenState">
+          <mat-expansion-panel-header class="header">
             <mat-panel-title class="title">INDEX</mat-panel-title>
             <mat-panel-description></mat-panel-description>
-        </mat-expansion-panel-header>
-        <section class="section">
-        <li *ngFor="let index of indexesFiltered" (click)="openMetadataInspectorDialog(index)">
-            {{index.IndexName}}</li>
-        </section>
+          </mat-expansion-panel-header>
+          <section class="section">
+            <li *ngFor="let index of indexesFiltered" (click)="openMetadataInspectorDialog(index, 'index')">
+              {{index.IndexName}}</li>
+          </section>
+        </mat-expansion-panel>
+        <mat-expansion-panel hideToggle [expanded]="panelOpenState">
+          <mat-expansion-panel-header class="header">
+            <mat-panel-title class="title">USER DEFINED FUNCTIONS</mat-panel-title>
+            <mat-panel-description></mat-panel-description>
+          </mat-expansion-panel-header>
+          <section class="section">
+            <li *ngFor="let function of functionsFiltered" (click)="openMetadataInspectorDialog(function, 'function')">
+              {{function.Name}}
+            </li>
+          </section>
+        </mat-expansion-panel>
+      </section>
     </mat-expansion-panel>
 </div>

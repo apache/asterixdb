@@ -11,12 +11,109 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */-->
-<div class="inspector-dialog">
-    <p mat-dialog-title class="header">METADATA INSPECTOR</p>
-    <mat-dialog-content>
-        <pre class="content">{{data}}</pre>
+<div class="inspector-dialog" cdkDrag cdkDragRootElement=".cdk-overlay-pane">
+    <div class="top-row" cdkDragHandle>
+      <p mat-dialog-title class="header"  *ngIf="data.MetadataType === 'dataset'">DATASET: {{data.DatasetName}}</p>
+      <p mat-dialog-title class="header"  *ngIf="data.MetadataType === 'datatype'">DATATYPE: {{data.DatatypeName}}</p>
+      <p mat-dialog-title class="header"  *ngIf="data.MetadataType === 'index'">INDEX: {{data.IndexName}}</p>
+      <p mat-dialog-title class="header"  *ngIf="data.MetadataType === 'function'">FUNCTION: {{data.Name}}</p>
+      <button mat-icon-button class='input-button' (click)="onClickClose()" matTooltip="Close Inspector Window"><mat-icon>close</mat-icon></button>
+    </div>
+    <mat-dialog-content class="metadata-inspector" *ngIf="showGuts == false">
+        <div *ngIf="data.MetadataType === 'dataset'">
+            <pre class="content"><b>Dataverse: </b>{{data.DataverseName}}</pre>
+            <pre class="content"><b>Dataset: </b>{{data.DatasetName}}</pre>
+            <pre class="content"><b>Datatype Name: </b>{{data.DatatypeName}}</pre>
+            <div *ngIf="data.InternalDetails.PrimaryKey.length > 0">
+              <pre class="list-title content"><b>Primary Keys:</b></pre>
+              <li class="content" *ngFor="let pkey of data.InternalDetails.PrimaryKey">{{pkey}}</li>
+            </div>
+            <pre class="content"><b>Sample:</b></pre>
+            <mat-card class="sample-card">
+              <mat-card-content>
+                <pre class="content" *ngIf="data.sample != undefined">{{data.sample}}</pre>
+                <pre class="content" *ngIf="data.sample === undefined">No Data inputed</pre>
+              </mat-card-content>
+            </mat-card>
+        </div>
+        <div *ngIf="data.MetadataType === 'datatype'">
+            <pre class="content"><b>Dataverse: </b>{{data.DataverseName}}</pre>
+            <pre class="content"><b>Datatype Name: </b>{{data.DatatypeName}}</pre>
+            <pre class="list-title content list-tag" *ngIf="data.Derived.Tag === 'ORDEREDLIST'"><b>[</b></pre>
+            <pre class="list-title content list-tag" *ngIf="data.Derived.Tag === 'UNORDEREDLIST'"><b>{{</b></pre>
+            <pre class="list-title content" *ngIf="data.Derived.Tag === 'RECORD'"><b>Fields:</b></pre>
+            <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
+              <mat-tree-node *matTreeNodeDef="let node;" matTreeNodeToggle>
+                <mat-expansion-panel hideToggle disabled class="tree-node mat-elevation-z0 right-aligned-header" (click)="$event.stopPropagation();">
+                  <mat-expansion-panel-header [collapsedHeight]="'25px'">
+                    <mat-panel-title class="not-nested-title" *ngIf="node.DatatypeType !== undefined">{{node.DatatypeName}} ({{node.DatatypeType}})</mat-panel-title>
+                    <mat-panel-title class="not-nested-title" *ngIf="node.DatatypeType === undefined">{{node.DatatypeName}}</mat-panel-title>
+
+                    <mat-panel-description class="not-nested-options" *ngIf="node.isNullable == true && node.isMissable == false">Nullable | Required</mat-panel-description>
+                    <mat-panel-description class="not-nested-options" *ngIf="node.isNullable == true && node.isMissable == true">Nullable | Not Required</mat-panel-description>
+                    <mat-panel-description class="not-nested-options" *ngIf="node.isNullable == false && node.isMissable == false">Not Nullable | Required</mat-panel-description>
+                    <mat-panel-description class="not-nested-options" *ngIf="node.isNullable == false && node.isMissable == true">Not Nullable | Not Required</mat-panel-description>
+                  </mat-expansion-panel-header>
+                </mat-expansion-panel>
+              </mat-tree-node>
+              <mat-nested-tree-node *matTreeNodeDef="let node;when: hasChild">
+                <div class="mat-tree-node">
+                  <mat-expansion-panel class="tree-node mat-elevation-z2 right-aligned-header">
+                    <mat-expansion-panel-header [collapsedHeight]="'25px'" [expandedHeight]="'35px'">
+                      <mat-panel-title *ngIf="node.anonymous == false">{{node.DatatypeName}} ({{node.DatatypeType}})</mat-panel-title>
+                      <mat-panel-title *ngIf="node.anonymous == true">{{node.DatatypeName}} (<i>{{node.DatatypeType}}</i>)</mat-panel-title>
+
+                      <mat-panel-description *ngIf="node.isNullable == true && node.isMissable == false">Nullable | Required</mat-panel-description>
+                      <mat-panel-description *ngIf="node.isNullable == true && node.isMissable == true">Nullable | Not Required</mat-panel-description>
+                      <mat-panel-description *ngIf="node.isNullable == false && node.isMissable == false">Not Nullable | Required</mat-panel-description>
+                      <mat-panel-description *ngIf="node.isNullable == false && node.isMissable == true">Not Nullable | Not Required</mat-panel-description>
+                    </mat-expansion-panel-header>
+                    <pre class="list-title content list-tag" *ngIf="node.OrderedList == true"><b>[</b></pre>
+                    <pre class="list-title content list-tag" *ngIf="node.UnorderedList == true"><b>{{</b></pre>
+                    <div [class.example-tree-invisible]="!treeControl.isExpanded(node)">
+                      <ng-container matTreeNodeOutlet></ng-container>
+                    </div>
+                    <pre class="list-title content list-tag" *ngIf="node.OrderedList == true"><b>]</b></pre>
+                    <pre class="list-title content list-tag" *ngIf="node.UnorderedList == true"><b>}}</b></pre>
+                  </mat-expansion-panel>
+                </div>
+              </mat-nested-tree-node>
+            </mat-tree>
+            <pre class="list-title content list-tag" *ngIf="data.Derived.Tag === 'ORDEREDLIST'"><b>]</b></pre>
+            <pre class="list-title content list-tag" *ngIf="data.Derived.Tag === 'UNORDEREDLIST'"><b>}}</b></pre>
+            <p class="anon-note">Note: italicized = anonymous type</p>
+        </div>
+        <div *ngIf="data.MetadataType === 'index'">
+            <pre class="content"><b>Dataverse: </b>{{data.DataverseName}}</pre>
+            <pre class="content"><b>Index Name: </b>{{data.IndexName}}</pre>
+
+            <pre class="content" *ngIf="data.IsPrimary == true"><b>Index Type: </b>Primary</pre>
+            <pre class="content" *ngIf="data.IsPrimary == false"><b>Index Type: </b>Not Primary</pre>
+
+            <div *ngIf="data.SearchKey.length > 0">
+              <pre class="list-title content"><b>Search Key(s):</b></pre>
+                <li class="content" *ngFor="let skey of data.SearchKey">{{skey}}</li>
+            </div>
+        </div>
+        <div *ngIf="data.MetadataType === 'function'">
+          <pre class="content"><b>Dataverse: </b>{{data.DataverseName}}</pre>
+          <pre class="content"><b>Function Name: </b>{{data.Name}}</pre>
+          <pre class="content"><b>Arity: </b>{{data.Arity}}</pre>
+          <div *ngIf="data.Params.length > 0">
+            <pre class="content"><b>Parameters: </b></pre>
+            <li class="content" *ngFor="let param of data.Params">{{param}}</li>
+          </div>
+          <pre class="content"><b>Defintion: </b></pre>
+          <pre class="content">{{data.Definition}}</pre>
+
+        </div>
     </mat-dialog-content>
+    <mat-dialog-content *ngIf="showGuts">
+        <pre class="content">{{data.guts}}</pre>
+    </mat-dialog-content>
+    <div class="spacer"></div>
     <mat-action-row>
-        <button mat-button class='input-button' (click)="onClickClose()">CLOSE</button>
+        <button mat-button class="input-button" (click)="onClickParsed()" *ngIf="hideJSONButton">SUMMARY</button>
+        <button mat-button class="input-button" (click)="onClickJSON()" *ngIf="hideJSONButton == false">JSON</button>
     </mat-action-row>
 </div>

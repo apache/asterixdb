@@ -28,18 +28,29 @@ import { Observable } from 'rxjs';
 
 export class QueryContainerComponent implements AfterViewInit {
     sideMenuVisible$: Observable<any>;
-    visible = false;
+    visible = true;
+    inputToOutput: Object;
+    isError: boolean;
+    hideOutput: boolean;
 
     constructor(private store: Store<any>) {}
 
     ngAfterViewInit() {
         this.sideMenuVisible$ = this.store.select(s => s.app.sideMenuVisible);
         this.sideMenuVisible$.subscribe((data: any) => {
-            if (data === true) {
-                this.visible = true;
-            } else {
-                this.visible = false;
-            }
+          this.visible = true;
         })
+    }
+
+    sendInputToOutput(inputToOutputData) {
+      this.inputToOutput = inputToOutputData;
+    }
+
+    sendIsError(isErrorData) {
+      this.isError = isErrorData;
+    }
+
+    sendHideOutput(hideOutputData) {
+      this.hideOutput = hideOutputData;
     }
 }

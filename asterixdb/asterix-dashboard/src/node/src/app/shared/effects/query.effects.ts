@@ -15,10 +15,11 @@ import { Injectable } from '@angular/core';
 import { Action } from '@ngrx/store';
 import { Actions, Effect, ofType } from '@ngrx/effects';
 import { Observable ,  of } from 'rxjs';
+import { map, switchMap, catchError } from 'rxjs/operators';
 import { SQLService } from '../services/async-query.service';
 import * as sqlQueryActions from '../actions/query.actions';
 
-export type Action = sqlQueryActions.All
+export type Action_type = sqlQueryActions.All
 
 @Injectable()
 export class SQLQueryEffects {
@@ -27,22 +28,26 @@ export class SQLQueryEffects {
 
     /* Effect to Execute an SQL++ Query against the AsterixDB */
     @Effect()
-    executeQuery$: Observable<Action> = this.actions
-        .ofType(sqlQueryActions.EXECUTE_QUERY)
-        .switchMap(query => {
-            return this.sqlService.executeSQLQuery((query as any).payload.queryString, (query as any).payload.planFormat)
-                .map(sqlQueryResult => new sqlQueryActions.ExecuteQuerySuccess(sqlQueryResult))
-                .catch(sqlQueryError => of(new sqlQueryActions.ExecuteQueryFail(sqlQueryError)));
-    });
+    executeQuery$: Observable<Action_type> = this.actions.pipe(
+      ofType(sqlQueryActions.EXECUTE_QUERY),
+      switchMap(query => {
+        return this.sqlService.executeSQLQuery((query as any).payload.queryString, (query as any).payload.planFormat, (query as any).payload.format, (query as any).payload.requestId).pipe(
+          map(sqlQueryResult => new sqlQueryActions.ExecuteQuerySuccess(sqlQueryResult)),
+          catchError(sqlQueryError => of(new sqlQueryActions.ExecuteQueryFail(sqlQueryError)))
+        )
+      })
+    );
 
     /* Effect to Execute an SQL++ Metadata Query against the AsterixDB
     */
     @Effect()
-    executeMetadataQuery$: Observable<Action> = this.actions
-        .ofType(sqlQueryActions.EXECUTE_METADATA_QUERY)
-        .switchMap(query => {
-            return this.sqlService.executeSQLQuery((query as any).payload, (query as any).payload.planFormat)
-                .map(sqlMetadataQueryResult => new sqlQueryActions.ExecuteMetadataQuerySuccess(sqlMetadataQueryResult))
-                .catch(sqlMetadataQueryError => of(new sqlQueryActions.ExecuteMetadataQueryFail(sqlMetadataQueryError)));
-    });
+    executeMetadataQuery$: Observable<Action_type> = this.actions.pipe(
+      ofType(sqlQueryActions.EXECUTE_METADATA_QUERY),
+      switchMap(query => {
+        return this.sqlService.executeSQLQuery((query as any).payload, (query as any).payload.planFormat, (query as any).payload.format, 'default').pipe(
+          map(sqlMetadataQueryResult => new sqlQueryActions.ExecuteMetadataQuerySuccess(sqlMetadataQueryResult)),
+          catchError(sqlMetadataQueryError => of(new sqlQueryActions.ExecuteMetadataQueryFail(sqlMetadataQueryError)))
+        )
+      })
+    );
 }

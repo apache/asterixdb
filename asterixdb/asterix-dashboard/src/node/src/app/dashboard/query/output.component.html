@@ -14,15 +14,16 @@ limitations under the License.
 <mat-card class="sql-results-card">
     <mat-card-content class="content-area">
         <div class="divider">
-        <div *ngIf='data.length != 0'>
-            <tree-view [data]="data" [queryId]="queryId"></tree-view>
+        <div *ngIf="isError == false && hideOutput == false">
+            <tree-view [data]="data" [queryId]="queryId" [planFormat]="planFormat" [jsonPlan]="queryOptimizedLogicalPlan" [plan]="optimalLogicalPlan" [planName]="'OPTIMIZED PLAN'" [inputToOutput]="inputToOutput"></tree-view>
         </div>
-        <div *ngIf='queryOptimizedLogicalPlan != ""'>
-            <plan-view [planFormat]="planFormat" [jsonPlan]="queryOptimizedLogicalPlan" [plan]="optimalLogicalPlan" [planName]="'OPTIMIZED PLAN'"></plan-view>
-        </div>
+        <!--
+        Ignore Logical Plan for now...if users want back can add back in. However, current JSON->graph code does not support sub plans
+
         <div *ngIf='queryLogicalPlan != ""'>
             <plan-view [planFormat]="planFormat" [jsonPlan]="queryLogicalPlan" [plan]="logicalPlan" [planName]="'LOGICAL PLAN'"></plan-view>
         </div>
+        -->
         </div>
     </mat-card-content>
 </mat-card>

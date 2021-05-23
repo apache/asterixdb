@@ -58,16 +58,30 @@ $query-spacing-unit: 5px;
     border: 1px dashed gainsboro;
 }
 
+#clear-history-btn {
+    color: black;
+}
+
 .input-button {
     font-size: 12px !important;
 }
+
+.next-prev-btn {
+  color: black;
+  float: right;
+}
+
+.next-prev-btn[disabled] {
+  color: rgba(0, 0, 0, 0.26);
+}
+
 
 .message {
     margin-top: 30px;
 }
 
 .metrics {
-    color: blue;
+    color: green;
     font-size: 14px !important;
     font-size: 1.0rem;
     font-weight: 500;
@@ -89,8 +103,39 @@ $query-spacing-unit: 5px;
     padding: 0;
 }
 
+.queryWarningMessage {
+  color: #ffae42;
+  font-size: 14px !important;
+  word-break: break-all;
+  font-size: 1.0rem;
+  font-weight: 500;
+  margin: 0;
+  padding: 0;
+}
+
+.obj-returned-cnt {
+  font-size: 14px !important;
+  word-break: break-all;
+  font-size: 1.0rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.obj-returned-div {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
 .run {
-    color: blue;
+    color: #00ab66;
+}
+
+.explain {
+  color: blue;
+}
+
+.stop {
+  color: #cf142b;
 }
 
 .dataverses {
@@ -101,6 +146,10 @@ $query-spacing-unit: 5px;
     margin-right: 15px;
     font-size: 0.80rem !important;
     font-weight: 500 !important;
+}
+
+.mat-action-row {
+    padding-right: 24px;
 }
 
 .d1 {
@@ -124,4 +173,24 @@ $query-spacing-unit: 5px;
 
 .sql-history {
     width: 500px !important;
+}
+
+.plan-output-format {
+  width: 90px !important;
+}
+
+.content {
+    border-style: dotted;
+    border-width: 1px;
+    border-color: black;
+}
+
+.warning-msgs {
+    overflow: scroll;
+    white-space: initial;
+}
+
+.error-line {
+  background-color: red;
+  color: red;
 }

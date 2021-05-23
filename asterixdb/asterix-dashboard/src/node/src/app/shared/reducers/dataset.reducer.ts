@@ -30,7 +30,9 @@ export interface State {
     dropDatasetError: any[],
     dropDatasetSuccess: boolean,
     dropDatasetFailed: boolean,
-    guideSelectsDataset: string
+    guideSelectsDataset: string,
+    sample: {},
+    dataset: string
 };
 
 const initialState: State = {
@@ -45,7 +47,9 @@ const initialState: State = {
     dropDatasetError: [],
     dropDatasetSuccess: false,
     dropDatasetFailed: false,
-    guideSelectsDataset: ""
+    guideSelectsDataset: "",
+    sample: {},
+    dataset: ""
 };
 
 /*
@@ -80,6 +84,26 @@ export function datasetReducer(state = initialState, action: Action) {
               loaded: true,
               loading: false,
               datasets: action.payload
+          })
+      }
+
+      /*
+      * Change the load state to true to signal that a SELECT Query is ongoing
+       */
+      case DatasetAction.SAMPLE_DATASET: {
+          return Object.assign({}, state, { loading: true, dataset: action.payload.dataset });
+      }
+
+      /*
+      * Change the load state to false, and loaded to true to signal
+      * that a SELECT Query is successful and there is a sample available
+      * in the store.
+       */
+      case DatasetAction.SAMPLE_DATASET_SUCCESS: {
+          return Object.assign({}, state, {
+              loaded: true,
+              loading: false,
+              sample: {...state.sample, [state.dataset]: action.payload.results[0]}
           })
       }
 

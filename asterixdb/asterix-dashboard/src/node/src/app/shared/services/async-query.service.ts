@@ -14,8 +14,7 @@ limitations under the License.
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import 'rxjs/add/operator/map'
-import 'rxjs/add/operator/catch'
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 /*
@@ -25,9 +24,12 @@ import { environment } from '../../../environments/environment';
 /* Using local proxy if webpack and development */
 var AsterixRestApiUrl = '/query-service';
 
+var AsterixDeleteApiUrl = '/admin/requests/running';
+
 if (environment.production) {
     var locationHost =  self.location.host.split(':')
-    var AsterixRestApiUrl = 'http://' + locationHost[0] + ':19002/query/service';
+    AsterixRestApiUrl = 'http://' + locationHost[0] + ':19002/query/service';
+    AsterixDeleteApiUrl = 'http://' + locationHost[0] + ':19002/admin/requests/running';
 }
 
 /*
@@ -36,6 +38,9 @@ if (environment.production) {
 @Injectable()
 export class SQLService {
     defaultPlanFormat='JSON';
+    defaultOutputFormat='JSON';
+    defaultClientContextID='default';
+
     /*
     * SQLQueryService constructor using
     * HttpClient from Angular 5
@@ -48,7 +53,7 @@ export class SQLService {
      */
     selectDataverses() : Observable<any> {
          let query = "SELECT VALUE dv FROM Metadata.`Dataverse` dv"
-         return this.executeSQLQuery(query, this.defaultPlanFormat);
+         return this.executeSQLQuery(query, this.defaultPlanFormat, this.defaultOutputFormat, this.defaultClientContextID);
     }
 
     /*
@@ -57,7 +62,15 @@ export class SQLService {
     */
     selectDatasets() : Observable<any> {
         let query = "SELECT VALUE ds FROM Metadata.`Dataset` ds"
-        return this.executeSQLQuery(query, this.defaultPlanFormat);
+        return this.executeSQLQuery(query, this.defaultPlanFormat, this.defaultOutputFormat, this.defaultClientContextID);
+    }
+
+    /*
+    * sends a select sql++ query to sample the passed in dataset.
+     */
+    sampleDataset(dataset: string) : Observable<any> {
+        let query = "SELECT * FROM " + dataset + " LIMIT 1;"
+        return this.executeSQLQuery(query, this.defaultPlanFormat, this.defaultOutputFormat, this.defaultClientContextID);
     }
 
     /*
@@ -66,7 +79,7 @@ export class SQLService {
     */
     selectDatatypes() : Observable<any> {
         let query = "SELECT VALUE dt FROM Metadata.`Datatype` dt"
-        return this.executeSQLQuery(query, this.defaultPlanFormat);
+        return this.executeSQLQuery(query, this.defaultPlanFormat, this.defaultOutputFormat, this.defaultClientContextID);
     }
 
     /*
@@ -75,7 +88,12 @@ export class SQLService {
     */
     selectIndexes() : Observable<any> {
         let query = "SELECT VALUE ix FROM Metadata.`Index` ix"
-        return this.executeSQLQuery(query, this.defaultPlanFormat);
+        return this.executeSQLQuery(query, this.defaultPlanFormat, this.defaultOutputFormat, this.defaultClientContextID);
+    }
+
+    selectFunctions() : Observable<any> {
+      let query = "SELECT VALUE fn FROM Metadata.`Function` fn"
+      return this.executeSQLQuery(query, this.defaultPlanFormat, this.defaultOutputFormat, this.defaultClientContextID);
     }
 
     /*
@@ -175,19 +193,59 @@ export class SQLService {
           status: string;
           login(username: string, password: string): Observable<boolean>
     */
-    executeSQLQuery(query: string, planFormat: string): Observable<any> {
+    executeSQLQuery(query: string, planFormat: string, outputFormat: string, clientContextID: string): Observable<any> {
         const apiUrl = AsterixRestApiUrl;
-        const headers = new HttpHeaders();
-        headers.append('Content-Type', 'application/json');
+        let headers = new HttpHeaders();
+
+        if (outputFormat == 'CSV_header') {
+          headers = new HttpHeaders({"Accept": "text/csv; header=present", "Content-Type": "application/json"});
+          outputFormat = 'CSV';
+        }
+        else if (outputFormat == 'CSV') {
+          headers = new HttpHeaders({"Accept": "text/csv; header=absent", "Content-Type": "application/json"});
+        }
+        else
+          headers = headers.append('Content-Type', 'application/json');
+
         let options = ({ headers: headers });
 
-        return this.http.post(apiUrl, {statement: query,
-            'logical-plan': true,
-            'optimized-logical-plan': true,
-            'plan-format': planFormat }, options)
-                .map((response: Response) => { return response; })
-                .catch((error: any) => this.handleExecuteQueryError(error))
+        let body = {
+          statement: query,
+          'logical-plan': true,
+          'optimized-logical-plan': true,
+          'plan-format': planFormat,
+          'max-warnings': Number.MAX_SAFE_INTEGER
+        }
+
+        if (clientContextID != 'default') {
+          body['client_context_id'] = clientContextID;
+        }
+
+        return this.http.post(apiUrl, body, options)
+            .pipe(map((response: Response) => { return response; }),
+                  catchError((error: any) => this.handleExecuteQueryError(error)))
+
+
     }
+
+    /*
+    * Cancels a sql++ query
+     */
+    cancelSQLQuery(clientContextID: string): Observable<any> {
+      let url = AsterixDeleteApiUrl;
+      let headers = new HttpHeaders();
+
+      url += `?client_context_id=${clientContextID}`;
+      headers = headers.append('Content-Type', 'application/json');
+
+      let options = ({ headers: headers });
+
+      return this.http.delete(url, options)
+        .pipe(map((response: Response) => {return response; }),
+          catchError((error: any) => this.handleDeleteQueryError(error))
+        )
+    }
+
     /*
     * AsterixDB query-service API raises HTTP errors if the sql++ query has some
     * syntax error, or some elements in the query are not found
@@ -203,5 +261,11 @@ export class SQLService {
         console.log('executeQueryError:')
         console.log(error);
         return Promise.reject(error.error || error);
+    }
+
+    private handleDeleteQueryError(error: any): Promise<any> {
+      console.log('deleteQueryError:')
+      console.log(error);
+      return Promise.reject(error.error || error);
     }
 }

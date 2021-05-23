@@ -28,6 +28,11 @@
             ],
             "scripts": [
               "node_modules/codemirror/lib/codemirror.js"
+            ],
+            "allowedCommonJsDependencies": [
+              "hammerjs",
+              "lodash",
+              "file-saver",
             ]
           },
           "configurations": {
@@ -57,7 +62,8 @@
           },
           "configurations": {
             "production": {
-              "browserTarget": "asterixdb-web-console:build:production"
+              "browserTarget": "asterixdb-web-console:build:production",
+              "sourceMap": true
             }
           }
         },

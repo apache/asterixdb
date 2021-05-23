@@ -15,9 +15,11 @@ import * as fromDataverse from './dataverse.reducer';
 import * as fromDataset from './dataset.reducer';
 import * as fromDatatype from './datatype.reducer';
 import * as fromIndex from './index.reducer';
+import * as fromFunction from './function.reducer';
 import * as fromQuery from './query.reducer';
 import * as fromQueryMetadata from './query-metadata.reducer';
 import * as fromAppState from './app.reducer';
+import * as fromCancel from './cancel.reducer';
 
 /*
 ** Global Interfaces store/state
@@ -27,6 +29,7 @@ export interface ModelState {
     dataset: fromDataset.State,
     datatype: fromDatatype.State,
     index: fromIndex.State,
+    functions: fromFunction.State,
     sqlQuery: fromQuery.State,
     sqlMetadataQuery: fromQueryMetadata.State,
     appState: fromAppState.State,
@@ -40,7 +43,9 @@ export const reducers = {
     dataset: fromDataset.datasetReducer,
     datatype: fromDatatype.datatypeReducer,
     index: fromIndex.indexReducer,
+    functions: fromFunction.functionReducer,
     sqlQuery: fromQuery.sqlReducer,
+    cancelQuery: fromCancel.cancelReducer,
     sqlMetadataQuery: fromQueryMetadata.sqlMetadataReducer,
     app: fromAppState.appReducer
 };

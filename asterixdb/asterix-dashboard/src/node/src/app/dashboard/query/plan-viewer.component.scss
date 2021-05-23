@@ -1,0 +1,231 @@
+/*
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+/*
+.plan-graph {
+  display: block;
+  margin: 0 0px 0 0px;
+  padding: 0;
+  width: 100%;
+  mat-expansion-panel {
+    border: none !important;
+  }
+}
+ */
+
+.plan-graph {
+  display: flex;
+  flex-flow: row;
+  margin: 0 0px 0 0px;
+  padding: 0;
+  width: 100%;
+  mat-expansion-panel {
+    border: none !important;
+  }
+}
+
+.panel {
+  order: 2;
+  display: flex;
+  flex-flow: column;
+  justify-content: stretch;
+  align-items: flex-start;
+  border: 1.5px solid grey;
+  border-radius: 15px;
+  margin-left: auto;
+  height: 100%;
+}
+
+.panel > * {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.plan-explorer-title {
+  width: 100%;
+  text-align: center;
+  margin-left: 0px !important;
+  margin-right: 0px !important;
+}
+
+.heading-title {
+  color: blue;
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+
+.mat-icon-button.inc-dec {
+  width: 25px;
+  height: 25px;
+  line-height: 25px;
+
+  .mat-icon {
+    font-size: 25px;
+    width: 25px;
+    height: 25px;
+    line-height: 25px;
+  }
+}
+
+.plan-header {
+  max-height: 42px;
+  min-height: 42px;
+  font-size: 0.80rem;
+  font-weight: 500;
+  border-bottom: 1px solid gray;
+}
+
+.divider {
+  display: flex;
+  flex-flow: row;
+  align-items: flex-start;
+}
+
+.plan {
+  margin: 0px;
+  padding: 20px;
+  padding-left: 50px;
+  padding-right: 50px;
+  margin-right: auto;
+  margin-left: auto;
+  padding-left: 50px;
+  min-height: 800px;
+  max-height: 1500px;
+  border: 1.5px solid grey;
+  border-radius: 15px;
+}
+
+.variable-nav {
+  display: flex;
+  flex-flow: column;
+}
+
+.declaration-back-btns {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-between;
+}
+
+.variable-select-move {
+  display: flex;
+  flex-flow: row;
+  justify-content: flex-start;
+}
+
+.search-nav {
+  display: flex;
+  flex-flow: row;
+  justify-content: flex-start;
+}
+
+.search {
+  display: flex;
+  flex-flow: column;
+  align-items: flex-start;
+}
+
+.search-btn {
+  align-self: center;
+  width: 100%;
+}
+
+.node-nav {
+  display: flex;
+  flex-float: row;
+}
+
+.node-mover {
+  display: flex;
+  flex-flow: column;
+  overflow: auto;
+}
+
+
+.plan1 {
+  display: flow;
+  flex-flow: row;
+}
+
+.content {
+  margin-top: 20px;
+  display: block;
+  font-size: 0.80rem;
+  font-weight: 500;
+}
+
+.json {
+  //padding: 20px;
+  //padding-right: 50px;
+  //margin-right: 25px;
+  min-width: 100%;
+  max-width: 100%;
+}
+
+.json-content {
+  //border-left: 1px solid gray;
+  padding-left: 25px; //display: inline-block;
+  //margin: auto;
+}
+
+.button {
+  font-size: 12px !important;
+  float: right;
+  color: blue !important;
+  margin-bottom: 15px;
+}
+
+#wrapper {
+  position: relative;
+}
+
+.center {
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
+.sticky {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  background-color: white;
+  border: 1px solid grey;
+  border-radius: 5px;
+  width: auto;
+  transform: translateX(-50%);
+}
+
+
+.collapsed {
+  width: auto;
+}
+
+.minimize-btn {
+  align-self: flex-start;
+}
+
+.clear-btn {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  align-self: center;
+}
+
+.orientation {
+  display: flex;
+  flex-flow: column;
+}
+
+.zoomFit-button {
+  align-self: center;
+}
