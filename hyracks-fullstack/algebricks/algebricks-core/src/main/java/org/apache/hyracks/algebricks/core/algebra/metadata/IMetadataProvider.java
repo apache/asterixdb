@@ -217,4 +217,6 @@ public interface IMetadataProvider<S, I> {
 
     public Map<String, Object> getConfig();
 
+    public boolean isBlockingOperatorDisabled();
+
 }
