@@ -230,20 +230,21 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     @Override
     public synchronized void delete(String relativePath) throws HyracksDataException {
         FileReference resourceFile = getLocalResourceFileByName(ioManager, relativePath);
-        if (resourceFile.getFile().exists()) {
-            if (isReplicationEnabled) {
-                createReplicationJob(ReplicationOperation.DELETE, resourceFile);
+        try {
+            if (resourceFile.getFile().exists()) {
+                if (isReplicationEnabled) {
+                    createReplicationJob(ReplicationOperation.DELETE, resourceFile);
+                }
+                final LocalResource localResource = readLocalResource(resourceFile.getFile());
+                IoUtil.delete(resourceFile);
+                // delete all checkpoints
+                indexCheckpointManagerProvider.get(DatasetResourceReference.of(localResource)).delete();
+            } else {
+                throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.RESOURCE_DOES_NOT_EXIST,
+                        relativePath);
             }
-            final LocalResource localResource = readLocalResource(resourceFile.getFile());
-            // Invalidate before deleting the file just in case file deletion throws some exception.
-            // Since it's just a cache invalidation, it should not affect correctness.
+        } finally {
             resourceCache.invalidate(relativePath);
-            IoUtil.delete(resourceFile);
-            // delete all checkpoints
-            indexCheckpointManagerProvider.get(DatasetResourceReference.of(localResource)).delete();
-        } else {
-            throw HyracksDataException.create(org.apache.hyracks.api.exceptions.ErrorCode.RESOURCE_DOES_NOT_EXIST,
-                    relativePath);
         }
     }
 
