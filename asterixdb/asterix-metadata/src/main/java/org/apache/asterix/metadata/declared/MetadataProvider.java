@@ -228,6 +228,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         blockingOperatorDisabled = true;
     }
 
+    @Override
     public boolean isBlockingOperatorDisabled() {
         return blockingOperatorDisabled;
     }

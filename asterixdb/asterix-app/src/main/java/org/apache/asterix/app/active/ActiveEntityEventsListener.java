@@ -434,6 +434,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         }
     }
 
+    protected synchronized void doRecover(MetadataProvider metadataProvider) throws HyracksDataException {
+        doStart(metadataProvider);
+    }
+
     private void cancelJob(Throwable th) {
         cancelJobSafely(metadataProvider, th);
         final WaitForStateSubscriber cancelSubscriber =

@@ -76,7 +76,6 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.exceptions.WarningCollector;
@@ -3580,7 +3579,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 printer.print(jobId);
             }
         } catch (Exception e) {
-            if (ExceptionUtils.getRootCause(e) instanceof InterruptedException) {
+            if (org.apache.hyracks.api.util.ExceptionUtils.getRootCause(e) instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, clientRequest.getId());
             }

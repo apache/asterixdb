@@ -29,7 +29,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.ComparisonEnum;
@@ -38,6 +37,7 @@ import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.logging.log4j.Level;
 import org.junit.Assert;
 

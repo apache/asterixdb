@@ -40,4 +40,9 @@ public interface IFrameOperationCallback extends Closeable {
      * @param th
      */
     void fail(Throwable th);
+
+    /**
+     * Called when the task has opened for initialization.
+     */
+    void open() throws HyracksDataException;
 }

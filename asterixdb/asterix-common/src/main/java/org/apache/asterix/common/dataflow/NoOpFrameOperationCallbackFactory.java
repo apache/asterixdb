@@ -55,5 +55,10 @@ public class NoOpFrameOperationCallbackFactory implements IFrameOperationCallbac
         public void fail(Throwable th) {
             // No Op
         }
+
+        @Override
+        public void open() throws HyracksDataException {
+            // No Op
+        }
     }
 }
