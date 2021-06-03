@@ -219,7 +219,7 @@ public class CorrelatedPrefixMergePolicyTest extends TestCase {
 
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
-                List<ILSMDiskComponent> mergedComponents = invocation.getArgumentAt(0, List.class);
+                List<ILSMDiskComponent> mergedComponents = invocation.getArgument(0);
                 mergedComponents.forEach(component -> {
                     try {
                         resultComponentIDs.add(component.getId());

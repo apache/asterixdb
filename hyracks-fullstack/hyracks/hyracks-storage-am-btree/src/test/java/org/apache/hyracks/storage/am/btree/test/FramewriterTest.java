@@ -73,7 +73,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({ "javax.management.*", "javax.xml.*", "com.sun.org.apache.xerces.*", "org.w3c.*", "org.xml.*" })
 @PrepareForTest({ BTreeUtils.class, FrameTupleAccessor.class, ArrayTupleBuilder.class,
         IndexSearchOperatorNodePushable.class, FrameUtils.class, FrameTupleAppender.class })
 public class FramewriterTest {
