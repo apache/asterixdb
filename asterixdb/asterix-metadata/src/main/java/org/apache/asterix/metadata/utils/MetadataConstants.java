@@ -32,7 +32,7 @@ public class MetadataConstants {
     public static final int METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 = 251;
     public static final int DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8 = METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 * 4;
     public static final Pattern METADATA_OBJECT_NAME_INVALID_CHARS =
-            Pattern.compile(SystemUtils.IS_OS_WINDOWS ? "[\u0000-\u001F\u007F\"*/:<>\\\\|+,.;=\\[\\]\n]" : "[\u0000/]");
+            Pattern.compile(SystemUtils.IS_OS_WINDOWS ? "[\u0000-\u001F\u007F\"*/:<>\\\\|+,;=\\[\\]\n]" : "[\u0000/]");
 
     // Name of the dataverse the metadata lives in.
     public static final DataverseName METADATA_DATAVERSE_NAME = DataverseName.createBuiltinDataverseName("Metadata");

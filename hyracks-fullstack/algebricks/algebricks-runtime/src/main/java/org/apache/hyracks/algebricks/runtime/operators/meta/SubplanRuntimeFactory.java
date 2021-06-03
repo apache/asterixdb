@@ -174,7 +174,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
         @Override
         public void flush() throws HyracksDataException {
-            writer.flush();
+            appender.flush(writer);
         }
 
         /**

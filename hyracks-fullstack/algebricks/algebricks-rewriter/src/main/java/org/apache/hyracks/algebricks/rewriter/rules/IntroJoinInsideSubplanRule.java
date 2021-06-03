@@ -44,6 +44,9 @@ public class IntroJoinInsideSubplanRule extends AbstractDecorrelationRule {
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
+        if (context.getMetadataProvider().isBlockingOperatorDisabled()) {
+            return false;
+        }
         AbstractLogicalOperator op0 = (AbstractLogicalOperator) opRef.getValue();
         if (op0.getOperatorTag() != LogicalOperatorTag.SUBPLAN) {
             return false;

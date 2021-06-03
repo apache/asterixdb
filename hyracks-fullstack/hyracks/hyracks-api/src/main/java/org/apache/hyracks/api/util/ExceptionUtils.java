@@ -23,9 +23,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.util.ThrowingFunction;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -157,5 +159,42 @@ public class ExceptionUtils {
         } catch (UncheckedExecutionException e) {
             throw HyracksDataException.create(e.getCause());
         }
+    }
+
+    // Gets the error message for the root cause of a given Throwable instance.
+    public static String getErrorMessage(Throwable th) {
+        Throwable cause = getRootCause(th);
+        return cause.getMessage();
+    }
+
+    /**
+     * Determines whether supplied exception contains a matching cause in its hierarchy, or is itself a match
+     */
+    public static boolean matchingCause(Throwable e, Predicate<Throwable> test) {
+        Throwable current = e;
+        Throwable cause = e.getCause();
+        while (cause != null && cause != current) {
+            if (test.test(cause)) {
+                return true;
+            }
+            Throwable nextCause = current.getCause();
+            current = cause;
+            cause = nextCause;
+        }
+        return test.test(e);
+    }
+
+    /**
+     * Unwraps enclosed exceptions until a non-product exception is found, otherwise returns the root production
+     * exception
+     */
+    public static Throwable unwrap(Throwable e) {
+        Throwable current = e;
+        Throwable cause = e.getCause();
+        while (cause != current && cause instanceof IFormattedException) {
+            current = cause;
+            cause = current.getCause();
+        }
+        return current;
     }
 }

@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FileSystemWatcher;
@@ -129,7 +128,7 @@ public class LocalFSInputStream extends AbstractMultipleInputStream {
         if (in == null) {
             return false;
         }
-        Throwable root = ExceptionUtils.getRootCause(th);
+        Throwable root = org.apache.hyracks.api.util.ExceptionUtils.getRootCause(th);
         if (root instanceof HyracksDataException) {
             HyracksDataException r = (HyracksDataException) root;
             boolean advance = false;

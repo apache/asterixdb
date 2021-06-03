@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.common.dataflow;
 
 import static org.apache.hyracks.api.exceptions.ErrorCode.CANNOT_DROP_IN_USE_INDEX;
 import static org.apache.hyracks.api.exceptions.ErrorCode.INDEX_DOES_NOT_EXIST;
+import static org.apache.hyracks.api.exceptions.ErrorCode.RESOURCE_DOES_NOT_EXIST;
 import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption.IF_EXISTS;
 import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption.WAIT_ON_IN_USE;
 
@@ -96,7 +97,7 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
     }
 
     private boolean isIgnorable(HyracksDataException e) {
-        return e.matches(INDEX_DOES_NOT_EXIST) && options.contains(IF_EXISTS);
+        return (e.matches(INDEX_DOES_NOT_EXIST) || e.matches(RESOURCE_DOES_NOT_EXIST)) && options.contains(IF_EXISTS);
     }
 
     private boolean canRetry(HyracksDataException e) throws HyracksDataException {

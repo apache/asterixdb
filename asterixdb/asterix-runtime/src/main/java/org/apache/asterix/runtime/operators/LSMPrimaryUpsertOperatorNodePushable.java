@@ -291,7 +291,13 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 public void fail(Throwable th) {
                     callback.fail(th);
                 }
+
+                @Override
+                public void open() throws HyracksDataException {
+                    callback.open();
+                }
             };
+            frameOpCallback.open();
         } catch (Throwable e) { // NOSONAR: Re-thrown
             throw HyracksDataException.create(e);
         }

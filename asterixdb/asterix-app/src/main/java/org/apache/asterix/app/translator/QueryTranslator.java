@@ -78,7 +78,6 @@ import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.ExceptionUtils;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.exceptions.WarningCollector;
@@ -2023,7 +2022,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             validateDatasetState(metadataProvider, ds, sourceLoc);
 
             ds.drop(metadataProvider, mdTxnCtx, jobsToExecute, bActiveTxn, progress, hcc, dropCorrespondingNodeGroup,
-                    sourceLoc, Collections.emptySet(), requestParameters.isForceDropDataset());
+                    sourceLoc, EnumSet.of(DropOption.IF_EXISTS), requestParameters.isForceDropDataset());
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
             return true;
@@ -2039,6 +2038,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     if (ds != null) {
                         jobsToExecute.clear();
+                        // start another txn for the compensating operations
+                        mdTxnCtx.setValue(MetadataManager.INSTANCE.beginTransaction());
+                        bActiveTxn.setValue(true);
+                        metadataProvider.setMetadataTxnContext(mdTxnCtx.getValue());
                         ds.drop(metadataProvider, mdTxnCtx, jobsToExecute, bActiveTxn, progress, hcc,
                                 dropCorrespondingNodeGroup, sourceLoc, EnumSet.of(DropOption.IF_EXISTS),
                                 requestParameters.isForceDropDataset());
@@ -3979,7 +3982,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 printer.print(jobId);
             }
         } catch (Exception e) {
-            if (ExceptionUtils.getRootCause(e) instanceof InterruptedException) {
+            if (org.apache.hyracks.api.util.ExceptionUtils.getRootCause(e) instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, clientRequest.getId());
             }
