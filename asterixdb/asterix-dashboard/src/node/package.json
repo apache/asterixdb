@@ -34,7 +34,7 @@
     "core-js": "3.8.3",
     "file-saver": "2.0.5",
     "hammerjs": "2.0.8",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "roboto-fontface": "^0.10.0",
     "rxjs": "6.6.3",
     "rxjs-compat": "6.6.3",

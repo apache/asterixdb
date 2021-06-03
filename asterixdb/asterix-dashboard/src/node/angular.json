@@ -33,6 +33,9 @@
               "hammerjs",
               "lodash",
               "file-saver",
+              "codemirror",
+              "webcola",
+              "dagre"
             ]
           },
           "configurations": {
