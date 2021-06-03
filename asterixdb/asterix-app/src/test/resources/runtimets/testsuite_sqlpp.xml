@@ -6140,6 +6140,11 @@
         <output-dir compare="Text">query-ASTERIXDB-159-3</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="var-in-list">
+        <output-dir compare="Text">var-in-list</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="misc">
     <test-case FilePath="misc">

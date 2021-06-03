@@ -69,7 +69,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
  *
  * @author yingyib
  */
-public class StaticTypeCastUtil {
+public final class StaticTypeCastUtil {
 
     private StaticTypeCastUtil() {
     }
@@ -82,10 +82,11 @@ public class StaticTypeCastUtil {
      * rule: @ IntroduceEnforcedListTypeRule.
      *
      * @param funcExpr
-     *            record constructor function expression
+     *            a function expression
      * @param reqType
-     *            required record type
+     *            required (list) type (for when the funcExpr is a list constructor)
      * @param inputType
+     *            inferred (list) type (for when the funcExpr is a list constructor)
      * @param env
      *            type environment
      * @throws AlgebricksException
@@ -136,7 +137,7 @@ public class StaticTypeCastUtil {
      * @param reqType
      *            the required type inferred from parent operators/expressions
      * @param inputType
-     *            the current inferred
+     *            the current inferred type
      * @param env
      *            the type environment
      * @return true if the type is casted; otherwise, false.
@@ -162,6 +163,7 @@ public class StaticTypeCastUtil {
             return rewriteListFuncExpr(funcExpr, (AbstractCollectionType) reqType, (AbstractCollectionType) inputType,
                     env);
         } else if (inputType.getTypeTag().equals(ATypeTag.OBJECT)) {
+            // TODO(ali): inputType? shouldn't we check against the funcExpr whether it's a record constructor?
             if (reqType.equals(BuiltinType.ANY)) {
                 reqType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
             }
@@ -186,13 +188,14 @@ public class StaticTypeCastUtil {
     }
 
     /**
-     * only called when funcExpr is record constructor
+     * Only called when funcExpr's inferred type (the inputRecordType) is a record.
      *
      * @param funcExpr
-     *            record constructor function expression
+     *            a function expression that produces a record
      * @param requiredRecordType
      *            required record type
      * @param inputRecordType
+     *            inferred record type of funcExpr
      * @param env
      *            type environment
      * @throws AlgebricksException
@@ -213,13 +216,14 @@ public class StaticTypeCastUtil {
     }
 
     /**
-     * only called when funcExpr is list constructor
+     * Only called when funcExpr is list constructor.
      *
      * @param funcExpr
      *            list constructor function expression
      * @param requiredListType
      *            required list type
      * @param inputListType
+     *            inferred list type
      * @param env
      *            type environment
      * @throws AlgebricksException
@@ -247,19 +251,22 @@ public class StaticTypeCastUtil {
                 case FUNCTION_CALL:
                     ScalarFunctionCallExpression argFunc = (ScalarFunctionCallExpression) arg;
                     changed |= rewriteFuncExpr(argFunc, requiredItemType, currentItemType, env);
-                    changed |= castItem(argRef, argFunc, requiredItemType, env);
+                    changed |= castItem(argRef, requiredItemType, env);
                     break;
                 case VARIABLE:
-                    // TODO(ali): why are we always casting to an open type without considering "requiredItemType"?
-                    changed |= injectCastToRelaxType(argRef, currentItemType, env);
+                    changed |= castItem(argRef, requiredItemType, env);
+                    break;
+                case CONSTANT:
+                    // TODO(ali): should the constant be handled (i.e. constant array or record)?
                     break;
             }
         }
         return changed;
     }
 
-    private static boolean castItem(Mutable<ILogicalExpression> itemExprRef, ScalarFunctionCallExpression itemExpr,
-            IAType requiredItemType, IVariableTypeEnvironment env) throws AlgebricksException {
+    private static boolean castItem(Mutable<ILogicalExpression> itemExprRef, IAType requiredItemType,
+            IVariableTypeEnvironment env) throws AlgebricksException {
+        ILogicalExpression itemExpr = itemExprRef.getValue();
         IAType itemType = (IAType) env.getType(itemExpr);
         if (TypeResolverUtil.needsCast(requiredItemType, itemType) && !satisfied(requiredItemType, itemType)) {
             injectCastFunction(FunctionUtil.getFunctionInfo(BuiltinFunctions.CAST_TYPE), requiredItemType, itemType,
