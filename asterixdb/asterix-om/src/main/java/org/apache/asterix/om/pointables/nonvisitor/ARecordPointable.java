@@ -152,7 +152,7 @@ public class ARecordPointable extends AbstractPointable {
                 && RecordUtil.isNull(bytes[getNullBitmapOffset(recordType) + fieldId / 4], fieldId);
     }
 
-    private boolean isClosedFieldMissing(ARecordType recordType, int fieldId) {
+    public boolean isClosedFieldMissing(ARecordType recordType, int fieldId) {
         return getNullBitmapSize(recordType) > 0
                 && RecordUtil.isMissing(bytes[getNullBitmapOffset(recordType) + fieldId / 4], fieldId);
     }
