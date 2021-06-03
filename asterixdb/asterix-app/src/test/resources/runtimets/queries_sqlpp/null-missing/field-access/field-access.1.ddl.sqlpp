@@ -17,7 +17,18 @@
  * under the License.
  */
 
-{
-  'null': {'a': null}.a,
-  'missing': {'b': missing}.b
+drop dataverse test if exists;
+create dataverse test;
+use test;
+
+drop dataset samptable if exists;
+drop type samptabletype if exists;
+
+create type samptabletype as closed {
+  id: tinyint,
+  mf: tinyint?,
+  rf: { pid:tinyint}?
 };
+
+
+create dataset samptable(samptabletype) primary key id;
