@@ -19,8 +19,6 @@
 package org.apache.asterix.test.sqlpp;
 
 import static org.apache.hyracks.util.file.FileUtil.canonicalize;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -69,6 +67,7 @@ import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.hyracks.test.support.TestUtils;
 import org.junit.Assert;
+import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
@@ -151,7 +150,7 @@ public class ParserTestExecutor extends TestExecutor {
             when(metadataProvider.getDefaultDataverseName()).thenReturn(dvName);
             when(metadataProvider.getConfig()).thenReturn(config);
             when(config.get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");
-            when(metadataProvider.findDataverse(any(DataverseName.class))).thenAnswer(new Answer<Dataverse>() {
+            when(metadataProvider.findDataverse(Mockito.<DataverseName> any())).thenAnswer(new Answer<Dataverse>() {
                 @Override
                 public Dataverse answer(InvocationOnMock invocation) {
                     Object[] args = invocation.getArguments();
@@ -160,17 +159,18 @@ public class ParserTestExecutor extends TestExecutor {
                     return mockDataverse;
                 }
             });
-            when(metadataProvider.findDataset(any(DataverseName.class), anyString())).thenAnswer(new Answer<Dataset>() {
-                @Override
-                public Dataset answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    final Dataset mockDataset = mock(Dataset.class);
-                    when(mockDataset.getDataverseName()).thenReturn((DataverseName) args[0]);
-                    when(mockDataset.getDatasetName()).thenReturn((String) args[1]);
-                    return mockDataset;
-                }
-            });
-            when(metadataProvider.lookupUserDefinedFunction(any(FunctionSignature.class)))
+            when(metadataProvider.findDataset(Mockito.<DataverseName> any(), Mockito.<String> any()))
+                    .thenAnswer(new Answer<Dataset>() {
+                        @Override
+                        public Dataset answer(InvocationOnMock invocation) {
+                            Object[] args = invocation.getArguments();
+                            final Dataset mockDataset = mock(Dataset.class);
+                            when(mockDataset.getDataverseName()).thenReturn((DataverseName) args[0]);
+                            when(mockDataset.getDatasetName()).thenReturn((String) args[1]);
+                            return mockDataset;
+                        }
+                    });
+            when(metadataProvider.lookupUserDefinedFunction(Mockito.<FunctionSignature> any()))
                     .thenAnswer(new Answer<Function>() {
                         @Override
                         public Function answer(InvocationOnMock invocation) {

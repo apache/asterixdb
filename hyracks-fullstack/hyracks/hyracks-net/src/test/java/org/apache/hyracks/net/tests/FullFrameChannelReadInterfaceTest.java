@@ -114,7 +114,7 @@ public class FullFrameChannelReadInterfaceTest {
         final ChannelControlBlock ccb = Mockito.mock(ChannelControlBlock.class);
         Mockito.when(ccb.isRemotelyClosed()).thenReturn(false);
         Mockito.doAnswer(invocation -> {
-            final Integer delta = invocation.getArgumentAt(0, Integer.class);
+            final Integer delta = invocation.getArgument(0);
             credit.addAndGet(delta);
             synchronized (credit) {
                 credit.notifyAll();
@@ -128,7 +128,7 @@ public class FullFrameChannelReadInterfaceTest {
         final ISocketChannel sc = Mockito.mock(ISocketChannel.class);
         Mockito.when(sc.read(Mockito.any(ByteBuffer.class))).thenAnswer(invocation -> {
             ccb.addPendingCredits(-FRAME_SIZE);
-            final ByteBuffer buffer = invocation.getArgumentAt(0, ByteBuffer.class);
+            final ByteBuffer buffer = invocation.getArgument(0);
             while (buffer.hasRemaining()) {
                 buffer.put((byte) 0);
             }

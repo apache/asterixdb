@@ -166,7 +166,7 @@ public class ConcurrentMergePolicyTest {
         Mockito.doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
-                List<ILSMDiskComponent> mergedComponents = invocation.getArgumentAt(0, List.class);
+                List<ILSMDiskComponent> mergedComponents = invocation.getArgument(0);
                 mergedComponents.forEach(component -> {
                     mergedSizes.add(component.getComponentSize());
                 });
