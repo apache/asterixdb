@@ -83,9 +83,7 @@ export class MetadataComponent {
     sampleDataset$: Observable<any>;
     sampleDataset: any;
 
-    //variables for counting
-    countDataset$:Observable<any>;
-    countDataset: number;
+    checkedDataverses: any = {};
 
     //added variables for flattening
     datatypesDict: Object;
@@ -104,6 +102,16 @@ export class MetadataComponent {
          this.dataverses$ = this.store.select(s => s.dataverse.dataverses.results);
          this.dataverses$.subscribe((data: any[]) => {
              this.dataverses = data;
+
+             if (Object.keys(this.checkedDataverses).length > 0) {
+               for (let dataverse of this.dataverses) {
+                 if (this.checkedDataverses[dataverse.DataverseName]) {
+                   dataverse.active = true;
+                 }
+               }
+
+               this.checkedDataverses = {};
+             }
          });
 
          // Watching for Datasets
@@ -140,6 +148,14 @@ export class MetadataComponent {
     }
 
     refreshMetadata() {
+        if (this.dataverses) {
+          for (let dataverse of this.dataverses) {
+            if (dataverse.active) {
+              this.checkedDataverses[dataverse.DataverseName] = true;
+            }
+          }
+        }
+
         this.store.dispatch(new dataverseActions.SelectDataverses('-'));
         this.store.dispatch(new datasetActions.SelectDatasets('-'));
         this.store.dispatch(new datatypesActions.SelectDatatypes('-'));
@@ -183,7 +199,6 @@ export class MetadataComponent {
 
     checkStatus = [];
     generateFilter(dataverse, event, i) {
-
         if (this.checkStatus[i] == undefined) {
             this.checkStatus.push(event.checked);
         } else {
