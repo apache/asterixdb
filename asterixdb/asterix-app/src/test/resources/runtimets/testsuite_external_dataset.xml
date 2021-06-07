@@ -256,5 +256,12 @@
         <output-dir compare="Text">aws/s3/include-exclude/include-12</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="aws/s3/anonymous_no_auth">
+        <output-dir compare="Text">anonymous_no_auth</output-dir>
+        <expected-error>ASX3119: Parameter 'secretAccessKey' is required if 'accessKeyId' is provided</expected-error>
+        <expected-error>ASX3119: Parameter 'accessKeyId' is required if 'secretAccessKey' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

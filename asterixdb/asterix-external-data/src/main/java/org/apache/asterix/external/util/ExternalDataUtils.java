@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
@@ -63,7 +66,9 @@ import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 
+import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.regions.Region;
@@ -623,16 +628,25 @@ public class ExternalDataUtils {
          */
         public static S3Client buildAwsS3Client(Map<String, String> configuration) throws CompilationException {
             // TODO(Hussain): Need to ensure that all required parameters are present in a previous step
-            String accessKeyId = configuration.get(ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME);
-            String secretAccessKey = configuration.get(ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME);
+            String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
+            String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
             String regionId = configuration.get(ExternalDataConstants.AwsS3.REGION_FIELD_NAME);
             String serviceEndpoint = configuration.get(ExternalDataConstants.AwsS3.SERVICE_END_POINT_FIELD_NAME);
 
             S3ClientBuilder builder = S3Client.builder();
 
             // Credentials
-            AwsBasicCredentials credentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
-            builder.credentialsProvider(StaticCredentialsProvider.create(credentials));
+            AwsCredentialsProvider credentialsProvider;
+
+            // No auth required
+            if (accessKeyId == null) {
+                credentialsProvider = AnonymousCredentialsProvider.create();
+            } else {
+                credentialsProvider =
+                        StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKeyId, secretAccessKey));
+            }
+
+            builder.credentialsProvider(credentialsProvider);
             builder.region(Region.of(regionId));
 
             // Validate the service endpoint if present
@@ -665,6 +679,20 @@ public class ExternalDataUtils {
             // check if the format property is present
             if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
                 throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
+            }
+
+            // Both parameters should be passed, or neither should be passed (for anonymous/no auth)
+            String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
+            String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
+            if (accessKeyId == null || secretAccessKey == null) {
+                // If one is passed, the other is required
+                if (accessKeyId != null) {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, SECRET_ACCESS_KEY_FIELD_NAME,
+                            ACCESS_KEY_ID_FIELD_NAME);
+                } else if (secretAccessKey != null) {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ACCESS_KEY_ID_FIELD_NAME,
+                            SECRET_ACCESS_KEY_FIELD_NAME);
+                }
             }
 
             validateIncludeExclude(configuration);
