@@ -18,9 +18,25 @@
  */
 package org.apache.hyracks.api.util;
 
+import java.util.function.Consumer;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 @FunctionalInterface
 public interface HyracksThrowingConsumer<V> {
-    void process(V value) throws HyracksDataException;
+    void accept(V value) throws HyracksDataException;
+
+    @SuppressWarnings("Duplicates")
+    static <T> Consumer<T> asUnchecked(HyracksThrowingConsumer<T> consumer) {
+        return input -> {
+            try {
+                consumer.accept(input);
+            } catch (HyracksDataException e) {
+                throw new UncheckedExecutionException(e);
+            }
+        };
+    }
+
 }

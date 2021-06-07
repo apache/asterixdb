@@ -21,6 +21,7 @@ package org.apache.asterix.testframework.context;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -37,77 +38,18 @@ import org.apache.asterix.testframework.xml.TestSuiteParser;
 
 public class TestCaseContext {
 
-    /**
-     * For specifying the desired output formatting of results.
-     */
-    public enum OutputFormat {
-        NONE("", ""),
-        ADM("adm", "application/x-adm"),
-        LOSSLESS_JSON("json", "application/json; lossless=true"),
-        CLEAN_JSON("json", "application/json"),
-        CSV("csv", "text/csv"),
-        CSV_HEADER("csv-header", "text/csv; header=present"),
-        AST("ast", "application/x-ast"),
-        PLAN("plan", "application/x-plan"),
-        BINARY("", "application/octet-stream");
-
-        private final String extension;
-        private final String mimetype;
-
-        OutputFormat(String ext, String mime) {
-            this.extension = ext;
-            this.mimetype = mime;
-        }
-
-        public String extension() {
-            return extension;
-        }
-
-        public String mimeType() {
-            return mimetype;
-        }
-
-        //
-        public static OutputFormat forCompilationUnit(CompilationUnit cUnit) {
-            switch (cUnit.getOutputDir().getCompare()) {
-                case TEXT:
-                    return OutputFormat.ADM;
-                case LOSSLESS_JSON:
-                    return OutputFormat.LOSSLESS_JSON;
-                case CLEAN_JSON:
-                    return OutputFormat.CLEAN_JSON;
-                case CSV:
-                    return OutputFormat.CSV;
-                case CSV_HEADER:
-                    return OutputFormat.CSV_HEADER;
-                case BINARY:
-                    return OutputFormat.BINARY;
-                case INSPECT:
-                case IGNORE:
-                    return OutputFormat.NONE;
-                case AST:
-                    return OutputFormat.AST;
-                case PLAN:
-                    return OutputFormat.PLAN;
-                default:
-                    assert false : "Unknown ComparisonEnum!";
-                    return OutputFormat.NONE;
-            }
-        }
-    }
-
     public static final String DEFAULT_TESTSUITE_XML_NAME = "testsuite.xml";
     public static final String ONLY_TESTSUITE_XML_NAME = "only.xml";
     public static final String DEFAULT_REPEATED_TESTSUITE_XML_NAME = "repeatedtestsuite.xml";
 
     private File tsRoot;
-
     private TestSuite testSuite;
-
     private TestGroup[] testGroups;
-
     private TestCase testCase;
     private Map<String, Object> kv;
+    public int numOfErrors;
+    public List<String> expectedErrors;
+    public BitSet expectedWarnings;
 
     public TestCaseContext(File tsRoot, TestSuite testSuite, TestGroup[] testGroups, TestCase testCase) {
         this.tsRoot = tsRoot;
@@ -234,16 +176,16 @@ public class TestCaseContext {
     }
 
     public static class Builder {
-        private final boolean m_doSlow;
-        private final Pattern m_re;
+        private final boolean doSlow;
+        private final Pattern re;
 
         public Builder() {
-            m_doSlow = System.getProperty("runSlowAQLTests", "false").equals("true");
-            String re = System.getProperty("testre");
-            if (re == null) {
-                m_re = null;
+            doSlow = System.getProperty("runSlowAQLTests", "false").equals("true");
+            String testre = System.getProperty("testre");
+            if (testre == null) {
+                this.re = null;
             } else {
-                m_re = Pattern.compile(re);
+                this.re = Pattern.compile(testre);
             }
         }
 
@@ -280,13 +222,13 @@ public class TestCaseContext {
         private void addContexts(File tsRoot, TestSuite ts, List<TestGroup> tgPath, List<TestCaseContext> tccs) {
             TestGroup tg = tgPath.get(tgPath.size() - 1);
             for (TestCase tc : tg.getTestCase()) {
-                if (m_doSlow || tc.getCategory() != CategoryEnum.SLOW) {
+                if (doSlow || tc.getCategory() != CategoryEnum.SLOW) {
                     boolean matches = false;
-                    if (m_re != null) {
+                    if (re != null) {
                         // Check all compilation units for matching
                         // name. If ANY match, add the test.
                         for (TestCase.CompilationUnit cu : tc.getCompilationUnit()) {
-                            if (m_re.matcher(cu.getName()).find()) {
+                            if (re.matcher(cu.getName()).find()) {
                                 matches = true;
                                 break;
                             }
@@ -302,6 +244,65 @@ public class TestCaseContext {
                 }
             }
             addContexts(tsRoot, ts, tgPath, tg.getTestGroup(), tccs);
+        }
+    }
+
+    /**
+     * For specifying the desired output formatting of results.
+     */
+    public enum OutputFormat {
+        NONE("", ""),
+        ADM("adm", "application/x-adm"),
+        LOSSLESS_JSON("json", "application/json; lossless=true"),
+        CLEAN_JSON("json", "application/json"),
+        CSV("csv", "text/csv"),
+        CSV_HEADER("csv-header", "text/csv; header=present"),
+        AST("ast", "application/x-ast"),
+        PLAN("plan", "application/x-plan"),
+        BINARY("", "application/octet-stream");
+
+        private final String extension;
+        private final String mimetype;
+
+        OutputFormat(String ext, String mime) {
+            this.extension = ext;
+            this.mimetype = mime;
+        }
+
+        public String extension() {
+            return extension;
+        }
+
+        public String mimeType() {
+            return mimetype;
+        }
+
+        //
+        public static OutputFormat forCompilationUnit(CompilationUnit cUnit) {
+            switch (cUnit.getOutputDir().getCompare()) {
+                case TEXT:
+                    return OutputFormat.ADM;
+                case LOSSLESS_JSON:
+                    return OutputFormat.LOSSLESS_JSON;
+                case CLEAN_JSON:
+                    return OutputFormat.CLEAN_JSON;
+                case CSV:
+                    return OutputFormat.CSV;
+                case CSV_HEADER:
+                    return OutputFormat.CSV_HEADER;
+                case BINARY:
+                    return OutputFormat.BINARY;
+                case INSPECT:
+                case IGNORE:
+                    return OutputFormat.NONE;
+                case AST:
+                    return OutputFormat.AST;
+                case PLAN:
+                    return OutputFormat.PLAN;
+                default:
+                    assert false : "Unknown ComparisonEnum!";
+                    return OutputFormat.NONE;
+            }
         }
     }
 }

@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.util;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -67,6 +68,12 @@ public class Span {
         @Override
         public void wait(Object monitor) throws InterruptedException {
             monitor.wait();
+        }
+
+        @Override
+        public boolean await(CountDownLatch latch) throws InterruptedException {
+            latch.await();
+            return true;
         }
 
         @Override
@@ -141,6 +148,10 @@ public class Span {
 
     public void wait(Object monitor) throws InterruptedException {
         TimeUnit.NANOSECONDS.timedWait(monitor, remaining(TimeUnit.NANOSECONDS));
+    }
+
+    public boolean await(CountDownLatch latch) throws InterruptedException {
+        return latch.await(remaining(TimeUnit.NANOSECONDS), TimeUnit.NANOSECONDS);
     }
 
     public void loopUntilExhausted(ThrowingAction action) throws Exception {

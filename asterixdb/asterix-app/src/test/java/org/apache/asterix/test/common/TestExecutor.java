@@ -1143,8 +1143,8 @@ public class TestExecutor {
 
     public void executeTestFile(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
             String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit,
-            MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
-            BitSet expectedWarnings) throws Exception {
+            MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath)
+            throws Exception {
         InputStream resultStream;
         File qbcFile;
         boolean failed = false;
@@ -1152,7 +1152,7 @@ public class TestExecutor {
         switch (ctx.getType()) {
             case "ddl":
                 ExtractedResult ddlExtractedResult = executeSqlppUpdateOrDdl(statement, OutputFormat.CLEAN_JSON, cUnit);
-                validateWarning(ddlExtractedResult, testCaseCtx, cUnit, testFile, expectedWarnings);
+                validateWarning(ddlExtractedResult, testCaseCtx, cUnit, testFile);
                 break;
             case "update":
                 // isDmlRecoveryTest: set IP address
@@ -1166,11 +1166,11 @@ public class TestExecutor {
             case "pollpost":
                 poll(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
                         expectedResultFileCtxs, testFile, actualPath, ctx.getType().substring("poll".length()),
-                        expectedWarnings, plainExecutor);
+                        plainExecutor);
                 break;
             case "polldynamic":
                 polldynamic(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount,
-                        expectedResultFileCtxs, testFile, actualPath, expectedWarnings);
+                        expectedResultFileCtxs, testFile, actualPath);
                 break;
             case "query":
             case "async":
@@ -1195,7 +1195,7 @@ public class TestExecutor {
                         variableCtx, ctx, expectedResultFile, actualResultFile, queryCount,
                         expectedResultFileCtxs.size(), cUnit.getParameter(), ComparisonEnum.TEXT);
 
-                validateWarning(extractedResult, testCaseCtx, cUnit, testFile, expectedWarnings);
+                validateWarning(extractedResult, testCaseCtx, cUnit, testFile);
                 break;
             case "store":
                 // This is a query that returns the expected output of a subsequent query
@@ -1610,18 +1610,18 @@ public class TestExecutor {
 
     private void polldynamic(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
             String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit,
-            MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
-            BitSet expectedWarnings) throws Exception {
+            MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath)
+            throws Exception {
         IExpectedResultPoller poller = getExpectedResultPoller(statement);
         final String key = getKey(statement);
         poll(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit, queryCount, expectedResultFileCtxs,
-                testFile, actualPath, "validate", expectedWarnings, new IPollTask() {
+                testFile, actualPath, "validate", new IPollTask() {
                     @Override
                     public void execute(TestCaseContext testCaseCtx, TestFileContext ctx,
                             Map<String, Object> variableCtx, String statement, boolean isDmlRecoveryTest,
                             ProcessBuilder pb, CompilationUnit cUnit, MutableInt queryCount,
-                            List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
-                            BitSet expectedWarnings) throws Exception {
+                            List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath)
+                            throws Exception {
                         File actualResultFile = new File(actualPath, testCaseCtx.getTestCase().getFilePath()
                                 + File.separatorChar + cUnit.getName() + '.' + ctx.getSeqNum() + ".polled.adm");
                         if (actualResultFile.exists() && !actualResultFile.delete()) {
@@ -1659,7 +1659,7 @@ public class TestExecutor {
     private void poll(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
             String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, CompilationUnit cUnit,
             MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
-            String newType, BitSet expectedWarnings, IPollTask pollTask) throws Exception {
+            String newType, IPollTask pollTask) throws Exception {
         // polltimeoutsecs=nnn, polldelaysecs=nnn
         int timeoutSecs = getTimeoutSecs(statement);
         int retryDelaySecs = getRetryDelaySecs(statement);
@@ -1682,7 +1682,7 @@ public class TestExecutor {
                         try {
                             startSemaphore.release();
                             pollTask.execute(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
-                                    queryCount, expectedResultFileCtxs, testFile, actualPath, expectedWarnings);
+                                    queryCount, expectedResultFileCtxs, testFile, actualPath);
                         } finally {
                             endSemaphore.release();
                         }
@@ -2092,13 +2092,13 @@ public class TestExecutor {
     public void executeTest(String actualPath, TestCaseContext testCaseCtx, ProcessBuilder pb,
             boolean isDmlRecoveryTest, TestGroup failedGroup, TestGroup passedGroup) throws Exception {
         MutableInt queryCount = new MutableInt(0);
-        int numOfErrors = 0;
+        testCaseCtx.numOfErrors = 0;
         int numOfFiles = 0;
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
-            List<String> expectedErrors = cUnit.getExpectedError();
-            BitSet expectedWarnings = new BitSet(cUnit.getExpectedWarn().size());
-            expectedWarnings.set(0, cUnit.getExpectedWarn().size());
+            testCaseCtx.expectedErrors = cUnit.getExpectedError();
+            testCaseCtx.expectedWarnings = new BitSet(cUnit.getExpectedWarn().size());
+            testCaseCtx.expectedWarnings.set(0, cUnit.getExpectedWarn().size());
             LOGGER.info(
                     "Starting [TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " ... ");
             Map<String, Object> variableCtx = new HashMap<>();
@@ -2120,7 +2120,7 @@ public class TestExecutor {
                     boolean loopCmd = testFile.getName().endsWith(".loop.cmd");
                     if (!testFile.getName().startsWith(DIAGNOSE)) {
                         executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
-                                queryCount, expectedResultFileCtxs, testFile, actualPath, expectedWarnings);
+                                queryCount, expectedResultFileCtxs, testFile, actualPath);
                     }
                     if (loopCmd) {
                         // this was a loop file and we have exited the loop; reset the loop iteration
@@ -2138,9 +2138,9 @@ public class TestExecutor {
                     }
                     loopIteration++;
                 } catch (Exception e) {
-                    numOfErrors++;
-                    boolean unexpected = isUnExpected(e, expectedErrors, numOfErrors, queryCount,
-                            testCaseCtx.isSourceLocationExpected(cUnit));
+                    testCaseCtx.numOfErrors++;
+                    boolean unexpected = isUnExpected(e, testCaseCtx.expectedErrors, testCaseCtx.numOfErrors,
+                            queryCount, testCaseCtx.isSourceLocationExpected(cUnit));
                     if (unexpected) {
                         LOGGER.error("testFile {} raised an unexpected exception", testFile, e);
                         if (failedGroup != null) {
@@ -2152,12 +2152,12 @@ public class TestExecutor {
                     }
                 }
                 if (numOfFiles == testFileCtxs.size()) {
-                    if (numOfErrors < cUnit.getExpectedError().size()) {
+                    if (testCaseCtx.numOfErrors < cUnit.getExpectedError().size()) {
                         LOGGER.error("Test {} failed to raise (an) expected exception(s)", cUnit.getName());
                         throw new Exception(
                                 "Test \"" + cUnit.getName() + "\" FAILED; expected exception was not thrown...");
                     }
-                    ensureWarnings(expectedWarnings, cUnit);
+                    ensureWarnings(testCaseCtx.expectedWarnings, cUnit);
                     LOGGER.info(
                             "[TEST]: " + testCaseCtx.getTestCase().getFilePath() + "/" + cUnit.getName() + " PASSED ");
                     if (passedGroup != null) {
@@ -2416,7 +2416,7 @@ public class TestExecutor {
                         final File file = ctx.getFile();
                         final String statement = readTestFile(file);
                         executeTestFile(testCaseCtx, ctx, variableCtx, statement, false, pb, cUnit, new MutableInt(-1),
-                                Collections.emptyList(), file, null, new BitSet());
+                                Collections.emptyList(), file, null);
                     }
                 }
             } catch (Exception diagnosticFailure) {
@@ -2794,11 +2794,11 @@ public class TestExecutor {
     }
 
     protected void validateWarning(ExtractedResult result, TestCaseContext testCaseCtx, CompilationUnit cUnit,
-            File testFile, BitSet expectedWarnings) throws Exception {
+            File testFile) throws Exception {
         if (testCaseCtx.getTestCase().isCheckWarnings()) {
             boolean expectedSourceLoc = testCaseCtx.isSourceLocationExpected(cUnit);
-            validateWarnings(result.getWarnings(), cUnit.getExpectedWarn(), expectedWarnings, expectedSourceLoc,
-                    testFile);
+            validateWarnings(result.getWarnings(), cUnit.getExpectedWarn(), testCaseCtx.expectedWarnings,
+                    expectedSourceLoc, testFile);
         }
     }
 
