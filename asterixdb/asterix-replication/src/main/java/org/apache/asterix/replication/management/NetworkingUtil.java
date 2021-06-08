@@ -34,8 +34,12 @@ import java.util.Enumeration;
 
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.network.ISocketChannel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class NetworkingUtil {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private NetworkingUtil() {
         throw new AssertionError("This util class should not be initialized.");
@@ -56,25 +60,33 @@ public class NetworkingUtil {
 
     public static void sendFile(FileChannel fileChannel, ISocketChannel socketChannel) throws IOException {
         long pos = 0;
-        long fileSize = fileChannel.size();
-        long remainingBytes = fileSize;
-        long transferredBytes = 0;
-
-        while ((transferredBytes += fileChannel.transferTo(pos, remainingBytes, socketChannel)) < fileSize) {
-            pos += transferredBytes;
-            remainingBytes -= transferredBytes;
+        long remainingBytes = fileChannel.size();
+        try {
+            while (remainingBytes > 0) {
+                long sentBytes = fileChannel.transferTo(pos, remainingBytes, socketChannel);
+                pos += sentBytes;
+                remainingBytes -= sentBytes;
+            }
+            socketChannel.getSocketChannel().socket().getOutputStream().flush();
+        } catch (Exception e) {
+            LOGGER.info("failed to send file; file size {}, pos {}, remainingBytes {}", fileChannel.size(), pos,
+                    remainingBytes);
         }
-        socketChannel.getSocketChannel().socket().getOutputStream().flush();
     }
 
     public static void downloadFile(FileChannel fileChannel, ISocketChannel socketChannel) throws IOException {
+        long remainingBytes = fileChannel.size();
         long pos = 0;
-        long fileSize = fileChannel.size();
-        long count = fileSize;
-        long numTransferred = 0;
-        while ((numTransferred += fileChannel.transferFrom(socketChannel, pos, count)) < fileSize) {
-            pos += numTransferred;
-            count -= numTransferred;
+        try {
+            while (remainingBytes > 0) {
+                long readBytes = fileChannel.transferFrom(socketChannel, pos, remainingBytes);
+                pos += readBytes;
+                remainingBytes -= readBytes;
+            }
+        } catch (Exception e) {
+            LOGGER.info("failed to download file; file size {}, pos {}, remainingBytes {}", fileChannel.size(), pos,
+                    remainingBytes);
+            throw e;
         }
     }
 
