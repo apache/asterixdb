@@ -136,7 +136,7 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
             // New API is not implemented, try falling back to old API
             try {
                 // For error code, see https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
-                if (ex.awsErrorDetails().errorCode().equals("NotImplemented")) {
+                if (ex.awsErrorDetails().errorCode().equals(AwsS3.ERROR_METHOD_NOT_IMPLEMENTED)) {
                     filesOnly = oldApiListS3Objects(s3Client, container, matchersList, p);
                 } else {
                     throw ex;
@@ -312,7 +312,7 @@ public class AwsS3InputStreamFactory implements IInputStreamFactory {
         return smallest;
     }
 
-    private static class PartitionWorkLoadBasedOnSize implements Serializable {
+    public static class PartitionWorkLoadBasedOnSize implements Serializable {
         private static final long serialVersionUID = 1L;
         private final List<String> filePaths = new ArrayList<>();
         private long totalSize = 0;

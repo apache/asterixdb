@@ -23,6 +23,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -41,6 +42,7 @@ import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 public class AwsS3InputStream extends AbstractMultipleInputStream {
 
@@ -51,6 +53,7 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
     private final int bufferSize;
 
     private final S3Client s3Client;
+    private static final int MAX_RETRIES = 5; // We will retry 5 times in case of internal error from AWS S3 service
 
     // File fields
     private final List<String> filePaths;
@@ -84,17 +87,10 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
         GetObjectRequest.Builder getObjectBuilder = GetObjectRequest.builder();
         GetObjectRequest getObjectRequest = getObjectBuilder.bucket(bucket).key(fileName).build();
 
-        // Have a reference to the S3 stream to ensure that if GZipInputStream causes an IOException because of reading
-        // the header, then the S3 stream gets closed in the close method
-        try {
-            in = s3Client.getObject(getObjectRequest);
-        } catch (NoSuchKeyException ex) {
-            LOGGER.debug(() -> "Key " + LogRedactionUtil.userData(getObjectRequest.key()) + " was not found in bucket "
-                    + getObjectRequest.bucket());
-            nextFileIndex++;
+        boolean isAvailableStream = doGetInputStream(getObjectRequest);
+        nextFileIndex++;
+        if (!isAvailableStream) {
             return advance();
-        } catch (SdkException ex) {
-            throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
         }
 
         // Use gzip stream if needed
@@ -103,11 +99,48 @@ public class AwsS3InputStream extends AbstractMultipleInputStream {
         }
 
         // Current file ready, point to the next file
-        nextFileIndex++;
         if (notificationHandler != null) {
             notificationHandler.notifyNewSource();
         }
         return true;
+    }
+
+    /**
+     * Get the input stream. If an error is encountered, depending on the error code, a retry might be favorable.
+     *
+     * @return true
+     */
+    private boolean doGetInputStream(GetObjectRequest request) throws RuntimeDataException {
+        int retries = 0;
+        while (retries < MAX_RETRIES) {
+            try {
+                in = s3Client.getObject(request);
+                break;
+            } catch (NoSuchKeyException ex) {
+                LOGGER.debug(() -> "Key " + LogRedactionUtil.userData(request.key()) + " was not found in bucket "
+                        + request.bucket());
+                return false;
+            } catch (S3Exception ex) {
+                if (!shouldRetry(ex.awsErrorDetails().errorCode(), retries++)) {
+                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                }
+                LOGGER.debug(() -> "S3 retryable error: " + LogRedactionUtil.userData(ex.getMessage()));
+
+                // Backoff for 1 sec for the first 2 retries, and 2 seconds from there onward
+                try {
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(retries < 3 ? 1 : 2));
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            } catch (SdkException ex) {
+                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+            }
+        }
+        return true;
+    }
+
+    private boolean shouldRetry(String errorCode, int currentRetry) {
+        return currentRetry < MAX_RETRIES && AwsS3.isRetryableError(errorCode);
     }
 
     private S3Client buildAwsS3Client(Map<String, String> configuration) throws HyracksDataException {
