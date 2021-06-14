@@ -139,6 +139,8 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
         IStorageComponentProvider storageComponentProvider = ccAppCtx.getStorageComponentProvider();
         IStatementExecutorFactory statementExecutorFactory = ccApp.getStatementExecutorFactory();
         ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
+        final IStatementExecutor.StatementProperties statementProperties = new IStatementExecutor.StatementProperties();
+        responseMsg.setStatementProperties(statementProperties);
         try {
             List<Warning> warnings = new ArrayList<>();
             IParser parser = compilationProvider.getParserFactory().createParser(statementsText);
@@ -160,8 +162,6 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
                     compilationProvider, storageComponentProvider, new ResponsePrinter(sessionOutput));
             final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
             stats.setProfileType(profileType);
-            final IStatementExecutor.StatementProperties statementProperties =
-                    new IStatementExecutor.StatementProperties();
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
             final IRequestParameters requestParameters =
                     new RequestParameters(requestReference, statementsText, null, resultProperties, stats,
@@ -174,7 +174,6 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
             responseMsg.setResult(outWriter.toString());
             responseMsg.setMetadata(outMetadata);
             responseMsg.setStats(stats);
-            responseMsg.setStatementProperties(statementProperties);
             responseMsg.setExecutionPlans(translator.getExecutionPlans());
             responseMsg.setWarnings(warnings);
         } catch (AlgebricksException | HyracksException | org.apache.asterix.lang.sqlpp.parser.TokenMgrError pe) {
