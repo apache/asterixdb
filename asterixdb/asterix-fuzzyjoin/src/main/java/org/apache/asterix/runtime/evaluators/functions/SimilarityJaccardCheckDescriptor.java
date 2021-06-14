@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.SimilarityJaccardCheckEvaluator;
@@ -34,12 +33,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class SimilarityJaccardCheckDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new SimilarityJaccardCheckDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = SimilarityJaccardCheckDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

@@ -19,7 +19,6 @@
 package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -36,12 +35,7 @@ import com.esri.core.geometry.ogc.OGCPolygon;
 public class STIsClosedDescriptor extends AbstractSTSingleGeometryDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new STIsClosedDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = STIsClosedDescriptor::new;
 
     @Override
     protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {

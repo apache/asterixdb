@@ -27,7 +27,6 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableTime;
 import org.apache.asterix.om.base.ATime;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -51,13 +50,7 @@ public class TemporalIntervalStartTimeAccessor extends AbstractScalarFunctionDyn
 
     private static final long serialVersionUID = 1L;
     private static final FunctionIdentifier FID = BuiltinFunctions.ACCESSOR_TEMPORAL_INTERVAL_START_TIME;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new TemporalIntervalStartTimeAccessor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = TemporalIntervalStartTimeAccessor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

@@ -27,7 +27,6 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityFilters;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableInt32;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -51,12 +50,7 @@ public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "prefix-len@3", 3);
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new PrefixLenDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = PrefixLenDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

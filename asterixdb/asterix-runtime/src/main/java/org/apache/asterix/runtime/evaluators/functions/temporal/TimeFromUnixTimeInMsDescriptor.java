@@ -25,7 +25,6 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableTime;
 import org.apache.asterix.om.base.ATime;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -46,13 +45,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class TimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = BuiltinFunctions.TIME_FROM_UNIX_TIME_IN_MS;
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new TimeFromUnixTimeInMsDescriptor();
-        }
-    };
+    public final static IFunctionDescriptorFactory FACTORY = TimeFromUnixTimeInMsDescriptor::new;
 
     /* (non-Javadoc)
      * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])

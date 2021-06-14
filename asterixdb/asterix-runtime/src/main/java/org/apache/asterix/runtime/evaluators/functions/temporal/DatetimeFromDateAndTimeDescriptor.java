@@ -28,7 +28,6 @@ import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -50,14 +49,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class DatetimeFromDateAndTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = BuiltinFunctions.DATETIME_FROM_DATE_TIME;
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new DatetimeFromDateAndTimeDescriptor();
-        }
-
-    };
+    public final static IFunctionDescriptorFactory FACTORY = DatetimeFromDateAndTimeDescriptor::new;
 
     /* (non-Javadoc)
      * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])

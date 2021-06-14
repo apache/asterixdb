@@ -36,7 +36,6 @@ import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParse
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -61,12 +60,7 @@ public class AIntervalStartFromDateConstructorDescriptor extends AbstractScalarF
 
     private static final long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = BuiltinFunctions.INTERVAL_CONSTRUCTOR_START_FROM_DATE;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new AIntervalStartFromDateConstructorDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = AIntervalStartFromDateConstructorDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

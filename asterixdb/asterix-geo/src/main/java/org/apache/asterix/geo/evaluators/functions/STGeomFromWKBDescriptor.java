@@ -24,7 +24,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -43,12 +42,7 @@ import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDe
 
 public class STGeomFromWKBDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new STGeomFromWKBDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = STGeomFromWKBDescriptor::new;
 
     private static final long serialVersionUID = 1L;
 

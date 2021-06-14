@@ -27,7 +27,6 @@ import java.nio.ByteBuffer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -51,12 +50,7 @@ import com.esri.core.geometry.ogc.OGCGeometry;
 
 public class STGeomFromTextSRIDDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new STGeomFromTextSRIDDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = STGeomFromTextSRIDDescriptor::new;
 
     private static final long serialVersionUID = 1L;
 

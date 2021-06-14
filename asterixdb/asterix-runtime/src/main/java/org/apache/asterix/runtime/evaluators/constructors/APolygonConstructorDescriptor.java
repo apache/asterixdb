@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.dataflow.data.nontagged.serde.APointSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -50,12 +49,7 @@ public class APolygonConstructorDescriptor extends AbstractScalarFunctionDynamic
     private static final Pattern WS = Pattern.compile("\\s+");
     private static final Pattern COMMA = Pattern.compile(",");
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new APolygonConstructorDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = APolygonConstructorDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

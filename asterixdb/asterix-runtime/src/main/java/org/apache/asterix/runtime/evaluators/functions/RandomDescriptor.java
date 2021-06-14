@@ -20,7 +20,6 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.utils.RandomHelper;
@@ -35,12 +34,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class RandomDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new RandomDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = RandomDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {

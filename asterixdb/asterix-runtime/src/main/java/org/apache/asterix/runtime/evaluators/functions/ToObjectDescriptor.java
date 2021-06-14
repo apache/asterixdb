@@ -24,7 +24,6 @@ import java.io.DataOutput;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -42,12 +41,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class ToObjectDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = -4146417699529927812L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ToObjectDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = ToObjectDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

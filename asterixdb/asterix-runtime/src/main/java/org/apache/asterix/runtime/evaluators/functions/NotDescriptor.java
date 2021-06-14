@@ -25,7 +25,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeseri
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -45,12 +44,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 @MissingNullInOutFunction
 public class NotDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new NotDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = NotDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {

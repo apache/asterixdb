@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.aggregates.serializable.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractSerializableAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -33,12 +32,7 @@ public class SerializableSqlStddevPopAggregateDescriptor
         extends AbstractSerializableAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new SerializableSqlStddevPopAggregateDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = SerializableSqlStddevPopAggregateDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {

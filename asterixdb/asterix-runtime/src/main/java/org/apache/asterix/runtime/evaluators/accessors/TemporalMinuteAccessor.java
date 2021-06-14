@@ -31,7 +31,6 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -56,14 +55,7 @@ public class TemporalMinuteAccessor extends AbstractScalarFunctionDynamicDescrip
 
     private static final FunctionIdentifier FID = BuiltinFunctions.ACCESSOR_TEMPORAL_MIN;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new TemporalMinuteAccessor();
-        }
-
-    };
+    public static final IFunctionDescriptorFactory FACTORY = TemporalMinuteAccessor::new;
 
     /* (non-Javadoc)
      * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])

@@ -27,7 +27,6 @@ import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem.Fields;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -50,13 +49,7 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = BuiltinFunctions.ADJUST_TIME_FOR_TIMEZONE;
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new AdjustTimeForTimeZoneDescriptor();
-        }
-    };
+    public final static IFunctionDescriptorFactory FACTORY = AdjustTimeForTimeZoneDescriptor::new;
 
     /* (non-Javadoc)
      * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])

@@ -81,12 +81,7 @@ public class LSMTreeRunner implements IExperimentRunner {
     protected IBufferCache memBufferCache;
     private final int onDiskPageSize;
     private final int onDiskNumPages;
-    private final static ThreadFactory threadFactory = new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-            return new Thread(r);
-        }
-    };
+    private final static ThreadFactory threadFactory = Thread::new;
 
     public LSMTreeRunner(int numBatches, int inMemPageSize, int inMemNumPages, int onDiskPageSize, int onDiskNumPages,
             ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories, int[] bloomFilterKeyFields,

@@ -24,7 +24,6 @@ import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.exceptions.OverflowException;
@@ -36,11 +35,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class NumericDivDescriptor extends AbstractNumericArithmeticEval {
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new NumericDivDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = NumericDivDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {

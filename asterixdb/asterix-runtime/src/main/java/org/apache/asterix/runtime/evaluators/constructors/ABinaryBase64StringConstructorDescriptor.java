@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.constructors;
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.base.AMutableBinary;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -35,12 +34,7 @@ import org.apache.hyracks.util.bytes.Base64Parser;
 @MissingNullInOutFunction
 public class ABinaryBase64StringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ABinaryBase64StringConstructorDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = ABinaryBase64StringConstructorDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

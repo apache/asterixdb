@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.pointables.nonvisitor.AIntervalPointable;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -30,13 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class IntervalEndsDescriptor extends AbstractIntervalLogicFuncDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new IntervalEndsDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = IntervalEndsDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {

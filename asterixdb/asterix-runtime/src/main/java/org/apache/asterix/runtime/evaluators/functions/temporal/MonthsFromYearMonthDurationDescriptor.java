@@ -26,7 +26,6 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -48,13 +47,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class MonthsFromYearMonthDurationDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = BuiltinFunctions.MONTHS_FROM_YEAR_MONTH_DURATION;
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new MonthsFromYearMonthDurationDescriptor();
-        }
-    };
+    public final static IFunctionDescriptorFactory FACTORY = MonthsFromYearMonthDurationDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

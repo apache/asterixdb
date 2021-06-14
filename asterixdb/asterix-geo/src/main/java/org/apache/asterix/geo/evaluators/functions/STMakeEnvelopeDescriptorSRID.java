@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
@@ -43,12 +42,7 @@ import com.esri.core.geometry.ogc.OGCGeometry;
 
 public class STMakeEnvelopeDescriptorSRID extends AbstractGetValDescriptor {
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new STMakeEnvelopeDescriptorSRID();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = STMakeEnvelopeDescriptorSRID::new;
 
     private static final long serialVersionUID = 1L;
 

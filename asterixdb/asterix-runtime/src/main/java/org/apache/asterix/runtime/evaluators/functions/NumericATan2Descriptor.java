@@ -28,7 +28,6 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -48,12 +47,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class NumericATan2Descriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new NumericATan2Descriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = NumericATan2Descriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {

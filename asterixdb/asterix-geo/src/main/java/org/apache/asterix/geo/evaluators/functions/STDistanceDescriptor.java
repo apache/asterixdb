@@ -19,7 +19,6 @@
 package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -29,12 +28,7 @@ import com.esri.core.geometry.ogc.OGCGeometry;
 public class STDistanceDescriptor extends AbstractSTDoubleGeometryDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new STDistanceDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = STDistanceDescriptor::new;
 
     @Override
     protected Object evaluateOGCGeometry(OGCGeometry geometry0, OGCGeometry geometry1) throws HyracksDataException {

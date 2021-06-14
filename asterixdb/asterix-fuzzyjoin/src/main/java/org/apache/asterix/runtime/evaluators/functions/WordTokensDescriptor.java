@@ -20,7 +20,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -39,12 +38,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.UTF8WordTokenF
 public class WordTokensDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new WordTokensDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = WordTokensDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {

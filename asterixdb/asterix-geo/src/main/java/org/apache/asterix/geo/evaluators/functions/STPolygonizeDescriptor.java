@@ -32,7 +32,6 @@ import org.apache.asterix.om.base.IACollection;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -58,12 +57,7 @@ import com.esri.core.geometry.ogc.OGCGeometryCollection;
 
 public class STPolygonizeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new STPolygonizeDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = STPolygonizeDescriptor::new;
 
     private static final long serialVersionUID = 1L;
 

@@ -29,7 +29,6 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AMutableDuration;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -53,13 +52,7 @@ public class DurationFromMillisecondsDescriptor extends AbstractScalarFunctionDy
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = BuiltinFunctions.DURATION_FROM_MILLISECONDS;
 
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new DurationFromMillisecondsDescriptor();
-        }
-    };
+    public final static IFunctionDescriptorFactory FACTORY = DurationFromMillisecondsDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

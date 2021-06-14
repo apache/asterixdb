@@ -63,12 +63,7 @@ public class TestStorageManagerComponentHolder {
     private static int pageSize;
     private static int numPages;
     private static int maxOpenFiles;
-    private final static ThreadFactory threadFactory = new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-            return new Thread(r);
-        }
-    };
+    private final static ThreadFactory threadFactory = Thread::new;
 
     public static void init(int pageSize, int numPages, int maxOpenFiles) {
         TestStorageManagerComponentHolder.pageSize = pageSize;

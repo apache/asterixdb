@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.unnestingfunctions.std;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -43,12 +42,7 @@ public class RangeDescriptor extends AbstractUnnestingFunctionDynamicDescriptor 
 
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new RangeDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = RangeDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {

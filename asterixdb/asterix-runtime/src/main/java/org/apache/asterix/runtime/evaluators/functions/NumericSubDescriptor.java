@@ -23,7 +23,6 @@ import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.temporal.DurationArithmeticOperations;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.exceptions.OverflowException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -34,11 +33,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class NumericSubDescriptor extends AbstractNumericArithmeticEval {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new NumericSubDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = NumericSubDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {

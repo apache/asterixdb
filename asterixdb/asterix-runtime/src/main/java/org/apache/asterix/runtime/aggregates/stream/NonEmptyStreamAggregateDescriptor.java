@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.aggregates.stream;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
@@ -41,12 +40,7 @@ public class NonEmptyStreamAggregateDescriptor extends AbstractAggregateFunction
 
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new NonEmptyStreamAggregateDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = NonEmptyStreamAggregateDescriptor::new;
 
     @Override
     public IAggregateEvaluatorFactory createAggregateEvaluatorFactory(IScalarEvaluatorFactory[] args) {

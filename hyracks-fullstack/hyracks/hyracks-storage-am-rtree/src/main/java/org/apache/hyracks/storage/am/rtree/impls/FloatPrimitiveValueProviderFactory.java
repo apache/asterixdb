@@ -37,12 +37,7 @@ public class FloatPrimitiveValueProviderFactory implements IPrimitiveValueProvid
 
     @Override
     public IPrimitiveValueProvider createPrimitiveValueProvider() {
-        return new IPrimitiveValueProvider() {
-            @Override
-            public double getValue(byte[] bytes, int offset) {
-                return FloatPointable.getFloat(bytes, offset);
-            }
-        };
+        return FloatPointable::getFloat;
     }
 
     @Override

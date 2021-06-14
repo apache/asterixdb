@@ -53,12 +53,7 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
     public IActivityClusterGraphGenerator createActivityClusterGraphGenerator(final ICCServiceContext ccServiceCtx,
             Set<JobFlag> jobFlags) throws HyracksException {
         final JobActivityGraphBuilder builder = new JobActivityGraphBuilder(spec, jobFlags);
-        PlanUtils.visit(spec, new IConnectorDescriptorVisitor() {
-            @Override
-            public void visit(IConnectorDescriptor conn) throws HyracksException {
-                builder.addConnector(conn);
-            }
-        });
+        PlanUtils.visit(spec, builder::addConnector);
         PlanUtils.visit(spec, new IOperatorDescriptorVisitor() {
             @Override
             public void visit(IOperatorDescriptor op) {
@@ -78,12 +73,7 @@ public class JobSpecificationActivityClusterGraphGeneratorFactory implements IAc
         acg.setConnectorPolicyAssignmentPolicy(spec.getConnectorPolicyAssignmentPolicy());
         acg.setUseConnectorPolicyForScheduling(spec.isUseConnectorPolicyForScheduling());
         final Set<Constraint> constraints = new HashSet<>();
-        final IConstraintAcceptor acceptor = new IConstraintAcceptor() {
-            @Override
-            public void addConstraint(Constraint constraint) {
-                constraints.add(constraint);
-            }
-        };
+        final IConstraintAcceptor acceptor = constraints::add;
         PlanUtils.visit(spec, new IOperatorDescriptorVisitor() {
             @Override
             public void visit(IOperatorDescriptor op) {

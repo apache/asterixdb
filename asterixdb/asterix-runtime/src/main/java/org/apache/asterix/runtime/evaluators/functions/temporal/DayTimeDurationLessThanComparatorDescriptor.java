@@ -20,20 +20,13 @@
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 
 @MissingNullInOutFunction
 public class DayTimeDurationLessThanComparatorDescriptor extends DayTimeDurationComparatorDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new DayTimeDurationLessThanComparatorDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = DayTimeDurationLessThanComparatorDescriptor::new;
 
     protected DayTimeDurationLessThanComparatorDescriptor() {
         super(false);

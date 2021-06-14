@@ -24,7 +24,6 @@ import static org.apache.asterix.runtime.evaluators.common.ArgumentUtils.NUMERIC
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
@@ -43,12 +42,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class RandomWithSeedDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new RandomWithSeedDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = RandomWithSeedDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {

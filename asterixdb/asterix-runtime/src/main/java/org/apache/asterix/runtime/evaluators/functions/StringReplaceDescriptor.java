@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.utils.StringReplacer;
@@ -36,12 +35,7 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 @MissingNullInOutFunction
 public class StringReplaceDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new StringReplaceDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = StringReplaceDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

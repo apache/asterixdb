@@ -22,7 +22,6 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -45,12 +44,7 @@ public class InjectFailureDescriptor extends AbstractScalarFunctionDynamicDescri
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new InjectFailureDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = InjectFailureDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {

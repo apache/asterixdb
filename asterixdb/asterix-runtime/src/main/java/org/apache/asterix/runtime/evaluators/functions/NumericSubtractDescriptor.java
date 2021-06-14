@@ -35,7 +35,6 @@ import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -57,12 +56,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class NumericSubtractDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new NumericSubtractDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = NumericSubtractDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {

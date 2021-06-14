@@ -31,9 +31,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 @MissingNullInOutFunction
 public final class DatetimeFromUnixTimeInMsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
-    public final static FunctionIdentifier FID = BuiltinFunctions.DATETIME_FROM_UNIX_TIME_IN_MS;
-    public final static IFunctionDescriptorFactory FACTORY = DatetimeFromUnixTimeInMsDescriptor::new;
     private final static long serialVersionUID = 1L;
+    public final static FunctionIdentifier FID = BuiltinFunctions.DATETIME_FROM_UNIX_TIME_IN_MS;
+
+    public final static IFunctionDescriptorFactory FACTORY = DatetimeFromUnixTimeInMsDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

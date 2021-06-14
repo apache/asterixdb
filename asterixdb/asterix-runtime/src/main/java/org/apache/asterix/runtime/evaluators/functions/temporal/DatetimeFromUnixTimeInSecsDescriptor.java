@@ -33,6 +33,7 @@ public final class DatetimeFromUnixTimeInSecsDescriptor extends AbstractScalarFu
 
     private final static long serialVersionUID = 1L;
     public final static FunctionIdentifier FID = BuiltinFunctions.DATETIME_FROM_UNIX_TIME_IN_SECS;
+
     public final static IFunctionDescriptorFactory FACTORY = DatetimeFromUnixTimeInSecsDescriptor::new;
 
     @Override

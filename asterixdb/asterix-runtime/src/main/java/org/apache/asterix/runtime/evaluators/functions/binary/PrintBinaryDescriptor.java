@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -53,12 +52,7 @@ public class PrintBinaryDescriptor extends AbstractScalarFunctionDynamicDescript
         return BuiltinFunctions.PRINT_BINARY;
     }
 
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new PrintBinaryDescriptor();
-        }
-    };
+    public final static IFunctionDescriptorFactory FACTORY = PrintBinaryDescriptor::new;
 
     public final static ATypeTag[] EXPECTED_INPUT_TAGS = { ATypeTag.BINARY, ATypeTag.STRING };
 

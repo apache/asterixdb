@@ -26,7 +26,6 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -49,12 +48,7 @@ public class StringSplitDescriptor extends AbstractScalarFunctionDynamicDescript
 
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new StringSplitDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = StringSplitDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

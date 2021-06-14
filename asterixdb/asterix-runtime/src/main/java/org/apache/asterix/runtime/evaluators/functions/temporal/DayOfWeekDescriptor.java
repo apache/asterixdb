@@ -30,9 +30,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @MissingNullInOutFunction
 public class DayOfWeekDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-    public final static FunctionIdentifier FID = BuiltinFunctions.DAY_OF_WEEK;
-    public final static IFunctionDescriptorFactory FACTORY = DayOfWeekDescriptor::new;
     private static final long serialVersionUID = 1L;
+    public final static FunctionIdentifier FID = BuiltinFunctions.DAY_OF_WEEK;
+
+    public final static IFunctionDescriptorFactory FACTORY = DayOfWeekDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

@@ -19,7 +19,6 @@
 package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -30,12 +29,7 @@ import com.esri.core.geometry.ogc.OGCPoint;
 public class STZDescriptor extends AbstractSTSingleGeometryDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new STZDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = STZDescriptor::new;
 
     @Override
     protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {

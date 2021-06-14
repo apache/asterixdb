@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.evaluators.functions;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -34,12 +33,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 @MissingNullInOutFunction
 public class NumericCosDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new NumericCosDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = NumericCosDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {

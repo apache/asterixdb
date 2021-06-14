@@ -48,12 +48,7 @@ public class RuntimeContext {
     private ILocalResourceRepository localResourceRepository;
     private IResourceLifecycleManager<IIndex> lcManager;
     private ResourceIdFactory resourceIdFactory;
-    private ThreadFactory threadFactory = new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-            return new Thread(r);
-        }
-    };
+    private ThreadFactory threadFactory = Thread::new;
 
     public RuntimeContext(INCServiceContext appCtx) throws HyracksDataException {
         fileMapManager = new FileMapManager();

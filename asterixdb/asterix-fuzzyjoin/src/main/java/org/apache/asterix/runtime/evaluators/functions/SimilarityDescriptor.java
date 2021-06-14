@@ -32,7 +32,6 @@ import org.apache.asterix.fuzzyjoin.similarity.SimilarityFilters;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetric;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AMutableDouble;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -56,12 +55,7 @@ public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescripto
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity@7", 7);
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new SimilarityDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = SimilarityDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {

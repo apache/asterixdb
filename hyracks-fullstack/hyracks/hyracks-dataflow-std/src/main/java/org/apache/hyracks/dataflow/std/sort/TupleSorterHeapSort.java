@@ -272,12 +272,7 @@ public class TupleSorterHeapSort implements ITupleSorter {
         isSorted = true;
     }
 
-    private static final Comparator<IResetableComparable> entryComparator = new Comparator<IResetableComparable>() {
-        @Override
-        public int compare(IResetableComparable o1, IResetableComparable o2) {
-            return o1.compareTo(o2);
-        }
-    };
+    private static final Comparator<IResetableComparable> entryComparator = Comparable::compareTo;
 
     @Override
     public void close() throws HyracksDataException {

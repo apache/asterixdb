@@ -22,7 +22,6 @@ package org.apache.asterix.runtime.unnestingfunctions.std;
 import java.io.IOException;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
@@ -44,12 +43,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ScanCollectionDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = ScanCollectionDescriptor::new;
 
     @Override
     public FunctionIdentifier getIdentifier() {
