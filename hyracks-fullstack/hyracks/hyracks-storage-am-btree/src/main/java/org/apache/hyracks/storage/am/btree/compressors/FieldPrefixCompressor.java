@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.am.btree.frames.BTreeFieldPrefixNSMLeafFrame;
 import org.apache.hyracks.storage.am.btree.impls.BTreeFieldPrefixTupleReference;
 import org.apache.hyracks.storage.am.btree.impls.FieldPrefixSlotManager;
 import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriter;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameCompressor;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -46,10 +47,17 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
 
     private final ITypeTraits[] typeTraits;
 
-    public FieldPrefixCompressor(ITypeTraits[] typeTraits, float ratioThreshold, int occurrenceThreshold) {
+    private final ITypeTraits nullTypeTraits;
+
+    private final INullIntrospector nullIntrospector;
+
+    public FieldPrefixCompressor(ITypeTraits[] typeTraits, float ratioThreshold, int occurrenceThreshold,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
         this.typeTraits = typeTraits;
         this.ratioThreshold = ratioThreshold;
         this.occurrenceThreshold = occurrenceThreshold;
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
     }
 
     @Override
@@ -163,7 +171,8 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
         int prefixTupleIndex = 0;
         uncompressedTupleCount = 0;
 
-        BTreeTypeAwareTupleWriter tupleWriter = new BTreeTypeAwareTupleWriter(typeTraits, false);
+        BTreeTypeAwareTupleWriter tupleWriter =
+                new BTreeTypeAwareTupleWriter(typeTraits, false, nullTypeTraits, nullIntrospector);
         BTreeFieldPrefixTupleReference tupleToWrite =
                 new BTreeFieldPrefixTupleReference(tupleWriter.createTupleReference());
         tupleToWrite.setFieldCount(fieldCount);
@@ -340,7 +349,8 @@ public class FieldPrefixCompressor implements ITreeIndexFrameCompressor {
         KeyPartition kp = new KeyPartition(maxCmps);
         keyPartitions.add(kp);
 
-        BTreeTypeAwareTupleWriter tupleWriter = new BTreeTypeAwareTupleWriter(typeTraits, false);
+        BTreeTypeAwareTupleWriter tupleWriter =
+                new BTreeTypeAwareTupleWriter(typeTraits, false, nullTypeTraits, nullIntrospector);
 
         BTreeFieldPrefixTupleReference prevTuple =
                 new BTreeFieldPrefixTupleReference(tupleWriter.createTupleReference());

@@ -50,7 +50,9 @@ import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.formats.nontagged.NullIntrospector;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.api.ExtensionMetadataDataset;
 import org.apache.asterix.metadata.api.ExtensionMetadataDatasetId;
 import org.apache.asterix.metadata.api.IExtensionMetadataEntity;
@@ -1539,7 +1541,8 @@ public class MetadataNode implements IMetadataNode {
 
     private ITupleReference getTupleToBeDeleted(TxnId txnId, IMetadataIndex metadataIndex, ITupleReference searchKey)
             throws AlgebricksException, HyracksDataException {
-        IValueExtractor<ITupleReference> valueExtractor = new TupleCopyValueExtractor(metadataIndex.getTypeTraits());
+        IValueExtractor<ITupleReference> valueExtractor = new TupleCopyValueExtractor(metadataIndex.getTypeTraits(),
+                TypeTraitProvider.INSTANCE.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE);
         List<ITupleReference> results = new ArrayList<>();
         searchIndex(txnId, metadataIndex, searchKey, valueExtractor, results);
         if (results.isEmpty()) {

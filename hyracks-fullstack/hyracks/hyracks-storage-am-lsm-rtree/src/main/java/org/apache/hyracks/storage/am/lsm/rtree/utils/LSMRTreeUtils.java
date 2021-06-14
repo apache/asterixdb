@@ -102,7 +102,7 @@ public class LSMRTreeUtils {
             rtreeLeafFrameTupleWriterFactory = rtreeInteriorFrameTupleWriterFactory;
         }
         BTreeTypeAwareTupleWriterFactory btreeTupleWriterFactory =
-                new BTreeTypeAwareTupleWriterFactory(btreeTypeTraits, false);
+                new BTreeTypeAwareTupleWriterFactory(btreeTypeTraits, false, null, null);
         RTreeFrameFactory rtreeInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
                 rtreeInteriorFrameTupleWriterFactory, valueProviderFactories, rtreePolicyType, isPointMBR);
         RTreeFrameFactory rtreeLeafFrameFactory = new RTreeNSMLeafFrameFactory(rtreeLeafFrameTupleWriterFactory,
@@ -127,7 +127,8 @@ public class LSMRTreeUtils {
         LSMComponentFilterFrameFactory filterFrameFactory = null;
         LSMComponentFilterManager filterManager = null;
         if (filterCmpFactories != null) {
-            TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
+            TypeAwareTupleWriterFactory filterTupleWriterFactory =
+                    new TypeAwareTupleWriterFactory(filterTypeTraits, null, null);
             filterHelper = new ComponentFilterHelper(filterTupleWriterFactory, filterCmpFactories);
             filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory);
             filterManager = new LSMComponentFilterManager(filterFrameFactory);
@@ -217,7 +218,8 @@ public class LSMRTreeUtils {
         LSMComponentFilterFrameFactory filterFrameFactory = null;
         LSMComponentFilterManager filterManager = null;
         if (filterCmpFactories != null) {
-            TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
+            TypeAwareTupleWriterFactory filterTupleWriterFactory =
+                    new TypeAwareTupleWriterFactory(filterTypeTraits, null, null);
             filterHelper = new ComponentFilterHelper(filterTupleWriterFactory, filterCmpFactories);
             filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory);
             filterManager = new LSMComponentFilterManager(filterFrameFactory);
@@ -264,7 +266,7 @@ public class LSMRTreeUtils {
             rtreeLeafFrameTupleWriterFactory = rtreeInteriorFrameTupleWriterFactory;
         }
         BTreeTypeAwareTupleWriterFactory btreeTupleWriterFactory =
-                new BTreeTypeAwareTupleWriterFactory(btreeTypeTraits, false);
+                new BTreeTypeAwareTupleWriterFactory(btreeTypeTraits, false, null, null);
         RTreeFrameFactory rtreeInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
                 rtreeInteriorFrameTupleWriterFactory, valueProviderFactories, rtreePolicyType, isPointMBR);
         RTreeFrameFactory rtreeLeafFrameFactory = new RTreeNSMLeafFrameFactory(rtreeLeafFrameTupleWriterFactory,

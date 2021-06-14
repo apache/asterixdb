@@ -49,6 +49,6 @@ public class LSMBTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
                 getVirtualBufferCacheProvider(), SynchronousSchedulerProvider.INSTANCE, MERGE_POLICY_FACTORY,
                 MERGE_POLICY_PROPERTIES, DURABLE, bloomFilterKeyFields,
                 LSMTreeOperatorTestHelper.DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, true, btreefields,
-                NoOpCompressorDecompressorFactory.INSTANCE, bloomFilterKeyFields != null);
+                NoOpCompressorDecompressorFactory.INSTANCE, bloomFilterKeyFields != null, null, null);
     }
 }

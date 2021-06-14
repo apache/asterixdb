@@ -127,7 +127,8 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         this.btree = BTreeUtils.createDiskBTree(bufferCache, getBTreeTypeTraits(tokenTypeTraits), tokenCmpFactories,
-                BTreeLeafFrameType.REGULAR_NSM, btreeFile, pageManagerFactory.createPageManager(bufferCache), false);
+                BTreeLeafFrameType.REGULAR_NSM, btreeFile, pageManagerFactory.createPageManager(bufferCache), false,
+                null, null);
         this.numTokenFields = btree.getComparatorFactories().length;
         this.numInvListKeys = invListCmpFactories.length;
         this.invListsFile = invListsFile;

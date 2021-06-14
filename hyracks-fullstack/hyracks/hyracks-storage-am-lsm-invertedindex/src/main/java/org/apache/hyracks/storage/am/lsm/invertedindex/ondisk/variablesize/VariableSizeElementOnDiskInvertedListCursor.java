@@ -53,7 +53,7 @@ public class VariableSizeElementOnDiskInvertedListCursor extends AbstractOnDiskI
         super(bufferCache, fileId, invListFields, stats);
         this.isInit = true;
         this.tupleReference = new VariableSizeInvertedListTupleReference(invListFields);
-        this.tupleWriter = new TypeAwareTupleWriter(invListFields);
+        this.tupleWriter = new TypeAwareTupleWriter(invListFields, null, null);
     }
 
     public VariableSizeElementOnDiskInvertedListCursor(IBufferCache bufferCache, int fileId,
@@ -70,7 +70,7 @@ public class VariableSizeElementOnDiskInvertedListCursor extends AbstractOnDiskI
         currentElementIxForScan = 0;
         isInit = true;
         this.tupleReference = new VariableSizeInvertedListTupleReference(invListFields);
-        this.tupleWriter = new TypeAwareTupleWriter(invListFields);
+        this.tupleWriter = new TypeAwareTupleWriter(invListFields, null, null);
     }
 
     /**

@@ -74,7 +74,8 @@ public class BTreeUpdateSearchTest extends AbstractBTreeTest {
         ISerializerDeserializer[] recDescSers =
                 { IntegerSerializerDeserializer.INSTANCE, IntegerSerializerDeserializer.INSTANCE };
 
-        BTreeTypeAwareTupleWriterFactory tupleWriterFactory = new BTreeTypeAwareTupleWriterFactory(typeTraits, false);
+        BTreeTypeAwareTupleWriterFactory tupleWriterFactory =
+                new BTreeTypeAwareTupleWriterFactory(typeTraits, false, null, null);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetadataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();

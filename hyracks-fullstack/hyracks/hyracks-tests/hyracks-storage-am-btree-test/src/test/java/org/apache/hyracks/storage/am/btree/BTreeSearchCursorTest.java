@@ -66,7 +66,7 @@ public class BTreeSearchCursorTest extends AbstractBTreeTest {
     public static final int FIELD_COUNT = 2;
     public static final ITypeTraits[] TYPE_TRAITS = { IntegerPointable.TYPE_TRAITS, IntegerPointable.TYPE_TRAITS };
     public static final BTreeTypeAwareTupleWriterFactory TUPLE_WRITER_FACTORY =
-            new BTreeTypeAwareTupleWriterFactory(TYPE_TRAITS, false);
+            new BTreeTypeAwareTupleWriterFactory(TYPE_TRAITS, false, null, null);
     public static final ITreeIndexMetadataFrameFactory META_FRAME_FACTORY = new LIFOMetaDataFrameFactory();
     public static final int KEY_FIELDS_COUNT = 1;
     public static final IBinaryComparatorFactory[] CMP_FACTORIES = { IntegerBinaryComparatorFactory.INSTANCE };

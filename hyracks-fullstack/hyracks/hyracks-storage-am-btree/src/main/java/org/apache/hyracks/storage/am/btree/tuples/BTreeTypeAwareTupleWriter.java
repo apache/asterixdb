@@ -19,21 +19,23 @@
 package org.apache.hyracks.storage.am.btree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
-public class BTreeTypeAwareTupleWriter extends TypeAwareTupleWriter implements ITreeIndexTupleWriter {
+// TODO(ali): this is broken if updateAware is enabled
+public class BTreeTypeAwareTupleWriter extends TypeAwareTupleWriter {
     protected final boolean updateAware;
     protected boolean isUpdated;
 
-    public BTreeTypeAwareTupleWriter(ITypeTraits[] typeTraits, boolean updateAware) {
-        super(typeTraits);
+    public BTreeTypeAwareTupleWriter(ITypeTraits[] typeTraits, boolean updateAware, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
+        super(typeTraits, nullTypeTraits, nullIntrospector);
         this.updateAware = updateAware;
     }
 
     @Override
     public BTreeTypeAwareTupleReference createTupleReference() {
-        return new BTreeTypeAwareTupleReference(typeTraits, updateAware);
+        return new BTreeTypeAwareTupleReference(typeTraits, updateAware, nullTypeTraits);
     }
 
     @Override

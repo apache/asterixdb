@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.btree.tuples;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriter;
 import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriterFactory;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 
 public class LSMBTreeTupleWriterFactory extends BTreeTypeAwareTupleWriterFactory {
 
@@ -30,15 +31,16 @@ public class LSMBTreeTupleWriterFactory extends BTreeTypeAwareTupleWriterFactory
     private final boolean isAntimatter;
 
     public LSMBTreeTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields, boolean isAntimatter,
-            boolean updateAware) {
-        super(typeTraits, updateAware);
+            boolean updateAware, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
+        super(typeTraits, updateAware, nullTypeTraits, nullIntrospector);
         this.numKeyFields = numKeyFields;
         this.isAntimatter = isAntimatter;
     }
 
     @Override
     public BTreeTypeAwareTupleWriter createTupleWriter() {
-        return new LSMBTreeTupleWriter(typeTraits, numKeyFields, isAntimatter, updateAware);
+        return new LSMBTreeTupleWriter(typeTraits, numKeyFields, isAntimatter, updateAware, nullTypeTraits,
+                nullIntrospector);
     }
 
 }

@@ -21,11 +21,14 @@ package org.apache.hyracks.storage.am.lsm.btree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 
 public class LSMBTreeCopyTupleWriter extends LSMBTreeTupleWriter {
-    public LSMBTreeCopyTupleWriter(ITypeTraits[] typeTraits, int numKeyFields, boolean updateAware) {
+
+    public LSMBTreeCopyTupleWriter(ITypeTraits[] typeTraits, int numKeyFields, boolean updateAware,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
         // Third parameter is never used locally, just give false.
-        super(typeTraits, numKeyFields, false, updateAware);
+        super(typeTraits, numKeyFields, false, updateAware, nullTypeTraits, nullIntrospector);
     }
 
     @Override

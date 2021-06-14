@@ -130,7 +130,7 @@ public class InvertedIndexUtils {
             IBinaryComparatorFactory[] invListCmpFactories, IBufferCache diskBufferCache,
             IPageManagerFactory freePageManagerFactory) throws HyracksDataException {
         BTreeTypeAwareTupleWriterFactory tupleWriterFactory =
-                new BTreeTypeAwareTupleWriterFactory(invListTypeTraits, false);
+                new BTreeTypeAwareTupleWriterFactory(invListTypeTraits, false, null, null);
         ITreeIndexFrameFactory leafFrameFactory =
                 BTreeUtils.getLeafFrameFactory(tupleWriterFactory, BTreeLeafFrameType.REGULAR_NSM);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
@@ -174,7 +174,8 @@ public class InvertedIndexUtils {
         LSMComponentFilterFrameFactory filterFrameFactory = null;
         LSMComponentFilterManager filterManager = null;
         if (filterCmpFactories != null) {
-            TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
+            TypeAwareTupleWriterFactory filterTupleWriterFactory =
+                    new TypeAwareTupleWriterFactory(filterTypeTraits, null, null);
             filterHelper = new ComponentFilterHelper(filterTupleWriterFactory, filterCmpFactories);
             filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory);
             filterManager = new LSMComponentFilterManager(filterFrameFactory);
@@ -225,7 +226,8 @@ public class InvertedIndexUtils {
         LSMComponentFilterFrameFactory filterFrameFactory = null;
         LSMComponentFilterManager filterManager = null;
         if (filterCmpFactories != null) {
-            TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
+            TypeAwareTupleWriterFactory filterTupleWriterFactory =
+                    new TypeAwareTupleWriterFactory(filterTypeTraits, null, null);
             filterHelper = new ComponentFilterHelper(filterTupleWriterFactory, filterCmpFactories);
             filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory);
             filterManager = new LSMComponentFilterManager(filterFrameFactory);

@@ -26,12 +26,14 @@ import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.formats.nontagged.NullIntrospector;
 import org.apache.asterix.metadata.api.IResourceFactoryProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.ArrayIndexUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -66,6 +68,7 @@ public class ArrayBTreeResourceFactoryProvider implements IResourceFactoryProvid
         int[] filterFields = IndexUtil.getFilterFields(dataset, index, filterTypeTraits);
         int[] btreeFields = IndexUtil.getBtreeFieldsIfFiltered(dataset, index);
         IStorageComponentProvider storageComponentProvider = mdProvider.getStorageComponentProvider();
+        ITypeTraitProvider typeTraitProvider = storageComponentProvider.getTypeTraitProvider();
         ITypeTraits[] typeTraits = getTypeTraits(mdProvider, dataset, index, recordType, metaType);
         IBinaryComparatorFactory[] cmpFactories = getCmpFactories(mdProvider, dataset, index, recordType, metaType);
         double bloomFilterFalsePositiveRate = mdProvider.getStorageProperties().getBloomFilterFalsePositiveRate();
@@ -97,7 +100,8 @@ public class ArrayBTreeResourceFactoryProvider implements IResourceFactoryProvid
                         filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory,
                         pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
                         mergePolicyFactory, mergePolicyProperties, true, null, bloomFilterFalsePositiveRate,
-                        index.isPrimaryIndex(), btreeFields, compDecompFactory, false);
+                        index.isPrimaryIndex(), btreeFields, compDecompFactory, false,
+                        typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE);
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_DATASET_TYPE,
                         dataset.getDatasetType().toString());

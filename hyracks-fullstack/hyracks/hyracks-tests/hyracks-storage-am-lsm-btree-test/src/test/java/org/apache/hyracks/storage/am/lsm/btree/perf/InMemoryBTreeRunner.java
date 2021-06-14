@@ -68,7 +68,8 @@ public class InMemoryBTreeRunner extends Thread implements IExperimentRunner {
     protected void init(int pageSize, int numPages, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories)
             throws HyracksDataException {
         bufferCache = new VirtualBufferCache(new HeapBufferAllocator(), pageSize, numPages);
-        BTreeTypeAwareTupleWriterFactory tupleWriterFactory = new BTreeTypeAwareTupleWriterFactory(typeTraits, false);
+        BTreeTypeAwareTupleWriterFactory tupleWriterFactory =
+                new BTreeTypeAwareTupleWriterFactory(typeTraits, false, null, null);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         IPageManager freePageManager = new VirtualFreePageManager(bufferCache);

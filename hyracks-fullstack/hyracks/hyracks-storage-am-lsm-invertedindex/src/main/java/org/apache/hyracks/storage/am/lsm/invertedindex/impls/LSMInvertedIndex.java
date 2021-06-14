@@ -120,10 +120,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
             InMemoryInvertedIndex memInvIndex =
                     createInMemoryInvertedIndex(virtualBufferCache, new VirtualFreePageManager(virtualBufferCache), i);
-            BTree deleteKeysBTree =
-                    BTreeUtils.createBTree(virtualBufferCache, new VirtualFreePageManager(virtualBufferCache),
-                            invListTypeTraits, invListCmpFactories, BTreeLeafFrameType.REGULAR_NSM,
-                            ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_del_" + i), false);
+            BTree deleteKeysBTree = BTreeUtils.createBTree(virtualBufferCache,
+                    new VirtualFreePageManager(virtualBufferCache), invListTypeTraits, invListCmpFactories,
+                    BTreeLeafFrameType.REGULAR_NSM,
+                    ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_del_" + i), false, null, null);
             LSMInvertedIndexMemoryComponent mutableComponent = new LSMInvertedIndexMemoryComponent(this, memInvIndex,
                     deleteKeysBTree, virtualBufferCache, filterHelper == null ? null : filterHelper.createFilter());
             memoryComponents.add(mutableComponent);

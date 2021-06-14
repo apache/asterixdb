@@ -27,6 +27,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 
@@ -42,8 +43,9 @@ public class TupleCopyValueExtractor implements IValueExtractor<ITupleReference>
     private byte[] tupleBytes;
     private ByteBuffer buf;
 
-    public TupleCopyValueExtractor(ITypeTraits[] typeTraits) {
-        this.tupleWriter = new TypeAwareTupleWriter(typeTraits);
+    public TupleCopyValueExtractor(ITypeTraits[] typeTraits, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
+        this.tupleWriter = new TypeAwareTupleWriter(typeTraits, nullTypeTraits, nullIntrospector);
         this.tupleReference = tupleWriter.createTupleReference();
     }
 

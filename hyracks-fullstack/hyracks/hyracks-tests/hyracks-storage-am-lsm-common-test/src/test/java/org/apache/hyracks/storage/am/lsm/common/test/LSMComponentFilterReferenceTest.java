@@ -34,7 +34,7 @@ public class LSMComponentFilterReferenceTest {
     @Test
     public void test() throws HyracksDataException {
         LSMComponentFilterReference filter = new LSMComponentFilterReference(
-                new TypeAwareTupleWriter(new ITypeTraits[] { IntegerPointable.TYPE_TRAITS }));
+                new TypeAwareTupleWriter(new ITypeTraits[] { IntegerPointable.TYPE_TRAITS }, null, null));
         Assert.assertEquals(filter.getLength(), 0);
         Assert.assertFalse(filter.isMaxTupleSet() || filter.isMinTupleSet());
         filter.writeMaxTuple(TupleUtils.createIntegerTuple(false, Integer.MAX_VALUE));
@@ -46,7 +46,7 @@ public class LSMComponentFilterReferenceTest {
         Assert.assertTrue(filter.getLength() == 20);
         byte[] serFilter = filter.getByteArray();
         LSMComponentFilterReference deserFilter = new LSMComponentFilterReference(
-                new TypeAwareTupleWriter((new ITypeTraits[] { IntegerPointable.TYPE_TRAITS })));
+                new TypeAwareTupleWriter(new ITypeTraits[] { IntegerPointable.TYPE_TRAITS }, null, null));
         deserFilter.set(serFilter, 0, 20);
         Assert.assertTrue(deserFilter.isMaxTupleSet() && deserFilter.isMinTupleSet());
         Assert.assertEquals(

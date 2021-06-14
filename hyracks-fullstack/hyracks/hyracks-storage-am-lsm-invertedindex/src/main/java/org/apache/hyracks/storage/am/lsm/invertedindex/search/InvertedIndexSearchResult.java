@@ -86,7 +86,7 @@ public class InvertedIndexSearchResult {
     public InvertedIndexSearchResult(ITypeTraits[] invListFields, IHyracksTaskContext ctx,
             ISimpleFrameBufferManager bufferManager) throws HyracksDataException {
         this.invListFields = invListFields;
-        this.tupleWriter = new TypeAwareTupleWriter(invListFields);
+        this.tupleWriter = new TypeAwareTupleWriter(invListFields, null, null);
         initTypeTraits(invListFields);
         this.ctx = ctx;
         appender = new InvertedListSearchResultFrameTupleAppender(ctx.getInitialFrameSize());

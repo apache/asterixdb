@@ -84,7 +84,8 @@ public class BTreeStatsTest extends AbstractBTreeTest {
         int keyFieldCount = 1;
         IBinaryComparatorFactory[] cmpFactories = new IBinaryComparatorFactory[keyFieldCount];
         cmpFactories[0] = IntegerBinaryComparatorFactory.INSTANCE;
-        BTreeTypeAwareTupleWriterFactory tupleWriterFactory = new BTreeTypeAwareTupleWriterFactory(typeTraits, false);
+        BTreeTypeAwareTupleWriterFactory tupleWriterFactory =
+                new BTreeTypeAwareTupleWriterFactory(typeTraits, false, null, null);
         ITreeIndexFrameFactory leafFrameFactory = new BTreeNSMLeafFrameFactory(tupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         ITreeIndexMetadataFrameFactory metaFrameFactory = new LIFOMetaDataFrameFactory();

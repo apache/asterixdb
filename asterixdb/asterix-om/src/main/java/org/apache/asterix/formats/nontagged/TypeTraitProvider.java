@@ -28,6 +28,7 @@ public class TypeTraitProvider implements ITypeTraitProvider {
 
     // WARNING: the byte sizes depend on the serializer!
     // currently assuming a serializer that adds a 1-byte type indicator before the data
+    private static final ITypeTraits ZERO_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(1);
     private static final ITypeTraits ONE_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(1 + 1);
     private static final ITypeTraits TWO_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(2 + 1);
     private static final ITypeTraits FOUR_BYTE_TYPE_TRAIT = new FixedLengthTypeTrait(4 + 1);
@@ -48,6 +49,9 @@ public class TypeTraitProvider implements ITypeTraitProvider {
             return null;
         }
         switch (type.getTypeTag()) {
+            case NULL:
+            case MISSING:
+                return ZERO_BYTE_TYPE_TRAIT;
             case BOOLEAN:
             case TINYINT:
                 return ONE_BYTE_TYPE_TRAIT;

@@ -58,7 +58,7 @@ public class VariableSizeInvertedListSearchResultFrameTupleAccessor
             throws HyracksDataException {
         super(frameSize, fields);
 
-        this.tupleWriter = new TypeAwareTupleWriter(fields);
+        this.tupleWriter = new TypeAwareTupleWriter(fields, null, null);
         this.tupleReference = new VariableSizeInvertedListTupleReference(fields);
     }
 

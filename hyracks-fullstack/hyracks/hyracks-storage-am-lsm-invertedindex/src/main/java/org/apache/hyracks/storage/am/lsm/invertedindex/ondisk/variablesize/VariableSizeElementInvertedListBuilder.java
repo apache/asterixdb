@@ -46,7 +46,7 @@ public class VariableSizeElementInvertedListBuilder extends AbstractInvertedList
         for (int i = 0; i < invListFields.length; i++) {
             allFields[i + tokenTypeTraits.length] = invListFields[i];
         }
-        this.writer = new TypeAwareTupleWriter(allFields);
+        this.writer = new TypeAwareTupleWriter(allFields, null, null);
 
         InvertedIndexUtils.verifyHasVarSizeTypeTrait(invListFields);
     }

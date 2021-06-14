@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
@@ -34,7 +35,7 @@ import org.apache.hyracks.storage.common.IStorageManager;
 
 public abstract class LsmResourceFactory implements IResourceFactory {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     protected final IStorageManager storageManager;
     protected final ITypeTraits[] typeTraits;
     protected final IBinaryComparatorFactory[] cmpFactories;
@@ -50,6 +51,8 @@ public abstract class LsmResourceFactory implements IResourceFactory {
     protected final ILSMMergePolicyFactory mergePolicyFactory;
     protected final Map<String, String> mergePolicyProperties;
     protected final boolean durable;
+    protected final ITypeTraits nullTypeTraits;
+    protected final INullIntrospector nullIntrospector;
 
     public LsmResourceFactory(IStorageManager storageManager, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] filterTypeTraits,
@@ -58,7 +61,8 @@ public abstract class LsmResourceFactory implements IResourceFactory {
             ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             IMetadataPageManagerFactory metadataPageManagerFactory, IVirtualBufferCacheProvider vbcProvider,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties, boolean durable) {
+            Map<String, String> mergePolicyProperties, boolean durable, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
         this.storageManager = storageManager;
         this.typeTraits = typeTraits;
         this.cmpFactories = cmpFactories;
@@ -74,5 +78,7 @@ public abstract class LsmResourceFactory implements IResourceFactory {
         this.mergePolicyFactory = mergePolicyFactory;
         this.mergePolicyProperties = mergePolicyProperties;
         this.durable = durable;
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
     }
 }

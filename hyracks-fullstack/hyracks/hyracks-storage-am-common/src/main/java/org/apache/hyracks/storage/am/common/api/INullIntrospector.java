@@ -16,22 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.storage.am.common.api;
 
-package org.apache.hyracks.storage.am.rtree.tuples;
+import java.io.Serializable;
 
-import org.apache.hyracks.api.dataflow.value.ITypeTraits;
-import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
+import org.apache.hyracks.api.io.IJsonSerializable;
 
-public class RTreeTypeAwareTupleWriterFactory extends TypeAwareTupleWriterFactory {
+/**
+ * An introspector that tells whether data is {@code NULL} or not.
+ */
+@FunctionalInterface
+public interface INullIntrospector extends Serializable, IJsonSerializable {
 
-    private static final long serialVersionUID = 1L;
+    boolean isNull(byte[] bytes, int offset, int length);
 
-    public RTreeTypeAwareTupleWriterFactory(ITypeTraits[] typeTraits) {
-        super(typeTraits, null, null);
-    }
-
-    @Override
-    public RTreeTypeAwareTupleWriter createTupleWriter() {
-        return new RTreeTypeAwareTupleWriter(typeTraits);
-    }
 }

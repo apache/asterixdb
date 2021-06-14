@@ -27,8 +27,8 @@ import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
 
 public class FieldPrefixPrefixTupleReference extends TypeAwareTupleReference {
 
-    public FieldPrefixPrefixTupleReference(ITypeTraits[] typeTraits) {
-        super(typeTraits);
+    public FieldPrefixPrefixTupleReference(ITypeTraits[] typeTraits, ITypeTraits nullTypeTraits) {
+        super(typeTraits, nullTypeTraits);
     }
 
     // assumes tuple index refers to prefix tuples

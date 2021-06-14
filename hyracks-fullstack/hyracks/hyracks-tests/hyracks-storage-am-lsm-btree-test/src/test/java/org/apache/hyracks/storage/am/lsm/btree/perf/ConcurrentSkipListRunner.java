@@ -116,7 +116,7 @@ public class ConcurrentSkipListRunner implements IExperimentRunner {
             this.dataGen = dataGen;
             this.numBatches = numBatches;
             this.skipList = skipList;
-            tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits);
+            tupleWriterFactory = new TypeAwareTupleWriterFactory(typeTraits, null, null);
             tupleWriter = tupleWriterFactory.createTupleWriter();
             int numTuples = numBatches * batchSize;
             tuples = new TypeAwareTupleReference[numTuples];

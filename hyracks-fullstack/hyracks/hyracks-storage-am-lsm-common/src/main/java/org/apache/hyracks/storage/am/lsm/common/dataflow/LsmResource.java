@@ -27,6 +27,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
@@ -49,7 +50,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public abstract class LsmResource implements IResource {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     protected String path;
     protected final IStorageManager storageManager;
@@ -67,6 +68,8 @@ public abstract class LsmResource implements IResource {
     protected final ILSMMergePolicyFactory mergePolicyFactory;
     protected final Map<String, String> mergePolicyProperties;
     protected final boolean durable;
+    protected final ITypeTraits nullTypeTraits;
+    protected final INullIntrospector nullIntrospector;
 
     public LsmResource(String path, IStorageManager storageManager, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] filterTypeTraits,
@@ -75,7 +78,8 @@ public abstract class LsmResource implements IResource {
             ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             IMetadataPageManagerFactory metadataPageManagerFactory, IVirtualBufferCacheProvider vbcProvider,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMMergePolicyFactory mergePolicyFactory,
-            Map<String, String> mergePolicyProperties, boolean durable) {
+            Map<String, String> mergePolicyProperties, boolean durable, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
         this.path = path;
         this.storageManager = storageManager;
         this.typeTraits = typeTraits;
@@ -92,6 +96,8 @@ public abstract class LsmResource implements IResource {
         this.mergePolicyFactory = mergePolicyFactory;
         this.mergePolicyProperties = mergePolicyProperties;
         this.durable = durable;
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
     }
 
     protected LsmResource(IPersistedResourceRegistry registry, JsonNode json) throws HyracksDataException {
@@ -156,6 +162,16 @@ public abstract class LsmResource implements IResource {
         mergePolicyFactory = (ILSMMergePolicyFactory) registry.deserialize(json.get("mergePolicyFactory"));
         mergePolicyProperties = OBJECT_MAPPER.convertValue(json.get("mergePolicyProperties"), Map.class);
         durable = json.get("durable").asBoolean();
+        if (json.hasNonNull("nullTypeTraits")) {
+            nullTypeTraits = (ITypeTraits) registry.deserialize(json.get("nullTypeTraits"));
+        } else {
+            nullTypeTraits = null;
+        }
+        if (json.hasNonNull("nullIntrospector")) {
+            nullIntrospector = (INullIntrospector) registry.deserialize(json.get("nullIntrospector"));
+        } else {
+            nullIntrospector = null;
+        }
     }
 
     protected void appendToJson(final ObjectNode json, IPersistedResourceRegistry registry)
@@ -206,6 +222,16 @@ public abstract class LsmResource implements IResource {
         json.set("mergePolicyFactory", mergePolicyFactory.toJson(registry));
         json.putPOJO("mergePolicyProperties", mergePolicyProperties);
         json.put("durable", durable);
+        if (nullTypeTraits != null) {
+            json.set("nullTypeTraits", nullTypeTraits.toJson(registry));
+        } else {
+            json.set("nullTypeTraits", null);
+        }
+        if (nullIntrospector != null) {
+            json.set("nullIntrospector", nullIntrospector.toJson(registry));
+        } else {
+            json.set("nullIntrospector", null);
+        }
     }
 
     @Override

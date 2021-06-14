@@ -68,11 +68,11 @@ public class TestLsmBtreeUtil {
             int[] btreeFields, int[] filterFields, boolean durable, IMetadataPageManagerFactory freePageManagerFactory,
             boolean updateAware, ITracer tracer) throws HyracksDataException {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory =
-                new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, false, updateAware);
+                new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, false, updateAware, null, null);
         LSMBTreeTupleWriterFactory deleteTupleWriterFactory =
-                new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, true, updateAware);
+                new LSMBTreeTupleWriterFactory(typeTraits, cmpFactories.length, true, updateAware, null, null);
         LSMBTreeCopyTupleWriterFactory copyTupleWriterFactory =
-                new LSMBTreeCopyTupleWriterFactory(typeTraits, cmpFactories.length, updateAware);
+                new LSMBTreeCopyTupleWriterFactory(typeTraits, cmpFactories.length, updateAware, null, null);
         ITreeIndexFrameFactory insertLeafFrameFactory = new BTreeNSMLeafFrameFactory(insertTupleWriterFactory);
         ITreeIndexFrameFactory copyTupleLeafFrameFactory = new BTreeNSMLeafFrameFactory(copyTupleWriterFactory);
         ITreeIndexFrameFactory deleteLeafFrameFactory = new BTreeNSMLeafFrameFactory(deleteTupleWriterFactory);
@@ -88,7 +88,8 @@ public class TestLsmBtreeUtil {
         LSMComponentFilterFrameFactory filterFrameFactory = null;
         LSMComponentFilterManager filterManager = null;
         if (filterCmpFactories != null) {
-            TypeAwareTupleWriterFactory filterTupleWriterFactory = new TypeAwareTupleWriterFactory(filterTypeTraits);
+            TypeAwareTupleWriterFactory filterTupleWriterFactory =
+                    new TypeAwareTupleWriterFactory(filterTypeTraits, null, null);
             filterHelper = new ComponentFilterHelper(filterTupleWriterFactory, filterCmpFactories);
             filterFrameFactory = new LSMComponentFilterFrameFactory(filterTupleWriterFactory);
             filterManager = new LSMComponentFilterManager(filterFrameFactory);

@@ -22,18 +22,20 @@ package org.apache.hyracks.storage.am.lsm.btree.tuples;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriter;
 import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriterFactory;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 
 public class LSMBTreeCopyTupleWriterFactory extends BTreeTypeAwareTupleWriterFactory {
     private static final long serialVersionUID = 1L;
     private final int numKeyFields;
 
-    public LSMBTreeCopyTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields, boolean updateAware) {
-        super(typeTraits, updateAware);
+    public LSMBTreeCopyTupleWriterFactory(ITypeTraits[] typeTraits, int numKeyFields, boolean updateAware,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
+        super(typeTraits, updateAware, nullTypeTraits, nullIntrospector);
         this.numKeyFields = numKeyFields;
     }
 
     @Override
     public BTreeTypeAwareTupleWriter createTupleWriter() {
-        return new LSMBTreeCopyTupleWriter(typeTraits, numKeyFields, updateAware);
+        return new LSMBTreeCopyTupleWriter(typeTraits, numKeyFields, updateAware, nullTypeTraits, nullIntrospector);
     }
 }

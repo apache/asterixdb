@@ -38,7 +38,7 @@ public class VariableSizeInvertedListTupleReference extends AbstractInvertedList
     public VariableSizeInvertedListTupleReference(ITypeTraits[] typeTraits) throws HyracksDataException {
         super(typeTraits);
 
-        this.tupleReference = new TypeAwareTupleReference(typeTraits);
+        this.tupleReference = new TypeAwareTupleReference(typeTraits, null);
     }
 
     @Override

@@ -64,7 +64,7 @@ public class LSMBTreeExamplesTest extends OrderedIndexExamplesTest {
                 harness.getOperationTracker(), harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
                 harness.getPageWriteCallbackFactory(), true, filterTypeTraits, filterCmpFactories, btreeFields,
                 filterFields, true, harness.getMetadataPageManagerFactory(), false, ITracer.NONE,
-                NoOpCompressorDecompressorFactory.INSTANCE, bloomFilterKeyFields != null);
+                NoOpCompressorDecompressorFactory.INSTANCE, bloomFilterKeyFields != null, null, null);
     }
 
     @Before

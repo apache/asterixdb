@@ -60,7 +60,7 @@ public class LSMRTreeWithAntiMatterLocalResourceFactory extends LsmResourceFacto
             IBinaryComparatorFactory[] btreeComparatorFactories) {
         super(storageManager, rteeTypeTraits, rtreeCmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
-                vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable);
+                vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, null, null);
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
         this.linearizeCmpFactory = linearizeCmpFactory;

@@ -26,6 +26,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IResource;
@@ -34,20 +35,25 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
 public class BTreeResource implements IResource {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private String path;
     private final IStorageManager storageManager;
     private final ITypeTraits[] typeTraits;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final IPageManagerFactory pageManagerFactory;
+    private final ITypeTraits nullTypeTraits;
+    private final INullIntrospector nullIntrospector;
 
     public BTreeResource(String path, IStorageManager storageManager, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, IPageManagerFactory pageManagerFactory) {
+            IBinaryComparatorFactory[] comparatorFactories, IPageManagerFactory pageManagerFactory,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
         this.path = path;
         this.storageManager = storageManager;
         this.typeTraits = typeTraits;
         this.comparatorFactories = comparatorFactories;
         this.pageManagerFactory = pageManagerFactory;
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
     }
 
     @Override
@@ -56,7 +62,8 @@ public class BTreeResource implements IResource {
         IIOManager ioManager = ctx.getIoManager();
         FileReference resourceRef = ioManager.resolve(path);
         return BTreeUtils.createBTree(bufferCache, typeTraits, comparatorFactories, BTreeLeafFrameType.REGULAR_NSM,
-                resourceRef, pageManagerFactory.createPageManager(bufferCache), false);
+                resourceRef, pageManagerFactory.createPageManager(bufferCache), false, nullTypeTraits,
+                nullIntrospector);
     }
 
     @Override

@@ -63,7 +63,7 @@ public class LSMRTreeLocalResourceFactory extends LsmResourceFactory {
             boolean isPointMBR, double bloomFilterFalsePositiveRate) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
-                vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable);
+                vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, null, null);
         this.btreeCmpFactories = btreeCmpFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;

@@ -25,6 +25,7 @@ import static org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReferenc
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriter;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
 
@@ -33,8 +34,9 @@ public class LSMBTreeTupleWriter extends BTreeTypeAwareTupleWriter implements IL
     private boolean isAntimatter;
     private final int numKeyFields;
 
-    public LSMBTreeTupleWriter(ITypeTraits[] typeTraits, int numKeyFields, boolean isAntimatter, boolean updateAware) {
-        super(typeTraits, updateAware);
+    public LSMBTreeTupleWriter(ITypeTraits[] typeTraits, int numKeyFields, boolean isAntimatter, boolean updateAware,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
+        super(typeTraits, updateAware, nullTypeTraits, nullIntrospector);
         this.numKeyFields = numKeyFields;
         this.isAntimatter = isAntimatter;
     }
@@ -56,7 +58,7 @@ public class LSMBTreeTupleWriter extends BTreeTypeAwareTupleWriter implements IL
 
     @Override
     public LSMBTreeTupleReference createTupleReference() {
-        return new LSMBTreeTupleReference(typeTraits, numKeyFields, updateAware);
+        return new LSMBTreeTupleReference(typeTraits, numKeyFields, updateAware, nullTypeTraits);
     }
 
     @Override
@@ -83,6 +85,7 @@ public class LSMBTreeTupleWriter extends BTreeTypeAwareTupleWriter implements IL
     public int writeTuple(ITupleReference tuple, byte[] targetBuf, int targetOff) {
         int bytesWritten = -1;
         if (isAntimatter) {
+            // TODO(ali): check this with secondary primary-key index
             bytesWritten = super.writeTupleFields(tuple, 0, numKeyFields, targetBuf, targetOff);
             // Set antimatter bit to 1.
             BitOperationUtils.setBit(targetBuf, targetOff, ANTIMATTER_BIT_OFFSET);
@@ -99,5 +102,11 @@ public class LSMBTreeTupleWriter extends BTreeTypeAwareTupleWriter implements IL
     @Override
     public void setAntimatter(boolean isDelete) {
         this.isAntimatter = isDelete;
+    }
+
+    @Override
+    protected int getAdjustedFieldIdx(int fieldIdx) {
+        // 2 bits when update-aware: 1 for antimatter and 1 for the update, otherwise, only 1 bit for the antimatter
+        return updateAware ? fieldIdx + 2 : fieldIdx + 1;
     }
 }

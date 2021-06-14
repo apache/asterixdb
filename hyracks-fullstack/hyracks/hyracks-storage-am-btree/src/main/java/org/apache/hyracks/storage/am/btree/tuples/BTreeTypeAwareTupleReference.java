@@ -23,14 +23,15 @@ import org.apache.hyracks.storage.am.common.api.IBTreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
 import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 
+// TODO(ali): this is broken if updateAware is enabled
 public class BTreeTypeAwareTupleReference extends TypeAwareTupleReference implements IBTreeIndexTupleReference {
 
     public static final byte UPDATE_BIT_OFFSET = 6;
 
     protected final boolean updateAware;
 
-    public BTreeTypeAwareTupleReference(ITypeTraits[] typeTraits, boolean updateAware) {
-        super(typeTraits);
+    public BTreeTypeAwareTupleReference(ITypeTraits[] typeTraits, boolean updateAware, ITypeTraits nullTypeTraits) {
+        super(typeTraits, nullTypeTraits);
         this.updateAware = updateAware;
     }
 

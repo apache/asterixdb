@@ -28,11 +28,13 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.indexing.FilesIndexDescription;
 import org.apache.asterix.external.indexing.IndexingConstants;
+import org.apache.asterix.formats.nontagged.NullIntrospector;
 import org.apache.asterix.metadata.api.IResourceFactoryProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -82,6 +84,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
         ILSMIOOperationSchedulerProvider ioSchedulerProvider =
                 storageComponentProvider.getIoOperationSchedulerProvider();
         boolean hasBloomFilter = bloomFilterFields != null;
+        ITypeTraitProvider typeTraitProvider = mdProvider.getDataFormat().getTypeTraitProvider();
         switch (dataset.getDatasetType()) {
             case EXTERNAL:
                 return index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))
@@ -89,12 +92,14 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                                 filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory,
                                 ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                                 ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
-                                bloomFilterFalsePositiveRate, false, btreeFields, hasBloomFilter)
+                                bloomFilterFalsePositiveRate, false, btreeFields, hasBloomFilter,
+                                typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE)
                         : new ExternalBTreeWithBuddyLocalResourceFactory(storageManager, typeTraits, cmpFactories,
                                 filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory,
                                 ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                                 ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
-                                bloomFilterFalsePositiveRate, false, btreeFields, hasBloomFilter);
+                                bloomFilterFalsePositiveRate, false, btreeFields, hasBloomFilter,
+                                typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE);
             case INTERNAL:
                 AsterixVirtualBufferCacheProvider vbcProvider =
                         new AsterixVirtualBufferCacheProvider(dataset.getDatasetId());
@@ -112,7 +117,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                         pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
                         mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
                         bloomFilterFalsePositiveRate, index.isPrimaryIndex(), btreeFields, compDecompFactory,
-                        hasBloomFilter);
+                        hasBloomFilter, typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE);
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_DATASET_TYPE,
                         dataset.getDatasetType().toString());

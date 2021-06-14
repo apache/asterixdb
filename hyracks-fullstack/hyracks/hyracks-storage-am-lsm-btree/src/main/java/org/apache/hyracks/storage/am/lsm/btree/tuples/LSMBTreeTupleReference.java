@@ -33,8 +33,9 @@ public class LSMBTreeTupleReference extends BTreeTypeAwareTupleReference impleme
     private boolean resetFieldCount = false;
     private final int numKeyFields;
 
-    public LSMBTreeTupleReference(ITypeTraits[] typeTraits, int numKeyFields, boolean updateAware) {
-        super(typeTraits, updateAware);
+    public LSMBTreeTupleReference(ITypeTraits[] typeTraits, int numKeyFields, boolean updateAware,
+            ITypeTraits nullTypeTraits) {
+        super(typeTraits, updateAware, nullTypeTraits);
         this.numKeyFields = numKeyFields;
     }
 
@@ -93,5 +94,11 @@ public class LSMBTreeTupleReference extends BTreeTypeAwareTupleReference impleme
 
     public int getTupleStart() {
         return tupleStartOff;
+    }
+
+    @Override
+    protected int getAdjustedFieldIdx(int fieldIdx) {
+        // 2 bits when update-aware: 1 for antimatter and 1 for the update, otherwise, only 1 bit for the antimatter
+        return updateAware ? fieldIdx + 2 : fieldIdx + 1;
     }
 }

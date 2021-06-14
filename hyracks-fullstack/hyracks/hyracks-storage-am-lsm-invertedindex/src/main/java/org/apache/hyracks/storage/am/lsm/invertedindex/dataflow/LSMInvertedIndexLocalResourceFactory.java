@@ -65,7 +65,7 @@ public class LSMInvertedIndexLocalResourceFactory extends LsmResourceFactory {
             int[] invertedIndexFieldsForNonBulkLoadOps, double bloomFilterFalsePositiveRate) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
-                vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable);
+                vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, null, null);
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         // ToDo: totally replace tokenizerFactory with full-text config

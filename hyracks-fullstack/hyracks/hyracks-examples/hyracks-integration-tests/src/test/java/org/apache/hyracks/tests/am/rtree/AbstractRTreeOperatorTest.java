@@ -228,7 +228,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected void createPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         btreeFactory = new BTreeResourceFactory(storageManager, primaryTypeTraits, primaryComparatorFactories,
-                pageManagerFactory);
+                pageManagerFactory, null, null);
         IIndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(storageManager, primarySplitProvider, btreeFactory, false);
         IndexCreateOperatorDescriptor primaryCreateOp = new IndexCreateOperatorDescriptor(spec, indexBuilderFactory);

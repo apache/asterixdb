@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.btree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriterFactory;
 
 public class BTreeTypeAwareTupleWriterFactory extends TypeAwareTupleWriterFactory {
@@ -26,13 +27,14 @@ public class BTreeTypeAwareTupleWriterFactory extends TypeAwareTupleWriterFactor
     private static final long serialVersionUID = 1L;
     protected final boolean updateAware;
 
-    public BTreeTypeAwareTupleWriterFactory(ITypeTraits[] typeTraits, boolean updateAware) {
-        super(typeTraits);
+    public BTreeTypeAwareTupleWriterFactory(ITypeTraits[] typeTraits, boolean updateAware, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
+        super(typeTraits, nullTypeTraits, nullIntrospector);
         this.updateAware = updateAware;
     }
 
     @Override
     public BTreeTypeAwareTupleWriter createTupleWriter() {
-        return new BTreeTypeAwareTupleWriter(typeTraits, updateAware);
+        return new BTreeTypeAwareTupleWriter(typeTraits, updateAware, nullTypeTraits, nullIntrospector);
     }
 }

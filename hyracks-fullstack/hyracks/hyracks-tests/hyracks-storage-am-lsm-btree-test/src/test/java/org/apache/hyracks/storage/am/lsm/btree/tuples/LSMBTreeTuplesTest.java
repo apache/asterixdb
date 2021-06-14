@@ -68,7 +68,7 @@ public class LSMBTreeTuplesTest {
             for (int numFields = numKeyFields; numFields <= maxFieldSerdes.length; numFields++) {
                 // Create and write tuple to bytes using an LSMBTreeTupleWriter.
                 LSMBTreeTupleWriter maxMatterTupleWriter =
-                        new LSMBTreeTupleWriter(maxTypeTraits, numKeyFields, false, false);
+                        new LSMBTreeTupleWriter(maxTypeTraits, numKeyFields, false, false, null, null);
                 ITupleReference maxTuple = TupleUtils.createTuple(maxFieldSerdes, (Object[]) maxFields);
                 ByteBuffer maxMatterBuf = writeTuple(maxTuple, maxMatterTupleWriter);
                 // Tuple reference should work for both matter and antimatter tuples (doesn't matter which factory creates it).
@@ -84,10 +84,12 @@ public class LSMBTreeTuplesTest {
                 }
                 // Create and write tuple to bytes using an LSMBTreeTupleWriter.
                 ITupleReference tuple = TupleUtils.createTuple(fieldSerdes, (Object[]) fields);
-                LSMBTreeTupleWriter matterTupleWriter = new LSMBTreeTupleWriter(typeTraits, numKeyFields, false, false);
+                LSMBTreeTupleWriter matterTupleWriter =
+                        new LSMBTreeTupleWriter(typeTraits, numKeyFields, false, false, null, null);
                 LSMBTreeTupleWriter antimatterTupleWriter =
-                        new LSMBTreeTupleWriter(typeTraits, numKeyFields, true, false);
-                LSMBTreeCopyTupleWriter copyTupleWriter = new LSMBTreeCopyTupleWriter(typeTraits, numKeyFields, false);
+                        new LSMBTreeTupleWriter(typeTraits, numKeyFields, true, false, null, null);
+                LSMBTreeCopyTupleWriter copyTupleWriter =
+                        new LSMBTreeCopyTupleWriter(typeTraits, numKeyFields, false, null, null);
                 ByteBuffer matterBuf = writeTuple(tuple, matterTupleWriter);
                 ByteBuffer antimatterBuf = writeTuple(tuple, antimatterTupleWriter);
 

@@ -26,6 +26,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleReference;
 
 public class LSMRTreeTupleReferenceForPointMBR extends RTreeTypeAwareTupleReference implements ILSMTreeTupleReference {
+
     private final int inputKeyFieldCount; //double field count for mbr secondary key of an input tuple
     private final int inputTotalFieldCount; //total field count (key + value fields) of an input tuple.
     private final int storedKeyFieldCount; //double field count to be stored for the mbr secondary key
@@ -140,6 +141,7 @@ public class LSMRTreeTupleReferenceForPointMBR extends RTreeTypeAwareTupleRefere
 
     @Override
     public boolean isAntimatter() {
+        // TODO(ali): antimatterAware should be checked?
         // Check antimatter bit.
         return BitOperationUtils.getBit(buf, tupleStartOff, ANTIMATTER_BIT_OFFSET);
     }

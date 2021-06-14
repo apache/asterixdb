@@ -75,8 +75,10 @@ public class BTreeFieldPrefixNSMLeafFrame implements IBTreeLeafFrame {
         this.slotManager = new FieldPrefixSlotManager();
 
         ITypeTraits[] typeTraits = tupleWriter.getTypeTraits();
-        this.framePrefixTuple = new FieldPrefixPrefixTupleReference(typeTraits);
-        this.compressor = new FieldPrefixCompressor(typeTraits, 0.001f, 2);
+        ITypeTraits nullTypeTraits = tupleWriter.getNullTypeTraits();
+        this.framePrefixTuple = new FieldPrefixPrefixTupleReference(typeTraits, nullTypeTraits);
+        this.compressor =
+                new FieldPrefixCompressor(typeTraits, 0.001f, 2, nullTypeTraits, tupleWriter.getNullIntrospector());
     }
 
     @Override

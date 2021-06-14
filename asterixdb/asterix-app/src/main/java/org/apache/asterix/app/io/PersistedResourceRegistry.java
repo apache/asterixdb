@@ -53,6 +53,7 @@ import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinary
 import org.apache.asterix.dataflow.data.nontagged.comparators.ListItemBinaryComparatorFactory;
 import org.apache.asterix.dataflow.data.nontagged.valueproviders.PrimitiveValueProviderFactory;
 import org.apache.asterix.formats.nontagged.AnyBinaryComparatorFactory;
+import org.apache.asterix.formats.nontagged.NullIntrospector;
 import org.apache.asterix.formats.nontagged.OrderedBinaryComparatorFactory;
 import org.apache.asterix.formats.nontagged.OrderedLinearizeComparatorFactory;
 import org.apache.asterix.metadata.utils.SecondaryCorrelatedTreeIndexOperationsHelper;
@@ -174,6 +175,9 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         // ITypeTraits
         registeredClasses.put("FixedLengthTypeTrait", FixedLengthTypeTrait.class);
         registeredClasses.put("VarLengthTypeTrait", VarLengthTypeTrait.class);
+
+        // INullIntrospector
+        registeredClasses.put("NullIntrospector", NullIntrospector.class);
 
         // ILSMOperationTrackerFactory
         registeredClasses.put("PrimaryIndexOperationTrackerFactory", PrimaryIndexOperationTrackerFactory.class);

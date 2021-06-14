@@ -31,6 +31,7 @@ import org.apache.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.DiskBTree;
 import org.apache.hyracks.storage.am.btree.tuples.BTreeTypeAwareTupleWriterFactory;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -43,9 +44,10 @@ public class BTreeUtils {
 
     public static BTree createBTree(IBufferCache bufferCache, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, BTreeLeafFrameType leafType, FileReference file,
-            IPageManager freePageManager, boolean updateAware) throws HyracksDataException {
+            IPageManager freePageManager, boolean updateAware, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) throws HyracksDataException {
         BTreeTypeAwareTupleWriterFactory tupleWriterFactory =
-                new BTreeTypeAwareTupleWriterFactory(typeTraits, updateAware);
+                new BTreeTypeAwareTupleWriterFactory(typeTraits, updateAware, nullTypeTraits, nullIntrospector);
         ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         return new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
@@ -54,9 +56,10 @@ public class BTreeUtils {
 
     public static DiskBTree createDiskBTree(IBufferCache bufferCache, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, BTreeLeafFrameType leafType, FileReference file,
-            IPageManager freePageManager, boolean updateAware) throws HyracksDataException {
+            IPageManager freePageManager, boolean updateAware, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) throws HyracksDataException {
         BTreeTypeAwareTupleWriterFactory tupleWriterFactory =
-                new BTreeTypeAwareTupleWriterFactory(typeTraits, updateAware);
+                new BTreeTypeAwareTupleWriterFactory(typeTraits, updateAware, nullTypeTraits, nullIntrospector);
         ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         return new DiskBTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,
@@ -65,9 +68,10 @@ public class BTreeUtils {
 
     public static BTree createBTree(IBufferCache bufferCache, IPageManager freePageManager, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, BTreeLeafFrameType leafType, FileReference file,
-            boolean updateAware) throws HyracksDataException {
+            boolean updateAware, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector)
+            throws HyracksDataException {
         BTreeTypeAwareTupleWriterFactory tupleWriterFactory =
-                new BTreeTypeAwareTupleWriterFactory(typeTraits, updateAware);
+                new BTreeTypeAwareTupleWriterFactory(typeTraits, updateAware, nullTypeTraits, nullIntrospector);
         ITreeIndexFrameFactory leafFrameFactory = getLeafFrameFactory(tupleWriterFactory, leafType);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(tupleWriterFactory);
         return new BTree(bufferCache, freePageManager, interiorFrameFactory, leafFrameFactory, cmpFactories,

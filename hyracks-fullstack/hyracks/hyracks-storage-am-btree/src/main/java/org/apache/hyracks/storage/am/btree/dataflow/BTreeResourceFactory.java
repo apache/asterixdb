@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.btree.dataflow;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.IResourceFactory;
@@ -28,24 +29,29 @@ import org.apache.hyracks.storage.common.IStorageManager;
 
 public class BTreeResourceFactory implements IResourceFactory {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final IStorageManager storageManager;
     private final ITypeTraits[] typeTraits;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final IPageManagerFactory pageManagerFactory;
+    private final ITypeTraits nullTypeTraits;
+    private final INullIntrospector nullIntrospector;
 
     public BTreeResourceFactory(IStorageManager storageManager, ITypeTraits[] typeTraits,
-            IBinaryComparatorFactory[] comparatorFactories, IPageManagerFactory pageManagerFactory) {
+            IBinaryComparatorFactory[] comparatorFactories, IPageManagerFactory pageManagerFactory,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
         this.storageManager = storageManager;
         this.typeTraits = typeTraits;
         this.comparatorFactories = comparatorFactories;
         this.pageManagerFactory = pageManagerFactory;
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
     }
 
     @Override
     public IResource createResource(FileReference fileRef) {
         return new BTreeResource(fileRef.getRelativePath(), storageManager, typeTraits, comparatorFactories,
-                pageManagerFactory);
+                pageManagerFactory, nullTypeTraits, nullIntrospector);
     }
 
 }

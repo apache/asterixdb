@@ -61,7 +61,7 @@ public class TestLsmBtreeLocalResource extends LSMBTreeLocalResource {
                 storageManager, mergePolicyFactory, mergePolicyProperties, filterTypeTraits, filterCmpFactories,
                 btreeFields, filterFields, opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory,
                 metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, durable,
-                NoOpCompressorDecompressorFactory.INSTANCE, hasBloomFilter);
+                NoOpCompressorDecompressorFactory.INSTANCE, hasBloomFilter, null, null);
     }
 
     protected TestLsmBtreeLocalResource(IPersistedResourceRegistry registry, JsonNode json, int[] bloomFilterKeyFields,

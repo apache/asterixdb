@@ -35,11 +35,13 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
     protected int dataStartOff;
 
     protected final ITypeTraits[] typeTraits;
-    protected VarLenIntDecoder encDec = VarLenIntEncoderDecoder.createDecoder();
+    protected final ITypeTraits nullTypeTraits; // can be null
+    protected final VarLenIntDecoder encDec = VarLenIntEncoderDecoder.createDecoder();
     protected int[] decodedFieldSlots;
 
-    public TypeAwareTupleReference(ITypeTraits[] typeTraits) {
+    public TypeAwareTupleReference(ITypeTraits[] typeTraits, ITypeTraits nullTypeTraits) {
         this.typeTraits = typeTraits;
+        this.nullTypeTraits = nullTypeTraits;
         this.fieldStartIndex = 0;
         setFieldCount(typeTraits.length);
     }
@@ -57,11 +59,12 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
         for (int i = fieldStartIndex; i < end; i++) {
             if (!typeTraits[i].isFixedLength()) {
                 cumul += encDec.decode();
-                decodedFieldSlots[field++] = cumul;
+            } else if (nullTypeTraits != null && isNull(buf, tupleStartOff, i)) {
+                cumul += nullTypeTraits.getFixedLength();
             } else {
                 cumul += typeTraits[i].getFixedLength();
-                decodedFieldSlots[field++] = cumul;
             }
+            decodedFieldSlots[field++] = cumul;
         }
         dataStartOff = encDec.getPos();
     }
@@ -126,5 +129,22 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
     @Override
     public int getTupleSize() {
         return dataStartOff - tupleStartOff + decodedFieldSlots[fieldCount - 1];
+    }
+
+    private boolean isNull(byte[] flags, int flagsOffset, int fieldIdx) {
+        int adjustedFieldIdx = getAdjustedFieldIdx(fieldIdx);
+        int flagByteIdx = adjustedFieldIdx / 8;
+        int flagBitIdx = 7 - (adjustedFieldIdx % 8);
+        return BitOperationUtils.getBit(flags, flagsOffset + flagByteIdx, (byte) flagBitIdx);
+    }
+
+    /**
+     * Adjusts the field index in case the null flags section starts with some other special-purpose fields.
+     *
+     * @param fieldIdx logical field index
+     * @return adjusted field index
+     */
+    protected int getAdjustedFieldIdx(int fieldIdx) {
+        return fieldIdx;
     }
 }

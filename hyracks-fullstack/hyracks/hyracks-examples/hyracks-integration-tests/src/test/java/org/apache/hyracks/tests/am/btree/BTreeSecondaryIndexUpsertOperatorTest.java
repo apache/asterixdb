@@ -120,12 +120,12 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
     @Override
     protected IResourceFactory createPrimaryResourceFactory() {
         return new BTreeResourceFactory(storageManager, DataSetConstants.primaryTypeTraits,
-                DataSetConstants.primaryComparatorFactories, pageManagerFactory);
+                DataSetConstants.primaryComparatorFactories, pageManagerFactory, null, null);
     }
 
     @Override
     protected IResourceFactory createSecondaryResourceFactory() {
         return new BTreeResourceFactory(storageManager, DataSetConstants.secondaryTypeTraits,
-                DataSetConstants.secondaryComparatorFactories, pageManagerFactory);
+                DataSetConstants.secondaryComparatorFactories, pageManagerFactory, null, null);
     }
 }

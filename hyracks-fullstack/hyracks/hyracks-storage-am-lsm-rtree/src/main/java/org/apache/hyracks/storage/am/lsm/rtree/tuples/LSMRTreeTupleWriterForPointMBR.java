@@ -44,6 +44,7 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
  */
 
 public class LSMRTreeTupleWriterForPointMBR extends RTreeTypeAwareTupleWriter implements ILSMTreeTupleWriter {
+
     private final int inputKeyFieldCount; //double field count for mbr secondary key of an input tuple
     private final int valueFieldCount; //value(or payload or primary key) field count (same for an input tuple and a stored tuple)
     private final int inputTotalFieldCount; //total field count (key + value fields) of an input tuple.
@@ -157,6 +158,7 @@ public class LSMRTreeTupleWriterForPointMBR extends RTreeTypeAwareTupleWriter im
     }
 
     protected void setAntimatterBit(byte[] targetBuf, int targetOff) {
+        // TODO(ali): antimatterAware should be checked?
         // Set antimatter bit to 1.
         BitOperationUtils.setBit(targetBuf, targetOff, ANTIMATTER_BIT_OFFSET);
     }

@@ -29,7 +29,7 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 public class RTreeTypeAwareTupleWriter extends TypeAwareTupleWriter {
 
     public RTreeTypeAwareTupleWriter(ITypeTraits[] typeTraits) {
-        super(typeTraits);
+        super(typeTraits, null, null);
     }
 
     public int writeTupleFields(ITreeIndexTupleReference[] refs, int startField, ByteBuffer targetBuf, int targetOff) {

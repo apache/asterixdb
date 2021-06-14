@@ -131,7 +131,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(btreeFileId, 0), true);
         try {
 
-            BTreeTypeAwareTupleWriter tupleWriter = new BTreeTypeAwareTupleWriter(typeTraits, false);
+            BTreeTypeAwareTupleWriter tupleWriter = new BTreeTypeAwareTupleWriter(typeTraits, false, null, null);
             BTreeFieldPrefixNSMLeafFrame frame = new BTreeFieldPrefixNSMLeafFrame(tupleWriter);
             frame.setPage(page);
             frame.initBuffer((byte) 0);

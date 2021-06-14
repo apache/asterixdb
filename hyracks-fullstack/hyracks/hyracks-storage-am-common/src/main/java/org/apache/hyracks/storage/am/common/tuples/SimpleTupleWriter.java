@@ -69,6 +69,7 @@ public class SimpleTupleWriter implements ITreeIndexTupleWriter {
         int runner = targetOff;
         int nullFlagsBytes = getNullFlagsBytes(tuple);
         int fieldSlotsBytes = getFieldSlotsBytes(tuple);
+        // TODO(ali): fix if needed
         for (int i = 0; i < nullFlagsBytes; i++) {
             targetBuf[runner++] = (byte) 0;
         }
