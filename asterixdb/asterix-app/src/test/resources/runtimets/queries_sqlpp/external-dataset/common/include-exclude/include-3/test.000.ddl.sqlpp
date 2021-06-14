@@ -31,7 +31,7 @@ drop dataset test if exists;
 CREATE EXTERNAL DATASET test(test) USING %adapter% (
 %template%,
 ("container"="include-exclude"),
-("definition"="data/mixed/"),
+("definition"="mixed-data/reviews/"),
 ("format"="csv"),
 ("header"=false),
 ("include"="*201?*.csv")
