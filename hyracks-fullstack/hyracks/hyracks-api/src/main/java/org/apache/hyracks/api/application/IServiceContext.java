@@ -19,11 +19,13 @@
 package org.apache.hyracks.api.application;
 
 import java.io.Serializable;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
-import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
+import org.apache.hyracks.api.job.IJobSerializerDeserializer;
 import org.apache.hyracks.api.messages.IMessageBroker;
 import org.apache.hyracks.api.service.IControllerService;
 
@@ -41,7 +43,7 @@ public interface IServiceContext {
 
     IMessageBroker getMessageBroker();
 
-    IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer();
+    ConcurrentMap<DeploymentId, IJobSerializerDeserializer> getJobSerializerDeserializerContainer();
 
     ThreadFactory getThreadFactory();
 

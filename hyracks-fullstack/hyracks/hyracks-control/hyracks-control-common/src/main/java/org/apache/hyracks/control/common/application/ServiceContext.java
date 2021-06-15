@@ -19,14 +19,16 @@
 package org.apache.hyracks.control.common.application;
 
 import java.io.Serializable;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.application.IServerContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
-import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
-import org.apache.hyracks.api.job.JobSerializerDeserializerContainer;
+import org.apache.hyracks.api.job.IJobSerializerDeserializer;
 import org.apache.hyracks.api.messages.IMessageBroker;
 
 public abstract class ServiceContext implements IServiceContext {
@@ -35,7 +37,7 @@ public abstract class ServiceContext implements IServiceContext {
     protected ThreadFactory threadFactory;
     protected Serializable distributedState;
     protected IMessageBroker messageBroker;
-    protected IJobSerializerDeserializerContainer jobSerDeContainer = new JobSerializerDeserializerContainer();
+    protected ConcurrentMap<DeploymentId, IJobSerializerDeserializer> jobSerDeContainer = new ConcurrentHashMap<>();
     protected IPersistedResourceRegistry persistedResourceRegistry;
 
     public ServiceContext(IServerContext serverCtx, IApplicationConfig appConfig, ThreadFactory threadFactory) {
@@ -60,7 +62,7 @@ public abstract class ServiceContext implements IServiceContext {
     }
 
     @Override
-    public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer() {
+    public ConcurrentMap<DeploymentId, IJobSerializerDeserializer> getJobSerializerDeserializerContainer() {
         return this.jobSerDeContainer;
     }
 
