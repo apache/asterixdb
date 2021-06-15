@@ -33,19 +33,6 @@ public interface IActiveNotificationHandler {
     void recover();
 
     /**
-     * Set whether handler initialization has completed or not
-     *
-     * @param initialized
-     * @throws HyracksDataException
-     */
-    void setInitialized(boolean initialized) throws HyracksDataException;
-
-    /**
-     * @return true if initialization has completed, false otherwise
-     */
-    boolean isInitialized();
-
-    /**
      * Register a listener for events of an active entity
      *
      * @param listener

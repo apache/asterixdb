@@ -31,9 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.active.ActivityState;
-import org.apache.asterix.active.CountRetryPolicyFactory;
 import org.apache.asterix.active.EntityId;
-import org.apache.asterix.active.InfiniteRetryPolicyFactory;
 import org.apache.asterix.active.NoRetryPolicyFactory;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
@@ -68,6 +66,7 @@ import org.apache.hyracks.api.job.JobIdFactory;
 import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.application.CCServiceContext;
+import org.apache.hyracks.util.CountRetryPolicy;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -148,7 +147,7 @@ public class ActiveEventsListenerTest {
         nodeControllers[1] = new TestNodeControllerActor(nodes[1], clusterController);
         listener = new TestEventsListener(clusterController, nodeControllers, jobIdFactory, entityId,
                 new ArrayList<>(allDatasets), statementExecutor, appCtx, hcc, locations,
-                new InfiniteRetryPolicyFactory());
+                x -> new CountRetryPolicy(1000));
         users = new TestUserActor[3];
         users[0] = newUser("Till", appCtx);
         users[1] = newUser("Mike", appCtx);
@@ -536,8 +535,7 @@ public class ActiveEventsListenerTest {
     public void testRecoveryFailureAfterOneAttemptCompilationFailure() throws Exception {
         handler.unregisterListener(listener);
         listener = new TestEventsListener(clusterController, nodeControllers, jobIdFactory, entityId,
-                new ArrayList<>(allDatasets), statementExecutor, appCtx, hcc, locations,
-                new CountRetryPolicyFactory(1));
+                new ArrayList<>(allDatasets), statementExecutor, appCtx, hcc, locations, x -> new CountRetryPolicy(1));
         testStartWhenStartSucceed();
         WaitForStateSubscriber tempFailSubscriber =
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.TEMPORARILY_FAILED));
@@ -580,8 +578,7 @@ public class ActiveEventsListenerTest {
     public void testRecoveryFailureAfterOneAttemptRuntimeFailure() throws Exception {
         handler.unregisterListener(listener);
         listener = new TestEventsListener(clusterController, nodeControllers, jobIdFactory, entityId,
-                new ArrayList<>(allDatasets), statementExecutor, appCtx, hcc, locations,
-                new CountRetryPolicyFactory(1));
+                new ArrayList<>(allDatasets), statementExecutor, appCtx, hcc, locations, x -> new CountRetryPolicy(1));
         testStartWhenStartSucceed();
         WaitForStateSubscriber tempFailSubscriber =
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.TEMPORARILY_FAILED));
@@ -1543,7 +1540,7 @@ public class ActiveEventsListenerTest {
             AlgebricksAbsolutePartitionConstraint locations = new AlgebricksAbsolutePartitionConstraint(nodes);
             additionalListeners[i] = listener = new TestEventsListener(clusterController, nodeControllers, jobIdFactory,
                     entityId, new ArrayList<>(allDatasets), statementExecutor, ccAppCtx, hcc, locations,
-                    new InfiniteRetryPolicyFactory());
+                    x -> new CountRetryPolicy(1000));
         }
         Action suspension = users[0].suspendAllActivities(handler);
         suspension.sync();

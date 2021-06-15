@@ -54,7 +54,6 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
     public static final String ACTIVE_ENTITY_PROPERTY_NAME = "ActiveJob";
     private final Map<EntityId, IActiveEntityEventsListener> entityEventListeners;
     private final Map<JobId, EntityId> jobId2EntityId;
-    private boolean initialized = false;
     private boolean suspended = false;
 
     public ActiveNotificationHandler() {
@@ -220,19 +219,6 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
             entityEventListeners.put(registeredListener.getEntityId(), registeredListener);
             throw new RuntimeDataException(ErrorCode.CANNOT_DERIGESTER_ACTIVE_ENTITY_LISTENER, listener.getEntityId());
         }
-    }
-
-    @Override
-    public boolean isInitialized() {
-        return initialized;
-    }
-
-    @Override
-    public void setInitialized(boolean initialized) throws HyracksDataException {
-        if (this.initialized) {
-            throw new RuntimeDataException(ErrorCode.DOUBLE_INITIALIZATION_OF_ACTIVE_NOTIFICATION_HANDLER);
-        }
-        this.initialized = initialized;
     }
 
     @Override
