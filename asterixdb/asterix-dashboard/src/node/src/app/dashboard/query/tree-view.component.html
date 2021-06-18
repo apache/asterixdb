@@ -20,8 +20,9 @@ limitations under the License.
         <mat-panel-description class='content'>
             <div class='panel'>
                 <span class='options'>
-                    <button mat-button [ngClass]="this.tableVisible === true ? 'button button-json selected' : 'button button-json'" (click)='showTable()' matTooltip="Show Table View">TABLE</button>
                     <button mat-button *ngIf="isCSV == false;" [ngClass]="this.jsonVisible === true ? 'button button-json selected' : 'button button-json'" (click)='showJSON()' matTooltip="Show JSON View">JSON</button>
+                    <button mat-button *ngIf="isCSV == false;" [ngClass]="this.jsonlVisible === true ? 'button button-json selected' : 'button button-json'" (click)='showJSONL()' matTooltip="Show JSONL View">JSONL</button>
+                    <button mat-button [ngClass]="this.tableVisible === true ? 'button button-json selected' : 'button button-json'" (click)='showTable()' matTooltip="Show Table View">TABLE</button>
                     <button mat-button *ngIf="isCSV == false;" [ngClass]="this.treeVisible === true ? 'button button-json selected' : 'button button-json'" (click)='showTree()' matTooltip="Show Tree View">TREE</button>
 
                     <button mat-button [ngClass]="this.planVisible === true ? 'button button-json selected' : 'button button-json'" (click)='showPlan()' matTooltip="Show Plan Viewer">PLAN</button>
@@ -55,6 +56,9 @@ limitations under the License.
                 </div>
                 <div *ngIf="planVisible" class="plan">
                   <plan-viewer [planFormat]="planFormat" [jsonPlan]="jsonPlan" [plan]="plan" [planName]="planName"></plan-viewer>
+                </div>
+                <div *ngIf="jsonlVisible" class="json">
+                  <pre>{{jsonlData}}</pre>
                 </div>
                 <div id='bottom'></div>
             </div>

@@ -45,10 +45,12 @@ export class TreeViewComponent {
     exportFileName: string = 'asterixdb-query-results';
 
     jsonVisible: any = true;
+    jsonlVisible: any = true;
     tableVisible: any = false;
     treeVisible: any = false;
     planVisible: any = false;
     jsonData: any;
+    jsonlData: any;
     jsonPath_: any = ': < JSON PATH >';
     rawData: any;
     treeData: any;
@@ -84,6 +86,7 @@ export class TreeViewComponent {
     ngOnChanges(changes: SimpleChange) {
         if (this.inputToOutput) {
             this.jsonVisible = true;
+            this.jsonlVisible = false;
             this.planVisible = false;
             this.tableVisible = false;
             this.treeVisible = false;
@@ -119,6 +122,7 @@ export class TreeViewComponent {
 
             if (this.isExplain) {
               this.jsonVisible = false;
+              this.jsonlVisible = false;
               this.planVisible = true;
               this.tableVisible = false;
               this.treeVisible = false;
@@ -158,6 +162,7 @@ export class TreeViewComponent {
             this.treeData_ = myData_;
             /* Prepare the JSON view */
             this.jsonData = JSON.stringify(this.treeData, null, 8)
+            this.jsonlData = this.jsonlinesTransform(this.treeData);
           } else {
             console.log('no data')
             this.treeData = [];
@@ -165,6 +170,7 @@ export class TreeViewComponent {
         } else {
           this.treeData = [];
           this.jsonData = JSON.stringify([ ], null, 8);
+          this.jsonlData = "";
           this.metrics = {"resultCount": 0};
 
           //clear tree data
@@ -188,6 +194,7 @@ export class TreeViewComponent {
     */
     showJSON() {
         this.jsonVisible = true;
+        this.jsonlVisible = false;
         this.treeVisible = false;
         this.tableVisible = false;
         this.planVisible = false;
@@ -195,10 +202,23 @@ export class TreeViewComponent {
     }
 
     /*
+    * Shows JSONL View
+     */
+    showJSONL() {
+      this.jsonVisible = false;
+      this.jsonlVisible = true;
+      this.treeVisible = false;
+      this.tableVisible = false;
+      this.planVisible = false;
+      this.viewMode = 'JSONL'
+    }
+
+    /*
     * Shows Table View
     */
     showTable() {
         this.jsonVisible = false;
+        this.jsonlVisible = false;
         this.treeVisible = false;
         this.tableVisible = true;
         this.planVisible = false;
@@ -210,6 +230,7 @@ export class TreeViewComponent {
     */
     showTree() {
         this.jsonVisible = false;
+        this.jsonlVisible = false;
         this.treeVisible = true;
         this.tableVisible = false;
         this.planVisible = false;
@@ -221,6 +242,7 @@ export class TreeViewComponent {
      */
     showPlan() {
       this.jsonVisible = false;
+      this.jsonlVisible = false;
       this.treeVisible = false;
       this.tableVisible = false;
       this.planVisible = true;

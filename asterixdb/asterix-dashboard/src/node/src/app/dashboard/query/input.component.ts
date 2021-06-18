@@ -93,7 +93,7 @@
     //sql++ keywords
     sqlppKeywords = "alter and as asc between by count create delete desc distinct drop from group having in insert into " +
       "is join like not on or order select set union update values where limit use let dataverse dataset exists with index type" +
-      "inner outer offset value type if exists declare function";
+      "inner outer offset value type if exists declare function explain";
 
     //sql++ builtin types
     sqlppTypes = "boolean tinyint smallint integer int bigint string float double binary point line rectangle circle polygon" +
@@ -294,12 +294,18 @@
     }
 
     onClickExplain() {
-      let use_regex = /use .*?;/i
+      //for future use...currently we do not support explaining for INSERT, UPDATE, or DELETE
+      /*
+      let insert_regex = /insert/i;
+      let update_regex = /update/i;
+      let delete_regex = /delete/i;
+       */
+      let select_regex = /select/i;
 
       let explainString = "";
 
-      if (use_regex.test(this.queryString))
-        explainString = this.queryString.replace(use_regex, "$& explain ");
+      if (select_regex.test(this.queryString))
+        explainString = this.queryString.replace(select_regex, "explain $& ");
       else
         explainString = "explain " + this.queryString;
 
