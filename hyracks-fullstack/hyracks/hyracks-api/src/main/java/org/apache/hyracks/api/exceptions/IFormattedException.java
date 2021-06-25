@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.api.exceptions;
 
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -51,6 +52,16 @@ public interface IFormattedException {
      * @since 0.3.5.1
      */
     Optional<IError> getError();
+
+    /**
+     * @return the source location
+     */
+    SourceLocation getSourceLocation();
+
+    /**
+     * @return the parameters to use when formatting
+     */
+    Serializable[] getParams();
 
     /**
      * Indicates whether this exception matches the supplied error code

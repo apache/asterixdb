@@ -33,12 +33,14 @@ public class Warning implements Serializable {
     private final SourceLocation srcLocation;
     private final int code;
     private final String message;
+    private final Serializable[] params;
 
-    private Warning(String component, SourceLocation srcLocation, int code, String message) {
+    private Warning(String component, SourceLocation srcLocation, int code, String message, Serializable... params) {
         this.component = component;
         this.srcLocation = srcLocation;
         this.code = code;
         this.message = message;
+        this.params = params;
     }
 
     /**
@@ -59,7 +61,7 @@ public class Warning implements Serializable {
 
     public static Warning of(SourceLocation srcLocation, IError code, Serializable... params) {
         return new Warning(code.component(), srcLocation, code.intValue(), ErrorMessageUtil
-                .formatMessage(code.component(), code.intValue(), code.errorMessage(), srcLocation, params));
+                .formatMessage(code.component(), code.intValue(), code.errorMessage(), srcLocation, params), params);
     }
 
     public String getComponent() {
@@ -106,12 +108,17 @@ public class Warning implements Serializable {
         String comp = input.readUTF();
         int code = input.readInt();
         String msg = input.readUTF();
-        return new Warning(comp, SourceLocation.create(input), code, msg);
+        SourceLocation sourceLocation = SourceLocation.create(input);
+        return new Warning(comp, sourceLocation, code, msg);
     }
 
     @Override
     public String toString() {
         return "Warning{" + "component='" + component + '\'' + ", srcLocation=" + srcLocation + ", code=" + code
                 + ", message='" + message + '\'' + '}';
+    }
+
+    public Serializable[] getParams() {
+        return params;
     }
 }
