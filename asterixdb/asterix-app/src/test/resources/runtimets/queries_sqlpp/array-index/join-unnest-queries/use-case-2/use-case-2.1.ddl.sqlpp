@@ -22,7 +22,7 @@
  *     1) INNER JOIN query, with additional predicate on inner collection before the unnest.
  *     2) INNER JOIN query, with additional predicate on the outer collection.
  *     3) Explicit INNER JOIN query using UNNEST subquery, no additional predicate.
- *     TODO (GLENN) 4) Explicit LEFT OUTER JOIN query using UNNEST subquery, no additional predicate.
+ *     4) Explicit LEFT OUTER JOIN query using UNNEST subquery, no additional predicate.
  */
 
 DROP DATAVERSE TestYelp IF EXISTS;

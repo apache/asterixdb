@@ -25,16 +25,22 @@ import java.util.List;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.ArrayIndexUtil;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 
 // TODO (GLENN): Refactor the BTreeAccessMethod class and this class to extend a new "AbstractBTreeAccessMethod" class.
 /**
@@ -68,6 +74,80 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
             }
         }
         return false;
+    }
+
+    @Override
+    public boolean applyJoinPlanTransformation(List<Mutable<ILogicalOperator>> afterJoinRefs,
+            Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree leftSubTree,
+            OptimizableOperatorSubTree rightSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
+            IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy)
+            throws AlgebricksException {
+        AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
+        Mutable<ILogicalExpression> conditionRef = joinOp.getCondition();
+        Dataset dataset = analysisCtx.getIndexDatasetMap().get(chosenIndex);
+        OptimizableOperatorSubTree indexSubTree, probeSubTree;
+
+        // We assume that the left subtree is the outer branch and the right subtree is the inner branch. This
+        // assumption holds true since we only use an index from the right subtree. The following is just a sanity
+        // check.
+        if (rightSubTree.hasDataSourceScan()
+                && dataset.getDatasetName().equals(rightSubTree.getDataset().getDatasetName())) {
+            indexSubTree = rightSubTree;
+            probeSubTree = leftSubTree;
+        } else {
+            return false;
+        }
+
+        LogicalVariable newNullPlaceHolderVar = null;
+        if (isLeftOuterJoin) {
+            // Gets a new null place holder variable that is the first field variable of the primary key from the
+            // indexSubTree's datasourceScanOp. We need this for all left outer joins, even those that do not have
+            // a special GroupBy.
+            newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
+
+            // For all INNER-UNNESTs associated with the inner subtree (i.e. the index subtree) to extract the
+            // secondary keys, transform these UNNESTs to LEFT-OUTER-UNNESTs. This is to ensure that probe entries w/o
+            // a corresponding secondary key entry are not incorrectly removed. This will not invalidate our fetched
+            // entries because *all* index entries have a non-empty array.
+            ILogicalOperator workingOp = indexSubTree.getRoot(), rootOp = indexSubTree.getRoot(), previousOp = null;
+            while (!workingOp.getInputs().isEmpty()) {
+                if (workingOp.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+                    UnnestOperator oldUnnest = (UnnestOperator) workingOp;
+                    LeftOuterUnnestOperator newUnnest = new LeftOuterUnnestOperator(oldUnnest.getVariable(),
+                            new MutableObject<>(oldUnnest.getExpressionRef().getValue()));
+                    newUnnest.setSourceLocation(oldUnnest.getSourceLocation());
+                    newUnnest.getInputs().addAll(oldUnnest.getInputs());
+                    newUnnest.setExecutionMode(oldUnnest.getExecutionMode());
+                    context.computeAndSetTypeEnvironmentForOperator(newUnnest);
+                    if (workingOp.equals(rootOp)) {
+                        rootOp = newUnnest;
+                        workingOp = newUnnest;
+                    } else if (previousOp != null) {
+                        previousOp.getInputs().clear();
+                        previousOp.getInputs().add(new MutableObject<>(newUnnest));
+                        context.computeAndSetTypeEnvironmentForOperator(previousOp);
+                    }
+                }
+                previousOp = workingOp;
+                workingOp = workingOp.getInputs().get(0).getValue();
+            }
+            indexSubTree.setRoot(rootOp);
+            indexSubTree.setRootRef(new MutableObject<>(rootOp));
+            joinOp.getInputs().remove(1);
+            joinOp.getInputs().add(1, new MutableObject<>(rootOp));
+            context.computeAndSetTypeEnvironmentForOperator(joinOp);
+        }
+
+        ILogicalOperator indexSearchOp = createIndexSearchPlan(afterJoinRefs, joinRef, conditionRef,
+                indexSubTree.getAssignsAndUnnestsRefs(), indexSubTree, probeSubTree, chosenIndex, analysisCtx, true,
+                isLeftOuterJoin, true, context, newNullPlaceHolderVar);
+        if (indexSearchOp == null) {
+            return false;
+        }
+
+        return AccessMethodUtils.finalizeJoinPlanTransformation(afterJoinRefs, joinRef, indexSubTree, probeSubTree,
+                analysisCtx, context, isLeftOuterJoin, isLeftOuterJoinWithSpecialGroupBy, indexSearchOp,
+                newNullPlaceHolderVar, conditionRef, dataset);
     }
 
     @Override
