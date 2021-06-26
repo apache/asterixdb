@@ -1,0 +1,66 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : test year_month_duration constructors
+ * Expected Res : Success
+ * Date         : 7 May 2013
+ * issue        : 363
+ */
+
+let
+test = [
+  'P30Y10M',
+  'P30Y',
+  '-P30Y10M',
+  '-P28M',
+  'P300Y15M',
+  test.year_month_duration('P300Y15M'),
+  duration('P300Y16M60DT300H98M482.435S')
+],
+testNull = [
+  null,
+  false,
+  true,
+  int8(0),
+  int16(0),
+  int32(0),
+  int64(0),
+  float(0),
+  double(0),
+  '@#!',
+  datetime('1987-11-19T10:50:56Z'),
+  date('2020-01-02'),
+  time('01:02:03'),
+  day_time_duration('P25DT13H12M50S'),
+  [],
+  {}
+],
+testMissing = [
+  missing
+]
+
+select 0 g, i, year_month_duration(test[i]) actual
+from range(0, len(test)-1) i
+union all
+select 1 g, i, null expected, year_month_duration(testNull[i]) actual
+from range(0, len(testNull)-1) i
+union all
+select 2 g, i, true expected, year_month_duration(testMissing[i]) is missing actual
+from range(0, len(testMissing)-1) i
+order by g, i;

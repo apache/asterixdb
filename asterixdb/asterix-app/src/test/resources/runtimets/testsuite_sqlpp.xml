@@ -3586,6 +3586,19 @@
         <output-dir compare="Text">binary_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="constructor" check-warnings="true">
+      <compilation-unit name="binary_02">
+        <output-dir compare="Text">binary_02</output-dir>
+        <expected-warn>ASX0006: Invalid format for binary in @#!1 (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: hex() cannot process input type date (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: hex() cannot process input type array (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: hex() cannot process input type object (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for binary in @#!2 (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: base64() cannot process input type date (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: base64() cannot process input type array (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: base64() cannot process input type object (in line 27, at column 13)</expected-warn>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="constructor">
       <compilation-unit name="add-null">
         <output-dir compare="Text">add-null</output-dir>
@@ -3594,6 +3607,16 @@
     <test-case FilePath="constructor">
       <compilation-unit name="boolean_01">
         <output-dir compare="Text">boolean_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor" check-warnings="true">
+      <compilation-unit name="boolean_02">
+        <output-dir compare="Text">boolean_02</output-dir>
+        <expected-warn>ASX0006: Invalid format for boolean in FALSE (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for boolean in TRUE (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: boolean() cannot process input type date (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: boolean() cannot process input type array (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: boolean() cannot process input type object (in line 28, at column 13)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
@@ -3606,9 +3629,31 @@
         <output-dir compare="Text">date_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="constructor" check-warnings="true">
+      <compilation-unit name="date_02">
+        <output-dir compare="Text">date_02</output-dir>
+        <expected-warn>ASX0006: Invalid format for date in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: date() cannot process input type boolean (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: date() cannot process input type bigint (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: date() cannot process input type time (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: date() cannot process input type array (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: date() cannot process input type object (in line 29, at column 13)</expected-warn>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="constructor">
       <compilation-unit name="datetime_01">
         <output-dir compare="Text">datetime_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor" check-warnings="true">
+      <compilation-unit name="datetime_02">
+        <output-dir compare="Text">datetime_02</output-dir>
+        <expected-warn>ASX0006: Invalid format for datetime in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type boolean (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type bigint (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type time (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type array (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type object (in line 29, at column 13)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
@@ -3616,14 +3661,46 @@
         <output-dir compare="Text">double_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="constructor" check-warnings="true">
+      <compilation-unit name="double_02">
+        <output-dir compare="Text">double_02</output-dir>
+        <expected-warn>ASX0006: Invalid format for double in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: double() cannot process input type datetime (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: double() cannot process input type date (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: double() cannot process input type time (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: double() cannot process input type array (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: double() cannot process input type object (in line 29, at column 13)</expected-warn>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="constructor">
       <compilation-unit name="duration_01">
         <output-dir compare="Text">duration_01</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="constructor">
+    <test-case FilePath="constructor" check-warnings="true">
       <compilation-unit name="duration_02">
         <output-dir compare="Text">duration_02</output-dir>
+        <expected-warn>ASX0006: Invalid format for duration in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: duration() cannot process input type bigint (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: duration() cannot process input type datetime (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: duration() cannot process input type date (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: duration() cannot process input type time (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: duration() cannot process input type array (in line 29, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: duration() cannot process input type object (in line 30, at column 13)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for yearmonthduration in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: year-month-duration() cannot process input type bigint (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: year-month-duration() cannot process input type datetime (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: year-month-duration() cannot process input type date (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: year-month-duration() cannot process input type time (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: year-month-duration() cannot process input type array (in line 29, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: year-month-duration() cannot process input type object (in line 30, at column 13)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for daytimeduration in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: day-time-duration() cannot process input type bigint (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: day-time-duration() cannot process input type datetime (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: day-time-duration() cannot process input type date (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: day-time-duration() cannot process input type time (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: day-time-duration() cannot process input type array (in line 29, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: day-time-duration() cannot process input type object (in line 30, at column 13)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
@@ -3631,9 +3708,49 @@
         <output-dir compare="Text">float_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="constructor" check-warnings="true">
+      <compilation-unit name="float_02">
+        <output-dir compare="Text">float_02</output-dir>
+        <expected-warn>ASX0006: Invalid format for float in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: float() cannot process input type datetime (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: float() cannot process input type date (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: float() cannot process input type time (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: float() cannot process input type array (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: float() cannot process input type object (in line 29, at column 13)</expected-warn>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="constructor">
       <compilation-unit name="int_01">
         <output-dir compare="Text">int_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor" check-warnings="true">
+      <compilation-unit name="int_02">
+        <output-dir compare="Text">int_02</output-dir>
+        <expected-warn>ASX0006: Invalid format for tinyint in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int8() cannot process input type datetime (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int8() cannot process input type date (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int8() cannot process input type time (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int8() cannot process input type array (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int8() cannot process input type object (in line 29, at column 13)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for smallint in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int16() cannot process input type datetime (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int16() cannot process input type date (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int16() cannot process input type time (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int16() cannot process input type array (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int16() cannot process input type object (in line 29, at column 13)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for integer in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int32() cannot process input type datetime (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int32() cannot process input type date (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int32() cannot process input type time (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int32() cannot process input type array (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int32() cannot process input type object (in line 29, at column 13)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for bigint in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int64() cannot process input type datetime (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int64() cannot process input type date (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int64() cannot process input type time (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int64() cannot process input type array (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int64() cannot process input type object (in line 29, at column 13)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
@@ -3686,9 +3803,27 @@
         <output-dir compare="Text">string_01</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="constructor" check-warnings="true">
+      <compilation-unit name="string_02">
+        <output-dir compare="Text">string_02</output-dir>
+        <expected-warn>ASX0004: Unsupported type: string() cannot process input type array (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: string() cannot process input type object (in line 25, at column 13)</expected-warn>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="constructor">
       <compilation-unit name="time_01">
         <output-dir compare="Text">time_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="constructor" check-warnings="true">
+      <compilation-unit name="time_02">
+        <output-dir compare="Text">time_02</output-dir>
+        <expected-warn>ASX0006: Invalid format for time in @#! (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: time() cannot process input type boolean (in line 25, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: time() cannot process input type bigint (in line 26, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: time() cannot process input type date (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: time() cannot process input type array (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: time() cannot process input type object (in line 29, at column 13)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor/uuid">
@@ -3696,16 +3831,11 @@
         <output-dir compare="Text">uuid_01</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="constructor/uuid">
+    <test-case FilePath="constructor/uuid" check-warnings="true">
       <compilation-unit name="uuid_02">
         <output-dir compare="Text">uuid_02</output-dir>
-        <expected-error>Invalid format for uuid in 02a199ca-bf58-412e-bd9f-60a0c975a8a-</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="constructor/uuid">
-      <compilation-unit name="uuid_03">
-        <output-dir compare="Text">uuid_03</output-dir>
-        <expected-error>Invalid format for uuid in 12345</expected-error>
+        <expected-warn>ASX0006: Invalid format for uuid in 02a199ca-bf58-412e-bd9f-60a0c975a8a- (in line 24, at column 13)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for uuid in 12345 (in line 25, at column 13)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">
@@ -13877,10 +14007,10 @@
         <output-dir compare="Text">to_boolean_01</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="types">
+    <test-case FilePath="types" check-warnings="true">
       <compilation-unit name="to_boolean_02">
         <output-dir compare="Text">to_boolean_02</output-dir>
-        <expected-error>ASX0002: Type mismatch</expected-error>
+        <expected-warn>ASX0004: Unsupported type: to-boolean() cannot process input type date (in line 24, at column 8)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">
@@ -13888,10 +14018,10 @@
         <output-dir compare="Text">to_bigint_01</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="types">
+    <test-case FilePath="types" check-warnings="true">
       <compilation-unit name="to_bigint_02">
         <output-dir compare="Text">to_bigint_02</output-dir>
-        <expected-error>ASX0002: Type mismatch</expected-error>
+        <expected-warn>ASX0004: Unsupported type: to-bigint() cannot process input type date (in line 24, at column 7)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">
@@ -13899,10 +14029,10 @@
         <output-dir compare="Text">to_double_01</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="types">
+    <test-case FilePath="types" check-warnings="true">
       <compilation-unit name="to_double_02">
         <output-dir compare="Text">to_double_02</output-dir>
-        <expected-error>ASX0002: Type mismatch</expected-error>
+        <expected-warn>ASX0004: Unsupported type: to-double() cannot process input type date (in line 24, at column 7)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">
@@ -13929,7 +14059,6 @@
     <test-case FilePath="types">
       <compilation-unit name="to_string_02">
         <output-dir compare="Text">to_string_02</output-dir>
-        <expected-error>ASX0004: Unsupported type</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="types">
@@ -13940,10 +14069,11 @@
     <test-case FilePath="types">
       <compilation-unit name="domain_boundaries_error">
         <output-dir compare="Text">domain_boundaries_error</output-dir>
-        <expected-error>ASX0006: Invalid format for int8 in tinyint</expected-error>
-        <expected-error>ASX0006: Invalid format for int16 in smallint</expected-error>
-        <expected-error>ASX0006: Invalid format for int32 in integer</expected-error>
-        <expected-error>ASX0006: Invalid format for int64 in bigint</expected-error>
+        <expected-error>ASX0001: Field type null cannot be promoted to type tinyint</expected-error>
+        <expected-error>ASX0001: Field type null cannot be promoted to type smallint</expected-error>
+        <expected-error>ASX0001: Field type null cannot be promoted to type integer</expected-error>
+        <expected-error>ASX0001: Field type null cannot be promoted to type bigint</expected-error>
+        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
   </test-group>

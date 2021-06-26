@@ -1,1 +1,25 @@
-{ "double1": NaN, "double2": INF, "double3": -INF, "double4": -80.2, "double5": -2.056E-29, "double6": -2.056E-299, "double7": -2.056E-299 }
+{ "g": 0, "i": 0, "actual": NaN }
+{ "g": 0, "i": 1, "actual": INF }
+{ "g": 0, "i": 2, "actual": -INF }
+{ "g": 0, "i": 3, "actual": -80.2 }
+{ "g": 0, "i": 4, "actual": -2.056E-29 }
+{ "g": 0, "i": 5, "actual": -2.056E-299 }
+{ "g": 0, "i": 6, "actual": -2.056E-299 }
+{ "g": 0, "i": 7, "actual": 8.0 }
+{ "g": 0, "i": 8, "actual": 16.0 }
+{ "g": 0, "i": 9, "actual": 32.0 }
+{ "g": 0, "i": 10, "actual": 64.0 }
+{ "g": 0, "i": 11, "actual": 2.5 }
+{ "g": 0, "i": 12, "actual": 0.0 }
+{ "g": 0, "i": 13, "actual": 1.0 }
+{ "g": 1, "i": 0, "expected": null, "actual": null }
+{ "g": 1, "i": 1, "expected": null, "actual": null }
+{ "g": 1, "i": 2, "expected": null, "actual": null }
+{ "g": 1, "i": 3, "expected": null, "actual": null }
+{ "g": 1, "i": 4, "expected": null, "actual": null }
+{ "g": 1, "i": 5, "expected": null, "actual": null }
+{ "g": 1, "i": 6, "expected": null, "actual": null }
+{ "g": 1, "i": 7, "expected": null, "actual": null }
+{ "g": 1, "i": 8, "expected": null, "actual": null }
+{ "g": 1, "i": 9, "expected": null, "actual": null }
+{ "g": 2, "i": 0, "expected": true, "actual": true }

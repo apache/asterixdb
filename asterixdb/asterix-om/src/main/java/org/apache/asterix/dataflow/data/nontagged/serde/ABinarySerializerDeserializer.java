@@ -25,6 +25,7 @@ import java.io.DataOutput;
 import org.apache.asterix.om.base.ABinary;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.ByteArrayPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.ByteArraySerializerDeserializer;
 
 public class ABinarySerializerDeserializer implements ISerializerDeserializer<ABinary> {
@@ -43,5 +44,13 @@ public class ABinarySerializerDeserializer implements ISerializerDeserializer<AB
     @Override
     public void serialize(ABinary binary, DataOutput out) throws HyracksDataException {
         ByteArraySerializerDeserializer.serialize(binary.getBytes(), binary.getStart(), binary.getLength(), out);
+    }
+
+    public static int getContentLength(byte[] bytes, int offset) {
+        return ByteArrayPointable.getContentLength(bytes, offset);
+    }
+
+    public static int getMetaLength(int contentLength) {
+        return ByteArrayPointable.getNumberBytesToStoreMeta(contentLength);
     }
 }

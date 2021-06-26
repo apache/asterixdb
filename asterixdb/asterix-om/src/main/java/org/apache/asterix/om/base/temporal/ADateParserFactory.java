@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.om.base.temporal;
 
-import static org.apache.asterix.om.base.temporal.GregorianCalendarSystem.CHRONON_OF_DAY;
-
 import java.io.DataOutput;
 import java.io.IOException;
 
@@ -354,7 +352,7 @@ public class ADateParserFactory implements IValueParserFactory {
      */
     public static int parseDatePartInDays(String dateString, int start, int length) throws HyracksDataException {
         long chronon = parseDatePart(dateString, start, length);
-        return convertParsedMillisecondsToDays(chronon);
+        return GregorianCalendarSystem.getInstance().getChrononInDays(chronon);
     }
 
     /**
@@ -368,18 +366,6 @@ public class ADateParserFactory implements IValueParserFactory {
      */
     public static int parseDatePartInDays(char[] dateString, int start, int length) throws HyracksDataException {
         long chronon = parseDatePart(dateString, start, length);
-        return convertParsedMillisecondsToDays(chronon);
-    }
-
-    public static int convertParsedMillisecondsToDays(long chronon) throws HyracksDataException {
-        if (chronon >= 0) {
-            return (int) (chronon / CHRONON_OF_DAY);
-        } else {
-            if (chronon % CHRONON_OF_DAY != 0) {
-                return (int) (chronon / CHRONON_OF_DAY - 1);
-            } else {
-                return (int) (chronon / CHRONON_OF_DAY);
-            }
-        }
+        return GregorianCalendarSystem.getInstance().getChrononInDays(chronon);
     }
 }

@@ -17,4 +17,11 @@
  * under the License.
  */
 
-uuid('02a199ca-bf58-412e-bd9f-60a0c975a8a-'); // Invalid format
+// requesttype=application/json
+// param max-warnings:json=100
+
+{
+  "null_0": uuid('02a199ca-bf58-412e-bd9f-60a0c975a8a-'), // Invalid format -> NULL
+  "null_1": uuid('12345') // Invalid length -> NULL
+};
+

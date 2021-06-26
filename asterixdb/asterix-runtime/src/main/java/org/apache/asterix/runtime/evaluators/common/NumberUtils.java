@@ -20,7 +20,11 @@
 package org.apache.asterix.runtime.evaluators.common;
 
 import org.apache.asterix.om.base.AMutableDouble;
+import org.apache.asterix.om.base.AMutableFloat;
+import org.apache.asterix.om.base.AMutableInt16;
+import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 /**
@@ -57,6 +61,31 @@ public final class NumberUtils {
         } else {
             try {
                 v = Double.parseDouble(textPtr.toString());
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        result.setValue(v);
+        return true;
+    }
+
+    /**
+     * Parses string as float
+     * @param textPtr input string
+     * @param result placeholder for the result
+     * @return {@code true} if parsing was successful, {@code false} otherwise
+     */
+    public static boolean parseFloat(UTF8StringPointable textPtr, AMutableFloat result) {
+        float v;
+        if (POSITIVE_INF.compareTo(textPtr) == 0) {
+            v = Float.POSITIVE_INFINITY;
+        } else if (NEGATIVE_INF.compareTo(textPtr) == 0) {
+            v = Float.NEGATIVE_INFINITY;
+        } else if (NAN.compareTo(textPtr) == 0) {
+            v = Float.NaN;
+        } else {
+            try {
+                v = Float.parseFloat(textPtr.toString());
             } catch (NumberFormatException e) {
                 return false;
             }
@@ -109,7 +138,149 @@ public final class NumberUtils {
         if (value < 0 && positive) {
             value *= -1;
         }
+        result.setValue(value);
+        return true;
+    }
 
+    /**
+     * Parses string as integer
+     * @param textPtr input string
+     * @param result placeholder for the result
+     * @return {@code true} if parsing was successful, {@code false} otherwise
+     */
+    public static boolean parseInt32(UTF8StringPointable textPtr, AMutableInt32 result) {
+        byte[] bytes = textPtr.getByteArray();
+        int offset = textPtr.getCharStartOffset();
+        //accumulating value in negative domain
+        //otherwise Integer.MIN_VALUE = -(Integer.MAX_VALUE + 1) would have caused overflow
+        int value = 0;
+        boolean positive = true;
+        int limit = -Integer.MAX_VALUE;
+        if (bytes[offset] == '+') {
+            offset++;
+        } else if (bytes[offset] == '-') {
+            offset++;
+            positive = false;
+            limit = Integer.MIN_VALUE;
+        }
+        int end = textPtr.getStartOffset() + textPtr.getLength();
+        for (; offset < end; offset++) {
+            int digit;
+            if (bytes[offset] >= '0' && bytes[offset] <= '9') {
+                value *= 10;
+                digit = bytes[offset] - '0';
+            } else if (bytes[offset] == 'i' && bytes[offset + 1] == '3' && bytes[offset + 2] == '2'
+                    && offset + 3 == end) {
+                break;
+            } else {
+                return false;
+            }
+            if (value < limit + digit) {
+                return false;
+            }
+            value -= digit;
+        }
+        if (value > 0) {
+            return false;
+        }
+        if (value < 0 && positive) {
+            value *= -1;
+        }
+        result.setValue(value);
+        return true;
+    }
+
+    /**
+     * Parses string as smallint
+     * @param textPtr input string
+     * @param result placeholder for the result
+     * @return {@code true} if parsing was successful, {@code false} otherwise
+     */
+    public static boolean parseInt16(UTF8StringPointable textPtr, AMutableInt16 result) {
+        byte[] bytes = textPtr.getByteArray();
+        int offset = textPtr.getCharStartOffset();
+        //accumulating value in negative domain
+        //otherwise Short.MIN_VALUE = -(Short.MAX_VALUE + 1) would have caused overflow
+        short value = 0;
+        boolean positive = true;
+        short limit = -Short.MAX_VALUE;
+        if (bytes[offset] == '+') {
+            offset++;
+        } else if (bytes[offset] == '-') {
+            offset++;
+            positive = false;
+            limit = Short.MIN_VALUE;
+        }
+        int end = textPtr.getStartOffset() + textPtr.getLength();
+        for (; offset < end; offset++) {
+            int digit;
+            if (bytes[offset] >= '0' && bytes[offset] <= '9') {
+                value = (short) (value * 10);
+                digit = bytes[offset] - '0';
+            } else if (bytes[offset] == 'i' && bytes[offset + 1] == '1' && bytes[offset + 2] == '6'
+                    && offset + 3 == end) {
+                break;
+            } else {
+                return false;
+            }
+            if (value < limit + digit) {
+                return false;
+            }
+            value = (short) (value - digit);
+        }
+        if (value > 0) {
+            return false;
+        }
+        if (value < 0 && positive) {
+            value *= -1;
+        }
+        result.setValue(value);
+        return true;
+    }
+
+    /**
+     * Parses string as tinyint
+     * @param textPtr input string
+     * @param result placeholder for the result
+     * @return {@code true} if parsing was successful, {@code false} otherwise
+     */
+    public static boolean parseInt8(UTF8StringPointable textPtr, AMutableInt8 result) {
+        byte[] bytes = textPtr.getByteArray();
+        int offset = textPtr.getCharStartOffset();
+        //accumulating value in negative domain
+        //otherwise Byte.MIN_VALUE = -(Byte.MAX_VALUE + 1) would have caused overflow
+        byte value = 0;
+        boolean positive = true;
+        byte limit = -Byte.MAX_VALUE;
+        if (bytes[offset] == '+') {
+            offset++;
+        } else if (bytes[offset] == '-') {
+            offset++;
+            positive = false;
+            limit = Byte.MIN_VALUE;
+        }
+        int end = textPtr.getStartOffset() + textPtr.getLength();
+        for (; offset < end; offset++) {
+            int digit;
+            if (bytes[offset] >= '0' && bytes[offset] <= '9') {
+                value = (byte) (value * 10);
+                digit = bytes[offset] - '0';
+            } else if (bytes[offset] == 'i' && bytes[offset + 1] == '8' && offset + 2 == end) {
+                break;
+            } else {
+                return false;
+            }
+            if (value < limit + digit) {
+                return false;
+            }
+            value = (byte) (value - digit);
+        }
+        if (value > 0) {
+            return false;
+        }
+        if (value < 0 && positive) {
+            value *= -1;
+        }
         result.setValue(value);
         return true;
     }

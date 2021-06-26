@@ -254,15 +254,8 @@ public class GregorianCalendarSystem implements ICalendarSystem {
     }
 
     public int getChrononInDays(long chronon) {
-        if (chronon >= 0) {
-            return (int) (chronon / CHRONON_OF_DAY);
-        } else {
-            if (chronon % CHRONON_OF_DAY != 0) {
-                return (int) (chronon / CHRONON_OF_DAY - 1);
-            } else {
-                return (int) (chronon / CHRONON_OF_DAY);
-            }
-        }
+        int temp = (chronon < 0) && (chronon % CHRONON_OF_DAY != 0) ? 1 : 0;
+        return (int) (chronon / CHRONON_OF_DAY - temp);
     }
 
     /**

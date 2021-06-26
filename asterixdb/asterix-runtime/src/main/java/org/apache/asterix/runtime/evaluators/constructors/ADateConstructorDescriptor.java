@@ -18,10 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.AMutableDate;
@@ -32,10 +30,8 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -44,9 +40,6 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 @MissingNullInOutFunction
 public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -65,82 +58,79 @@ public class ADateConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new IScalarEvaluator() {
+                return new AbstractConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
 
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable inputArg = new VoidPointable();
-                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    private AMutableDate aDate = new AMutableDate(0);
+                    private final AMutableDate aDate = new AMutableDate(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADate> dateSerde =
+                    private final ISerializerDeserializer<ADate> dateSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
-
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        try {
-                            resultStorage.reset();
-                            eval.evaluate(tuple, inputArg);
-
-                            if (PointableHelper.checkAndSetMissingOrNull(result, inputArg)) {
-                                return;
-                            }
-
-                            byte[] serString = inputArg.getByteArray();
-                            int offset = inputArg.getStartOffset();
-                            int len = inputArg.getLength();
-
-                            byte tt = serString[offset];
-                            if (tt == ATypeTag.SERIALIZED_DATE_TYPE_TAG) {
+                    protected void evaluateImpl(IPointable result) throws HyracksDataException {
+                        byte[] bytes = inputArg.getByteArray();
+                        int startOffset = inputArg.getStartOffset();
+                        int len = inputArg.getLength();
+                        ATypeTag inputType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[startOffset]);
+                        switch (inputType) {
+                            case DATE:
                                 result.set(inputArg);
-                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                                utf8Ptr.set(serString, offset + 1, len - 1);
-                                int stringLength = utf8Ptr.getUTF8Length();
-
-                                // the string to be parsed should be at least 8 characters: YYYYMMDD
-                                if (stringLength < 8) {
-                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
-                                            ATypeTag.SERIALIZED_DATE_TYPE_TAG);
-                                }
-
-                                int startOffset = utf8Ptr.getCharStartOffset();
-                                while (serString[startOffset] == ' ') {
-                                    startOffset++;
-                                }
-                                int endOffset = startOffset + stringLength - 1;
-                                while (serString[endOffset] == ' ') {
-                                    endOffset--;
-                                }
-
-                                long chrononTimeInMs = ADateParserFactory.parseDatePart(serString, startOffset,
-                                        endOffset - startOffset + 1);
-                                short temp = 0;
-                                if (chrononTimeInMs < 0
-                                        && chrononTimeInMs % GregorianCalendarSystem.CHRONON_OF_DAY != 0) {
-                                    temp = 1;
-                                }
-                                aDate.setValue((int) (chrononTimeInMs / GregorianCalendarSystem.CHRONON_OF_DAY) - temp);
+                                break;
+                            case DATETIME:
+                                long chronon = ADateTimeSerializerDeserializer.getChronon(bytes, startOffset + 1);
+                                aDate.setValue(GregorianCalendarSystem.getInstance().getChrononInDays(chronon));
+                                resultStorage.reset();
                                 dateSerde.serialize(aDate, out);
                                 result.set(resultStorage);
-                            } else {
-                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
-                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                            }
-                        } catch (IOException e) {
-                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
-                                    ATypeTag.SERIALIZED_DATE_TYPE_TAG);
+                                break;
+                            case STRING:
+                                utf8Ptr.set(bytes, startOffset + 1, len - 1);
+                                if (parseDate(utf8Ptr, aDate)) {
+                                    resultStorage.reset();
+                                    dateSerde.serialize(aDate, out);
+                                    result.set(resultStorage);
+                                } else {
+                                    handleParseError(utf8Ptr, result);
+                                }
+                                break;
+                            default:
+                                handleUnsupportedType(inputType, result);
+                                break;
                         }
+                    }
+
+                    @Override
+                    protected FunctionIdentifier getIdentifier() {
+                        return ADateConstructorDescriptor.this.getIdentifier();
+                    }
+
+                    @Override
+                    protected BuiltinType getTargetType() {
+                        return BuiltinType.ADATE;
                     }
                 };
             }
         };
     }
 
+    private static boolean parseDate(UTF8StringPointable textPtr, AMutableDate result) {
+        int stringLength = textPtr.getUTF8Length();
+        if (stringLength < 8) {
+            return false;
+        }
+        try {
+            long chronon = ADateParserFactory.parseDatePart(textPtr.getByteArray(), textPtr.getCharStartOffset(),
+                    stringLength);
+            int chrononInDays = GregorianCalendarSystem.getInstance().getChrononInDays(chronon);
+            result.setValue(chrononInDays);
+            return true;
+        } catch (HyracksDataException e) {
+            return false;
+        }
+    }
+
     @Override
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.DATE_CONSTRUCTOR;
     }
-
 }

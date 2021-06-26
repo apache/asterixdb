@@ -23,7 +23,6 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
-import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
@@ -64,14 +63,6 @@ public class CastTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor 
     public void setImmutableStates(Object... states) {
         reqType = (IAType) states[0];
         inputType = (IAType) states[1];
-        // If reqType or inputType is null, or they are the same, it indicates there is a bug in the compiler.
-        if (reqType == null || inputType == null || reqType.equals(inputType)) {
-            throw new IllegalStateException(
-                    "Invalid types for casting, required type " + reqType + ", input type " + inputType);
-        }
-        // NULLs and MISSINGs are handled by the generated code, therefore we only need to handle actual types here.
-        this.reqType = TypeComputeUtils.getActualType(reqType);
-        this.inputType = TypeComputeUtils.getActualType(inputType);
     }
 
     @Override

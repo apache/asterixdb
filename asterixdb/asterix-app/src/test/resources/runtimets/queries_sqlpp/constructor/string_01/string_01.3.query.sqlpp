@@ -17,15 +17,42 @@
  * under the License.
  */
 
-use test;
+let
+test = [
+  'true',
+  'false"',
+  int8('8'),
+  int16('16'),
+  int32('32'),
+  int64('64'),
+  float('1.25'),
+  double('2.5'),
+  true,
+  false,
+  datetime('2020-01-02T03:04:05Z'),
+  date('2021-01-02'),
+  time('01:02:03'),
+  duration('P30Y10M25DT13H12M50S'),
+  year_month_duration('P2Y'),
+  day_time_duration('P4S'),
+  uuid('02a199ca-bf58-412e-bd9f-60a0c975a8ac'),
+  base64('0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM+/')
+],
+testNull = [
+  null,
+  [],
+  {}
+],
+testMissing = [
+  missing
+]
 
-{
-    'string1':test.string('true'),
-    'string2':test.string('false"'),
-    'string3':test.string(test.int8('8')),
-    'string4':test.string(test.int16('16')),
-    'string5':test.string(test.int32('32')),
-    'string6':test.string(test.int64('64')),
-    'string7':test.string(test.float('1.25')),
-    'string8':test.string(test.double('2.5'))
-};
+select 0 g, i, string(test[i]) actual
+from range(0, len(test)-1) i
+union all
+select 1 g, i, null expected, string(testNull[i]) actual
+from range(0, len(testNull)-1) i
+union all
+select 2 g, i, true expected, string(testMissing[i]) is missing actual
+from range(0, len(testMissing)-1) i
+order by g, i;

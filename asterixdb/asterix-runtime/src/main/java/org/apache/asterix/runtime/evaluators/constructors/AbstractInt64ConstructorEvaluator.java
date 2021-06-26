@@ -19,91 +19,96 @@
 
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
-import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public abstract class AbstractInt64ConstructorEvaluator implements IScalarEvaluator {
+public abstract class AbstractInt64ConstructorEvaluator extends AbstractConstructorEvaluator {
+
+    protected final AMutableInt64 aInt64 = new AMutableInt64(0);
     @SuppressWarnings("unchecked")
-    protected static final ISerializerDeserializer<AInt64> INT64_SERDE =
+    protected final ISerializerDeserializer<AInt64> int64Serde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
+    protected final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
-    protected final IScalarEvaluator inputEval;
-    protected final SourceLocation sourceLoc;
-    protected final IPointable inputArg;
-    protected final ArrayBackedValueStorage resultStorage;
-    protected final DataOutput out;
-    protected final AMutableInt64 aInt64;
-    protected final UTF8StringPointable utf8Ptr;
-
-    protected AbstractInt64ConstructorEvaluator(IScalarEvaluator inputEval, SourceLocation sourceLoc) {
-        this.inputEval = inputEval;
-        this.sourceLoc = sourceLoc;
-        inputArg = new VoidPointable();
-        resultStorage = new ArrayBackedValueStorage();
-        out = resultStorage.getDataOutput();
-        aInt64 = new AMutableInt64(0);
-        utf8Ptr = new UTF8StringPointable();
+    protected AbstractInt64ConstructorEvaluator(IEvaluatorContext ctx, IScalarEvaluator inputEval,
+            SourceLocation sourceLoc) {
+        super(ctx, inputEval, sourceLoc);
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-        try {
-            inputEval.evaluate(tuple, inputArg);
-            resultStorage.reset();
-
-            if (PointableHelper.checkAndSetMissingOrNull(result, inputArg)) {
-                return;
-            }
-
-            evaluateImpl(result);
-        } catch (IOException e) {
-            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e, ATypeTag.SERIALIZED_INT64_TYPE_TAG);
-        }
-    }
-
-    protected void evaluateImpl(IPointable result) throws IOException {
+    protected void evaluateImpl(IPointable result) throws HyracksDataException {
         byte[] bytes = inputArg.getByteArray();
         int startOffset = inputArg.getStartOffset();
-
-        byte tt = bytes[startOffset];
-        if (tt == ATypeTag.SERIALIZED_INT64_TYPE_TAG) {
-            result.set(inputArg);
-        } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-            utf8Ptr.set(bytes, startOffset + 1, inputArg.getLength() - 1);
-            if (NumberUtils.parseInt64(utf8Ptr, aInt64)) {
-                INT64_SERDE.serialize(aInt64, out);
+        int len = inputArg.getLength();
+        ATypeTag inputType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[startOffset]);
+        switch (inputType) {
+            case BIGINT:
+                result.set(inputArg);
+                break;
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+                resultStorage.reset();
+                try {
+                    ATypeHierarchy.getTypePromoteComputer(inputType, ATypeTag.BIGINT).convertType(bytes,
+                            startOffset + 1, len - 1, out);
+                } catch (IOException e) {
+                    throw HyracksDataException.create(e);
+                }
                 result.set(resultStorage);
-            } else {
-                handleUnparseableString(result);
-            }
-        } else {
-            throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                break;
+            case FLOAT:
+            case DOUBLE:
+                resultStorage.reset();
+                try {
+                    ATypeHierarchy.getTypeDemoteComputer(inputType, ATypeTag.BIGINT, false).convertType(bytes,
+                            startOffset + 1, len - 1, out);
+                } catch (IOException e) {
+                    throw HyracksDataException.create(e);
+                }
+                result.set(resultStorage);
+                break;
+            case BOOLEAN:
+                resultStorage.reset();
+                boolean b = ABooleanSerializerDeserializer.getBoolean(bytes, startOffset + 1);
+                aInt64.setValue(b ? 1 : 0);
+                int64Serde.serialize(aInt64, out);
+                result.set(resultStorage);
+                break;
+            case STRING:
+                utf8Ptr.set(bytes, startOffset + 1, len - 1);
+                if (NumberUtils.parseInt64(utf8Ptr, aInt64)) {
+                    resultStorage.reset();
+                    int64Serde.serialize(aInt64, out);
+                    result.set(resultStorage);
+                } else {
+                    handleParseError(utf8Ptr, result);
+                }
+                break;
+            default:
+                handleUnsupportedType(inputType, result);
+                break;
         }
     }
 
-    protected void handleUnparseableString(IPointable result) throws HyracksDataException {
-        throw new InvalidDataFormatException(sourceLoc, getIdentifier(), ATypeTag.SERIALIZED_INT64_TYPE_TAG);
+    @Override
+    protected BuiltinType getTargetType() {
+        return BuiltinType.AINT64;
     }
-
-    protected abstract FunctionIdentifier getIdentifier();
 }

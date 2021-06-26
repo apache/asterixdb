@@ -1640,7 +1640,7 @@ public class BuiltinFunctions {
         // and then, Asterix builtin functions
         addPrivateFunction(CHECK_UNKNOWN, NotUnknownTypeComputer.INSTANCE, true);
         addPrivateFunction(ANY_COLLECTION_MEMBER, CollectionMemberResultType.INSTANCE_MISSABLE, true);
-        addFunction(BOOLEAN_CONSTRUCTOR, ABooleanTypeComputer.INSTANCE, true);
+        addFunction(BOOLEAN_CONSTRUCTOR, ABooleanTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(CIRCLE_CONSTRUCTOR, ACircleTypeComputer.INSTANCE, true);
         addPrivateFunction(CONCAT_NON_NULL, ConcatNonNullTypeComputer.INSTANCE, true);
         addFunction(GROUPING, AInt64TypeComputer.INSTANCE, true);
@@ -1656,23 +1656,23 @@ public class BuiltinFunctions {
         addFunction(CREATE_UUID, AUUIDTypeComputer.INSTANCE, false);
         addFunction(UUID, AUUIDTypeComputer.INSTANCE, false);
         addPrivateFunction(CREATE_QUERY_UID, ABinaryTypeComputer.INSTANCE, false);
-        addFunction(UUID_CONSTRUCTOR, AUUIDTypeComputer.INSTANCE, true);
+        addFunction(UUID_CONSTRUCTOR, AUUIDTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(RANDOM, ADoubleTypeComputer.INSTANCE, false);
         addFunction(RANDOM_WITH_SEED, NumericUnaryTypeComputer.INSTANCE_DOUBLE, false);
 
-        addFunction(DATE_CONSTRUCTOR, ADateTypeComputer.INSTANCE, true);
-        addFunction(DATETIME_CONSTRUCTOR, ADateTimeTypeComputer.INSTANCE, true);
-        addFunction(DOUBLE_CONSTRUCTOR, ADoubleTypeComputer.INSTANCE, true);
-        addFunction(DURATION_CONSTRUCTOR, ADurationTypeComputer.INSTANCE, true);
-        addFunction(YEAR_MONTH_DURATION_CONSTRUCTOR, AYearMonthDurationTypeComputer.INSTANCE, true);
-        addFunction(DAY_TIME_DURATION_CONSTRUCTOR, ADayTimeDurationTypeComputer.INSTANCE, true);
+        addFunction(DATE_CONSTRUCTOR, ADateTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(DATETIME_CONSTRUCTOR, ADateTimeTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(DOUBLE_CONSTRUCTOR, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(DURATION_CONSTRUCTOR, ADurationTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(YEAR_MONTH_DURATION_CONSTRUCTOR, AYearMonthDurationTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(DAY_TIME_DURATION_CONSTRUCTOR, ADayTimeDurationTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(EDIT_DISTANCE, AInt64TypeComputer.INSTANCE, true);
         addFunction(EDIT_DISTANCE_CHECK, OrderedListOfAnyTypeComputer.INSTANCE, true);
         addPrivateFunction(EDIT_DISTANCE_STRING_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(EDIT_DISTANCE_LIST_IS_FILTERABLE, ABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(EMPTY_STREAM, ABooleanTypeComputer.INSTANCE, true);
 
-        addFunction(FLOAT_CONSTRUCTOR, AFloatTypeComputer.INSTANCE, true);
+        addFunction(FLOAT_CONSTRUCTOR, AFloatTypeComputer.INSTANCE_NULLABLE, true);
         addPrivateFunction(FUZZY_EQ, BooleanFunctionTypeComputer.INSTANCE, true);
         addPrivateFunction(GET_HANDLE, AnyTypeComputer.INSTANCE, true);
         addPrivateFunction(GET_ITEM, NonTaggedGetItemResultType.INSTANCE, true);
@@ -1681,10 +1681,10 @@ public class BuiltinFunctions {
         addPrivateFunction(HASHED_GRAM_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addPrivateFunction(HASHED_WORD_TOKENS, OrderedListOfAInt32TypeComputer.INSTANCE, true);
         addPrivateFunction(INDEX_SEARCH, AnyTypeComputer.INSTANCE, true);
-        addFunction(INT8_CONSTRUCTOR, AInt8TypeComputer.INSTANCE, true);
-        addFunction(INT16_CONSTRUCTOR, AInt16TypeComputer.INSTANCE, true);
-        addFunction(INT32_CONSTRUCTOR, AInt32TypeComputer.INSTANCE, true);
-        addFunction(INT64_CONSTRUCTOR, AInt64TypeComputer.INSTANCE, true);
+        addFunction(INT8_CONSTRUCTOR, AInt8TypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(INT16_CONSTRUCTOR, AInt16TypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(INT32_CONSTRUCTOR, AInt32TypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(INT64_CONSTRUCTOR, AInt64TypeComputer.INSTANCE_NULLABLE, true);
         addFunction(LEN, AInt64TypeComputer.INSTANCE, true);
         addFunction(LINE_CONSTRUCTOR, ALineTypeComputer.INSTANCE, true);
         addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, AnyTypeComputer.INSTANCE, true);
@@ -2210,8 +2210,8 @@ public class BuiltinFunctions {
         addFunction(ST_POLYGONIZE, AGeometryTypeComputer.INSTANCE, true);
 
         // Binary functions
-        addFunction(BINARY_HEX_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE, true);
-        addFunction(BINARY_BASE64_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE, true);
+        addFunction(BINARY_HEX_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(BINARY_BASE64_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE_NULLABLE, true);
 
         addPrivateFunction(SUBSET_COLLECTION, SubsetCollectionTypeComputer.INSTANCE, true);
         addFunction(SWITCH_CASE, SwitchCaseComputer.INSTANCE, true);
@@ -2221,7 +2221,7 @@ public class BuiltinFunctions {
         addPrivateFunction(CAST_TYPE_LAX, CastTypeLaxComputer.INSTANCE, true);
 
         addFunction(TID, AInt64TypeComputer.INSTANCE, true);
-        addFunction(TIME_CONSTRUCTOR, ATimeTypeComputer.INSTANCE, true);
+        addFunction(TIME_CONSTRUCTOR, ATimeTypeComputer.INSTANCE_NULLABLE, true);
         addPrivateFunction(TYPE_OF, AnyTypeComputer.INSTANCE, true);
         addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(WORD_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);

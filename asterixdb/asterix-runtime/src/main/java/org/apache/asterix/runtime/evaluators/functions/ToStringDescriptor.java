@@ -19,23 +19,17 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.IOException;
-
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AbstractStringConstructorEvaluator;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
@@ -56,31 +50,19 @@ public class ToStringDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new AbstractStringConstructorEvaluator(args[0].createScalarEvaluator(ctx), sourceLoc) {
-                    @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<ANull> nullSerde =
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
-
+                return new AbstractStringConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
                     @Override
-                    protected void evaluateImpl(IPointable result) throws IOException {
-                        byte[] bytes = inputArg.getByteArray();
-                        int offset = inputArg.getStartOffset();
-                        ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
-                        switch (tt) {
+                    protected void handleUnsupportedType(ATypeTag inputType, IPointable result)
+                            throws HyracksDataException {
+                        switch (inputType) {
                             case ARRAY:
                             case MULTISET:
                             case OBJECT:
-                                setNull(result);
+                                PointableHelper.setNull(result);
                                 break;
                             default:
-                                super.evaluateImpl(result);
-                                break;
+                                super.handleUnsupportedType(inputType, result);
                         }
-                    }
-
-                    private void setNull(IPointable result) throws HyracksDataException {
-                        nullSerde.serialize(ANull.NULL, out);
-                        result.set(resultStorage);
                     }
 
                     @Override

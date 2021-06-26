@@ -19,103 +19,85 @@
 
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADayTimeDurationSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt16SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AYearMonthDurationSerializerDeserializer;
+import org.apache.asterix.om.base.AUUID;
+import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
-import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
-import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.bytes.Base64Printer;
 
-public abstract class AbstractStringConstructorEvaluator implements IScalarEvaluator {
+public abstract class AbstractStringConstructorEvaluator extends AbstractConstructorEvaluator {
 
-    protected final IScalarEvaluator inputEval;
-    protected final SourceLocation sourceLoc;
-    protected final IPointable inputArg;
-    protected final ArrayBackedValueStorage resultStorage;
-    protected final DataOutput out;
-    protected final UTF8StringBuilder builder;
-    protected final GrowableArray baaos;
+    protected final UTF8StringBuilder builder = new UTF8StringBuilder();
+    protected final GrowableArray baaos = new GrowableArray();
+    protected final StringBuilder sb = new StringBuilder(32);
 
-    protected AbstractStringConstructorEvaluator(IScalarEvaluator inputEval, SourceLocation sourceLoc) {
-        this.inputEval = inputEval;
-        this.sourceLoc = sourceLoc;
-        resultStorage = new ArrayBackedValueStorage();
-        out = resultStorage.getDataOutput();
-        inputArg = new VoidPointable();
-        builder = new UTF8StringBuilder();
-        baaos = new GrowableArray();
+    protected AbstractStringConstructorEvaluator(IEvaluatorContext ctx, IScalarEvaluator inputEval,
+            SourceLocation sourceLoc) {
+        super(ctx, inputEval, sourceLoc);
     }
 
     @Override
-    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-        try {
-            inputEval.evaluate(tuple, inputArg);
-            resultStorage.reset();
-
-            if (PointableHelper.checkAndSetMissingOrNull(result, inputArg)) {
-                return;
-            }
-
-            evaluateImpl(result);
-        } catch (IOException e) {
-            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e, ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-        }
-    }
-
-    protected void evaluateImpl(IPointable result) throws IOException {
-        byte[] serString = inputArg.getByteArray();
-        int offset = inputArg.getStartOffset();
-
-        ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[serString[offset]];
-        if (tt == ATypeTag.STRING) {
+    protected void evaluateImpl(IPointable result) throws HyracksDataException {
+        byte[] bytes = inputArg.getByteArray();
+        int startOffset = inputArg.getStartOffset();
+        int len = inputArg.getLength();
+        ATypeTag inputType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[startOffset]);
+        if (inputType == ATypeTag.STRING) {
             result.set(inputArg);
-        } else {
-            int len = inputArg.getLength();
+            return;
+        }
+        try {
             baaos.reset();
             builder.reset(baaos, len);
-            int startOffset = offset + 1;
-            switch (tt) {
-                case TINYINT: {
-                    int i = AInt8SerializerDeserializer.getByte(serString, startOffset);
-                    builder.appendString(String.valueOf(i));
+            sb.setLength(0);
+            switch (inputType) {
+                case TINYINT:
+                    int i = AInt8SerializerDeserializer.getByte(bytes, startOffset + 1);
+                    sb.append(i);
+                    builder.appendString(sb);
                     break;
-                }
-                case SMALLINT: {
-                    int i = AInt16SerializerDeserializer.getShort(serString, startOffset);
-                    builder.appendString(String.valueOf(i));
+                case SMALLINT:
+                    i = AInt16SerializerDeserializer.getShort(bytes, startOffset + 1);
+                    sb.append(i);
+                    builder.appendString(sb);
                     break;
-                }
-                case INTEGER: {
-                    int i = AInt32SerializerDeserializer.getInt(serString, startOffset);
-                    builder.appendString(String.valueOf(i));
+                case INTEGER:
+                    i = AInt32SerializerDeserializer.getInt(bytes, startOffset + 1);
+                    sb.append(i);
+                    builder.appendString(sb);
                     break;
-                }
-                case BIGINT: {
-                    long l = AInt64SerializerDeserializer.getLong(serString, startOffset);
-                    builder.appendString(String.valueOf(l));
+                case BIGINT:
+                    long l = AInt64SerializerDeserializer.getLong(bytes, startOffset + 1);
+                    sb.append(l);
+                    builder.appendString(sb);
                     break;
-                }
-                case DOUBLE: {
-                    double d = ADoubleSerializerDeserializer.getDouble(serString, startOffset);
+                case DOUBLE:
+                    double d = ADoubleSerializerDeserializer.getDouble(bytes, startOffset + 1);
                     if (Double.isNaN(d)) {
                         builder.appendUtf8StringPointable(NumberUtils.NAN);
                     } else if (d == Double.POSITIVE_INFINITY) { // NOSONAR
@@ -123,12 +105,12 @@ public abstract class AbstractStringConstructorEvaluator implements IScalarEvalu
                     } else if (d == Double.NEGATIVE_INFINITY) { // NOSONAR
                         builder.appendUtf8StringPointable(NumberUtils.NEGATIVE_INF);
                     } else {
-                        builder.appendString(String.valueOf(d));
+                        sb.append(d);
+                        builder.appendString(sb);
                     }
                     break;
-                }
-                case FLOAT: {
-                    float f = AFloatSerializerDeserializer.getFloat(serString, startOffset);
+                case FLOAT:
+                    float f = AFloatSerializerDeserializer.getFloat(bytes, startOffset + 1);
                     if (Float.isNaN(f)) {
                         builder.appendUtf8StringPointable(NumberUtils.NAN);
                     } else if (f == Float.POSITIVE_INFINITY) { // NOSONAR
@@ -136,43 +118,75 @@ public abstract class AbstractStringConstructorEvaluator implements IScalarEvalu
                     } else if (f == Float.NEGATIVE_INFINITY) { // NOSONAR
                         builder.appendUtf8StringPointable(NumberUtils.NEGATIVE_INF);
                     } else {
-                        builder.appendString(String.valueOf(f));
+                        sb.append(f);
+                        builder.appendString(sb);
                     }
                     break;
-                }
-                case BOOLEAN: {
-                    boolean b = ABooleanSerializerDeserializer.getBoolean(serString, startOffset);
+                case BOOLEAN:
+                    boolean b = ABooleanSerializerDeserializer.getBoolean(bytes, startOffset + 1);
                     builder.appendString(String.valueOf(b));
                     break;
-                }
-
-                // NotYetImplemented
-                case CIRCLE:
                 case DATE:
-                case DATETIME:
-                case LINE:
+                    l = ADateSerializerDeserializer.getChronon(bytes, startOffset + 1)
+                            * GregorianCalendarSystem.CHRONON_OF_DAY;
+                    GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(l, 0, sb,
+                            GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY, false);
+                    builder.appendString(sb);
+                    break;
                 case TIME:
-                case DURATION:
+                    i = ATimeSerializerDeserializer.getChronon(bytes, startOffset + 1);
+                    GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(i, 0, sb,
+                            GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND, false);
+                    builder.appendString(sb);
+                    break;
+                case DATETIME:
+                    l = ADateTimeSerializerDeserializer.getChronon(bytes, startOffset + 1);
+                    GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(l, 0, sb,
+                            GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+                    builder.appendString(sb);
+                    break;
                 case YEARMONTHDURATION:
+                    i = AYearMonthDurationSerializerDeserializer.getYearMonth(bytes, startOffset + 1);
+                    GregorianCalendarSystem.getInstance().getDurationExtendStringRepWithTimezoneUntilField(0, i, sb);
+                    builder.appendString(sb);
+                    break;
                 case DAYTIMEDURATION:
-                case INTERVAL:
-                case ARRAY:
-                case POINT:
-                case POINT3D:
-                case RECTANGLE:
-                case POLYGON:
-                case OBJECT:
-                case MULTISET:
+                    l = ADayTimeDurationSerializerDeserializer.getDayTime(bytes, startOffset + 1);
+                    GregorianCalendarSystem.getInstance().getDurationExtendStringRepWithTimezoneUntilField(l, 0, sb);
+                    builder.appendString(sb);
+                    break;
+                case DURATION:
+                    i = ADurationSerializerDeserializer.getYearMonth(bytes, startOffset + 1);
+                    l = ADurationSerializerDeserializer.getDayTime(bytes, startOffset + 1);
+                    GregorianCalendarSystem.getInstance().getDurationExtendStringRepWithTimezoneUntilField(l, i, sb);
+                    builder.appendString(sb);
+                    break;
                 case UUID:
+                    AUUID.appendLiteralOnly(bytes, startOffset + 1, sb);
+                    builder.appendString(sb);
+                    break;
+                case BINARY:
+                    int contentLength = ABinarySerializerDeserializer.getContentLength(bytes, startOffset + 1);
+                    int metaLength = ABinarySerializerDeserializer.getMetaLength(contentLength);
+                    Base64Printer.printBase64Binary(bytes, startOffset + 1 + metaLength, contentLength, sb);
+                    builder.appendString(sb);
+                    break;
                 default:
-                    throw new UnsupportedTypeException(sourceLoc, getIdentifier(), serString[offset]);
+                    handleUnsupportedType(inputType, result);
+                    return;
             }
             builder.finish();
+            resultStorage.reset();
             out.write(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
             out.write(baaos.getByteArray(), 0, baaos.getLength());
             result.set(resultStorage);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
         }
     }
 
-    protected abstract FunctionIdentifier getIdentifier();
+    @Override
+    protected BuiltinType getTargetType() {
+        return BuiltinType.ASTRING;
+    }
 }

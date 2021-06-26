@@ -17,23 +17,41 @@
  * under the License.
  */
 
-use test;
+let
+test = [
+  '+80i8',
+  '-80',
+  test.tinyint('+80i8'),
+  int16(16),
+  int32(32),
+  int64(64),
+  float(1.25),
+  double(2.25),
+  false,
+  true
+],
+testNull = [
+  null,
+  '@#!',
+  datetime('1987-11-19T10:50:56Z'),
+  date('2020-01-02'),
+  time('01:02:03'),
+  duration('PT0H'),
+  year_month_duration('P0Y0M'),
+  day_time_duration('P0D'),
+  [],
+  {}
+],
+testMissing = [
+  missing
+]
 
-{
-    'int8':test.tinyint('+80i8'),
-    'int16':test.smallint('160'),
-    'int32':test.integer('+320i32'),
-    'int64':test.bigint('640'),
-
-    'int8_2':test.tinyint('-80'),
-    'int16_2':test.smallint('-160i16'),
-    'int32_2':test.integer('-320'),
-    'int64_2':test.bigint('-640i64'),
-
-    'int64_min':test.bigint('-9223372036854775808'),
-
-    'int8_3':test.tinyint(test.tinyint('+80i8')),
-    'int16_3':test.smallint(test.smallint('160')),
-    'int32_3':test.integer(test.integer('+320i32')),
-    'int64_3':test.bigint(test.bigint('640'))
-};
+select 0 g, i, tinyint(test[i]) actual
+from range(0, len(test)-1) i
+union all
+select 1 g, i, null expected, tinyint(testNull[i]) actual
+from range(0, len(testNull)-1) i
+union all
+select 2 g, i, true expected, tinyint(testMissing[i]) is missing actual
+from range(0, len(testMissing)-1) i
+order by g, i;

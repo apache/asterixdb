@@ -16,6 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
+// requesttype=application/json
+// param max-warnings:json=100
+
 {
  "t": to_number(date("2017-06-30"))
 }

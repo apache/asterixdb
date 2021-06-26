@@ -46,7 +46,7 @@ public class ADoubleConstructorDescriptor extends AbstractScalarFunctionDynamicD
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new AbstractDoubleConstructorEvaluator(args[0].createScalarEvaluator(ctx), sourceLoc) {
+                return new AbstractDoubleConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
                     @Override
                     protected FunctionIdentifier getIdentifier() {
                         return ADoubleConstructorDescriptor.this.getIdentifier();

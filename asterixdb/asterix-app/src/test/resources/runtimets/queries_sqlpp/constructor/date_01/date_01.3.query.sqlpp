@@ -17,18 +17,49 @@
  * under the License.
  */
 
-use test;
+let
+test = [
+  '2010-10-30',
+  '1987-11-19',
+  '-1987-11-19',
+  '0001-12-27',
+  '-1951-12-27',
+  '-2043-11-19',
+  '-19280329',
+  '19280329',
+  '19000228',
+  '20000229',
+  test.date('20000229'),
+  datetime('2010-10-30T01:02:03Z')
+],
+testNull = [
+  null,
+  false,
+  true,
+  '@#!',
+  int8(0),
+  int16(0),
+  int32(0),
+  int64(0),
+  float(0),
+  double(0),
+  time('01:02:03'),
+  duration('PT0H'),
+  year_month_duration('P0Y0M'),
+  day_time_duration('P0D'),
+  [],
+  {}
+],
+testMissing = [
+  missing
+]
 
-{
-    'date1':test.date('2010-10-30'),
-    'date2':test.date('1987-11-19'),
-    'date3':test.date('-1987-11-19'),
-    'date4':test.date('0001-12-27'),
-    'date5':test.date('-1951-12-27'),
-    'date6':test.date('-2043-11-19'),
-    'date7':test.date('-19280329'),
-    'date8':test.date('19280329'),
-    'date9':test.date('19000228'),
-    'date10':test.date('20000229'),
-    'date11':test.date(test.date('20000229'))
-};
+select 0 g, i, date(test[i]) actual
+from range(0, len(test)-1) i
+union all
+select 1 g, i, null expected, date(testNull[i]) actual
+from range(0, len(testNull)-1) i
+union all
+select 2 g, i, true expected, date(testMissing[i]) is missing actual
+from range(0, len(testMissing)-1) i
+order by g, i;

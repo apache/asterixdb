@@ -18,10 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADateTimeSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableTime;
 import org.apache.asterix.om.base.ATime;
@@ -32,10 +30,8 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -44,9 +40,6 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 @MissingNullInOutFunction
 public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -65,73 +58,83 @@ public class ATimeConstructorDescriptor extends AbstractScalarFunctionDynamicDes
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new IScalarEvaluator() {
+                return new AbstractConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
 
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable inputArg = new VoidPointable();
-                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    private AMutableTime aTime = new AMutableTime(0);
+                    private final AMutableTime aTime = new AMutableTime(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ATime> timeSerde =
+                    private final ISerializerDeserializer<ATime> timeSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ATIME);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        try {
-                            eval.evaluate(tuple, inputArg);
-
-                            if (PointableHelper.checkAndSetMissingOrNull(result, inputArg)) {
-                                return;
-                            }
-
-                            byte[] serString = inputArg.getByteArray();
-                            int offset = inputArg.getStartOffset();
-                            int len = inputArg.getLength();
-
-                            byte tt = serString[offset];
-                            if (tt == ATypeTag.SERIALIZED_TIME_TYPE_TAG) {
+                    protected void evaluateImpl(IPointable result) throws HyracksDataException {
+                        byte[] bytes = inputArg.getByteArray();
+                        int startOffset = inputArg.getStartOffset();
+                        int len = inputArg.getLength();
+                        ATypeTag inputType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[startOffset]);
+                        switch (inputType) {
+                            case TIME:
                                 result.set(inputArg);
-                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                break;
+                            case DATETIME:
+                                long chronon = ADateTimeSerializerDeserializer.getChronon(bytes, startOffset + 1);
+                                int chrononTime = (int) (chronon / GregorianCalendarSystem.CHRONON_OF_DAY);
+                                aTime.setValue(chrononTime);
                                 resultStorage.reset();
-                                utf8Ptr.set(serString, offset + 1, len - 1);
-                                int stringLength = utf8Ptr.getUTF8Length();
-                                int startOffset = utf8Ptr.getCharStartOffset();
-
-                                // the string to be parsed should be at least 6 characters: hhmmss
-                                if (stringLength < 6) {
-                                    throw new InvalidDataFormatException(sourceLoc, getIdentifier(),
-                                            ATypeTag.SERIALIZED_TIME_TYPE_TAG);
-                                }
-
-                                int chrononTimeInMs =
-                                        ATimeParserFactory.parseTimePart(serString, startOffset, stringLength);
-
-                                if (chrononTimeInMs < 0) {
-                                    chrononTimeInMs += GregorianCalendarSystem.CHRONON_OF_DAY;
-                                }
-
-                                aTime.setValue(chrononTimeInMs);
                                 timeSerde.serialize(aTime, out);
                                 result.set(resultStorage);
-                            } else {
-                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
-                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                            }
-                        } catch (IOException e) {
-                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
-                                    ATypeTag.SERIALIZED_POLYGON_TYPE_TAG);
+                                break;
+                            case STRING:
+                                utf8Ptr.set(bytes, startOffset + 1, len - 1);
+                                if (parseTime(utf8Ptr, aTime)) {
+                                    resultStorage.reset();
+                                    timeSerde.serialize(aTime, out);
+                                    result.set(resultStorage);
+                                } else {
+                                    handleParseError(utf8Ptr, result);
+                                }
+                                break;
+                            default:
+                                handleUnsupportedType(inputType, result);
+                                break;
                         }
+                    }
+
+                    @Override
+                    protected BuiltinType getTargetType() {
+                        return BuiltinType.ATIME;
+                    }
+
+                    @Override
+                    protected FunctionIdentifier getIdentifier() {
+                        return ATimeConstructorDescriptor.this.getIdentifier();
                     }
                 };
             }
         };
     }
 
+    private static boolean parseTime(UTF8StringPointable textPtr, AMutableTime result) {
+        int stringLength = textPtr.getUTF8Length();
+        // the string to be parsed should be at least 6 characters: hhmmss
+        if (stringLength < 6) {
+            return false;
+        }
+        try {
+            int chronon = ATimeParserFactory.parseTimePart(textPtr.getByteArray(), textPtr.getCharStartOffset(),
+                    stringLength);
+            if (chronon < 0) {
+                chronon += GregorianCalendarSystem.CHRONON_OF_DAY;
+            }
+            result.setValue(chronon);
+            return true;
+        } catch (HyracksDataException e) {
+            return false;
+        }
+    }
+
     @Override
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.TIME_CONSTRUCTOR;
     }
-
 }

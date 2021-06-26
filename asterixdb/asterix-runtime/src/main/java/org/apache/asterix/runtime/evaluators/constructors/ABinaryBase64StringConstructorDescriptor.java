@@ -19,6 +19,7 @@
 package org.apache.asterix.runtime.evaluators.constructors;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.om.base.AMutableBinary;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -28,7 +29,8 @@ import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.data.parsers.ByteArrayBase64ParserFactory;
+import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.util.bytes.Base64Parser;
 
 @MissingNullInOutFunction
 public class ABinaryBase64StringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -47,8 +49,27 @@ public class ABinaryBase64StringConstructorDescriptor extends AbstractScalarFunc
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new ABinaryHexStringConstructorDescriptor.ABinaryConstructorEvaluator(args[0],
-                        ByteArrayBase64ParserFactory.INSTANCE, ctx, sourceLoc);
+                return new AbstractBinaryConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
+
+                    private final Base64Parser parser = new Base64Parser();
+
+                    @Override
+                    protected boolean parseBinary(UTF8StringPointable textPtr, AMutableBinary result) {
+                        try {
+                            parser.generatePureByteArrayFromBase64String(textPtr.getByteArray(),
+                                    textPtr.getCharStartOffset(), textPtr.getUTF8Length());
+                        } catch (IllegalArgumentException e) {
+                            return false;
+                        }
+                        result.setValue(parser.getByteArray(), 0, parser.getLength());
+                        return true;
+                    }
+
+                    @Override
+                    protected FunctionIdentifier getIdentifier() {
+                        return ABinaryBase64StringConstructorDescriptor.this.getIdentifier();
+                    }
+                };
             }
         };
     }

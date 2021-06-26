@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AMutableFloat;
@@ -30,11 +30,10 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
-import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -43,9 +42,6 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 @MissingNullInOutFunction
 public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -64,57 +60,78 @@ public class AFloatConstructorDescriptor extends AbstractScalarFunctionDynamicDe
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new IScalarEvaluator() {
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable inputArg = new VoidPointable();
-                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    private AMutableFloat aFloat = new AMutableFloat(0);
+                return new AbstractConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
+
+                    private final AMutableFloat aFloat = new AMutableFloat(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AFloat> floatSerde =
+                    private final ISerializerDeserializer<AFloat> floatSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AFLOAT);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        try {
-                            eval.evaluate(tuple, inputArg);
-
-                            if (PointableHelper.checkAndSetMissingOrNull(result, inputArg)) {
-                                return;
-                            }
-
-                            byte[] serString = inputArg.getByteArray();
-                            int offset = inputArg.getStartOffset();
-                            int len = inputArg.getLength();
-
-                            byte tt = serString[offset];
-                            if (tt == ATypeTag.SERIALIZED_FLOAT_TYPE_TAG) {
+                    protected void evaluateImpl(IPointable result) throws HyracksDataException {
+                        byte[] bytes = inputArg.getByteArray();
+                        int startOffset = inputArg.getStartOffset();
+                        int len = inputArg.getLength();
+                        ATypeTag inputType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[startOffset]);
+                        switch (inputType) {
+                            case FLOAT:
                                 result.set(inputArg);
-                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                break;
+                            case TINYINT:
+                            case SMALLINT:
+                            case INTEGER:
+                            case BIGINT:
                                 resultStorage.reset();
-                                int utf8offset = offset + 1;
-                                int utf8len = len - 1;
-                                if (NumberUtils.POSITIVE_INF.compareTo(serString, utf8offset, utf8len) == 0) {
-                                    aFloat.setValue(Float.POSITIVE_INFINITY);
-                                } else if (NumberUtils.NEGATIVE_INF.compareTo(serString, utf8offset, utf8len) == 0) {
-                                    aFloat.setValue(Float.NEGATIVE_INFINITY);
-                                } else if (NumberUtils.NAN.compareTo(serString, utf8offset, utf8len) == 0) {
-                                    aFloat.setValue(Float.NaN);
-                                } else {
-                                    utf8Ptr.set(serString, utf8offset, utf8len);
-                                    aFloat.setValue(Float.parseFloat(utf8Ptr.toString()));
+                                try {
+                                    ATypeHierarchy.getTypePromoteComputer(inputType, ATypeTag.FLOAT).convertType(bytes,
+                                            startOffset + 1, len - 1, out);
+                                } catch (IOException e) {
+                                    throw HyracksDataException.create(e);
                                 }
+                                result.set(resultStorage);
+                                break;
+                            case DOUBLE:
+                                resultStorage.reset();
+                                try {
+                                    ATypeHierarchy.getTypeDemoteComputer(inputType, ATypeTag.FLOAT, false)
+                                            .convertType(bytes, startOffset + 1, len - 1, out);
+                                } catch (IOException e) {
+                                    throw HyracksDataException.create(e);
+                                }
+                                result.set(resultStorage);
+                                break;
+                            case BOOLEAN:
+                                boolean b = ABooleanSerializerDeserializer.getBoolean(bytes, startOffset + 1);
+                                aFloat.setValue(b ? 1 : 0);
+                                resultStorage.reset();
                                 floatSerde.serialize(aFloat, out);
                                 result.set(resultStorage);
-                            } else {
-                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
-                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                            }
-                        } catch (IOException e) {
-                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
-                                    ATypeTag.SERIALIZED_FLOAT_TYPE_TAG);
+                                break;
+                            case STRING:
+                                utf8Ptr.set(bytes, startOffset + 1, len - 1);
+                                if (NumberUtils.parseFloat(utf8Ptr, aFloat)) {
+                                    resultStorage.reset();
+                                    floatSerde.serialize(aFloat, out);
+                                    result.set(resultStorage);
+                                } else {
+                                    handleParseError(utf8Ptr, result);
+                                }
+                                break;
+                            default:
+                                handleUnsupportedType(inputType, result);
+                                break;
                         }
+                    }
+
+                    @Override
+                    protected BuiltinType getTargetType() {
+                        return BuiltinType.AFLOAT;
+                    }
+
+                    @Override
+                    protected FunctionIdentifier getIdentifier() {
+                        return AFloatConstructorDescriptor.this.getIdentifier();
                     }
                 };
             }

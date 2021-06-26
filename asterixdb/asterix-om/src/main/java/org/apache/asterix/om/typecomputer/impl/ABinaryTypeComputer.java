@@ -19,21 +19,15 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class ABinaryTypeComputer extends AbstractResultTypeComputer {
-    public static final ABinaryTypeComputer INSTANCE = new ABinaryTypeComputer();
+public class ABinaryTypeComputer extends AbstractConstructorTypeComputer {
 
-    private ABinaryTypeComputer() {
+    public static final ABinaryTypeComputer INSTANCE = new ABinaryTypeComputer(false);
 
-    }
+    public static final ABinaryTypeComputer INSTANCE_NULLABLE = new ABinaryTypeComputer(true);
 
-    @Override
-    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return BuiltinType.ABINARY;
+    private ABinaryTypeComputer(boolean nullable) {
+        super(BuiltinType.ABINARY, nullable);
     }
 }

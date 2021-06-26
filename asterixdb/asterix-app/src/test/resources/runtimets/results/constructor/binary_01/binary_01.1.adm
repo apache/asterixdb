@@ -1,1 +1,20 @@
-[ hex("ABCDEF0123456789"), hex("ABCDEF0123456789"), hex("0A0B0C0D0E0F"), hex("01020304050607080900"), hex(""), hex("ABCDEF0123456789"), hex("D35DB7E39EBBF3DAB07ABB72BA2A296AC75F8218E4973C5CBDB9E64161114D850838F2CA2471850D20195C254134CFBF"), hex(""), hex("41737465726978"), hex("4173746572697801"), hex("41737465726978013C"), hex("41737465726978013C") ]
+{ "g": 0, "i": 0, "actual": hex("ABCDEF0123456789") }
+{ "g": 0, "i": 1, "actual": hex("ABCDEF0123456789") }
+{ "g": 0, "i": 2, "actual": hex("0A0B0C0D0E0F") }
+{ "g": 0, "i": 3, "actual": hex("01020304050607080900") }
+{ "g": 0, "i": 4, "actual": hex("") }
+{ "g": 0, "i": 5, "actual": hex("ABCDEF0123456789") }
+{ "g": 1, "i": 0, "expected": null, "actual": null }
+{ "g": 1, "i": 1, "expected": null, "actual": null }
+{ "g": 1, "i": 2, "expected": null, "actual": null }
+{ "g": 1, "i": 3, "expected": null, "actual": null }
+{ "g": 1, "i": 4, "expected": null, "actual": null }
+{ "g": 1, "i": 5, "expected": null, "actual": null }
+{ "g": 1, "i": 6, "expected": null, "actual": null }
+{ "g": 1, "i": 7, "expected": null, "actual": null }
+{ "g": 1, "i": 8, "expected": null, "actual": null }
+{ "g": 1, "i": 9, "expected": null, "actual": null }
+{ "g": 1, "i": 10, "expected": null, "actual": null }
+{ "g": 1, "i": 11, "expected": null, "actual": null }
+{ "g": 1, "i": 12, "expected": null, "actual": null }
+{ "g": 2, "i": 0, "expected": true, "actual": true }

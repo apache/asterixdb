@@ -1,0 +1,24 @@
+{ "g": 0, "i": 0, "actual": year-month-duration("P30Y10M") }
+{ "g": 0, "i": 1, "actual": year-month-duration("P30Y") }
+{ "g": 0, "i": 2, "actual": year-month-duration("-P30Y10M") }
+{ "g": 0, "i": 3, "actual": year-month-duration("-P2Y4M") }
+{ "g": 0, "i": 4, "actual": year-month-duration("P301Y3M") }
+{ "g": 0, "i": 5, "actual": year-month-duration("P301Y3M") }
+{ "g": 0, "i": 6, "actual": year-month-duration("P301Y4M") }
+{ "g": 1, "i": 0, "expected": null, "actual": null }
+{ "g": 1, "i": 1, "expected": null, "actual": null }
+{ "g": 1, "i": 2, "expected": null, "actual": null }
+{ "g": 1, "i": 3, "expected": null, "actual": null }
+{ "g": 1, "i": 4, "expected": null, "actual": null }
+{ "g": 1, "i": 5, "expected": null, "actual": null }
+{ "g": 1, "i": 6, "expected": null, "actual": null }
+{ "g": 1, "i": 7, "expected": null, "actual": null }
+{ "g": 1, "i": 8, "expected": null, "actual": null }
+{ "g": 1, "i": 9, "expected": null, "actual": null }
+{ "g": 1, "i": 10, "expected": null, "actual": null }
+{ "g": 1, "i": 11, "expected": null, "actual": null }
+{ "g": 1, "i": 12, "expected": null, "actual": null }
+{ "g": 1, "i": 13, "expected": null, "actual": null }
+{ "g": 1, "i": 14, "expected": null, "actual": null }
+{ "g": 1, "i": 15, "expected": null, "actual": null }
+{ "g": 2, "i": 0, "expected": true, "actual": true }

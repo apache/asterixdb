@@ -18,28 +18,15 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
-import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class AInt64TypeComputer extends AbstractResultTypeComputer {
+public class AInt64TypeComputer extends AbstractNumericConstructorTypeComputer {
 
     public static final AInt64TypeComputer INSTANCE = new AInt64TypeComputer(false);
 
     public static final AInt64TypeComputer INSTANCE_NULLABLE = new AInt64TypeComputer(true);
 
-    private final IAType type;
-
     private AInt64TypeComputer(boolean nullable) {
-        IAType t = BuiltinType.AINT64;
-        type = nullable ? AUnionType.createNullableType(t) : t;
-    }
-
-    @Override
-    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return type;
+        super(BuiltinType.AINT64, nullable);
     }
 }

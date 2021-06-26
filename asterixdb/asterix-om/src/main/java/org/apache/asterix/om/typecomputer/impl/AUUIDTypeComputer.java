@@ -19,22 +19,15 @@
 
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class AUUIDTypeComputer extends AbstractResultTypeComputer {
+public class AUUIDTypeComputer extends AbstractConstructorTypeComputer {
 
-    public static final AUUIDTypeComputer INSTANCE = new AUUIDTypeComputer();
+    public static final AUUIDTypeComputer INSTANCE = new AUUIDTypeComputer(false);
 
-    private AUUIDTypeComputer() {
+    public static final AUUIDTypeComputer INSTANCE_NULLABLE = new AUUIDTypeComputer(true);
+
+    private AUUIDTypeComputer(boolean nullable) {
+        super(BuiltinType.AUUID, nullable);
     }
-
-    @Override
-    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return BuiltinType.AUUID;
-    }
-
 }

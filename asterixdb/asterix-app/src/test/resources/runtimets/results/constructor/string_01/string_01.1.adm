@@ -1,1 +1,22 @@
-{ "string1": "true", "string2": "false\"", "string3": "8", "string4": "16", "string5": "32", "string6": "64", "string7": "1.25", "string8": "2.5" }
+{ "g": 0, "i": 0, "actual": "true" }
+{ "g": 0, "i": 1, "actual": "false\"" }
+{ "g": 0, "i": 2, "actual": "8" }
+{ "g": 0, "i": 3, "actual": "16" }
+{ "g": 0, "i": 4, "actual": "32" }
+{ "g": 0, "i": 5, "actual": "64" }
+{ "g": 0, "i": 6, "actual": "1.25" }
+{ "g": 0, "i": 7, "actual": "2.5" }
+{ "g": 0, "i": 8, "actual": "true" }
+{ "g": 0, "i": 9, "actual": "false" }
+{ "g": 0, "i": 10, "actual": "2020-01-02T03:04:05.000Z" }
+{ "g": 0, "i": 11, "actual": "2021-01-02" }
+{ "g": 0, "i": 12, "actual": "01:02:03.000" }
+{ "g": 0, "i": 13, "actual": "P30Y10M25DT13H12M50S" }
+{ "g": 0, "i": 14, "actual": "P2Y" }
+{ "g": 0, "i": 15, "actual": "PT4S" }
+{ "g": 0, "i": 16, "actual": "02a199ca-bf58-412e-bd9f-60a0c975a8ac" }
+{ "g": 0, "i": 17, "actual": "0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM+/" }
+{ "g": 1, "i": 0, "expected": null, "actual": null }
+{ "g": 1, "i": 1, "expected": null, "actual": null }
+{ "g": 1, "i": 2, "expected": null, "actual": null }
+{ "g": 2, "i": 0, "expected": true, "actual": true }

@@ -17,19 +17,50 @@
  * under the License.
  */
 
-use test;
+let
+test = [
+  '10:50:56.200+05:00',
+  '10:50:56.200-10:15',
+  '10:50:56',
+  '10:50:56.200Z',
+  '23:59:59.999-13:30',
+  '00:00:00.000+14:45',
+  '12:59:00.019-01:00',
+  '12:59:00.01-01:00',
+  '12:59:00.019-01:00',
+  '12590001-0100',
+  '125900019+0100',
+  test.time('125900019+0100'),
+  datetime('2010-10-30T01:02:03Z')
+],
+testNull = [
+  null,
+  false,
+  true,
+  '@#!',
+  int8(0),
+  int16(0),
+  int32(0),
+  int64(0),
+  float(0),
+  double(0),
+  date('2020-01-02'),
+  duration('PT0H'),
+  year_month_duration('P0Y0M'),
+  day_time_duration('P0D'),
+  [],
+  {}
+],
+testMissing = [
+  missing
+]
 
-{
-    'time1':test.time('10:50:56.200+05:00'),
-    'time2':test.time('10:50:56.200-10:15'),
-    'time3':test.time('10:50:56'),
-    'time4':test.time('10:50:56.200Z'),
-    'time5':test.time('23:59:59.999-13:30'),
-    'time6':test.time('00:00:00.000+14:45'),
-    'time7':test.time('12:59:00.019-01:00'),
-    'time8':test.time('12:59:00.01-01:00'),
-    'time9':test.time('12:59:00.019-01:00'),
-    'time10':test.time('12590001-0100'),
-    'time11':test.time('125900019+0100'),
-    'time12':test.time(test.time('125900019+0100'))
-};
+select 0 g, i, time(test[i]) actual
+from range(0, len(test)-1) i
+union all
+select 1 g, i, null expected, time(testNull[i]) actual
+from range(0, len(testNull)-1) i
+union all
+select 2 g, i, true expected, time(testMissing[i]) is missing actual
+from range(0, len(testMissing)-1) i
+order by g, i;

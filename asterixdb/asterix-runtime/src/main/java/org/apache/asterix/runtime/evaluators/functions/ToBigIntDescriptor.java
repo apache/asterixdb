@@ -19,16 +19,11 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import java.io.IOException;
-
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
-import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.om.types.hierachy.ITypeConvertComputer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AbstractInt64ConstructorEvaluator;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -55,51 +50,20 @@ public class ToBigIntDescriptor extends AbstractScalarFunctionDynamicDescriptor 
 
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new AbstractInt64ConstructorEvaluator(args[0].createScalarEvaluator(ctx), sourceLoc) {
+                return new AbstractInt64ConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
                     @Override
-                    protected void evaluateImpl(IPointable result) throws IOException {
-                        byte[] bytes = inputArg.getByteArray();
-                        int offset = inputArg.getStartOffset();
-                        ATypeTag tt = ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]];
-                        switch (tt) {
-                            case BOOLEAN:
-                                boolean b = ABooleanSerializerDeserializer.getBoolean(bytes, offset + 1);
-                                aInt64.setValue(b ? 1 : 0);
-                                INT64_SERDE.serialize(aInt64, out);
-                                result.set(resultStorage);
-                                break;
-
-                            case TINYINT:
-                            case SMALLINT:
-                            case INTEGER:
-                                ITypeConvertComputer tpcc = ATypeHierarchy.getTypePromoteComputer(tt, ATypeTag.BIGINT);
-                                tpcc.convertType(bytes, offset + 1, inputArg.getLength() - 1, out);
-                                result.set(resultStorage);
-                                break;
-
-                            case FLOAT:
-                            case DOUBLE:
-                                ITypeConvertComputer tdcc =
-                                        ATypeHierarchy.getTypeDemoteComputer(tt, ATypeTag.BIGINT, false);
-                                tdcc.convertType(bytes, offset + 1, inputArg.getLength() - 1, out);
-                                result.set(resultStorage);
-                                break;
-
+                    protected void handleUnsupportedType(ATypeTag inputType, IPointable result)
+                            throws HyracksDataException {
+                        switch (inputType) {
                             case ARRAY:
                             case MULTISET:
                             case OBJECT:
                                 PointableHelper.setNull(result);
                                 break;
-
                             default:
-                                super.evaluateImpl(result);
+                                super.handleUnsupportedType(inputType, result);
                                 break;
                         }
-                    }
-
-                    @Override
-                    protected void handleUnparseableString(IPointable result) {
-                        PointableHelper.setNull(result);
                     }
 
                     @Override

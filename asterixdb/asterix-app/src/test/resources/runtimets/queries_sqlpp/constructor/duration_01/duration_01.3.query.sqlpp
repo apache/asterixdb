@@ -22,20 +22,52 @@
  * Date         : 7 May 2013
  */
 
-use test;
+let
+test = [
+    'P30Y10M25DT13H12M50S',
+    'P25DT13H12M50S',
+    'PT13H12M50S',
+    'P30YT12MS',
+    'PT13H',
+    '-P30Y10M25DT13H12M50S',
+    '-P25DT13H12M50S',
+    '-PT13H50S',
+    'P120D',
+    '-P28M',
+    'PT29M90.937S',
+    'P300Y15M60DT300H98M482.435S',
+    test.duration('P300Y15M60DT300H98M482.435S'),
+    year_month_duration('P30Y10M'),
+    day_time_duration('P25DT13H12M50S')
+],
+testNull = [
+  null,
+  false,
+  true,
+  int8(0),
+  int16(0),
+  int32(0),
+  int64(0),
+  float(0),
+  double(0),
+  '@#!',
+  datetime('1987-11-19T10:50:56Z'),
+  date('2020-01-02'),
+  time('01:02:03'),
+  [],
+  {}
+],
+testMissing = [
+  missing
+]
 
-{
-    'duration1':test.duration('P30Y10M25DT13H12M50S'),
-    'duration2':test.duration('P25DT13H12M50S'),
-    'duration3':test.duration('PT13H12M50S'),
-    'duration4':test.duration('P30YT12MS'),
-    'duration5':test.duration('PT13H'),
-    'duration6':test.duration('-P30Y10M25DT13H12M50S'),
-    'duration7':test.duration('-P25DT13H12M50S'),
-    'duration8':test.duration('-PT13H50S'),
-    'duration9':test.duration('P120D'),
-    'duration10':test.duration('-P28M'),
-    'duration11':test.duration('PT29M90.937S'),
-    'duration12':test.duration('P300Y15M60DT300H98M482.435S'),
-    'duration13':test.duration(test.duration('P300Y15M60DT300H98M482.435S'))
-};
+select 0 g, i, duration(test[i]) actual
+from range(0, len(test)-1) i
+union all
+select 1 g, i, null expected, duration(testNull[i]) actual
+from range(0, len(testNull)-1) i
+union all
+select 2 g, i, true expected, duration(testMissing[i]) is missing actual
+from range(0, len(testMissing)-1) i
+order by g, i;
+

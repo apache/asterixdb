@@ -16,10 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : test sub type duration (year_month_duration and day_time_duration) constructors
- * Expected Res : Success
- * Date         : 7 May 2013
- * issue        : 363
- */
 
+// requesttype=application/json
+// param max-warnings:json=100
+
+{
+  "null_0": boolean("FALSE"),
+  "null_1": boolean("TRUE"),
+  "null_2": boolean(date("2020-01-01")),
+  "null_3": boolean([]),
+  "null_4": boolean({})
+};

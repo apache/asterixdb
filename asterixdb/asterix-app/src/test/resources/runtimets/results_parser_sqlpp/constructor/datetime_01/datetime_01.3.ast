@@ -1,111 +1,170 @@
-DataverseUse test
 Query:
-RecordConstructor [
-  (
-    LiteralExpr [STRING] [datetime1]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [2010-10-30T10:50:56.999+05:45]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime2]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [2010-10-30T10:30:56.250-10:00]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime3]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [1987-11-19T09:20:00.200Z]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime4]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [1987-11-19T10:50:56Z]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime5]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [-1987-11-19T10:50:56.099-05:30]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime6]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [-0001-11-19T10:50:56.719Z]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime7]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [1951-12-27T12:20:15Z]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime8]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [2043-11-19T10:50:56.719Z]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime9]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [-19280329T174937374-0630]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime10]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [-19280329T174937374+0630]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime11]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [-19280329T174937374]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime12]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [-19280329T174937374+0630]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime13]
-    :
-    FunctionCall asterix.datetime@1[
-      LiteralExpr [STRING] [-19280329T17493737+0630]
-    ]
-  )
-  (
-    LiteralExpr [STRING] [datetime14]
-    :
+Let Variable [ Name=$test ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [2010-10-30T10:50:56.999+05:45]
+    LiteralExpr [STRING] [2010-10-30T10:30:56.250-10:00]
+    LiteralExpr [STRING] [1987-11-19T09:20:00.200Z]
+    LiteralExpr [STRING] [1987-11-19T10:50:56Z]
+    LiteralExpr [STRING] [-1987-11-19T10:50:56.099-05:30]
+    LiteralExpr [STRING] [-0001-11-19T10:50:56.719Z]
+    LiteralExpr [STRING] [1951-12-27T12:20:15Z]
+    LiteralExpr [STRING] [2043-11-19T10:50:56.719Z]
+    LiteralExpr [STRING] [-19280329T174937374-0630]
+    LiteralExpr [STRING] [-19280329T174937374+0630]
+    LiteralExpr [STRING] [-19280329T174937374]
+    LiteralExpr [STRING] [-19280329T174937374+0630]
+    LiteralExpr [STRING] [-19280329T17493737+0630]
+    LiteralExpr [STRING] [-19280301T05493737+0630]
     FunctionCall asterix.datetime@1[
       LiteralExpr [STRING] [-19280301T05493737+0630]
     ]
-  )
-  (
-    LiteralExpr [STRING] [datetime15]
-    :
+    FunctionCall asterix.date@1[
+      LiteralExpr [STRING] [2020-01-02]
+    ]
+  ]
+Let Variable [ Name=$testNull ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [NULL]
+    LiteralExpr [FALSE]
+    LiteralExpr [TRUE]
+    LiteralExpr [STRING] [@#!]
+    FunctionCall asterix.int8@1[
+      LiteralExpr [LONG] [0]
+    ]
+    FunctionCall asterix.int16@1[
+      LiteralExpr [LONG] [0]
+    ]
+    FunctionCall asterix.int32@1[
+      LiteralExpr [LONG] [0]
+    ]
+    FunctionCall asterix.int64@1[
+      LiteralExpr [LONG] [0]
+    ]
+    FunctionCall asterix.float@1[
+      LiteralExpr [LONG] [0]
+    ]
+    FunctionCall asterix.double@1[
+      LiteralExpr [LONG] [0]
+    ]
+    FunctionCall asterix.time@1[
+      LiteralExpr [STRING] [01:02:03]
+    ]
+    FunctionCall asterix.duration@1[
+      LiteralExpr [STRING] [PT0H]
+    ]
+    FunctionCall asterix.year-month-duration@1[
+      LiteralExpr [STRING] [P0Y0M]
+    ]
+    FunctionCall asterix.day-time-duration@1[
+      LiteralExpr [STRING] [P0D]
+    ]
+  ]
+Let Variable [ Name=$testMissing ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [MISSING]
+  ]
+SELECT ELEMENT [
+Variable [ Name=#1 ]
+]
+FROM [  (
+    SELECT [
+    LiteralExpr [LONG] [0]
+    g
+    Variable [ Name=$i ]
+    i
     FunctionCall asterix.datetime@1[
-      FunctionCall asterix.datetime@1[
-        LiteralExpr [STRING] [-19280301T05493737+0630]
+      IndexAccessor [
+        Variable [ Name=$test ]
+        Index:         Variable [ Name=$i ]
       ]
     ]
+    actual
+    ]
+    FROM [      FunctionCall asterix.range@2[
+        LiteralExpr [LONG] [0]
+        OperatorExpr [
+          FunctionCall asterix.len@1[
+            Variable [ Name=$test ]
+          ]
+          -
+          LiteralExpr [LONG] [1]
+        ]
+      ]
+      AS Variable [ Name=$i ]
+    ]
+    UNION
+      SELECT [
+      LiteralExpr [LONG] [1]
+      g
+      Variable [ Name=$i ]
+      i
+      LiteralExpr [NULL]
+      expected
+      FunctionCall asterix.datetime@1[
+        IndexAccessor [
+          Variable [ Name=$testNull ]
+          Index:           Variable [ Name=$i ]
+        ]
+      ]
+      actual
+      ]
+      FROM [        FunctionCall asterix.range@2[
+          LiteralExpr [LONG] [0]
+          OperatorExpr [
+            FunctionCall asterix.len@1[
+              Variable [ Name=$testNull ]
+            ]
+            -
+            LiteralExpr [LONG] [1]
+          ]
+        ]
+        AS Variable [ Name=$i ]
+      ]
+    UNION
+      SELECT [
+      LiteralExpr [LONG] [2]
+      g
+      Variable [ Name=$i ]
+      i
+      LiteralExpr [TRUE]
+      expected
+      FunctionCall algebricks.is-missing@1[
+        FunctionCall asterix.datetime@1[
+          IndexAccessor [
+            Variable [ Name=$testMissing ]
+            Index:             Variable [ Name=$i ]
+          ]
+        ]
+      ]
+      actual
+      ]
+      FROM [        FunctionCall asterix.range@2[
+          LiteralExpr [LONG] [0]
+          OperatorExpr [
+            FunctionCall asterix.len@1[
+              Variable [ Name=$testMissing ]
+            ]
+            -
+            LiteralExpr [LONG] [1]
+          ]
+        ]
+        AS Variable [ Name=$i ]
+      ]
   )
+  AS Variable [ Name=#1 ]
 ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=#1 ]
+    Field=g
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=#1 ]
+    Field=i
+  ]
+  ASC
+

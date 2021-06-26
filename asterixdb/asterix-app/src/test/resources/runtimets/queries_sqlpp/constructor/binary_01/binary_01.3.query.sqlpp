@@ -17,20 +17,40 @@
  * under the License.
  */
 
-use test;
+let
+test = [
+  'ABCDEF0123456789',
+  'abcdef0123456789',
+  '0A0B0C0D0E0F',
+  '01020304050607080900',
+  '',
+  test.hex('ABCDEF0123456789')
+],
+testNull = [
+  null,
+  '@#!',
+  int8(0),
+  int16(0),
+  int32(0),
+  int64(0),
+  float(0),
+  double(0),
+  date('2020-01-01'),
+  datetime('2020-01-01T00:00:00Z'),
+  time("00:00:00"),
+  [],
+  {}
+],
+testMissing = [
+  missing
+]
 
-[
-    test.hex('ABCDEF0123456789'),
-    test.hex('abcdef0123456789'),
-    test.hex('0A0B0C0D0E0F'),
-    test.hex('01020304050607080900'),
-    test.hex(''),
-    test.hex(test.hex('ABCDEF0123456789')),
-
-    test.base64('0123456789qwertyuiopasdfghjklzxcvbnmQWERTYUIOPLKJHGFDSAZXCVBNM+/'),
-    test.base64(''),
-    test.base64('QXN0ZXJpeA=='),
-    test.base64('QXN0ZXJpeAE='),
-    test.base64('QXN0ZXJpeAE8'),
-    test.base64(test.base64('QXN0ZXJpeAE8'))
-];
+select 0 g, i, hex(test[i]) actual
+from range(0, len(test)-1) i
+union all
+select 1 g, i, null expected, hex(testNull[i]) actual
+from range(0, len(testNull)-1) i
+union all
+select 2 g, i, true expected, hex(testMissing[i]) is missing actual
+from range(0, len(testMissing)-1) i
+order by g, i;

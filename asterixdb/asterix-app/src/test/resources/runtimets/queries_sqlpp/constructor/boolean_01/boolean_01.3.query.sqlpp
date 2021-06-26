@@ -17,10 +17,67 @@
  * under the License.
  */
 
-use test;
+let
+testFalse = [
+  false,
+  test.boolean('false'),
+  int8(0),
+  int16(0),
+  int32(0),
+  int64(0),
+  float(0),
+  float("NaN"),
+  double(0),
+  double("NaN"),
+  'false'
+],
+testTrue = [
+  true,
+  int8(1),
+  int8(2),
+  int16(1),
+  int16(-1),
+  int32(1),
+  int32(2),
+  int64(1),
+  int64(3),
+  float(1),
+  float("INF"),
+  float("-INF"),
+  double(1),
+  double("INF"),
+  double("-INF"),
+  'true'
+],
+testNull = [
+  null,
+  'TRUE',
+  'FALSE',
+  'abc',
+  date('1970-01-01'),
+  datetime('1970-01-01T00:00:00Z'),
+  time("00:00:00"),
+  duration('PT0H'),
+  year_month_duration('P0Y0M'),
+  day_time_duration('P0D'),
+  [],
+  [null],
+  {},
+  {"a":null}
+],
+testMissing = [
+  missing
+]
 
-{
-    'boolean1':test.boolean('true'),
-    'boolean2':test.boolean('false'),
-    'boolean3':test.boolean(test.boolean('false'))
-};
+select 0 g, i, false expected, boolean(testFalse[i]) actual
+from range(0, len(testFalse)-1) i
+union all
+select 1 g, i, true expected, boolean(testTrue[i]) actual
+from range(0, len(testTrue)-1) i
+union all
+select 2 g, i, null expected, boolean(testNull[i]) actual
+from range(0, len(testNull)-1) i
+union all
+select 3 g, i, true expected, boolean(testMissing[i]) is missing actual
+from range(0, len(testMissing)-1) i
+order by g, i;

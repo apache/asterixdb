@@ -1,1 +1,31 @@
-{ "datetime1": datetime("2010-10-30T05:05:56.999Z"), "datetime2": datetime("2010-10-30T20:30:56.250Z"), "datetime3": datetime("1987-11-19T09:20:00.200Z"), "datetime4": datetime("1987-11-19T10:50:56.000Z"), "datetime5": datetime("-1987-11-19T16:20:56.099Z"), "datetime6": datetime("-0001-11-19T10:50:56.719Z"), "datetime7": datetime("1951-12-27T12:20:15.000Z"), "datetime8": datetime("2043-11-19T10:50:56.719Z"), "datetime9": datetime("-1928-03-30T00:19:37.374Z"), "datetime10": datetime("-1928-03-29T11:19:37.374Z"), "datetime11": datetime("-1928-03-29T17:49:37.374Z"), "datetime12": datetime("-1928-03-29T11:19:37.374Z"), "datetime13": datetime("-1928-03-29T11:19:37.370Z"), "datetime14": datetime("-1928-02-29T23:19:37.370Z"), "datetime15": datetime("-1928-02-29T23:19:37.370Z") }
+{ "g": 0, "i": 0, "actual": datetime("2010-10-30T05:05:56.999Z") }
+{ "g": 0, "i": 1, "actual": datetime("2010-10-30T20:30:56.250Z") }
+{ "g": 0, "i": 2, "actual": datetime("1987-11-19T09:20:00.200Z") }
+{ "g": 0, "i": 3, "actual": datetime("1987-11-19T10:50:56.000Z") }
+{ "g": 0, "i": 4, "actual": datetime("-1987-11-19T16:20:56.099Z") }
+{ "g": 0, "i": 5, "actual": datetime("-0001-11-19T10:50:56.719Z") }
+{ "g": 0, "i": 6, "actual": datetime("1951-12-27T12:20:15.000Z") }
+{ "g": 0, "i": 7, "actual": datetime("2043-11-19T10:50:56.719Z") }
+{ "g": 0, "i": 8, "actual": datetime("-1928-03-30T00:19:37.374Z") }
+{ "g": 0, "i": 9, "actual": datetime("-1928-03-29T11:19:37.374Z") }
+{ "g": 0, "i": 10, "actual": datetime("-1928-03-29T17:49:37.374Z") }
+{ "g": 0, "i": 11, "actual": datetime("-1928-03-29T11:19:37.374Z") }
+{ "g": 0, "i": 12, "actual": datetime("-1928-03-29T11:19:37.370Z") }
+{ "g": 0, "i": 13, "actual": datetime("-1928-02-29T23:19:37.370Z") }
+{ "g": 0, "i": 14, "actual": datetime("-1928-02-29T23:19:37.370Z") }
+{ "g": 0, "i": 15, "actual": datetime("2020-01-02T00:00:00.000Z") }
+{ "g": 1, "i": 0, "expected": null, "actual": null }
+{ "g": 1, "i": 1, "expected": null, "actual": null }
+{ "g": 1, "i": 2, "expected": null, "actual": null }
+{ "g": 1, "i": 3, "expected": null, "actual": null }
+{ "g": 1, "i": 4, "expected": null, "actual": null }
+{ "g": 1, "i": 5, "expected": null, "actual": null }
+{ "g": 1, "i": 6, "expected": null, "actual": null }
+{ "g": 1, "i": 7, "expected": null, "actual": null }
+{ "g": 1, "i": 8, "expected": null, "actual": null }
+{ "g": 1, "i": 9, "expected": null, "actual": null }
+{ "g": 1, "i": 10, "expected": null, "actual": null }
+{ "g": 1, "i": 11, "expected": null, "actual": null }
+{ "g": 1, "i": 12, "expected": null, "actual": null }
+{ "g": 1, "i": 13, "expected": null, "actual": null }
+{ "g": 2, "i": 0, "expected": true, "actual": true }

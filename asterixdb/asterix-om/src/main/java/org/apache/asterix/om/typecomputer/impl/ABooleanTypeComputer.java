@@ -18,22 +18,23 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 
-public class ABooleanTypeComputer extends AbstractResultTypeComputer {
+public class ABooleanTypeComputer extends AbstractConstructorTypeComputer {
 
-    public static final ABooleanTypeComputer INSTANCE = new ABooleanTypeComputer();
+    public static final ABooleanTypeComputer INSTANCE = new ABooleanTypeComputer(false);
 
-    private ABooleanTypeComputer() {
+    public static final ABooleanTypeComputer INSTANCE_NULLABLE = new ABooleanTypeComputer(true);
+
+    private ABooleanTypeComputer(boolean nullable) {
+        super(BuiltinType.ABOOLEAN, nullable);
     }
 
     @Override
-    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return BuiltinType.ABOOLEAN;
+    protected boolean isAlwaysCastable(IAType inputType) {
+        return super.isAlwaysCastable(inputType)
+                || ATypeHierarchy.getTypeDomain(inputType.getTypeTag()) == ATypeHierarchy.Domain.NUMERIC;
     }
-
 }

@@ -1,1 +1,31 @@
-{ "duration1": duration("P30Y10M25DT13H12M50S"), "duration2": duration("P25DT13H12M50S"), "duration3": duration("PT13H12M50S"), "duration4": duration("P30YT12M"), "duration5": duration("PT13H"), "duration6": duration("-P30Y10M25DT13H12M50S"), "duration7": duration("-P25DT13H12M50S"), "duration8": duration("-PT13H50S"), "duration9": duration("P120D"), "duration10": duration("-P2Y4M"), "duration11": duration("PT30M30.937S"), "duration12": duration("P301Y3M72DT13H46M2.435S"), "duration13": duration("P301Y3M72DT13H46M2.435S") }
+{ "g": 0, "i": 0, "actual": duration("P30Y10M25DT13H12M50S") }
+{ "g": 0, "i": 1, "actual": duration("P25DT13H12M50S") }
+{ "g": 0, "i": 2, "actual": duration("PT13H12M50S") }
+{ "g": 0, "i": 3, "actual": duration("P30YT12M") }
+{ "g": 0, "i": 4, "actual": duration("PT13H") }
+{ "g": 0, "i": 5, "actual": duration("-P30Y10M25DT13H12M50S") }
+{ "g": 0, "i": 6, "actual": duration("-P25DT13H12M50S") }
+{ "g": 0, "i": 7, "actual": duration("-PT13H50S") }
+{ "g": 0, "i": 8, "actual": duration("P120D") }
+{ "g": 0, "i": 9, "actual": duration("-P2Y4M") }
+{ "g": 0, "i": 10, "actual": duration("PT30M30.937S") }
+{ "g": 0, "i": 11, "actual": duration("P301Y3M72DT13H46M2.435S") }
+{ "g": 0, "i": 12, "actual": duration("P301Y3M72DT13H46M2.435S") }
+{ "g": 0, "i": 13, "actual": duration("P30Y10M") }
+{ "g": 0, "i": 14, "actual": duration("P25DT13H12M50S") }
+{ "g": 1, "i": 0, "expected": null, "actual": null }
+{ "g": 1, "i": 1, "expected": null, "actual": null }
+{ "g": 1, "i": 2, "expected": null, "actual": null }
+{ "g": 1, "i": 3, "expected": null, "actual": null }
+{ "g": 1, "i": 4, "expected": null, "actual": null }
+{ "g": 1, "i": 5, "expected": null, "actual": null }
+{ "g": 1, "i": 6, "expected": null, "actual": null }
+{ "g": 1, "i": 7, "expected": null, "actual": null }
+{ "g": 1, "i": 8, "expected": null, "actual": null }
+{ "g": 1, "i": 9, "expected": null, "actual": null }
+{ "g": 1, "i": 10, "expected": null, "actual": null }
+{ "g": 1, "i": 11, "expected": null, "actual": null }
+{ "g": 1, "i": 12, "expected": null, "actual": null }
+{ "g": 1, "i": 13, "expected": null, "actual": null }
+{ "g": 1, "i": 14, "expected": null, "actual": null }
+{ "g": 2, "i": 0, "expected": true, "actual": true }

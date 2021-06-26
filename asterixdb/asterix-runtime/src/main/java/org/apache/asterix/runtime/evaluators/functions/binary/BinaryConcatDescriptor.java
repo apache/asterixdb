@@ -100,10 +100,10 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                         }
                         try {
                             listAccessor.reset(data, offset);
+                            boolean itemsAreSelfDescribing = listAccessor.itemsAreSelfDescribing();
                             int concatLength = 0;
                             boolean itemIsNull = false;
                             for (int i = 0; i < listAccessor.size(); i++) {
-                                // TODO(ali): itemOffset should be adjusted if list is heterogeneous like string_concat
                                 int itemOffset = listAccessor.getItemOffset(i);
                                 ATypeTag itemType = listAccessor.getItemType(itemOffset);
                                 if (itemType != ATypeTag.BINARY) {
@@ -119,6 +119,9 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
                                     throw new UnsupportedItemTypeException(sourceLoc, getIdentifier(),
                                             itemType.serialize());
                                 }
+                                if (itemsAreSelfDescribing) {
+                                    itemOffset++;
+                                }
                                 concatLength += ByteArrayPointable.getContentLength(data, itemOffset);
                             }
                             if (itemIsNull) {
@@ -132,6 +135,9 @@ public class BinaryConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
 
                             for (int i = 0; i < listAccessor.size(); i++) {
                                 int itemOffset = listAccessor.getItemOffset(i);
+                                if (itemsAreSelfDescribing) {
+                                    itemOffset++;
+                                }
                                 int length = ByteArrayPointable.getContentLength(data, itemOffset);
                                 dataOutput.write(data,
                                         itemOffset + ByteArrayPointable.getNumberBytesToStoreMeta(length), length);

@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -118,8 +120,15 @@ public final class FunctionTypeInferers {
         public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
                 CompilerProperties compilerProps) throws AlgebricksException {
             AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-            IAType rt = TypeCastUtils.getRequiredType(funcExpr);
-            IAType it = (IAType) context.getType(funcExpr.getArguments().get(0).getValue());
+            IAType reqType = TypeCastUtils.getRequiredType(funcExpr);
+            IAType inputType = (IAType) context.getType(funcExpr.getArguments().get(0).getValue());
+            // If reqType or inputType is null it indicates there is a bug in the compiler.
+            if (reqType == null || inputType == null) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, expr.getSourceLocation(),
+                        "Invalid types for casting, required type " + reqType + ", input type " + inputType);
+            }
+            IAType rt = TypeComputeUtils.getActualType(reqType);
+            IAType it = TypeComputeUtils.getActualType(inputType);
             fd.setImmutableStates(rt, it);
         }
     }

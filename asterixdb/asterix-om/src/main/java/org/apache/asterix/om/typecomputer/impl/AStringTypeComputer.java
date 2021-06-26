@@ -18,27 +18,43 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
-import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class AStringTypeComputer extends AbstractResultTypeComputer {
+public class AStringTypeComputer extends AbstractConstructorTypeComputer {
 
-    public static final AStringTypeComputer INSTANCE = new AStringTypeComputer(BuiltinType.ASTRING);
-    public static final AStringTypeComputer INSTANCE_NULLABLE =
-            new AStringTypeComputer(AUnionType.createNullableType(BuiltinType.ASTRING));
+    public static final AStringTypeComputer INSTANCE = new AStringTypeComputer(false);
 
-    private final IAType outputType;
+    public static final AStringTypeComputer INSTANCE_NULLABLE = new AStringTypeComputer(true);
 
-    private AStringTypeComputer(IAType outputType) {
-        this.outputType = outputType;
+    private AStringTypeComputer(boolean nullable) {
+        super(BuiltinType.ASTRING, nullable);
     }
 
     @Override
-    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return outputType;
+    protected boolean isAlwaysCastable(IAType inputType) {
+        if (super.isAlwaysCastable(inputType)) {
+            return true;
+        }
+        switch (inputType.getTypeTag()) {
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
+            case FLOAT:
+            case DOUBLE:
+            case BOOLEAN:
+            case DATETIME:
+            case DATE:
+            case TIME:
+            case DURATION:
+            case YEARMONTHDURATION:
+            case DAYTIMEDURATION:
+            case UUID:
+            case BINARY:
+                return true;
+            default:
+                return false;
+        }
     }
 }

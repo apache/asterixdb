@@ -16,13 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : test sub type duration (year_month_duration and day_time_duration) constructors
- * Expected Res : Success
- * Date         : 7 May 2013
- * issue        : 363
- */
 
-drop  dataverse test if exists;
-create  dataverse test;
+// requesttype=application/json
+// param max-warnings:json=100
 
+{
+  "null_0": string([]),
+  "null_1": string({})
+}

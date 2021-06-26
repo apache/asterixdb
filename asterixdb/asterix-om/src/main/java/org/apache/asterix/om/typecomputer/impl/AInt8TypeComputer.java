@@ -18,22 +18,13 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class AInt8TypeComputer extends AbstractResultTypeComputer {
+public class AInt8TypeComputer extends AbstractNumericConstructorTypeComputer {
 
-    public static final AInt8TypeComputer INSTANCE = new AInt8TypeComputer();
+    public static final AInt8TypeComputer INSTANCE_NULLABLE = new AInt8TypeComputer(true);
 
-    private AInt8TypeComputer() {
+    private AInt8TypeComputer(boolean nullable) {
+        super(BuiltinType.AINT8, nullable);
     }
-
-    @Override
-    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return BuiltinType.AINT8;
-    }
-
 }

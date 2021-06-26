@@ -1,0 +1,26 @@
+{ "g": 0, "i": 0, "actual": day-time-duration("P25DT13H12M50S") }
+{ "g": 0, "i": 1, "actual": day-time-duration("PT13H12M50S") }
+{ "g": 0, "i": 2, "actual": day-time-duration("PT13H") }
+{ "g": 0, "i": 3, "actual": day-time-duration("-P25DT13H12M50S") }
+{ "g": 0, "i": 4, "actual": day-time-duration("-PT13H50S") }
+{ "g": 0, "i": 5, "actual": day-time-duration("P120D") }
+{ "g": 0, "i": 6, "actual": day-time-duration("PT30M30.937S") }
+{ "g": 0, "i": 7, "actual": day-time-duration("PT14H") }
+{ "g": 0, "i": 8, "actual": day-time-duration("P3DT4H5M6S") }
+{ "g": 1, "i": 0, "expected": null, "actual": null }
+{ "g": 1, "i": 1, "expected": null, "actual": null }
+{ "g": 1, "i": 2, "expected": null, "actual": null }
+{ "g": 1, "i": 3, "expected": null, "actual": null }
+{ "g": 1, "i": 4, "expected": null, "actual": null }
+{ "g": 1, "i": 5, "expected": null, "actual": null }
+{ "g": 1, "i": 6, "expected": null, "actual": null }
+{ "g": 1, "i": 7, "expected": null, "actual": null }
+{ "g": 1, "i": 8, "expected": null, "actual": null }
+{ "g": 1, "i": 9, "expected": null, "actual": null }
+{ "g": 1, "i": 10, "expected": null, "actual": null }
+{ "g": 1, "i": 11, "expected": null, "actual": null }
+{ "g": 1, "i": 12, "expected": null, "actual": null }
+{ "g": 1, "i": 13, "expected": null, "actual": null }
+{ "g": 1, "i": 14, "expected": null, "actual": null }
+{ "g": 1, "i": 15, "expected": null, "actual": null }
+{ "g": 2, "i": 0, "expected": true, "actual": true }

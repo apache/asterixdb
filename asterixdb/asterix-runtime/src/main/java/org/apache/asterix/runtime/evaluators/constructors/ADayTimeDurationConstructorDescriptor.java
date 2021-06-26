@@ -18,9 +18,8 @@
  */
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import java.io.DataOutput;
-
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
+import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADayTimeDuration;
 import org.apache.asterix.om.base.AMutableDayTimeDuration;
@@ -31,10 +30,8 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -43,9 +40,6 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 @MissingNullInOutFunction
 public class ADayTimeDurationConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -66,67 +60,74 @@ public class ADayTimeDurationConstructorDescriptor extends AbstractScalarFunctio
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new IScalarEvaluator() {
+                return new AbstractConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
 
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable inputArg = new VoidPointable();
-                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
-                    private AMutableDayTimeDuration aDayTimeDuration = new AMutableDayTimeDuration(0);
+                    private final AMutableDayTimeDuration aDayTimeDuration = new AMutableDayTimeDuration(0);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde =
+                    private final ISerializerDeserializer<ADayTimeDuration> dayTimeDurationSerde =
                             SerializerDeserializerProvider.INSTANCE
                                     .getSerializerDeserializer(BuiltinType.ADAYTIMEDURATION);
                     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
 
                     @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        try {
-                            eval.evaluate(tuple, inputArg);
-
-                            if (PointableHelper.checkAndSetMissingOrNull(result, inputArg)) {
-                                return;
-                            }
-
-                            byte[] serString = inputArg.getByteArray();
-                            int offset = inputArg.getStartOffset();
-                            int len = inputArg.getLength();
-
-                            byte tt = serString[offset];
-                            if (tt == ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG) {
+                    protected void evaluateImpl(IPointable result) throws HyracksDataException {
+                        byte[] bytes = inputArg.getByteArray();
+                        int startOffset = inputArg.getStartOffset();
+                        int len = inputArg.getLength();
+                        ATypeTag inputType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[startOffset]);
+                        switch (inputType) {
+                            case DAYTIMEDURATION:
                                 result.set(inputArg);
-                            } else if (tt == ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
+                                break;
+                            case DURATION:
+                                long millis = ADurationSerializerDeserializer.getDayTime(bytes, startOffset + 1);
+                                aDayTimeDuration.setMilliseconds(millis);
                                 resultStorage.reset();
-                                utf8Ptr.set(serString, offset + 1, len - 1);
-                                int stringLength = utf8Ptr.getUTF8Length();
-                                int startOffset = utf8Ptr.getCharStartOffset();
-
-                                ADurationParserFactory.parseDuration(serString, startOffset, stringLength,
-                                        aDayTimeDuration, ADurationParseOption.DAY_TIME);
-
                                 dayTimeDurationSerde.serialize(aDayTimeDuration, out);
                                 result.set(resultStorage);
-                            } else {
-                                throw new TypeMismatchException(sourceLoc, getIdentifier(), 0, tt,
-                                        ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                            }
-                        } catch (Exception e) {
-                            throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
-                                    ATypeTag.SERIALIZED_DAY_TIME_DURATION_TYPE_TAG);
+                                break;
+                            case STRING:
+                                utf8Ptr.set(bytes, startOffset + 1, len - 1);
+                                if (parseDayTimeDuration(utf8Ptr, aDayTimeDuration)) {
+                                    resultStorage.reset();
+                                    dayTimeDurationSerde.serialize(aDayTimeDuration, out);
+                                    result.set(resultStorage);
+                                } else {
+                                    handleParseError(utf8Ptr, result);
+                                }
+                                break;
+                            default:
+                                handleUnsupportedType(inputType, result);
+                                break;
                         }
                     }
 
+                    @Override
+                    protected BuiltinType getTargetType() {
+                        return BuiltinType.ADAYTIMEDURATION;
+                    }
+
+                    @Override
+                    protected FunctionIdentifier getIdentifier() {
+                        return ADayTimeDurationConstructorDescriptor.this.getIdentifier();
+                    }
                 };
             }
         };
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.asterix.om.functions.AbstractFunctionDescriptor#getIdentifier()
-     */
+    private static boolean parseDayTimeDuration(UTF8StringPointable textPtr, ADayTimeDuration result) {
+        try {
+            ADurationParserFactory.parseDuration(textPtr.getByteArray(), textPtr.getCharStartOffset(),
+                    textPtr.getUTF8Length(), result, ADurationParseOption.DAY_TIME);
+            return true;
+        } catch (HyracksDataException e) {
+            return false;
+        }
+    }
+
     @Override
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.DAY_TIME_DURATION_CONSTRUCTOR;
     }
-
 }

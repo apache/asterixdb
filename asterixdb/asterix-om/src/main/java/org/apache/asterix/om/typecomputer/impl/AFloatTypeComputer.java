@@ -18,22 +18,15 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class AFloatTypeComputer extends AbstractResultTypeComputer {
+public class AFloatTypeComputer extends AbstractNumericConstructorTypeComputer {
 
-    public static final AFloatTypeComputer INSTANCE = new AFloatTypeComputer();
+    public static final AFloatTypeComputer INSTANCE = new AFloatTypeComputer(false);
 
-    private AFloatTypeComputer() {
+    public static final AFloatTypeComputer INSTANCE_NULLABLE = new AFloatTypeComputer(true);
+
+    private AFloatTypeComputer(boolean nullable) {
+        super(BuiltinType.AFLOAT, nullable);
     }
-
-    @Override
-    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return BuiltinType.AFLOAT;
-    }
-
 }

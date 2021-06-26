@@ -17,13 +17,44 @@
  * under the License.
  */
 
-use test;
+let
+test = [
+  'NaN',
+  'INF',
+  '-INF',
+  '-80.20',
+  '-20.56e-30',
+  test.float('-20.56e-30'),
+  int8(8),
+  int16(16),
+  int32(32),
+  int64(64),
+  double(2.5),
+  false,
+  true
+],
+testNull = [
+  null,
+  '@#!',
+  datetime('1987-11-19T10:50:56Z'),
+  date('2020-01-02'),
+  time('01:02:03'),
+  duration('PT0H'),
+  year_month_duration('P0Y0M'),
+  day_time_duration('P0D'),
+  [],
+  {}
+],
+testMissing = [
+  missing
+]
 
-{
-    'float1':test.float('NaN'),
-    'float2':test.float('INF'),
-    'float3':test.float('-INF'),
-    'float4':test.float('-80.20'),
-    'float5':test.float('-20.56e-30'),
-    'float6':test.float(test.float('-20.56e-30'))
-};
+select 0 g, i, float(test[i]) actual
+from range(0, len(test)-1) i
+union all
+select 1 g, i, null expected, float(testNull[i]) actual
+from range(0, len(testNull)-1) i
+union all
+select 2 g, i, true expected, float(testMissing[i]) is missing actual
+from range(0, len(testMissing)-1) i
+order by g, i;

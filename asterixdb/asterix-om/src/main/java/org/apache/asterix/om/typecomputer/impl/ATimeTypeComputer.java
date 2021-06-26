@@ -18,22 +18,22 @@
  */
 package org.apache.asterix.om.typecomputer.impl;
 
-import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
-public class ATimeTypeComputer extends AbstractResultTypeComputer {
+public class ATimeTypeComputer extends AbstractConstructorTypeComputer {
 
-    public static final ATimeTypeComputer INSTANCE = new ATimeTypeComputer();
+    public static final ATimeTypeComputer INSTANCE = new ATimeTypeComputer(false);
 
-    private ATimeTypeComputer() {
+    public static final ATimeTypeComputer INSTANCE_NULLABLE = new ATimeTypeComputer(true);
+
+    private ATimeTypeComputer(boolean nullable) {
+        super(BuiltinType.ATIME, nullable);
     }
 
     @Override
-    protected IAType getResultType(ILogicalExpression expr, IAType... strippedInputTypes) throws AlgebricksException {
-        return BuiltinType.ATIME;
+    protected boolean isAlwaysCastable(IAType inputType) {
+        return super.isAlwaysCastable(inputType) || inputType.getTypeTag() == ATypeTag.DATETIME;
     }
-
 }
