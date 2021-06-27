@@ -117,8 +117,11 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
         Map<VariableExpr, Set<? extends Scope.SymbolAnnotation>> liveAnnotatedVars =
                 scopeChecker.getCurrentScope().getLiveVariables();
         Set<VariableExpr> liveVars = liveAnnotatedVars.keySet();
-        Set<VariableExpr> liveContextVars = Scope.findVariablesAnnotatedBy(liveVars,
-                SqlppVariableAnnotation.CONTEXT_VARIABLE, liveAnnotatedVars, winExpr.getSourceLocation());
+
+        Map<VariableExpr, Set<? extends Scope.SymbolAnnotation>> localAnnotatedVars =
+                scopeChecker.getCurrentScope().getLiveVariables(scopeChecker.getPrecedingScope());
+        Set<VariableExpr> liveContextVars = Scope.findVariablesAnnotatedBy(localAnnotatedVars.keySet(),
+                SqlppVariableAnnotation.CONTEXT_VARIABLE, localAnnotatedVars, winExpr.getSourceLocation());
 
         List<Pair<Expression, Identifier>> winFieldList = winExpr.getWindowFieldList();
         Map<VariableExpr, Identifier> winVarFieldMap =
