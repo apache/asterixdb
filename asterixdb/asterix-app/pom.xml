@@ -759,6 +759,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-fuzzyjoin</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-storage-am-rtree</artifactId>
       <version>${hyracks.version}</version>
