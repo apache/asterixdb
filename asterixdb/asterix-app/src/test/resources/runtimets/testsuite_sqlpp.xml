@@ -5627,6 +5627,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
+      <compilation-unit name="gby-cross-join">
+        <output-dir compare="Text">gby-cross-join</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="group-by">
       <compilation-unit name="gby-nested-01">
         <output-dir compare="Text">gby-nested-01</output-dir>
       </compilation-unit>

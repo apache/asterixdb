@@ -84,24 +84,27 @@ public class PushGroupByThroughProduct implements IAlgebraicRewriteRule {
 
         Mutable<ILogicalOperator> opLeftRef = join.getInputs().get(0);
         ILogicalOperator opLeft = opLeftRef.getValue();
+        Mutable<ILogicalOperator> opRightRef = join.getInputs().get(1);
+        ILogicalOperator opRight = opRightRef.getValue();
         switch (canPushThrough(gby, opLeft, decorToPush, decorNotToPush)) {
             case REPEATED_DECORS: {
                 return false;
             }
             case TRUE: {
-                push(opRef, opRef2, 0, decorToPush, decorNotToPush, context);
-                return true;
+                if (OperatorPropertiesUtil.isCardinalityZeroOrOne(opRight)) {
+                    push(opRef, opRef2, 0, decorToPush, decorNotToPush, context);
+                    return true;
+                }
+                return false;
             }
             case FALSE: {
                 decorToPush.clear();
-                Mutable<ILogicalOperator> opRightRef = join.getInputs().get(1);
-                ILogicalOperator opRight = opRightRef.getValue();
-                if (canPushThrough(gby, opRight, decorToPush, decorNotToPush) == PushTestResult.TRUE) {
+                if (canPushThrough(gby, opRight, decorToPush, decorNotToPush) == PushTestResult.TRUE
+                        && OperatorPropertiesUtil.isCardinalityZeroOrOne(opLeft)) {
                     push(opRef, opRef2, 1, decorToPush, decorNotToPush, context);
                     return true;
-                } else {
-                    return false;
                 }
+                return false;
             }
             default: {
                 throw new IllegalStateException();

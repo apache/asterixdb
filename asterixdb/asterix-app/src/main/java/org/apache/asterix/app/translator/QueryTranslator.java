@@ -4333,7 +4333,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         appCtx.getRequestTracker().track(clientRequest);
     }
 
-    protected void validateStatements(IRequestParameters requestParameters) throws CompilationException {
+    protected void validateStatements(IRequestParameters requestParameters)
+            throws CompilationException, HyracksDataException {
         validateStatements(statements, requestParameters.isMultiStatement(),
                 requestParameters.getStatementCategoryRestrictionMask());
     }

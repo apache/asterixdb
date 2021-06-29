@@ -1,0 +1,71 @@
+DataverseUse test
+Query:
+SELECT [
+FieldAccessor [
+  Variable [ Name=$y ]
+  Field=c2
+]
+c2
+(
+  SELECT [
+  WINDOW asterix.nth-value-impl@3[
+    (
+      SELECT ELEMENT [
+      FieldAccessor [
+        FieldAccessor [
+          Variable [ Name=#2 ]
+          Field=x
+        ]
+        Field=c2
+      ]
+      ]
+      FROM [        Variable [ Name=#1 ]
+        AS Variable [ Name=#2 ]
+      ]
+    )
+    LiteralExpr [LONG] [3]
+    FieldAccessor [
+      Variable [ Name=$x ]
+      Field=c2
+    ]
+  ]
+    AS Variable [ Name=#1 ]
+    (
+      x:=Variable [ Name=$x ]
+    )
+  OVER (
+    PARTITION BY
+      FieldAccessor [
+        Variable [ Name=$x ]
+        Field=one
+      ]
+    ORDER BY
+      FieldAccessor [
+        Variable [ Name=$x ]
+        Field=c2
+      ]
+      ASC
+    range between unbounded preceding and unbounded following exclude no others
+  )
+  nth
+  ]
+  FROM [    FunctionCall asterix.dataset@1[
+      LiteralExpr [STRING] [test.t1]
+    ]
+    AS Variable [ Name=$x ]
+  ]
+)
+q1
+]
+FROM [  FunctionCall asterix.dataset@1[
+    LiteralExpr [STRING] [test.t1]
+  ]
+  AS Variable [ Name=$y ]
+]
+Orderby
+  FieldAccessor [
+    Variable [ Name=$y ]
+    Field=c2
+  ]
+  ASC
+
