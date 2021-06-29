@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.metadata.declared;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -134,10 +133,8 @@ public class ArrayBTreeResourceFactoryProvider implements IResourceFactoryProvid
                 sourceType = metaType;
             }
             for (int i = 0; i < e.getProjectList().size(); i++) {
-                List<String> project = e.getProjectList().get(i);
                 Pair<IAType, Boolean> keyTypePair = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
-                        ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project), sourceType,
-                        ArrayIndexUtil.getArrayDepthIndicator(e.getUnnestList(), project));
+                        e.getUnnestList(), e.getProjectList().get(i), sourceType);
                 IAType keyType = keyTypePair.first;
                 secondaryTypeTraits[secondaryTypeTraitPos++] = typeTraitProvider.getTypeTrait(keyType);
             }
@@ -175,10 +172,8 @@ public class ArrayBTreeResourceFactoryProvider implements IResourceFactoryProvid
                 sourceType = metaType;
             }
             for (int i = 0; i < e.getProjectList().size(); i++) {
-                List<String> project = e.getProjectList().get(i);
                 Pair<IAType, Boolean> keyTypePair = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
-                        ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project), sourceType,
-                        ArrayIndexUtil.getArrayDepthIndicator(e.getUnnestList(), project));
+                        e.getUnnestList(), e.getProjectList().get(i), sourceType);
                 IAType keyType = keyTypePair.first;
                 secondaryCmpFactories[secondaryCmpFactoriesPos++] =
                         cmpFactoryProvider.getBinaryComparatorFactory(keyType, true);

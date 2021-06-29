@@ -153,9 +153,7 @@ public class KeyFieldTypeUtil {
                 ARecordType sourceType =
                         (e.getSourceIndicator() == Index.RECORD_INDICATOR) ? recordType : metaRecordType;
                 Pair<IAType, Boolean> keyPairType = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
-                        ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), e.getProjectList().get(i)),
-                        sourceType,
-                        ArrayIndexUtil.getArrayDepthIndicator(e.getUnnestList(), e.getProjectList().get(i)));
+                        e.getUnnestList(), e.getProjectList().get(i), sourceType);
                 indexKeyTypes.add(keyPairType.first);
             }
         }

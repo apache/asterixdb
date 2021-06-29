@@ -728,10 +728,10 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 // Walk the array path.
                 List<String> flatFirstFieldName = ArrayIndexUtil.getFlattenedKeyFieldNames(
                         workingElement.getUnnestList(), workingElement.getProjectList().get(0));
-                List<Integer> firstArrayIndicator = ArrayIndexUtil
-                        .getArrayDepthIndicator(workingElement.getUnnestList(), workingElement.getProjectList().get(0));
+                List<Boolean> firstUnnestFlags = ArrayIndexUtil.getUnnestFlags(workingElement.getUnnestList(),
+                        workingElement.getProjectList().get(0));
                 ArrayIndexUtil.walkArrayPath((isOpenOrNestedField) ? null : recordType, flatFirstFieldName,
-                        firstArrayIndicator, branchCreator);
+                        firstUnnestFlags, branchCreator);
 
                 // For all other elements in the PROJECT list, add an assign.
                 for (int j = 1; j < workingElement.getProjectList().size(); j++) {
@@ -1054,25 +1054,19 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
         @Override
         public void executeActionOnEachArrayStep(ARecordType startingStepRecordType, IAType workingType,
-                List<String> fieldName, boolean isFirstArrayStep, boolean isFirstUnnestInStep,
-                boolean isLastUnnestInIntermediateStep) throws AlgebricksException {
+                List<String> fieldName, boolean isFirstArrayStep, boolean isLastUnnestInIntermediateStep)
+                throws AlgebricksException {
             if (!isFirstWalk) {
                 // We have already built the UNNEST path, do not build again.
                 return;
             }
 
+            // Get the field we want to UNNEST from our record.
             ILogicalExpression accessToUnnestVar;
-            if (isFirstUnnestInStep) {
-                // This is the first UNNEST step. Get the field we want to UNNEST from our record.
-                accessToUnnestVar = (startingStepRecordType != null)
-                        ? getFieldAccessFunction(new MutableObject<>(createLastRecordVarRef()),
-                                startingStepRecordType.getFieldIndex(fieldName.get(0)), fieldName)
-                        : getFieldAccessFunction(new MutableObject<>(createLastRecordVarRef()), -1, fieldName);
-            } else {
-                // This is the second+ UNNEST step. Refer back to the previously unnested variable.
-                accessToUnnestVar = new VariableReferenceExpression(this.lastFieldVars.get(0));
-                this.lastFieldVars.clear();
-            }
+            accessToUnnestVar = (startingStepRecordType != null)
+                    ? getFieldAccessFunction(new MutableObject<>(createLastRecordVarRef()),
+                            startingStepRecordType.getFieldIndex(fieldName.get(0)), fieldName)
+                    : getFieldAccessFunction(new MutableObject<>(createLastRecordVarRef()), -1, fieldName);
             UnnestingFunctionCallExpression scanCollection = new UnnestingFunctionCallExpression(
                     BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SCAN_COLLECTION),
                     Collections.singletonList(new MutableObject<>(accessToUnnestVar)));

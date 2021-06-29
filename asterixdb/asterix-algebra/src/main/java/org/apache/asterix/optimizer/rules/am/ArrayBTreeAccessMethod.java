@@ -179,7 +179,6 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
 
     @Override
     protected IAType getIndexedKeyType(Index.IIndexDetails chosenIndexDetails, int keyPos) throws CompilationException {
-        // TODO (GLENN): This assumes a flattened key list. Refactor / clarify this when removing depth indicators.
         Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) chosenIndexDetails;
         int elementPos = 0;
         for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {

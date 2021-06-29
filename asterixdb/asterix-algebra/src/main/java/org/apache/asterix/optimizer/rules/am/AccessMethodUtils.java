@@ -3060,7 +3060,6 @@ public class AccessMethodUtils {
         MutableInt fieldSource = new MutableInt(0);
         ARecordType workingRecordType = subTree.getRecordType();
 
-        // TODO: (GLENN) Refactor this to use ArrayIndexUtil.
         // Iterate through our array index structure. We must match the depth and field names for the caller's variable
         // to qualify for an array-index optimization.
         LogicalVariable varFromParent = assignVar;

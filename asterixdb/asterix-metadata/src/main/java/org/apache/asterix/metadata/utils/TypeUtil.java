@@ -61,8 +61,8 @@ public class TypeUtil {
     }
 
     private static class EnforcedTypeBuilder {
-        private final Deque<Triple<IAType, String, Integer>> typeStack = new ArrayDeque<>();
-        private List<Integer> keyDepthIndicators;
+        private final Deque<Triple<IAType, String, Boolean>> typeStack = new ArrayDeque<>();
+        private List<Boolean> keyUnnestFlags;
         private List<String> keyFieldNames;
         private ARecordType baseRecordType;
         private IAType keyFieldType;
@@ -72,11 +72,11 @@ public class TypeUtil {
         private IAType endOfOpenTypeBuild;
         private int indexOfOpenPart;
 
-        public void reset(ARecordType baseRecordType, List<String> keyFieldNames, List<Integer> keyDepthIndicators,
+        public void reset(ARecordType baseRecordType, List<String> keyFieldNames, List<Boolean> keyUnnestFlags,
                 IAType keyFieldType) {
             this.baseRecordType = baseRecordType;
             this.keyFieldNames = keyFieldNames;
-            this.keyDepthIndicators = keyDepthIndicators;
+            this.keyUnnestFlags = keyUnnestFlags;
             this.keyFieldType = keyFieldType;
         }
 
@@ -90,21 +90,19 @@ public class TypeUtil {
             IAType typeIntermediate = baseRecordType;
             List<String> subFieldName = new ArrayList<>();
             for (int i = 0; i < keyFieldNames.size() - 1; i++) {
-                typeStack.push(new Triple<>(typeIntermediate, keyFieldNames.get(i),
-                        (i == 0) ? 0 : keyDepthIndicators.get(i - 1)));
+                typeStack.push(
+                        new Triple<>(typeIntermediate, keyFieldNames.get(i), i != 0 && keyUnnestFlags.get(i - 1)));
                 bridgeNameFoundFromOpenTypeBuild = typeIntermediate.getTypeName();
 
-                if (i == 0 || keyDepthIndicators.get(i - 1) == 0) {
+                if (i == 0 || !keyUnnestFlags.get(i - 1)) {
                     subFieldName.add(keyFieldNames.get(i));
                 } else {
-                    // We have a multi-valued intermediate. Traverse the array first, then add our field name.
-                    for (int j = 0; j < keyDepthIndicators.get(i - 1); j++) {
-                        typeIntermediate = TypeComputeUtils.extractListItemType(typeIntermediate);
-                        if (typeIntermediate == null) {
-                            String fName = String.join(".", subFieldName);
-                            throw new AsterixException(ErrorCode.COMPILATION_ERROR,
-                                    "Wrong level of array nesting for field: " + fName);
-                        }
+                    // We have a multi-valued intermediate. Perform our UNNEST then add our field name.
+                    typeIntermediate = TypeComputeUtils.extractListItemType(typeIntermediate);
+                    if (typeIntermediate == null) {
+                        String fName = String.join(".", subFieldName);
+                        throw new AsterixException(ErrorCode.COMPILATION_ERROR,
+                                "No list item type found. Wrong type given from field " + fName);
                     }
                     subFieldName.add(keyFieldNames.get(i));
                 }
@@ -133,27 +131,27 @@ public class TypeUtil {
         }
 
         private IAType buildNewForOpenType() {
-            int depthOfOpenType = keyDepthIndicators.subList(indexOfOpenPart + 1, keyDepthIndicators.size()).stream()
-                    .filter(i -> i != 0).findFirst().orElse(0);
-            IAType resultant = nestArrayType(keyFieldType, depthOfOpenType);
+            boolean isTypeWithUnnest = keyUnnestFlags.subList(indexOfOpenPart + 1, keyUnnestFlags.size()).stream()
+                    .filter(i -> i).findFirst().orElse(false);
+            IAType resultant = nestArrayType(keyFieldType, isTypeWithUnnest);
 
             // Build the type (list or record) that holds the type (list or record) above.
             resultant = nestArrayType(
                     new ARecordType(keyFieldNames.get(keyFieldNames.size() - 2),
                             new String[] { keyFieldNames.get(keyFieldNames.size() - 1) },
                             new IAType[] { AUnionType.createUnknownableType(resultant) }, true),
-                    keyDepthIndicators.get(indexOfOpenPart));
+                    keyUnnestFlags.get(indexOfOpenPart));
 
             // Create open part of the nested field.
             for (int i = keyFieldNames.size() - 3; i > (indexOfOpenPart - 1); i--) {
                 resultant = nestArrayType(
                         new ARecordType(keyFieldNames.get(i), new String[] { keyFieldNames.get(i + 1) },
                                 new IAType[] { AUnionType.createUnknownableType(resultant) }, true),
-                        keyDepthIndicators.get(i));
+                        keyUnnestFlags.get(i));
             }
 
             // Now update the parent to include this optional field, accounting for intermediate arrays.
-            Triple<IAType, String, Integer> gapTriple = this.typeStack.pop();
+            Triple<IAType, String, Boolean> gapTriple = this.typeStack.pop();
             ARecordType parentRecord =
                     (ARecordType) unnestArrayType(TypeComputeUtils.getActualType(gapTriple.first), gapTriple.third);
             IAType[] parentFieldTypes = ArrayUtils.addAll(parentRecord.getFieldTypes().clone(),
@@ -168,9 +166,9 @@ public class TypeUtil {
         private IAType buildNewForFullyClosedType() throws AsterixException {
             // The schema is closed all the way to the field itself.
             IAType typeIntermediate = TypeComputeUtils.getActualType(endOfOpenTypeBuild);
-            int depthOfOpenType = (indexOfOpenPart == 0) ? 0 : keyDepthIndicators.get(indexOfOpenPart - 1);
-            int depthOfKeyType = keyDepthIndicators.get(indexOfOpenPart);
-            ARecordType lastNestedRecord = (ARecordType) unnestArrayType(typeIntermediate, depthOfOpenType);
+            boolean isOpenTypeWithUnnest = indexOfOpenPart != 0 && keyUnnestFlags.get(indexOfOpenPart - 1);
+            boolean isKeyTypeWithUnnest = keyUnnestFlags.get(indexOfOpenPart);
+            ARecordType lastNestedRecord = (ARecordType) unnestArrayType(typeIntermediate, isOpenTypeWithUnnest);
             Map<String, IAType> recordNameTypesMap = createRecordNameTypeMap(lastNestedRecord);
 
             // If an enforced field already exists, verify that the type is correct.
@@ -186,21 +184,21 @@ public class TypeUtil {
             }
             if (enforcedFieldType == null) {
                 recordNameTypesMap.put(keyFieldNames.get(keyFieldNames.size() - 1),
-                        AUnionType.createUnknownableType(nestArrayType(keyFieldType, depthOfKeyType)));
+                        AUnionType.createUnknownableType(nestArrayType(keyFieldType, isKeyTypeWithUnnest)));
             }
 
             // Build the nested record, and account for the wrapping array.
             IAType resultant = nestArrayType(
                     new ARecordType(lastNestedRecord.getTypeName(), recordNameTypesMap.keySet().toArray(new String[0]),
                             recordNameTypesMap.values().toArray(new IAType[0]), lastNestedRecord.isOpen()),
-                    depthOfOpenType);
+                    isOpenTypeWithUnnest);
             return keepUnknown(endOfOpenTypeBuild, resultant);
         }
 
         private ARecordType buildRestOfRecord(IAType newTypeToAdd) {
             IAType resultant = TypeComputeUtils.getActualType(newTypeToAdd);
             while (!typeStack.isEmpty()) {
-                Triple<IAType, String, Integer> typeFromStack = typeStack.pop();
+                Triple<IAType, String, Boolean> typeFromStack = typeStack.pop();
                 IAType typeIntermediate = unnestArrayType(typeFromStack.first, typeFromStack.third);
                 ARecordType recordType = (ARecordType) typeIntermediate;
                 IAType[] fieldTypes = recordType.getFieldTypes().clone();
@@ -228,18 +226,13 @@ public class TypeUtil {
             return updatedRecordType;
         }
 
-        private static IAType nestArrayType(IAType originalType, int depthOfArrays) {
-            IAType resultant = originalType;
-            for (int i = 0; i < depthOfArrays; i++) {
-                resultant =
-                        new AOrderedListType(resultant, (i == depthOfArrays - 1) ? originalType.getTypeName() : null);
-            }
-            return resultant;
+        private static IAType nestArrayType(IAType originalType, boolean isWithinArray) {
+            return (isWithinArray) ? new AOrderedListType(originalType, originalType.getTypeName()) : originalType;
         }
 
-        private static IAType unnestArrayType(IAType originalType, int depthOfArrays) {
+        private static IAType unnestArrayType(IAType originalType, boolean isWithinArray) {
             IAType resultant = originalType;
-            for (int i = 0; i < depthOfArrays; i++) {
+            if (isWithinArray) {
                 resultant = TypeComputeUtils.extractListItemType(resultant);
                 if (resultant != null) {
                     resultant = TypeComputeUtils.getActualType(resultant);
@@ -299,7 +292,7 @@ public class TypeUtil {
                         "Indexing an open field is only supported on the record part");
             }
             enforcedTypeBuilder.reset(enforcedRecordType, keyFieldNames.get(i),
-                    Collections.nCopies(keyFieldNames.get(i).size(), 0), keyFieldTypes.get(i));
+                    Collections.nCopies(keyFieldNames.get(i).size(), false), keyFieldTypes.get(i));
             validateRecord(enforcedRecordType);
             enforcedRecordType = enforcedTypeBuilder.build();
         }
@@ -319,7 +312,7 @@ public class TypeUtil {
                         "Indexing an open field is only supported on the record part");
             }
             enforcedTypeBuilder.reset(enforcedRecordType, keyFieldNames.get(i),
-                    Collections.nCopies(keyFieldNames.get(i).size(), 0), keyFieldTypes.get(i));
+                    Collections.nCopies(keyFieldNames.get(i).size(), false), keyFieldTypes.get(i));
             validateRecord(enforcedRecordType);
             enforcedRecordType = enforcedTypeBuilder.build();
         }
@@ -342,7 +335,7 @@ public class TypeUtil {
                 List<String> project = projectList.get(i);
                 enforcedTypeBuilder.reset(enforcedRecordType,
                         ArrayIndexUtil.getFlattenedKeyFieldNames(unnestList, project),
-                        ArrayIndexUtil.getArrayDepthIndicator(unnestList, project), typeList.get(i));
+                        ArrayIndexUtil.getUnnestFlags(unnestList, project), typeList.get(i));
                 validateRecord(enforcedRecordType);
                 enforcedRecordType = enforcedTypeBuilder.build();
             }

@@ -39,14 +39,18 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class ArrayIndexUtil {
     /**
-     * @deprecated Use the project + unnest scheme instead of array indicators.
+     * Similar function to Index's "getSubFieldType", but accounts for array fields as well.
      */
-    public static IAType getSubFieldInArrayType(ARecordType recordType, List<String> subFieldName,
-            List<Integer> arrayDepthIndicators) throws AlgebricksException {
-        IAType subType = recordType.getFieldType(subFieldName.get(0));
-        for (int i = 1; i < subFieldName.size(); i++) {
+    public static IAType getSubFieldType(ARecordType recordType, List<List<String>> unnestList,
+            List<String> projectList) throws AlgebricksException {
+        List<String> flattenedFieldName = ArrayIndexUtil.getFlattenedKeyFieldNames(unnestList, projectList);
+        List<Boolean> unnestFlags = ArrayIndexUtil.getUnnestFlags(unnestList, projectList);
+        IAType subType = recordType.getFieldType(flattenedFieldName.get(0));
+
+        for (int i = 1; i < flattenedFieldName.size(); i++) {
             if (subType == null) {
                 return null;
+
             } else if (subType.getTypeTag().equals(ATypeTag.UNION)) {
                 // Support enforced types here.
                 subType = ((AUnionType) subType).getActualType();
@@ -56,31 +60,30 @@ public class ArrayIndexUtil {
                             "Field accessor is not defined for values of type " + subType.getTypeTag());
                 }
             }
-            if (subType.getTypeTag().equals(ATypeTag.OBJECT) && arrayDepthIndicators.get(i - 1) == 0) {
-                subType = ((ARecordType) subType).getFieldType(subFieldName.get(i));
+
+            if (subType.getTypeTag().equals(ATypeTag.OBJECT) && !unnestFlags.get(i - 1)) {
+                subType = ((ARecordType) subType).getFieldType(flattenedFieldName.get(i));
+
             } else if ((subType.getTypeTag().equals(ATypeTag.ARRAY) || subType.getTypeTag().equals(ATypeTag.MULTISET))
-                    && arrayDepthIndicators.get(i - 1) > 0) {
-                for (int j = 0; j < arrayDepthIndicators.get(i - 1); j++) {
-                    subType = TypeComputeUtils.extractListItemType(subType);
-                }
-                subType = (subType != null) ? ((ARecordType) subType).getFieldType(subFieldName.get(i)) : null;
+                    && unnestFlags.get(i - 1)) {
+                subType = TypeComputeUtils.extractListItemType(subType);
+                subType = (subType != null) ? ((ARecordType) subType).getFieldType(flattenedFieldName.get(i)) : null;
+
             } else {
                 throw new AsterixException(ErrorCode.COMPILATION_ERROR,
-                        (arrayDepthIndicators.get(i - 1) > 0)
-                                ? "Object type given, but array depth indicator is " + "non-zero."
-                                : "Array/multiset type given, but array depth indicator is zero.");
+                        unnestFlags.get(i - 1) ? "Object type given, but unnest flag is also raised."
+                                : "Array/multiset type given, but unnest flag is lowered.");
             }
         }
-        if (subType != null && arrayDepthIndicators.get(arrayDepthIndicators.size() - 1) > 0) {
+
+        if (subType != null && unnestFlags.get(unnestFlags.size() - 1)) {
             // If the end field is an array, we must extract the list item here as well.
-            for (int j = 0; j < arrayDepthIndicators.get(arrayDepthIndicators.size() - 1); j++) {
-                if (subType instanceof AbstractCollectionType) {
-                    subType = TypeComputeUtils.extractListItemType(subType);
-                } else {
-                    throw new AsterixException(ErrorCode.COMPILATION_ERROR,
-                            "Array type expected for last term, but given: "
-                                    + ((subType != null) ? subType.getTypeTag() : "null"));
-                }
+            if (subType instanceof AbstractCollectionType) {
+                subType = TypeComputeUtils.extractListItemType(subType);
+
+            } else {
+                throw new AsterixException(ErrorCode.COMPILATION_ERROR,
+                        "Array type expected for last term, but given: " + subType.getTypeTag());
             }
         }
         return subType;
@@ -88,15 +91,18 @@ public class ArrayIndexUtil {
 
     /**
      * Given a path of complex types (i.e. lists + records), determine the nullability of the field.
-     * @deprecated Use the project + unnest scheme instead of array indicators.
      */
-    public static boolean isSubFieldNullable(ARecordType recordType, List<String> subFieldName,
-            List<Integer> arrayIndicators) throws AlgebricksException {
-        IAType subType = recordType.getFieldType(subFieldName.get(0));
-        for (int i = 1; i < subFieldName.size(); i++) {
+    public static boolean isSubFieldNullable(ARecordType recordType, List<List<String>> unnestList,
+            List<String> projectList) throws AlgebricksException {
+        List<String> flattenedFieldName = ArrayIndexUtil.getFlattenedKeyFieldNames(unnestList, projectList);
+        List<Boolean> unnestFlags = ArrayIndexUtil.getUnnestFlags(unnestList, projectList);
+        IAType subType = recordType.getFieldType(flattenedFieldName.get(0));
+
+        for (int i = 1; i < flattenedFieldName.size(); i++) {
             if (subType == null) {
                 return true;
             }
+
             if (subType.getTypeTag().equals(ATypeTag.UNION)) {
                 if (NonTaggedFormatUtil.isOptional(subType)) {
                     return true;
@@ -109,12 +115,12 @@ public class ArrayIndexUtil {
             }
 
             if (subType instanceof ARecordType) {
-                subType = ((ARecordType) subType).getFieldType(subFieldName.get(i));
-            } else if (subType instanceof AbstractCollectionType && arrayIndicators.get(i - 1) > 0) {
-                for (int j = 0; j < arrayIndicators.get(i - 1); j++) {
-                    subType = TypeComputeUtils.extractListItemType(subType);
-                }
-                subType = (subType != null) ? ((ARecordType) subType).getFieldType(subFieldName.get(i)) : null;
+                subType = ((ARecordType) subType).getFieldType(flattenedFieldName.get(i));
+
+            } else if (subType instanceof AbstractCollectionType && unnestFlags.get(i - 1)) {
+                subType = TypeComputeUtils.extractListItemType(subType);
+                subType = (subType != null) ? ((ARecordType) subType).getFieldType(flattenedFieldName.get(i)) : null;
+
             } else {
                 throw CompilationException.create(ErrorCode.COMPILATION_ILLEGAL_STATE,
                         "Illegal field type " + subType.getTypeTag() + " when checking field nullability");
@@ -125,32 +131,37 @@ public class ArrayIndexUtil {
 
     /**
      * Similar function to Index's "getNonNullableOpenFieldType", but accounts for array fields as well.
-     * @deprecated Use the project + unnest scheme instead of array indicators.
      */
-    public static Pair<IAType, Boolean> getNonNullableOpenFieldType(IAType fieldType, List<String> fieldName,
-            ARecordType recType, List<Integer> arrayIndicators) throws AlgebricksException {
+    public static Pair<IAType, Boolean> getNonNullableOpenFieldType(IAType fieldType, List<List<String>> unnestList,
+            List<String> projectList, ARecordType recType) throws AlgebricksException {
         Pair<IAType, Boolean> keyPairType = null;
         IAType subType = recType;
         boolean nullable = false;
-        for (int i = 0; i < fieldName.size(); i++) {
+
+        List<String> flattenedFieldName = ArrayIndexUtil.getFlattenedKeyFieldNames(unnestList, projectList);
+        List<Boolean> unnestFlags = ArrayIndexUtil.getUnnestFlags(unnestList, projectList);
+        for (int i = 0; i < flattenedFieldName.size(); i++) {
             if (subType instanceof AUnionType) {
                 nullable = nullable || ((AUnionType) subType).isUnknownableType();
                 subType = ((AUnionType) subType).getActualType();
             }
             if (subType instanceof ARecordType) {
-                subType = ((ARecordType) subType).getFieldType(fieldName.get(i));
+                subType = ((ARecordType) subType).getFieldType(flattenedFieldName.get(i));
+
             } else if ((subType instanceof AOrderedListType || subType instanceof AUnorderedListType)
-                    && arrayIndicators.get(i - 1) > 0) {
-                for (int j = 0; j < arrayIndicators.get(i - 1); j++) {
-                    subType = TypeComputeUtils.extractListItemType(subType);
-                }
+                    && unnestFlags.get(i - 1)) {
+                subType = TypeComputeUtils.extractListItemType(subType);
                 if (subType instanceof ARecordType) {
-                    subType = ((ARecordType) subType).getFieldType(fieldName.get(i));
+                    subType = ((ARecordType) subType).getFieldType(flattenedFieldName.get(i));
+
                 } else {
-                    throw AsterixException.create(ErrorCode.COMPILATION_ILLEGAL_STATE, "Unexpected type " + fieldType);
+                    throw AsterixException.create(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                            "Unexpected type " + subType + ", expected record.");
                 }
+
             } else {
-                throw AsterixException.create(ErrorCode.COMPILATION_ILLEGAL_STATE, "Unexpected type " + fieldType);
+                throw AsterixException.create(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                        "Unexpected type " + subType + ", expected record, array, or multi-set.");
             }
 
             if (subType == null) {
@@ -158,18 +169,20 @@ public class ArrayIndexUtil {
                 break;
             }
         }
+
         if (subType != null) {
-            IAType keyType = ArrayIndexUtil.getSubFieldInArrayType(recType, fieldName, arrayIndicators);
+            IAType keyType = ArrayIndexUtil.getSubFieldType(recType, unnestList, projectList);
             Pair<IAType, Boolean> pair = Index.getNonNullableType(keyType);
-            pair.second = pair.second || ArrayIndexUtil.isSubFieldNullable(recType, fieldName, arrayIndicators);
+            pair.second = pair.second || ArrayIndexUtil.isSubFieldNullable(recType, unnestList, projectList);
             keyPairType = pair;
         }
+
         keyPairType.second = keyPairType.second || nullable;
         return keyPairType;
     }
 
     /**
-     * @deprecated Use new unnestList and projectList scheme.
+     * @return The concatenation of the unnest list fields and the project field (for use in creating a unique name).
      */
     public static List<String> getFlattenedKeyFieldNames(List<List<String>> unnestList, List<String> projectList) {
         if (unnestList == null) {
@@ -184,6 +197,41 @@ public class ArrayIndexUtil {
                 flattenedKeyNameList.addAll(projectList);
             }
             return flattenedKeyNameList;
+        }
+    }
+
+    /**
+     * @return Mapping to the flattened key field names, determine where the UNNESTs occur.
+     */
+    public static List<Boolean> getUnnestFlags(List<List<String>> unnestList, List<String> projectList) {
+        if (unnestList.isEmpty()) {
+            // A simple element has no UNNEST flags raised..
+            List<Boolean> unnestFlags = new ArrayList<>();
+            for (String ignored : projectList) {
+                unnestFlags.add(false);
+            }
+            return unnestFlags;
+
+        } else {
+            List<Boolean> unnestFlagsPrefix = new ArrayList<>();
+            for (List<String> unnestField : unnestList) {
+                for (int i = 0; i < unnestField.size() - 1; i++) {
+                    unnestFlagsPrefix.add(false);
+                }
+                unnestFlagsPrefix.add(true);
+            }
+
+            if (projectList == null) {
+                // Stop here. The prefix is the flag vector itself.
+                return unnestFlagsPrefix;
+
+            } else {
+                List<Boolean> unnestFlags = new ArrayList<>(unnestFlagsPrefix);
+                for (int i = 0; i < projectList.size(); i++) {
+                    unnestFlags.add(false);
+                }
+                return unnestFlags;
+            }
         }
     }
 
@@ -244,18 +292,14 @@ public class ArrayIndexUtil {
     }
 
     /**
-     * Given the {@code Index}'s representation of an array path (i.e. a concatenation of record paths, with array
-     * steps specified in depths corresponding to an index in the aforementioned record path array), traverse each
-     * distinct record path and invoke the appropriate commands for each scenario.
-     * <p>
-     * Here, we keep track of the record/list type at each step and give this to each command.
+     * Traverse each distinct record path and invoke the appropriate commands for each scenario. Here, we keep track
+     * of the record/list type at each step and give this to each command.
      */
     public static void walkArrayPath(ARecordType baseRecordType, List<String> flattenedFieldName,
-            List<Integer> flattenedDepthIndicators, TypeTrackerCommandExecutor commandExecutor)
-            throws AlgebricksException {
-        ArrayPath arrayPath = new ArrayPath(flattenedFieldName, flattenedDepthIndicators).invoke();
+            List<Boolean> unnestFlags, TypeTrackerCommandExecutor commandExecutor) throws AlgebricksException {
+        ArrayPath arrayPath = new ArrayPath(flattenedFieldName, unnestFlags).invoke();
         List<List<String>> fieldNamesPerArray = arrayPath.fieldNamesPerArray;
-        List<Integer> depthOfArraySteps = arrayPath.depthOfArraySteps;
+        List<Boolean> unnestFlagsPerArray = arrayPath.unnestFlagsPerArray;
 
         // If we are given no base record type, then we do not need to keep track of the record type. We are solely 
         // using this walk for its flags.
@@ -275,7 +319,7 @@ public class ArrayIndexUtil {
                         startingStepRecordType).first;
             }
 
-            for (int j = 0; j < depthOfArraySteps.get(i); j++) {
+            if (unnestFlagsPerArray.get(i)) {
                 if (isTrackingType) {
                     workingType = TypeComputeUtils.extractListItemType(workingType);
                     if (workingType == null) {
@@ -284,17 +328,14 @@ public class ArrayIndexUtil {
                     }
                 }
                 boolean isFirstArrayStep = i == 0;
-                boolean isFirstUnnestInStep = j == 0;
-                boolean isLastUnnestInIntermediateStep =
-                        j == depthOfArraySteps.get(i) - 1 && i < fieldNamesPerArray.size() - 1;
+                boolean isLastUnnestInIntermediateStep = i < fieldNamesPerArray.size() - 1;
                 commandExecutor.executeActionOnEachArrayStep(startingStepRecordType, workingType,
-                        fieldNamesPerArray.get(i), isFirstArrayStep, isFirstUnnestInStep,
-                        isLastUnnestInIntermediateStep);
+                        fieldNamesPerArray.get(i), isFirstArrayStep, isLastUnnestInIntermediateStep);
             }
 
             if (i == fieldNamesPerArray.size() - 1) {
-                boolean requiresOnlyOneUnnest = depthOfArraySteps.stream().reduce(0, Integer::sum).equals(1);
-                boolean isNonArrayStep = depthOfArraySteps.get(i) == 0;
+                boolean requiresOnlyOneUnnest = fieldNamesPerArray.size() == 1;
+                boolean isNonArrayStep = !unnestFlagsPerArray.get(i);
                 commandExecutor.executeActionOnFinalArrayStep(startingStepRecordType, fieldNamesPerArray.get(i),
                         isNonArrayStep, requiresOnlyOneUnnest);
             }
@@ -302,28 +343,25 @@ public class ArrayIndexUtil {
     }
 
     /**
-     * Given the {@code Index}'s representation of an array path (i.e. a concatenation of record paths, with array
-     * steps specified in depths corresponding to an index in the aforementioned record path array), traverse each
-     * distinct record path and invoke the appropriate commands for each scenario.
-     * <p>
-     * Here, we keep track of the total number of actions performed and give this to each command.
+     * Traverse each distinct record path and invoke the appropriate commands for each scenario. Here, we keep track
+     * of the total number of actions performed and give this to each command.
      */
-    public static void walkArrayPath(List<String> flattenedFieldName, List<Integer> flattenedDepthIndicators,
+    public static void walkArrayPath(List<String> flattenedFieldName, List<Boolean> unnestFlags,
             ActionCounterCommandExecutor commandExecutor) throws AlgebricksException {
-        ArrayPath arrayPath = new ArrayPath(flattenedFieldName, flattenedDepthIndicators).invoke();
+        ArrayPath arrayPath = new ArrayPath(flattenedFieldName, unnestFlags).invoke();
         List<List<String>> fieldNamesPerArray = arrayPath.fieldNamesPerArray;
-        List<Integer> depthOfArraySteps = arrayPath.depthOfArraySteps;
+        List<Boolean> unnestFlagsPerArray = arrayPath.unnestFlagsPerArray;
 
         int numberOfActionsPerformed = 0;
         for (int i = 0; i < fieldNamesPerArray.size(); i++) {
-            int unnestLevel = depthOfArraySteps.get(i);
+            boolean isUnnestFlagRaised = unnestFlagsPerArray.get(i);
             if (i == 0) {
                 commandExecutor.executeActionOnFirstArrayStep();
                 numberOfActionsPerformed++;
-                unnestLevel--;
+                isUnnestFlagRaised = false;
             }
 
-            for (int j = 0; j < unnestLevel; j++) {
+            if (isUnnestFlagRaised) {
                 commandExecutor.executeActionOnIntermediateArrayStep(numberOfActionsPerformed++);
             }
 
@@ -343,8 +381,8 @@ public class ArrayIndexUtil {
 
     public interface TypeTrackerCommandExecutor {
         void executeActionOnEachArrayStep(ARecordType startingStepRecordType, IAType workingType,
-                List<String> fieldName, boolean isFirstArrayStep, boolean isFirstUnnestInStep,
-                boolean isLastUnnestInIntermediateStep) throws AlgebricksException;
+                List<String> fieldName, boolean isFirstArrayStep, boolean isLastUnnestInIntermediateStep)
+                throws AlgebricksException;
 
         void executeActionOnFinalArrayStep(ARecordType startingStepRecordType, List<String> fieldName,
                 boolean isNonArrayStep, boolean requiresOnlyOneUnnest) throws AlgebricksException;
@@ -352,24 +390,24 @@ public class ArrayIndexUtil {
 
     private static class ArrayPath {
         private final List<String> flattenedFieldName;
-        private final List<Integer> flattenedDepthIndicators;
+        private final List<Boolean> unnestFlags;
         private List<List<String>> fieldNamesPerArray;
-        private List<Integer> depthOfArraySteps;
+        private List<Boolean> unnestFlagsPerArray;
 
-        public ArrayPath(List<String> flattenedFieldName, List<Integer> flattenedDepthIndicators) {
+        public ArrayPath(List<String> flattenedFieldName, List<Boolean> unnestFlags) {
             this.flattenedFieldName = flattenedFieldName;
-            this.flattenedDepthIndicators = flattenedDepthIndicators;
+            this.unnestFlags = unnestFlags;
         }
 
         public ArrayPath invoke() {
             fieldNamesPerArray = new ArrayList<>();
-            depthOfArraySteps = new ArrayList<>();
+            unnestFlagsPerArray = new ArrayList<>();
             List<String> workingRecordPath = new ArrayList<>();
-            for (int i = 0; i < flattenedDepthIndicators.size(); i++) {
+            for (int i = 0; i < unnestFlags.size(); i++) {
                 workingRecordPath.add(flattenedFieldName.get(i));
 
-                if (i == flattenedDepthIndicators.size() - 1 || flattenedDepthIndicators.get(i) > 0) {
-                    depthOfArraySteps.add(flattenedDepthIndicators.get(i));
+                if (i == unnestFlags.size() - 1 || unnestFlags.get(i)) {
+                    unnestFlagsPerArray.add(unnestFlags.get(i));
                     fieldNamesPerArray.add(workingRecordPath);
                     workingRecordPath = new ArrayList<>();
                 }

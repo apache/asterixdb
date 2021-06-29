@@ -57,7 +57,6 @@ import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IUnnestingEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.evaluators.ColumnAccessEvalFactory;
 import org.apache.hyracks.algebricks.runtime.operators.aggreg.SimpleAlgebricksAccumulatingAggregatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.SinkRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
@@ -78,14 +77,13 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 
 public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndexOperationsHelper {
     private final int numAtomicSecondaryKeys, numArraySecondaryKeys, numTotalSecondaryKeys;
-    private final Index.ArrayIndexDetails arrayIndexDetails;
     private final EvalFactoryAndRecDescStackBuilder evalFactoryAndRecDescStackBuilder =
             new EvalFactoryAndRecDescStackBuilder();
 
-    // TODO (GLENN): Phase these out and use the UNNEST / PROJECT scheme instead.
+    private final Index.ArrayIndexDetails arrayIndexDetails;
     private final List<List<String>> flattenedFieldNames;
     private final List<IAType> flattenedKeyTypes;
-    private final List<List<Integer>> depthIndicators;
+    private final List<List<Boolean>> unnestFlags;
 
     protected SecondaryArrayIndexBTreeOperationsHelper(Dataset dataset, Index index, MetadataProvider metadataProvider,
             SourceLocation sourceLoc) throws AlgebricksException {
@@ -94,19 +92,19 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
 
         flattenedFieldNames = new ArrayList<>();
         flattenedKeyTypes = new ArrayList<>();
-        depthIndicators = new ArrayList<>();
+        unnestFlags = new ArrayList<>();
         for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
             if (e.getUnnestList().isEmpty()) {
                 flattenedFieldNames.add(e.getProjectList().get(0));
                 flattenedKeyTypes.add(e.getTypeList().get(0));
-                depthIndicators
-                        .add(ArrayIndexUtil.getArrayDepthIndicator(e.getUnnestList(), e.getProjectList().get(0)));
+                unnestFlags.add(ArrayIndexUtil.getUnnestFlags(e.getUnnestList(), e.getProjectList().get(0)));
+
             } else {
                 for (int i = 0; i < e.getProjectList().size(); i++) {
                     List<String> project = e.getProjectList().get(i);
                     flattenedFieldNames.add(ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project));
-                    depthIndicators.add(ArrayIndexUtil.getArrayDepthIndicator(e.getUnnestList(), project));
                     flattenedKeyTypes.add(e.getTypeList().get(i));
+                    unnestFlags.add(ArrayIndexUtil.getUnnestFlags(e.getUnnestList(), project));
                 }
             }
         }
@@ -127,7 +125,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
         numArraySecondaryKeys = numTotalSecondaryKeys - numAtomicSecondaryKeys;
     }
 
-    private int findPosOfArrayIndex() throws AsterixException {
+    private int findPosOfArrayIndexElement() throws AsterixException {
         for (int i = 0; i < arrayIndexDetails.getElementList().size(); i++) {
             if (!arrayIndexDetails.getElementList().get(i).getUnnestList().isEmpty()) {
                 return i;
@@ -163,9 +161,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
                 ARecordType sourceType = (e.getSourceIndicator() == 0) ? itemType : metaType;
                 addSKEvalFactories(isOverridingKeyFieldTypes ? enforcedItemType : sourceType, flattenedListPos, false);
                 Pair<IAType, Boolean> keyTypePair = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
-                        ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), e.getProjectList().get(i)),
-                        sourceType,
-                        ArrayIndexUtil.getArrayDepthIndicator(e.getUnnestList(), e.getProjectList().get(i)));
+                        e.getUnnestList(), e.getProjectList().get(i), sourceType);
                 IAType keyType = keyTypePair.first;
                 anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
                 ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(keyType);
@@ -242,14 +238,15 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
             return;
         }
 
-        List<Integer> arrayDepthIndicators = depthIndicators.get(fieldPos);
-        List<String> fieldNames = flattenedFieldNames.get(fieldPos);
-        if (arrayDepthIndicators.stream().noneMatch(b -> b > 0)) {
+        List<String> flattenedFieldName = flattenedFieldNames.get(fieldPos);
+        List<Boolean> workingUnnestFlags = unnestFlags.get(fieldPos);
+        if (workingUnnestFlags.stream().noneMatch(b -> b)) {
             addAtomicFieldToBuilder(recordType, fieldPos);
+
         } else {
             EvalFactoryAndRecDescInvoker commandExecutor =
                     new EvalFactoryAndRecDescInvoker(!evalFactoryAndRecDescStackBuilder.isUnnestEvalPopulated());
-            ArrayIndexUtil.walkArrayPath(recordType, fieldNames, arrayDepthIndicators, commandExecutor);
+            ArrayIndexUtil.walkArrayPath(recordType, flattenedFieldName, workingUnnestFlags, commandExecutor);
         }
     }
 
@@ -278,13 +275,12 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
                 sourceOp = targetOp;
             }
 
-            // TODO (GLENN): Refactor to use UNNEST + PROJECT scheme.
             // Perform the unnest work.
             final Mutable<IOperatorDescriptor> sourceOpRef = new MutableObject<>(sourceOp);
             final Mutable<IOperatorDescriptor> targetOpRef = new MutableObject<>(targetOp);
             LoadingJobBuilder jobBuilder = new LoadingJobBuilder(spec, sourceOpRef, targetOpRef);
-            int posOfArrayIndex = findPosOfArrayIndex();
-            ArrayIndexUtil.walkArrayPath(flattenedFieldNames.get(posOfArrayIndex), depthIndicators.get(posOfArrayIndex),
+            int posOfArrayElement = findPosOfArrayIndexElement();
+            ArrayIndexUtil.walkArrayPath(flattenedFieldNames.get(posOfArrayElement), unnestFlags.get(posOfArrayElement),
                     jobBuilder);
             sourceOp = sourceOpRef.getValue();
 
@@ -450,8 +446,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
                     : inputWidth + numTotalSecondaryKeys + numFilterFields).toArray();
             for (int i = 0; i < numTotalSecondaryKeys; i++) {
                 int sizeOfFieldNamesForI = flattenedFieldNames.get(i).size();
-                if (depthIndicators.get(i).get(sizeOfFieldNamesForI - 1) != 0
-                        && (depthIndicators.get(i).stream().anyMatch(b -> b > 0))) {
+                if (unnestFlags.get(i).get(sizeOfFieldNamesForI - 1)) {
                     projectionList[i] = numPrimaryKeys + 1;
                 } else {
                     projectionList[i] = outColumns[outColumnsCursor++];
@@ -469,9 +464,9 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
             outColumns = IntStream.range(inputWidth, inputWidth + numArraySecondaryKeys).toArray();
             for (int i = 0; i < numTotalSecondaryKeys; i++) {
                 int sizeOfFieldNamesForI = flattenedFieldNames.get(i).size();
-                if (depthIndicators.get(i).stream().noneMatch(b -> b > 0)) {
+                if (unnestFlags.get(i).stream().noneMatch(b -> b)) {
                     projectionList[i] = numPrimaryKeys + atomicSKCursor++;
-                } else if (depthIndicators.get(i).get(sizeOfFieldNamesForI - 1) == 0) {
+                } else if (!unnestFlags.get(i).get(sizeOfFieldNamesForI - 1)) {
                     projectionList[i] = outColumns[arraySKCursor++];
                 } else {
                     projectionList[i] = numPrimaryKeys + numAtomicSecondaryKeys + numFilterFields + 1;
@@ -525,25 +520,20 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
 
         @Override
         public void executeActionOnEachArrayStep(ARecordType startingStepRecordType, IAType workingType,
-                List<String> fieldName, boolean isFirstArrayStep, boolean isFirstUnnestInStep,
-                boolean isLastUnnestInIntermediateStep) throws AlgebricksException {
+                List<String> fieldName, boolean isFirstArrayStep, boolean isLastUnnestInIntermediateStep)
+                throws AlgebricksException {
             if (!this.isFirstWalk) {
                 // We have already added the appropriate UNNESTs.
                 return;
             }
 
             int sourceColumnForNestedArrays = numPrimaryKeys + numAtomicSecondaryKeys + numFilterFields;
-            if (isFirstUnnestInStep) {
-                int sourceColumnForFirstUnnestInAtomicPath =
-                        isFirstArrayStep ? numPrimaryKeys : sourceColumnForNestedArrays;
-                IScalarEvaluatorFactory sef = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
-                        metadataProvider.getFunctionManager(), startingStepRecordType, fieldName,
-                        sourceColumnForFirstUnnestInAtomicPath, sourceLoc);
-                evalFactoryAndRecDescStackBuilder.addUnnest(sef, workingType);
-            } else {
-                IScalarEvaluatorFactory sef = new ColumnAccessEvalFactory(sourceColumnForNestedArrays);
-                evalFactoryAndRecDescStackBuilder.addUnnest(sef, workingType);
-            }
+            int sourceColumnForFirstUnnestInAtomicPath =
+                    isFirstArrayStep ? numPrimaryKeys : sourceColumnForNestedArrays;
+            IScalarEvaluatorFactory sef = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
+                    metadataProvider.getFunctionManager(), startingStepRecordType, fieldName,
+                    sourceColumnForFirstUnnestInAtomicPath, sourceLoc);
+            evalFactoryAndRecDescStackBuilder.addUnnest(sef, workingType);
         }
 
         @Override
