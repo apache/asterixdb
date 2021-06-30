@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.test.external_dataset;
 
-import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.*;
+import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.FIXED_DATA_CONTAINER;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
