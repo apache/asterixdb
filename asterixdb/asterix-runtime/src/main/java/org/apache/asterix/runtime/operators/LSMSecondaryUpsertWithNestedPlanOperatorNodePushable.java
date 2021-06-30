@@ -33,13 +33,12 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.tuples.ConcatenatingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 public class LSMSecondaryUpsertWithNestedPlanOperatorNodePushable extends LSMSecondaryUpsertOperatorNodePushable {
@@ -154,10 +153,7 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorNodePushable extends LSMSec
 
         private FrameTupleAccessor endOfPipelineTupleAccessor;
         private FrameTupleReference endOfPipelineTupleReference;
-
-        // We are not writing the resulting tuple to a frame, we must store the result in an intermediate.
-        private ArrayTupleBuilder arrayTupleBuilder;
-        private ArrayTupleReference arrayTupleReference;
+        private ConcatenatingTupleReference endTupleReference;
 
         private IndexTupleUnconditionalOperation(RecordDescriptor recordDescriptor, boolean isInsert) {
             this.inputRecordDescriptor = recordDescriptor;
@@ -166,11 +162,9 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorNodePushable extends LSMSec
 
         @Override
         public void open() throws HyracksDataException {
-            int numSecondaryKeys = inputRecordDescriptor.getFieldCount();
+            endTupleReference = new ConcatenatingTupleReference(2);
             endOfPipelineTupleAccessor = new FrameTupleAccessor(inputRecordDescriptor);
             endOfPipelineTupleReference = new FrameTupleReference();
-            arrayTupleBuilder = new ArrayTupleBuilder(numberOfPrimaryKeyAndFilterFields + numSecondaryKeys);
-            arrayTupleReference = new ArrayTupleReference();
         }
 
         @Override
@@ -180,33 +174,33 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorNodePushable extends LSMSec
             endOfPipelineTupleAccessor.reset(buffer);
             int nTuple = endOfPipelineTupleAccessor.getTupleCount();
             for (int t = 0; t < nTuple; t++) {
-
                 endOfPipelineTupleReference.reset(endOfPipelineTupleAccessor, t);
+
+                // Do not perform operations w/ null or missing values (same behavior as atomic upserts).
                 if (hasNullOrMissing(endOfPipelineTupleReference)) {
-                    // Do not perform operations w/ null or missing values (same behavior as atomic upserts).
                     continue;
                 }
 
-                // First, add the secondary keys.
-                arrayTupleBuilder.reset();
-                int nFields = endOfPipelineTupleAccessor.getFieldCount();
-                for (int f = 0; f < nFields; f++) {
-                    arrayTupleBuilder.addField(endOfPipelineTupleAccessor, t, f);
-                }
+                // Add the secondary keys.
+                endTupleReference.reset();
+                endTupleReference.addTuple(endOfPipelineTupleReference);
 
-                // Next, add the primary keys and filter fields.
-                for (int f = 0; f < numberOfPrimaryKeyAndFilterFields; f++) {
-                    arrayTupleBuilder.addField(tuple.getFieldData(f), tuple.getFieldStart(f), tuple.getFieldLength(f));
-                }
+                // Add the primary keys and filter fields.
+                endTupleReference.addTuple(tuple);
 
                 // Finally, pass the tuple to our accessor. There are only two operations: insert or delete.
-                arrayTupleReference.reset(arrayTupleBuilder.getFieldEndOffsets(), arrayTupleBuilder.getByteArray());
                 if (this.isInsert) {
                     abstractModCallback.setOp(AbstractIndexModificationOperationCallback.Operation.INSERT);
-                    workingLSMAccessor.forceInsert(arrayTupleReference);
+                    try {
+                        workingLSMAccessor.forceInsert(endTupleReference);
+                    } catch (HyracksDataException e) {
+                        if (!e.matches(org.apache.hyracks.api.exceptions.ErrorCode.DUPLICATE_KEY)) {
+                            throw e;
+                        }
+                    }
                 } else {
                     abstractModCallback.setOp(AbstractIndexModificationOperationCallback.Operation.DELETE);
-                    workingLSMAccessor.forceDelete(arrayTupleReference);
+                    workingLSMAccessor.forceDelete(endTupleReference);
                 }
             }
         }

@@ -449,7 +449,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                         context.computeAndSetTypeEnvironmentForOperator(unnestSourceOp);
                         UnnestBranchCreator unnestSIDXBranch = buildUnnestBranch(unnestSourceOp, index, newRecordVar,
                                 newMetaVar, recType, metaType, dataset.hasMetaPart());
-                        unnestSIDXBranch.applyProjectDistinct();
+                        unnestSIDXBranch.applyProjectOnly();
 
                         // If there exists a filter expression, add it to the top of our nested plan.
                         filterExpression = (primaryIndexModificationOp.getOperation() == Kind.UPSERT) ? null
@@ -477,7 +477,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                             UnnestBranchCreator unnestBeforeSIDXBranch = buildUnnestBranch(unnestBeforeSourceOp, index,
                                     primaryIndexModificationOp.getBeforeOpRecordVar(), beforeOpMetaVar, recType,
                                     metaType, dataset.hasMetaPart());
-                            unnestBeforeSIDXBranch.applyProjectDistinct();
+                            unnestBeforeSIDXBranch.applyProjectOnly();
                             indexUpdate.getNestedPlans().add(unnestBeforeSIDXBranch.buildBranch());
                         }
                     } else if (index.getIndexType() == IndexType.ARRAY && isBulkload) {
@@ -1008,6 +1008,13 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             VariableReferenceExpression varRef = new VariableReferenceExpression(lastRecordVar);
             varRef.setSourceLocation(sourceLoc);
             return varRef;
+        }
+
+        public final void applyProjectOnly() throws AlgebricksException {
+            List<LogicalVariable> projectVars = new ArrayList<>(this.lastFieldVars);
+            ProjectOperator projectOperator = new ProjectOperator(projectVars);
+            projectOperator.setSourceLocation(sourceLoc);
+            this.currentTop = introduceNewOp(currentTop, projectOperator, true);
         }
 
         @SafeVarargs
