@@ -305,9 +305,9 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             }
             errorCount = 0;
         } catch (Exception | org.apache.asterix.lang.sqlpp.parser.TokenMgrError e) {
-            handleExecuteStatementException(e, executionState, param);
+            handleExecuteStatementException(e, executionState, param, response);
             response.setStatus(executionState.getHttpStatus());
-            requestFailed(e, responsePrinter);
+            requestFailed(e, responsePrinter, executionState);
         } finally {
             executionState.finish();
         }
@@ -419,7 +419,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     protected boolean handleIFormattedException(IError error, IFormattedException ex,
-            RequestExecutionState executionState, QueryServiceRequestParameters param) {
+            RequestExecutionState executionState, QueryServiceRequestParameters param, IServletResponse response) {
         if (error instanceof ErrorCode) {
             switch ((ErrorCode) error) {
                 case INVALID_REQ_PARAM_VAL:
@@ -451,7 +451,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     protected void handleExecuteStatementException(Throwable t, RequestExecutionState executionState,
-            QueryServiceRequestParameters param) {
+            QueryServiceRequestParameters param, IServletResponse response) {
         if (t instanceof org.apache.asterix.lang.sqlpp.parser.TokenMgrError || t instanceof AlgebricksException) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("handleException: {}: {}", t.getMessage(), LogRedactionUtil.statement(param.toString()),
@@ -465,8 +465,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         } else if (t instanceof IFormattedException) {
             IFormattedException formattedEx = (IFormattedException) t;
             Optional<IError> maybeError = formattedEx.getError();
-            if (maybeError.isPresent()
-                    && handleIFormattedException(maybeError.get(), (IFormattedException) t, executionState, param)) {
+            if (maybeError.isPresent() && handleIFormattedException(maybeError.get(), (IFormattedException) t,
+                    executionState, param, response)) {
                 return;
             }
         }
@@ -496,7 +496,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, param.isCSVWithHeader());
     }
 
-    protected void requestFailed(Throwable throwable, ResponsePrinter responsePrinter) {
+    protected void requestFailed(Throwable throwable, ResponsePrinter responsePrinter,
+            RequestExecutionState executionState) {
         final ExecutionError executionError = ExecutionError.of(throwable);
         responsePrinter.addResultPrinter(new ErrorsPrinter(Collections.singletonList(executionError)));
     }

@@ -48,6 +48,7 @@ import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.http.api.IChannelClosedHandler;
 import org.apache.hyracks.http.api.IServletRequest;
+import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.HttpServer;
 import org.apache.hyracks.http.server.InterruptOnCloseHandler;
 import org.apache.hyracks.ipc.exceptions.IPCException;
@@ -167,13 +168,13 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
 
     @Override
     protected void handleExecuteStatementException(Throwable t, RequestExecutionState executionState,
-            QueryServiceRequestParameters param) {
+            QueryServiceRequestParameters param, IServletResponse response) {
         if (t instanceof TimeoutException // TODO(mblow): I don't think t can ever been an instance of TimeoutException
                 || ExceptionUtils.matchingCause(t, candidate -> candidate instanceof IPCException)) {
             GlobalConfig.ASTERIX_LOGGER.log(Level.WARN, t.toString(), t);
             executionState.setStatus(ResultStatus.FAILED, HttpResponseStatus.SERVICE_UNAVAILABLE);
         } else {
-            super.handleExecuteStatementException(t, executionState, param);
+            super.handleExecuteStatementException(t, executionState, param, response);
         }
     }
 
