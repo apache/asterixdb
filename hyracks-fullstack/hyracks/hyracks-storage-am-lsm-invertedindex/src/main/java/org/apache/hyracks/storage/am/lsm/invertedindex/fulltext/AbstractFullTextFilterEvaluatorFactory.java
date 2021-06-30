@@ -22,6 +22,8 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.fulltext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class AbstractFullTextFilterEvaluatorFactory implements IFullTextFilterEvaluatorFactory {
+    private static final long serialVersionUID = 3535472161323149351L;
+
     protected final String name;
     protected final FullTextFilterType type;
     protected static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();

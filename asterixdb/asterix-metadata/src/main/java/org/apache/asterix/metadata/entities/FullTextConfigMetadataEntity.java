@@ -24,6 +24,8 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.runtime.fulltext.FullTextConfigDescriptor;
 
 public class FullTextConfigMetadataEntity implements IMetadataEntity<FullTextConfigMetadataEntity> {
+    private static final long serialVersionUID = -8257829613982301855L;
+
     private final FullTextConfigDescriptor fullTextConfig;
 
     public FullTextConfigMetadataEntity(FullTextConfigDescriptor config) {

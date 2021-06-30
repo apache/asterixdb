@@ -190,6 +190,8 @@ public class MetadataTransactionContext extends MetadataCache {
 
     public void dropFullTextFilter(DataverseName dataverseName, String filterName) {
         AbstractFullTextFilterDescriptor filter = new AbstractFullTextFilterDescriptor(dataverseName, filterName) {
+            private static final long serialVersionUID = -8222222581298765902L;
+
             @Override
             public FullTextFilterType getFilterType() {
                 return null;

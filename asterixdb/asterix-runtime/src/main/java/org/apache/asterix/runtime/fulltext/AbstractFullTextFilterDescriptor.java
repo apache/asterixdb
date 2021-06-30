@@ -22,6 +22,8 @@ package org.apache.asterix.runtime.fulltext;
 import org.apache.asterix.common.metadata.DataverseName;
 
 public abstract class AbstractFullTextFilterDescriptor implements IFullTextFilterDescriptor {
+    private static final long serialVersionUID = 6884215200256734408L;
+
     protected final DataverseName dataverseName;
     protected final String name;
 

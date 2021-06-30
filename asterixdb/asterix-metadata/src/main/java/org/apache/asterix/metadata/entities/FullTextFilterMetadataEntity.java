@@ -24,6 +24,8 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.runtime.fulltext.AbstractFullTextFilterDescriptor;
 
 public class FullTextFilterMetadataEntity implements IMetadataEntity<FullTextFilterMetadataEntity> {
+    private static final long serialVersionUID = 1442247723350731174L;
+
     private final AbstractFullTextFilterDescriptor filterDescriptor;
 
     public FullTextFilterMetadataEntity(AbstractFullTextFilterDescriptor filterDescriptor) {
