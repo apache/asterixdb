@@ -31,7 +31,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -510,8 +509,8 @@ public class AzureBlobStorageExternalDatasetTest {
 
         public void executeTestFile(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
                 String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, TestCase.CompilationUnit cUnit,
-                MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath,
-                BitSet expectedWarnings) throws Exception {
+                MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath)
+                throws Exception {
             String[] lines;
             switch (ctx.getType()) {
                 case "container":
@@ -527,7 +526,7 @@ public class AzureBlobStorageExternalDatasetTest {
                     break;
                 default:
                     super.executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
-                            queryCount, expectedResultFileCtxs, testFile, actualPath, expectedWarnings);
+                            queryCount, expectedResultFileCtxs, testFile, actualPath);
             }
         }
     }
