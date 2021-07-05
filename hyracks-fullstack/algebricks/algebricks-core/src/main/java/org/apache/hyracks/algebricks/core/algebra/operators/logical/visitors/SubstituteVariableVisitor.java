@@ -421,8 +421,8 @@ public class SubstituteVariableVisitor
             Pair<LogicalVariable, LogicalVariable> pair) throws AlgebricksException {
         boolean producedVarFound = false;
         if (op.getOperation() == InsertDeleteUpsertOperator.Kind.UPSERT) {
-            if (op.getUpsertIndicatorVar() != null && op.getUpsertIndicatorVar().equals(pair.first)) {
-                op.setUpsertIndicatorVar(pair.second);
+            if (op.getOperationVar() != null && op.getOperationVar().equals(pair.first)) {
+                op.setOperationVar(pair.second);
                 producedVarFound = true;
             } else if (op.getBeforeOpRecordVar() != null && op.getBeforeOpRecordVar().equals(pair.first)) {
                 op.setPrevRecordVar(pair.second);
@@ -453,7 +453,7 @@ public class SubstituteVariableVisitor
         substUsedVariablesInExpr(op.getSecondaryKeyExpressions(), pair.first, pair.second);
         substUsedVariablesInExpr(op.getFilterExpression(), pair.first, pair.second);
         substUsedVariablesInExpr(op.getAdditionalFilteringExpressions(), pair.first, pair.second);
-        substUsedVariablesInExpr(op.getUpsertIndicatorExpr(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getOperationExpr(), pair.first, pair.second);
         substUsedVariablesInExpr(op.getPrevSecondaryKeyExprs(), pair.first, pair.second);
         substUsedVariablesInExpr(op.getPrevAdditionalFilteringExpression(), pair.first, pair.second);
         if (!op.getNestedPlans().isEmpty()) {

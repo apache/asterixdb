@@ -19,7 +19,7 @@
 package org.apache.asterix.runtime.operators;
 
 import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
-import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
+import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -33,21 +33,21 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 
 public class LSMSecondaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final int[] prevValuePermutation;
-    protected final int upsertIndicatorFieldIndex;
-    protected final IBinaryBooleanInspectorFactory upsertIndicatorInspectorFactory;
+    protected final int operationFieldIndex;
+    protected final IBinaryIntegerInspectorFactory operationInspectorFactory;
 
     public LSMSecondaryUpsertOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, IIndexDataflowHelperFactory indexHelperFactory,
             ITupleFilterFactory tupleFilterFactory, IModificationOperationCallbackFactory modificationOpCallbackFactory,
-            int upsertIndicatorFieldIndex, IBinaryBooleanInspectorFactory upsertIndicatorInspectorFactory,
+            int operationFieldIndex, IBinaryIntegerInspectorFactory operationInspectorFactory,
             int[] prevValuePermutation) {
         super(spec, outRecDesc, fieldPermutation, IndexOperation.UPSERT, indexHelperFactory, tupleFilterFactory, false,
                 modificationOpCallbackFactory);
         this.prevValuePermutation = prevValuePermutation;
-        this.upsertIndicatorFieldIndex = upsertIndicatorFieldIndex;
-        this.upsertIndicatorInspectorFactory = upsertIndicatorInspectorFactory;
+        this.operationFieldIndex = operationFieldIndex;
+        this.operationInspectorFactory = operationInspectorFactory;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class LSMSecondaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpe
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         RecordDescriptor intputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new LSMSecondaryUpsertOperatorNodePushable(ctx, partition, indexHelperFactory, modCallbackFactory,
-                tupleFilterFactory, fieldPermutation, intputRecDesc, upsertIndicatorFieldIndex,
-                upsertIndicatorInspectorFactory, prevValuePermutation);
+                tupleFilterFactory, fieldPermutation, intputRecDesc, operationFieldIndex, operationInspectorFactory,
+                prevValuePermutation);
     }
 }

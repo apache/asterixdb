@@ -20,7 +20,7 @@ package org.apache.asterix.runtime.operators;
 
 import java.util.List;
 
-import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
+import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
@@ -39,11 +39,11 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorDescriptor extends LSMSecon
 
     public LSMSecondaryUpsertWithNestedPlanOperatorDescriptor(JobSpecification spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, IIndexDataflowHelperFactory indexHelperFactory,
-            IModificationOperationCallbackFactory modCallbackFactory, int upsertIndicatorFieldIndex,
-            IBinaryBooleanInspectorFactory upsertIndicatorInspectorFactory,
-            List<AlgebricksPipeline> secondaryKeysPipeline, List<AlgebricksPipeline> prevSecondaryKeysPipeline) {
-        super(spec, outRecDesc, fieldPermutation, indexHelperFactory, null, modCallbackFactory,
-                upsertIndicatorFieldIndex, upsertIndicatorInspectorFactory, null);
+            IModificationOperationCallbackFactory modCallbackFactory, int operationFieldIndex,
+            IBinaryIntegerInspectorFactory operationInspectorFactory, List<AlgebricksPipeline> secondaryKeysPipeline,
+            List<AlgebricksPipeline> prevSecondaryKeysPipeline) {
+        super(spec, outRecDesc, fieldPermutation, indexHelperFactory, null, modCallbackFactory, operationFieldIndex,
+                operationInspectorFactory, null);
         this.secondaryKeysPipeline = secondaryKeysPipeline;
         this.prevSecondaryKeysPipeline = prevSecondaryKeysPipeline;
     }
@@ -53,7 +53,7 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorDescriptor extends LSMSecon
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new LSMSecondaryUpsertWithNestedPlanOperatorNodePushable(ctx, partition, indexHelperFactory,
-                modCallbackFactory, fieldPermutation, inputRecDesc, upsertIndicatorFieldIndex,
-                upsertIndicatorInspectorFactory, secondaryKeysPipeline, prevSecondaryKeysPipeline);
+                modCallbackFactory, fieldPermutation, inputRecDesc, operationFieldIndex, operationInspectorFactory,
+                secondaryKeysPipeline, prevSecondaryKeysPipeline);
     }
 }

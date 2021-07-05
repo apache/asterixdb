@@ -617,7 +617,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
                 || !Objects.equals(op.getPrevSecondaryKeyExprs(), insertOpArg.getPrevSecondaryKeyExprs())
                 || !Objects.equals(op.getPrevAdditionalFilteringExpression(),
                         insertOpArg.getPrevAdditionalFilteringExpression())
-                || !Objects.equals(op.getUpsertIndicatorExpr(), insertOpArg.getUpsertIndicatorExpr())
+                || !Objects.equals(op.getOperationExpr(), insertOpArg.getOperationExpr())
                 || (op.getNumberOfAdditionalNonFilteringFields() != insertOpArg
                         .getNumberOfAdditionalNonFilteringFields())) {
             return Boolean.FALSE;

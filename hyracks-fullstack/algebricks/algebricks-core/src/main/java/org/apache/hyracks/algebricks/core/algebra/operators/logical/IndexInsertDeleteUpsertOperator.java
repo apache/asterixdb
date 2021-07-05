@@ -45,7 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
  * perform. In the case of bulk-loading, {@link #operation} will be INSERT and the {@link #bulkload} flag will be
  * raised. {@link #additionalFilteringExpressions} and {@link #numberOfAdditionalNonFilteringFields} refers to the
  * additionalFilteringExpressions, numberOfAdditionalNonFilteringFields found in the corresponding primary index
- * {@link InsertDeleteUpsertOperator} (i.e. to specify LSM filters). {@link #upsertIndicatorExpr} also originates from
+ * {@link InsertDeleteUpsertOperator} (i.e. to specify LSM filters). {@link #operationExpr} also originates from
  * {@link InsertDeleteUpsertOperator}, and is only set when the operation is of kind UPSERT.
  * <p>
  *
@@ -84,7 +84,7 @@ public class IndexInsertDeleteUpsertOperator extends AbstractOperatorWithNestedP
     // used for upsert operations
     private List<Mutable<ILogicalExpression>> prevSecondaryKeyExprs;
     private Mutable<ILogicalExpression> prevAdditionalFilteringExpression;
-    private Mutable<ILogicalExpression> upsertIndicatorExpr;
+    private Mutable<ILogicalExpression> operationExpr;
     private final int numberOfAdditionalNonFilteringFields;
 
     public IndexInsertDeleteUpsertOperator(IDataSourceIndex<?, ?> dataSourceIndex,
@@ -129,8 +129,8 @@ public class IndexInsertDeleteUpsertOperator extends AbstractOperatorWithNestedP
                 }
             }
         }
-        // Upsert indicator var <For upsert>
-        if (upsertIndicatorExpr != null && visitor.transform(upsertIndicatorExpr)) {
+        // Operation indicator var <For upsert>
+        if (operationExpr != null && visitor.transform(operationExpr)) {
             b = true;
         }
         // Old secondary <For upsert>
@@ -177,8 +177,8 @@ public class IndexInsertDeleteUpsertOperator extends AbstractOperatorWithNestedP
                 e.getValue().getUsedVariables(vars);
             }
         }
-        if (getUpsertIndicatorExpr() != null) {
-            getUpsertIndicatorExpr().getValue().getUsedVariables(vars);
+        if (getOperationExpr() != null) {
+            getOperationExpr().getValue().getUsedVariables(vars);
         }
     }
 
@@ -273,11 +273,11 @@ public class IndexInsertDeleteUpsertOperator extends AbstractOperatorWithNestedP
         return numberOfAdditionalNonFilteringFields;
     }
 
-    public Mutable<ILogicalExpression> getUpsertIndicatorExpr() {
-        return upsertIndicatorExpr;
+    public Mutable<ILogicalExpression> getOperationExpr() {
+        return operationExpr;
     }
 
-    public void setUpsertIndicatorExpr(Mutable<ILogicalExpression> upsertIndicatorExpr) {
-        this.upsertIndicatorExpr = upsertIndicatorExpr;
+    public void setOperationExpr(Mutable<ILogicalExpression> operationExpr) {
+        this.operationExpr = operationExpr;
     }
 }

@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
-import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
+import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.meta.PipelineAssembler;
@@ -48,12 +48,11 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorNodePushable extends LSMSec
 
     public LSMSecondaryUpsertWithNestedPlanOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, IModificationOperationCallbackFactory modCallbackFactory,
-            int[] fieldPermutation, RecordDescriptor inputRecDesc, int upsertIndicatorFieldIndex,
-            IBinaryBooleanInspectorFactory upsertIndicatorInspectorFactory,
-            List<AlgebricksPipeline> secondaryKeysPipeline, List<AlgebricksPipeline> prevSecondaryKeysPipeline)
-            throws HyracksDataException {
+            int[] fieldPermutation, RecordDescriptor inputRecDesc, int operationFieldIndex,
+            IBinaryIntegerInspectorFactory operationInspectorFactory, List<AlgebricksPipeline> secondaryKeysPipeline,
+            List<AlgebricksPipeline> prevSecondaryKeysPipeline) throws HyracksDataException {
         super(ctx, partition, indexHelperFactory, modCallbackFactory, null, fieldPermutation, inputRecDesc,
-                upsertIndicatorFieldIndex, upsertIndicatorInspectorFactory, null);
+                operationFieldIndex, operationInspectorFactory, null);
         this.numberOfPrimaryKeyAndFilterFields = fieldPermutation.length;
         this.startOfNewKeyPipelines = buildStartOfPipelines(secondaryKeysPipeline, inputRecDesc, false);
         this.startOfPrevKeyPipelines = buildStartOfPipelines(prevSecondaryKeysPipeline, inputRecDesc, true);
@@ -110,9 +109,9 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorNodePushable extends LSMSec
 
             // Insert all of our new keys, if the PIDX operation was also an UPSERT (and not just a DELETE).
             frameTuple.reset(accessor, i);
-            if (upsertIndicatorInspector.getBooleanValue(frameTuple.getFieldData(upsertIndicatorFieldIndex),
-                    frameTuple.getFieldStart(upsertIndicatorFieldIndex),
-                    frameTuple.getFieldLength(upsertIndicatorFieldIndex))) {
+            int operation = operationInspector.getIntegerValue(frameTuple.getFieldData(operationFieldIndex),
+                    frameTuple.getFieldStart(operationFieldIndex), frameTuple.getFieldLength(operationFieldIndex));
+            if (operation == UPSERT_NEW || operation == UPSERT_EXISTING) {
                 writeTupleToPipelineStarts(buffer, i, startOfNewKeyPipelines);
             }
         }

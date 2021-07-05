@@ -30,7 +30,7 @@ import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.PrimaryIndexLogMarkerCallback;
-import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -80,6 +80,9 @@ import org.apache.logging.log4j.Logger;
 
 public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
+    public static final AInt8 UPSERT_NEW = new AInt8((byte) 0);
+    public static final AInt8 UPSERT_EXISTING = new AInt8((byte) 1);
+    public static final AInt8 DELETE_EXISTING = new AInt8((byte) 2);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ThreadLocal<DateFormat> DATE_FORMAT =
             ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS"));
@@ -172,21 +175,22 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                             if (cursor.hasNext()) {
                                 cursor.next();
                                 prevTuple = cursor.getTuple();
-                                appendUpsertIndicator(!isDelete);
+                                appendOperationIndicator(!isDelete, true);
                                 appendFilterToPrevTuple();
                                 appendPrevRecord();
                                 appendPreviousMeta();
                                 appendFilterToOutput();
                             } else {
-                                appendUpsertIndicator(!isDelete);
+                                appendOperationIndicator(!isDelete, false);
                                 appendPreviousTupleAsMissing();
                             }
                         } finally {
                             cursor.close(); // end the search
                         }
                     } else {
+                        // simple upsert into a non-filtered dataset having no secondary indexes
                         searchCallback.before(key); // lock
-                        appendUpsertIndicator(!isDelete);
+                        appendOperationIndicator(true, false);
                         appendPreviousTupleAsMissing();
                     }
                     beforeModification(tuple);
@@ -353,8 +357,17 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         }
     }
 
-    protected void appendUpsertIndicator(boolean isUpsert) throws IOException {
-        recordDesc.getFields()[0].serialize(isUpsert ? ABoolean.TRUE : ABoolean.FALSE, dos);
+    @SuppressWarnings("unchecked") // using serializer
+    protected void appendOperationIndicator(boolean isUpsert, boolean prevTupleExists) throws IOException {
+        if (isUpsert) {
+            if (prevTupleExists) {
+                recordDesc.getFields()[0].serialize(UPSERT_EXISTING, dos);
+            } else {
+                recordDesc.getFields()[0].serialize(UPSERT_NEW, dos);
+            }
+        } else {
+            recordDesc.getFields()[0].serialize(DELETE_EXISTING, dos);
+        }
         tb.addFieldEndOffset();
     }
 

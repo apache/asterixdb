@@ -389,7 +389,7 @@ public class RebalanceUtil {
 
     // Gets the primary key permutation for upserts.
     private static int[] getPrimaryKeyPermutationForUpsert(Dataset dataset) {
-        // upsertIndicatorVar + prev record
+        // (upsert) operationVar + prev record
         int f = 2;
         // add the previous meta second
         if (dataset.hasMetaPart()) {

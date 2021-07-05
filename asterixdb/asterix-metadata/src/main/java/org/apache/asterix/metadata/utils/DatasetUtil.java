@@ -475,9 +475,9 @@ public class DatasetUtil {
         IDataFormat dataFormat = metadataProvider.getDataFormat();
 
         int f = 0;
-        // add the upsert indicator var
-        outputSerDes[f] = dataFormat.getSerdeProvider().getSerializerDeserializer(BuiltinType.ABOOLEAN);
-        outputTypeTraits[f] = dataFormat.getTypeTraitProvider().getTypeTrait(BuiltinType.ABOOLEAN);
+        // add the upsert operation var
+        outputSerDes[f] = dataFormat.getSerdeProvider().getSerializerDeserializer(BuiltinType.AINT8);
+        outputTypeTraits[f] = dataFormat.getTypeTraitProvider().getTypeTrait(BuiltinType.AINT8);
         f++;
         // add the previous record
         outputSerDes[f] = dataFormat.getSerdeProvider().getSerializerDeserializer(itemType);

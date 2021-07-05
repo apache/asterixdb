@@ -24,6 +24,8 @@ import java.nio.ByteBuffer;
 
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.CharArrayRecord;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -98,7 +100,11 @@ public class DumpIndexReader extends FunctionReader {
         recordBuilder.append("{\"values\":[");
         for (int j = 0; j < tuple.getFieldCount(); ++j) {
             bbis.setByteBuffer(ByteBuffer.wrap(tuple.getFieldData(j)), tuple.getFieldStart(j));
-            recordBuilder.append(secondaryRecDesc.getFields()[j].deserialize(dis));
+            IAObject field = (IAObject) secondaryRecDesc.getFields()[j].deserialize(dis);
+            if (field.getType().getTypeTag() == ATypeTag.MISSING) {
+                continue;
+            }
+            recordBuilder.append(field);
             recordBuilder.append(",");
         }
         recordBuilder.deleteCharAt(recordBuilder.length() - 1);

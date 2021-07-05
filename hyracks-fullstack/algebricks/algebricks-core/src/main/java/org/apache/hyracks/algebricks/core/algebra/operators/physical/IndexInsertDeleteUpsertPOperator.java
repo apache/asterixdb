@@ -57,14 +57,14 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
     private final ILogicalExpression filterExpr;
     private final IDataSourceIndex<?, ?> dataSourceIndex;
     private final List<LogicalVariable> additionalFilteringKeys;
-    private final LogicalVariable upsertIndicatorVar;
+    private final LogicalVariable operationVar;
     private final List<LogicalVariable> prevSecondaryKeys;
     private final LogicalVariable prevAdditionalFilteringKey;
     private final int numOfAdditionalNonFilteringFields;
 
     public IndexInsertDeleteUpsertPOperator(List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalFilteringKeys, Mutable<ILogicalExpression> filterExpr,
-            IDataSourceIndex<?, ?> dataSourceIndex, LogicalVariable upsertIndicatorVar,
+            IDataSourceIndex<?, ?> dataSourceIndex, LogicalVariable operationVar,
             List<LogicalVariable> prevSecondaryKeys, LogicalVariable prevAdditionalFilteringKey,
             int numOfAdditionalNonFilteringFields) {
         this.primaryKeys = primaryKeys;
@@ -76,7 +76,7 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
         }
         this.dataSourceIndex = dataSourceIndex;
         this.additionalFilteringKeys = additionalFilteringKeys;
-        this.upsertIndicatorVar = upsertIndicatorVar;
+        this.operationVar = operationVar;
         this.prevSecondaryKeys = prevSecondaryKeys;
         this.prevAdditionalFilteringKey = prevAdditionalFilteringKey;
         this.numOfAdditionalNonFilteringFields = numOfAdditionalNonFilteringFields;
@@ -157,7 +157,7 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
                 break;
             case UPSERT:
                 runtimeAndConstraints = mp.getIndexUpsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas,
-                        typeEnv, primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, upsertIndicatorVar,
+                        typeEnv, primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, operationVar,
                         prevSecondaryKeys, prevAdditionalFilteringKey, inputDesc, context, spec, secondaryKeyPipelines);
                 break;
             default:

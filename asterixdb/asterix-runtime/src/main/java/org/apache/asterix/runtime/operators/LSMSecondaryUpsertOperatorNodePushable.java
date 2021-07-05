@@ -19,14 +19,13 @@
 package org.apache.asterix.runtime.operators;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
-import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
-import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
+import org.apache.hyracks.algebricks.data.IBinaryIntegerInspector;
+import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -48,38 +47,32 @@ import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDel
  * -If old secondary index tuple == new secondary index tuple
  * --do nothing
  * -else
- * --If any old field is null/missing?
- * ---do nothing
- * --else
- * ---delete old secondary index tuple
- * --If any new field is null/missing?
- * ---do nothing
- * --else
- * ---insert new secondary index tuple
+ * --perform the operation based on the operation kind
  */
 public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
-    private final PermutingFrameTupleReference prevValueTuple = new PermutingFrameTupleReference();
-    private final int numberOfFields;
-    private final boolean isPrimaryKeyIndex;
+    protected static final int UPSERT_NEW = LSMPrimaryUpsertOperatorNodePushable.UPSERT_NEW.getByteValue();
+    protected static final int UPSERT_EXISTING = LSMPrimaryUpsertOperatorNodePushable.UPSERT_EXISTING.getByteValue();
+    protected static final int DELETE_EXISTING = LSMPrimaryUpsertOperatorNodePushable.DELETE_EXISTING.getByteValue();
 
-    protected final int upsertIndicatorFieldIndex;
-    protected final IBinaryBooleanInspector upsertIndicatorInspector;
+    private final PermutingFrameTupleReference prevTuple = new PermutingFrameTupleReference();
+    private final int numberOfFields;
+
+    protected final int operationFieldIndex;
+    protected final IBinaryIntegerInspector operationInspector;
     protected AbstractIndexModificationOperationCallback abstractModCallback;
 
     public LSMSecondaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, IModificationOperationCallbackFactory modCallbackFactory,
             ITupleFilterFactory tupleFilterFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
-            int upsertIndicatorFieldIndex, IBinaryBooleanInspectorFactory upsertIndicatorInspectorFactory,
-            int[] prevValuePermutation) throws HyracksDataException {
+            int operationFieldIndex, IBinaryIntegerInspectorFactory operationInspectorFactory,
+            int[] prevTuplePermutation) throws HyracksDataException {
         super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, IndexOperation.UPSERT,
                 modCallbackFactory, tupleFilterFactory);
-        this.prevValueTuple.setFieldPermutation(prevValuePermutation);
-        this.upsertIndicatorFieldIndex = upsertIndicatorFieldIndex;
-        this.upsertIndicatorInspector = upsertIndicatorInspectorFactory.createBinaryBooleanInspector(ctx);
+        this.prevTuple.setFieldPermutation(prevTuplePermutation);
+        this.operationFieldIndex = operationFieldIndex;
+        this.operationInspector = operationInspectorFactory.createBinaryIntegerInspector(ctx);
         this.numberOfFields = fieldPermutation.length;
-        // a primary key index only has primary keys, and thus these two permutations are the same
-        this.isPrimaryKeyIndex = Arrays.equals(fieldPermutation, prevValuePermutation);
     }
 
     @Override
@@ -97,36 +90,24 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
         for (int i = 0; i < tupleCount; i++) {
             try {
                 frameTuple.reset(accessor, i);
-                boolean isUpsert =
-                        upsertIndicatorInspector.getBooleanValue(frameTuple.getFieldData(upsertIndicatorFieldIndex),
-                                frameTuple.getFieldStart(upsertIndicatorFieldIndex),
-                                frameTuple.getFieldLength(upsertIndicatorFieldIndex));
-                // if both previous value and new value are null, then we skip
+                int operation = operationInspector.getIntegerValue(frameTuple.getFieldData(operationFieldIndex),
+                        frameTuple.getFieldStart(operationFieldIndex), frameTuple.getFieldLength(operationFieldIndex));
                 tuple.reset(accessor, i);
-                prevValueTuple.reset(accessor, i);
+                prevTuple.reset(accessor, i);
 
-                boolean newTupleHasNullOrMissing = hasNullOrMissing(tuple);
-                boolean oldTupleHasNullOrMissing = hasNullOrMissing(prevValueTuple);
-                if (newTupleHasNullOrMissing && oldTupleHasNullOrMissing) {
-                    // No op
-                    continue;
-                }
-                // At least, one is not null
-                if (!isPrimaryKeyIndex && TupleUtils.equalTuples(tuple, prevValueTuple, numberOfFields)) {
-                    // For a secondary index, if the secondary key values do not change, we can skip upserting it.
-                    // However, for a primary key index, we cannot do this because it only contains primary keys
-                    // which are always the same
-                    continue;
-                }
-                // if all old fields are known values, then delete. skip deleting if any is null or missing
-                if (!oldTupleHasNullOrMissing) {
-                    abstractModCallback.setOp(Operation.DELETE);
-                    lsmAccessor.forceDelete(prevValueTuple);
-                }
-                // if all new fields are known values, then insert. skip inserting if any is null or missing
-                if (isUpsert && !newTupleHasNullOrMissing) {
+                if (operation == UPSERT_NEW) {
                     abstractModCallback.setOp(Operation.INSERT);
                     lsmAccessor.forceInsert(tuple);
+                } else if (operation == UPSERT_EXISTING) {
+                    if (!TupleUtils.equalTuples(tuple, prevTuple, numberOfFields)) {
+                        abstractModCallback.setOp(Operation.DELETE);
+                        lsmAccessor.forceDelete(prevTuple);
+                        abstractModCallback.setOp(Operation.INSERT);
+                        lsmAccessor.forceInsert(tuple);
+                    }
+                } else if (operation == DELETE_EXISTING) {
+                    abstractModCallback.setOp(Operation.DELETE);
+                    lsmAccessor.forceDelete(prevTuple);
                 }
             } catch (Exception e) {
                 throw HyracksDataException.create(e);

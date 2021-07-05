@@ -428,11 +428,11 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                 return new IndexBulkloadPOperator(primaryKeys, secondaryKeys, additionalFilteringKeys,
                         opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex());
             } else {
-                LogicalVariable upsertIndicatorVar = null;
+                LogicalVariable operationVar = null;
                 List<LogicalVariable> prevSecondaryKeys = null;
                 LogicalVariable prevAdditionalFilteringKey = null;
                 if (opInsDel.getOperation() == Kind.UPSERT) {
-                    upsertIndicatorVar = getKey(opInsDel.getUpsertIndicatorExpr().getValue());
+                    operationVar = getKey(opInsDel.getOperationExpr().getValue());
                     prevSecondaryKeys = new ArrayList<>();
                     getKeys(opInsDel.getPrevSecondaryKeyExprs(), prevSecondaryKeys);
                     if (opInsDel.getPrevAdditionalFilteringExpression() != null) {
@@ -442,9 +442,8 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     }
                 }
                 return new IndexInsertDeleteUpsertPOperator(primaryKeys, secondaryKeys, additionalFilteringKeys,
-                        opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex(), upsertIndicatorVar,
-                        prevSecondaryKeys, prevAdditionalFilteringKey,
-                        opInsDel.getNumberOfAdditionalNonFilteringFields());
+                        opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex(), operationVar, prevSecondaryKeys,
+                        prevAdditionalFilteringKey, opInsDel.getNumberOfAdditionalNonFilteringFields());
             }
         }
 

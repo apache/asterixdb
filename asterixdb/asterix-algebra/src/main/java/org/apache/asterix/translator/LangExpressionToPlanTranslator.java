@@ -513,8 +513,8 @@ abstract class LangExpressionToPlanTranslator
             upsertOp = new InsertDeleteUpsertOperator(targetDatasource, payloadVarRef, varRefsForLoading,
                     Collections.singletonList(new MutableObject<>(metaVarRef)), InsertDeleteUpsertOperator.Kind.UPSERT,
                     false);
-            upsertOp.setUpsertIndicatorVar(context.newVar());
-            upsertOp.setUpsertIndicatorVarType(BuiltinType.ABOOLEAN);
+            upsertOp.setOperationVar(context.newVar());
+            upsertOp.setOperationVarType(BuiltinType.AINT8);
             // Create and add a new variable used for representing the original record
             upsertOp.setPrevRecordVar(context.newVar());
             upsertOp.setPrevRecordType(targetDatasource.getItemType());
@@ -567,8 +567,8 @@ abstract class LangExpressionToPlanTranslator
             upsertOp.getInputs().add(new MutableObject<>(pkeyAssignOp));
             upsertOp.setAdditionalFilteringExpressions(filterExprs);
             upsertOp.setSourceLocation(sourceLoc);
-            upsertOp.setUpsertIndicatorVar(context.newVar());
-            upsertOp.setUpsertIndicatorVarType(BuiltinType.ABOOLEAN);
+            upsertOp.setOperationVar(context.newVar());
+            upsertOp.setOperationVarType(BuiltinType.AINT8);
             // Create and add a new variable used for representing the original record
             upsertOp.setPrevRecordVar(context.newVar());
             upsertOp.setPrevRecordType(recordType);

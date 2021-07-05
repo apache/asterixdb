@@ -629,8 +629,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             }
 
             if (primaryIndexModificationOp.getOperation() == Kind.UPSERT) {
-                indexUpdate.setUpsertIndicatorExpr(new MutableObject<>(
-                        new VariableReferenceExpression(primaryIndexModificationOp.getUpsertIndicatorVar())));
+                indexUpdate.setOperationExpr(new MutableObject<>(
+                        new VariableReferenceExpression(primaryIndexModificationOp.getOperationVar())));
             }
 
             context.computeAndSetTypeEnvironmentForOperator(indexUpdate);

@@ -38,7 +38,7 @@ public class IndexCheckpoint {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final long INITIAL_CHECKPOINT_ID = 0;
     // TODO(mblow): remove this marker & related logic once we no longer are able to read indexes prior to the fix
-    private static final long HAS_NULL_MISSING_VALUES_FIX = -2;
+    private static final long HAS_NULL_MISSING_VALUES_FIX = -3;
     private long id;
     private long validComponentSequence;
     private long lowWatermark;
