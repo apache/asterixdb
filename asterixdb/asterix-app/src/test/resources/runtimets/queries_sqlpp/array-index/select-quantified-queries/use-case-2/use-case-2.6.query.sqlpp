@@ -20,7 +20,8 @@ SET `compiler.arrayindex` "true";
 
 USE TestYelp;
 
-SELECT COUNT(*)
-FROM YelpCheckin C
-WHERE EVERY D IN C.checkin_times.dates 
-SATISFIES D > "2016" AND D < "2017";
+FROM    YelpCheckin C
+WHERE   LEN(C.checkin_times.dates) > 0 AND
+        ( EVERY D IN C.checkin_times.dates
+          SATISFIES D > "2016" AND D < "2017" )
+SELECT  COUNT(*);

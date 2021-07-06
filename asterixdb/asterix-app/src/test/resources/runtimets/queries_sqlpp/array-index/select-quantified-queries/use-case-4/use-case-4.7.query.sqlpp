@@ -20,10 +20,10 @@ SET `compiler.arrayindex` "true";
 
 USE TestYelp;
 
-SELECT C.business_id
-FROM YelpCheckin C
-WHERE EVERY CT IN C.checkin_times
-SATISFIES (
-    EVERY D IN CT.dates
-    SATISFIES D > "2019-06-05"
-);
+FROM    YelpCheckin C
+WHERE   LEN(C.checkin_times) > 0 AND
+        ( EVERY CT IN C.checkin_times
+          SATISFIES ( LEN(CT.dates) > 0 AND
+                      ( EVERY D IN CT.dates
+                        SATISFIES D > "2019-06-05" ) ) )
+SELECT  C.business_id;

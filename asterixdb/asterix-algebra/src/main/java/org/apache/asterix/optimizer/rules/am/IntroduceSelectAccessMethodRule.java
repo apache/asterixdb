@@ -129,10 +129,13 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<>();
 
     static {
-        registerAccessMethod(ArrayBTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(BTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(RTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
+        registerAccessMethod(ArrayBTreeAccessMethod.INSTANCE, accessMethods);
+        for (Pair<FunctionIdentifier, Boolean> f : ArrayBTreeAccessMethod.INSTANCE.getOptimizableFunctions()) {
+            SelectInSubplanBranchCreator.addOptimizableFunction(f.first);
+        }
     }
 
     /**
