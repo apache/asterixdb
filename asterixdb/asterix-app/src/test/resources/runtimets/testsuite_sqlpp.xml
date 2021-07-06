@@ -8000,14 +8000,14 @@
       <test-case FilePath="array-index/error-handling">
         <compilation-unit name="index-with-enforced-type">
           <output-dir compare="Text">index-with-enforced-type</output-dir>
-          <expected-error>ASX1154: Incompatible index type ARRAY</expected-error>
+          <expected-error>ASX1155: Incompatible index type ARRAY</expected-error>
           <source-location>false</source-location>
         </compilation-unit>
       </test-case>
       <test-case FilePath="array-index/error-handling">
         <compilation-unit name="index-mixed-composite">
           <output-dir compare="Text">index-mixed-composite</output-dir>
-          <expected-error>ASX1154: Incompatible index type ARRAY</expected-error>
+          <expected-error>ASX1155: Incompatible index type ARRAY</expected-error>
           <source-location>false</source-location>
         </compilation-unit>
       </test-case>

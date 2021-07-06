@@ -899,7 +899,7 @@ public class ExternalDataUtils {
             String blobEndpoint = configuration.get(BLOB_ENDPOINT_FIELD_NAME);
             String endpointSuffix = configuration.get(ENDPOINT_SUFFIX_FIELD_NAME);
 
-            // Constructor the connection string
+            // Construct the connection string
             // Connection string format: name1=value1;name2=value2;....
             StringBuilder connectionStringBuilder = new StringBuilder();
             BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
@@ -926,15 +926,10 @@ public class ExternalDataUtils {
                 if (authMethodFound) {
                     throw new CompilationException(ErrorCode.ONLY_SINGLE_AUTHENTICATION_IS_ALLOWED);
                 }
-                authMethodFound = true;
                 // account name + shared access token
                 connectionStringBuilder.append(CONNECTION_STRING_ACCOUNT_NAME).append("=").append(accountName)
                         .append(";").append(CONNECTION_STRING_SHARED_ACCESS_SIGNATURE).append("=")
                         .append(sharedAccessSignature).append(";");
-            }
-
-            if (!authMethodFound) {
-                throw new CompilationException(ErrorCode.NO_AUTH_METHOD_PROVIDED);
             }
 
             // Add blobEndpoint and endpointSuffix if present, adjust any '/' as needed
@@ -952,6 +947,12 @@ public class ExternalDataUtils {
                     connectionStringBuilder.append(CONNECTION_STRING_ENDPOINT_SUFFIX).append("=")
                             .append(endpointSuffixUpdated).append(";");
                 }
+            }
+
+            // No credentials or endpoint provided
+            if (connectionStringBuilder.length() == 0) {
+                throw new CompilationException(ErrorCode.NO_AUTH_PROVIDED_ENDPOINT_REQUIRED_FOR_ANONYMOUS_ACCESS,
+                        BLOB_ENDPOINT_FIELD_NAME);
             }
 
             try {

@@ -66,11 +66,13 @@ import org.junit.runners.Parameterized.Parameters;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.PublicAccessType;
 import com.azure.storage.common.sas.AccountSasPermission;
 import com.azure.storage.common.sas.AccountSasResourceType;
 import com.azure.storage.common.sas.AccountSasService;
 import com.azure.storage.common.sas.AccountSasSignatureValues;
 
+// TODO(Hussain): Need to run the test manually to ensure new tests (anonymous access) are working fine
 @Ignore
 @RunWith(Parameterized.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -100,6 +102,7 @@ public class AzureBlobStorageExternalDatasetTest {
     private static final String PLAYGROUND_CONTAINER = "playground";
     private static final String FIXED_DATA_CONTAINER = "fixed-data"; // Do not use, has fixed data
     private static final String INCLUDE_EXCLUDE_CONTAINER = "include-exclude";
+    private static final String PUBLIC_ACCESS_CONTAINER = "public-access-container"; // requires no authentication
     private static final String JSON_DEFINITION = "json-data/reviews/";
     private static final String CSV_DEFINITION = "csv-data/reviews/";
     private static final String TSV_DEFINITION = "tsv-data/reviews/";
@@ -116,6 +119,7 @@ public class AzureBlobStorageExternalDatasetTest {
             + "BlobEndpoint=" + BLOB_SERVICE_ENDPOINT + "/devstoreaccount1;";
     private static BlobServiceClient blobServiceClient;
     private static BlobContainerClient playgroundContainer;
+    private static BlobContainerClient publicAccessContainer;
 
     protected TestCaseContext tcCtx;
 
@@ -195,6 +199,8 @@ public class AzureBlobStorageExternalDatasetTest {
 
         LOGGER.info("creating container " + PLAYGROUND_CONTAINER);
         playgroundContainer = blobServiceClient.createBlobContainer(PLAYGROUND_CONTAINER);
+        publicAccessContainer = blobServiceClient.createBlobContainer(PUBLIC_ACCESS_CONTAINER);
+        publicAccessContainer.setAccessPolicy(PublicAccessType.CONTAINER, null);
         LOGGER.info("container " + PLAYGROUND_CONTAINER + " created successfully");
 
         LOGGER.info("Adding JSON files");
@@ -342,6 +348,7 @@ public class AzureBlobStorageExternalDatasetTest {
 
         // Load the data
         playgroundContainer.getBlobClient(basePath + finalFileName).uploadFromFile(filePath.toString());
+        publicAccessContainer.getBlobClient(basePath + finalFileName).uploadFromFile(filePath.toString());
         if (copyToSubLevels) {
             playgroundContainer.getBlobClient(basePath + "level1a/" + finalFileName)
                     .uploadFromFile(filePath.toString());

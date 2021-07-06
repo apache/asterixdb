@@ -68,9 +68,20 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
-      <compilation-unit name="invalid-no-auth">
-        <output-dir compare="Text">invalid-no-auth</output-dir>
-        <expected-error>ASX1139: No authentication parameters provided</expected-error>
+      <compilation-unit name="anonymous-no-auth-public-access-allowed">
+        <output-dir compare="Text">anonymous-no-auth-public-access-allowed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
+      <compilation-unit name="anonymous-no-auth-public-access-not-allowed">
+        <output-dir compare="Text">anonymous-no-auth-public-access-not-allowed</output-dir>
+        <expected-error>Server failed to authenticate the request. Make sure the value of the Authorization header is formed correctly including the signature.</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
+      <compilation-unit name="anonymous-no-auth-no-endpoint">
+        <output-dir compare="Text">anonymous-no-auth-no-endpoint</output-dir>
+        <expected-error>ASX1151: No authentication credentials provided, 'blobEndpoint' field is required for anonymous access</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
