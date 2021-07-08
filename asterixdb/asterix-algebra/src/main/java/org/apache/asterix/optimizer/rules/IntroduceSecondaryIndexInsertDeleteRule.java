@@ -337,8 +337,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             IndexInsertDeleteUpsertOperator indexUpdate;
             if (index.getIndexType() != IndexType.RTREE) {
                 // Create an expression per key
-                Mutable<ILogicalExpression> filterExpression =
-                        (primaryIndexModificationOp.getOperation() == Kind.UPSERT) ? null
+                Mutable<ILogicalExpression> filterExpression = (primaryIndexModificationOp.getOperation() == Kind.UPSERT
+                        || index.getIndexType() == IndexType.BTREE) ? null
                                 : createFilterExpression(secondaryKeyVars, context.getOutputTypeEnvironment(currentTop),
                                         index.getIndexDetails().isOverridingKeyFieldTypes());
                 DataSourceIndex dataSourceIndex = new DataSourceIndex(index, dataverseName, datasetName, mp);

@@ -126,27 +126,12 @@ public class BTreeAccessMethod implements IAccessMethod {
 
     @Override
     public boolean matchAllIndexExprs(Index index) {
-        // require all expressions to be matched if this is a composite key index which has an unknownable key field.
-        // because we only add a tuple to the index if all its key fields are not null/missing.
-        return ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldTypes().size() > 1
-                && hasUnknownableField(index);
+        return false;
     }
 
     @Override
     public boolean matchPrefixIndexExprs(Index index) {
         return !matchAllIndexExprs(index);
-    }
-
-    private boolean hasUnknownableField(Index index) {
-        if (index.isSecondaryIndex() && index.getIndexDetails().isOverridingKeyFieldTypes() && !index.isEnforced()) {
-            return true;
-        }
-        for (IAType fieldType : ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldTypes()) {
-            if (NonTaggedFormatUtil.isOptional(fieldType)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     @Override

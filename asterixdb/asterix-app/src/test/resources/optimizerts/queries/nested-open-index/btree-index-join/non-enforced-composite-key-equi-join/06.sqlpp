@@ -17,9 +17,7 @@
  * under the License.
  */
 /*
- * Description  : There's index-join hint and the probe type is known (string), non-enforced nested composite index.
- *              : Currently this index cannot be used for this query because
- *              : the index will not store composite keys where some fields are NULL/MISSING.
+ * Description  : Index join because there's a hint and the probe type is known (string), non-enforced nested composite
  * Expected Res : Success
  */
 drop dataverse test if exists;

@@ -21,4 +21,5 @@ USE test;
 
 SET `import-private-functions` `true`;
 FROM DUMP_INDEX("test", "ds1", "idx1") AS v
-SELECT VALUE v;
+SELECT VALUE v
+ORDER BY v.values;

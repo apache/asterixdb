@@ -3,6 +3,13 @@
     -- STREAM_SELECT  |PARTITIONED|
       -- STREAM_PROJECT  |PARTITIONED|
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- DATASOURCE_SCAN (test.testdst)  |PARTITIONED|
+          -- BTREE_SEARCH (test.testdst.testdst)  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              -- STABLE_SORT [$$21(ASC)]  |PARTITIONED|
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      -- BTREE_SEARCH (test.testdst.sec_Idx)  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          -- ASSIGN  |PARTITIONED|
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
