@@ -51,9 +51,7 @@ public class GetTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
                     private DataOutput dataOutput = resultStorage.getDataOutput();
                     private IScalarEvaluator inputEval = args[0].createScalarEvaluator(ctx);
-                    final IPointable inputArg = new VoidPointable();
-
-                    private StringBuilder stringBuilder = new StringBuilder();
+                    private final IPointable inputArg = new VoidPointable();
                     private final UTF8StringWriter writer = new UTF8StringWriter();
 
                     @Override
@@ -61,13 +59,11 @@ public class GetTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         resultStorage.reset();
                         inputEval.evaluate(tuple, inputArg);
 
-                        byte[] bytes = inputArg.getByteArray();
-                        int offset = inputArg.getStartOffset();
-                        stringBuilder.append(ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]].toString());
-
                         try {
+                            byte[] bytes = inputArg.getByteArray();
+                            int offset = inputArg.getStartOffset();
                             dataOutput.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                            writer.writeUTF8(stringBuilder.toString(), dataOutput);
+                            writer.writeUTF8(ATypeTag.VALUE_TYPE_MAPPING[bytes[offset]].toString(), dataOutput);
                         } catch (IOException e) {
                             throw HyracksDataException.create(e);
                         }

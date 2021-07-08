@@ -1,0 +1,2 @@
+{ "t1": "array", "t2": "binary", "t3": "boolean", "t4": "circle", "t5": "date", "t6": "datetime", "t7": "duration", "t8": "interval", "t9": "line", "t10": "multiset", "t11": "point", "t12": "polygon", "t13": "rectangle", "t14": "string", "t15": "time", "t16": "uuid" }
+{ "t1": "array", "t2": "binary", "t3": "boolean", "t4": "circle", "t5": "date", "t6": "datetime", "t7": "duration", "t8": "interval", "t9": "line", "t10": "multiset", "t11": "point", "t12": "polygon", "t13": "rectangle", "t14": "string", "t15": "time", "t16": "uuid" }
