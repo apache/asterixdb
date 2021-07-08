@@ -19,22 +19,34 @@
 package org.apache.asterix.external.api;
 
 import java.util.List;
+import java.util.Set;
 
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IRecordReaderFactory<T> extends IExternalDataSourceFactory {
 
-    public IRecordReader<? extends T> createRecordReader(IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException;
+    IRecordReader<? extends T> createRecordReader(IHyracksTaskContext ctx, int partition) throws HyracksDataException;
 
-    public Class<?> getRecordClass();
+    Class<?> getRecordClass();
 
     @Override
-    public default DataSourceType getDataSourceType() {
+    default DataSourceType getDataSourceType() {
         return DataSourceType.RECORDS;
     }
 
-    public List<String> getRecordReaderNames();
+    List<String> getRecordReaderNames();
+
+    /**
+     * Usually there is only a single adapter with a specific name.
+     * When two or more adapters share the same name, only one can support {@link ExternalDataConstants#ALL_FORMATS}.
+     * Other adapters must have only a subset of {@link ExternalDataConstants#ALL_FORMATS}.
+     *
+     * @return adapter's supported formats
+     */
+    default Set<String> getReaderSupportedFormats() {
+        return ExternalDataConstants.ALL_FORMATS;
+    }
 
 }

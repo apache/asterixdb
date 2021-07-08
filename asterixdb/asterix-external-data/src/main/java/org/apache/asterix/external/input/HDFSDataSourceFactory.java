@@ -48,6 +48,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -59,7 +60,9 @@ import org.apache.hyracks.hdfs.scheduler.Scheduler;
 
 public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IIndexibleExternalDataSource {
 
-    protected static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
+    private static final List<String> recordReaderNames = Collections.singletonList("hdfs");
+
     protected transient AlgebricksAbsolutePartitionConstraint clusterLocations;
     protected transient IServiceContext serviceCtx;
     protected String[] readSchedule;
@@ -79,16 +82,24 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     private InputSplit[] inputSplits;
     private String nodeName;
     private Class recordReaderClazz;
-    private static final List<String> recordReaderNames = Collections.unmodifiableList(Arrays.asList("hdfs"));
 
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
-            IWarningCollector warningCollector) throws AsterixException {
+            IWarningCollector warningCollector) throws AlgebricksException, HyracksDataException {
+        JobConf hdfsConf = createHdfsConf(serviceCtx, configuration);
+        configureHdfsConf(hdfsConf, configuration);
+    }
+
+    protected JobConf createHdfsConf(IServiceContext serviceCtx, Map<String, String> configuration)
+            throws HyracksDataException {
+        this.serviceCtx = serviceCtx;
+        this.configuration = configuration;
+        init((ICCServiceContext) serviceCtx);
+        return HDFSUtils.configureHDFSJobConf(configuration);
+    }
+
+    protected void configureHdfsConf(JobConf conf, Map<String, String> configuration) throws AlgebricksException {
         try {
-            this.serviceCtx = serviceCtx;
-            this.configuration = configuration;
-            init((ICCServiceContext) serviceCtx);
-            JobConf conf = HDFSUtils.configureHDFSJobConf(configuration);
             confFactory = new ConfFactory(conf);
             clusterLocations = getPartitionConstraint();
             int numPartitions = clusterLocations.getLocations().length;
@@ -109,7 +120,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
             Arrays.fill(read, false);
             String formatString = configuration.get(ExternalDataConstants.KEY_FORMAT);
             if (formatString == null || formatString.equals(ExternalDataConstants.FORMAT_HDFS_WRITABLE)
-                    || formatString.equals(ExternalDataConstants.FORMAT_NOOP)) {
+                    || formatString.equals(ExternalDataConstants.FORMAT_NOOP)
+                    || formatString.equals(ExternalDataConstants.FORMAT_PARQUET)) {
                 RecordReader<?, ?> reader = conf.getInputFormat().getRecordReader(inputSplits[0], conf, Reporter.NULL);
                 this.recordClass = reader.createValue().getClass();
                 reader.close();

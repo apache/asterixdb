@@ -76,7 +76,7 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
             Iterable<BlobItem> blobItems = blobContainer.listBlobs(listBlobsOptions, null);
 
             // Collect the paths to files only
-            IncludeExcludeMatcher includeExcludeMatcher = getIncludeExcludeMatchers();
+            IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
             collectAndFilterFiles(blobItems, includeExcludeMatcher.getPredicate(),
                     includeExcludeMatcher.getMatchersList(), filesOnly);
 
@@ -96,9 +96,9 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
     /**
      * Collects and filters the files only, and excludes any folders
      *
-     * @param items storage items
+     * @param items     storage items
      * @param predicate predicate to test with for file filtration
-     * @param matchers include/exclude matchers to test against
+     * @param matchers  include/exclude matchers to test against
      * @param filesOnly List containing the files only (excluding folders)
      */
     private void collectAndFilterFiles(Iterable<BlobItem> items, BiPredicate<List<Matcher>, String> predicate,
@@ -121,15 +121,15 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
     /**
      * To efficiently utilize the parallelism, work load will be distributed amongst the partitions based on the file
      * size.
-     *
+     * <p>
      * Example:
      * File1 1mb, File2 300kb, File3 300kb, File4 300kb
-     *
+     * <p>
      * Distribution:
      * Partition1: [File1]
      * Partition2: [File2, File3, File4]
      *
-     * @param items items
+     * @param items           items
      * @param partitionsCount Partitions count
      */
     private void distributeWorkLoad(List<BlobItem> items, int partitionsCount) {

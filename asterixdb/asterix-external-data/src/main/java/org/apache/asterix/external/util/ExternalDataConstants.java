@@ -190,10 +190,11 @@ public class ExternalDataConstants {
     public static final String FORMAT_KV = "kv";
     public static final String FORMAT_CSV = "csv";
     public static final String FORMAT_TSV = "tsv";
+    public static final String FORMAT_PARQUET = "parquet";
     public static final Set<String> ALL_FORMATS;
 
     static {
-        Set<String> formats = new HashSet<>(13);
+        Set<String> formats = new HashSet<>(14);
         formats.add(FORMAT_HIVE);
         formats.add(FORMAT_BINARY);
         formats.add(FORMAT_ADM);
@@ -207,6 +208,7 @@ public class ExternalDataConstants {
         formats.add(FORMAT_KV);
         formats.add(FORMAT_CSV);
         formats.add(FORMAT_TSV);
+        formats.add(FORMAT_PARQUET);
         ALL_FORMATS = Collections.unmodifiableSet(formats);
     }
 
@@ -310,6 +312,17 @@ public class ExternalDataConstants {
         public static boolean isRetryableError(String errorCode) {
             return errorCode.equals(ERROR_INTERNAL_ERROR) || errorCode.equals(ERROR_SLOW_DOWN);
         }
+
+        /*
+         * Hadoop-AWS
+         * AWS connectors for s3 and s3n are deprecated.
+         */
+        public static final String HADOOP_ACCESS_KEY_ID = "fs.s3a.access.key";
+        public static final String HADOOP_SECRET_ACCESS_KEY = "fs.s3a.secret.key";
+        public static final String HADOOP_PATH_STYLE_ACCESS = "fs.s3a.path.style.access";
+        public static final String HADOOP_REGION = "fs.s3a.region";
+        public static final String HADOOP_SERVICE_END_POINT = "fs.s3a.endpoint";
+        public static final String HADOOP_S3_PROTOCOL = "s3a";
     }
 
     public static class AzureBlob {

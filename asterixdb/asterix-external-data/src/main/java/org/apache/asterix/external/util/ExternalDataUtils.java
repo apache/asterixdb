@@ -21,6 +21,9 @@ package org.apache.asterix.external.util;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ERROR_METHOD_NOT_IMPLEMENTED;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_ACCESS_KEY_ID;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_PATH_STYLE_ACCESS;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_SECRET_ACCESS_KEY;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_KEY_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_NAME_FIELD_NAME;
@@ -35,7 +38,9 @@ import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.E
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
@@ -45,10 +50,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -62,11 +71,13 @@ import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
+import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory.IncludeExcludeMatcher;
 import org.apache.asterix.external.library.JavaLibrary;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -102,6 +113,7 @@ import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.S3Response;
 
 public class ExternalDataUtils {
@@ -436,7 +448,8 @@ public class ExternalDataUtils {
         final String inputFormat = configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT);
         if (ExternalDataConstants.INPUT_FORMAT_PARQUET.equals(inputFormat)) {
             //Parquet supports binary-to-binary conversion. No parsing is required
-            configuration.put(ExternalDataConstants.KEY_FORMAT, ExternalDataConstants.FORMAT_NOOP);
+            configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_NOOP);
+            configuration.put(ExternalDataConstants.KEY_FORMAT, ExternalDataConstants.FORMAT_PARQUET);
         }
         if (!configuration.containsKey(ExternalDataConstants.KEY_PARSER)
                 && configuration.containsKey(ExternalDataConstants.KEY_FORMAT)) {
@@ -542,7 +555,7 @@ public class ExternalDataUtils {
                 AwsS3.validateProperties(configuration, srcLoc, collector);
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
-                ExternalDataUtils.Azure.validateProperties(configuration, srcLoc, collector);
+                Azure.validateProperties(configuration, srcLoc, collector);
                 break;
             default:
                 // Nothing needs to be done
@@ -711,12 +724,46 @@ public class ExternalDataUtils {
         }
     }
 
+    public static IncludeExcludeMatcher getIncludeExcludeMatchers(Map<String, String> configuration)
+            throws CompilationException {
+        // Get and compile the patterns for include/exclude if provided
+        List<Matcher> includeMatchers = new ArrayList<>();
+        List<Matcher> excludeMatchers = new ArrayList<>();
+        String pattern = null;
+        try {
+            for (Map.Entry<String, String> entry : configuration.entrySet()) {
+                if (entry.getKey().startsWith(KEY_INCLUDE)) {
+                    pattern = entry.getValue();
+                    includeMatchers.add(Pattern.compile(patternToRegex(pattern)).matcher(""));
+                } else if (entry.getKey().startsWith(KEY_EXCLUDE)) {
+                    pattern = entry.getValue();
+                    excludeMatchers.add(Pattern.compile(patternToRegex(pattern)).matcher(""));
+                }
+            }
+        } catch (PatternSyntaxException ex) {
+            throw new CompilationException(ErrorCode.INVALID_REGEX_PATTERN, pattern);
+        }
+
+        IncludeExcludeMatcher includeExcludeMatcher;
+        if (!includeMatchers.isEmpty()) {
+            includeExcludeMatcher =
+                    new IncludeExcludeMatcher(includeMatchers, (matchers1, key) -> matchPatterns(matchers1, key));
+        } else if (!excludeMatchers.isEmpty()) {
+            includeExcludeMatcher =
+                    new IncludeExcludeMatcher(excludeMatchers, (matchers1, key) -> !matchPatterns(matchers1, key));
+        } else {
+            includeExcludeMatcher = new IncludeExcludeMatcher(Collections.emptyList(), (matchers1, key) -> true);
+        }
+
+        return includeExcludeMatcher;
+    }
+
     public static boolean supportsPushdown(Map<String, String> properties) {
         //Currently, only Apache Parquet format is supported
-        return ExternalDataConstants.CLASS_NAME_PARQUET_INPUT_FORMAT
-                .equals(properties.get(ExternalDataConstants.KEY_INPUT_FORMAT))
-                || ExternalDataConstants.INPUT_FORMAT_PARQUET
-                        .equals(properties.get(ExternalDataConstants.KEY_INPUT_FORMAT));
+        String inputFormat = properties.get(ExternalDataConstants.KEY_INPUT_FORMAT);
+        return ExternalDataConstants.CLASS_NAME_PARQUET_INPUT_FORMAT.equals(inputFormat)
+                || ExternalDataConstants.INPUT_FORMAT_PARQUET.equals(inputFormat)
+                || ExternalDataConstants.FORMAT_PARQUET.equals(properties.get(ExternalDataConstants.KEY_FORMAT));
     }
 
     public static class AwsS3 {
@@ -777,6 +824,33 @@ public class ExternalDataUtils {
             }
 
             return builder.build();
+        }
+
+        /**
+         * Builds the S3 client using the provided configuration
+         *
+         * @param configuration properties
+         */
+        public static void configureAwsS3HdfsJobConf(JobConf conf, Map<String, String> configuration) {
+            String accessKeyId = configuration.get(ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME);
+            String secretAccessKey = configuration.get(ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME);
+            String regionId = configuration.get(ExternalDataConstants.AwsS3.REGION_FIELD_NAME);
+            String serviceEndpoint = configuration.get(ExternalDataConstants.AwsS3.SERVICE_END_POINT_FIELD_NAME);
+
+            conf.set(HADOOP_ACCESS_KEY_ID, accessKeyId);
+            conf.set(HADOOP_SECRET_ACCESS_KEY, secretAccessKey);
+            /*
+             * This is to allow S3 definition to have path-style form. Should always be true to match the current
+             * way we access files in S3
+             */
+            conf.set(HADOOP_PATH_STYLE_ACCESS, ExternalDataConstants.TRUE);
+
+            if (serviceEndpoint != null) {
+                // Validation of the URL should be done at hadoop-aws level
+                conf.set(ExternalDataConstants.AwsS3.HADOOP_SERVICE_END_POINT, serviceEndpoint);
+            } else {
+                conf.set(ExternalDataConstants.AwsS3.HADOOP_REGION, regionId);
+            }
         }
 
         /**
@@ -856,11 +930,10 @@ public class ExternalDataUtils {
         /**
          * Checks for a single object in the specified bucket to determine if the bucket is empty or not.
          *
-         * @param s3Client s3 client
+         * @param s3Client  s3 client
          * @param container the container name
-         * @param prefix Prefix to be used
+         * @param prefix    Prefix to be used
          * @param useOldApi flag whether to use the old API or not
-         *
          * @return returns the S3 response
          */
         private static S3Response isBucketEmpty(S3Client s3Client, String container, String prefix, boolean useOldApi) {
@@ -875,6 +948,155 @@ public class ExternalDataUtils {
                 response = s3Client.listObjectsV2(listObjectsBuilder.bucket(container).maxKeys(1).build());
             }
             return response;
+        }
+
+        /**
+         * Returns the lists of S3 objects.
+         *
+         * @param configuration         properties
+         * @param includeExcludeMatcher include/exclude matchers to apply
+         */
+        public static List<S3Object> listS3Objects(Map<String, String> configuration,
+                IncludeExcludeMatcher includeExcludeMatcher, IWarningCollector warningCollector)
+                throws CompilationException {
+            // Prepare to retrieve the objects
+            List<S3Object> filesOnly;
+            String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+            S3Client s3Client = buildAwsS3Client(configuration);
+            String prefix = getPrefix(configuration);
+
+            try {
+                filesOnly = listS3Objects(s3Client, container, prefix, includeExcludeMatcher);
+            } catch (S3Exception ex) {
+                // New API is not implemented, try falling back to old API
+                try {
+                    // For error code, see https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
+                    if (ex.awsErrorDetails().errorCode()
+                            .equals(ExternalDataConstants.AwsS3.ERROR_METHOD_NOT_IMPLEMENTED)) {
+                        filesOnly = oldApiListS3Objects(s3Client, container, prefix, includeExcludeMatcher);
+                    } else {
+                        throw ex;
+                    }
+                } catch (SdkException ex2) {
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex2.getMessage());
+                }
+            } catch (SdkException ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+            } finally {
+                if (s3Client != null) {
+                    CleanupUtils.close(s3Client, null);
+                }
+            }
+
+            // Warn if no files are returned
+            if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
+                Warning warning = Warning.of(null, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                warningCollector.warn(warning);
+            }
+
+            return filesOnly;
+        }
+
+        /**
+         * Uses the latest API to retrieve the objects from the storage.
+         *
+         * @param s3Client              S3 client
+         * @param container             container name
+         * @param prefix                definition prefix
+         * @param includeExcludeMatcher include/exclude matchers to apply
+         */
+        private static List<S3Object> listS3Objects(S3Client s3Client, String container, String prefix,
+                IncludeExcludeMatcher includeExcludeMatcher) {
+            String newMarker = null;
+            List<S3Object> filesOnly = new ArrayList<>();
+
+            ListObjectsV2Response listObjectsResponse;
+            ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(container);
+            listObjectsBuilder.prefix(prefix);
+
+            while (true) {
+                // List the objects from the start, or from the last marker in case of truncated result
+                if (newMarker == null) {
+                    listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.build());
+                } else {
+                    listObjectsResponse =
+                            s3Client.listObjectsV2(listObjectsBuilder.continuationToken(newMarker).build());
+                }
+
+                // Collect the paths to files only
+                collectAndFilterFiles(listObjectsResponse.contents(), includeExcludeMatcher.getPredicate(),
+                        includeExcludeMatcher.getMatchersList(), filesOnly);
+
+                // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
+                if (!listObjectsResponse.isTruncated()) {
+                    break;
+                } else {
+                    newMarker = listObjectsResponse.nextContinuationToken();
+                }
+            }
+
+            return filesOnly;
+        }
+
+        /**
+         * Uses the old API (in case the new API is not implemented) to retrieve the objects from the storage
+         *
+         * @param s3Client              S3 client
+         * @param container             container name
+         * @param prefix                definition prefix
+         * @param includeExcludeMatcher include/exclude matchers to apply
+         */
+        private static List<S3Object> oldApiListS3Objects(S3Client s3Client, String container, String prefix,
+                IncludeExcludeMatcher includeExcludeMatcher) {
+            String newMarker = null;
+            List<S3Object> filesOnly = new ArrayList<>();
+
+            ListObjectsResponse listObjectsResponse;
+            ListObjectsRequest.Builder listObjectsBuilder = ListObjectsRequest.builder().bucket(container);
+            listObjectsBuilder.prefix(prefix);
+
+            while (true) {
+                // List the objects from the start, or from the last marker in case of truncated result
+                if (newMarker == null) {
+                    listObjectsResponse = s3Client.listObjects(listObjectsBuilder.build());
+                } else {
+                    listObjectsResponse = s3Client.listObjects(listObjectsBuilder.marker(newMarker).build());
+                }
+
+                // Collect the paths to files only
+                collectAndFilterFiles(listObjectsResponse.contents(), includeExcludeMatcher.getPredicate(),
+                        includeExcludeMatcher.getMatchersList(), filesOnly);
+
+                // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
+                if (!listObjectsResponse.isTruncated()) {
+                    break;
+                } else {
+                    newMarker = listObjectsResponse.nextMarker();
+                }
+            }
+
+            return filesOnly;
+        }
+
+        /**
+         * AWS S3 returns all the objects as paths, not differentiating between folder and files. The path is considered
+         * a file if it does not end up with a "/" which is the separator in a folder structure.
+         *
+         * @param s3Objects List of returned objects
+         */
+        private static void collectAndFilterFiles(List<S3Object> s3Objects,
+                BiPredicate<List<Matcher>, String> predicate, List<Matcher> matchers, List<S3Object> filesOnly) {
+            for (S3Object object : s3Objects) {
+                // skip folders
+                if (object.key().endsWith("/")) {
+                    continue;
+                }
+
+                // No filter, add file
+                if (predicate.test(matchers, object.key())) {
+                    filesOnly.add(object);
+                }
+            }
         }
     }
 

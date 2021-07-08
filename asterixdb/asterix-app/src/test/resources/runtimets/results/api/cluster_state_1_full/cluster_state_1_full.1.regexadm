@@ -9,7 +9,7 @@
     "active\.stop\.timeout" : 3600,
     "active\.suspend\.timeout" : 3600,
     "compiler\.arrayindex" : false,
-    "compiler\.external\.field\.pushdown" : false,
+    "compiler\.external\.field\.pushdown" : true,
     "compiler\.framesize" : 32768,
     "compiler\.groupmemory" : 163840,
     "compiler\.indexonly" : true,

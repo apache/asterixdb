@@ -22,3 +22,4 @@ org.apache.asterix.external.input.record.reader.stream.StreamRecordReaderFactory
 org.apache.asterix.external.input.record.reader.http.HttpServerRecordReaderFactory
 org.apache.asterix.external.input.record.reader.aws.AwsS3ReaderFactory
 org.apache.asterix.external.input.record.reader.azure.AzureBlobReaderFactory
+org.apache.asterix.external.input.record.reader.aws.parquet.AwsS3ParquetReaderFactory

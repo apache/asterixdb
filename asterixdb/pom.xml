@@ -88,7 +88,8 @@
     <log4j.version>2.14.1</log4j.version>
     <awsjavasdk.version>2.10.83</awsjavasdk.version>
     <azurejavasdk.version>12.6.0</azurejavasdk.version>
-    <parquet.version>1.8.2</parquet.version>
+    <parquet.version>1.12.0</parquet.version>
+    <hadoop-awsjavasdk.version>1.12.1</hadoop-awsjavasdk.version>
 
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
@@ -1636,17 +1637,48 @@
         <groupId>org.apache.parquet</groupId>
         <artifactId>parquet-column</artifactId>
         <version>${parquet.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.parquet</groupId>
         <artifactId>parquet-hadoop</artifactId>
         <version>${parquet.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.kitesdk</groupId>
         <artifactId>kite-data-core</artifactId>
         <version>1.1.0</version>
       </dependency>
+      <!-- Hadoop AWS start -->
+      <dependency>
+        <!-- Pick a newer AWS SDK -->
+        <groupId>com.amazonaws</groupId>
+        <artifactId>aws-java-sdk-s3</artifactId>
+        <version>${hadoop-awsjavasdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-aws</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
+      <!-- Hadoop AWS end -->
     </dependencies>
   </dependencyManagement>
 

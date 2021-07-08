@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.test.external_dataset.aws;
 
+import static org.apache.asterix.test.external_dataset.BinaryFileConverterUtil.DEFAULT_PARQUET_SRC_PATH;
+import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createBinaryFiles;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setDataPaths;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setUploaders;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
@@ -128,6 +130,7 @@ public class AwsS3ExternalDatasetTest {
     public static void setUp() throws Exception {
         final TestExecutor testExecutor = new AwsTestExecutor();
         LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, testExecutor);
+        createBinaryFiles(DEFAULT_PARQUET_SRC_PATH);
         setNcEndpoints(testExecutor);
         startAwsS3MockServer();
     }
@@ -221,7 +224,6 @@ public class AwsS3ExternalDatasetTest {
 
     private static RequestBody getRequestBody(String content, boolean fromFile, boolean gzipped) {
         RequestBody body;
-
         // Content is string
         if (!fromFile) {
             body = RequestBody.fromString(content);
@@ -247,6 +249,7 @@ public class AwsS3ExternalDatasetTest {
 
     static class AwsTestExecutor extends TestExecutor {
 
+        @Override
         public void executeTestFile(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
                 String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, TestCase.CompilationUnit cUnit,
                 MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath)

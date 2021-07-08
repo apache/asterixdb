@@ -18,9 +18,11 @@
  */
 package org.apache.asterix.test.external_dataset;
 
+import static org.apache.asterix.test.external_dataset.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.FIXED_DATA_CONTAINER;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -51,6 +53,7 @@ public class ExternalDatasetTestUtils {
     public static final String CSV_DEFINITION = "csv-data/reviews/";
     public static final String TSV_DEFINITION = "tsv-data/reviews/";
     public static final String MIXED_DEFINITION = "mixed-data/reviews/";
+    public static final String PARQUET_DEFINITION = "parquet-data/reviews/";
 
     // This is used for a test to generate over 1000 number of files
     public static final String OVER_1000_OBJECTS_PATH = "over-1000-objects";
@@ -72,6 +75,18 @@ public class ExternalDatasetTestUtils {
 
     public ExternalDatasetTestUtils(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
+    }
+
+    /**
+     * Generate binary files (e.g., parquet files)
+     */
+    public static void createBinaryFiles(String parquetRawJsonDir) throws IOException {
+        //base path
+        File basePath = new File(".");
+        //clean the binary generated files' directory
+        BinaryFileConverterUtil.cleanBinaryDirectory(basePath, BINARY_GEN_BASEDIR);
+        //Convert files in DEFAULT_PARQUET_SRC_PATH to parquet
+        BinaryFileConverterUtil.convertToParquet(basePath, parquetRawJsonDir, BINARY_GEN_BASEDIR);
     }
 
     public static void setDataPaths(String jsonDataPath, String csvDataPath, String tsvDataPath) {
@@ -109,6 +124,10 @@ public class ExternalDatasetTestUtils {
         LOGGER.info("Loading " + OVER_1000_OBJECTS_COUNT + " into " + OVER_1000_OBJECTS_PATH);
         loadLargeNumberOfFiles();
         LOGGER.info("Added " + OVER_1000_OBJECTS_COUNT + " files into " + OVER_1000_OBJECTS_PATH + " successfully");
+
+        LOGGER.info("Adding Parquet files to the bucket");
+        loadParquetFiles();
+        LOGGER.info("Parquet files added successfully");
 
         LOGGER.info("Files added successfully");
     }
@@ -208,6 +227,19 @@ public class ExternalDatasetTestUtils {
         loadData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
         loadGzData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
         loadGzData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
+    }
+
+    private static void loadParquetFiles() {
+        String dataBasePath = BINARY_GEN_BASEDIR;
+        String definition = PARQUET_DEFINITION;
+
+        // Normal format
+        String definitionSegment = "";
+        loadData(dataBasePath, "", "dummy_tweet.parquet", definition, definitionSegment, false, false);
+        loadData(dataBasePath, "", "id_age.parquet", definition, definitionSegment, false, false);
+        loadData(dataBasePath, "", "id_age-string.parquet", definition, definitionSegment, false, false);
+        loadData(dataBasePath, "", "id_name.parquet", definition, definitionSegment, false, false);
+        loadData(dataBasePath, "", "id_name_comment.parquet", definition, definitionSegment, false, false);
     }
 
     private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,

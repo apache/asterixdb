@@ -30,7 +30,7 @@ public class AlgebricksConfig {
     public static final boolean SORT_PARALLEL_DEFAULT = true;
     public static final boolean INDEX_ONLY_DEFAULT = true;
     public static final boolean SANITYCHECK_DEFAULT = false;
-    public static final boolean EXTERNAL_FIELD_PUSHDOWN_DEFAULT = false;
+    public static final boolean EXTERNAL_FIELD_PUSHDOWN_DEFAULT = true;
     public static final boolean SUBPLAN_MERGE_DEFAULT = true;
     public static final boolean SUBPLAN_NESTEDPUSHDOWN_DEFAULT = true;
     public static final boolean MIN_MEMORY_ALLOCATION_DEFAULT = true;

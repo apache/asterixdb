@@ -76,6 +76,50 @@
         <output-dir compare="Text">common/tsv/mixed</output-dir>
       </compilation-unit>
     </test-case>
+    <!-- Parquet Tests Start -->
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/select-all-fields">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/select-all-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/select-count-one-field">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/select-count-one-field</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/multi-file-multi-schema">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/multi-file-multi-schema</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/expression-pushdown">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/expression-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/missing-fields">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/missing-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/string-standard-utf8">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/string-standard-utf8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/object-concat">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/object-concat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <!-- Parquet Tests End -->
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">
         <placeholder name="adapter" value="S3" />

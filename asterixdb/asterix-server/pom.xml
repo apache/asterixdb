@@ -199,9 +199,23 @@
               </gavs>
               <noticeUrl>https://raw.githubusercontent.com/aws/aws-sdk-java-v2/2.10.83/NOTICE.txt</noticeUrl>
             </override>
+            <!-- Hadoop AWS SDK -->
+            <override>
+              <gavs>
+                <gav>com.amazonaws:aws-java-sdk-core:1.12.1</gav>
+                <gav>com.amazonaws:jmespath-java:1.12.1</gav>
+                <gav>com.amazonaws:aws-java-sdk-s3:1.12.1</gav>
+                <gav>com.amazonaws:aws-java-sdk-kms:1.12.1</gav>
+              </gavs>
+              <noticeUrl>https://raw.githubusercontent.com/aws/aws-sdk-java/1.12.1/NOTICE.txt</noticeUrl>
+            </override>
             <override>
               <gav>software.amazon.eventstream:eventstream:1.0.1</gav>
               <noticeUrl>https://raw.githubusercontent.com/awslabs/aws-eventstream-java/7be2dd80e12f8835674c8ffb0f4a2efb64c7b585/NOTICE</noticeUrl>
+            </override>
+            <override>
+              <gav>software.amazon.ion:ion-java:1.0.2</gav>
+              <noticeUrl>https://raw.githubusercontent.com/amzn/ion-java/v1.0.2/NOTICE</noticeUrl>
             </override>
             <override>
               <gavs>
@@ -220,6 +234,10 @@
             <override>
               <gav>org.msgpack:msgpack-core:0.8.20</gav>
               <noticeUrl>https://raw.githubusercontent.com/msgpack/msgpack-java/0.8.20/NOTICE</noticeUrl>
+            </override>
+            <override>
+              <gav>com.github.luben:zstd-jni:1.4.9-1</gav>
+              <url>https://raw.githubusercontent.com/luben/zstd-jni/v1.4.9-1/LICENSE</url>
             </override>
           </overrides>
           <licenses>
@@ -312,13 +330,18 @@
               </aliasUrls>
             </license>
             <license>
-              <url>https://opensource.org/licenses/bsd-license.php</url>
-              <aliasUrls>http://www.opensource.org/licenses/bsd-license.php</aliasUrls>
-            </license>
-            <license>
               <!-- this is special case- handled in ftl template -->
               <url>PUBLIC_DOMAIN</url>
               <aliasUrls>Public Domain</aliasUrls>
+            </license>
+            <license>
+              <displayName>The 2-Clause BSD License</displayName>
+              <url>https://opensource.org/licenses/BSD-2-Clause</url>
+              <contentFile>raw.githubusercontent.com_luben_zstd-jni_v1.4.9-1_LICENSE.txt</contentFile>
+              <aliasUrls>
+                <aliasURL>https://opensource.org/licenses/bsd-license.php</aliasURL>
+                <aliasUrl>https://raw.githubusercontent.com/luben/zstd-jni/v1.4.9-1/LICENSE</aliasUrl>
+              </aliasUrls>
             </license>
           </licenses>
           <templateProperties>

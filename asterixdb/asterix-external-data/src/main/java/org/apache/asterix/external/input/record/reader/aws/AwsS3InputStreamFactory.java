@@ -18,35 +18,20 @@
  */
 package org.apache.asterix.external.input.record.reader.aws;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.function.BiPredicate;
-import java.util.regex.Matcher;
 
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.api.util.CleanupUtils;
 
-import software.amazon.awssdk.core.exception.SdkException;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
-import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory {
@@ -65,156 +50,27 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
 
         // Ensure the validity of include/exclude
         ExternalDataUtils.validateIncludeExclude(configuration);
-        IncludeExcludeMatcher includeExcludeMatcher = getIncludeExcludeMatchers();
+        IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
 
-        // Prepare to retrieve the objects
-        List<S3Object> filesOnly;
-        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-        S3Client s3Client = ExternalDataUtils.AwsS3.buildAwsS3Client(configuration);
-
-        try {
-            filesOnly = listS3Objects(s3Client, container, includeExcludeMatcher);
-        } catch (S3Exception ex) {
-            // New API is not implemented, try falling back to old API
-            try {
-                // For error code, see https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
-                if (ex.awsErrorDetails().errorCode().equals(ExternalDataConstants.AwsS3.ERROR_METHOD_NOT_IMPLEMENTED)) {
-                    filesOnly = oldApiListS3Objects(s3Client, container, includeExcludeMatcher);
-                } else {
-                    throw ex;
-                }
-            } catch (SdkException ex2) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex2.getMessage());
-            }
-        } catch (SdkException ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
-        } finally {
-            if (s3Client != null) {
-                CleanupUtils.close(s3Client, null);
-            }
-        }
-
-        // Warn if no files are returned
-        if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
-            Warning warning = Warning.of(null, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
-            warningCollector.warn(warning);
-        }
-
+        //Get a list of S3 objects
+        List<S3Object> filesOnly =
+                ExternalDataUtils.AwsS3.listS3Objects(configuration, includeExcludeMatcher, warningCollector);
         // Distribute work load amongst the partitions
         distributeWorkLoad(filesOnly, getPartitionsCount());
     }
 
     /**
-     * Uses the latest API to retrieve the objects from the storage.
-     *
-     * @param s3Client S3 client
-     * @param container container name
-     * @param includeExcludeMatcher include/exclude matchers to apply
-     */
-    private List<S3Object> listS3Objects(S3Client s3Client, String container,
-            IncludeExcludeMatcher includeExcludeMatcher) {
-        String newMarker = null;
-        List<S3Object> filesOnly = new ArrayList<>();
-
-        ListObjectsV2Response listObjectsResponse;
-        ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(container);
-        listObjectsBuilder.prefix(ExternalDataUtils.getPrefix(configuration));
-
-        while (true) {
-            // List the objects from the start, or from the last marker in case of truncated result
-            if (newMarker == null) {
-                listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.build());
-            } else {
-                listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.continuationToken(newMarker).build());
-            }
-
-            // Collect the paths to files only
-            collectAndFilterFiles(listObjectsResponse.contents(), includeExcludeMatcher.getPredicate(),
-                    includeExcludeMatcher.getMatchersList(), filesOnly);
-
-            // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
-            if (!listObjectsResponse.isTruncated()) {
-                break;
-            } else {
-                newMarker = listObjectsResponse.nextContinuationToken();
-            }
-        }
-
-        return filesOnly;
-    }
-
-    /**
-     * Uses the old API (in case the new API is not implemented) to retrieve the objects from the storage
-     *
-     * @param s3Client S3 client
-     * @param container container name
-     * @param includeExcludeMatcher include/exclude matchers to apply
-     */
-    private List<S3Object> oldApiListS3Objects(S3Client s3Client, String container,
-            IncludeExcludeMatcher includeExcludeMatcher) {
-        String newMarker = null;
-        List<S3Object> filesOnly = new ArrayList<>();
-
-        ListObjectsResponse listObjectsResponse;
-        ListObjectsRequest.Builder listObjectsBuilder = ListObjectsRequest.builder().bucket(container);
-        listObjectsBuilder.prefix(ExternalDataUtils.getPrefix(configuration));
-
-        while (true) {
-            // List the objects from the start, or from the last marker in case of truncated result
-            if (newMarker == null) {
-                listObjectsResponse = s3Client.listObjects(listObjectsBuilder.build());
-            } else {
-                listObjectsResponse = s3Client.listObjects(listObjectsBuilder.marker(newMarker).build());
-            }
-
-            // Collect the paths to files only
-            collectAndFilterFiles(listObjectsResponse.contents(), includeExcludeMatcher.getPredicate(),
-                    includeExcludeMatcher.getMatchersList(), filesOnly);
-
-            // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
-            if (!listObjectsResponse.isTruncated()) {
-                break;
-            } else {
-                newMarker = listObjectsResponse.nextMarker();
-            }
-        }
-
-        return filesOnly;
-    }
-
-    /**
-     * AWS S3 returns all the objects as paths, not differentiating between folder and files. The path is considered
-     * a file if it does not end up with a "/" which is the separator in a folder structure.
-     *
-     * @param s3Objects List of returned objects
-     */
-    private void collectAndFilterFiles(List<S3Object> s3Objects, BiPredicate<List<Matcher>, String> predicate,
-            List<Matcher> matchers, List<S3Object> filesOnly) {
-        for (S3Object object : s3Objects) {
-            // skip folders
-            if (object.key().endsWith("/")) {
-                continue;
-            }
-
-            // No filter, add file
-            if (predicate.test(matchers, object.key())) {
-                filesOnly.add(object);
-            }
-        }
-    }
-
-    /**
      * To efficiently utilize the parallelism, work load will be distributed amongst the partitions based on the file
      * size.
-     *
+     * <p>
      * Example:
      * File1 1mb, File2 300kb, File3 300kb, File4 300kb
-     *
+     * <p>
      * Distribution:
      * Partition1: [File1]
      * Partition2: [File2, File3, File4]
      *
-     * @param fileObjects AWS S3 file objects
+     * @param fileObjects     AWS S3 file objects
      * @param partitionsCount Partitions count
      */
     private void distributeWorkLoad(List<S3Object> fileObjects, int partitionsCount) {

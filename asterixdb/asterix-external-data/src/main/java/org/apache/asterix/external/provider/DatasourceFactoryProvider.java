@@ -20,13 +20,16 @@ package org.apache.asterix.external.provider;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -46,7 +49,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class DatasourceFactoryProvider {
 
     private static final String RESOURCE = "META-INF/services/org.apache.asterix.external.api.IRecordReaderFactory";
-    private static Map<String, Class> factories = null;
+    private static final String DEFAULT_FORMAT = "DEFAULT_FORMAT";
+    private static Map<String, Map<String, Class<?>>> factories = null;
 
     private DatasourceFactoryProvider() {
     }
@@ -96,15 +100,16 @@ public class DatasourceFactoryProvider {
         return streamSourceFactory;
     }
 
-    protected static IRecordReaderFactory getInstance(Class clazz) throws AsterixException {
+    protected static IRecordReaderFactory<?> getInstance(Class<?> clazz) throws AsterixException {
         try {
-            return (IRecordReaderFactory) clazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException | ClassCastException e) {
+            return (IRecordReaderFactory<?>) clazz.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | ClassCastException | NoSuchMethodException
+                | InvocationTargetException e) {
             throw new AsterixException("Cannot create: " + clazz.getSimpleName(), e);
         }
     }
 
-    public static IRecordReaderFactory getRecordReaderFactory(String adaptorName, Map<String, String> configuration)
+    public static IRecordReaderFactory<?> getRecordReaderFactory(String adaptorName, Map<String, String> configuration)
             throws HyracksDataException, AsterixException {
         if (adaptorName.equals(ExternalDataConstants.EXTERNAL)) {
             //return ExternalDataUtils.createExternalRecordReaderFactory(libraryManager, configuration);
@@ -112,24 +117,27 @@ public class DatasourceFactoryProvider {
         }
 
         if (factories == null) {
-            factories = initFactories();
+            initFactories();
         }
 
         if (factories.containsKey(adaptorName)) {
-            return getInstance(factories.get(adaptorName));
+            Map<String, Class<?>> formatClassMap = factories.get(adaptorName);
+            String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
+            return getInstance(formatClassMap.getOrDefault(format, formatClassMap.get(DEFAULT_FORMAT)));
         }
 
         try {
-            return (IRecordReaderFactory) Class.forName(adaptorName).newInstance();
-        } catch (IllegalAccessException | ClassNotFoundException | InstantiationException | ClassCastException e) {
+            return (IRecordReaderFactory<?>) Class.forName(adaptorName).getDeclaredConstructor().newInstance();
+        } catch (IllegalAccessException | ClassNotFoundException | InstantiationException | ClassCastException
+                | NoSuchMethodException | InvocationTargetException e) {
             throw new RuntimeDataException(ErrorCode.UNKNOWN_RECORD_READER_FACTORY, e, adaptorName);
         }
     }
 
-    protected static Map<String, Class> initFactories() throws AsterixException {
-        Map<String, Class> factories = new HashMap<>();
+    protected static void initFactories() throws AsterixException {
+        factories = new HashMap<>();
         ClassLoader cl = ParserFactoryProvider.class.getClassLoader();
-        final Charset encoding = Charset.forName("UTF-8");
+        final Charset encoding = StandardCharsets.UTF_8;
         try {
             Enumeration<URL> urls = cl.getResources(RESOURCE);
             for (URL url : Collections.list(urls)) {
@@ -142,19 +150,44 @@ public class DatasourceFactoryProvider {
                         continue;
                     }
                     final Class<?> clazz = Class.forName(className);
-                    List<String> formats = ((IRecordReaderFactory) clazz.newInstance()).getRecordReaderNames();
-                    for (String format : formats) {
-                        if (factories.containsKey(format)) {
-                            throw new AsterixException(ErrorCode.PROVIDER_DATASOURCE_FACTORY_DUPLICATE_FORMAT_MAPPING,
-                                    format);
-                        }
-                        factories.put(format, clazz);
-                    }
+                    final IRecordReaderFactory<?> readerFactory =
+                            (IRecordReaderFactory<?>) clazz.getDeclaredConstructor().newInstance();
+                    List<String> readerNames = readerFactory.getRecordReaderNames();
+                    Set<String> supportedFormats = readerFactory.getReaderSupportedFormats();
+                    putFactory(readerNames, supportedFormats, clazz);
                 }
             }
-        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+        } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException
+                | NoSuchMethodException | InvocationTargetException e) {
             throw new AsterixException(e);
         }
-        return factories;
+    }
+
+    private static void putFactory(List<String> readerNames, Set<String> supportedFormats, Class<?> clazz)
+            throws AsterixException {
+        for (String reader : readerNames) {
+            Map<String, Class<?>> formatClassMap = factories.computeIfAbsent(reader, k -> new HashMap<>());
+            if (isDefaultFormat(supportedFormats)) {
+                //Ensure that only one reader is the default reader
+                checkDuplicates(formatClassMap, DEFAULT_FORMAT);
+                formatClassMap.put(DEFAULT_FORMAT, clazz);
+            } else {
+                //Specialized formats for the same reader name
+                for (String format : supportedFormats) {
+                    checkDuplicates(formatClassMap, format);
+                    formatClassMap.put(format, clazz);
+                }
+            }
+        }
+    }
+
+    private static boolean isDefaultFormat(Set<String> supportedFormats) {
+        return supportedFormats.equals(ExternalDataConstants.ALL_FORMATS);
+    }
+
+    private static void checkDuplicates(Map<String, Class<?>> factories, String key) throws AsterixException {
+        if (factories.containsKey(key)) {
+            throw new AsterixException(ErrorCode.PROVIDER_DATASOURCE_FACTORY_DUPLICATE_FORMAT_MAPPING, key);
+        }
     }
 }

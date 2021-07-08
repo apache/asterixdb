@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -232,20 +231,10 @@ public class HDFSUtils {
     public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(IApplicationContext appCtx,
             AlgebricksAbsolutePartitionConstraint clusterLocations) {
         if (clusterLocations == null) {
-            IClusterStateManager clusterStateManager = ((ICcApplicationContext) appCtx).getClusterStateManager();
-            ArrayList<String> locs = new ArrayList<>();
-            Map<String, String[]> stores = appCtx.getMetadataProperties().getStores();
-            for (String node : stores.keySet()) {
-                int numIODevices = clusterStateManager.getIODevices(node).length;
-                for (int k = 0; k < numIODevices; k++) {
-                    locs.add(node);
-                }
-            }
-            String[] cluster = new String[locs.size()];
-            cluster = locs.toArray(cluster);
-            return new AlgebricksAbsolutePartitionConstraint(cluster);
+            return ((ICcApplicationContext) appCtx).getClusterStateManager().getClusterLocations();
         }
         return clusterLocations;
+
     }
 
     public static RecordIdType getRecordIdType(Map<String, String> configuration) {

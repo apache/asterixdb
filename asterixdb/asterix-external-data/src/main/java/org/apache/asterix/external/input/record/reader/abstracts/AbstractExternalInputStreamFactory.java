@@ -18,24 +18,16 @@
  */
 package org.apache.asterix.external.input.record.reader.abstracts;
 
-import static org.apache.asterix.external.util.ExternalDataConstants.*;
-
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
-import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -80,39 +72,6 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
         this.configuration = configuration;
         this.partitionConstraint =
                 ((ICcApplicationContext) ctx.getApplicationContext()).getClusterStateManager().getClusterLocations();
-    }
-
-    protected IncludeExcludeMatcher getIncludeExcludeMatchers() throws CompilationException {
-        // Get and compile the patterns for include/exclude if provided
-        List<Matcher> includeMatchers = new ArrayList<>();
-        List<Matcher> excludeMatchers = new ArrayList<>();
-        String pattern = null;
-        try {
-            for (Map.Entry<String, String> entry : configuration.entrySet()) {
-                if (entry.getKey().startsWith(KEY_INCLUDE)) {
-                    pattern = entry.getValue();
-                    includeMatchers.add(Pattern.compile(ExternalDataUtils.patternToRegex(pattern)).matcher(""));
-                } else if (entry.getKey().startsWith(KEY_EXCLUDE)) {
-                    pattern = entry.getValue();
-                    excludeMatchers.add(Pattern.compile(ExternalDataUtils.patternToRegex(pattern)).matcher(""));
-                }
-            }
-        } catch (PatternSyntaxException ex) {
-            throw new CompilationException(ErrorCode.INVALID_REGEX_PATTERN, pattern);
-        }
-
-        IncludeExcludeMatcher includeExcludeMatcher;
-        if (!includeMatchers.isEmpty()) {
-            includeExcludeMatcher = new IncludeExcludeMatcher(includeMatchers,
-                    (matchers1, key) -> ExternalDataUtils.matchPatterns(matchers1, key));
-        } else if (!excludeMatchers.isEmpty()) {
-            includeExcludeMatcher = new IncludeExcludeMatcher(excludeMatchers,
-                    (matchers1, key) -> !ExternalDataUtils.matchPatterns(matchers1, key));
-        } else {
-            includeExcludeMatcher = new IncludeExcludeMatcher(Collections.emptyList(), (matchers1, key) -> true);
-        }
-
-        return includeExcludeMatcher;
     }
 
     public static class PartitionWorkLoadBasedOnSize implements Serializable {
