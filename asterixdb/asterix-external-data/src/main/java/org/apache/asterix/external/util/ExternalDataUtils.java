@@ -183,7 +183,7 @@ public class ExternalDataUtils {
     }
 
     public static String getDataverse(Map<String, String> configuration) {
-        return configuration.get(ExternalDataConstants.KEY_DATAVERSE);
+        return configuration.get(ExternalDataConstants.KEY_DATASET_DATAVERSE);
     }
 
     public static String getParserFactory(Map<String, String> configuration) {
@@ -287,7 +287,7 @@ public class ExternalDataUtils {
         if (!configuration.containsKey(ExternalDataConstants.KEY_IS_FEED)) {
             configuration.put(ExternalDataConstants.KEY_IS_FEED, ExternalDataConstants.TRUE);
         }
-        configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataverseName);
+        configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE, dataverseName);
         configuration.put(ExternalDataConstants.KEY_FEED_NAME, feedName);
     }
 

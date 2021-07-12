@@ -785,7 +785,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             Map<String, String> configuration, ARecordType itemType, ARecordType metaType,
             IWarningCollector warningCollector) throws AlgebricksException {
         try {
-            configuration.put(ExternalDataConstants.KEY_DATAVERSE, dataset.getDataverseName());
+            configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE, dataset.getDataverseName());
             ITypedAdapterFactory adapterFactory =
                     AdapterFactoryProvider.getAdapterFactory(getApplicationContext().getServiceContext(), adapterName,
                             configuration, itemType, metaType, warningCollector);
