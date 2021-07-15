@@ -319,10 +319,19 @@ public class ExternalDataConstants {
          */
         public static final String HADOOP_ACCESS_KEY_ID = "fs.s3a.access.key";
         public static final String HADOOP_SECRET_ACCESS_KEY = "fs.s3a.secret.key";
+        public static final String HADOOP_SESSION_TOKEN = "fs.s3a.session.token";
         public static final String HADOOP_PATH_STYLE_ACCESS = "fs.s3a.path.style.access";
         public static final String HADOOP_REGION = "fs.s3a.region";
         public static final String HADOOP_SERVICE_END_POINT = "fs.s3a.endpoint";
         public static final String HADOOP_S3_PROTOCOL = "s3a";
+
+        //Hadoop credentials provider key
+        public static final String HADOOP_CREDENTIAL_PROVIDER_KEY = "fs.s3a.aws.credentials.provider";
+        //Anonymous credential provider
+        public static final String HADOOP_ANONYMOUS_ACCESS = "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider";
+        //Temporary credential provider
+        public static final String HADOOP_TEMP_ACCESS = "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider";
+
     }
 
     public static class AzureBlob {

@@ -22,8 +22,12 @@ import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_P
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ERROR_METHOD_NOT_IMPLEMENTED;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_ACCESS_KEY_ID;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_ANONYMOUS_ACCESS;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_CREDENTIAL_PROVIDER_KEY;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_PATH_STYLE_ACCESS;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_SECRET_ACCESS_KEY;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_SESSION_TOKEN;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_TEMP_ACCESS;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_KEY_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_NAME_FIELD_NAME;
@@ -834,11 +838,29 @@ public class ExternalDataUtils {
         public static void configureAwsS3HdfsJobConf(JobConf conf, Map<String, String> configuration) {
             String accessKeyId = configuration.get(ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME);
             String secretAccessKey = configuration.get(ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME);
+            String sessionToken = configuration.get(ExternalDataConstants.AwsS3.SESSION_TOKEN_FIELD_NAME);
             String regionId = configuration.get(ExternalDataConstants.AwsS3.REGION_FIELD_NAME);
             String serviceEndpoint = configuration.get(ExternalDataConstants.AwsS3.SERVICE_END_POINT_FIELD_NAME);
 
-            conf.set(HADOOP_ACCESS_KEY_ID, accessKeyId);
-            conf.set(HADOOP_SECRET_ACCESS_KEY, secretAccessKey);
+            /*
+             * Authentication Methods:
+             * 1- Anonymous: no accessKeyId and no secretAccessKey
+             * 2- Temporary: has to provide accessKeyId, secretAccessKey and sessionToken
+             * 3- Private: has to provide accessKeyId and secretAccessKey
+             */
+            if (accessKeyId == null) {
+                //Tells hadoop-aws it is an anonymous access
+                conf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_ANONYMOUS_ACCESS);
+            } else {
+                conf.set(HADOOP_ACCESS_KEY_ID, accessKeyId);
+                conf.set(HADOOP_SECRET_ACCESS_KEY, secretAccessKey);
+                if (sessionToken != null) {
+                    conf.set(HADOOP_SESSION_TOKEN, sessionToken);
+                    //Tells hadoop-aws it is a temporary access
+                    conf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_TEMP_ACCESS);
+                }
+            }
+
             /*
              * This is to allow S3 definition to have path-style form. Should always be true to match the current
              * way we access files in S3

@@ -119,6 +119,16 @@
         <output-dir compare="Text">common/parquet/object-concat</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="parquet-anonymous-access">
+        <output-dir compare="Text">parquet-anonymous-access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="parquet-temporary-access">
+        <output-dir compare="Text">parquet-temporary-access</output-dir>
+      </compilation-unit>
+    </test-case>
     <!-- Parquet Tests End -->
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">
