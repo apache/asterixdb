@@ -39,6 +39,7 @@ import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
+import org.apache.asterix.lang.common.clause.OrderbyClause.NullOrderModifier;
 import org.apache.asterix.lang.common.clause.OrderbyClause.OrderModifier;
 import org.apache.asterix.lang.common.clause.UpdateClause;
 import org.apache.asterix.lang.common.clause.WhereClause;
@@ -317,7 +318,7 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
     @Override
     public Void visit(OrderbyClause oc, Integer step) throws CompilationException {
         out.print(skip(step) + "order by ");
-        printDelimitedObyExpressions(oc.getOrderbyList(), oc.getModifierList(), step);
+        printDelimitedObyExpressions(oc.getOrderbyList(), oc.getModifierList(), oc.getNullModifierList(), step);
         out.println();
         return null;
     }
@@ -1037,8 +1038,8 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
         }
     }
 
-    protected void printDelimitedObyExpressions(List<Expression> list, List<OrderModifier> mlist, Integer step)
-            throws CompilationException {
+    protected void printDelimitedObyExpressions(List<Expression> list, List<OrderModifier> mlist,
+            List<NullOrderModifier> nlist, Integer step) throws CompilationException {
         int index = 0;
         int size = list.size();
         for (Expression expr : list) {
@@ -1046,6 +1047,11 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
             OrderModifier orderModifier = mlist.get(index);
             if (orderModifier != OrderModifier.ASC) {
                 out.print(orderModifier.toString().toLowerCase());
+            }
+            NullOrderModifier nullModifier = nlist.get(index);
+            if (nullModifier != null) {
+                out.print(" nulls ");
+                out.print(nullModifier.toString().toLowerCase());
             }
             if (++index < size) {
                 out.print(COMMA);

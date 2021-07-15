@@ -31,6 +31,7 @@ import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
+import org.apache.asterix.lang.common.clause.OrderbyClause.NullOrderModifier;
 import org.apache.asterix.lang.common.clause.OrderbyClause.OrderModifier;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
@@ -241,10 +242,14 @@ public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<V
     public Void visit(OrderbyClause oc, Integer step) throws CompilationException {
         out.println(skip(step) + "Orderby");
         List<OrderModifier> mlist = oc.getModifierList();
+        List<NullOrderModifier> nlist = oc.getNullModifierList();
         List<Expression> list = oc.getOrderbyList();
         for (int i = 0; i < list.size(); i++) {
             list.get(i).accept(this, step + 1);
-            out.println(skip(step + 1) + mlist.get(i).toString());
+            OrderModifier orderModifier = mlist.get(i);
+            NullOrderModifier nullOrderModifier = nlist.get(i);
+            out.println(
+                    skip(step + 1) + orderModifier + (nullOrderModifier != null ? " NULLS " + nullOrderModifier : ""));
         }
         out.println();
         return null;

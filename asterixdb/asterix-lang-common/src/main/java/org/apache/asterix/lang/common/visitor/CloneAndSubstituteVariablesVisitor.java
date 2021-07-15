@@ -250,7 +250,8 @@ public class CloneAndSubstituteVariablesVisitor extends
             VariableSubstitutionEnvironment env) throws CompilationException {
         List<Expression> exprList =
                 VariableCloneAndSubstitutionUtil.visitAndCloneExprList(oc.getOrderbyList(), env, this);
-        OrderbyClause oc2 = new OrderbyClause(exprList, new ArrayList<>(oc.getModifierList()));
+        OrderbyClause oc2 = new OrderbyClause(exprList, new ArrayList<>(oc.getModifierList()),
+                new ArrayList<>(oc.getNullModifierList()));
         oc2.setNumFrames(oc.getNumFrames());
         oc2.setNumTuples(oc.getNumTuples());
         oc2.setRangeMap(oc.getRangeMap());

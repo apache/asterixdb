@@ -393,9 +393,13 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             out.println(skip(step + 1) + "ORDER BY");
             List<Expression> orderbyList = winExpr.getOrderbyList();
             List<OrderbyClause.OrderModifier> orderbyModifierList = winExpr.getOrderbyModifierList();
+            List<OrderbyClause.NullOrderModifier> orderbyNullModifierList = winExpr.getOrderbyNullModifierList();
             for (int i = 0, ln = orderbyList.size(); i < ln; i++) {
                 orderbyList.get(i).accept(this, step + 2);
-                out.println(skip(step + 2) + orderbyModifierList.get(i));
+                OrderbyClause.OrderModifier orderModifier = orderbyModifierList.get(i);
+                OrderbyClause.NullOrderModifier nullOrderModifier = orderbyNullModifierList.get(i);
+                out.println(skip(step + 2) + orderModifier
+                        + (nullOrderModifier != null ? " NULLS " + nullOrderModifier : ""));
             }
         }
         if (winExpr.hasFrameDefinition()) {

@@ -48,6 +48,7 @@ import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
+import org.apache.asterix.lang.common.clause.OrderbyClause.NullOrderModifier;
 import org.apache.asterix.lang.common.clause.OrderbyClause.OrderModifier;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
@@ -1266,13 +1267,17 @@ abstract class LangExpressionToPlanTranslator
         SourceLocation sourceLoc = oc.getSourceLocation();
         OrderOperator ord = new OrderOperator();
         ord.setSourceLocation(sourceLoc);
-        Iterator<OrderModifier> modifIter = oc.getModifierList().iterator();
+        List<Expression> orderbyList = oc.getOrderbyList();
+        List<OrderModifier> modifierList = oc.getModifierList();
+        List<NullOrderModifier> nullModifierList = oc.getNullModifierList();
         Mutable<ILogicalOperator> topOp = tupSource;
-        for (Expression e : oc.getOrderbyList()) {
+        for (int i = 0, n = orderbyList.size(); i < n; i++) {
+            Expression e = orderbyList.get(i);
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(e, topOp);
-            OrderModifier m = modifIter.next();
-            OrderOperator.IOrder comp = translateOrderModifier(m);
-            ord.getOrderExpressions().add(new Pair<>(comp, new MutableObject<>(p.first)));
+            ILogicalExpression obyExpr = p.first;
+            OrderModifier modifier = modifierList.get(i);
+            NullOrderModifier nullModifier = nullModifierList.get(i);
+            addOrderByExpression(ord.getOrderExpressions(), obyExpr, modifier, nullModifier);
             topOp = p.second;
         }
         ord.getInputs().add(topOp);
@@ -1283,16 +1288,38 @@ abstract class LangExpressionToPlanTranslator
             ord.getAnnotations().put(OperatorAnnotations.MAX_NUMBER_FRAMES, oc.getNumFrames());
         }
         if (oc.getRangeMap() != null) {
-            Iterator<OrderModifier> orderModifIter = oc.getModifierList().iterator();
-            boolean ascending = orderModifIter.next() == OrderModifier.ASC;
+            boolean ascending = modifierList.get(0) == OrderModifier.ASC;
             RangeMapBuilder.verifyRangeOrder(oc.getRangeMap(), ascending, sourceLoc);
             ord.getAnnotations().put(OperatorAnnotations.USE_STATIC_RANGE, oc.getRangeMap());
         }
         return new Pair<>(ord, null);
     }
 
+    protected void addOrderByExpression(List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> outOrderList,
+            ILogicalExpression obyExpr, OrderModifier modifier, NullOrderModifier nullModifier) {
+        OrderOperator.IOrder comp = translateOrderModifier(modifier);
+        ILogicalExpression nullModifierExpr = translateNullOrderModifier(obyExpr, modifier, nullModifier);
+        if (nullModifierExpr != null) {
+            outOrderList.add(new Pair<>(comp, new MutableObject<>(nullModifierExpr)));
+        }
+        outOrderList.add(new Pair<>(comp, new MutableObject<>(obyExpr)));
+    }
+
     protected OrderOperator.IOrder translateOrderModifier(OrderModifier m) {
         return m == OrderModifier.ASC ? OrderOperator.ASC_ORDER : OrderOperator.DESC_ORDER;
+    }
+
+    protected ILogicalExpression translateNullOrderModifier(ILogicalExpression obyExpr, OrderModifier m,
+            NullOrderModifier nm) {
+        if ((m == OrderModifier.ASC && nm == NullOrderModifier.LAST)
+                || (m == OrderModifier.DESC && nm == NullOrderModifier.FIRST)) {
+            AbstractFunctionCallExpression isUnknownExpr =
+                    createFunctionCallExpression(BuiltinFunctions.IS_UNKNOWN, obyExpr.getSourceLocation());
+            isUnknownExpr.getArguments().add(new MutableObject<>(obyExpr.cloneExpression()));
+            return isUnknownExpr;
+        } else {
+            return null;
+        }
     }
 
     @Override

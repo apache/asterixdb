@@ -1220,9 +1220,12 @@ Result:
 The last three (optional) clauses to be processed in a query are `ORDER BY`, `LIMIT`, and `OFFSET`.
 
 The `ORDER BY` clause is used to globally sort data in either ascending order (i.e., `ASC`) or descending order (i.e., `DESC`).
-During ordering, `MISSING` and `NULL` are treated as being smaller than any other value if they are encountered
+During ordering (if the `NULLS` modifier is not specified), `MISSING` and `NULL` are treated as being smaller than any other value if they are encountered
 in the ordering key(s). `MISSING` is treated as smaller than `NULL` if both occur in the data being sorted.
-The ordering of values of a given type is consistent with its type's `<=` ordering; the ordering of values across types is implementation-defined but stable.
+The `NULLS` modifier determines how `MISSING` and `NULL` are ordered relative to all other values:
+first (`NULLS` `FIRST`) or last (`NULLS` `LAST`). The relative order between `MISSING` and `NULL` is not affected by the `NULLS` modifier
+(i.e. `MISSING` is still treated as smaller than `NULL`). The ordering of values of a given type is consistent with its type's `<=` ordering;
+the ordering of values across types is implementation-defined but stable.
 
 The `LIMIT` clause is used to limit the result set to a specified maximum size.
 The optional `OFFSET` clause is used to specify a number of items in the output stream to be discarded before the query result begins.

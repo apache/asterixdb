@@ -3984,6 +3984,7 @@ Expression FunctionCallExpr() throws ParseException:
 WindowExpression WindowExpr(FunctionSignature signature, List<Expression> argList, Expression aggFilterExpr)
   throws ParseException:
 {
+  WindowExpression windowExpr = null;
   Boolean fromLast = null, ignoreNulls = null;
 }
 {
@@ -4021,9 +4022,9 @@ WindowExpression WindowExpr(FunctionSignature signature, List<Expression> argLis
       }
     }
   )?
-  <OVER>
+  <OVER> windowExpr = OverClause(signature, argList, aggFilterExpr, token, fromLast, ignoreNulls)
   {
-    return OverClause(signature, argList, aggFilterExpr, token, fromLast, ignoreNulls);
+    return windowExpr;
   }
 }
 
@@ -4035,6 +4036,7 @@ WindowExpression OverClause(FunctionSignature signature, List<Expression> argLis
   OrderbyClause orderByClause = null;
   List<Expression> orderbyList = null;
   List<OrderbyClause.OrderModifier> orderbyModifierList = null;
+  List<OrderbyClause.NullOrderModifier> orderbyNullModifierList = null;
   WindowExpression.FrameMode frameMode = null;
   Pair<WindowExpression.FrameBoundaryKind, Expression> frameStart = null, frameEnd = null;
   WindowExpression.FrameBoundaryKind frameStartKind = null, frameEndKind = null;
@@ -4063,6 +4065,7 @@ WindowExpression OverClause(FunctionSignature signature, List<Expression> argLis
     {
       orderbyList = orderByClause.getOrderbyList();
       orderbyModifierList = orderByClause.getModifierList();
+      orderbyNullModifierList = orderByClause.getNullModifierList();
     }
     (
       frameMode = WindowFrameMode()
@@ -4089,8 +4092,8 @@ WindowExpression OverClause(FunctionSignature signature, List<Expression> argLis
   <RIGHTPAREN>
   {
     WindowExpression winExpr = new WindowExpression(signature, argList, aggFilterExpr, partitionExprs, orderbyList,
-      orderbyModifierList, frameMode, frameStartKind, frameStartExpr, frameEndKind, frameEndExpr, frameExclusionKind,
-      windowVar, windowFieldList, ignoreNulls, fromLast);
+      orderbyModifierList, orderbyNullModifierList, frameMode, frameStartKind, frameStartExpr, frameEndKind,
+      frameEndExpr, frameExclusionKind, windowVar, windowFieldList, ignoreNulls, fromLast);
     return addSourceLocation(winExpr, startToken);
   }
 }
@@ -4617,65 +4620,89 @@ OrderbyClause OrderbyClause() throws ParseException :
 {
     Token startToken = null;
     OrderbyClause oc = new OrderbyClause();
-    Expression orderbyExpr;
+    Triple<Expression, OrderbyClause.OrderModifier, OrderbyClause.NullOrderModifier> orderbyExpr = null;
     List<Expression> orderbyList = new ArrayList<Expression>();
     List<OrderbyClause.OrderModifier> modifierList = new ArrayList<OrderbyClause.OrderModifier>();
-    int numOfOrderby = 0;
+    List<OrderbyClause.NullOrderModifier> nullModifierList = new ArrayList<OrderbyClause.NullOrderModifier>();
 }
 {
-    <ORDER>
-      {
-        startToken = token;
-        Token hintToken = fetchHint(token, SqlppHint.INMEMORY_HINT, SqlppHint.RANGE_HINT);
-        if (hintToken != null) {
-          switch (hintToken.hint) {
-            case INMEMORY_HINT:
-              String[] splits = hintToken.hintParams.split("\\s+");
-              int numFrames = Integer.parseInt(splits[0]);
-              int numTuples = Integer.parseInt(splits[1]);
-              oc.setNumFrames(numFrames);
-              oc.setNumTuples(numTuples);
-              break;
-            case RANGE_HINT:
-              try {
-                Expression rangeExpr = parseExpression(hintToken.hintParams);
-                RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
-                oc.setRangeMap(rangeMap);
-              } catch (CompilationException e) {
-                throw new SqlppParseException(getSourceLocation(hintToken), e.getMessage());
-              }
-              break;
+  <ORDER>
+  {
+    startToken = token;
+    Token hintToken = fetchHint(token, SqlppHint.INMEMORY_HINT, SqlppHint.RANGE_HINT);
+    if (hintToken != null) {
+      switch (hintToken.hint) {
+        case INMEMORY_HINT:
+          String[] splits = hintToken.hintParams.split("\\s+");
+          int numFrames = Integer.parseInt(splits[0]);
+          int numTuples = Integer.parseInt(splits[1]);
+          oc.setNumFrames(numFrames);
+          oc.setNumTuples(numTuples);
+          break;
+        case RANGE_HINT:
+          try {
+            Expression rangeExpr = parseExpression(hintToken.hintParams);
+            RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
+            oc.setRangeMap(rangeMap);
+          } catch (CompilationException e) {
+            throw new SqlppParseException(getSourceLocation(hintToken), e.getMessage());
           }
-        }
+          break;
       }
-    <BY> orderbyExpr = Expression()
-    {
-      orderbyList.add(orderbyExpr);
-      OrderbyClause.OrderModifier modif = OrderbyClause.OrderModifier.ASC;
     }
-    ( (<ASC> { modif = OrderbyClause.OrderModifier.ASC; })
-    | (<DESC> { modif = OrderbyClause.OrderModifier.DESC; }))?
+  }
+  <BY> orderbyExpr = OrderByExpression()
+  {
+    orderbyList.add(orderbyExpr.first);
+    modifierList.add(orderbyExpr.second);
+    nullModifierList.add(orderbyExpr.third);
+  }
+  (
+    LOOKAHEAD(2) <COMMA> orderbyExpr = OrderByExpression()
     {
-      modifierList.add(modif);
+      orderbyList.add(orderbyExpr.first);
+      modifierList.add(orderbyExpr.second);
+      nullModifierList.add(orderbyExpr.third);
     }
+  )*
+  {
+    oc.setOrderbyList(orderbyList);
+    oc.setModifierList(modifierList);
+    oc.setNullModifierList(nullModifierList);
+    return addSourceLocation(oc, startToken);
+  }
+}
 
-    (LOOKAHEAD(2) <COMMA> orderbyExpr = Expression()
+Triple<Expression, OrderbyClause.OrderModifier, OrderbyClause.NullOrderModifier> OrderByExpression()
+  throws ParseException:
+{
+  Expression orderbyExpr = null;
+  OrderbyClause.OrderModifier modif = OrderbyClause.OrderModifier.ASC;
+  OrderbyClause.NullOrderModifier nullModif = null;
+}
+{
+  orderbyExpr = Expression()
+  (
+    <ASC> { modif = OrderbyClause.OrderModifier.ASC; }
+    |
+    <DESC> { modif = OrderbyClause.OrderModifier.DESC; }
+  )?
+  (
+    LOOKAHEAD({ laIdentifier(NULLS) }) <IDENTIFIER> { expectToken(NULLS); } <IDENTIFIER>
     {
-      orderbyList.add(orderbyExpr);
-      modif = OrderbyClause.OrderModifier.ASC;
+      if (isToken(FIRST)) {
+        nullModif = OrderbyClause.NullOrderModifier.FIRST;
+      } else if (isToken(LAST)) {
+        nullModif = OrderbyClause.NullOrderModifier.LAST;
+      } else {
+        throw createUnexpectedTokenError();
+      }
     }
-    ( (<ASC> { modif = OrderbyClause.OrderModifier.ASC; })
-    | (<DESC> { modif = OrderbyClause.OrderModifier.DESC; }))?
-    {
-      modifierList.add(modif);
-    }
-    )*
-
-    {
-      oc.setModifierList(modifierList);
-      oc.setOrderbyList(orderbyList);
-      return addSourceLocation(oc, startToken);
-    }
+  )?
+  {
+    return new Triple<Expression, OrderbyClause.OrderModifier, OrderbyClause.NullOrderModifier>(orderbyExpr, modif,
+      nullModif);
+  }
 }
 
 GroupbyClause GroupbyClause()throws ParseException :

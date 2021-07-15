@@ -30,6 +30,7 @@ import org.apache.hyracks.dataflow.common.data.partition.range.RangeMap;
 public class OrderbyClause extends AbstractClause {
     private List<Expression> orderbyList;
     private List<OrderModifier> modifierList;
+    private List<NullOrderModifier> nullModifierList;
     private RangeMap rangeMap; // can be null
     private int numFrames = -1;
     private int numTuples = -1;
@@ -38,9 +39,11 @@ public class OrderbyClause extends AbstractClause {
         // Default constructor.
     }
 
-    public OrderbyClause(List<Expression> orderbyList, List<OrderModifier> modifierList) {
+    public OrderbyClause(List<Expression> orderbyList, List<OrderModifier> modifierList,
+            List<NullOrderModifier> nullModifierList) {
         this.orderbyList = orderbyList;
         this.modifierList = modifierList;
+        this.nullModifierList = nullModifierList;
     }
 
     public List<Expression> getOrderbyList() {
@@ -59,6 +62,14 @@ public class OrderbyClause extends AbstractClause {
         this.modifierList = modifierList;
     }
 
+    public List<NullOrderModifier> getNullModifierList() {
+        return nullModifierList;
+    }
+
+    public void setNullModifierList(List<NullOrderModifier> nullModifierList) {
+        this.nullModifierList = nullModifierList;
+    }
+
     @Override
     public ClauseType getClauseType() {
         return ClauseType.ORDER_BY_CLAUSE;
@@ -67,6 +78,11 @@ public class OrderbyClause extends AbstractClause {
     public enum OrderModifier {
         ASC,
         DESC
+    }
+
+    public enum NullOrderModifier {
+        FIRST,
+        LAST
     }
 
     @Override

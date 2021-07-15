@@ -1178,16 +1178,16 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             }
             List<Expression> orderExprList = winExpr.getOrderbyList();
             List<OrderbyClause.OrderModifier> orderModifierList = winExpr.getOrderbyModifierList();
+            List<OrderbyClause.NullOrderModifier> nullOrderModifierList = winExpr.getOrderbyNullModifierList();
             orderExprCount = orderExprList.size();
             orderExprListOut = new ArrayList<>(orderExprCount);
             for (int i = 0; i < orderExprCount; i++) {
                 Expression orderExpr = orderExprList.get(i);
                 OrderbyClause.OrderModifier orderModifier = orderModifierList.get(i);
+                OrderbyClause.NullOrderModifier nullOrderModifier = nullOrderModifierList.get(i);
                 Pair<ILogicalOperator, LogicalVariable> orderExprResult = orderExpr.accept(this, currentOpRef);
                 VariableReferenceExpression orderExprOut = new VariableReferenceExpression(orderExprResult.second);
-                orderExprOut.setSourceLocation(orderExpr.getSourceLocation());
-                OrderOperator.IOrder orderModifierOut = translateOrderModifier(orderModifier);
-                orderExprListOut.add(new Pair<>(orderModifierOut, new MutableObject<>(orderExprOut)));
+                addOrderByExpression(orderExprListOut, orderExprOut, orderModifier, nullOrderModifier);
                 currentOpRef = new MutableObject<>(orderExprResult.first);
             }
         } else if (winExpr.hasFrameDefinition()) {

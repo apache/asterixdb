@@ -96,7 +96,7 @@ UnionOption ::= "UNION ALL" (QueryBlock | Subquery)
 
 WithClause ::= "WITH" Variable "AS" Expr ("," Variable "AS" Expr)*
 
-OrderbyClause ::= "ORDER BY" Expr ( "ASC" | "DESC" )? ( "," Expr ( "ASC" | "DESC" )? )*
+OrderbyClause ::= "ORDER BY" Expr ( "ASC" | "DESC" )? ( "NULLS" ( "FIRST" | "LAST" ) )? ( "," Expr ( "ASC" | "DESC" )? ( "NULLS" ( "FIRST" | "LAST" ) )? )*
 
 LimitClause ::= "LIMIT" Expr OffsetClause?
 
@@ -116,7 +116,7 @@ WindowDefinition ::= WindowPartitionClause? (WindowOrderClause (WindowFrameClaus
 
 WindowPartitionClause ::= "PARTITION" "BY" Expr ("," Expr)*
 
-WindowOrderClause ::= "ORDER" "BY" Expr ("ASC"|"DESC")? ("," Expr ("ASC" | "DESC")?)*
+WindowOrderClause ::= "ORDER" "BY" Expr ("ASC" | "DESC")? ( "NULLS" ( "FIRST" | "LAST" ) )? ("," Expr ("ASC" | "DESC")? ( "NULLS" ( "FIRST" | "LAST" ) )? )*
 
 WindowFrameClause ::= ("ROWS" | "RANGE" | "GROUPS") WindowFrameExtent
 

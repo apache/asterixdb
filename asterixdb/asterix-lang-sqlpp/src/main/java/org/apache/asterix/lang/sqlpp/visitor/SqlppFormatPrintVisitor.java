@@ -364,7 +364,8 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
         }
         if (windowExpr.hasOrderByList()) {
             out.print(skip(step + 1) + "order by ");
-            printDelimitedObyExpressions(windowExpr.getOrderbyList(), windowExpr.getOrderbyModifierList(), step + 2);
+            printDelimitedObyExpressions(windowExpr.getOrderbyList(), windowExpr.getOrderbyModifierList(),
+                    windowExpr.getOrderbyNullModifierList(), step + 2);
             out.println();
         }
         if (windowExpr.hasFrameDefinition()) {

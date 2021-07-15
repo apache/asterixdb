@@ -19,8 +19,6 @@
 
 USE test;
 
-
 SELECT VALUE d
 FROM data AS d
 ORDER BY d.a;
-

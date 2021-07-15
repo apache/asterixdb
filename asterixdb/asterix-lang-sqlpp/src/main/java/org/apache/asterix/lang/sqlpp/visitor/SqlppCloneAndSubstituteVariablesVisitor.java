@@ -414,6 +414,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 ? VariableCloneAndSubstitutionUtil.visitAndCloneExprList(winExpr.getOrderbyList(), env, this) : null;
         List<OrderbyClause.OrderModifier> newOrderbyModifierList =
                 winExpr.hasOrderByList() ? new ArrayList<>(winExpr.getOrderbyModifierList()) : null;
+        List<OrderbyClause.NullOrderModifier> newOrderbyNullModifierList =
+                winExpr.hasOrderByList() ? new ArrayList<>(winExpr.getOrderbyNullModifierList()) : null;
         Expression newFrameStartExpr =
                 winExpr.hasFrameStartExpr() ? (Expression) winExpr.getFrameStartExpr().accept(this, env).first : null;
         Expression newFrameEndExpr =
@@ -422,11 +424,11 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
                 winExpr.hasWindowVar() ? (VariableExpr) winExpr.getWindowVar().accept(this, env).first : null;
         List<Pair<Expression, Identifier>> newWindowFieldList = winExpr.hasWindowFieldList()
                 ? VariableCloneAndSubstitutionUtil.substInFieldList(winExpr.getWindowFieldList(), env, this) : null;
-        WindowExpression newWinExpr =
-                new WindowExpression(winExpr.getFunctionSignature(), newExprList, newAggFilterExpr, newPartitionList,
-                        newOrderbyList, newOrderbyModifierList, winExpr.getFrameMode(), winExpr.getFrameStartKind(),
-                        newFrameStartExpr, winExpr.getFrameEndKind(), newFrameEndExpr, winExpr.getFrameExclusionKind(),
-                        newWindowVar, newWindowFieldList, winExpr.getIgnoreNulls(), winExpr.getFromLast());
+        WindowExpression newWinExpr = new WindowExpression(winExpr.getFunctionSignature(), newExprList,
+                newAggFilterExpr, newPartitionList, newOrderbyList, newOrderbyModifierList, newOrderbyNullModifierList,
+                winExpr.getFrameMode(), winExpr.getFrameStartKind(), newFrameStartExpr, winExpr.getFrameEndKind(),
+                newFrameEndExpr, winExpr.getFrameExclusionKind(), newWindowVar, newWindowFieldList,
+                winExpr.getIgnoreNulls(), winExpr.getFromLast());
         newWinExpr.setSourceLocation(winExpr.getSourceLocation());
         newWinExpr.addHints(winExpr.getHints());
         return new Pair<>(newWinExpr, env);

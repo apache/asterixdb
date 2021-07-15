@@ -276,7 +276,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         for (Expression orderExpr : oc.getOrderbyList()) {
             newOrderbyList.add((Expression) orderExpr.accept(this, arg));
         }
-        OrderbyClause copy = new OrderbyClause(newOrderbyList, new ArrayList<>(oc.getModifierList()));
+        OrderbyClause copy = new OrderbyClause(newOrderbyList, new ArrayList<>(oc.getModifierList()),
+                new ArrayList<>(oc.getNullModifierList()));
         copy.setSourceLocation(oc.getSourceLocation());
         return copy;
     }
@@ -526,6 +527,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         List<Expression> newOrderbyList = winExpr.hasOrderByList() ? copyExprList(winExpr.getOrderbyList(), arg) : null;
         List<OrderbyClause.OrderModifier> newOrderbyModifierList =
                 winExpr.hasOrderByList() ? new ArrayList<>(winExpr.getOrderbyModifierList()) : null;
+        List<OrderbyClause.NullOrderModifier> newOrderbyNullModifierList =
+                winExpr.hasOrderByList() ? new ArrayList<>(winExpr.getOrderbyNullModifierList()) : null;
         Expression newFrameStartExpr =
                 winExpr.hasFrameStartExpr() ? (Expression) winExpr.getFrameStartExpr().accept(this, arg) : null;
         Expression newFrameEndExpr =
@@ -534,11 +537,11 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
                 winExpr.hasWindowVar() ? (VariableExpr) winExpr.getWindowVar().accept(this, arg) : null;
         List<Pair<Expression, Identifier>> newWindowFieldList =
                 winExpr.hasWindowFieldList() ? copyFieldList(winExpr.getWindowFieldList(), arg) : null;
-        WindowExpression copy =
-                new WindowExpression(winExpr.getFunctionSignature(), newExprList, newAggFilterExpr, newPartitionList,
-                        newOrderbyList, newOrderbyModifierList, winExpr.getFrameMode(), winExpr.getFrameStartKind(),
-                        newFrameStartExpr, winExpr.getFrameEndKind(), newFrameEndExpr, winExpr.getFrameExclusionKind(),
-                        newWindowVar, newWindowFieldList, winExpr.getIgnoreNulls(), winExpr.getFromLast());
+        WindowExpression copy = new WindowExpression(winExpr.getFunctionSignature(), newExprList, newAggFilterExpr,
+                newPartitionList, newOrderbyList, newOrderbyModifierList, newOrderbyNullModifierList,
+                winExpr.getFrameMode(), winExpr.getFrameStartKind(), newFrameStartExpr, winExpr.getFrameEndKind(),
+                newFrameEndExpr, winExpr.getFrameExclusionKind(), newWindowVar, newWindowFieldList,
+                winExpr.getIgnoreNulls(), winExpr.getFromLast());
         copy.setSourceLocation(winExpr.getSourceLocation());
         copy.addHints(winExpr.getHints());
         return copy;

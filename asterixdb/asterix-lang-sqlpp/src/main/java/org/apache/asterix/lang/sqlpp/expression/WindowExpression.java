@@ -40,6 +40,7 @@ public class WindowExpression extends AbstractCallExpression {
     private List<Expression> partitionList;
     private List<Expression> orderbyList;
     private List<OrderbyClause.OrderModifier> orderbyModifierList;
+    private List<OrderbyClause.NullOrderModifier> orderbyNullModifierList;
 
     private FrameMode frameMode;
     private FrameBoundaryKind frameStartKind;
@@ -56,7 +57,8 @@ public class WindowExpression extends AbstractCallExpression {
 
     public WindowExpression(FunctionSignature functionSignature, List<Expression> exprList, Expression aggFilterExpr,
             List<Expression> partitionList, List<Expression> orderbyList,
-            List<OrderbyClause.OrderModifier> orderbyModifierList, FrameMode frameMode,
+            List<OrderbyClause.OrderModifier> orderbyModifierList,
+            List<OrderbyClause.NullOrderModifier> orderbyNullModifierList, FrameMode frameMode,
             FrameBoundaryKind frameStartKind, Expression frameStartExpr, FrameBoundaryKind frameEndKind,
             Expression frameEndExpr, FrameExclusionKind frameExclusionKind, VariableExpr windowVar,
             List<Pair<Expression, Identifier>> windowFieldList, Boolean ignoreNulls, Boolean fromLast) {
@@ -64,6 +66,7 @@ public class WindowExpression extends AbstractCallExpression {
         this.partitionList = partitionList;
         this.orderbyList = orderbyList;
         this.orderbyModifierList = orderbyModifierList;
+        this.orderbyNullModifierList = orderbyNullModifierList;
         this.frameMode = frameMode;
         this.frameStartKind = frameStartKind;
         this.frameStartExpr = frameStartExpr;
@@ -111,6 +114,14 @@ public class WindowExpression extends AbstractCallExpression {
 
     public void setOrderbyModifierList(List<OrderbyClause.OrderModifier> orderbyModifierList) {
         this.orderbyModifierList = orderbyModifierList;
+    }
+
+    public List<OrderbyClause.NullOrderModifier> getOrderbyNullModifierList() {
+        return orderbyNullModifierList;
+    }
+
+    public void setOrderbyNullModifierList(List<OrderbyClause.NullOrderModifier> orderbyNullModifierList) {
+        this.orderbyNullModifierList = orderbyNullModifierList;
     }
 
     public boolean hasFrameDefinition() {
@@ -292,7 +303,12 @@ public class WindowExpression extends AbstractCallExpression {
                 if (i > 0) {
                     sb.append(',');
                 }
-                sb.append(orderbyList.get(i)).append(' ').append(orderbyModifierList.get(i));
+                OrderbyClause.OrderModifier orderModifier = orderbyModifierList.get(i);
+                OrderbyClause.NullOrderModifier nullOrderModifier = orderbyNullModifierList.get(i);
+                sb.append(orderbyList.get(i)).append(' ').append(orderModifier);
+                if (nullOrderModifier != null) {
+                    sb.append(" NULLS ").append(nullOrderModifier);
+                }
             }
         }
         if (hasFrameDefinition()) {
