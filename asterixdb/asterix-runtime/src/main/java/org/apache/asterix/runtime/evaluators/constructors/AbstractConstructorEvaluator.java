@@ -61,11 +61,19 @@ public abstract class AbstractConstructorEvaluator implements IScalarEvaluator {
 
     @Override
     public final void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-        inputEval.evaluate(tuple, inputArg);
-        if (PointableHelper.checkAndSetMissingOrNull(result, inputArg)) {
+        evaluateInput(tuple);
+        if (checkAndSetMissingOrNull(result)) {
             return;
         }
         evaluateImpl(result);
+    }
+
+    protected void evaluateInput(IFrameTupleReference tuple) throws HyracksDataException {
+        inputEval.evaluate(tuple, inputArg);
+    }
+
+    protected boolean checkAndSetMissingOrNull(IPointable result) throws HyracksDataException {
+        return PointableHelper.checkAndSetMissingOrNull(result, inputArg);
     }
 
     protected abstract void evaluateImpl(IPointable result) throws HyracksDataException;

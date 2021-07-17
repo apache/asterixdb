@@ -17,15 +17,16 @@
  * under the License.
  */
 
-// requesttype=application/json
-// param max-warnings:json=100
+let
+test = [
+  '11/58/59',
+  '58-57-10'
+],
+fmt = [
+  'hh/mm/ss',
+  'ss-mm-hh'
+]
 
-{
-  "null_0": datetime("@#!"),
-  "null_1": datetime(false),
-  "null_2": datetime(0),
-  "null_3": datetime(time("01:02:03")),
-  "null_4": datetime([]),
-  "null_5": datetime({}),
-  "null_6": datetime("1951-12-27T12:20:15Z", "INVALID_FORMAT")
-};
+select i, time(test[i], fmt[i]) actual
+from range(0, len(test)-1) i
+order by i;

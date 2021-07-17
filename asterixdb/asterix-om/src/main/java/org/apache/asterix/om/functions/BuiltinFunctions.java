@@ -1122,10 +1122,16 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "polygon", 1);
     public static final FunctionIdentifier TIME_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "time", 1);
+    public static final FunctionIdentifier TIME_CONSTRUCTOR_WITH_FORMAT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "time", 2);
     public static final FunctionIdentifier DATE_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "date", 1);
+    public static final FunctionIdentifier DATE_CONSTRUCTOR_WITH_FORMAT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "date", 2);
     public static final FunctionIdentifier DATETIME_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime", 1);
+    public static final FunctionIdentifier DATETIME_CONSTRUCTOR_WITH_FORMAT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime", 2);
     public static final FunctionIdentifier DURATION_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "duration", 1);
     public static final FunctionIdentifier UUID_CONSTRUCTOR =
@@ -1661,7 +1667,9 @@ public class BuiltinFunctions {
         addFunction(RANDOM_WITH_SEED, NumericUnaryTypeComputer.INSTANCE_DOUBLE, false);
 
         addFunction(DATE_CONSTRUCTOR, ADateTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(DATE_CONSTRUCTOR_WITH_FORMAT, ADateTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(DATETIME_CONSTRUCTOR, ADateTimeTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(DATETIME_CONSTRUCTOR_WITH_FORMAT, ADateTimeTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(DOUBLE_CONSTRUCTOR, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(DURATION_CONSTRUCTOR, ADurationTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(YEAR_MONTH_DURATION_CONSTRUCTOR, AYearMonthDurationTypeComputer.INSTANCE_NULLABLE, true);
@@ -2222,6 +2230,7 @@ public class BuiltinFunctions {
 
         addFunction(TID, AInt64TypeComputer.INSTANCE, true);
         addFunction(TIME_CONSTRUCTOR, ATimeTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(TIME_CONSTRUCTOR_WITH_FORMAT, ATimeTypeComputer.INSTANCE_NULLABLE, true);
         addPrivateFunction(TYPE_OF, AnyTypeComputer.INSTANCE, true);
         addPrivateFunction(UNORDERED_LIST_CONSTRUCTOR, UnorderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(WORD_TOKENS, OrderedListOfAStringTypeComputer.INSTANCE, true);

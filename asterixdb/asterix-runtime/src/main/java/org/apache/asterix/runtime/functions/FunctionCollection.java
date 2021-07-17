@@ -265,7 +265,9 @@ import org.apache.asterix.runtime.evaluators.constructors.ABinaryHexStringConstr
 import org.apache.asterix.runtime.evaluators.constructors.ABooleanConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ACircleConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ADateConstructorDescriptor;
+import org.apache.asterix.runtime.evaluators.constructors.ADateConstructorWithFormatDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ADateTimeConstructorDescriptor;
+import org.apache.asterix.runtime.evaluators.constructors.ADateTimeConstructorWithFormatDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ADayTimeDurationConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ADoubleConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ADurationConstructorDescriptor;
@@ -285,6 +287,7 @@ import org.apache.asterix.runtime.evaluators.constructors.APolygonConstructorDes
 import org.apache.asterix.runtime.evaluators.constructors.ARectangleConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AStringConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ATimeConstructorDescriptor;
+import org.apache.asterix.runtime.evaluators.constructors.ATimeConstructorWithFormatDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AUUIDFromStringConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.AYearMonthDurationConstructorDescriptor;
 import org.apache.asterix.runtime.evaluators.constructors.ClosedRecordConstructorDescriptor;
@@ -1052,8 +1055,11 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ACircleConstructorDescriptor.FACTORY);
         fc.add(ARectangleConstructorDescriptor.FACTORY);
         fc.add(ATimeConstructorDescriptor.FACTORY);
+        fc.add(ATimeConstructorWithFormatDescriptor.FACTORY);
         fc.add(ADateConstructorDescriptor.FACTORY);
+        fc.add(ADateConstructorWithFormatDescriptor.FACTORY);
         fc.add(ADateTimeConstructorDescriptor.FACTORY);
+        fc.add(ADateTimeConstructorWithFormatDescriptor.FACTORY);
         fc.add(ADurationConstructorDescriptor.FACTORY);
         fc.add(AYearMonthDurationConstructorDescriptor.FACTORY);
         fc.add(ADayTimeDurationConstructorDescriptor.FACTORY);

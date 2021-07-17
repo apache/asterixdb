@@ -1,0 +1,44 @@
+Query:
+Let Variable [ Name=$test ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [11/58/59]
+    LiteralExpr [STRING] [58-57-10]
+  ]
+Let Variable [ Name=$fmt ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [hh/mm/ss]
+    LiteralExpr [STRING] [ss-mm-hh]
+  ]
+SELECT [
+Variable [ Name=$i ]
+i
+FunctionCall asterix.time@2[
+  IndexAccessor [
+    Variable [ Name=$test ]
+    Index:     Variable [ Name=$i ]
+  ]
+  IndexAccessor [
+    Variable [ Name=$fmt ]
+    Index:     Variable [ Name=$i ]
+  ]
+]
+actual
+]
+FROM [  FunctionCall asterix.range@2[
+    LiteralExpr [LONG] [0]
+    OperatorExpr [
+      FunctionCall asterix.len@1[
+        Variable [ Name=$test ]
+      ]
+      -
+      LiteralExpr [LONG] [1]
+    ]
+  ]
+  AS Variable [ Name=$i ]
+]
+Orderby
+  Variable [ Name=$i ]
+  ASC
+

@@ -26,5 +26,6 @@
   "null_2": time(0),
   "null_3": time(date("2020-01-02")),
   "null_4": time([]),
-  "null_5": time({})
+  "null_5": time({}),
+  "null_6": time("11:58:59", "INVALID_FORMAT")
 };
