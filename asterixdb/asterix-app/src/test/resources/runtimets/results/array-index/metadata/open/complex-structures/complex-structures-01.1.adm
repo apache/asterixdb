@@ -1,0 +1,8 @@
+{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "open_field_1", "open_field_2" ] ], "ProjectList": [ [ "open_field_3a" ] ] } ], "SearchKeyType": [ [ "int64" ] ] }
+{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "closed_field_1", "open_field_2" ] ], "ProjectList": [ [ "open_field_3a" ] ] } ], "SearchKeyType": [ [ "int64" ] ] }
+{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "open_field_1", "open_field_2" ] ], "ProjectList": [ [ "open_field_3b", "open_field_4" ] ] } ], "SearchKeyType": [ [ "int64" ] ] }
+{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "closed_field_1", "closed_field_2" ] ], "ProjectList": [ [ "open_field_3b", "open_field_4" ] ] } ], "SearchKeyType": [ [ "int64" ] ] }
+{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "open_field_1", "open_field_2" ], [ "open_field_3c", "open_field_4a" ] ] } ], "SearchKeyType": [ [ "int64" ] ] }
+{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "closed_field_1", "closed_field_2" ], [ "closed_field_3", "open_field_4a" ] ] } ], "SearchKeyType": [ [ "int64" ] ] }
+{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "open_field_1", "open_field_2" ], [ "open_field_3c", "open_field_4b" ] ], "ProjectList": [ [ "open_field_5" ] ] } ], "SearchKeyType": [ [ "int64" ] ] }
+{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "closed_field_1", "closed_field_2" ], [ "closed_field_3", "closed_field_4" ] ], "ProjectList": [ [ "open_field_5" ] ] } ], "SearchKeyType": [ [ "int64" ] ] }

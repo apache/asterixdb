@@ -131,23 +131,26 @@ public class TypeUtil {
         }
 
         private IAType buildNewForOpenType() {
-            boolean isTypeWithUnnest = keyUnnestFlags.subList(indexOfOpenPart + 1, keyUnnestFlags.size()).stream()
-                    .filter(i -> i).findFirst().orElse(false);
-            IAType resultant = nestArrayType(keyFieldType, isTypeWithUnnest);
+            // Walk backwards through our flags and construct the desired type.
+            List<Boolean> unnestFlagsForOpenType = keyUnnestFlags.subList(indexOfOpenPart, keyUnnestFlags.size());
+            List<String> fieldNamesForOpenType = keyFieldNames.subList(indexOfOpenPart, keyFieldNames.size());
+            IAType resultant = keyFieldType;
+            for (int i = unnestFlagsForOpenType.size() - 1; i >= 0; i--) {
+                // Construct the type name.
+                StringBuilder recordTypeNameBuilder = new StringBuilder();
+                recordTypeNameBuilder.append(baseRecordType.getTypeName());
+                for (int j = 0; j < i + indexOfOpenPart; j++) {
+                    recordTypeNameBuilder.append("_").append(keyFieldNames.get(j));
+                    if (keyUnnestFlags.get(j)) {
+                        recordTypeNameBuilder.append("_Item");
+                    }
+                }
 
-            // Build the type (list or record) that holds the type (list or record) above.
-            resultant = nestArrayType(
-                    new ARecordType(keyFieldNames.get(keyFieldNames.size() - 2),
-                            new String[] { keyFieldNames.get(keyFieldNames.size() - 1) },
-                            new IAType[] { AUnionType.createUnknownableType(resultant) }, true),
-                    keyUnnestFlags.get(indexOfOpenPart));
-
-            // Create open part of the nested field.
-            for (int i = keyFieldNames.size() - 3; i > (indexOfOpenPart - 1); i--) {
-                resultant = nestArrayType(
-                        new ARecordType(keyFieldNames.get(i), new String[] { keyFieldNames.get(i + 1) },
-                                new IAType[] { AUnionType.createUnknownableType(resultant) }, true),
-                        keyUnnestFlags.get(i));
+                // Construct the type itself and account for any array steps.
+                resultant = nestArrayType(resultant, unnestFlagsForOpenType.get(i));
+                resultant =
+                        new ARecordType(recordTypeNameBuilder.toString(), new String[] { fieldNamesForOpenType.get(i) },
+                                new IAType[] { AUnionType.createUnknownableType(resultant) }, true);
             }
 
             // Now update the parent to include this optional field, accounting for intermediate arrays.
@@ -155,9 +158,9 @@ public class TypeUtil {
             ARecordType parentRecord =
                     (ARecordType) unnestArrayType(TypeComputeUtils.getActualType(gapTriple.first), gapTriple.third);
             IAType[] parentFieldTypes = ArrayUtils.addAll(parentRecord.getFieldTypes().clone(),
-                    AUnionType.createUnknownableType(resultant));
+                    ((ARecordType) resultant).getFieldTypes().clone());
             resultant = new ARecordType(bridgeNameFoundFromOpenTypeBuild,
-                    ArrayUtils.addAll(parentRecord.getFieldNames(), resultant.getTypeName()), parentFieldTypes, true);
+                    ArrayUtils.addAll(parentRecord.getFieldNames(), gapTriple.second), parentFieldTypes, true);
             resultant = keepUnknown(gapTriple.first, nestArrayType(resultant, gapTriple.third));
 
             return resultant;
@@ -227,7 +230,15 @@ public class TypeUtil {
         }
 
         private static IAType nestArrayType(IAType originalType, boolean isWithinArray) {
-            return (isWithinArray) ? new AOrderedListType(originalType, originalType.getTypeName()) : originalType;
+            if (isWithinArray) {
+                String newTypeName = originalType.getTypeName().endsWith("_Item")
+                        ? originalType.getTypeName().substring(0, originalType.getTypeName().length() - 5)
+                        : originalType.getTypeName();
+                return new AOrderedListType(originalType, newTypeName + "_Array");
+
+            } else {
+                return originalType;
+            }
         }
 
         private static IAType unnestArrayType(IAType originalType, boolean isWithinArray) {

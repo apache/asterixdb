@@ -8066,6 +8066,11 @@
           <output-dir compare="Text">use-case-4</output-dir>
         </compilation-unit>
       </test-case>
+      <test-case FilePath="array-index/metadata/open">
+        <compilation-unit name="complex-structures">
+          <output-dir compare="Text">complex-structures</output-dir>
+        </compilation-unit>
+      </test-case>
       <!--      <test-case FilePath="array-index/metadata/closed">-->
       <!--        <compilation-unit name="with-composite-sk">-->
       <!--          <output-dir compare="Text">with-composite-sk</output-dir>-->
