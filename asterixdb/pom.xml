@@ -79,6 +79,7 @@
     <prepare-env.stage>none</prepare-env.stage>
     <shim.stage>none</shim.stage>
     <pytestlib.stage>none</pytestlib.stage>
+    <skip-npm-touch.stage>none</skip-npm-touch.stage>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.7-SNAPSHOT</algebricks.version>
@@ -709,6 +710,18 @@
         <shim.stage>none</shim.stage>
         <pytestlib.stage>generate-test-resources</pytestlib.stage>
         <global.itest.excludes/>
+      </properties>
+    </profile>
+    <profile>
+      <id>skip-npm</id>
+      <activation>
+        <property>
+          <name>skip.npm</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <properties>
+          <skip-npm-touch.stage>process-sources</skip-npm-touch.stage>
       </properties>
     </profile>
     <profile>

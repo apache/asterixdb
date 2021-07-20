@@ -191,10 +191,10 @@
                 <id>extract-rr</id>
                 <phase>generate-sources</phase>
                 <configuration>
-                  <tasks>
+                  <target>
                     <echo message="Extracting rr" />
                     <unzip src="${project.build.directory}/rr-1.62-java8.zip" dest="${project.build.directory}" />
-                  </tasks>
+                  </target>
                 </configuration>
                 <goals>
                   <goal>run</goal>
@@ -204,13 +204,13 @@
                 <id>extract-diagrams</id>
                 <phase>process-resources</phase>
                 <configuration>
-                  <tasks>
+                  <target>
                     <echo message="Extracting diagrams" />
                     <unzip src="${project.build.directory}/railroads.zip" dest="${project.build.directory}" />
                       <copy todir="${project.build.directory}/site/images/diagrams/">
                       <fileset dir="${project.build.directory}/diagram/"/>
                     </copy>
-                  </tasks>
+                  </target>
                 </configuration>
                 <goals>
                   <goal>run</goal>
