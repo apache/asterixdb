@@ -17,21 +17,15 @@
  * under the License.
  */
 
---- test drop dataverse with views
+--- Negative: invalid with clause
 
-drop dataverse test1 if exists;
-create dataverse test1;
+drop dataverse test if exists;
+create dataverse test;
 
-create view test1.v1 as
-  select r from range(0,2) r;
-
-create view test1.v2 as
-  select v1.* from v1;
-
-create view test1.v3(r bigint) default null as v2;
-
-create type test1.t4 as closed { r:int64? };
-
-create view test1.v4(t4) default null as v2;
-
-drop dataverse test1;
+create view test.v1(cd date) default null
+with {
+  'date':'YYYY-MM-DD',
+  'date-illegal-property-name':'YYYY-MM-DD'
+}
+as
+  select string(current_date()) cd from range(1,2) r;

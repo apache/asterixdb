@@ -648,50 +648,22 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(dd.getDataverse(), datasetName, stmt.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(dd.getDataverse());
         TypeExpression itemTypeExpr = dd.getItemType();
-        DataverseName itemTypeDataverseName;
-        String itemTypeName;
-        boolean itemTypeAnonymous;
-        switch (itemTypeExpr.getTypeKind()) {
-            case TYPEREFERENCE:
-                TypeReferenceExpression itemTypeRefExpr = (TypeReferenceExpression) itemTypeExpr;
-                Pair<DataverseName, Identifier> itemTypeIdent = itemTypeRefExpr.getIdent();
-                itemTypeDataverseName = itemTypeIdent.first != null ? itemTypeIdent.first : dataverseName;
-                itemTypeName = itemTypeRefExpr.getIdent().second.getValue();
-                itemTypeAnonymous = false;
-                break;
-            case RECORD:
-                itemTypeDataverseName = dataverseName;
-                itemTypeName = TypeUtil.createDatasetInlineTypeName(datasetName, false);
-                itemTypeAnonymous = true;
-                break;
-            default:
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
-                        String.valueOf(itemTypeExpr.getTypeKind()));
-        }
+        Triple<DataverseName, String, Boolean> itemTypeQualifiedName =
+                extractDatasetItemTypeName(dataverseName, datasetName, itemTypeExpr, false, stmt.getSourceLocation());
+        DataverseName itemTypeDataverseName = itemTypeQualifiedName.first;
+        String itemTypeName = itemTypeQualifiedName.second;
+        boolean itemTypeAnonymous = itemTypeQualifiedName.third;
 
         TypeExpression metaItemTypeExpr = dd.getMetaItemType();
         DataverseName metaItemTypeDataverseName = null;
         String metaItemTypeName = null;
         boolean metaItemTypeAnonymous;
         if (metaItemTypeExpr != null) {
-            switch (metaItemTypeExpr.getTypeKind()) {
-                case TYPEREFERENCE:
-                    TypeReferenceExpression metaItemTypeRefExpr = (TypeReferenceExpression) metaItemTypeExpr;
-                    Pair<DataverseName, Identifier> metaItemTypeIdent = metaItemTypeRefExpr.getIdent();
-                    metaItemTypeDataverseName =
-                            metaItemTypeIdent.first != null ? metaItemTypeIdent.first : dataverseName;
-                    metaItemTypeName = metaItemTypeRefExpr.getIdent().second.getValue();
-                    metaItemTypeAnonymous = false;
-                    break;
-                case RECORD:
-                    metaItemTypeDataverseName = dataverseName;
-                    metaItemTypeName = TypeUtil.createDatasetInlineTypeName(datasetName, true);
-                    metaItemTypeAnonymous = true;
-                    break;
-                default:
-                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, stmt.getSourceLocation(),
-                            String.valueOf(metaItemTypeExpr.getTypeKind()));
-            }
+            Triple<DataverseName, String, Boolean> metaItemTypeQualifiedName = extractDatasetItemTypeName(dataverseName,
+                    datasetName, metaItemTypeExpr, true, stmt.getSourceLocation());
+            metaItemTypeDataverseName = metaItemTypeQualifiedName.first;
+            metaItemTypeName = metaItemTypeQualifiedName.second;
+            metaItemTypeAnonymous = metaItemTypeQualifiedName.third;
         } else {
             metaItemTypeAnonymous = true; // doesn't matter
         }
@@ -754,29 +726,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
-            IAType itemType;
-            boolean itemTypeIsInline = false;
-            switch (itemTypeExpr.getTypeKind()) {
-                case TYPEREFERENCE:
-                    itemTypeEntity = metadataProvider.findTypeEntity(itemTypeDataverseName, itemTypeName);
-                    if (itemTypeEntity == null || itemTypeEntity.getIsAnonymous()) {
-                        // anonymous types cannot be referred from CREATE DATASET
-                        throw new AsterixException(ErrorCode.UNKNOWN_TYPE, sourceLoc,
-                                DatasetUtil.getFullyQualifiedDisplayName(itemTypeDataverseName, itemTypeName));
-                    }
-                    itemType = itemTypeEntity.getDatatype();
-                    validateDatasetItemType(dsType, itemType, false, sourceLoc);
-                    break;
-                case RECORD:
-                    itemType = translateType(itemTypeDataverseName, itemTypeName, itemTypeExpr, mdTxnCtx);
-                    validateDatasetItemType(dsType, itemType, false, sourceLoc);
-                    itemTypeEntity = new Datatype(itemTypeDataverseName, itemTypeName, itemType, true);
-                    itemTypeIsInline = true;
-                    break;
-                default:
-                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
-                            String.valueOf(itemTypeExpr.getTypeKind()));
-            }
+            Pair<Datatype, Boolean> itemTypePair = fetchDatasetItemType(mdTxnCtx, dsType, itemTypeDataverseName,
+                    itemTypeName, itemTypeExpr, false, metadataProvider, sourceLoc);
+            itemTypeEntity = itemTypePair.first;
+            IAType itemType = itemTypeEntity.getDatatype();
+            boolean itemTypeIsInline = itemTypePair.second;
+
             String ngName = ngNameId != null ? ngNameId
                     : configureNodegroupForDataset(appCtx, dd.getHints(), dataverseName, datasetName, metadataProvider,
                             sourceLoc);
@@ -793,30 +748,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             switch (dsType) {
                 case INTERNAL:
                     if (metaItemTypeExpr != null) {
-                        switch (metaItemTypeExpr.getTypeKind()) {
-                            case TYPEREFERENCE:
-                                metaItemTypeEntity =
-                                        metadataProvider.findTypeEntity(metaItemTypeDataverseName, metaItemTypeName);
-                                if (metaItemTypeEntity == null || metaItemTypeEntity.getIsAnonymous()) {
-                                    // anonymous types cannot be referred from CREATE DATASET
-                                    throw new AsterixException(ErrorCode.UNKNOWN_TYPE, sourceLoc, DatasetUtil
-                                            .getFullyQualifiedDisplayName(metaItemTypeDataverseName, metaItemTypeName));
-                                }
-                                metaItemType = metaItemTypeEntity.getDatatype();
-                                validateDatasetItemType(dsType, metaItemType, true, sourceLoc);
-                                break;
-                            case RECORD:
-                                metaItemType = translateType(metaItemTypeDataverseName, metaItemTypeName,
-                                        metaItemTypeExpr, mdTxnCtx);
-                                validateDatasetItemType(dsType, metaItemType, true, sourceLoc);
-                                metaItemTypeEntity =
-                                        new Datatype(metaItemTypeDataverseName, metaItemTypeName, metaItemType, true);
-                                metaItemTypeIsInline = true;
-                                break;
-                            default:
-                                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
-                                        String.valueOf(metaItemTypeExpr.getTypeKind()));
-                        }
+                        Pair<Datatype, Boolean> metaItemTypePair =
+                                fetchDatasetItemType(mdTxnCtx, dsType, metaItemTypeDataverseName, metaItemTypeName,
+                                        metaItemTypeExpr, true, metadataProvider, sourceLoc);
+                        metaItemTypeEntity = metaItemTypePair.first;
+                        metaItemType = metaItemTypeEntity.getDatatype();
+                        metaItemTypeIsInline = metaItemTypePair.second;
                     }
                     ARecordType metaRecType = (ARecordType) metaItemType;
 
@@ -963,12 +900,62 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
+    protected Triple<DataverseName, String, Boolean> extractDatasetItemTypeName(DataverseName datasetDataverseName,
+            String datasetName, TypeExpression itemTypeExpr, boolean isMetaItemType, SourceLocation sourceLoc)
+            throws CompilationException {
+        switch (itemTypeExpr.getTypeKind()) {
+            case TYPEREFERENCE:
+                TypeReferenceExpression itemTypeRefExpr = (TypeReferenceExpression) itemTypeExpr;
+                Pair<DataverseName, Identifier> itemTypeIdent = itemTypeRefExpr.getIdent();
+                DataverseName typeDataverseName =
+                        itemTypeIdent.first != null ? itemTypeIdent.first : datasetDataverseName;
+                String typeName = itemTypeRefExpr.getIdent().second.getValue();
+                return new Triple<>(typeDataverseName, typeName, false);
+            case RECORD:
+                String inlineTypeName = TypeUtil.createDatasetInlineTypeName(datasetName, isMetaItemType);
+                return new Triple<>(datasetDataverseName, inlineTypeName, true);
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                        String.valueOf(itemTypeExpr.getTypeKind()));
+        }
+    }
+
+    protected Pair<Datatype, Boolean> fetchDatasetItemType(MetadataTransactionContext mdTxnCtx, DatasetType datasetType,
+            DataverseName itemTypeDataverseName, String itemTypeName, TypeExpression itemTypeExpr,
+            boolean isMetaItemType, MetadataProvider metadataProvider, SourceLocation sourceLoc)
+            throws AlgebricksException {
+        switch (itemTypeExpr.getTypeKind()) {
+            case TYPEREFERENCE:
+                Datatype itemTypeEntity = metadataProvider.findTypeEntity(itemTypeDataverseName, itemTypeName);
+                if (itemTypeEntity == null || itemTypeEntity.getIsAnonymous()) {
+                    // anonymous types cannot be referred from CREATE DATASET/VIEW
+                    throw new AsterixException(ErrorCode.UNKNOWN_TYPE, sourceLoc,
+                            DatasetUtil.getFullyQualifiedDisplayName(itemTypeDataverseName, itemTypeName));
+                }
+                IAType itemType = itemTypeEntity.getDatatype();
+                validateDatasetItemType(datasetType, itemType, isMetaItemType, sourceLoc);
+                return new Pair<>(itemTypeEntity, false);
+            case RECORD:
+                itemType = translateType(itemTypeDataverseName, itemTypeName, itemTypeExpr, mdTxnCtx);
+                validateDatasetItemType(datasetType, itemType, isMetaItemType, sourceLoc);
+                itemTypeEntity = new Datatype(itemTypeDataverseName, itemTypeName, itemType, true);
+                return new Pair<>(itemTypeEntity, true);
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                        String.valueOf(itemTypeExpr.getTypeKind()));
+        }
+    }
+
     protected void validateDatasetItemType(DatasetType datasetType, IAType itemType, boolean isMetaItemType,
             SourceLocation sourceLoc) throws AlgebricksException {
         if (itemType.getTypeTag() != ATypeTag.OBJECT) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    String.format(StringUtils.capitalize(dataset()) + " %s has to be a record type.",
+                    String.format("%s %s has to be a record type.",
+                            datasetType == DatasetType.VIEW ? "view" : StringUtils.capitalize(dataset()),
                             isMetaItemType ? "meta type" : "type"));
+        }
+        if (datasetType == DatasetType.VIEW) {
+            ViewUtil.validateViewItemType((ARecordType) itemType, sourceLoc);
         }
     }
 
@@ -2439,15 +2426,31 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     public void handleCreateViewStatement(MetadataProvider metadataProvider, Statement stmt,
             IStatementRewriter stmtRewriter, IRequestParameters requestParameters) throws Exception {
         CreateViewStatement cvs = (CreateViewStatement) stmt;
-        metadataProvider.validateDatabaseObjectName(cvs.getDataverseName(), cvs.getViewName(),
-                stmt.getSourceLocation());
+        String viewName = cvs.getViewName();
+        metadataProvider.validateDatabaseObjectName(cvs.getDataverseName(), viewName, stmt.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(cvs.getDataverseName());
-        lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, cvs.getViewName(),
-                MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDataverseName(),
-                MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDatatypeName(), false, null, null, false, null, null,
-                true, DatasetType.VIEW, null);
+
+        DataverseName viewItemTypeDataverseName;
+        String viewItemTypeName;
+        boolean viewItemTypeAnonymous;
+        if (cvs.hasItemType()) {
+            Triple<DataverseName, String, Boolean> viewTypeQualifiedName = extractDatasetItemTypeName(dataverseName,
+                    viewName, cvs.getItemType(), false, stmt.getSourceLocation());
+            viewItemTypeDataverseName = viewTypeQualifiedName.first;
+            viewItemTypeName = viewTypeQualifiedName.second;
+            viewItemTypeAnonymous = viewTypeQualifiedName.third;
+        } else {
+            viewItemTypeDataverseName = MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDataverseName();
+            viewItemTypeName = MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDatatypeName();
+            viewItemTypeAnonymous = false;
+        }
+
+        lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, viewName,
+                viewItemTypeDataverseName, viewItemTypeName, viewItemTypeAnonymous, null, null, false, null, null, true,
+                DatasetType.VIEW, null);
         try {
-            doCreateView(metadataProvider, cvs, dataverseName, cvs.getViewName(), stmtRewriter, requestParameters);
+            doCreateView(metadataProvider, cvs, dataverseName, viewName, viewItemTypeDataverseName, viewItemTypeName,
+                    stmtRewriter, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
             metadataProvider.setDefaultDataverse(activeDataverse);
@@ -2455,7 +2458,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void doCreateView(MetadataProvider metadataProvider, CreateViewStatement cvs, DataverseName dataverseName,
-            String viewName, IStatementRewriter stmtRewriter, IRequestParameters requestParameters) throws Exception {
+            String viewName, DataverseName itemTypeDataverseName, String itemTypeName, IStatementRewriter stmtRewriter,
+            IRequestParameters requestParameters) throws Exception {
         SourceLocation sourceLoc = cvs.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -2479,6 +2483,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
+            Datatype itemTypeEntity = null;
+            boolean itemTypeIsInline = false;
+            if (cvs.hasItemType()) {
+                Pair<Datatype, Boolean> itemTypePair = fetchDatasetItemType(mdTxnCtx, DatasetType.VIEW,
+                        itemTypeDataverseName, itemTypeName, cvs.getItemType(), false, metadataProvider, sourceLoc);
+                itemTypeEntity = itemTypePair.first;
+                itemTypeIsInline = itemTypePair.second;
+            }
+
             // Check whether the view is usable:
             // create a view declaration for this function,
             // and a query body that queries this view:
@@ -2494,16 +2507,23 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             List<List<Triple<DataverseName, String, String>>> dependencies =
                     ViewUtil.getViewDependencies(viewDecl, queryRewriter);
 
-            ViewDetails viewDetails = new ViewDetails(cvs.getViewBody(), dependencies);
+            ViewDetails viewDetails = cvs.hasItemType()
+                    ? new ViewDetails(cvs.getViewBody(), dependencies, cvs.getDefaultNull(), cvs.getDatetimeFormat(),
+                            cvs.getDateFormat(), cvs.getTimeFormat())
+                    : new ViewDetails(cvs.getViewBody(), dependencies, null, null, null, null);
 
-            Dataset view =
-                    new Dataset(dataverseName, viewName, MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDataverseName(),
-                            MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDatatypeName(),
-                            MetadataConstants.METADATA_NODEGROUP_NAME, "", Collections.emptyMap(), viewDetails,
-                            Collections.emptyMap(), DatasetType.VIEW, 0, MetadataUtil.PENDING_NO_OP);
+            Dataset view = new Dataset(dataverseName, viewName, itemTypeDataverseName, itemTypeName,
+                    MetadataConstants.METADATA_NODEGROUP_NAME, "", Collections.emptyMap(), viewDetails,
+                    Collections.emptyMap(), DatasetType.VIEW, 0, MetadataUtil.PENDING_NO_OP);
             if (existingDataset == null) {
+                if (itemTypeIsInline) {
+                    MetadataManager.INSTANCE.addDatatype(mdTxnCtx, itemTypeEntity);
+                }
                 MetadataManager.INSTANCE.addDataset(mdTxnCtx, view);
             } else {
+                if (itemTypeIsInline) {
+                    MetadataManager.INSTANCE.updateDatatype(mdTxnCtx, itemTypeEntity);
+                }
                 MetadataManager.INSTANCE.updateDataset(mdTxnCtx, view);
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -2562,6 +2582,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         DatasetUtil.getFullyQualifiedDisplayName(dataverseName, viewName));
             }
             MetadataManager.INSTANCE.dropDataset(mdTxnCtx, dataverseName, viewName, false);
+            if (TypeUtil.isDatasetInlineTypeName(dataset, dataset.getItemTypeDataverseName(),
+                    dataset.getItemTypeName())) {
+                MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(),
+                        dataset.getItemTypeName());
+            }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {

@@ -1,0 +1,72 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse test1 if exists;
+create dataverse test1;
+
+use test1;
+
+create dataset t1(c_id int32 not unknown) open type primary key c_id;
+
+create dataset t2(c_id int32 not unknown) open type primary key c_id;
+
+/* inline type */
+create view v1(
+  c_id int32,
+  c_i8 int8, c_i16 int16, c_i32 int32, c_i64 int64, c_f float, c_d double,
+  c_b boolean, c_s string,
+  c_datetime datetime, c_date date, c_time time,
+  c_dur duration, c_ymdur year_month_duration, c_dtdur day_time_duration
+) default null as t1;
+
+create type t2 as closed {
+  c_id:int32?,
+  c_i8:int8?, c_i16:int16?, c_i32:int32?, c_i64:int64?, c_f:float?, c_d:double?,
+  c_b:boolean?, c_s:string?,
+  c_datetime:datetime?, c_date:date?, c_time:time?,
+  c_dur:duration?, c_ymdur:year_month_duration?, c_dtdur:day_time_duration?
+};
+
+/* type reference, query body */
+create view v2_ref_type(t2) default null as
+  select c_id,
+    c_i8, c_i16, c_i32, c_i64, c_f, c_d,
+    c_b, c_s,
+    c_datetime, c_date, c_time,
+    c_dur, c_ymdur, c_dtdur
+  from t1
+;
+
+/* custom date/time format (with clause) */
+create view v3_datetime_format(
+  c_id int32,
+  c_datetime datetime, c_date date, c_time time
+) default null with {
+  'datetime':'MM/DD/YYYY hh:mm:ss.nnna',
+  'date':'MM/DD/YYYY',
+  'time':'hh:mm:ss.nnna'
+} as t2;
+
+/* custom date format (with clause) */
+create view v4_date_format_only(
+  c_id int32,
+  c_datetime datetime, c_date date, c_time time
+) default null with {
+  'date':'MM/DD/YYYY'
+} as t2;

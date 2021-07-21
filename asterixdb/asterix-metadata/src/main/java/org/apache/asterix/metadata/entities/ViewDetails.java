@@ -37,6 +37,7 @@ import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entitytupletranslators.AbstractTupleTranslator;
 import org.apache.asterix.om.base.AMutableString;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.utils.RecordUtil;
@@ -49,13 +50,36 @@ public class ViewDetails implements IDatasetDetails {
 
     private static final long serialVersionUID = 1L;
 
+    public static List<DependencyKind> DEPENDENCIES_SCHEMA =
+            Arrays.asList(DependencyKind.DATASET, DependencyKind.FUNCTION, DependencyKind.TYPE, DependencyKind.SYNONYM);
+
     private final String viewBody;
 
     private final List<List<Triple<DataverseName, String, String>>> dependencies;
 
-    public ViewDetails(String viewBody, List<List<Triple<DataverseName, String, String>>> dependencies) {
+    // Typed view parameters
+
+    private final Boolean defaultNull;
+
+    private final String datetimeFormat;
+
+    private final String dateFormat;
+
+    private final String timeFormat;
+
+    public ViewDetails(String viewBody, List<List<Triple<DataverseName, String, String>>> dependencies,
+            Boolean defaultNull, String datetimeFormat, String dateFormat, String timeFormat) {
         this.viewBody = Objects.requireNonNull(viewBody);
         this.dependencies = Objects.requireNonNull(dependencies);
+        this.defaultNull = defaultNull;
+        this.datetimeFormat = datetimeFormat;
+        this.dateFormat = dateFormat;
+        this.timeFormat = timeFormat;
+    }
+
+    @Override
+    public DatasetConfig.DatasetType getDatasetType() {
+        return DatasetConfig.DatasetType.VIEW;
     }
 
     public String getViewBody() {
@@ -66,9 +90,22 @@ public class ViewDetails implements IDatasetDetails {
         return dependencies;
     }
 
-    @Override
-    public DatasetConfig.DatasetType getDatasetType() {
-        return DatasetConfig.DatasetType.VIEW;
+    // Typed view fields
+
+    public Boolean getDefaultNull() {
+        return defaultNull;
+    }
+
+    public String getDatetimeFormat() {
+        return datetimeFormat;
+    }
+
+    public String getDateFormat() {
+        return dateFormat;
+    }
+
+    public String getTimeFormat() {
+        return timeFormat;
     }
 
     @Override
@@ -83,6 +120,9 @@ public class ViewDetails implements IDatasetDetails {
         AMutableString aString = new AMutableString("");
         ISerializerDeserializer<AString> stringSerde =
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+
+        ISerializerDeserializer<ANull> nullSerde =
+                SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
 
         // write field 'Definition'
         fieldName.reset();
@@ -130,11 +170,41 @@ public class ViewDetails implements IDatasetDetails {
             viewRecordBuilder.addField(fieldName, fieldValue);
         }
 
+        // write field 'DefaultNull'
+        if (defaultNull != null && defaultNull) {
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_DEFAULT);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            nullSerde.serialize(ANull.NULL, fieldValue.getDataOutput());
+            viewRecordBuilder.addField(fieldName, fieldValue);
+        }
+
+        // write field 'Format'
+        if (datetimeFormat != null || dateFormat != null || timeFormat != null) {
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_DATA_FORMAT);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+
+            OrderedListBuilder formatListBuilder = new OrderedListBuilder();
+            formatListBuilder.reset(FULL_OPEN_ORDEREDLIST_TYPE);
+            for (String format : new String[] { datetimeFormat, dateFormat, timeFormat }) {
+                itemValue.reset();
+                if (format == null) {
+                    nullSerde.serialize(ANull.NULL, itemValue.getDataOutput());
+                } else {
+                    aString.setValue(format);
+                    stringSerde.serialize(aString, itemValue.getDataOutput());
+                }
+                formatListBuilder.addItem(itemValue);
+            }
+            fieldValue.reset();
+            formatListBuilder.write(fieldValue.getDataOutput(), true);
+            viewRecordBuilder.addField(fieldName, fieldValue);
+        }
+
         viewRecordBuilder.write(out, true);
     }
-
-    public static List<DependencyKind> DEPENDENCIES_SCHEMA =
-            Arrays.asList(DependencyKind.DATASET, DependencyKind.FUNCTION, DependencyKind.TYPE, DependencyKind.SYNONYM);
 
     public static List<List<Triple<DataverseName, String, String>>> createDependencies(
             List<Triple<DataverseName, String, String>> datasetDependencies,

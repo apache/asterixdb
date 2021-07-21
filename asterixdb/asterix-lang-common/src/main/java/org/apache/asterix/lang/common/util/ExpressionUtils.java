@@ -44,6 +44,7 @@ import org.apache.asterix.lang.common.literal.DoubleLiteral;
 import org.apache.asterix.lang.common.literal.LongIntegerLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
 import org.apache.asterix.object.base.AdmArrayNode;
@@ -55,6 +56,7 @@ import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
 import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
@@ -245,5 +247,13 @@ public class ExpressionUtils {
                 }
             }
         }
+    }
+
+    public static Query createWrappedQuery(Expression expr, SourceLocation sourceLoc) {
+        Query wrappedQuery = new Query(false);
+        wrappedQuery.setSourceLocation(sourceLoc);
+        wrappedQuery.setBody(expr);
+        wrappedQuery.setTopLevel(false);
+        return wrappedQuery;
     }
 }

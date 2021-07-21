@@ -16,22 +16,40 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+ * Description  : Create index on a view
+ * Expected Res : Failure
+ */
 
---- test drop dataverse with views
+drop  dataverse test if exists;
+create  dataverse test;
 
-drop dataverse test1 if exists;
-create dataverse test1;
+use test;
 
-create view test1.v1 as
-  select r from range(0,2) r;
+create type test.LineItemType as
+ closed {
+  l_orderkey : bigint,
+  l_partkey : bigint,
+  l_suppkey : bigint,
+  l_linenumber : bigint,
+  l_quantity : double,
+  l_extendedprice : double,
+  l_discount : double,
+  l_tax : double,
+  l_returnflag : string,
+  l_linestatus : string,
+  l_shipdate : string,
+  l_commitdate : string,
+  l_receiptdate : string,
+  l_shipinstruct : string,
+  l_shipmode : string,
+  l_comment : string
+};
 
-create view test1.v2 as
-  select v1.* from v1;
+create dataset LineItem(LineItemType) primary key l_orderkey;
 
-create view test1.v3(r bigint) default null as v2;
+create view LineItemView1 as LineItem;
 
-create type test1.t4 as closed { r:int64? };
+--- Failure: cannot create index on a view
 
-create view test1.v4(t4) default null as v2;
-
-drop dataverse test1;
+create index idx1 on LineItemView1(l_partkey : bigint);

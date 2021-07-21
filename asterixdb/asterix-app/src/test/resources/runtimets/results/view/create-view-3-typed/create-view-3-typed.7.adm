@@ -1,0 +1,4 @@
+{ "DataverseName": "test1", "DatasetName": "v1", "ViewDetails": { "Definition": "t1", "Dependencies": [ [ [ "test1", "t1" ] ], [  ], [  ] ], "Default": null } }
+{ "DataverseName": "test1", "DatasetName": "v2_ref_type", "ViewDetails": { "Definition": "select c_id,\n    c_i8, c_i16, c_i32, c_i64, c_f, c_d,\n    c_b, c_s,\n    c_datetime, c_date, c_time,\n    c_dur, c_ymdur, c_dtdur\n  from t1", "Dependencies": [ [ [ "test1", "t1" ] ], [  ], [  ] ], "Default": null } }
+{ "DataverseName": "test1", "DatasetName": "v3_datetime_format", "ViewDetails": { "Definition": "t2", "Dependencies": [ [ [ "test1", "t2" ] ], [  ], [  ] ], "Default": null, "DataFormat": [ "MM/DD/YYYY hh:mm:ss.nnna", "MM/DD/YYYY", "hh:mm:ss.nnna" ] } }
+{ "DataverseName": "test1", "DatasetName": "v4_date_format_only", "ViewDetails": { "Definition": "t2", "Dependencies": [ [ [ "test1", "t2" ] ], [  ], [  ] ], "Default": null, "DataFormat": [ null, "MM/DD/YYYY", null ] } }

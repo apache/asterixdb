@@ -62,7 +62,7 @@ public class DatasetDeclParametersUtil {
      * ***********************************************
      */
     private static final ARecordType WITH_OBJECT_TYPE = getWithObjectType();
-    private static final AdmObjectNode EMPTY_WITH_OBJECT = new AdmObjectNode();
+    static final AdmObjectNode EMPTY_WITH_OBJECT = new AdmObjectNode();
 
     private DatasetDeclParametersUtil() {
     }

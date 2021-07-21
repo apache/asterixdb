@@ -1,0 +1,79 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test1;
+
+insert into t1 ([
+  {
+    'c_id':0,
+    'c_i8':'8','c_i16':'16','c_i32':'32','c_i64':'64','c_f':'1.5','c_d':'2.25',
+    'c_b':false,'c_s':'abc',
+    'c_datetime':'2020-02-03T10:11:12.001','c_date':'2020-02-03','c_time':'10:11:12.001',
+    'c_dur':'P30Y10M25DT13H12M50S','c_ymdur':'P30Y10M','c_dtdur':'P25DT13H12M50S'
+  },
+
+  {
+    'c_id':1,
+    'c_i8':'-8','c_i16':'-16','c_i32':'-32','c_i64':'-64','c_f':'-1.5','c_d':'-2.25',
+    'c_b':true,'c_s':'xyz',
+    'c_datetime':'2021-04-05T01:02:03.999','c_date':'2021-04-05','c_time':'01:02:03.999',
+    'c_dur':'P1Y2M3DT4H5M6S','c_ymdur':'P1Y2M','c_dtdur':'P3DT4H5M6S'
+  },
+
+  /* Null values */
+  {
+    'c_id':2,
+    'c_i8':null,'c_i16':null,'c_i32':null,'c_i64':null,'c_f':null,'c_d':null,
+    'c_b':null,'c_s':null,
+    'c_datetime':null,'c_date':null,'c_time':null,
+    'c_dur':null,'c_ymdur':null,'c_dtdur':null
+  },
+
+  /* Missing values */
+  {
+    'c_id':3
+  },
+
+  /* Invalid values */
+  {
+    'c_id':4,
+    'c_i8':'a','c_i16':'b','c_i32':'c','c_i64':'d','c_f':'e','c_d':'f',
+    'c_b':99,'c_s':null,
+    'c_datetime':'a','c_date':'b','c_time':'c',
+    'c_dur':'x','c_ymdur':'y','c_dtdur':'z',
+    'c_something_else':'something_else'
+  }
+]);
+
+/* Custom date/time format */
+insert into t2 ([
+  {
+    'c_id':0,
+    'c_datetime':'02/20/2020 11:40:41.001pm','c_date':'02/20/2020','c_time':'11:40:41.001pm'
+  },
+  {
+    'c_id':1,
+    'c_datetime':'11/25/2021 11:50:51.999am','c_date':'11/25/2021','c_time':'11:50:51.999am'
+  },
+  /* Invalid values */
+  {
+    'c_id':2,
+    'c_datetime':'a','c_date':'b','c_time':'c'
+  }
+]);

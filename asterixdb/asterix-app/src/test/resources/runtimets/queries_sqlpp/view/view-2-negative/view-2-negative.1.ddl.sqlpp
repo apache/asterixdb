@@ -17,21 +17,15 @@
  * under the License.
  */
 
---- test drop dataverse with views
-
 drop dataverse test1 if exists;
 create dataverse test1;
 
-create view test1.v1 as
-  select r from range(0,2) r;
+use test1;
 
-create view test1.v2 as
-  select v1.* from v1;
+create dataset t1(id bigint not unknown, v string) primary key id;
 
-create view test1.v3(r bigint) default null as v2;
+create view v1 as t1;
 
-create type test1.t4 as closed { r:int64? };
+create view v2 as t1;
 
-create view test1.v4(t4) default null as v2;
-
-drop dataverse test1;
+create view v3 as t1;

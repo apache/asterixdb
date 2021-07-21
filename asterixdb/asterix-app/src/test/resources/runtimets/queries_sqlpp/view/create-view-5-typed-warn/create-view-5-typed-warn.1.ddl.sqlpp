@@ -17,21 +17,19 @@
  * under the License.
  */
 
---- test drop dataverse with views
-
 drop dataverse test1 if exists;
 create dataverse test1;
 
-create view test1.v1 as
-  select r from range(0,2) r;
+use test1;
 
-create view test1.v2 as
-  select v1.* from v1;
+create dataset t1(c_id int32 not unknown) open type primary key c_id;
 
-create view test1.v3(r bigint) default null as v2;
-
-create type test1.t4 as closed { r:int64? };
-
-create view test1.v4(t4) default null as v2;
-
-drop dataverse test1;
+/* invalid custom date/time format (in with clause) */
+create view v1_invalid_datetime_format(
+  c_id int32,
+  c_datetime datetime, c_date date, c_time time
+) default null with {
+  'datetime':'XX.ZZ.11',
+  'date':'XX.ZZ.22',
+  'time':'XX.ZZ.33'
+} as t1;

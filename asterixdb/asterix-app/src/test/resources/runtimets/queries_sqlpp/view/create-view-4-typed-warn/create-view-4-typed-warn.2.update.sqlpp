@@ -17,21 +17,24 @@
  * under the License.
  */
 
---- test drop dataverse with views
+use test1;
 
-drop dataverse test1 if exists;
-create dataverse test1;
+insert into t1 ([
+  /* Invalid format (string values) */
+  {
+    'c_id':0,
+    'c_i8':'a','c_i16':'b','c_i32':'c','c_i64':'d','c_f':'e','c_d':'f',
+    'c_b':null,'c_s':null,
+    'c_datetime':'g','c_date':'h','c_time':'j',
+    'c_dur':'k','c_ymdur':'m','c_dtdur':'n'
+  },
+  /* Invalid type */
+  {
+    'c_id':1,
+    'c_i8':duration('P1M8S'),'c_i16':duration('P1M16S'),'c_i32':duration('P1M32S'),'c_i64':duration('P1M64S'),'c_f':duration('P2M32S'),'c_d':duration('P2M64S'),
+    'c_b':duration('P3M1S'),'c_s':null,
+    'c_datetime':duration('P4M1S'),'c_date':duration('P5M1S'),'c_time':duration('P6M1S'),
+    'c_dur':date('2020-01-02'),'c_ymdur':date('2020-01-02'),'c_dtdur':date('2020-01-02')
+  }
+]);
 
-create view test1.v1 as
-  select r from range(0,2) r;
-
-create view test1.v2 as
-  select v1.* from v1;
-
-create view test1.v3(r bigint) default null as v2;
-
-create type test1.t4 as closed { r:int64? };
-
-create view test1.v4(t4) default null as v2;
-
-drop dataverse test1;

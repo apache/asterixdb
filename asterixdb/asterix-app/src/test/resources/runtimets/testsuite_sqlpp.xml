@@ -4121,6 +4121,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl/create-index">
+      <compilation-unit name="create-index-6">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1050: Cannot find dataset with name LineItemView1 in dataverse test (in line 55, at column 1)</expected-error>
+        <expected-error>ASX1050: Cannot find dataset with name LineItemView2 in dataverse test (in line 60, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl/create-index">
       <compilation-unit name="create-inverted-index-with-variable-length-primary-key">
         <output-dir compare="Text">create-inverted-index-with-variable-length-primary-key</output-dir>
       </compilation-unit>
@@ -13022,10 +13029,67 @@
         <expected-error>ASX1072: A dataset with name ds1 already exists in dataverse test (in line 30, at column 1)</expected-error>
         <expected-error>ASX1072: A dataset with name ds2 already exists in dataverse test (in line 30, at column 1)</expected-error>
         <expected-error>ASX1160: A view with this name test.ds1 already exists (in line 27, at column 1)</expected-error>
-        <expected-error><![CDATA[ASX1001: Syntax error: Unexpected IF NOT EXISTS (in line 25, at column 39)]]></expected-error>
+        <expected-error><![CDATA[ASX1001: Syntax error: Unexpected IF NOT EXISTS (in line 25, at column 1)]]></expected-error>
         <expected-error>ASX1149: Illegal function or view recursion (in line 31, at column 1)</expected-error>
         <expected-error>ASX1149: Illegal function or view recursion (in line 32, at column 1)</expected-error>
         <expected-error>ASX1149: Illegal function or view recursion (in line 33, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view">
+      <compilation-unit name="create-view-3-typed">
+        <output-dir compare="Text">create-view-3-typed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view" check-warnings="true">
+      <compilation-unit name="create-view-4-typed-warn">
+        <output-dir compare="Text">create-view-4-typed-warn</output-dir>
+        <expected-warn>ASX0006: Invalid format for tinyint in a (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for smallint in b (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for integer in c (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for bigint in d (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for float in e (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for double in f (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for datetime in g (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for date in h (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for time in j (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for duration in k (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for yearmonthduration in m (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for daytimeduration in n (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: boolean() cannot process input type duration (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int8() cannot process input type duration (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int16() cannot process input type duration (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int32() cannot process input type duration (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: int64() cannot process input type duration (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: float() cannot process input type duration (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: double() cannot process input type duration (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type duration (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: date() cannot process input type duration (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: time() cannot process input type duration (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: duration() cannot process input type date (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: year-month-duration() cannot process input type date (in line 30, at column 6)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: day-time-duration() cannot process input type date (in line 30, at column 6)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view" check-warnings="true">
+      <compilation-unit name="create-view-5-typed-warn">
+        <output-dir compare="Text">create-view-5-typed-warn</output-dir>
+        <expected-warn>ASX0006: Invalid format for datetime in a (in line 27, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for date in b (in line 27, at column 6)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for time in c (in line 27, at column 6)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view">
+      <compilation-unit name="create-view-6-typed-negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1082: Cannot find datatype with name unknown_dv.t1</expected-error>
+        <expected-error>ASX1082: Cannot find datatype with name test.t1_unknown</expected-error>
+        <expected-error>ASX1079: Compilation error: view type cannot have open fields (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1004: Unsupported type: view cannot process input type t1_a (in line 30, at column 1)</expected-error>
+        <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1(r bigint, a [bigint]) default null as<< Encountered "[" at column 33]]></expected-error>
+        <expected-error>ASX1079: Compilation error: Invalid type for field r. The type must allow MISSING and NULL (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1001: Syntax error: ASX1059: Field(s) [date-illegal-property-name] unsupported in the with clause (in line 25, at column 1)</expected-error>
+        <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1(r bigint) as<< Encountered "as" at column 31]]></expected-error>
+        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="view">
@@ -13041,6 +13105,7 @@
         <expected-error>ASX1147: Cannot drop dataverse: dataset (or view) test2.ds2 being used by view test1.v1</expected-error>
         <expected-error>ASX1147: Cannot drop dataverse: function test2.f2() being used by view test1.v1</expected-error>
         <expected-error>ASX1147: Cannot drop dataverse: synonym test2.s3 being used by view test1.v1</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: type test2.t1 being used by dataset test1.v1</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -13061,12 +13126,21 @@
         <expected-error>ASX1148: Cannot drop synonym test2.s2 being used by view test1.v1</expected-error>
         <expected-error>ASX1148: Cannot drop view test2.v2 being used by view test1.v1</expected-error>
         <expected-error>ASX1148: Cannot drop view test2.v2 being used by function test1.f1()</expected-error>
+        <expected-error>ASX1148: Cannot drop type test2.t1 being used by dataset test1.v1</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="view">
       <compilation-unit name="view-1">
         <output-dir compare="Text">view-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view">
+      <compilation-unit name="view-2-negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1050: Cannot find dataset with name v1 in dataverse test1 (in line 24, at column 17)</expected-error>
+        <expected-error>ASX1050: Cannot find dataset with name v2 in dataverse test1 (in line 24, at column 17)</expected-error>
+        <expected-error>ASX1050: Cannot find dataset with name v3 in dataverse test1 (in line 24, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

@@ -59,9 +59,11 @@ import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.AUnorderedList;
 import org.apache.asterix.om.base.IACursor;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -263,7 +265,35 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                     }
                 }
 
-                datasetDetails = new ViewDetails(definition, dependencies);
+                // Default Null
+                Boolean defaultNull = null;
+                int defaultFieldPos =
+                        datasetDetailsRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_DEFAULT);
+                if (defaultFieldPos >= 0) {
+                    IAObject defaultValue = datasetDetailsRecord.getValueByPos(defaultFieldPos);
+                    defaultNull = defaultValue.getType().getTypeTag() == ATypeTag.NULL;
+                }
+
+                // Format fields
+                String datetimeFormat = null, dateFormat = null, timeFormat = null;
+                int formatFieldPos =
+                        datasetDetailsRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_DATA_FORMAT);
+                if (formatFieldPos >= 0) {
+                    IACursor formatCursor =
+                            ((AOrderedList) datasetDetailsRecord.getValueByPos(formatFieldPos)).getCursor();
+                    if (formatCursor.next()) {
+                        datetimeFormat = getStringValue(formatCursor.get());
+                        if (formatCursor.next()) {
+                            dateFormat = getStringValue(formatCursor.get());
+                            if (formatCursor.next()) {
+                                timeFormat = getStringValue(formatCursor.get());
+                            }
+                        }
+                    }
+                }
+
+                datasetDetails =
+                        new ViewDetails(definition, dependencies, defaultNull, datetimeFormat, dateFormat, timeFormat);
                 break;
             }
         }
@@ -334,6 +364,10 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             return ((AString) compressionRecord.getValueByPos(schemeIndex)).getStringValue();
         }
         return CompressionManager.NONE;
+    }
+
+    private static String getStringValue(IAObject obj) {
+        return obj.getType().getTypeTag() == ATypeTag.STRING ? ((AString) obj).getStringValue() : null;
     }
 
     @Override

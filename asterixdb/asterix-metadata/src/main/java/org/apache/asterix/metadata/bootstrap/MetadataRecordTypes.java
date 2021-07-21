@@ -48,6 +48,7 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_DATATYPE_NAME = "DatatypeName";
     public static final String FIELD_NAME_DATAVERSE_NAME = "DataverseName";
     public static final String FIELD_NAME_DATA_FORMAT = "DataFormat";
+    public static final String FIELD_NAME_DEFAULT = "Default";
     public static final String FIELD_NAME_DEFINITION = "Definition";
     public static final String FIELD_NAME_DEPENDENCIES = "Dependencies";
     public static final String FIELD_NAME_DERIVED = "Derived";

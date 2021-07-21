@@ -17,21 +17,18 @@
  * under the License.
  */
 
---- test drop dataverse with views
+--- Test that DROP DATAVERSE fails due to cross-dataverse dependencies
+
+--- View depends on datatype
 
 drop dataverse test1 if exists;
 create dataverse test1;
 
-create view test1.v1 as
-  select r from range(0,2) r;
+drop dataverse test2 if exists;
+create dataverse test2;
 
-create view test1.v2 as
-  select v1.* from v1;
+create type test2.t1 as closed { r:int64? };
 
-create view test1.v3(r bigint) default null as v2;
+create view test1.v1(test2.t1) default null as select r from range(1,2) r;
 
-create type test1.t4 as closed { r:int64? };
-
-create view test1.v4(t4) default null as v2;
-
-drop dataverse test1;
+drop dataverse test2;

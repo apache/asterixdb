@@ -31,7 +31,7 @@ public final class ViewDecl extends AbstractStatement {
 
     private final DatasetFullyQualifiedName viewName;
 
-    private Expression viewBody;
+    private final Expression viewBody;
 
     private Expression viewBodyNormalized;
 
@@ -48,27 +48,12 @@ public final class ViewDecl extends AbstractStatement {
         return viewBody;
     }
 
-    public void setViewBody(Expression expr) {
-        viewBody = expr;
-        viewBodyNormalized = null;
-    }
-
     public Expression getNormalizedViewBody() {
         return viewBodyNormalized;
     }
 
     public void setNormalizedViewBody(Expression expr) {
         viewBodyNormalized = expr;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        ViewDecl viewDecl = (ViewDecl) o;
-        return viewName.equals(viewDecl.viewName);
     }
 
     @Override

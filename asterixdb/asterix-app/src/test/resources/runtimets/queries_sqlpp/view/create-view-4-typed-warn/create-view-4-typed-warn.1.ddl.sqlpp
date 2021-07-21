@@ -17,21 +17,17 @@
  * under the License.
  */
 
---- test drop dataverse with views
-
 drop dataverse test1 if exists;
 create dataverse test1;
 
-create view test1.v1 as
-  select r from range(0,2) r;
+use test1;
 
-create view test1.v2 as
-  select v1.* from v1;
+create dataset t1(c_id int32 not unknown) open type primary key c_id;
 
-create view test1.v3(r bigint) default null as v2;
-
-create type test1.t4 as closed { r:int64? };
-
-create view test1.v4(t4) default null as v2;
-
-drop dataverse test1;
+create view v1(
+  c_id int32,
+  c_i8 int8, c_i16 int16, c_i32 int32, c_i64 int64, c_f float, c_d double,
+  c_b boolean, c_s string,
+  c_datetime datetime, c_date date, c_time time,
+  c_dur duration, c_ymdur year_month_duration, c_dtdur day_time_duration
+) default null as t1;

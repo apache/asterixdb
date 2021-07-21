@@ -225,6 +225,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     // tokens parsed as identifiers
     private static final String CUBE = "CUBE";
     private static final String CURRENT = "CURRENT";
+    private static final String DEFAULT = "DEFAULT";
     private static final String EXCLUDE = "EXCLUDE";
     private static final String FIRST = "FIRST";
     private static final String FOLLOWING = "FOLLOWING";
@@ -1043,7 +1044,7 @@ TypeExpression DatasetReferenceTypeSpecification() throws ParseException:
   }
 }
 
-TypeExpression DatasetRecordTypeSpecification(boolean allowRecordKindModifier) throws ParseException:
+RecordTypeDefinition DatasetRecordTypeSpecification(boolean allowRecordKindModifier) throws ParseException:
 {
   RecordTypeDefinition recordTypeDef = null;
   RecordTypeDefinition.RecordKind recordKind = null;
@@ -1417,17 +1418,29 @@ CreateViewStatement CreateViewStatement(Token startStmtToken, boolean orReplace)
 CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) throws ParseException:
 {
   Pair<DataverseName, Identifier> nameComponents = null;
+  TypeExpression typeExpr = null;
   boolean ifNotExists = false;
   Token beginPos = null, endPos = null;
   Expression viewBodyExpr = null;
+  Boolean defaultNull = null;
+  RecordConstructor withRecord = null;
   DataverseName currentDataverse = defaultDataverse;
 }
 {
   nameComponents = QualifiedName()
-  ifNotExists = IfNotExists()
+  (
+    (
+      typeExpr = DatasetTypeSpecification()
+      ifNotExists = IfNotExists()
+      <IDENTIFIER> { expectToken(DEFAULT); } <NULL> { defaultNull = true; }
+      ( <WITH> withRecord = RecordConstructor() )?
+    )
+    |
+    ( ifNotExists = IfNotExists() )
+  )
   {
     if (orReplace && ifNotExists) {
-      throw new SqlppParseException(getSourceLocation(token), "Unexpected IF NOT EXISTS");
+      throw new SqlppParseException(getSourceLocation(startStmtToken), "Unexpected IF NOT EXISTS");
     }
   }
   <AS>
@@ -1445,9 +1458,13 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
       endPos.endColumn + 1);
     removeCurrentScope();
     defaultDataverse = currentDataverse;
-    CreateViewStatement stmt = new CreateViewStatement(nameComponents.first, nameComponents.second.getValue(), viewBody,
-      viewBodyExpr, orReplace, ifNotExists);
+    try {
+      CreateViewStatement stmt = new CreateViewStatement(nameComponents.first, nameComponents.second.getValue(),
+        typeExpr, viewBody, viewBodyExpr, defaultNull, withRecord, orReplace, ifNotExists);
     return addSourceLocation(stmt, startStmtToken);
+    } catch (CompilationException e) {
+       throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
+    }
   }
 }
 
@@ -1456,7 +1473,10 @@ Expression ViewBody() throws ParseException:
   Expression viewBodyExpr = null;
 }
 {
-  viewBodyExpr = SelectExpression(true)
+  (
+    ( viewBodyExpr = VariableRef() ( viewBodyExpr = FieldAccessor(viewBodyExpr) )* )
+    | viewBodyExpr = SelectExpression(true)
+  )
   {
     return viewBodyExpr;
   }

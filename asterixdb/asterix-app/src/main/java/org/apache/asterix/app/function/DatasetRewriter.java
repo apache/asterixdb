@@ -19,6 +19,7 @@
 package org.apache.asterix.app.function;
 
 import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
+import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.SINGULAR;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.util.ArrayList;
@@ -88,8 +89,8 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
             default:
                 // VIEWS are not expected at this point
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, unnest.getSourceLocation(),
-                        "Unexpected dataset type " + dataset.getDatasetType() + " for dataset "
-                                + DatasetUtil.getFullyQualifiedDisplayName(dataset));
+                        String.format("Unexpected %s type %s for %s %s", dataset(SINGULAR), dataset.getDatasetType(),
+                                dataset(SINGULAR), DatasetUtil.getFullyQualifiedDisplayName(dataset)));
         }
         variables.add(unnest.getVariable());
 

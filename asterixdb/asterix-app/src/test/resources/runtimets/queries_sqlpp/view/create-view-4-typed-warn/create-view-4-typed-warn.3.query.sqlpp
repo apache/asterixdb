@@ -17,21 +17,15 @@
  * under the License.
  */
 
---- test drop dataverse with views
+// requesttype=application/json
+// param max-warnings:json=100
 
-drop dataverse test1 if exists;
-create dataverse test1;
+use test1;
 
-create view test1.v1 as
-  select r from range(0,2) r;
-
-create view test1.v2 as
-  select v1.* from v1;
-
-create view test1.v3(r bigint) default null as v2;
-
-create type test1.t4 as closed { r:int64? };
-
-create view test1.v4(t4) default null as v2;
-
-drop dataverse test1;
+select c_id,
+  c_i8, c_i16, c_i32, c_i64, c_f, c_d,
+  c_b, c_s,
+  c_datetime, c_date, c_time,
+  c_dur, c_ymdur, c_dtdur
+from v1
+order by c_id;
