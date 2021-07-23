@@ -52,9 +52,9 @@ MultisetConstructor ::= "{{" Expr ("," Expr)* "}}"
 
 Query ::= (Expr | Selection)
 
-Selection ::= WithClause? QueryBlock UnionOption* OrderByClause? ( LimitClause | OffsetClause )?
+Selection ::= (WithClause | LetClause)? QueryBlock UnionOption* OrderByClause? ( LimitClause | OffsetClause )?
 
-QueryBlock ::= SelectClause StreamGenerator?
+QueryBlock ::= SelectClause ( ( LetClause WhereClause? ) | StreamGenerator )?
              | StreamGenerator SelectClause
 
 StreamGenerator::= FromClause LetClause? WhereClause? (GroupByClause LetClause? HavingClause?)?

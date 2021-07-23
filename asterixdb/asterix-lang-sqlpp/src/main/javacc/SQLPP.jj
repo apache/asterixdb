@@ -3960,12 +3960,21 @@ SelectBlock SelectBlock() throws ParseException:
 }
 {
   (
+    (
      selectClause = SelectClause() { startSrcLoc = selectClause.getSourceLocation(); }
      (
         (
           fromClause = FromClause()
           (
               fromLetClauses = LetClause()
+          )?
+          (whereClause = WhereClause())?
+          (
+            groupbyClause = GroupbyClause()
+            (
+                gbyLetClauses = LetClause()
+            )?
+            (havingClause = HavingClause())?
           )?
         )
         |
@@ -3986,17 +3995,12 @@ SelectBlock SelectBlock() throws ParseException:
             fromTerms.add(new FromTerm(listExpr, fromVar, null, new ArrayList<AbstractBinaryCorrelateClause>()));
             fromClause = new FromClause(fromTerms);
           }
+          (whereClause = WhereClause())?
         )
      )?
-     (whereClause = WhereClause())?
-     (
-        groupbyClause = GroupbyClause()
-        (
-            gbyLetClauses = LetClause()
-        )?
-        (havingClause = HavingClause())?
-     )?
+    )
     |
+    (
      fromClause = FromClause() { startSrcLoc = fromClause.getSourceLocation(); }
      (
         fromLetClauses = LetClause()
@@ -4010,6 +4014,7 @@ SelectBlock SelectBlock() throws ParseException:
         (havingClause = HavingClause())?
      )?
      selectClause = SelectClause()
+    )
   )
   {
     if (fromLetClauses != null) {
