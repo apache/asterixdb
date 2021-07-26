@@ -41,13 +41,19 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.maven.license.project.LicensedProjects;
 import org.apache.hyracks.maven.license.project.Project;
 import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DefaultArtifact;
+import org.apache.maven.artifact.handler.ArtifactHandler;
+import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.ArtifactResolutionRequest;
+import org.apache.maven.artifact.resolver.ArtifactResolutionResult;
 import org.apache.maven.artifact.resolver.ArtifactResolver;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.License;
@@ -120,6 +126,9 @@ public abstract class LicenseMojo extends AbstractMojo {
 
     @Parameter
     protected boolean failOnWarning;
+
+    @Parameter
+    protected List<String> extraDependencies = new ArrayList<>();
 
     private Map<String, MavenProject> projectCache = new HashMap<>();
 
@@ -393,24 +402,47 @@ public abstract class LicenseMojo extends AbstractMojo {
     private void gatherProjectDependencies(MavenProject project,
             Map<MavenProject, List<Pair<String, String>>> dependencyLicenseMap,
             Map<String, MavenProject> dependencyGavMap) throws ProjectBuildingException {
-        final Set dependencyArtifacts = project.getArtifacts();
+        final Set<Artifact> dependencyArtifacts = project.getArtifacts();
         if (dependencyArtifacts != null) {
-            for (Object depArtifactObj : dependencyArtifacts) {
-                final Artifact depArtifact = (Artifact) depArtifactObj;
-                if (!excludedScopes.contains(depArtifact.getScope())) {
-                    MavenProject dep = resolveDependency(depArtifact);
-                    dep.setArtifact(depArtifact);
-                    dependencyGavMap.put(toGav(dep), dep);
-                    List<Pair<String, String>> licenseUrls = new ArrayList<>();
-                    for (Object license : dep.getLicenses()) {
-                        final License license1 = (License) license;
-                        String url = license1.getUrl() != null ? license1.getUrl()
-                                : (license1.getName() != null ? license1.getName() : "LICENSE_EMPTY_NAME_URL");
-                        licenseUrls.add(new ImmutablePair<>(url, license1.getName()));
-                    }
-                    dependencyLicenseMap.put(dep, licenseUrls);
+            for (Artifact depArtifact : dependencyArtifacts) {
+                processArtifact(depArtifact, dependencyLicenseMap, dependencyGavMap);
+            }
+        }
+        for (String gav : extraDependencies) {
+            ArtifactHandler handler = new DefaultArtifactHandler("jar");
+            String[] gavParts = StringUtils.split(gav, ':');
+            Artifact manualDep = new DefaultArtifact(gavParts[0], gavParts[1], gavParts[2], Artifact.SCOPE_COMPILE,
+                    "jar", null, handler);
+            processArtifact(manualDep, dependencyLicenseMap, dependencyGavMap);
+        }
+    }
+
+    private void processArtifact(Artifact depArtifact,
+            Map<MavenProject, List<Pair<String, String>>> dependencyLicenseMap,
+            Map<String, MavenProject> dependencyGavMap) throws ProjectBuildingException {
+        if (!excludedScopes.contains(depArtifact.getScope())) {
+            MavenProject dep = resolveDependency(depArtifact);
+            if (!depArtifact.isResolved()) {
+                ArtifactResolutionRequest arr = new ArtifactResolutionRequest();
+                arr.setLocalRepository(localRepository);
+                arr.setRemoteRepositories(remoteRepositories);
+                arr.setArtifact(depArtifact);
+                ArtifactResolutionResult result = artifactResolver.resolve(arr);
+                if (!result.isSuccess()) {
+                    throw new ProjectBuildingException(project.getId(),
+                            "Unable to resolve " + depArtifact + ": " + result.getExceptions(), (Throwable) null);
                 }
             }
+            dep.setArtifact(depArtifact);
+            dependencyGavMap.put(toGav(dep), dep);
+            List<Pair<String, String>> licenseUrls = new ArrayList<>();
+            for (Object license : dep.getLicenses()) {
+                final License license1 = (License) license;
+                String url = license1.getUrl() != null ? license1.getUrl()
+                        : (license1.getName() != null ? license1.getName() : "LICENSE_EMPTY_NAME_URL");
+                licenseUrls.add(new ImmutablePair<>(url, license1.getName()));
+            }
+            dependencyLicenseMap.put(dep, licenseUrls);
         }
     }
 
@@ -430,7 +462,7 @@ public abstract class LicenseMojo extends AbstractMojo {
                     .get(SupplementalModelHelper.generateSupplementMapKey(depObj.getGroupId(), depObj.getArtifactId()));
             registerVerified(depProj, supplement);
             if (supplement != null) {
-                Model merged = SupplementalModelHelper.mergeModels(assembler, depProj.getModel(), supplement);
+                Model merged = SupplementalModelHelper.mergeModels(assembler, depProj.getModel(), supplement).clone();
                 Set<String> origLicenses =
                         depProj.getModel().getLicenses().stream().map(License::getUrl).collect(Collectors.toSet());
                 Set<String> newLicenses =
