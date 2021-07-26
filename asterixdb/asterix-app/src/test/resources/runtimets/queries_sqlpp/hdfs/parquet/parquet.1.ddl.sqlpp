@@ -17,7 +17,25 @@
  * under the License.
  */
 /*
-* Description  : Test Standard UTF-8
+* Description  : Test reading Parquet from HDFS
+                 Check Parquet S3 for more tests
 * Expected Res : Success
-* Date         : August 30th 2020
+* Date         : June 22nd 2020
+* Update Date  : July 26th 2021
 */
+
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+
+USE test;
+
+
+CREATE TYPE ParquetType as {
+};
+
+CREATE EXTERNAL DATASET ParquetDataset(ParquetType) USING hdfs
+(
+  ("hdfs"="hdfs://127.0.0.1:31888"),
+  ("path"="/asterix/id_age.parquet"),
+  ("input-format"="parquet-input-format")
+);

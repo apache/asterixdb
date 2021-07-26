@@ -17,14 +17,14 @@
  * under the License.
  */
 /*
-* Description  : Test Standard UTF-8
+* Description  : Test reading Parquet from HDFS
+                 Check Parquet S3 for more tests
 * Expected Res : Success
-* Date         : August 30th 2020
+* Date         : June 22nd 2020
+* Update Date  : July 26th 2021
 */
 USE test;
 
-SET `compiler.external.field.pushdown` "true";
-
-SELECT VALUE array_count(split(trim(p.comment),"𩸽"))
+SELECT VALUE p
 FROM ParquetDataset p
-WHERE contains(p.comment, "𩸽");
+ORDER BY p.id;
