@@ -5,7 +5,7 @@ OperatorExpr ::= PathExpr
                  | OperatorExpr Operator OperatorExpr?
                  | OperatorExpr "BETWEEN" OperatorExpr "AND" OperatorExpr
 
-QuantifiedExpr::= ( "SOME" | "EVERY" ) Variable "IN" Expr ( "," Variable "IN" Expr )* "SATISFIES" Expr ("END")?
+QuantifiedExpr::= ( "SOME" | "EVERY" | ( "SOME" "AND" "EVERY" ) ) Variable "IN" Expr ( "," Variable "IN" Expr )* "SATISFIES" Expr ("END")?
 
 PathExpr ::= PrimaryExpr ("." Identifier | "[" Expr (":" (Expr)? )? "]")*
 

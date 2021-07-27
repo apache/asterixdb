@@ -85,6 +85,33 @@ public final class ConstantExpression extends AbstractLogicalExpression {
             return "FALSE";
         }
     });
+    public static final ConstantExpression NULL = new ConstantExpression(new IAlgebricksConstantValue() {
+
+        @Override
+        public boolean isTrue() {
+            return false;
+        }
+
+        @Override
+        public boolean isMissing() {
+            return false;
+        }
+
+        @Override
+        public boolean isNull() {
+            return true;
+        }
+
+        @Override
+        public boolean isFalse() {
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return "NULL";
+        }
+    });
     public static final ConstantExpression MISSING = new ConstantExpression(new IAlgebricksConstantValue() {
 
         @Override

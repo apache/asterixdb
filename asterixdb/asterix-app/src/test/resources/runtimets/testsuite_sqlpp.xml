@@ -9386,6 +9386,11 @@
   </test-group>
   <test-group name="quantifiers">
     <test-case FilePath="quantifiers">
+      <compilation-unit name="any_and_every_01">
+        <output-dir compare="Text">any_and_every_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="quantifiers">
       <compilation-unit name="anysat_01">
         <output-dir compare="Text">somesat_01</output-dir>
       </compilation-unit>

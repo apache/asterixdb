@@ -191,7 +191,7 @@ Quantified expressions are used for expressing existential or universal predicat
 The following pair of examples illustrate the use of a quantified expression to test that every (or some) element in the
 set [1, 2, 3] of integers is less than three. The first example yields `FALSE` and second example yields `TRUE`.
 
-It is useful to note that if the set were instead the empty set, the first expression would yield `TRUE` ("every" value in an empty set satisfies the condition) while the second expression would yield `FALSE` (since there isn't "some" value, as there are no values in the set, that satisfies the condition).
+It is useful to note that if the set were instead the empty set, the first expression would yield `TRUE` ("every" value in an empty set satisfies the condition) while the second expression would yield `FALSE` (since there isn't "some" value, as there are no values in the set, that satisfies the condition). To express a universal predicate that yields `FALSE` with the empty set, we would use the quantifier `SOME AND EVERY` in lieu of `EVERY`.
 
 A quantified expression will return a `NULL` (or `MISSING`) if the first expression in it evaluates to `NULL` (or `MISSING`).
 Otherwise, a type error will be raised if the first expression in a quantified expression does not return a collection.

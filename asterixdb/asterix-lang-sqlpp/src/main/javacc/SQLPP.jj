@@ -4941,8 +4941,10 @@ QuantifiedExpression QuantifiedExpression()throws ParseException:
     createNewScope();
   }
 
-   ( ((<ANY>|<SOME>) { startToken = token; qc.setQuantifier(QuantifiedExpression.Quantifier.SOME); })
-     | (<EVERY> {  startToken = token; qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY); }))
+     ( LOOKAHEAD(2)
+       (<ANY>|<SOME>)<AND><EVERY> { startToken = token; qc.setQuantifier(QuantifiedExpression.Quantifier.SOME_AND_EVERY); }
+       | (<ANY>|<SOME>) { startToken = token; qc.setQuantifier(QuantifiedExpression.Quantifier.SOME); }
+       | <EVERY> {  startToken = token; qc.setQuantifier(QuantifiedExpression.Quantifier.EVERY); } )
     var = Variable() <IN> inExpr = Expression()
     {
       pair = new QuantifiedPair(var, inExpr);

@@ -41,6 +41,7 @@ import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMissing;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
@@ -311,9 +312,11 @@ public class NonTaggedDataFormat implements IDataFormat {
     @SuppressWarnings("unchecked")
     @Override
     public IScalarEvaluatorFactory getConstantEvalFactory(IAlgebricksConstantValue value) throws AlgebricksException {
-        IAObject obj = null;
+        IAObject obj;
         if (value.isMissing()) {
             obj = AMissing.MISSING;
+        } else if (value.isNull()) {
+            obj = ANull.NULL;
         } else if (value.isTrue()) {
             obj = ABoolean.TRUE;
         } else if (value.isFalse()) {

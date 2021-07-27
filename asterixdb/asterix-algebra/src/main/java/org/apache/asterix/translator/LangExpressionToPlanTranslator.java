@@ -1326,7 +1326,20 @@ abstract class LangExpressionToPlanTranslator
     public Pair<ILogicalOperator, LogicalVariable> visit(QuantifiedExpression qe, Mutable<ILogicalOperator> tupSource)
             throws CompilationException {
         SourceLocation sourceLoc = qe.getSourceLocation();
-        Mutable<ILogicalOperator> topOp = tupSource;
+
+        Mutable<ILogicalOperator> topOp;
+        SubplanOperator subplanOp;
+        if (qe.getQuantifier() == Quantifier.SOME_AND_EVERY) {
+            subplanOp = new SubplanOperator();
+            subplanOp.getInputs().add(tupSource);
+            subplanOp.setSourceLocation(sourceLoc);
+            NestedTupleSourceOperator ntsOp = new NestedTupleSourceOperator(new MutableObject<>(subplanOp));
+            ntsOp.setSourceLocation(sourceLoc);
+            topOp = new MutableObject<>(ntsOp);
+        } else {
+            subplanOp = null; // not used
+            topOp = tupSource;
+        }
 
         ILogicalOperator firstOp = null;
         Mutable<ILogicalOperator> lastOp = null;
@@ -1357,47 +1370,104 @@ abstract class LangExpressionToPlanTranslator
 
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo2 = langExprToAlgExpression(qe.getSatisfiesExpr(), topOp);
 
-        AggregateFunctionCallExpression fAgg;
-        SelectOperator s;
-        if (qe.getQuantifier() == Quantifier.SOME) {
-            s = new SelectOperator(new MutableObject<>(eo2.first), false, null);
-            s.getInputs().add(eo2.second);
-            s.setSourceLocation(sourceLoc);
-            fAgg = BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.NON_EMPTY_STREAM,
-                    new ArrayList<>());
-            fAgg.setSourceLocation(sourceLoc);
-        } else { // EVERY
-            // look for input items that do not satisfy the condition, if none found then return true
-            // when inverting the condition account for NULL/MISSING by replacing them with FALSE
-            // condition() -> not(if-missing-or-null(condition(), false))
+        switch (qe.getQuantifier()) {
+            case SOME:
+                SelectOperator s = new SelectOperator(new MutableObject<>(eo2.first), false, null);
+                s.getInputs().add(eo2.second);
+                s.setSourceLocation(sourceLoc);
+                AggregateFunctionCallExpression fAgg = BuiltinFunctions
+                        .makeAggregateFunctionExpression(BuiltinFunctions.NON_EMPTY_STREAM, new ArrayList<>(0));
+                fAgg.setSourceLocation(sourceLoc);
+                LogicalVariable qeVar = context.newVar();
+                AggregateOperator a = new AggregateOperator(mkSingletonArrayList(qeVar),
+                        mkSingletonArrayList(new MutableObject<>(fAgg)));
+                a.getInputs().add(new MutableObject<>(s));
+                a.setSourceLocation(sourceLoc);
+                return new Pair<>(a, qeVar);
+            case EVERY:
+                // look for input items that do not satisfy the condition, if none found then return true
+                // when inverting the condition account for NULL/MISSING by replacing them with FALSE:
+                // condition() -> not(if-missing-or-null(condition(), false))
+                List<Mutable<ILogicalExpression>> ifMissingOrNullArgs = new ArrayList<>(2);
+                ifMissingOrNullArgs.add(new MutableObject<>(eo2.first));
+                ifMissingOrNullArgs.add(new MutableObject<>(ConstantExpression.FALSE));
+                List<Mutable<ILogicalExpression>> notArgs = new ArrayList<>(1);
+                ScalarFunctionCallExpression ifMissinOrNullExpr = new ScalarFunctionCallExpression(
+                        BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.IF_MISSING_OR_NULL),
+                        ifMissingOrNullArgs);
+                ifMissinOrNullExpr.setSourceLocation(sourceLoc);
+                notArgs.add(new MutableObject<>(ifMissinOrNullExpr));
+                ScalarFunctionCallExpression notExpr = new ScalarFunctionCallExpression(
+                        BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.NOT), notArgs);
+                notExpr.setSourceLocation(sourceLoc);
+                s = new SelectOperator(new MutableObject<>(notExpr), false, null);
+                s.getInputs().add(eo2.second);
+                s.setSourceLocation(sourceLoc);
+                fAgg = BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.EMPTY_STREAM,
+                        new ArrayList<>());
+                fAgg.setSourceLocation(sourceLoc);
+                qeVar = context.newVar();
+                a = new AggregateOperator(mkSingletonArrayList(qeVar), mkSingletonArrayList(new MutableObject<>(fAgg)));
+                a.getInputs().add(new MutableObject<>(s));
+                a.setSourceLocation(sourceLoc);
+                return new Pair<>(a, qeVar);
+            case SOME_AND_EVERY:
+                // return true if the stream was non-empty but there were no items that satisfied the condition
+                AbstractFunctionCallExpression fAgg1 = BuiltinFunctions
+                        .makeAggregateFunctionExpression(BuiltinFunctions.NON_EMPTY_STREAM, new ArrayList<>(0));
+                fAgg1.setSourceLocation(sourceLoc);
 
-            List<Mutable<ILogicalExpression>> ifMissingOrNullArgs = new ArrayList<>(2);
-            ConstantExpression eFalse = new ConstantExpression(new AsterixConstantValue(ABoolean.FALSE));
-            eFalse.setSourceLocation(sourceLoc);
-            ifMissingOrNullArgs.add(new MutableObject<>(eo2.first));
-            ifMissingOrNullArgs.add(new MutableObject<>(eFalse));
+                List<Mutable<ILogicalExpression>> switchCaseArgs = new ArrayList<>(4);
+                switchCaseArgs.add(new MutableObject<>(eo2.first));
+                switchCaseArgs.add(new MutableObject<>(ConstantExpression.TRUE));
+                switchCaseArgs.add(new MutableObject<>(ConstantExpression.NULL));
+                switchCaseArgs.add(new MutableObject<>(ConstantExpression.TRUE));
+                ScalarFunctionCallExpression switchCaseExpr = new ScalarFunctionCallExpression(
+                        BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SWITCH_CASE), switchCaseArgs);
+                switchCaseExpr.setSourceLocation(sourceLoc);
 
-            List<Mutable<ILogicalExpression>> notArgs = new ArrayList<>(1);
-            ScalarFunctionCallExpression ifMissinOrNullExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(BuiltinFunctions.IF_MISSING_OR_NULL), ifMissingOrNullArgs);
-            ifMissinOrNullExpr.setSourceLocation(sourceLoc);
-            notArgs.add(new MutableObject<>(ifMissinOrNullExpr));
+                AbstractFunctionCallExpression fAgg2 = BuiltinFunctions.makeAggregateFunctionExpression(
+                        BuiltinFunctions.SQL_COUNT, mkSingletonArrayList(new MutableObject<>(switchCaseExpr)));
+                fAgg2.setSourceLocation(sourceLoc);
 
-            ScalarFunctionCallExpression notExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.NOT), notArgs);
-            notExpr.setSourceLocation(sourceLoc);
-            s = new SelectOperator(new MutableObject<>(notExpr), false, null);
-            s.getInputs().add(eo2.second);
-            s.setSourceLocation(sourceLoc);
-            fAgg = BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.EMPTY_STREAM, new ArrayList<>());
-            fAgg.setSourceLocation(sourceLoc);
+                LogicalVariable qeVar1 = context.newVar();
+                LogicalVariable qeVar2 = context.newVar();
+                List<LogicalVariable> qeVarList = new ArrayList<>(2);
+                List<Mutable<ILogicalExpression>> fAggList = new ArrayList<>(2);
+                qeVarList.add(qeVar1);
+                qeVarList.add(qeVar2);
+                fAggList.add(new MutableObject<>(fAgg1));
+                fAggList.add(new MutableObject<>(fAgg2));
+
+                a = new AggregateOperator(qeVarList, fAggList);
+                a.getInputs().add(eo2.second);
+                a.setSourceLocation(sourceLoc);
+
+                subplanOp.setRootOp(new MutableObject<>(a));
+
+                VariableReferenceExpression qeVar1Ref = new VariableReferenceExpression(qeVar1);
+                qeVar1Ref.setSourceLocation(sourceLoc);
+
+                VariableReferenceExpression qeVar2Ref = new VariableReferenceExpression(qeVar2);
+                qeVar2Ref.setSourceLocation(sourceLoc);
+                ScalarFunctionCallExpression qeVar2EqZero = new ScalarFunctionCallExpression(
+                        BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.EQ), new MutableObject<>(qeVar2Ref),
+                        new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt64(0)))));
+
+                ScalarFunctionCallExpression andExpr =
+                        new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND),
+                                new MutableObject<>(qeVar1Ref), new MutableObject<>(qeVar2EqZero));
+
+                qeVar = context.newVar();
+                AssignOperator assignOp2 = new AssignOperator(qeVar, new MutableObject<>(andExpr));
+                assignOp2.setSourceLocation(sourceLoc);
+                assignOp2.getInputs().add(new MutableObject<>(subplanOp));
+
+                return new Pair<>(assignOp2, qeVar);
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                        qe.getQuantifier().toString());
         }
-        LogicalVariable qeVar = context.newVar();
-        AggregateOperator a =
-                new AggregateOperator(mkSingletonArrayList(qeVar), mkSingletonArrayList(new MutableObject<>(fAgg)));
-        a.getInputs().add(new MutableObject<>(s));
-        a.setSourceLocation(sourceLoc);
-        return new Pair<>(a, qeVar);
     }
 
     @Override
@@ -1738,14 +1808,25 @@ abstract class LangExpressionToPlanTranslator
     }
 
     protected boolean expressionNeedsNoNesting(Expression expr) throws CompilationException {
-        Kind k = expr.getKind();
-        boolean noNesting = k == Kind.LITERAL_EXPRESSION || k == Kind.LIST_CONSTRUCTOR_EXPRESSION
-                || k == Kind.RECORD_CONSTRUCTOR_EXPRESSION || k == Kind.VARIABLE_EXPRESSION;
-        noNesting = noNesting || k == Kind.CALL_EXPRESSION || k == Kind.OP_EXPRESSION
-                || k == Kind.FIELD_ACCESSOR_EXPRESSION;
-        noNesting = noNesting || k == Kind.INDEX_ACCESSOR_EXPRESSION || k == Kind.UNARY_EXPRESSION
-                || k == Kind.IF_EXPRESSION;
-        return noNesting || k == Kind.CASE_EXPRESSION || k == Kind.WINDOW_EXPRESSION;
+        switch (expr.getKind()) {
+            case LITERAL_EXPRESSION:
+            case LIST_CONSTRUCTOR_EXPRESSION:
+            case RECORD_CONSTRUCTOR_EXPRESSION:
+            case VARIABLE_EXPRESSION:
+            case CALL_EXPRESSION:
+            case OP_EXPRESSION:
+            case FIELD_ACCESSOR_EXPRESSION:
+            case INDEX_ACCESSOR_EXPRESSION:
+            case UNARY_EXPRESSION:
+            case IF_EXPRESSION:
+            case CASE_EXPRESSION:
+            case WINDOW_EXPRESSION:
+                return true;
+            case QUANTIFIED_EXPRESSION:
+                return ((QuantifiedExpression) expr).getQuantifier() == Quantifier.SOME_AND_EVERY;
+            default:
+                return false;
+        }
     }
 
     protected <T> List<T> mkSingletonArrayList(T item) {

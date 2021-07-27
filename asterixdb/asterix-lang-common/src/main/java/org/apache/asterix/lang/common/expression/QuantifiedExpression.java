@@ -78,6 +78,7 @@ public class QuantifiedExpression extends AbstractExpression {
     }
 
     public enum Quantifier {
+        SOME_AND_EVERY,
         EVERY,
         SOME
     }
