@@ -110,9 +110,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     }
 
     protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
-            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context)
-            throws AlgebricksException {
-        fillSubTreeIndexExprs(subTree, analyzedAMs, context, false);
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context,
+            boolean isJoinLeftBranch) throws AlgebricksException {
+        fillSubTreeIndexExprs(subTree, analyzedAMs, context, isJoinLeftBranch, false);
     }
 
     /**
@@ -121,6 +121,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * @param subTree
      * @param analyzedAMs
      * @param context
+     * @param isJoinLeftBranch
      * @param isArbitraryFormOfSubtree
      *            if the given subtree is in an arbitrary form that OptimizableSubTree class can't initialize, we try
      *            to fill the field type of each variable that is used in the optimizable function expressions.
@@ -130,7 +131,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      */
     protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs, IOptimizationContext context,
-            boolean isArbitraryFormOfSubtree) throws AlgebricksException {
+            boolean isJoinLeftBranch, boolean isArbitraryFormOfSubtree) throws AlgebricksException {
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         // Check applicability of indexes by access method type.
         while (amIt.hasNext()) {
@@ -138,10 +139,13 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             AccessMethodAnalysisContext amCtx = entry.getValue();
             // For the current access method type, map variables to applicable
             // indexes.
-            if (!isArbitraryFormOfSubtree) {
-                fillAllIndexExprs(subTree, amCtx, context);
-            } else {
+            if (isArbitraryFormOfSubtree) {
                 fillVarFieldTypeForOptFuncExprs(subTree, amCtx, context);
+            } else {
+                if (isJoinLeftBranch) {
+                    fillVarFieldTypeForOptFuncExprs(subTree, amCtx, context);
+                }
+                fillAllIndexExprs(subTree, amCtx, context);
             }
         }
     }

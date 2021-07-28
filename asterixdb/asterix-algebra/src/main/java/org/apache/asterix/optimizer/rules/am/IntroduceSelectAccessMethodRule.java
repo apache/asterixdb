@@ -420,7 +420,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             if (continueCheck) {
                 // Map variables to the applicable indexes and find the field name and type.
                 // Then find the applicable indexes for the variables used in the SELECT condition.
-                fillSubTreeIndexExprs(subTree, analyzedAMs, context);
+                fillSubTreeIndexExprs(subTree, analyzedAMs, context, false);
 
                 // Prune the access methods based on the function expression and access methods.
                 pruneIndexCandidates(analyzedAMs, context, typeEnvironment);
