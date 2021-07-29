@@ -199,20 +199,21 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     //memorySize is the memory for join (we have already excluded the 2 buffers for in/out)
     private static int getNumberOfPartitions(int memorySize, int buildSize, double factor, int nPartitions)
             throws HyracksDataException {
-        int numberOfPartitions = 0;
         if (memorySize <= 2) {
             throw new HyracksDataException("Not enough memory is available for Hybrid Hash Join.");
         }
-        if (memorySize > buildSize * factor) {
-            // We will switch to in-Mem HJ eventually: create two big partitions.
-            // We set 2 (not 1) to avoid a corner case where the only partition may be spilled to the disk.
-            // This may happen since this formula doesn't consider the hash table size. If this is the case,
-            // we will do a nested loop join after some iterations. But, this is not effective.
-            return 2;
+        int minimumNumberOfPartitions = Math.min(20, memorySize);
+        if (buildSize < 0 || memorySize > buildSize * factor) {
+
+            return minimumNumberOfPartitions;
         }
-        numberOfPartitions = (int) (Math.ceil((buildSize * factor / nPartitions - memorySize) / (memorySize - 1)));
-        numberOfPartitions = Math.max(2, numberOfPartitions);
-        if (numberOfPartitions > memorySize) {
+        // Two frames are already excluded from the memorySize for taking the input and output into account. That
+        // makes the denominator in the following formula to be different than the denominator in original Hybrid Hash
+        // Join which is memorySize - 1. This formula gives the total number of partitions, the spilled partitions
+        // and the memory-resident partition ( + 1 in formula is for taking the memory-resident partition into account).
+        int numberOfPartitions = (int) (Math.ceil((buildSize * factor / nPartitions - memorySize) / (memorySize))) + 1;
+        numberOfPartitions = Math.max(minimumNumberOfPartitions, numberOfPartitions);
+        if (numberOfPartitions > memorySize) { // Considers applying Grace Hash Join instead of Hybrid Hash Join.
             numberOfPartitions = (int) Math.ceil(Math.sqrt(buildSize * factor / nPartitions));
             return Math.max(2, Math.min(numberOfPartitions, memorySize));
         }
