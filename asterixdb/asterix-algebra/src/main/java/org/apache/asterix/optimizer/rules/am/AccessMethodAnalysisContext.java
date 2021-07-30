@@ -36,6 +36,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
  * Context for analyzing the applicability of a single access method.
  */
 public class AccessMethodAnalysisContext {
+    private final ArrayIndexStructureMatcher arrayIndexStructureMatcher = new ArrayIndexStructureMatcher();
 
     private List<IOptimizableFuncExpr> matchedFuncExprs = new ArrayList<IOptimizableFuncExpr>();
 
@@ -176,4 +177,7 @@ public class AccessMethodAnalysisContext {
         this.indexDatasetMap = indexDatasetMap;
     }
 
+    public ArrayIndexStructureMatcher getArrayIndexStructureMatcher() {
+        return arrayIndexStructureMatcher;
+    }
 }

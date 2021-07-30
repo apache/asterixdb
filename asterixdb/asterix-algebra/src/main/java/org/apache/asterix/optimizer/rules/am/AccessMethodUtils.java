@@ -28,7 +28,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 
 import org.apache.asterix.algebra.operators.physical.ExternalDataLookupPOperator;
 import org.apache.asterix.common.annotations.AbstractExpressionAnnotationWithIndexNames;
@@ -2967,13 +2966,17 @@ public class AccessMethodUtils {
         return Collections.emptyList();
     }
 
-    /**
-     * Determine whether an array index can be used for the given variable.
-     */
-    public static Triple<Integer, List<String>, IAType> analyzeVarForArrayIndexes(AssignOperator assignOp,
-            IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree subTree, LogicalVariable datasetMetaVar,
-            IOptimizationContext context, List<Index> datasetIndexes, List<IOptimizableFuncExpr> matchedFuncExprs,
-            int assignVarIndex) throws AlgebricksException {
+    public static Triple<Integer, List<String>, IAType> analyzeVarForArrayIndexes(List<Index> datasetIndexes,
+            IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree subTree, IOptimizationContext context,
+            LogicalVariable assignVar, AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
+        // Set the logical expression we are working with.
+        final int lastMatchedDataSourceVar = subTree.getLastMatchedDataSourceVars().second;
+        if (lastMatchedDataSourceVar < 0) {
+            return null;
+        }
+        final ILogicalExpression optVarExpr =
+                optFuncExpr.getFuncExpr().getArguments().get(lastMatchedDataSourceVar).getValue();
+        optFuncExpr.setLogicalExpr(lastMatchedDataSourceVar, optVarExpr);
 
         for (Index index : datasetIndexes) {
             if (index.getIndexType() != IndexType.ARRAY) {
@@ -2988,198 +2991,39 @@ public class AccessMethodUtils {
 
                 // We have found the array field for an array index.
                 for (List<String> project : e.getProjectList()) {
-                    List<String> flattenedFieldName =
-                            ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project);
-                    List<Integer> arrayIndicator = ArrayIndexUtil.getArrayDepthIndicator(e.getUnnestList(), project);
+                    List<String> flatName = ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project);
+                    List<Boolean> unnestFlags = ArrayIndexUtil.getUnnestFlags(e.getUnnestList(), project);
+                    analysisCtx.getArrayIndexStructureMatcher().reset(assignVar, subTree);
+                    ArrayIndexUtil.walkArrayPath(subTree.getRecordType(), flatName, unnestFlags,
+                            analysisCtx.getArrayIndexStructureMatcher());
 
-                    Triple<Integer, List<String>, IAType> fieldTriplet =
-                            matchAssignFieldInUnnestAssignStack(assignOp.getVariables().get(assignVarIndex),
-                                    assignVarIndex, optFuncExpr, subTree, datasetMetaVar, context, arrayIndicator,
-                                    flattenedFieldName, arrayIndexDetails.isOverridingKeyFieldTypes());
-
-                    // This specific field aligns with our array index.
-                    if (fieldTriplet.first > -1) {
-                        int optVarIndex = fieldTriplet.first;
-                        List<String> fieldName = fieldTriplet.second;
-                        IAType fieldType = fieldTriplet.third;
+                    LogicalVariable varAfterWalk = analysisCtx.getArrayIndexStructureMatcher().getEndVar();
+                    ILogicalOperator opAfterWalk = analysisCtx.getArrayIndexStructureMatcher().getEndOperator();
+                    if (varAfterWalk != null && opAfterWalk != null) {
+                        // This specific field aligns with an array index. Verify that this variable actually exists
+                        // in our function expression.
+                        int optVarIndex = optFuncExpr.findLogicalVar(varAfterWalk);
+                        if (optVarIndex == -1) {
+                            continue;
+                        }
+                        IAType fieldType =
+                                (IAType) context.getOutputTypeEnvironment(opAfterWalk).getVarType(varAfterWalk);
+                        optFuncExpr.setSourceVar(optVarIndex, varAfterWalk);
 
                         // Remember matching subtree.
                         optFuncExpr.setOptimizableSubTree(optVarIndex, subTree);
                         MutableInt fieldSource = new MutableInt(0);
-                        optFuncExpr.setFieldName(optVarIndex, fieldName, fieldSource.intValue());
+                        optFuncExpr.setFieldName(optVarIndex, flatName, fieldSource.intValue());
                         optFuncExpr.setFieldType(optVarIndex, fieldType);
                         IAType type = (IAType) context.getOutputTypeEnvironment(subTree.getRoot())
                                 .getVarType(optFuncExpr.getLogicalVar(optVarIndex));
                         optFuncExpr.setFieldType(optVarIndex, type);
 
-                        return fieldTriplet;
+                        return new Triple<>(optVarIndex, flatName, fieldType);
                     }
                 }
             }
         }
-
         return null;
-    }
-
-    /**
-     * @param assignVar Variable from lowest assign that we are trying to match (i.e. the first array step var).
-     * @param assignVarIndex Index of the variable from the lowest assign.
-     * @param optFuncExpr The function expression we are trying to optimize.
-     * @param subTree Subtree for the function expression {@code optFunExpr}.
-     * @param datasetMetaVar Meta-variable from our subtree, if any exist.
-     * @param context Context required to get the type of the found variable.
-     * @param indexArrayIndicators Depth indicators of index to match our unnest/assign stack to.
-     * @param indexFieldNames Field names of index to match our unnest/assign stack to.
-     * @param areFieldNamesInAssign True if we have an open index. False otherwise.
-     */
-    private static Triple<Integer, List<String>, IAType> matchAssignFieldInUnnestAssignStack(LogicalVariable assignVar,
-            int assignVarIndex, IOptimizableFuncExpr optFuncExpr, OptimizableOperatorSubTree subTree,
-            LogicalVariable datasetMetaVar, IOptimizationContext context, List<Integer> indexArrayIndicators,
-            List<String> indexFieldNames, boolean areFieldNamesInAssign) throws AlgebricksException {
-        Triple<Integer, List<String>, IAType> resultantTriple = new Triple<>(-1, new ArrayList<>(), null);
-        final int optVarIndex = subTree.getLastMatchedDataSourceVars().second;
-        if (optVarIndex < 0) {
-            return resultantTriple;
-        }
-        final ILogicalExpression optVarExpr = optFuncExpr.getFuncExpr().getArguments().get(optVarIndex).getValue();
-        optFuncExpr.setLogicalExpr(optVarIndex, optVarExpr);
-
-        // Build our assign / unnest stack. Do not include the very last assign (this is handled in the parent).
-        int indexOfWorkingOp = subTree.getAssignsAndUnnests().size() - 1;
-        Stack<AbstractLogicalOperator> logicalOperatorStack = new Stack<>();
-        logicalOperatorStack.addAll(subTree.getAssignsAndUnnests().subList(0, indexOfWorkingOp));
-        if (logicalOperatorStack.empty()) {
-            return resultantTriple;
-        }
-
-        // Aggregate our record paths, and pair these with their respective array indexes.
-        Pair<List<List<String>>, List<Integer>> unnestPairs =
-                ArrayIndexUtil.unnestComplexRecordPath(indexFieldNames, indexArrayIndicators);
-        AbstractLogicalOperator workingOp = null;
-        List<String> fieldNameForWorkingUnnest;
-        MutableInt fieldSource = new MutableInt(0);
-        ARecordType workingRecordType = subTree.getRecordType();
-
-        // Iterate through our array index structure. We must match the depth and field names for the caller's variable
-        // to qualify for an array-index optimization.
-        LogicalVariable varFromParent = assignVar;
-        for (int pairsIndex = 0; pairsIndex < unnestPairs.first.size(); pairsIndex++) {
-            if (logicalOperatorStack.empty()) {
-                return resultantTriple;
-            }
-            workingOp = logicalOperatorStack.pop();
-
-            // Explore our UNNEST path.
-            if (unnestPairs.second.get(pairsIndex) > 0) {
-                for (int i = (pairsIndex == 0) ? 1 : 0; i < unnestPairs.first.get(pairsIndex).size(); i++) {
-                    // Match our parent assign variable to a variable used in our working assign.
-                    assignVarIndex = findAssignVarIndex(workingOp, varFromParent);
-                    if (logicalOperatorStack.empty() || assignVarIndex == -1) {
-                        return resultantTriple;
-                    }
-                    varFromParent = ((AssignOperator) workingOp).getVariables().get(assignVarIndex);
-                    indexOfWorkingOp--;
-                    workingOp = logicalOperatorStack.pop();
-                }
-
-                // Get the field name associated with the current UNNEST.
-                if (workingOp.getOperatorTag() != LogicalOperatorTag.UNNEST) {
-                    return resultantTriple;
-                }
-                fieldNameForWorkingUnnest = getFieldNameFromSubTree(null, subTree, indexOfWorkingOp, assignVarIndex,
-                        workingRecordType, 0, null, subTree.getMetaRecordType(), datasetMetaVar, fieldSource, true);
-
-                if (!fieldNameForWorkingUnnest.equals(unnestPairs.first.get(pairsIndex))) {
-                    return resultantTriple;
-                }
-                resultantTriple.second.addAll(fieldNameForWorkingUnnest);
-
-                IAType typeIntermediate = workingRecordType.getSubFieldType(fieldNameForWorkingUnnest);
-                for (int i = 0; i < unnestPairs.second.get(pairsIndex); i++) {
-                    // If we are working with a closed index, then update our record type. For open types, we do not
-                    // need to do this as the field name is stored in the expression itself.
-                    if (!areFieldNamesInAssign && pairsIndex != unnestPairs.first.size() - 1) {
-                        typeIntermediate = TypeComputeUtils.extractListItemType(typeIntermediate);
-                        if (typeIntermediate == null) {
-                            return resultantTriple;
-                        }
-                    }
-                    boolean isIntermediateUnnestInPath = (i != unnestPairs.second.get(pairsIndex) - 1);
-                    if (!areFieldNamesInAssign && !isIntermediateUnnestInPath) {
-                        if (typeIntermediate.getTypeTag().equals(ATypeTag.OBJECT)) {
-                            workingRecordType = (ARecordType) typeIntermediate;
-                        } else if (!typeIntermediate.getTypeTag().isListType()) {
-                            return resultantTriple;
-                        }
-                    }
-
-                    // Update our parent variable. If we are in-between UNNESTs, we need to fetch the next UNNEST.
-                    if (isIntermediateUnnestInPath) {
-                        workingOp = logicalOperatorStack.pop();
-                        indexOfWorkingOp--;
-                    }
-                    varFromParent = ((UnnestOperator) workingOp).getVariable();
-                }
-            } else if (pairsIndex != 0) {
-                // We have explored an UNNEST array-path previously, and must now match a field name.
-                AssignOperator workingOpAsAssign = (AssignOperator) workingOp;
-                indexOfWorkingOp -= unnestPairs.first.get(pairsIndex).size();
-                for (assignVarIndex = 0; assignVarIndex < workingOpAsAssign.getVariables().size(); assignVarIndex++) {
-                    // Iterate through each of our ASSIGN's field names, and try to match the index field names.
-                    fieldNameForWorkingUnnest = getFieldNameFromSubTree(null, subTree, indexOfWorkingOp, assignVarIndex,
-                            workingRecordType, 0, null, subTree.getMetaRecordType(), datasetMetaVar, fieldSource, true);
-
-                    if (fieldNameForWorkingUnnest.equals(unnestPairs.first.get(pairsIndex))) {
-                        resultantTriple.second.addAll(fieldNameForWorkingUnnest);
-                        break;
-                    }
-                }
-
-                // We have exhausted all of our ASSIGN variables, but have not matched the field name. Exit early.
-                if (assignVarIndex == workingOpAsAssign.getVariables().size()) {
-                    return resultantTriple;
-                }
-            }
-
-            indexOfWorkingOp--;
-        }
-
-        // We have found an applicable array index. Determine our optFuncIndex and fieldType.
-        if (workingOp != null && workingOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-            AssignOperator workingOpAsAssign = (AssignOperator) workingOp;
-            LogicalVariable matchedVar = workingOpAsAssign.getVariables().get(assignVarIndex);
-            if (optFuncExpr.findLogicalVar(matchedVar) > -1) {
-                resultantTriple.first = optFuncExpr.findLogicalVar(matchedVar);
-                resultantTriple.third = (IAType) context.getOutputTypeEnvironment(workingOp).getVarType(matchedVar);
-                optFuncExpr.setSourceVar(resultantTriple.first, matchedVar);
-            }
-
-        } else if (workingOp != null) {
-            UnnestOperator workingOpAsUnnest = (UnnestOperator) workingOp;
-            resultantTriple.first = optFuncExpr.findLogicalVar(workingOpAsUnnest.getVariable());
-            resultantTriple.third =
-                    (IAType) context.getOutputTypeEnvironment(workingOp).getVarType(workingOpAsUnnest.getVariable());
-            optFuncExpr.setSourceVar(resultantTriple.first, workingOpAsUnnest.getVariable());
-        }
-
-        return resultantTriple;
-    }
-
-    private static int findAssignVarIndex(AbstractLogicalOperator workingOp, LogicalVariable varFromParentAssign) {
-        if (workingOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
-            return -1;
-        }
-        AssignOperator workingOpAsAssign = (AssignOperator) workingOp;
-
-        // Match our parent assign variable to a variable used in our working assign.
-        List<LogicalVariable> variablesUsedInWorkingAssign = new ArrayList<>();
-        for (Mutable<ILogicalExpression> assignExpr : workingOpAsAssign.getExpressions()) {
-            assignExpr.getValue().getUsedVariables(variablesUsedInWorkingAssign);
-            int pos = variablesUsedInWorkingAssign.indexOf(varFromParentAssign);
-            if (pos != -1) {
-                return pos;
-            }
-        }
-        return -1;
     }
 }

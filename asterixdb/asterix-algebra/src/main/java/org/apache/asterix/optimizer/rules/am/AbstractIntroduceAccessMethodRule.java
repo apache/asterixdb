@@ -81,7 +81,6 @@ import com.google.common.base.Strings;
  * methods.
  */
 public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRewriteRule {
-
     protected MetadataProvider metadataProvider;
 
     public abstract Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods();
@@ -829,9 +828,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             if (optVarIndex == -1) {
                 if (doesArrayIndexQualify && subTree.getDataSourceType() == DataSourceType.DATASOURCE_SCAN) {
                     // We may be able to apply an array index to this variable.
-                    Triple<Integer, List<String>, IAType> fieldTriplet =
-                            AccessMethodUtils.analyzeVarForArrayIndexes(assignOp, optFuncExpr, subTree, datasetMetaVar,
-                                    context, datasetIndexes, analysisCtx.getMatchedFuncExprs(), varIndex);
+                    Triple<Integer, List<String>, IAType> fieldTriplet = AccessMethodUtils
+                            .analyzeVarForArrayIndexes(datasetIndexes, optFuncExpr, subTree, context, var, analysisCtx);
                     if (fieldTriplet != null && subTree.hasDataSource()) {
                         fillIndexExprs(datasetIndexes, fieldTriplet.second, fieldTriplet.third, optFuncExpr,
                                 optFuncExprIndex, fieldTriplet.first, subTree, analysisCtx, fieldSource.intValue());

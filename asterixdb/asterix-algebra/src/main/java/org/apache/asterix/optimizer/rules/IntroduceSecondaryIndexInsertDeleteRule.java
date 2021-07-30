@@ -721,17 +721,12 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 secondaryKeyVars.add(newVar);
 
             } else {
-                // We have an array element. The "open / nestedness" is determined by the first UNNEST field.
-                isOpenOrNestedField = workingElement.getUnnestList().get(0).size() > 1
-                        || !recordType.isClosedField(workingElement.getUnnestList().get(0).get(0));
-
-                // Walk the array path.
+                // We have an array element.  Walk the array path.
                 List<String> flatFirstFieldName = ArrayIndexUtil.getFlattenedKeyFieldNames(
                         workingElement.getUnnestList(), workingElement.getProjectList().get(0));
                 List<Boolean> firstUnnestFlags = ArrayIndexUtil.getUnnestFlags(workingElement.getUnnestList(),
                         workingElement.getProjectList().get(0));
-                ArrayIndexUtil.walkArrayPath((isOpenOrNestedField) ? null : recordType, flatFirstFieldName,
-                        firstUnnestFlags, branchCreator);
+                ArrayIndexUtil.walkArrayPath(recordType, flatFirstFieldName, firstUnnestFlags, branchCreator);
 
                 // For all other elements in the PROJECT list, add an assign.
                 for (int j = 1; j < workingElement.getProjectList().size(); j++) {

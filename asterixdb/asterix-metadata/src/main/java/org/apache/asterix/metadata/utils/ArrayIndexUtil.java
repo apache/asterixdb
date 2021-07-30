@@ -19,6 +19,7 @@
 package org.apache.asterix.metadata.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -236,62 +237,6 @@ public class ArrayIndexUtil {
     }
 
     /**
-     * @deprecated Use new unnestList and projectList scheme.
-     */
-    public static List<Integer> getArrayDepthIndicator(List<List<String>> unnestList, List<String> projectList) {
-        if (unnestList == null) {
-            // A simple element has a flat set of depth indicators.
-            List<Integer> depthIndicator = new ArrayList<>();
-            for (String ignored : projectList) {
-                depthIndicator.add(0);
-            }
-            return depthIndicator;
-
-        } else {
-            List<Integer> depthIndicatorPrefix = new ArrayList<>();
-            for (List<String> unnestField : unnestList) {
-                for (int i = 0; i < unnestField.size() - 1; i++) {
-                    depthIndicatorPrefix.add(0);
-                }
-                depthIndicatorPrefix.add(1);
-            }
-
-            if (projectList == null) {
-                // Stop here. The prefix is the indicator itself.
-                return depthIndicatorPrefix;
-
-            } else {
-                List<Integer> depthIndicator = new ArrayList<>(depthIndicatorPrefix);
-                for (int i = 0; i < projectList.size(); i++) {
-                    depthIndicator.add(0);
-                }
-                return depthIndicator;
-            }
-        }
-    }
-
-    /**
-     * @deprecated Use new unnestList and projectList scheme.
-     * @return The record paths and non-zero depth indicators associated each record of fields from an array index.
-     */
-    public static Pair<List<List<String>>, List<Integer>> unnestComplexRecordPath(List<String> fieldName,
-            List<Integer> depthIndicators) {
-        List<List<String>> resultantPaths = new ArrayList<>();
-        List<Integer> resultantArrayIndicators = new ArrayList<>();
-        List<String> workingRecordPath = new ArrayList<>();
-        for (int i = 0; i < depthIndicators.size(); i++) {
-            workingRecordPath.add(fieldName.get(i));
-
-            if (i == depthIndicators.size() - 1 || depthIndicators.get(i) > 0) {
-                resultantArrayIndicators.add(depthIndicators.get(i));
-                resultantPaths.add(workingRecordPath);
-                workingRecordPath = new ArrayList<>();
-            }
-        }
-        return new Pair<>(resultantPaths, resultantArrayIndicators);
-    }
-
-    /**
      * Traverse each distinct record path and invoke the appropriate commands for each scenario. Here, we keep track
      * of the record/list type at each step and give this to each command.
      */
@@ -301,22 +246,33 @@ public class ArrayIndexUtil {
         List<List<String>> fieldNamesPerArray = arrayPath.fieldNamesPerArray;
         List<Boolean> unnestFlagsPerArray = arrayPath.unnestFlagsPerArray;
 
-        // If we are given no base record type, then we do not need to keep track of the record type. We are solely 
+        // If we are given no base record type, then we do not need to keep track of the record type. We are solely
         // using this walk for its flags.
         boolean isTrackingType = baseRecordType != null;
-
         IAType workingType = baseRecordType;
+
         for (int i = 0; i < fieldNamesPerArray.size(); i++) {
-            ARecordType startingStepRecordType = null;
+            ARecordType startingStepRecordType = (isTrackingType) ? (ARecordType) workingType : null;
             if (isTrackingType) {
                 if (!workingType.getTypeTag().equals(ATypeTag.OBJECT)) {
                     throw new AsterixException(ErrorCode.COMPILATION_ERROR, "Mismatched record type to depth-"
                             + "indicators. Expected record type, but got: " + workingType.getTypeTag());
                 }
-                startingStepRecordType = (ARecordType) workingType;
-                workingType = Index.getNonNullableOpenFieldType(
-                        startingStepRecordType.getSubFieldType(fieldNamesPerArray.get(i)), fieldNamesPerArray.get(i),
-                        startingStepRecordType).first;
+
+                ARecordType intermediateRecordType = startingStepRecordType;
+                List<String> fieldName = fieldNamesPerArray.get(i);
+                for (String fieldPart : fieldName) {
+                    // Determine whether we have an open field or not. Extract the type appropriately.
+                    isTrackingType = isTrackingType && intermediateRecordType.doesFieldExist(fieldPart);
+                    if (isTrackingType) {
+                        workingType = Index.getNonNullableOpenFieldType(intermediateRecordType.getFieldType(fieldPart),
+                                Collections.singletonList(fieldPart), intermediateRecordType).first;
+                        if (workingType instanceof ARecordType) {
+                            // We have an intermediate step, set our record step for the next loop iteration.
+                            intermediateRecordType = (ARecordType) workingType;
+                        }
+                    }
+                }
             }
 
             if (unnestFlagsPerArray.get(i)) {

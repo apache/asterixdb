@@ -208,8 +208,9 @@ public class SelectInSubplanBranchCreator {
         newSelectOperator.setExecutionMode(optimizableSelect.getExecutionMode());
 
         // Follow this SELECT to the root of our nested-plan branch (i.e. the NESTED-TUPLE-SOURCE).
-        ILogicalOperator workingOriginalOperator = optimizableSelect, workingNewOperator = newSelectOperator;
+        ILogicalOperator workingNewOperator = newSelectOperator;
         UnnestOperator bottommostNewUnnest = null;
+        ILogicalOperator workingOriginalOperator = optimizableSelect.getInputs().get(0).getValue();
         while (!workingOriginalOperator.getOperatorTag().equals(LogicalOperatorTag.NESTEDTUPLESOURCE)) {
             if (workingOriginalOperator.getInputs().isEmpty()) {
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
@@ -237,8 +238,27 @@ public class SelectInSubplanBranchCreator {
                     workingNewOperator = newAssign;
                     break;
 
-                case AGGREGATE:
                 case SELECT:
+                    // If we encounter another SELECT, then we have multiple quantifiers. Transform our new SELECT to
+                    // include this condition.
+                    List<Mutable<ILogicalExpression>> selectArguments = new ArrayList<>();
+                    if (!newSelectOperator.getCondition().getValue().splitIntoConjuncts(selectArguments)) {
+                        selectArguments.add(newSelectOperator.getCondition());
+                    }
+                    if (!((SelectOperator) workingOriginalOperator).getCondition().getValue()
+                            .splitIntoConjuncts(selectArguments)) {
+                        selectArguments.add(((SelectOperator) workingOriginalOperator).getCondition());
+                    }
+                    ScalarFunctionCallExpression andCond = new ScalarFunctionCallExpression(
+                            BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND), selectArguments);
+                    SelectOperator updatedSelectOperator = new SelectOperator(new MutableObject<>(andCond),
+                            newSelectOperator.getRetainMissing(), newSelectOperator.getMissingPlaceholderVariable());
+                    updatedSelectOperator.setSourceLocation(sourceLocation);
+                    updatedSelectOperator.getInputs().addAll(newSelectOperator.getInputs());
+                    newSelectOperator = updatedSelectOperator;
+                    break;
+
+                case AGGREGATE:
                     break;
 
                 default:
