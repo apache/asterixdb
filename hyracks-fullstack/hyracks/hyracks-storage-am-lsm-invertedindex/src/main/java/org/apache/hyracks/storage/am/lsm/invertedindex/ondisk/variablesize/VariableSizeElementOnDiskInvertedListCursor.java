@@ -24,6 +24,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListTupleReference;
@@ -49,16 +50,18 @@ public class VariableSizeElementOnDiskInvertedListCursor extends AbstractOnDiskI
     private ITreeIndexTupleWriter tupleWriter;
 
     public VariableSizeElementOnDiskInvertedListCursor(IBufferCache bufferCache, int fileId,
-            ITypeTraits[] invListFields, IIndexCursorStats stats) throws HyracksDataException {
-        super(bufferCache, fileId, invListFields, stats);
+            ITypeTraits[] invListFields, IIndexCursorStats stats, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) throws HyracksDataException {
+        super(bufferCache, fileId, invListFields, stats, nullTypeTraits, nullIntrospector);
         this.isInit = true;
-        this.tupleReference = new VariableSizeInvertedListTupleReference(invListFields);
-        this.tupleWriter = new TypeAwareTupleWriter(invListFields, null, null);
+        this.tupleReference = new VariableSizeInvertedListTupleReference(invListFields, nullTypeTraits);
+        this.tupleWriter = new TypeAwareTupleWriter(invListFields, nullTypeTraits, nullIntrospector);
     }
 
     public VariableSizeElementOnDiskInvertedListCursor(IBufferCache bufferCache, int fileId,
-            ITypeTraits[] invListFields, IHyracksTaskContext ctx, IIndexCursorStats stats) throws HyracksDataException {
-        super(bufferCache, fileId, invListFields, ctx, stats);
+            ITypeTraits[] invListFields, IHyracksTaskContext ctx, IIndexCursorStats stats, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) throws HyracksDataException {
+        super(bufferCache, fileId, invListFields, ctx, stats, nullTypeTraits, nullIntrospector);
         isInit = true;
     }
 
@@ -69,8 +72,8 @@ public class VariableSizeElementOnDiskInvertedListCursor extends AbstractOnDiskI
         // Note that the cursors can be re-used in the upper-layer callers so we need to reset the state variables when open()
         currentElementIxForScan = 0;
         isInit = true;
-        this.tupleReference = new VariableSizeInvertedListTupleReference(invListFields);
-        this.tupleWriter = new TypeAwareTupleWriter(invListFields, null, null);
+        this.tupleReference = new VariableSizeInvertedListTupleReference(invListFields, nullTypeTraits);
+        this.tupleWriter = new TypeAwareTupleWriter(invListFields, nullTypeTraits, nullIntrospector);
     }
 
     /**

@@ -54,7 +54,7 @@ public class RTreeExamplesTest extends AbstractRTreeExamplesTest {
             RTreePolicyType rtreePolicyType, int[] rtreeFields, int[] btreeFields, ITypeTraits[] filterTypeTraits,
             IBinaryComparatorFactory[] filterCmpFactories, int[] filterFields) throws HyracksDataException {
         return RTreeUtils.createRTree(harness.getBufferCache(), typeTraits, valueProviderFactories, rtreeCmpFactories,
-                rtreePolicyType, harness.getFileReference(), false, harness.getMetadataManagerFactory());
+                rtreePolicyType, harness.getFileReference(), false, harness.getMetadataManagerFactory(), null, null);
     }
 
 }

@@ -23,6 +23,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNameMapper;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
@@ -35,9 +36,9 @@ public class PartitionedOnDiskInvertedIndexFactory extends OnDiskInvertedIndexFa
             IInvertedListBuilderFactory invListBuilderFactory, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IInvertedIndexFileNameMapper fileNameMapper,
-            IPageManagerFactory pageManagerFactory) {
+            IPageManagerFactory pageManagerFactory, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
         super(ioManager, bufferCache, invListBuilderFactory, invListTypeTraits, invListCmpFactories, tokenTypeTraits,
-                tokenCmpFactories, fileNameMapper, pageManagerFactory);
+                tokenCmpFactories, fileNameMapper, pageManagerFactory, nullTypeTraits, nullIntrospector);
     }
 
     @Override
@@ -46,6 +47,7 @@ public class PartitionedOnDiskInvertedIndexFactory extends OnDiskInvertedIndexFa
         FileReference invListsFile = ioManager.resolveAbsolutePath(invListsFilePath);
         IInvertedListBuilder invListBuilder = invListBuilderFactory.create();
         return new PartitionedOnDiskInvertedIndex(bufferCache, invListBuilder, invListTypeTraits, invListCmpFactories,
-                tokenTypeTraits, tokenCmpFactories, dictBTreeFile, invListsFile, freePageManagerFactory);
+                tokenTypeTraits, tokenCmpFactories, dictBTreeFile, invListsFile, freePageManagerFactory, nullTypeTraits,
+                nullIntrospector);
     }
 }

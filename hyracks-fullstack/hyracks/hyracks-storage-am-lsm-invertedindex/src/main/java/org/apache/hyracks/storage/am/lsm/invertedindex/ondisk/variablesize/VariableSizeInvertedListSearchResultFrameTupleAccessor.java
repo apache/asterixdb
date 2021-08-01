@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListTupleReference;
@@ -54,12 +55,12 @@ public class VariableSizeInvertedListSearchResultFrameTupleAccessor
     private IInvertedListTupleReference tupleReference;
     private ITreeIndexTupleWriter tupleWriter;
 
-    public VariableSizeInvertedListSearchResultFrameTupleAccessor(int frameSize, ITypeTraits[] fields)
-            throws HyracksDataException {
+    public VariableSizeInvertedListSearchResultFrameTupleAccessor(int frameSize, ITypeTraits[] fields,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) throws HyracksDataException {
         super(frameSize, fields);
 
-        this.tupleWriter = new TypeAwareTupleWriter(fields, null, null);
-        this.tupleReference = new VariableSizeInvertedListTupleReference(fields);
+        this.tupleWriter = new TypeAwareTupleWriter(fields, nullTypeTraits, nullIntrospector);
+        this.tupleReference = new VariableSizeInvertedListTupleReference(fields, nullTypeTraits);
     }
 
     @Override

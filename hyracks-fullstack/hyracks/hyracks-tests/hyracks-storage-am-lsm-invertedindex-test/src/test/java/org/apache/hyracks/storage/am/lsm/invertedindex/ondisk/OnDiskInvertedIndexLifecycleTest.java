@@ -65,7 +65,7 @@ public class OnDiskInvertedIndexLifecycleTest extends AbstractIndexLifecycleTest
                 .resolveAbsolutePath(harness.getInvListsFileRef().getFile().getAbsolutePath() + "_btree");
         index = new OnDiskInvertedIndex(harness.getDiskBufferCache(), invListBuilder, invListTypeTraits,
                 invListCmpFactories, tokenTypeTraits, tokenCmpFactories, harness.getInvListsFileRef(), btreeFile,
-                harness.getMetadataPageManagerFactory());
+                harness.getMetadataPageManagerFactory(), null, null);
 
     }
 

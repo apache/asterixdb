@@ -38,6 +38,6 @@ public class RTreeOperatorTestHelper extends TreeOperatorTestHelper {
             int[] btreeFields, ITypeTraits[] secondaryTypeTraits,
             IBinaryComparatorFactory[] secondaryComparatorFactories, IMetadataPageManagerFactory pageManagerFactory) {
         return new RTreeResourceFactory(storageManager, secondaryTypeTraits, secondaryComparatorFactories,
-                pageManagerFactory, valueProviderFactories, rtreePolicyType);
+                pageManagerFactory, valueProviderFactories, rtreePolicyType, null, null);
     }
 }

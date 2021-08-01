@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.api;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.common.IIndex;
 
 public interface IInvertedIndex extends IIndex {
@@ -32,4 +33,8 @@ public interface IInvertedIndex extends IIndex {
     ITypeTraits[] getTokenTypeTraits();
 
     IBinaryComparatorFactory[] getTokenCmpFactories();
+
+    ITypeTraits getNullTypeTraits();
+
+    INullIntrospector getNullIntrospector();
 }

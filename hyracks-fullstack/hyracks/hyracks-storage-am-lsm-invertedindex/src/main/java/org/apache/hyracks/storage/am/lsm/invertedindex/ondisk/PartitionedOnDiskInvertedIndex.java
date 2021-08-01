@@ -26,6 +26,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearcher;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
@@ -46,9 +47,10 @@ public class PartitionedOnDiskInvertedIndex extends OnDiskInvertedIndex implemen
     public PartitionedOnDiskInvertedIndex(IBufferCache bufferCache, IInvertedListBuilder invListBuilder,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories, FileReference btreeFile,
-            FileReference invListsFile, IPageManagerFactory pageManagerFactory) throws HyracksDataException {
+            FileReference invListsFile, IPageManagerFactory pageManagerFactory, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) throws HyracksDataException {
         super(bufferCache, invListBuilder, invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories,
-                btreeFile, invListsFile, pageManagerFactory);
+                btreeFile, invListsFile, pageManagerFactory, nullTypeTraits, nullIntrospector);
     }
 
     public class PartitionedOnDiskInvertedIndexAccessor extends OnDiskInvertedIndexAccessor {

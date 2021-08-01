@@ -36,6 +36,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.SingleFrameBufferManager;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListTupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
@@ -68,6 +69,8 @@ public abstract class AbstractOnDiskInvertedListCursor extends AbstractInvertedL
     protected int bufferNumLoadedPages;
 
     protected final IInvertedListTupleReference tuple;
+    protected final ITypeTraits nullTypeTraits;
+    protected final INullIntrospector nullIntrospector;
     protected final ITypeTraits[] invListFields;
     protected ICachedPage page;
     // buffer manager to conform to the memory budget
@@ -79,19 +82,22 @@ public abstract class AbstractOnDiskInvertedListCursor extends AbstractInvertedL
     protected final IIndexCursorStats stats;
 
     protected AbstractOnDiskInvertedListCursor(IBufferCache bufferCache, int fileId, ITypeTraits[] invListFields,
-            IHyracksTaskContext ctx, IIndexCursorStats stats) throws HyracksDataException {
-        this(bufferCache, fileId, invListFields, ctx, stats, false);
+            IHyracksTaskContext ctx, IIndexCursorStats stats, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) throws HyracksDataException {
+        this(bufferCache, fileId, invListFields, ctx, stats, false, nullTypeTraits, nullIntrospector);
     }
 
     protected AbstractOnDiskInvertedListCursor(IBufferCache bufferCache, int fileId, ITypeTraits[] invListFields,
-            IIndexCursorStats stats) throws HyracksDataException {
-        this(bufferCache, fileId, invListFields, null, stats, true);
+            IIndexCursorStats stats, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector)
+            throws HyracksDataException {
+        this(bufferCache, fileId, invListFields, null, stats, true, nullTypeTraits, nullIntrospector);
     }
 
     // If isScan, use the SingleFrameBufferManager to minimize memory cost by allocating only one memory frame,
     // elsewhere use a regular buffer manager
     protected AbstractOnDiskInvertedListCursor(IBufferCache bufferCache, int fileId, ITypeTraits[] invListFields,
-            IHyracksTaskContext ctx, IIndexCursorStats stats, boolean isScan) throws HyracksDataException {
+            IHyracksTaskContext ctx, IIndexCursorStats stats, boolean isScan, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) throws HyracksDataException {
         this.bufferCache = bufferCache;
         this.fileId = fileId;
 
@@ -104,7 +110,7 @@ public abstract class AbstractOnDiskInvertedListCursor extends AbstractInvertedL
         this.lastRandomSearchedElementIx = 0;
         this.moreBlocksToRead = true;
         this.invListFields = invListFields;
-        this.tuple = InvertedIndexUtils.createInvertedListTupleReference(invListFields);
+        this.tuple = InvertedIndexUtils.createInvertedListTupleReference(invListFields, nullTypeTraits);
         this.buffers = new ArrayList<ByteBuffer>();
         if (ctx == null && !isScan) {
             throw HyracksDataException.create(ErrorCode.CANNOT_CONTINUE_TEXT_SEARCH_HYRACKS_TASK_IS_NULL);
@@ -118,6 +124,8 @@ public abstract class AbstractOnDiskInvertedListCursor extends AbstractInvertedL
             this.bufferManagerForSearch = new SingleFrameBufferManager();
         }
         this.stats = stats;
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
     }
 
     /**

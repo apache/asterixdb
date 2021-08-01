@@ -28,6 +28,7 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListTupleReference;
 import org.apache.hyracks.storage.am.lsm.invertedindex.impls.AbstractOnDiskInvertedListCursor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
@@ -49,11 +50,12 @@ public class FixedSizeElementOnDiskInvertedListCursor extends AbstractOnDiskInve
     private int[] elementIndexes = new int[10];
 
     public FixedSizeElementOnDiskInvertedListCursor(IBufferCache bufferCache, int fileId, ITypeTraits[] invListFields,
-            IHyracksTaskContext ctx, IIndexCursorStats stats) throws HyracksDataException {
-        super(bufferCache, fileId, invListFields, ctx, stats);
+            IHyracksTaskContext ctx, IIndexCursorStats stats, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) throws HyracksDataException {
+        super(bufferCache, fileId, invListFields, ctx, stats, nullTypeTraits, nullIntrospector);
 
         this.bufferEndElementIx = 0;
-        this.bufferEndElementTuple = InvertedIndexUtils.createInvertedListTupleReference(invListFields);
+        this.bufferEndElementTuple = InvertedIndexUtils.createInvertedListTupleReference(invListFields, nullTypeTraits);
 
         int tmpSize = 0;
         for (int i = 0; i < invListFields.length; i++) {

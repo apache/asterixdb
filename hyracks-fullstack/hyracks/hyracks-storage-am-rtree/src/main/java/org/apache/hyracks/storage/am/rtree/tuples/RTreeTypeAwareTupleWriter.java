@@ -22,14 +22,16 @@ package org.apache.hyracks.storage.am.rtree.tuples;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 public class RTreeTypeAwareTupleWriter extends TypeAwareTupleWriter {
 
-    public RTreeTypeAwareTupleWriter(ITypeTraits[] typeTraits) {
-        super(typeTraits, null, null);
+    public RTreeTypeAwareTupleWriter(ITypeTraits[] typeTraits, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
+        super(typeTraits, nullTypeTraits, nullIntrospector);
     }
 
     public int writeTupleFields(ITreeIndexTupleReference[] refs, int startField, ByteBuffer targetBuf, int targetOff) {

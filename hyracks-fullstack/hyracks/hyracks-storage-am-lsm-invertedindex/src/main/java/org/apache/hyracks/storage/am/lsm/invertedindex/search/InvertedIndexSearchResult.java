@@ -37,6 +37,7 @@ import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.buffermanager.BufferManagerBackedVSizeFrame;
 import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListSearchResultFrameTupleAppender;
@@ -84,14 +85,16 @@ public class InvertedIndexSearchResult {
     protected byte[] tempBytes;
 
     public InvertedIndexSearchResult(ITypeTraits[] invListFields, IHyracksTaskContext ctx,
-            ISimpleFrameBufferManager bufferManager) throws HyracksDataException {
+            ISimpleFrameBufferManager bufferManager, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector)
+            throws HyracksDataException {
         this.invListFields = invListFields;
-        this.tupleWriter = new TypeAwareTupleWriter(invListFields, null, null);
+        this.tupleWriter = new TypeAwareTupleWriter(invListFields, nullTypeTraits, nullIntrospector);
         initTypeTraits(invListFields);
         this.ctx = ctx;
         appender = new InvertedListSearchResultFrameTupleAppender(ctx.getInitialFrameSize());
-        accessor = InvertedIndexUtils.createInvertedListFrameTupleAccessor(ctx.getInitialFrameSize(), typeTraits);
-        tuple = InvertedIndexUtils.createInvertedListTupleReference(typeTraits);
+        accessor = InvertedIndexUtils.createInvertedListFrameTupleAccessor(ctx.getInitialFrameSize(), typeTraits,
+                nullTypeTraits, nullIntrospector);
+        tuple = InvertedIndexUtils.createInvertedListTupleReference(typeTraits, nullTypeTraits);
         this.bufferManager = bufferManager;
         this.isInReadMode = false;
         this.isWriteFinished = false;

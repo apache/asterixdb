@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilderFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.fixedsize.FixedSizeElementInvertedListBuilder;
@@ -31,10 +32,15 @@ public class InvertedListBuilderFactory implements IInvertedListBuilderFactory {
     protected final ITypeTraits[] invListFields;
     protected final ITypeTraits[] tokenTypeTraits;
     private final boolean isFixedSize;
+    private final ITypeTraits nullTypeTraits;
+    private final INullIntrospector nullIntrospector;
 
-    public InvertedListBuilderFactory(ITypeTraits[] tokenTypeTraits, ITypeTraits[] invListFields) {
+    public InvertedListBuilderFactory(ITypeTraits[] tokenTypeTraits, ITypeTraits[] invListFields,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
         this.tokenTypeTraits = tokenTypeTraits;
         this.invListFields = invListFields;
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
 
         isFixedSize = InvertedIndexUtils.checkTypeTraitsAllFixed(invListFields);
     }
@@ -44,7 +50,8 @@ public class InvertedListBuilderFactory implements IInvertedListBuilderFactory {
         if (isFixedSize) {
             return new FixedSizeElementInvertedListBuilder(invListFields);
         } else {
-            return new VariableSizeElementInvertedListBuilder(tokenTypeTraits, invListFields);
+            return new VariableSizeElementInvertedListBuilder(tokenTypeTraits, invListFields, nullTypeTraits,
+                    nullIntrospector);
         }
     }
 }

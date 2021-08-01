@@ -23,6 +23,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndex;
@@ -39,12 +40,14 @@ public class OnDiskInvertedIndexFactory extends IndexFactory<IInvertedIndex> {
     protected final ITypeTraits[] tokenTypeTraits;
     protected final IBinaryComparatorFactory[] tokenCmpFactories;
     protected final IInvertedIndexFileNameMapper fileNameMapper;
+    protected final ITypeTraits nullTypeTraits;
+    protected final INullIntrospector nullIntrospector;
 
     public OnDiskInvertedIndexFactory(IIOManager ioManager, IBufferCache bufferCache,
             IInvertedListBuilderFactory invListBuilderFactory, ITypeTraits[] invListTypeTraits,
             IBinaryComparatorFactory[] invListCmpFactories, ITypeTraits[] tokenTypeTraits,
             IBinaryComparatorFactory[] tokenCmpFactories, IInvertedIndexFileNameMapper fileNameMapper,
-            IPageManagerFactory pageManagerFactory) {
+            IPageManagerFactory pageManagerFactory, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
         super(ioManager, bufferCache, pageManagerFactory);
         this.invListBuilderFactory = invListBuilderFactory;
         this.invListTypeTraits = invListTypeTraits;
@@ -52,6 +55,8 @@ public class OnDiskInvertedIndexFactory extends IndexFactory<IInvertedIndex> {
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         this.fileNameMapper = fileNameMapper;
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
     }
 
     @Override
@@ -60,6 +65,7 @@ public class OnDiskInvertedIndexFactory extends IndexFactory<IInvertedIndex> {
         FileReference invListsFile = ioManager.resolveAbsolutePath(invListsFilePath);
         IInvertedListBuilder invListBuilder = invListBuilderFactory.create();
         return new OnDiskInvertedIndex(bufferCache, invListBuilder, invListTypeTraits, invListCmpFactories,
-                tokenTypeTraits, tokenCmpFactories, dictBTreeFile, invListsFile, freePageManagerFactory);
+                tokenTypeTraits, tokenCmpFactories, dictBTreeFile, invListsFile, freePageManagerFactory, nullTypeTraits,
+                nullIntrospector);
     }
 }

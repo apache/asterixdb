@@ -50,7 +50,7 @@ public class LSMRTreeWithAntiMatterTuplesExamplesTest extends AbstractLSMRTreeEx
                 harness.getPageWriteCallbackFactory(),
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), rtreeFields,
                 filterTypeTraits, filterCmpFactories, filterFields, true, false,
-                harness.getMetadataPageManagerFactory());
+                harness.getMetadataPageManagerFactory(), null, null);
     }
 
     @Before

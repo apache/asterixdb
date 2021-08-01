@@ -50,7 +50,7 @@ public class LSMRTreeExamplesTest extends AbstractLSMRTreeExamplesTest {
                 harness.getIOOperationCallbackFactory(), harness.getPageWriteCallbackFactory(),
                 LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length), rtreeFields, btreeFields,
                 filterTypeTraits, filterCmpFactories, filterFields, true, false,
-                harness.getMetadataPageManagerFactory());
+                harness.getMetadataPageManagerFactory(), null, null);
     }
 
     @Before

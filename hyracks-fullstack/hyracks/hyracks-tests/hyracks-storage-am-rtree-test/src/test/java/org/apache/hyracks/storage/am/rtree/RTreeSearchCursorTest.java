@@ -76,7 +76,7 @@ public class RTreeSearchCursorTest extends AbstractRTreeTest {
     public static final IPrimitiveValueProviderFactory[] VALUE_PROVIDER_FACTORY =
             RTreeUtils.createPrimitiveValueProviderFactories(CMP_FACTORIES.length, IntegerPointable.FACTORY);
     public static final RTreeTypeAwareTupleWriterFactory TUPLE_WRITER_FACTORY =
-            new RTreeTypeAwareTupleWriterFactory(TYPE_TRAITS);
+            new RTreeTypeAwareTupleWriterFactory(TYPE_TRAITS, null, null);
     public static final ITreeIndexMetadataFrameFactory META_FRAME_FACTORY = new LIFOMetaDataFrameFactory();
     public static final ITreeIndexFrameFactory INTERIOR_FRAME_FACTORY = new RTreeNSMInteriorFrameFactory(
             TUPLE_WRITER_FACTORY, VALUE_PROVIDER_FACTORY, RTreePolicyType.RTREE, false);

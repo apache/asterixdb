@@ -28,17 +28,18 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.util.InvertedIndexUtils;
 
 public class VariableSizeInvertedListTupleReference extends AbstractInvertedListTupleReference {
 
-    private ITreeIndexTupleReference tupleReference;
+    private final ITreeIndexTupleReference tupleReference;
 
     @Override
     protected void verifyTypeTrait() throws HyracksDataException {
         InvertedIndexUtils.verifyHasVarSizeTypeTrait(typeTraits);
     }
 
-    public VariableSizeInvertedListTupleReference(ITypeTraits[] typeTraits) throws HyracksDataException {
+    public VariableSizeInvertedListTupleReference(ITypeTraits[] typeTraits, ITypeTraits nullTypeTraits)
+            throws HyracksDataException {
         super(typeTraits);
 
-        this.tupleReference = new TypeAwareTupleReference(typeTraits, null);
+        this.tupleReference = new TypeAwareTupleReference(typeTraits, nullTypeTraits);
     }
 
     @Override

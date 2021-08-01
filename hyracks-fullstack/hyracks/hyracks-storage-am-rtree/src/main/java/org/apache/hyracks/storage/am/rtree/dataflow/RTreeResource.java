@@ -24,6 +24,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -42,10 +43,13 @@ public class RTreeResource implements IResource {
     private final IPageManagerFactory pageManagerFactory;
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
     private final RTreePolicyType rtreePolicyType;
+    private final ITypeTraits nullTypeTraits;
+    private final INullIntrospector nullIntrospector;
 
     public RTreeResource(String path, IStorageManager storageManager, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, IPageManagerFactory pageManagerFactory,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType) {
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
         this.path = path;
         this.storageManager = storageManager;
         this.typeTraits = typeTraits;
@@ -53,6 +57,8 @@ public class RTreeResource implements IResource {
         this.pageManagerFactory = pageManagerFactory;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
     }
 
     @Override
@@ -60,7 +66,8 @@ public class RTreeResource implements IResource {
         IIOManager ioManager = ctx.getIoManager();
         FileReference resourceRef = ioManager.resolve(path);
         return RTreeUtils.createRTree(storageManager.getBufferCache(ctx), typeTraits, valueProviderFactories,
-                comparatorFactories, rtreePolicyType, resourceRef, false, pageManagerFactory);
+                comparatorFactories, rtreePolicyType, resourceRef, false, pageManagerFactory, nullTypeTraits,
+                nullIntrospector);
     }
 
     @Override

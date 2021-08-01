@@ -103,8 +103,8 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
         if (bufferManager == null) {
             throw HyracksDataException.create(ErrorCode.CANNOT_CONTINUE_TEXT_SEARCH_BUFFER_MANAGER_IS_NULL);
         }
-        this.finalSearchResult =
-                new InvertedIndexFinalSearchResult(invIndex.getInvListTypeTraits(), ctx, bufferManager);
+        this.finalSearchResult = new InvertedIndexFinalSearchResult(invIndex.getInvListTypeTraits(), ctx, bufferManager,
+                invIndex.getNullTypeTraits(), invIndex.getNullIntrospector());
         this.invListMerger = new InvertedListMerger(ctx, invIndex, bufferManager);
         this.invListCmp = MultiComparator.create(invIndex.getInvListCmpFactories());
         this.invListCursorFactory = new InvertedListCursorFactory(invIndex, ctx);
@@ -118,9 +118,10 @@ public abstract class AbstractTOccurrenceSearcher implements IInvertedIndexSearc
         this.queryTokenAppender = new FrameTupleAppenderAccessor(QUERY_TOKEN_REC_DESC);
         this.queryTokenAppender.reset(queryTokenFrame, true);
         this.isSingleInvertedList = false;
-        this.searchResultTuple = InvertedIndexUtils.createInvertedListTupleReference(invIndex.getInvListTypeTraits());
+        this.searchResultTuple = InvertedIndexUtils.createInvertedListTupleReference(invIndex.getInvListTypeTraits(),
+                invIndex.getNullTypeTraits());
         this.searchResultFta = InvertedIndexUtils.createInvertedListFrameTupleAccessor(ctx.getInitialFrameSize(),
-                invIndex.getInvListTypeTraits());
+                invIndex.getInvListTypeTraits(), invIndex.getNullTypeTraits(), invIndex.getNullIntrospector());
     }
 
     protected void tokenizeQuery(InvertedIndexSearchPredicate searchPred) throws HyracksDataException {

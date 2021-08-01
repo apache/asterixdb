@@ -21,11 +21,13 @@ package org.apache.hyracks.storage.am.lsm.rtree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 
 public class LSMRTreeCopyTupleWriter extends LSMRTreeTupleWriter {
-    public LSMRTreeCopyTupleWriter(ITypeTraits[] typeTraits) {
+    public LSMRTreeCopyTupleWriter(ITypeTraits[] typeTraits, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
         // Third parameter is never used locally, just give false.
-        super(typeTraits, false);
+        super(typeTraits, false, nullTypeTraits, nullIntrospector);
     }
 
     @Override

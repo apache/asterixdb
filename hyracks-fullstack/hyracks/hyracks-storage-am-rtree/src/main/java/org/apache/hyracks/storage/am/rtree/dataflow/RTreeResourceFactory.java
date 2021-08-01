@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.rtree.dataflow;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
@@ -30,29 +31,34 @@ import org.apache.hyracks.storage.common.IStorageManager;
 
 public class RTreeResourceFactory implements IResourceFactory {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final IStorageManager storageManager;
     private final ITypeTraits[] typeTraits;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final IPageManagerFactory pageManagerFactory;
     private final IPrimitiveValueProviderFactory[] valueProviderFactories;
     private final RTreePolicyType rtreePolicyType;
+    private final ITypeTraits nullTypeTraits;
+    private final INullIntrospector nullIntrospector;
 
     public RTreeResourceFactory(IStorageManager storageManager, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] comparatorFactories, IPageManagerFactory pageManagerFactory,
-            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType) {
+            IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
         this.storageManager = storageManager;
         this.typeTraits = typeTraits;
         this.comparatorFactories = comparatorFactories;
         this.pageManagerFactory = pageManagerFactory;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
     }
 
     @Override
     public IResource createResource(FileReference fileRef) {
         return new RTreeResource(fileRef.getRelativePath(), storageManager, typeTraits, comparatorFactories,
-                pageManagerFactory, valueProviderFactories, rtreePolicyType);
+                pageManagerFactory, valueProviderFactories, rtreePolicyType, nullTypeTraits, nullIntrospector);
     }
 
 }

@@ -131,7 +131,7 @@ public class TypeAwareTupleReference implements ITreeIndexTupleReference {
         return dataStartOff - tupleStartOff + decodedFieldSlots[fieldCount - 1];
     }
 
-    private boolean isNull(byte[] flags, int flagsOffset, int fieldIdx) {
+    protected boolean isNull(byte[] flags, int flagsOffset, int fieldIdx) {
         int adjustedFieldIdx = getAdjustedFieldIdx(fieldIdx);
         int flagByteIdx = adjustedFieldIdx / 8;
         int flagBitIdx = 7 - (adjustedFieldIdx % 8);

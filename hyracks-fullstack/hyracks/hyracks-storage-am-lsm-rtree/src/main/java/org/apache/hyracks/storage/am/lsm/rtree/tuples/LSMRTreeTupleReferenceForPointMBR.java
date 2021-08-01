@@ -34,8 +34,8 @@ public class LSMRTreeTupleReferenceForPointMBR extends RTreeTypeAwareTupleRefere
     private final boolean antimatterAware;
 
     public LSMRTreeTupleReferenceForPointMBR(ITypeTraits[] typeTraits, int keyFieldCount, int valueFieldCount,
-            boolean antimatterAware) {
-        super(typeTraits);
+            boolean antimatterAware, ITypeTraits nullTypeTraits) {
+        super(typeTraits, nullTypeTraits);
         this.inputKeyFieldCount = keyFieldCount;
         this.inputTotalFieldCount = keyFieldCount + valueFieldCount;
         this.storedKeyFieldCount = keyFieldCount / 2;
@@ -53,10 +53,21 @@ public class LSMRTreeTupleReferenceForPointMBR extends RTreeTypeAwareTupleRefere
         // decode field slots in three steps
         int field = 0;
         int cumul = 0;
+        int nullFlagsRunner = 0;
         //step1. decode field slots for stored key
-        for (int i = 0; i < storedKeyFieldCount; i++) {
-            //key or value fields
-            cumul += typeTraits[i].getFixedLength();
+        encDec.reset(buf, tupleStartOff + nullFlagsBytes);
+        for (int i = 0; i < storedKeyFieldCount; i++, nullFlagsRunner++) {
+            if (!typeTraits[i].isFixedLength()) {
+                // for variable length fields, read the encoded length whether it's a value or null
+                cumul += encDec.decode();
+            } else {
+                // for fixed length fields, if the field is null, get the null length
+                if (nullTypeTraits != null && isNull(buf, tupleStartOff, nullFlagsRunner)) {
+                    cumul += nullTypeTraits.getFixedLength();
+                } else {
+                    cumul += typeTraits[i].getFixedLength();
+                }
+            }
             decodedFieldSlots[field++] = cumul;
         }
         //step2. decode field slots for non-stored (duplicated point) key
@@ -65,17 +76,19 @@ public class LSMRTreeTupleReferenceForPointMBR extends RTreeTypeAwareTupleRefere
             decodedFieldSlots[field++] = decodedFieldSlots[i];
         }
         //step3. decode field slots for value field
-        encDec.reset(buf, tupleStartOff + nullFlagsBytes);
-        for (int i = inputKeyFieldCount; i < inputTotalFieldCount; i++) {
+        for (int i = inputKeyFieldCount; i < inputTotalFieldCount; i++, nullFlagsRunner++) {
             if (!typeTraits[i].isFixedLength()) {
-                //value fields
+                // for variable length fields, read the encoded length whether it's a value or null
                 cumul += encDec.decode();
-                decodedFieldSlots[field++] = cumul;
             } else {
-                //key or value fields
-                cumul += typeTraits[i].getFixedLength();
-                decodedFieldSlots[field++] = cumul;
+                // for fixed length fields, if the field is null, get the null length
+                if (nullTypeTraits != null && isNull(buf, tupleStartOff, nullFlagsRunner)) {
+                    cumul += nullTypeTraits.getFixedLength();
+                } else {
+                    cumul += typeTraits[i].getFixedLength();
+                }
             }
+            decodedFieldSlots[field++] = cumul;
         }
 
         dataStartOff = encDec.getPos();
@@ -103,19 +116,21 @@ public class LSMRTreeTupleReferenceForPointMBR extends RTreeTypeAwareTupleRefere
 
     @Override
     public int getFieldLength(int fIdx) {
-        if (getInternalFieldIdx(fIdx) == 0) {
+        int internalFieldIdx = getInternalFieldIdx(fIdx);
+        if (internalFieldIdx == 0) {
             return decodedFieldSlots[0];
         } else {
-            return decodedFieldSlots[getInternalFieldIdx(fIdx)] - decodedFieldSlots[getInternalFieldIdx(fIdx) - 1];
+            return decodedFieldSlots[internalFieldIdx] - decodedFieldSlots[internalFieldIdx - 1];
         }
     }
 
     @Override
     public int getFieldStart(int fIdx) {
-        if (getInternalFieldIdx(fIdx) == 0) {
+        int internalFieldIdx = getInternalFieldIdx(fIdx);
+        if (internalFieldIdx == 0) {
             return dataStartOff;
         } else {
-            return dataStartOff + decodedFieldSlots[getInternalFieldIdx(fIdx) - 1];
+            return dataStartOff + decodedFieldSlots[internalFieldIdx - 1];
         }
     }
 
@@ -144,5 +159,11 @@ public class LSMRTreeTupleReferenceForPointMBR extends RTreeTypeAwareTupleRefere
         // TODO(ali): antimatterAware should be checked?
         // Check antimatter bit.
         return BitOperationUtils.getBit(buf, tupleStartOff, ANTIMATTER_BIT_OFFSET);
+    }
+
+    @Override
+    protected int getAdjustedFieldIdx(int fieldIdx) {
+        // 1 for antimatter
+        return antimatterAware ? fieldIdx + 1 : fieldIdx;
     }
 }

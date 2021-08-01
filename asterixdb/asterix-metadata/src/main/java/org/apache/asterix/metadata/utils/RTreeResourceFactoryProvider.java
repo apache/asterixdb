@@ -28,6 +28,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.indexing.IndexingConstants;
+import org.apache.asterix.formats.nontagged.NullIntrospector;
 import org.apache.asterix.metadata.api.IResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -35,6 +36,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -155,6 +157,7 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
                 dataset.getDatasetType() == DatasetType.EXTERNAL ? IndexingConstants.getBuddyBtreeComparatorFactories()
                         : getComparatorFactoriesForDeletedKeyBTree(secondaryTypeTraits, primaryComparatorFactories,
                                 secondaryComparatorFactories);
+        ITypeTraitProvider typeTraitProvider = mdProvider.getDataFormat().getTypeTraitProvider();
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             AsterixVirtualBufferCacheProvider vbcProvider =
                     new AsterixVirtualBufferCacheProvider(dataset.getDatasetId());
@@ -162,14 +165,16 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     filterTypeTraits, filterCmpFactories, secondaryFilterFields, opTrackerFactory, ioOpCallbackFactory,
                     pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
                     mergePolicyFactory, mergePolicyProperties, true, valueProviderFactories, rTreePolicyType,
-                    linearizeCmpFactory, rtreeFields, isPointMBR, btreeCompFactories);
+                    linearizeCmpFactory, rtreeFields, isPointMBR, btreeCompFactories,
+                    typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE);
         } else {
             return new ExternalRTreeLocalResourceFactory(storageManager, typeTraits, rtreeCmpFactories,
                     filterTypeTraits, filterCmpFactories, secondaryFilterFields, opTrackerFactory, ioOpCallbackFactory,
                     pageWriteCallbackFactory, metadataPageManagerFactory, ioSchedulerProvider, mergePolicyFactory,
                     mergePolicyProperties, true, btreeCompFactories, valueProviderFactories, rTreePolicyType,
                     linearizeCmpFactory, rtreeFields, new int[] { numNestedSecondaryKeyFields }, isPointMBR,
-                    mdProvider.getStorageProperties().getBloomFilterFalsePositiveRate());
+                    mdProvider.getStorageProperties().getBloomFilterFalsePositiveRate(),
+                    typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE);
         }
     }
 

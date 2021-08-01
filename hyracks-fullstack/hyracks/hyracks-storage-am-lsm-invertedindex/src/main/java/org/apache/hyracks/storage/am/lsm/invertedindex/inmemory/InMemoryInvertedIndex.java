@@ -31,6 +31,7 @@ import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPageManager;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
@@ -55,12 +56,15 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
 
     protected final ITypeTraits[] btreeTypeTraits;
     protected final IBinaryComparatorFactory[] btreeCmpFactories;
+    protected final ITypeTraits nullTypeTraits;
+    protected final INullIntrospector nullIntrospector;
 
     public InMemoryInvertedIndex(IBufferCache virtualBufferCache, IPageManager virtualFreePageManager,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories,
             IBinaryTokenizerFactory tokenizerFactory, IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory,
-            FileReference btreeFileRef) throws HyracksDataException {
+            FileReference btreeFileRef, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector)
+            throws HyracksDataException {
         this.tokenTypeTraits = tokenTypeTraits;
         this.tokenCmpFactories = tokenCmpFactories;
         this.invListTypeTraits = invListTypeTraits;
@@ -79,8 +83,11 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
             btreeTypeTraits[tokenTypeTraits.length + i] = invListTypeTraits[i];
             btreeCmpFactories[tokenTypeTraits.length + i] = invListCmpFactories[i];
         }
-        this.btree = BTreeUtils.createBTree(virtualBufferCache, virtualFreePageManager, btreeTypeTraits,
-                btreeCmpFactories, BTreeLeafFrameType.REGULAR_NSM, btreeFileRef, false, null, null);
+        this.btree =
+                BTreeUtils.createBTree(virtualBufferCache, virtualFreePageManager, btreeTypeTraits, btreeCmpFactories,
+                        BTreeLeafFrameType.REGULAR_NSM, btreeFileRef, false, nullTypeTraits, nullIntrospector);
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
     }
 
     @Override
@@ -216,6 +223,16 @@ public class InMemoryInvertedIndex implements IInPlaceInvertedIndex {
     @Override
     public IBinaryComparatorFactory[] getTokenCmpFactories() {
         return tokenCmpFactories;
+    }
+
+    @Override
+    public ITypeTraits getNullTypeTraits() {
+        return nullTypeTraits;
+    }
+
+    @Override
+    public INullIntrospector getNullIntrospector() {
+        return nullIntrospector;
     }
 
     @Override

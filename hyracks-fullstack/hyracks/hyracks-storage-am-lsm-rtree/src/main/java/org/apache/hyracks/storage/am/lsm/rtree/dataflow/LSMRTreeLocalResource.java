@@ -32,6 +32,7 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
@@ -73,10 +74,12 @@ public class LSMRTreeLocalResource extends LsmResource {
             Map<String, String> mergePolicyProperties, boolean durable, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, int[] buddyBTreeFields,
-            boolean isPointMBR, double bloomFilterFalsePositiveRate) {
+            boolean isPointMBR, double bloomFilterFalsePositiveRate, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
         super(path, storageManager, typeTraits, rtreeCmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
-                vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, null, null);
+                vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, nullTypeTraits,
+                nullIntrospector);
         this.btreeCmpFactories = btreeCmpFactories;
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
@@ -117,7 +120,7 @@ public class LSMRTreeLocalResource extends LsmResource {
                 opTrackerProvider.getOperationTracker(ncServiceCtx, this),
                 ioSchedulerProvider.getIoScheduler(ncServiceCtx), ioOpCallbackFactory, pageWriteCallbackFactory,
                 linearizeCmpFactory, rtreeFields, buddyBTreeFields, filterTypeTraits, filterCmpFactories, filterFields,
-                durable, isPointMBR, metadataPageManagerFactory);
+                durable, isPointMBR, metadataPageManagerFactory, nullTypeTraits, nullIntrospector);
     }
 
     @Override

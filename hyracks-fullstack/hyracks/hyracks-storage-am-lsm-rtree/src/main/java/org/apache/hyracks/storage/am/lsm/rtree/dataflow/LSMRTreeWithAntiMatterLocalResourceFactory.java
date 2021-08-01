@@ -25,6 +25,7 @@ import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
@@ -57,10 +58,12 @@ public class LSMRTreeWithAntiMatterLocalResourceFactory extends LsmResourceFacto
             Map<String, String> mergePolicyProperties, boolean durable,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, boolean isPointMBR,
-            IBinaryComparatorFactory[] btreeComparatorFactories) {
+            IBinaryComparatorFactory[] btreeComparatorFactories, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
         super(storageManager, rteeTypeTraits, rtreeCmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
-                vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, null, null);
+                vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, nullTypeTraits,
+                nullIntrospector);
         this.valueProviderFactories = valueProviderFactories;
         this.rtreePolicyType = rtreePolicyType;
         this.linearizeCmpFactory = linearizeCmpFactory;
@@ -75,6 +78,7 @@ public class LSMRTreeWithAntiMatterLocalResourceFactory extends LsmResourceFacto
                 cmpFactories, filterTypeTraits, filterCmpFactories, filterFields, opTrackerProvider,
                 ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider,
                 ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, btreeComparatorFactories,
-                valueProviderFactories, rtreePolicyType, linearizeCmpFactory, rtreeFields, isPointMBR, durable);
+                valueProviderFactories, rtreePolicyType, linearizeCmpFactory, rtreeFields, isPointMBR, durable,
+                nullTypeTraits, nullIntrospector);
     }
 }

@@ -109,7 +109,7 @@ public final class LSMRTreeTestContext extends AbstractRTreeTestContext {
                 typeTraits, rtreeCmpFactories, btreeCmpFactories, valueProviderFactories, rtreePolicyType,
                 bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
                 pageWriteCallbackFactory, LSMRTreeUtils.proposeBestLinearizer(typeTraits, rtreeCmpFactories.length),
-                null, btreeFields, null, null, null, true, isPointMBR, metadataPageManagerFactory);
+                null, btreeFields, null, null, null, true, isPointMBR, metadataPageManagerFactory, null, null);
         LSMRTreeTestContext testCtx = new LSMRTreeTestContext(fieldSerdes, lsmTree);
         return testCtx;
     }

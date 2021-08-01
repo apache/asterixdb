@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.variablesize;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleWriter;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.AbstractInvertedListBuilder;
@@ -35,8 +36,8 @@ public class VariableSizeElementInvertedListBuilder extends AbstractInvertedList
 
     // The tokenTypeTraits is necessary because the underlying TypeAwareTupleWriter requires all the type traits of the tuple
     // even if the first a few fields in the tuple are never accessed by the writer
-    public VariableSizeElementInvertedListBuilder(ITypeTraits[] tokenTypeTraits, ITypeTraits[] invListFields)
-            throws HyracksDataException {
+    public VariableSizeElementInvertedListBuilder(ITypeTraits[] tokenTypeTraits, ITypeTraits[] invListFields,
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) throws HyracksDataException {
         super(invListFields);
 
         this.allFields = new ITypeTraits[invListFields.length + tokenTypeTraits.length];
@@ -46,7 +47,7 @@ public class VariableSizeElementInvertedListBuilder extends AbstractInvertedList
         for (int i = 0; i < invListFields.length; i++) {
             allFields[i + tokenTypeTraits.length] = invListFields[i];
         }
-        this.writer = new TypeAwareTupleWriter(allFields, null, null);
+        this.writer = new TypeAwareTupleWriter(allFields, nullTypeTraits, nullIntrospector);
 
         InvertedIndexUtils.verifyHasVarSizeTypeTrait(invListFields);
     }

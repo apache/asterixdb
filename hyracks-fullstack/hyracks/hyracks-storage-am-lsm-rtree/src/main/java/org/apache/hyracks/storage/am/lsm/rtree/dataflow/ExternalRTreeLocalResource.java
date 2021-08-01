@@ -30,6 +30,7 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
@@ -61,12 +62,13 @@ public class ExternalRTreeLocalResource extends LSMRTreeLocalResource {
             Map<String, String> mergePolicyProperties, boolean durable, IBinaryComparatorFactory[] btreeCmpFactories,
             IPrimitiveValueProviderFactory[] valueProviderFactories, RTreePolicyType rtreePolicyType,
             ILinearizeComparatorFactory linearizeCmpFactory, int[] rtreeFields, int[] buddyBTreeFields,
-            boolean isPointMBR, double bloomFilterFalsePositiveRate) {
+            boolean isPointMBR, double bloomFilterFalsePositiveRate, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
         super(path, storageManager, typeTraits, rtreeCmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory, null,
                 ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, btreeCmpFactories,
                 valueProviderFactories, rtreePolicyType, linearizeCmpFactory, rtreeFields, buddyBTreeFields, isPointMBR,
-                bloomFilterFalsePositiveRate);
+                bloomFilterFalsePositiveRate, nullTypeTraits, nullIntrospector);
     }
 
     private ExternalRTreeLocalResource(IPersistedResourceRegistry registry, JsonNode json,
@@ -90,7 +92,7 @@ public class ExternalRTreeLocalResource extends LSMRTreeLocalResource {
                 opTrackerProvider.getOperationTracker(ncServiceCtx, this),
                 ioSchedulerProvider.getIoScheduler(ncServiceCtx), ioOpCallbackFactory, pageWriteCallbackFactory,
                 linearizeCmpFactory, buddyBTreeFields, durable, isPointMBR, metadataPageManagerFactory,
-                ncServiceCtx.getTracer());
+                ncServiceCtx.getTracer(), nullTypeTraits, nullIntrospector);
 
     }
 

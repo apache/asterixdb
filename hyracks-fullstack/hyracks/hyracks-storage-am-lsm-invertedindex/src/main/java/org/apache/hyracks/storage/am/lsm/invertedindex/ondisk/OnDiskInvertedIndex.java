@@ -41,6 +41,7 @@ import org.apache.hyracks.storage.am.btree.impls.DiskBTree;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInPlaceInvertedIndex;
@@ -103,6 +104,8 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
     protected int rootPageId = 0;
     protected IBufferCache bufferCache;
     protected int fileId = -1;
+    protected final ITypeTraits nullTypeTraits;
+    protected final INullIntrospector nullIntrospector;
     protected final ITypeTraits[] invListTypeTraits;
     protected final IBinaryComparatorFactory[] invListCmpFactories;
     protected final ITypeTraits[] tokenTypeTraits;
@@ -119,7 +122,8 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
     public OnDiskInvertedIndex(IBufferCache bufferCache, IInvertedListBuilder invListBuilder,
             ITypeTraits[] invListTypeTraits, IBinaryComparatorFactory[] invListCmpFactories,
             ITypeTraits[] tokenTypeTraits, IBinaryComparatorFactory[] tokenCmpFactories, FileReference btreeFile,
-            FileReference invListsFile, IPageManagerFactory pageManagerFactory) throws HyracksDataException {
+            FileReference invListsFile, IPageManagerFactory pageManagerFactory, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) throws HyracksDataException {
         this.bufferCache = bufferCache;
         this.invListBuilder = invListBuilder;
         this.invListTypeTraits = invListTypeTraits;
@@ -128,7 +132,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         this.tokenCmpFactories = tokenCmpFactories;
         this.btree = BTreeUtils.createDiskBTree(bufferCache, getBTreeTypeTraits(tokenTypeTraits), tokenCmpFactories,
                 BTreeLeafFrameType.REGULAR_NSM, btreeFile, pageManagerFactory.createPageManager(bufferCache), false,
-                null, null);
+                nullTypeTraits, nullIntrospector);
         this.numTokenFields = btree.getComparatorFactories().length;
         this.numInvListKeys = invListCmpFactories.length;
         this.invListsFile = invListsFile;
@@ -136,6 +140,8 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         this.invListEndPageIdField = numTokenFields + 1;
         this.invListStartOffField = numTokenFields + 2;
         this.invListNumElementsField = numTokenFields + 3;
+        this.nullTypeTraits = nullTypeTraits;
+        this.nullIntrospector = nullIntrospector;
     }
 
     @Override
@@ -197,10 +203,10 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
     public IInvertedListCursor createInvertedListCursor(IHyracksTaskContext ctx) throws HyracksDataException {
         if (InvertedIndexUtils.checkTypeTraitsAllFixed(invListTypeTraits)) {
             return new FixedSizeElementOnDiskInvertedListCursor(bufferCache, fileId, invListTypeTraits, ctx,
-                    NoOpIndexCursorStats.INSTANCE);
+                    NoOpIndexCursorStats.INSTANCE, nullTypeTraits, nullIntrospector);
         } else {
             return new VariableSizeElementOnDiskInvertedListCursor(bufferCache, fileId, invListTypeTraits, ctx,
-                    NoOpIndexCursorStats.INSTANCE);
+                    NoOpIndexCursorStats.INSTANCE, nullTypeTraits, nullIntrospector);
         }
     }
 
@@ -210,7 +216,8 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
         if (InvertedIndexUtils.checkTypeTraitsAllFixed(invListTypeTraits)) {
             return new FixedSizeElementInvertedListScanCursor(bufferCache, fileId, invListTypeTraits, stats);
         } else {
-            return new VariableSizeElementOnDiskInvertedListCursor(bufferCache, fileId, invListTypeTraits, stats);
+            return new VariableSizeElementOnDiskInvertedListCursor(bufferCache, fileId, invListTypeTraits, stats,
+                    nullTypeTraits, nullIntrospector);
         }
     }
 
@@ -697,6 +704,16 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
     @Override
     public IBinaryComparatorFactory[] getTokenCmpFactories() {
         return tokenCmpFactories;
+    }
+
+    @Override
+    public ITypeTraits getNullTypeTraits() {
+        return nullTypeTraits;
+    }
+
+    @Override
+    public INullIntrospector getNullIntrospector() {
+        return nullIntrospector;
     }
 
     @Override

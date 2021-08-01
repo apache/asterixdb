@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.lsm.rtree.tuples;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 
@@ -32,8 +33,8 @@ public class LSMRTreeTupleWriterFactoryForPointMBR extends RTreeTypeAwareTupleWr
     private final boolean isAntimatter;
 
     public LSMRTreeTupleWriterFactoryForPointMBR(ITypeTraits[] typeTraits, int keyFieldCount, int valueFieldCount,
-            boolean antimatterAware, boolean isDelete) {
-        super(typeTraits);
+            boolean antimatterAware, boolean isDelete, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
+        super(typeTraits, nullTypeTraits, nullIntrospector);
         this.keyFieldCount = keyFieldCount;
         this.valueFieldCount = valueFieldCount;
         this.antimatterAware = antimatterAware;
@@ -43,7 +44,7 @@ public class LSMRTreeTupleWriterFactoryForPointMBR extends RTreeTypeAwareTupleWr
     @Override
     public RTreeTypeAwareTupleWriter createTupleWriter() {
         return new LSMRTreeTupleWriterForPointMBR(typeTraits, keyFieldCount, valueFieldCount, antimatterAware,
-                isAntimatter);
+                isAntimatter, nullTypeTraits, nullIntrospector);
     }
 
 }

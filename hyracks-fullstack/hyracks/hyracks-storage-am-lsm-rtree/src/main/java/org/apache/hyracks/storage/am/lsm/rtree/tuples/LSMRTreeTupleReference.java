@@ -26,8 +26,8 @@ import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleReference;
 
 public class LSMRTreeTupleReference extends RTreeTypeAwareTupleReference implements ILSMTreeTupleReference {
 
-    public LSMRTreeTupleReference(ITypeTraits[] typeTraits) {
-        super(typeTraits);
+    public LSMRTreeTupleReference(ITypeTraits[] typeTraits, ITypeTraits nullTypeTraits) {
+        super(typeTraits, nullTypeTraits);
     }
 
     @Override
@@ -44,5 +44,11 @@ public class LSMRTreeTupleReference extends RTreeTypeAwareTupleReference impleme
 
     public int getTupleStart() {
         return tupleStartOff;
+    }
+
+    @Override
+    protected int getAdjustedFieldIdx(int fieldIdx) {
+        // 1 for antimatter
+        return fieldIdx + 1;
     }
 }

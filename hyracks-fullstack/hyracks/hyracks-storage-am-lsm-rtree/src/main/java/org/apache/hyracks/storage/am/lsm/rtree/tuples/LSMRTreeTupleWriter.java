@@ -23,6 +23,7 @@ import static org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReferenc
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
@@ -30,14 +31,15 @@ import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriter;
 public class LSMRTreeTupleWriter extends RTreeTypeAwareTupleWriter implements ILSMTreeTupleWriter {
     private boolean isAntimatter;
 
-    public LSMRTreeTupleWriter(ITypeTraits[] typeTraits, boolean isAntimatter) {
-        super(typeTraits);
+    public LSMRTreeTupleWriter(ITypeTraits[] typeTraits, boolean isAntimatter, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
+        super(typeTraits, nullTypeTraits, nullIntrospector);
         this.isAntimatter = isAntimatter;
     }
 
     @Override
     public LSMRTreeTupleReference createTupleReference() {
-        return new LSMRTreeTupleReference(typeTraits);
+        return new LSMRTreeTupleReference(typeTraits, nullTypeTraits);
     }
 
     @Override
@@ -72,4 +74,9 @@ public class LSMRTreeTupleWriter extends RTreeTypeAwareTupleWriter implements IL
         this.isAntimatter = isAntimatter;
     }
 
+    @Override
+    protected int getAdjustedFieldIdx(int fieldIdx) {
+        // 1 for antimatter
+        return fieldIdx + 1;
+    }
 }

@@ -25,6 +25,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.IPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
@@ -45,9 +46,10 @@ public class RTreeUtils {
     public static RTree createRTree(IBufferCache bufferCache, ITypeTraits[] typeTraits,
             IPrimitiveValueProviderFactory[] valueProviderFactories, IBinaryComparatorFactory[] cmpFactories,
             RTreePolicyType rtreePolicyType, FileReference file, boolean isPointMBR,
-            IPageManagerFactory pageManagerFactory) {
+            IPageManagerFactory pageManagerFactory, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
 
-        RTreeTypeAwareTupleWriterFactory tupleWriterFactory = new RTreeTypeAwareTupleWriterFactory(typeTraits);
+        RTreeTypeAwareTupleWriterFactory tupleWriterFactory =
+                new RTreeTypeAwareTupleWriterFactory(typeTraits, nullTypeTraits, nullIntrospector);
         ITreeIndexFrameFactory interiorFrameFactory = new RTreeNSMInteriorFrameFactory(tupleWriterFactory,
                 valueProviderFactories, rtreePolicyType, isPointMBR);
         ITreeIndexFrameFactory leafFrameFactory =

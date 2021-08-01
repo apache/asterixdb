@@ -182,7 +182,7 @@ public class TypeAwareTupleWriter implements ITreeIndexTupleWriter {
      * @param flagsOffset start of the null flags data
      * @param fieldIdx logical field index
      */
-    private void setNullFlag(byte[] flags, int flagsOffset, int fieldIdx) {
+    protected void setNullFlag(byte[] flags, int flagsOffset, int fieldIdx) {
         int adjustedFieldIdx = getAdjustedFieldIdx(fieldIdx);
         int flagByteIdx = adjustedFieldIdx / 8;
         int flagBitIdx = 7 - (adjustedFieldIdx % 8);

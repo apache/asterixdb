@@ -26,8 +26,8 @@ import org.apache.hyracks.storage.am.common.tuples.TypeAwareTupleReference;
 
 public class RTreeTypeAwareTupleReference extends TypeAwareTupleReference implements ITreeIndexTupleReference {
 
-    public RTreeTypeAwareTupleReference(ITypeTraits[] typeTraits) {
-        super(typeTraits, null);
+    public RTreeTypeAwareTupleReference(ITypeTraits[] typeTraits, ITypeTraits nullTypeTraits) {
+        super(typeTraits, nullTypeTraits);
     }
 
 }

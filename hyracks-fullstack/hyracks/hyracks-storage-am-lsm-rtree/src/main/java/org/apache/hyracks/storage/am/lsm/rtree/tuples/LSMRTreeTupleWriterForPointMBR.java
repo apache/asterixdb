@@ -23,6 +23,7 @@ import static org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReferenc
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.util.BitOperationUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleWriter;
@@ -54,8 +55,9 @@ public class LSMRTreeTupleWriterForPointMBR extends RTreeTypeAwareTupleWriter im
     private boolean isAntimatter;
 
     public LSMRTreeTupleWriterForPointMBR(ITypeTraits[] typeTraits, int keyFieldCount, int valueFieldCount,
-            boolean antimatterAware, boolean isAntimatter) {
-        super(typeTraits);
+            boolean antimatterAware, boolean isAntimatter, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
+        super(typeTraits, nullTypeTraits, nullIntrospector);
         this.inputKeyFieldCount = keyFieldCount;
         this.valueFieldCount = valueFieldCount;
         this.inputTotalFieldCount = keyFieldCount + valueFieldCount;
@@ -81,14 +83,15 @@ public class LSMRTreeTupleWriterForPointMBR extends RTreeTypeAwareTupleWriter im
 
     @Override
     public LSMRTreeTupleReferenceForPointMBR createTupleReference() {
-        return new LSMRTreeTupleReferenceForPointMBR(typeTraits, inputKeyFieldCount, valueFieldCount, antimatterAware);
+        return new LSMRTreeTupleReferenceForPointMBR(typeTraits, inputKeyFieldCount, valueFieldCount, antimatterAware,
+                nullTypeTraits);
     }
 
     @Override
     public int writeTuple(ITupleReference tuple, byte[] targetBuf, int targetOff) {
         int runner = targetOff;
         int nullFlagsBytes = getNullFlagsBytes(tuple);
-        // write null indicator bits
+        // reset null indicator bits
         for (int i = 0; i < nullFlagsBytes; i++) {
             targetBuf[runner++] = (byte) 0;
         }
@@ -100,15 +103,28 @@ public class LSMRTreeTupleWriterForPointMBR extends RTreeTypeAwareTupleWriter im
             }
         }
 
+        int nullRunner = 0;
         // write key fields
-        for (int i = 0; i < storedKeyFieldCount; i++) {
-            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf, runner, tuple.getFieldLength(i));
-            runner += tuple.getFieldLength(i);
+        for (int i = 0; i < storedKeyFieldCount; i++, nullRunner++) {
+            byte[] fieldData = tuple.getFieldData(i);
+            int fieldOffset = tuple.getFieldStart(i);
+            int fieldLength = tuple.getFieldLength(i);
+            if (nullIntrospector != null && nullIntrospector.isNull(fieldData, fieldOffset, fieldLength)) {
+                setNullFlag(targetBuf, targetOff, nullRunner);
+            }
+            System.arraycopy(fieldData, fieldOffset, targetBuf, runner, fieldLength);
+            runner += fieldLength;
         }
         // write value fields
-        for (int i = inputKeyFieldCount; i < inputTotalFieldCount; i++) {
-            System.arraycopy(tuple.getFieldData(i), tuple.getFieldStart(i), targetBuf, runner, tuple.getFieldLength(i));
-            runner += tuple.getFieldLength(i);
+        for (int i = inputKeyFieldCount; i < inputTotalFieldCount; i++, nullRunner++) {
+            byte[] fieldData = tuple.getFieldData(i);
+            int fieldOffset = tuple.getFieldStart(i);
+            int fieldLength = tuple.getFieldLength(i);
+            if (nullIntrospector != null && nullIntrospector.isNull(fieldData, fieldOffset, fieldLength)) {
+                setNullFlag(targetBuf, targetOff, nullRunner);
+            }
+            System.arraycopy(fieldData, fieldOffset, targetBuf, runner, fieldLength);
+            runner += fieldLength;
         }
 
         //set antimatter bit if necessary
@@ -138,7 +154,7 @@ public class LSMRTreeTupleWriterForPointMBR extends RTreeTypeAwareTupleWriter im
 
     @Override
     protected int getNullFlagsBytes(ITupleReference tuple) {
-        return BitOperationUtils.getFlagBytes(storedTotalFieldCount + (antimatterAware ? 1 : 0));
+        return BitOperationUtils.getFlagBytes(storedTotalFieldCount + valueFieldCount + (antimatterAware ? 1 : 0));
     }
 
     @Override
@@ -166,5 +182,10 @@ public class LSMRTreeTupleWriterForPointMBR extends RTreeTypeAwareTupleWriter im
     @Override
     public void setAntimatter(boolean isAntimatter) {
         this.isAntimatter = isAntimatter;
+    }
+
+    @Override
+    protected int getAdjustedFieldIdx(int fieldIdx) {
+        return antimatterAware ? fieldIdx + 1 : fieldIdx;
     }
 }

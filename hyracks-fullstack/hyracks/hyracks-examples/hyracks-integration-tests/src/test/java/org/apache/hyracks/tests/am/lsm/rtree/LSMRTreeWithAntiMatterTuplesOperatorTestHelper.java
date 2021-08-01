@@ -54,6 +54,6 @@ public class LSMRTreeWithAntiMatterTuplesOperatorTestHelper extends LSMTreeOpera
                 NoOpIOOperationCallbackFactory.INSTANCE, NoOpPageWriteCallbackFactory.INSTANCE, pageManagerFactory,
                 getVirtualBufferCacheProvider(), SynchronousSchedulerProvider.INSTANCE, MERGE_POLICY_FACTORY,
                 MERGE_POLICY_PROPERTIES, DURABLE, valueProviderFactories, rtreePolicyType, linearizerCmpFactory,
-                btreeFields, IS_POINT_MBR, btreeComparatorFactories);
+                btreeFields, IS_POINT_MBR, btreeComparatorFactories, null, null);
     }
 }

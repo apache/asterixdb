@@ -35,6 +35,7 @@ import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexOperationContext;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentFilterHelper;
@@ -92,6 +93,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     protected final IBinaryComparatorFactory[] tokenCmpFactories;
     private final int[] filterFieldsForNonBulkLoadOps;
     private final int[] invertedIndexFieldsForNonBulkLoadOps;
+    protected final ITypeTraits nullTypeTraits;
+    protected final INullIntrospector nullIntrospector;
 
     public LSMInvertedIndex(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             ILSMDiskComponentFactory componentFactory, IComponentFilterHelper filterHelper,
@@ -103,7 +106,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             int[] invertedIndexFields, int[] filterFields, int[] filterFieldsForNonBulkLoadOps,
-            int[] invertedIndexFieldsForNonBulkLoadOps, boolean durable, ITracer tracer) throws HyracksDataException {
+            int[] invertedIndexFieldsForNonBulkLoadOps, boolean durable, ITracer tracer, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy,
                 opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, componentFactory,
                 componentFactory, filterFrameFactory, filterManager, filterFields, durable, filterHelper,
@@ -116,14 +120,17 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         this.tokenCmpFactories = tokenCmpFactories;
         this.filterFieldsForNonBulkLoadOps = filterFieldsForNonBulkLoadOps;
         this.invertedIndexFieldsForNonBulkLoadOps = invertedIndexFieldsForNonBulkLoadOps;
+        this.nullIntrospector = nullIntrospector;
+        this.nullTypeTraits = nullTypeTraits;
         int i = 0;
         for (IVirtualBufferCache virtualBufferCache : virtualBufferCaches) {
             InMemoryInvertedIndex memInvIndex =
                     createInMemoryInvertedIndex(virtualBufferCache, new VirtualFreePageManager(virtualBufferCache), i);
-            BTree deleteKeysBTree = BTreeUtils.createBTree(virtualBufferCache,
-                    new VirtualFreePageManager(virtualBufferCache), invListTypeTraits, invListCmpFactories,
-                    BTreeLeafFrameType.REGULAR_NSM,
-                    ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_del_" + i), false, null, null);
+            BTree deleteKeysBTree =
+                    BTreeUtils.createBTree(virtualBufferCache, new VirtualFreePageManager(virtualBufferCache),
+                            invListTypeTraits, invListCmpFactories, BTreeLeafFrameType.REGULAR_NSM,
+                            ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_del_" + i), false,
+                            nullTypeTraits, nullIntrospector);
             LSMInvertedIndexMemoryComponent mutableComponent = new LSMInvertedIndexMemoryComponent(this, memInvIndex,
                     deleteKeysBTree, virtualBufferCache, filterHelper == null ? null : filterHelper.createFilter());
             memoryComponents.add(mutableComponent);
@@ -410,7 +417,8 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         return InvertedIndexUtils.createInMemoryBTreeInvertedindex(virtualBufferCache, virtualFreePageManager,
                 invListTypeTraits, invListCmpFactories, tokenTypeTraits, tokenCmpFactories, tokenizerFactory,
                 fullTextConfigEvaluatorFactory,
-                ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_vocab_" + id));
+                ioManager.resolveAbsolutePath(fileManager.getBaseDir() + "_virtual_vocab_" + id), nullTypeTraits,
+                nullIntrospector);
     }
 
     @Override
@@ -442,6 +450,16 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
     @Override
     public IBinaryComparatorFactory[] getTokenCmpFactories() {
         return tokenCmpFactories;
+    }
+
+    @Override
+    public ITypeTraits getNullTypeTraits() {
+        return nullTypeTraits;
+    }
+
+    @Override
+    public INullIntrospector getNullIntrospector() {
+        return nullIntrospector;
     }
 
     public IBinaryTokenizerFactory getTokenizerFactory() {

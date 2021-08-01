@@ -54,6 +54,6 @@ public class LSMRTreeOperatorTestHelper extends LSMTreeOperatorTestHelper {
                 NoOpPageWriteCallbackFactory.INSTANCE, pageManagerFactory, getVirtualBufferCacheProvider(),
                 SynchronousSchedulerProvider.INSTANCE, MERGE_POLICY_FACTORY, MERGE_POLICY_PROPERTIES, DURABLE,
                 btreeComparatorFactories, valueProviderFactories, rtreePolicyType, linearizerCmpFactory, null,
-                btreeFields, IS_POINT_MBR, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE);
+                btreeFields, IS_POINT_MBR, DEFAULT_BLOOM_FILTER_FALSE_POSITIVE_RATE, null, null);
     }
 }

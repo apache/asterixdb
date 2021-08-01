@@ -26,6 +26,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
+import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 
 /**
  * This is an in-memory based storage for final results of inverted-index searches.
@@ -34,8 +35,9 @@ import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 public class InvertedIndexFinalSearchResult extends InvertedIndexSearchResult {
 
     public InvertedIndexFinalSearchResult(ITypeTraits[] invListFields, IHyracksTaskContext ctx,
-            ISimpleFrameBufferManager bufferManager) throws HyracksDataException {
-        super(invListFields, ctx, bufferManager);
+            ISimpleFrameBufferManager bufferManager, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector)
+            throws HyracksDataException {
+        super(invListFields, ctx, bufferManager, nullTypeTraits, nullIntrospector);
     }
 
     /**

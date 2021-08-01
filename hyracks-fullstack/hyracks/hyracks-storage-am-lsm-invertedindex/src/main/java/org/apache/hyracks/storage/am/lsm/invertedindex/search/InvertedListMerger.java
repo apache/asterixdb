@@ -92,8 +92,10 @@ public class InvertedListMerger {
     public InvertedListMerger(IHyracksTaskContext ctx, IInvertedIndex invIndex, ISimpleFrameBufferManager bufferManager)
             throws HyracksDataException {
         this.invListCmp = MultiComparator.create(invIndex.getInvListCmpFactories());
-        this.prevSearchResult = new InvertedIndexSearchResult(invIndex.getInvListTypeTraits(), ctx, bufferManager);
-        this.newSearchResult = new InvertedIndexSearchResult(invIndex.getInvListTypeTraits(), ctx, bufferManager);
+        this.prevSearchResult = new InvertedIndexSearchResult(invIndex.getInvListTypeTraits(), ctx, bufferManager,
+                invIndex.getNullTypeTraits(), invIndex.getNullIntrospector());
+        this.newSearchResult = new InvertedIndexSearchResult(invIndex.getInvListTypeTraits(), ctx, bufferManager,
+                invIndex.getNullTypeTraits(), invIndex.getNullIntrospector());
     }
 
     /**
