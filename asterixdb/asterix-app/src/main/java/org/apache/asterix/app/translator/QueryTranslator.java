@@ -42,6 +42,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.active.ActivityState;
@@ -283,6 +284,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected final IMetadataLockUtil lockUtil;
     protected final IResponsePrinter responsePrinter;
     protected final WarningCollector warningCollector;
+    protected final ReentrantReadWriteLock compilationLock;
 
     public QueryTranslator(ICcApplicationContext appCtx, List<Statement> statements, SessionOutput output,
             ILangCompilationProvider compilationProvider, ExecutorService executorService,
@@ -301,6 +303,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         this.executorService = executorService;
         this.responsePrinter = responsePrinter;
         this.warningCollector = new WarningCollector();
+        this.compilationLock = appCtx.getCompilationLock();
         if (appCtx.getServiceContext().getAppConfig().getBoolean(CCConfig.Option.ENFORCE_FRAME_WRITER_PROTOCOL)) {
             this.jobFlags.add(JobFlag.ENFORCE_CONTRACT);
         }
@@ -3392,12 +3395,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
             public void lock() throws AlgebricksException {
+                compilationLock.readLock().lock();
                 lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
             }
 
             @Override
             public void unlock() {
                 metadataProvider.getLocks().unlock();
+                compilationLock.readLock().unlock();
             }
         };
         final IStatementCompiler compiler = () -> {
@@ -3987,6 +3992,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
             public void lock() {
+                compilationLock.readLock().lock();
             }
 
             @Override
@@ -3994,6 +4000,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 metadataProvider.getLocks().unlock();
                 // release external datasets' locks acquired during compilation of the query
                 ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
+                compilationLock.readLock().unlock();
             }
         };
         final IStatementCompiler compiler = () -> {

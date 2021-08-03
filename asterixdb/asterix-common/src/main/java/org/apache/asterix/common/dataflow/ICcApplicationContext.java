@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.dataflow;
 
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IMetadataLockManager;
@@ -149,4 +151,11 @@ public interface ICcApplicationContext extends IApplicationContext {
      * @return the adapter factory service
      */
     IAdapterFactoryService getAdapterFactoryService();
+
+    /**
+     * Gets the cluster query compilation lock
+     *
+     * @return the cluster query compilation lock
+     */
+    ReentrantReadWriteLock getCompilationLock();
 }

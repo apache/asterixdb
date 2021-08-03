@@ -19,6 +19,7 @@
 package org.apache.asterix.runtime.utils;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
 import org.apache.asterix.common.api.IConfigValidator;
@@ -100,6 +101,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final IRequestTracker requestTracker;
     private final IConfigValidator configValidator;
     private final IAdapterFactoryService adapterFactoryService;
+    private final ReentrantReadWriteLock compilationLock = new ReentrantReadWriteLock(true);
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
             Supplier<IMetadataBootstrap> metadataBootstrapSupplier, IGlobalRecoveryManager globalRecoveryManager,
@@ -313,5 +315,10 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IAdapterFactoryService getAdapterFactoryService() {
         return adapterFactoryService;
+    }
+
+    @Override
+    public ReentrantReadWriteLock getCompilationLock() {
+        return compilationLock;
     }
 }
