@@ -59,7 +59,7 @@ public class MappedFileSplit extends ManagedFileSplit {
     @Override
     public FileReference getFileReference(IIOManager ioManager) throws HyracksDataException {
         if (cached == null) {
-            cached = new FileReference(ioManager.getIODevices().get(ioDevice), getPath());
+            cached = super.getFileReference(ioManager);
         }
         return cached;
     }

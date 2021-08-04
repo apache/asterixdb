@@ -184,6 +184,10 @@ public class NodeManager implements INodeManager {
 
     public synchronized void failNode(String nodeId) throws HyracksException {
         NodeControllerState state = nodeRegistry.get(nodeId);
+        if (state == null) {
+            LOGGER.info("node {} is not registered; no need to fail it", nodeId);
+            return;
+        }
         Set<JobId> affectedJobIds = state.getActiveJobIds();
         // Removes the node from node map.
         nodeRegistry.remove(nodeId);

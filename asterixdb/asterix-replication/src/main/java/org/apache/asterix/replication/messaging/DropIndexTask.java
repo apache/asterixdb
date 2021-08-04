@@ -23,7 +23,6 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.logging.Logger;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
@@ -32,13 +31,15 @@ import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A task to drop an index that was dropped on master
  */
 public class DropIndexTask implements IReplicaTask {
 
-    private static final Logger LOGGER = Logger.getLogger(DeleteFileTask.class.getName());
+    private static final Logger LOGGER = LogManager.getLogger();
     private final String file;
 
     public DropIndexTask(String file) {
@@ -55,7 +56,7 @@ public class DropIndexTask implements IReplicaTask {
                 IoUtil.delete(indexDir);
                 LOGGER.info(() -> "Deleted index: " + indexFile.getAbsolutePath());
             } else {
-                LOGGER.warning(() -> "Requested to delete a non-existing index: " + indexFile.getAbsolutePath());
+                LOGGER.warn(() -> "Requested to delete a non-existing index: " + indexFile.getAbsolutePath());
             }
             ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());
         } catch (IOException e) {
@@ -65,7 +66,7 @@ public class DropIndexTask implements IReplicaTask {
 
     @Override
     public ReplicationProtocol.ReplicationRequestType getMessageType() {
-        return ReplicationProtocol.ReplicationRequestType.REPLICATE_RESOURCE_FILE;
+        return ReplicationProtocol.ReplicationRequestType.DROP_INDEX;
     }
 
     @Override
