@@ -19,4 +19,4 @@
 //polltimeoutsecs=30
 //prettifyjsonresult=true
 
-nc:asterix_nc1 /admin/storage/partition/0
+nc:asterix_nc1 /admin/storage/partition/1

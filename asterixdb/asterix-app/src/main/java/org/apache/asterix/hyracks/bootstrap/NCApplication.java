@@ -341,7 +341,11 @@ public class NCApplication extends BaseNCApplication {
     @Override
     public IFileDeviceResolver getFileDeviceResolver() {
         return (relPath, devices) -> {
-            int ioDeviceIndex = Math.abs(StoragePathUtil.getPartitionNumFromRelativePath(relPath) % devices.size());
+            int partition = StoragePathUtil.getPartitionNumFromRelativePath(relPath);
+            if (partition < 0) {
+                return devices.get(0);
+            }
+            int ioDeviceIndex = Math.abs(partition % devices.size());
             return devices.get(ioDeviceIndex);
         };
     }

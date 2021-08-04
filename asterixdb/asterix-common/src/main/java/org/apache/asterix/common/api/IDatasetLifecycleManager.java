@@ -169,4 +169,17 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
      * @return the current datasets io stats
      */
     StorageIOStats getDatasetsIOStats();
+
+    /**
+     * Closes {@code resourcePath} if open
+     * @param resourcePath
+     * @throws HyracksDataException
+     */
+    void closeIfOpen(String resourcePath) throws HyracksDataException;
+
+    /**
+     * Removes all memory references of {@code partition}
+     * @param partitionId
+     */
+    void closePartition(int partitionId);
 }

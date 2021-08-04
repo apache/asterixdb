@@ -138,14 +138,15 @@ public class ReplicaManager implements IReplicaManager {
         return replicaSyncLock;
     }
 
-    private void closePartitionResources(int partition) throws HyracksDataException {
+    public void closePartitionResources(int partition) throws HyracksDataException {
         final PersistentLocalResourceRepository resourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         final Map<Long, LocalResource> partitionResources = resourceRepository.getPartitionResources(partition);
         final IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
         for (LocalResource resource : partitionResources.values()) {
-            datasetLifecycleManager.close(resource.getPath());
+            datasetLifecycleManager.closeIfOpen(resource.getPath());
         }
+        datasetLifecycleManager.closePartition(partition);
     }
 
     private boolean isSelf(ReplicaIdentifier id) {

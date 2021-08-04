@@ -182,4 +182,10 @@ public class DatasetResource implements Comparable<DatasetResource> {
     public boolean isMetadataDataset() {
         return MetadataIndexImmutableProperties.isMetadataDataset(getDatasetID());
     }
+
+    public void removePartition(int partitionId) {
+        datasetPrimaryOpTrackers.remove(partitionId);
+        datasetComponentIdGenerators.remove(partitionId);
+        datasetRateLimiters.remove(partitionId);
+    }
 }

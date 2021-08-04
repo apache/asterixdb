@@ -248,7 +248,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
-    private static FileReference getLocalResourceFileByName(IIOManager ioManager, String resourcePath)
+    public static FileReference getLocalResourceFileByName(IIOManager ioManager, String resourcePath)
             throws HyracksDataException {
         String fileName = resourcePath + File.separator + StorageConstants.METADATA_FILE_NAME;
         return ioManager.resolve(fileName);
@@ -602,5 +602,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     private static boolean isComponentFile(File indexDir, String fileName) {
         return COMPONENT_FILES_FILTER.accept(indexDir, fileName);
+    }
+
+    public Path[] getStorageRoots() {
+        return storageRoots;
     }
 }

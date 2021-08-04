@@ -41,7 +41,7 @@ public class DatasetLocalResource implements IResource {
     /**
      * The resource partition
      */
-    private final int partition;
+    private int partition;
     private final IResource resource;
 
     public DatasetLocalResource(int datasetId, int partition, IResource resource) {
@@ -66,6 +66,10 @@ public class DatasetLocalResource implements IResource {
     @Override
     public void setPath(String path) {
         resource.setPath(path);
+    }
+
+    public void setPartition(int partition) {
+        this.partition = partition;
     }
 
     @Override
