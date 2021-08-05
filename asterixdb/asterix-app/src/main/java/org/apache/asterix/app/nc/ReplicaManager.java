@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.app.nc;
 
-import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,9 +36,7 @@ import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.client.NodeStatus;
-import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.util.annotations.ThreadSafe;
@@ -152,11 +149,7 @@ public class ReplicaManager implements IReplicaManager {
     }
 
     private boolean isSelf(ReplicaIdentifier id) {
-        IApplicationConfig appConfig = appCtx.getServiceContext().getAppConfig();
-        String host = appConfig.getString(NCConfig.Option.REPLICATION_LISTEN_ADDRESS);
-        int port = appConfig.getInt(NCConfig.Option.REPLICATION_LISTEN_PORT);
-
-        final InetSocketAddress replicaAddress = new InetSocketAddress(host, port);
-        return id.equals(ReplicaIdentifier.of(id.getPartition(), replicaAddress));
+        String nodeId = appCtx.getServiceContext().getNodeId();
+        return id.getNodeId().equals(nodeId);
     }
 }

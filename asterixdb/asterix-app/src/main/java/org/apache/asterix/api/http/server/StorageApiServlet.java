@@ -135,6 +135,7 @@ public class StorageApiServlet extends AbstractServlet {
                 final ObjectNode replicaJson = OBJECT_MAPPER.createObjectNode();
                 replicaJson.put("location", toHostPort(replica.getIdentifier().getLocation()));
                 replicaJson.put("status", replica.getStatus().toString());
+                replicaJson.put("nodeId", replica.getIdentifier().getNodeId());
                 replicasArray.add(replicaJson);
             }
             partitionJson.set("replicas", replicasArray);
@@ -167,11 +168,12 @@ public class StorageApiServlet extends AbstractServlet {
         final String partition = request.getParameter("partition");
         final String host = request.getParameter("host");
         final String port = request.getParameter("port");
-        if (partition == null || host == null || port == null) {
+        final String nodeId = request.getParameter("nodeId");
+        if (partition == null || host == null || port == null || nodeId == null) {
             return null;
         }
-        final InetSocketAddress replicaAddress = new InetSocketAddress(host, Integer.valueOf(port));
-        return ReplicaIdentifier.of(Integer.valueOf(partition), replicaAddress);
+        final InetSocketAddress replicaAddress = new InetSocketAddress(host, Integer.parseInt(port));
+        return ReplicaIdentifier.of(Integer.parseInt(partition), nodeId, replicaAddress);
     }
 
     private void processPromote(IServletRequest request, IServletResponse response) throws HyracksDataException {

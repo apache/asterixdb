@@ -2655,8 +2655,8 @@ public class TestExecutor {
         String partition = command[2];
         String destNode = command[3];
         final InetSocketAddress destAddress = getNcReplicationAddress(destNode);
-        List<Parameter> parameters = new ArrayList<>(3);
-        Stream.of("partition", "host", "port").forEach(arg -> {
+        List<Parameter> parameters = new ArrayList<>(4);
+        Stream.of("partition", "host", "port", "nodeId").forEach(arg -> {
             Parameter p = new Parameter();
             p.setName(arg);
             p.setType(ParameterTypeEnum.STRING);
@@ -2665,6 +2665,7 @@ public class TestExecutor {
         parameters.get(0).setValue(partition);
         parameters.get(1).setValue(destAddress.getHostName());
         parameters.get(2).setValue(String.valueOf(destAddress.getPort()));
+        parameters.get(3).setValue(destNode);
         final HttpUriRequest httpUriRequest = constructPostMethod(endpoint, parameters);
         final HttpResponse httpResponse = executeHttpRequest(httpUriRequest);
         Assert.assertEquals(HttpStatus.SC_OK, httpResponse.getStatusLine().getStatusCode());

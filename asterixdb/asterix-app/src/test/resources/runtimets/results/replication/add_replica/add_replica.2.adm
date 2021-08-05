@@ -2,6 +2,7 @@
   "partition" : 0,
   "replicas" : [ {
     "location" : "127.0.0.1:2002",
+    "nodeId" : "asterix_nc2",
     "status" : "IN_SYNC"
   } ]
 } ]

@@ -26,16 +26,18 @@ public class ReplicaIdentifier {
 
     private final int partition;
     private final String id;
+    private final String nodeId;
     private volatile InetSocketAddress location;
 
-    private ReplicaIdentifier(int partition, InetSocketAddress location) {
+    private ReplicaIdentifier(int partition, String nodeId, InetSocketAddress location) {
         this.partition = partition;
+        this.nodeId = nodeId;
         this.location = location;
         id = partition + "@" + location.getHostString() + ":" + location.getPort();
     }
 
-    public static ReplicaIdentifier of(int partition, InetSocketAddress location) {
-        return new ReplicaIdentifier(partition, location);
+    public static ReplicaIdentifier of(int partition, String nodeId, InetSocketAddress location) {
+        return new ReplicaIdentifier(partition, nodeId, location);
     }
 
     public int getPartition() {
@@ -50,6 +52,10 @@ public class ReplicaIdentifier {
         //noinspection NonAtomicOperationOnVolatileField
         location = NetworkUtil.refresh(location);
         return location;
+    }
+
+    public String getNodeId() {
+        return nodeId;
     }
 
     @Override
