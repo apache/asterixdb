@@ -19,7 +19,9 @@
 package org.apache.asterix.runtime;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -200,7 +202,8 @@ public class ClusterStateManagerTest {
 
     private void notifyNodeStartupCompletion(CcApplicationContext applicationContext, String nodeId)
             throws HyracksDataException {
-        NCLifecycleTaskReportMessage msg = new NCLifecycleTaskReportMessage(nodeId, true, mockLocalCounters());
+        NCLifecycleTaskReportMessage msg =
+                new NCLifecycleTaskReportMessage(nodeId, true, mockLocalCounters(), getNodeActivePartitions(nodeId));
         applicationContext.getNcLifecycleCoordinator().process(msg);
     }
 
@@ -261,5 +264,21 @@ public class ClusterStateManagerTest {
         Mockito.when(localCounters.getMaxResourceId()).thenReturn(1000L);
         Mockito.when(localCounters.getMaxTxnId()).thenReturn(1000L);
         return localCounters;
+    }
+
+    private static Set<Integer> getNodeActivePartitions(String nodeId) {
+        Set<Integer> activePartitions = new HashSet<>();
+        switch (nodeId) {
+            case NC1:
+                activePartitions.add(0);
+                break;
+            case NC2:
+                activePartitions.add(1);
+                break;
+            case NC3:
+                activePartitions.add(2);
+                break;
+        }
+        return activePartitions;
     }
 }

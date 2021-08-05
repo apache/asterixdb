@@ -24,6 +24,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
@@ -121,6 +122,10 @@ public class MetadataProperties extends AbstractProperties {
 
     public SortedMap<Integer, ClusterPartition> getClusterPartitions() {
         return accessor.getClusterPartitions();
+    }
+
+    public Set<Integer> getNodeActivePartitions(String nodeId) {
+        return accessor.getActivePartitions(nodeId);
     }
 
     public Map<String, String> getTransactionLogDirs() {

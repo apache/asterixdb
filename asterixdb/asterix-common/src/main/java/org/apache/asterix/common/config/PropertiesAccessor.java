@@ -25,6 +25,7 @@ import static org.apache.hyracks.util.file.FileUtil.joinPath;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -190,6 +192,17 @@ public class PropertiesAccessor implements IApplicationConfig {
 
     public SortedMap<Integer, ClusterPartition> getClusterPartitions() {
         return clusterPartitions;
+    }
+
+    public Set<Integer> getActivePartitions(String nodeId) {
+        // by default, node actives partitions are the partitions assigned to the node
+        String[] activePartitions = cfg.getStringArray(NodeProperties.Option.ACTIVE_PARTITIONS);
+        if (activePartitions == null) {
+            ClusterPartition[] nodeClusterPartitions = nodePartitionsMap.get(nodeId);
+            return Arrays.stream(nodeClusterPartitions).map(ClusterPartition::getPartitionId)
+                    .collect(Collectors.toSet());
+        }
+        return Arrays.stream(activePartitions).map(Integer::parseInt).collect(Collectors.toSet());
     }
 
     public List<AsterixExtension> getExtensions() {

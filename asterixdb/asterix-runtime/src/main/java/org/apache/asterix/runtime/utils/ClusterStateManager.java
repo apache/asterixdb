@@ -139,19 +139,15 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
-    public synchronized void updateNodeState(String nodeId, boolean active, NcLocalCounters localCounters) {
+    public synchronized void updateNodeState(String nodeId, boolean active, NcLocalCounters localCounters,
+            Set<Integer> activePartitions) {
         if (active) {
             updateClusterCounters(nodeId, localCounters);
             participantNodes.add(nodeId);
+            activateNodePartitions(nodeId, activePartitions);
         } else {
             participantNodes.remove(nodeId);
-        }
-        ClusterPartition[] nodePartitions = node2PartitionsMap.get(nodeId);
-        // if this isn't a storage node, it will not have cluster partitions
-        if (nodePartitions != null) {
-            for (ClusterPartition p : nodePartitions) {
-                updateClusterPartition(p.getPartitionId(), nodeId, active);
-            }
+            deactivateNodePartitions(nodeId);
         }
     }
 
@@ -416,11 +412,10 @@ public class ClusterStateManager implements IClusterStateManager {
     public synchronized void deregisterNodePartitions(String nodeId) throws HyracksDataException {
         ClusterPartition[] nodePartitions = node2PartitionsMap.remove(nodeId);
         if (nodePartitions == null) {
-            LOGGER.info("deregisterNodePartitions unknown node " + nodeId + " (already removed?)");
+            LOGGER.info("deregisterNodePartitions unknown node {} (already removed?)", nodeId);
         } else {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("deregisterNodePartitions for node " + nodeId + ": " + Arrays.toString(nodePartitions));
-            }
+            LOGGER.info("deregisterNodePartitions for node {}: {}", () -> nodeId,
+                    () -> Arrays.toString(nodePartitions));
             for (ClusterPartition nodePartition : nodePartitions) {
                 clusterPartitions.remove(nodePartition.getPartitionId());
             }
@@ -431,12 +426,12 @@ public class ClusterStateManager implements IClusterStateManager {
     @Override
     public synchronized void removePending(String nodeId) {
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Registering intention to remove node id " + nodeId);
+            LOGGER.info("Registering intention to remove node id {}", nodeId);
         }
         if (participantNodes.contains(nodeId)) {
             pendingRemoval.add(nodeId);
         } else {
-            LOGGER.warn("Cannot register unknown node " + nodeId + " for pending removal");
+            LOGGER.warn("Cannot register unknown node {} for pending removal", nodeId);
         }
     }
 
@@ -494,6 +489,19 @@ public class ClusterStateManager implements IClusterStateManager {
                 configManager.set(nodeId, key, value);
             }
         });
+    }
+
+    private synchronized void activateNodePartitions(String nodeId, Set<Integer> activePartitions) {
+        for (Integer partitionId : activePartitions) {
+            updateClusterPartition(partitionId, nodeId, true);
+        }
+    }
+
+    private synchronized void deactivateNodePartitions(String nodeId) {
+        clusterPartitions.values().stream()
+                .filter(partition -> partition.getActiveNodeId() != null && partition.getActiveNodeId().equals(nodeId))
+                .forEach(nodeActivePartition -> updateClusterPartition(nodeActivePartition.getPartitionId(), nodeId,
+                        false));
     }
 
     private static InetSocketAddress getReplicaLocation(IClusterStateManager csm, String nodeId) {

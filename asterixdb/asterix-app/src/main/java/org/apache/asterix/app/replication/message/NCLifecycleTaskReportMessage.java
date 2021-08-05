@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.replication.message;
 
+import java.util.Set;
+
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.replication.INCLifecycleMessage;
@@ -31,11 +33,14 @@ public class NCLifecycleTaskReportMessage implements INCLifecycleMessage, ICcAdd
     private final boolean success;
     private Throwable exception;
     private final NcLocalCounters localCounters;
+    private final Set<Integer> activePartitions;
 
-    public NCLifecycleTaskReportMessage(String nodeId, boolean success, NcLocalCounters localCounters) {
+    public NCLifecycleTaskReportMessage(String nodeId, boolean success, NcLocalCounters localCounters,
+            Set<Integer> activePartitions) {
         this.nodeId = nodeId;
         this.success = success;
         this.localCounters = localCounters;
+        this.activePartitions = activePartitions;
     }
 
     @Override
@@ -66,5 +71,9 @@ public class NCLifecycleTaskReportMessage implements INCLifecycleMessage, ICcAdd
     @Override
     public MessageType getType() {
         return MessageType.REGISTRATION_TASKS_RESULT;
+    }
+
+    public Set<Integer> getActivePartitions() {
+        return activePartitions;
     }
 }

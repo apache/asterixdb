@@ -19,6 +19,7 @@
 package org.apache.asterix.app.replication.message;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -72,7 +73,9 @@ public class RegistrationTasksResponseMessage extends CcIdentifiedMessage
             }
             NcLocalCounters localCounter = success ? NcLocalCounters.collect(getCcId(),
                     (NodeControllerService) appCtx.getServiceContext().getControllerService()) : null;
-            NCLifecycleTaskReportMessage result = new NCLifecycleTaskReportMessage(nodeId, success, localCounter);
+            Set<Integer> nodeActivePartitions = appCtx.getMetadataProperties().getNodeActivePartitions(nodeId);
+            NCLifecycleTaskReportMessage result =
+                    new NCLifecycleTaskReportMessage(nodeId, success, localCounter, nodeActivePartitions);
             result.setException(exception);
             try {
                 broker.sendMessageToCC(getCcId(), result);

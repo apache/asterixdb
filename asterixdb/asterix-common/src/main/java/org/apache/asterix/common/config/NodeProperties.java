@@ -46,7 +46,8 @@ public class NodeProperties extends AbstractProperties {
         STARTING_PARTITION_ID(
                 OptionTypes.INTEGER,
                 -1,
-                "The first partition id to assign to iodevices on this node (-1 == auto-assign)");
+                "The first partition id to assign to iodevices on this node (-1 == auto-assign)"),
+        ACTIVE_PARTITIONS(OptionTypes.STRING_ARRAY, null, "List of node active partitions");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -95,7 +96,7 @@ public class NodeProperties extends AbstractProperties {
 
         @Override
         public boolean hidden() {
-            return this == INITIAL_RUN || this == STARTING_PARTITION_ID;
+            return this == INITIAL_RUN || this == STARTING_PARTITION_ID || this == ACTIVE_PARTITIONS;
         }
 
     }
