@@ -71,7 +71,10 @@ public class ClusterPartition implements Cloneable {
 
     @Override
     public ClusterPartition clone() {
-        return new ClusterPartition(partitionId, nodeId, ioDeviceNum);
+        ClusterPartition clone = new ClusterPartition(partitionId, nodeId, ioDeviceNum);
+        clone.setPendingActivation(pendingActivation);
+        clone.setActiveNodeId(activeNodeId);
+        return clone;
     }
 
     @Override
