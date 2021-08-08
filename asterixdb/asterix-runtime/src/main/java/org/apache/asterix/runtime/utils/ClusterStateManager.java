@@ -473,6 +473,11 @@ public class ClusterStateManager implements IClusterStateManager {
         refreshState();
     }
 
+    @Override
+    public Map<Integer, ClusterPartition> getClusterPartitions() {
+        return Collections.unmodifiableMap(clusterPartitions);
+    }
+
     private void updateClusterCounters(String nodeId, NcLocalCounters localCounters) {
         final IResourceIdManager resourceIdManager = appCtx.getResourceIdManager();
         resourceIdManager.report(nodeId, localCounters.getMaxResourceId());

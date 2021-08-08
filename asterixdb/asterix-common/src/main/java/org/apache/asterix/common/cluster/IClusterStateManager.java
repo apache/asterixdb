@@ -265,4 +265,11 @@ public interface IClusterStateManager {
      * @param rebalanceRequired
      */
     void setRebalanceRequired(boolean rebalanceRequired) throws HyracksDataException;
+
+    /**
+     * Gets a map of the cluster partitions
+     *
+     * @return the cluster partitions map
+     */
+    Map<Integer, ClusterPartition> getClusterPartitions();
 }
