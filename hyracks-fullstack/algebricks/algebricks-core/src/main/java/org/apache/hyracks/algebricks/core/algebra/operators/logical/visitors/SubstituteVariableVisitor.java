@@ -452,6 +452,7 @@ public class SubstituteVariableVisitor
         substUsedVariablesInExpr(op.getPrimaryKeyExpressions(), pair.first, pair.second);
         substUsedVariablesInExpr(op.getSecondaryKeyExpressions(), pair.first, pair.second);
         substUsedVariablesInExpr(op.getFilterExpression(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getBeforeOpFilterExpression(), pair.first, pair.second);
         substUsedVariablesInExpr(op.getAdditionalFilteringExpressions(), pair.first, pair.second);
         substUsedVariablesInExpr(op.getOperationExpr(), pair.first, pair.second);
         substUsedVariablesInExpr(op.getPrevSecondaryKeyExprs(), pair.first, pair.second);

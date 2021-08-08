@@ -236,7 +236,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         // that filters nulls.
         AlgebricksMetaOperatorDescriptor selectOp = null;
         if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
-            selectOp = createFilterNullsSelectOp(spec, numSecondaryKeys, secondaryRecDesc);
+            selectOp = createFilterAnyUnknownSelectOp(spec, numSecondaryKeys, secondaryRecDesc);
         }
 
         // Create a tokenizer op.

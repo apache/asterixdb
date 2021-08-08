@@ -1,0 +1,35 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// test that secondary indexes can include or exclude entries that have unknown keys
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+
+USE test;
+
+CREATE DATASET ds1(id int not unknown) OPEN TYPE PRIMARY KEY id;
+
+CREATE INDEX exclude_unknown_idx1 ON ds1(int_f: int) exclude unknown key;
+CREATE INDEX exclude_unknown_idx2 ON ds1(int_f: int, str_f: string) exclude unknown key;
+
+CREATE INDEX include_unknown_idx1 ON ds1(int_f: int) include unknown key;
+CREATE INDEX include_unknown_idx2 ON ds1(int_f: int, str_f: string) include unknown key;
+
+CREATE INDEX idx1 ON ds1(int_f: int);
+CREATE INDEX idx2 ON ds1(int_f: int, str_f: string);

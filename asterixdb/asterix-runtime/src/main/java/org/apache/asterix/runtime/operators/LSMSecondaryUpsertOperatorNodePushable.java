@@ -34,6 +34,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.PermutingFrameTupleReference;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -57,6 +58,8 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
 
     private final PermutingFrameTupleReference prevTuple = new PermutingFrameTupleReference();
     private final int numberOfFields;
+    private final ITupleFilterFactory prevTupleFilterFactory;
+    private ITupleFilter prevTupleFilter;
 
     protected final int operationFieldIndex;
     protected final IBinaryIntegerInspector operationInspector;
@@ -64,15 +67,18 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
 
     public LSMSecondaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, IModificationOperationCallbackFactory modCallbackFactory,
-            ITupleFilterFactory tupleFilterFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
-            int operationFieldIndex, IBinaryIntegerInspectorFactory operationInspectorFactory,
-            int[] prevTuplePermutation) throws HyracksDataException {
+            ITupleFilterFactory tupleFilterFactory, ITupleFilterFactory prevTupleFilterFactory, int[] fieldPermutation,
+            RecordDescriptor inputRecDesc, int operationFieldIndex,
+            IBinaryIntegerInspectorFactory operationInspectorFactory, int[] prevTuplePermutation)
+            throws HyracksDataException {
         super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, IndexOperation.UPSERT,
                 modCallbackFactory, tupleFilterFactory);
         this.prevTuple.setFieldPermutation(prevTuplePermutation);
         this.operationFieldIndex = operationFieldIndex;
         this.operationInspector = operationInspectorFactory.createBinaryIntegerInspector(ctx);
         this.numberOfFields = fieldPermutation.length;
+        this.prevTupleFilterFactory = prevTupleFilterFactory;
+
     }
 
     @Override
@@ -80,6 +86,9 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
         super.open();
         frameTuple = new FrameTupleReference();
         abstractModCallback = (AbstractIndexModificationOperationCallback) modCallback;
+        if (prevTupleFilterFactory != null) {
+            prevTupleFilter = prevTupleFilterFactory.createTupleFilter(ctx);
+        }
     }
 
     @Override
@@ -87,6 +96,8 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
         accessor.reset(buffer);
         ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) indexAccessor;
         int tupleCount = accessor.getTupleCount();
+        boolean tupleFilterIsNull = tupleFilter == null;
+        boolean prevTupleFilterIsNull = prevTupleFilter == null;
         for (int i = 0; i < tupleCount; i++) {
             try {
                 frameTuple.reset(accessor, i);
@@ -96,18 +107,26 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
                 prevTuple.reset(accessor, i);
 
                 if (operation == UPSERT_NEW) {
-                    abstractModCallback.setOp(Operation.INSERT);
-                    lsmAccessor.forceInsert(tuple);
-                } else if (operation == UPSERT_EXISTING) {
-                    if (!TupleUtils.equalTuples(tuple, prevTuple, numberOfFields)) {
-                        abstractModCallback.setOp(Operation.DELETE);
-                        lsmAccessor.forceDelete(prevTuple);
+                    if (tupleFilterIsNull || tupleFilter.accept(frameTuple)) {
                         abstractModCallback.setOp(Operation.INSERT);
                         lsmAccessor.forceInsert(tuple);
                     }
+                } else if (operation == UPSERT_EXISTING) {
+                    if (!TupleUtils.equalTuples(tuple, prevTuple, numberOfFields)) {
+                        if (prevTupleFilterIsNull || prevTupleFilter.accept(frameTuple)) {
+                            abstractModCallback.setOp(Operation.DELETE);
+                            lsmAccessor.forceDelete(prevTuple);
+                        }
+                        if (tupleFilterIsNull || tupleFilter.accept(frameTuple)) {
+                            abstractModCallback.setOp(Operation.INSERT);
+                            lsmAccessor.forceInsert(tuple);
+                        }
+                    }
                 } else if (operation == DELETE_EXISTING) {
-                    abstractModCallback.setOp(Operation.DELETE);
-                    lsmAccessor.forceDelete(prevTuple);
+                    if (prevTupleFilterIsNull || prevTupleFilter.accept(frameTuple)) {
+                        abstractModCallback.setOp(Operation.DELETE);
+                        lsmAccessor.forceDelete(prevTuple);
+                    }
                 }
             } catch (Exception e) {
                 throw HyracksDataException.create(e);

@@ -5088,6 +5088,26 @@
         <output-dir compare="Text">query-issue382</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="create-index-unknown-key">
+        <output-dir compare="Text">index-unknown-key</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-into-index-unknown-key">
+        <output-dir compare="Text">index-unknown-key</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="upsert-into-index-unknown-key">
+        <output-dir compare="Text">index-unknown-key</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="load-into-index-unknown-key">
+        <output-dir compare="Text">index-unknown-key</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="employee">
     <test-case FilePath="employee">

@@ -70,6 +70,8 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
         int[] fieldPermutation = createFieldPermutationForBulkLoadOp(indexDetails.getKeyFieldNames().size());
         IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
+        boolean excludeUnknown =
+                excludeUnknowns(index, indexDetails) && (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes);
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             /*
              * In case of external data,
@@ -89,6 +91,12 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             AlgebricksMetaOperatorDescriptor asterixAssignOp =
                     createExternalAssignOp(spec, indexDetails.getKeyFieldNames().size(), secondaryRecDesc);
 
+            // If any of the secondary fields are nullable, then add a select op that filters nulls.
+            AlgebricksMetaOperatorDescriptor selectOp = null;
+            if (excludeUnknown) {
+                selectOp =
+                        createFilterAllUnknownsSelectOp(spec, indexDetails.getKeyFieldNames().size(), secondaryRecDesc);
+            }
             // Sort by secondary keys.
             ExternalSortOperatorDescriptor sortOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc);
             // Create secondary BTree bulk load op.
@@ -111,7 +119,12 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBulkLoadOp, 0, metaOp, 0);
             root = metaOp;
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
-            spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, sortOp, 0);
+            if (excludeUnknown) {
+                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
+                spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
+            } else {
+                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, sortOp, 0);
+            }
             spec.connect(new OneToOneConnectorDescriptor(spec), sortOp, 0, secondaryBulkLoadOp, 0);
             spec.addRoot(root);
             spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
@@ -138,7 +151,14 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
             sourceOp = targetOp;
-
+            if (excludeUnknown) {
+                // if any of the secondary fields are nullable, then add a select op that filters nulls.
+                // assign op ----> select op
+                targetOp =
+                        createFilterAllUnknownsSelectOp(spec, indexDetails.getKeyFieldNames().size(), secondaryRecDesc);
+                spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+                sourceOp = targetOp;
+            }
             // no need to sort if the index is secondary primary index
             if (!indexDetails.getKeyFieldNames().isEmpty()) {
                 // sort by secondary keys.
@@ -287,5 +307,14 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             fieldPermutation[i] = i;
         }
         return fieldPermutation;
+    }
+
+    private static boolean excludeUnknowns(Index index, Index.ValueIndexDetails details) {
+        if (index.isPrimaryKeyIndex()) {
+            return true;
+        } else {
+            Boolean excludeUnknownKey = details.isExcludeUnknownKey();
+            return excludeUnknownKey != null && excludeUnknownKey;
+        }
     }
 }

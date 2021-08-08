@@ -286,7 +286,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
 
             if (anySecondaryKeyIsNullable || arrayIndexDetails.isOverridingKeyFieldTypes()) {
                 // If any of the secondary fields are nullable, then we need to filter out the nulls.
-                targetOp = createFilterNullsSelectOp(spec, numTotalSecondaryKeys, secondaryRecDesc);
+                targetOp = createFilterAnyUnknownSelectOp(spec, numTotalSecondaryKeys, secondaryRecDesc);
                 spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
                 sourceOp = targetOp;
             }

@@ -610,6 +610,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
                 || !Objects.equals(op.getPrimaryKeyExpressions(), insertOpArg.getPrimaryKeyExpressions())
                 || !Objects.equals(op.getSecondaryKeyExpressions(), insertOpArg.getSecondaryKeyExpressions())
                 || !Objects.equals(op.getFilterExpression(), insertOpArg.getFilterExpression())
+                || !Objects.equals(op.getBeforeOpFilterExpression(), insertOpArg.getBeforeOpFilterExpression())
                 || !Objects.equals(op.getOperation(), insertOpArg.getOperation())
                 || (op.isBulkload() != insertOpArg.isBulkload())
                 || !Objects.equals(op.getAdditionalFilteringExpressions(),

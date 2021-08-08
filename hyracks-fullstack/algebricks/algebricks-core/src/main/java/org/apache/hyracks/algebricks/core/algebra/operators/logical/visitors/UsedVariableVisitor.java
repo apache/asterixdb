@@ -416,6 +416,9 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         if (op.getFilterExpression() != null) {
             op.getFilterExpression().getValue().getUsedVariables(usedVariables);
         }
+        if (op.getBeforeOpFilterExpression() != null) {
+            op.getBeforeOpFilterExpression().getValue().getUsedVariables(usedVariables);
+        }
         if (op.getAdditionalFilteringExpressions() != null) {
             for (Mutable<ILogicalExpression> e : op.getAdditionalFilteringExpressions()) {
                 e.getValue().getUsedVariables(usedVariables);

@@ -42,8 +42,8 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorDescriptor extends LSMSecon
             IModificationOperationCallbackFactory modCallbackFactory, int operationFieldIndex,
             IBinaryIntegerInspectorFactory operationInspectorFactory, List<AlgebricksPipeline> secondaryKeysPipeline,
             List<AlgebricksPipeline> prevSecondaryKeysPipeline) {
-        super(spec, outRecDesc, fieldPermutation, indexHelperFactory, null, modCallbackFactory, operationFieldIndex,
-                operationInspectorFactory, null);
+        super(spec, outRecDesc, fieldPermutation, indexHelperFactory, null, null, modCallbackFactory,
+                operationFieldIndex, operationInspectorFactory, null);
         this.secondaryKeysPipeline = secondaryKeysPipeline;
         this.prevSecondaryKeysPipeline = prevSecondaryKeysPipeline;
     }

@@ -1,2 +1,2 @@
-{ "DataverseName": "testdv", "DatasetName": "t1", "IndexName": "idx1", "IndexStructure": "BTREE", "SearchKey": [ [ "name" ] ], "IsPrimary": false, "Timestamp": "Tue Jun 21 15:54:27 PDT 2016", "PendingOp": 0 }
+{ "DataverseName": "testdv", "DatasetName": "t1", "IndexName": "idx1", "IndexStructure": "BTREE", "SearchKey": [ [ "name" ] ], "IsPrimary": false, "Timestamp": "Tue Jun 21 15:54:27 PDT 2016", "PendingOp": 0, "ExcludeUnknownKey": false }
 { "DataverseName": "testdv", "DatasetName": "t1", "IndexName": "t1", "IndexStructure": "BTREE", "SearchKey": [ [ "id" ] ], "IsPrimary": true, "Timestamp": "Tue Jun 21 15:54:27 PDT 2016", "PendingOp": 0 }

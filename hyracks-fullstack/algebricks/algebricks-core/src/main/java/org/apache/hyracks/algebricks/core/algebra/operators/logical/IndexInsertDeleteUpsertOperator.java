@@ -78,6 +78,7 @@ public class IndexInsertDeleteUpsertOperator extends AbstractOperatorWithNestedP
     // Otherwise, it contains secondary key information.
     private List<Mutable<ILogicalExpression>> secondaryKeyExprs;
     private Mutable<ILogicalExpression> filterExpr;
+    private Mutable<ILogicalExpression> beforeOpFilterExpr;
     private final Kind operation;
     private final boolean bulkload;
     private List<Mutable<ILogicalExpression>> additionalFilteringExpressions;
@@ -89,12 +90,13 @@ public class IndexInsertDeleteUpsertOperator extends AbstractOperatorWithNestedP
 
     public IndexInsertDeleteUpsertOperator(IDataSourceIndex<?, ?> dataSourceIndex,
             List<Mutable<ILogicalExpression>> primaryKeyExprs, List<Mutable<ILogicalExpression>> secondaryKeyExprs,
-            Mutable<ILogicalExpression> filterExpr, Kind operation, boolean bulkload,
-            int numberOfAdditionalNonFilteringFields) {
+            Mutable<ILogicalExpression> filterExpr, Mutable<ILogicalExpression> beforeOpFilterExpr, Kind operation,
+            boolean bulkload, int numberOfAdditionalNonFilteringFields) {
         this.dataSourceIndex = dataSourceIndex;
         this.primaryKeyExprs = primaryKeyExprs;
         this.secondaryKeyExprs = secondaryKeyExprs;
         this.filterExpr = filterExpr;
+        this.beforeOpFilterExpr = beforeOpFilterExpr;
         this.operation = operation;
         this.bulkload = bulkload;
         this.numberOfAdditionalNonFilteringFields = numberOfAdditionalNonFilteringFields;
@@ -121,6 +123,12 @@ public class IndexInsertDeleteUpsertOperator extends AbstractOperatorWithNestedP
                 b = true;
             }
         }
+        // Old Filtering <For upsert>
+        if (beforeOpFilterExpr != null) {
+            if (visitor.transform(beforeOpFilterExpr)) {
+                b = true;
+            }
+        }
         // Additional Filtering <For upsert>
         if (additionalFilteringExpressions != null) {
             for (int i = 0; i < additionalFilteringExpressions.size(); i++) {
@@ -141,7 +149,7 @@ public class IndexInsertDeleteUpsertOperator extends AbstractOperatorWithNestedP
                 }
             }
         }
-        // Old Filtering <For upsert>
+        // Old Additional Filtering <For upsert>
         if (prevAdditionalFilteringExpression != null) {
             visitor.transform(prevAdditionalFilteringExpression);
         }
@@ -163,6 +171,9 @@ public class IndexInsertDeleteUpsertOperator extends AbstractOperatorWithNestedP
         }
         if (getFilterExpression() != null) {
             getFilterExpression().getValue().getUsedVariables(vars);
+        }
+        if (getBeforeOpFilterExpression() != null) {
+            getBeforeOpFilterExpression().getValue().getUsedVariables(vars);
         }
         if (getAdditionalFilteringExpressions() != null) {
             for (Mutable<ILogicalExpression> e : getAdditionalFilteringExpressions()) {
@@ -232,8 +243,16 @@ public class IndexInsertDeleteUpsertOperator extends AbstractOperatorWithNestedP
         return filterExpr;
     }
 
+    public Mutable<ILogicalExpression> getBeforeOpFilterExpression() {
+        return beforeOpFilterExpr;
+    }
+
     public void setFilterExpression(Mutable<ILogicalExpression> filterExpr) {
         this.filterExpr = filterExpr;
+    }
+
+    public void setBeforeOpFilterExpression(Mutable<ILogicalExpression> beforeOpFilterExpr) {
+        this.beforeOpFilterExpr = beforeOpFilterExpr;
     }
 
     public Kind getOperation() {

@@ -227,6 +227,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String CURRENT = "CURRENT";
     private static final String DEFAULT = "DEFAULT";
     private static final String EXCLUDE = "EXCLUDE";
+    private static final String INCLUDE = "INCLUDE";
     private static final String FIRST = "FIRST";
     private static final String FOLLOWING = "FOLLOWING";
     private static final String GROUPING = "GROUPING";
@@ -1131,6 +1132,7 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
   boolean hasUnnest = false;
   String fullTextConfigName = null;
   Token startElementToken = null;
+  Boolean excludeUnknown = null;
 }
 {
   (
@@ -1149,6 +1151,17 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
       )*
     <RIGHTPAREN>
     ( <TYPE> indexParams = IndexType() )? ( <ENFORCED> { enforced = true; } )?
+    ( <IDENTIFIER>
+      {
+        if (isToken(EXCLUDE)) {
+          excludeUnknown = true;
+        } else if (isToken(INCLUDE)) {
+          excludeUnknown = false;
+        } else {
+          throw createUnexpectedTokenError();
+        }
+      } <UNKNOWN> <KEY>
+    )?
   )
   {
     IndexType indexType;
@@ -1163,7 +1176,8 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
       fullTextConfigName = null;
     }
     CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
-      new Identifier(indexName), indexType, indexedElementList, enforced, gramLength, fullTextConfigName, ifNotExists);
+      new Identifier(indexName), indexType, indexedElementList, enforced, gramLength, fullTextConfigName, ifNotExists,
+      excludeUnknown);
     return addSourceLocation(stmt, startStmtToken);
   }
 }
@@ -1292,7 +1306,7 @@ CreateIndexStatement PrimaryIndexSpecification(Token startStmtToken) throws Pars
       indexName = "primary_idx_" + nameComponents.second;
     }
     CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
-      new Identifier(indexName), IndexType.BTREE, Collections.emptyList(), false, -1, null, ifNotExists);
+      new Identifier(indexName), IndexType.BTREE, Collections.emptyList(), false, -1, null, ifNotExists, null);
     return addSourceLocation(stmt, startStmtToken);
   }
 }

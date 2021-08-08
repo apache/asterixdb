@@ -81,6 +81,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     public static final String FULL_TEXT_CONFIG_FIELD_NAME = "FullTextConfig";
     public static final String INDEX_SEARCHKEY_TYPE_FIELD_NAME = "SearchKeyType";
     public static final String INDEX_ISENFORCED_FIELD_NAME = "IsEnforced";
+    public static final String INDEX_EXCLUDE_UNKNOWN_FIELD_NAME = "ExcludeUnknownKey";
     public static final String INDEX_SEARCHKEY_SOURCE_INDICATOR_FIELD_NAME = "SearchKeySourceIndicator";
     public static final String INDEX_SEARCHKEY_ELEMENTS_FIELD_NAME = "SearchKeyElements";
     public static final String COMPLEXSEARCHKEY_UNNEST_FIELD_NAME = "UnnestList";
@@ -138,6 +139,9 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         IndexType indexType = IndexType.valueOf(
                 ((AString) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX))
                         .getStringValue());
+        Boolean isPrimaryIndex =
+                ((ABoolean) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_ISPRIMARY_FIELD_INDEX))
+                        .getBoolean();
 
         // Read key names
         List<Pair<List<List<String>>, List<List<String>>>> searchElements = new ArrayList<>();
@@ -377,8 +381,21 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 List<List<String>> keyFieldNames =
                         searchElements.stream().map(Pair::getSecond).map(l -> l.get(0)).collect(Collectors.toList());
                 List<IAType> keyFieldTypes = searchKeyType.stream().map(l -> l.get(0)).collect(Collectors.toList());
+
+                // Read the exclude unknown key option if applicable for an index
+                Boolean excludeUnknownKey = null;
+                boolean unknownKeyOptionAllowed =
+                        indexType == IndexType.BTREE && !isPrimaryIndex && !keyFieldNames.isEmpty();
+                if (unknownKeyOptionAllowed) {
+                    // default to always include unknowns for normal b-trees
+                    excludeUnknownKey = false;
+                    int excludeUnknownKeyPos = indexRecord.getType().getFieldIndex(INDEX_EXCLUDE_UNKNOWN_FIELD_NAME);
+                    if (excludeUnknownKeyPos >= 0) {
+                        excludeUnknownKey = ((ABoolean) indexRecord.getValueByPos(excludeUnknownKeyPos)).getBoolean();
+                    }
+                }
                 indexDetails = new Index.ValueIndexDetails(keyFieldNames, keyFieldSourceIndicator, keyFieldTypes,
-                        isOverridingKeyTypes);
+                        isOverridingKeyTypes, excludeUnknownKey);
                 break;
             case TEXT:
                 keyFieldNames =
@@ -413,9 +430,6 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         if (isEnforcedFieldPos > 0) {
             isEnforcingKeys = ((ABoolean) indexRecord.getValueByPos(isEnforcedFieldPos)).getBoolean();
         }
-        Boolean isPrimaryIndex =
-                ((ABoolean) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_ISPRIMARY_FIELD_INDEX))
-                        .getBoolean();
         int pendingOp = ((AInt32) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX))
                 .getIntegerValue();
 
@@ -549,6 +563,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         writeSearchKeyType(index);
         writeEnforced(index);
         writeSearchKeySourceIndicator(index);
+        writeExcludeUnknownKey(index);
     }
 
     private void writeComplexSearchKeys(Index.ArrayIndexDetails indexDetails) throws HyracksDataException {
@@ -745,6 +760,23 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             }
             fieldValue.reset();
             listBuilder.write(fieldValue.getDataOutput(), true);
+            recordBuilder.addField(nameValue, fieldValue);
+        }
+    }
+
+    private void writeExcludeUnknownKey(Index index) throws HyracksDataException {
+        boolean unknownKeyOptionAllowed =
+                index.getIndexType() == IndexType.BTREE && !index.isPrimaryIndex() && !index.isPrimaryKeyIndex();
+        if (unknownKeyOptionAllowed) {
+            Boolean excludeUnknownKey = ((Index.ValueIndexDetails) index.getIndexDetails()).isExcludeUnknownKey();
+            if (excludeUnknownKey == null) {
+                excludeUnknownKey = false;
+            }
+            fieldValue.reset();
+            nameValue.reset();
+            aString.setValue(INDEX_EXCLUDE_UNKNOWN_FIELD_NAME);
+            stringSerde.serialize(aString, nameValue.getDataOutput());
+            booleanSerde.serialize(ABoolean.valueOf(excludeUnknownKey), fieldValue.getDataOutput());
             recordBuilder.addField(nameValue, fieldValue);
         }
     }

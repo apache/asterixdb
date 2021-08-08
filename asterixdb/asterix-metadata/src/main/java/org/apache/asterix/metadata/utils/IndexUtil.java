@@ -58,9 +58,8 @@ public class IndexUtil {
 
     public static Index getPrimaryIndex(Dataset dataset) {
         InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
-        return new Index(dataset.getDataverseName(), dataset.getDatasetName(), dataset.getDatasetName(),
-                DatasetConfig.IndexType.BTREE, id.getPartitioningKey(), id.getKeySourceIndicator(),
-                id.getPrimaryKeyType(), false, false, true, dataset.getPendingOp());
+        return Index.createPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName(), id.getPartitioningKey(),
+                id.getKeySourceIndicator(), id.getPrimaryKeyType(), dataset.getPendingOp());
     }
 
     public static int[] getBtreeFieldsIfFiltered(Dataset dataset, Index index) throws AlgebricksException {

@@ -222,7 +222,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
             // If any of the secondary fields are nullable, then add a select op that filters nulls.
             AlgebricksMetaOperatorDescriptor selectOp = null;
             if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
-                selectOp = createFilterNullsSelectOp(spec, numNestedSecondaryKeFieldsConsideringPointMBR,
+                selectOp = createFilterAnyUnknownSelectOp(spec, numNestedSecondaryKeFieldsConsideringPointMBR,
                         secondaryRecDescConsideringPointMBR);
             }
 
@@ -273,7 +273,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
             // If any of the secondary fields are nullable, then add a select op that filters nulls.
             AlgebricksMetaOperatorDescriptor selectOp = null;
             if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
-                selectOp = createFilterNullsSelectOp(spec, numNestedSecondaryKeFieldsConsideringPointMBR,
+                selectOp = createFilterAnyUnknownSelectOp(spec, numNestedSecondaryKeFieldsConsideringPointMBR,
                         secondaryRecDescConsideringPointMBR);
             }
 

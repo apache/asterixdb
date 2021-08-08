@@ -51,7 +51,7 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorNodePushable extends LSMSec
             int[] fieldPermutation, RecordDescriptor inputRecDesc, int operationFieldIndex,
             IBinaryIntegerInspectorFactory operationInspectorFactory, List<AlgebricksPipeline> secondaryKeysPipeline,
             List<AlgebricksPipeline> prevSecondaryKeysPipeline) throws HyracksDataException {
-        super(ctx, partition, indexHelperFactory, modCallbackFactory, null, fieldPermutation, inputRecDesc,
+        super(ctx, partition, indexHelperFactory, modCallbackFactory, null, null, fieldPermutation, inputRecDesc,
                 operationFieldIndex, operationInspectorFactory, null);
         this.numberOfPrimaryKeyAndFilterFields = fieldPermutation.length;
         this.startOfNewKeyPipelines = buildStartOfPipelines(secondaryKeysPipeline, inputRecDesc, false);

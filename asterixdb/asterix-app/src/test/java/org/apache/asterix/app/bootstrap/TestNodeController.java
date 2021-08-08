@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.app.nc.TransactionSubsystem;
-import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -718,10 +717,8 @@ public class TestNodeController {
                         indicator == Index.RECORD_INDICATOR ? recordType.getFieldNames() : metaType.getFieldNames();
                 keyFieldNames.add(Arrays.asList(fieldNames[primaryKeyIndexes[i]]));
             }
-            index = new Index(dataset.getDataverseName(), dataset.getDatasetName(), dataset.getDatasetName(),
-                    IndexType.BTREE,
-                    new Index.ValueIndexDetails(keyFieldNames, primaryKeyIndicators, keyFieldTypes, false), false, true,
-                    MetadataUtil.PENDING_NO_OP);
+            index = Index.createPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName(), keyFieldNames,
+                    primaryKeyIndicators, keyFieldTypes, MetadataUtil.PENDING_NO_OP);
             List<String> nodes = Collections.singletonList(ExecutionTestUtil.integrationUtil.ncs[0].getId());
             CcApplicationContext appCtx =
                     (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();

@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.MetadataException;
@@ -364,9 +363,8 @@ public class MetadataNode implements IMetadataNode {
             if (dataset.getDatasetType() == DatasetType.INTERNAL) {
                 // Add the primary index for the dataset.
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
-                Index primaryIndex = new Index(dataset.getDataverseName(), dataset.getDatasetName(),
-                        dataset.getDatasetName(), IndexType.BTREE, id.getPrimaryKey(), id.getKeySourceIndicator(),
-                        id.getPrimaryKeyType(), false, false, true, dataset.getPendingOp());
+                Index primaryIndex = Index.createPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName(),
+                        id.getPrimaryKey(), id.getKeySourceIndicator(), id.getPrimaryKeyType(), dataset.getPendingOp());
 
                 addIndex(txnId, primaryIndex);
             }

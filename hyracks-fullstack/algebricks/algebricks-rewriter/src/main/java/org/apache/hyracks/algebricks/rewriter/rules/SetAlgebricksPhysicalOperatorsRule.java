@@ -442,8 +442,9 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
                     }
                 }
                 return new IndexInsertDeleteUpsertPOperator(primaryKeys, secondaryKeys, additionalFilteringKeys,
-                        opInsDel.getFilterExpression(), opInsDel.getDataSourceIndex(), operationVar, prevSecondaryKeys,
-                        prevAdditionalFilteringKey, opInsDel.getNumberOfAdditionalNonFilteringFields());
+                        opInsDel.getFilterExpression(), opInsDel.getBeforeOpFilterExpression(),
+                        opInsDel.getDataSourceIndex(), operationVar, prevSecondaryKeys, prevAdditionalFilteringKey,
+                        opInsDel.getNumberOfAdditionalNonFilteringFields());
             }
         }
 

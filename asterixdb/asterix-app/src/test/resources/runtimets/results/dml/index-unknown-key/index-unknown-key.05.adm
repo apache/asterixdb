@@ -1,0 +1,5 @@
+{ "values": [ null, "2", 2 ] }
+{ "values": [ 1, "1", 1 ] }
+{ "values": [ 4, null, 4 ] }
+{ "values": [ 5, 5 ] }
+{ "values": [ "3", 3 ] }

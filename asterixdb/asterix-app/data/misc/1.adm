@@ -1,0 +1,9 @@
+{"id": 1, "int_f": 1   , "str_f": "1"}
+{"id": 2, "int_f": null, "str_f": "2"}
+{"id": 3               , "str_f": "3"}
+{"id": 4, "int_f": 4   , "str_f": null}
+{"id": 5, "int_f": 5                 }
+{"id": 6, "int_f": null              }
+{"id": 7               , "str_f": null}
+{"id": 8, "int_f": null, "str_f": null}
+{"id": 9                               ,"other_f": "other" }

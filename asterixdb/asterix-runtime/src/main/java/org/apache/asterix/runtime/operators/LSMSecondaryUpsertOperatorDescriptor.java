@@ -33,21 +33,23 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 
 public class LSMSecondaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOperatorDescriptor {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
     private final int[] prevValuePermutation;
     protected final int operationFieldIndex;
     protected final IBinaryIntegerInspectorFactory operationInspectorFactory;
+    private final ITupleFilterFactory prevTupleFilterFactory;
 
     public LSMSecondaryUpsertOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, IIndexDataflowHelperFactory indexHelperFactory,
-            ITupleFilterFactory tupleFilterFactory, IModificationOperationCallbackFactory modificationOpCallbackFactory,
-            int operationFieldIndex, IBinaryIntegerInspectorFactory operationInspectorFactory,
-            int[] prevValuePermutation) {
+            ITupleFilterFactory tupleFilterFactory, ITupleFilterFactory prevTupleFilterFactory,
+            IModificationOperationCallbackFactory modificationOpCallbackFactory, int operationFieldIndex,
+            IBinaryIntegerInspectorFactory operationInspectorFactory, int[] prevValuePermutation) {
         super(spec, outRecDesc, fieldPermutation, IndexOperation.UPSERT, indexHelperFactory, tupleFilterFactory, false,
                 modificationOpCallbackFactory);
         this.prevValuePermutation = prevValuePermutation;
         this.operationFieldIndex = operationFieldIndex;
         this.operationInspectorFactory = operationInspectorFactory;
+        this.prevTupleFilterFactory = prevTupleFilterFactory;
     }
 
     @Override
@@ -55,7 +57,7 @@ public class LSMSecondaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpe
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         RecordDescriptor intputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new LSMSecondaryUpsertOperatorNodePushable(ctx, partition, indexHelperFactory, modCallbackFactory,
-                tupleFilterFactory, fieldPermutation, intputRecDesc, operationFieldIndex, operationInspectorFactory,
-                prevValuePermutation);
+                tupleFilterFactory, prevTupleFilterFactory, fieldPermutation, intputRecDesc, operationFieldIndex,
+                operationInspectorFactory, prevValuePermutation);
     }
 }

@@ -128,7 +128,8 @@ public class ConcurrentInsertTest {
         Index secondaryIndexEntity = new Index(StorageTestUtils.DATASET.getDataverseName(),
                 StorageTestUtils.DATASET.getDatasetName(), "TestIndex", IndexType.BTREE,
                 Arrays.asList(Arrays.asList(StorageTestUtils.RECORD_TYPE.getFieldNames()[1])),
-                Arrays.asList(Index.RECORD_INDICATOR), Arrays.asList(BuiltinType.AINT64), false, false, false, 0);
+                Arrays.asList(Index.RECORD_INDICATOR), Arrays.asList(BuiltinType.AINT64), false, false, false, 0,
+                false);
 
         SecondaryIndexInfo secondaryIndexInfo =
                 nc.createSecondaryIndex(primaryIndexInfo, secondaryIndexEntity, StorageTestUtils.STORAGE_MANAGER, 0);
@@ -142,7 +143,7 @@ public class ConcurrentInsertTest {
 
         Index primaryKeyIndexEntity = new Index(StorageTestUtils.DATASET.getDataverseName(),
                 StorageTestUtils.DATASET.getDatasetName(), "PrimaryKeyIndex", IndexType.BTREE, Arrays.asList(),
-                Arrays.asList(), Arrays.asList(), false, false, false, 0);
+                Arrays.asList(), Arrays.asList(), false, false, false, 0, null);
 
         SecondaryIndexInfo primaryKeyIndexInfo =
                 nc.createSecondaryIndex(primaryIndexInfo, primaryKeyIndexEntity, StorageTestUtils.STORAGE_MANAGER, 0);

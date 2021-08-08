@@ -324,11 +324,14 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         deepCopyExpressionRefs(newSecondaryKeyExpressions, op.getSecondaryKeyExpressions());
         Mutable<ILogicalExpression> newFilterExpression =
                 new MutableObject<>(((AbstractLogicalExpression) op.getFilterExpression()).cloneExpression());
+        Mutable<ILogicalExpression> newBeforeOpFilterExpression =
+                new MutableObject<>(((AbstractLogicalExpression) op.getBeforeOpFilterExpression()).cloneExpression());
         List<Mutable<ILogicalExpression>> newLSMComponentFilterExpressions = new ArrayList<>();
         deepCopyExpressionRefs(newLSMComponentFilterExpressions, op.getAdditionalFilteringExpressions());
-        IndexInsertDeleteUpsertOperator indexInsertDeleteOp = new IndexInsertDeleteUpsertOperator(
-                op.getDataSourceIndex(), newPrimaryKeyExpressions, newSecondaryKeyExpressions, newFilterExpression,
-                op.getOperation(), op.isBulkload(), op.getNumberOfAdditionalNonFilteringFields());
+        IndexInsertDeleteUpsertOperator indexInsertDeleteOp =
+                new IndexInsertDeleteUpsertOperator(op.getDataSourceIndex(), newPrimaryKeyExpressions,
+                        newSecondaryKeyExpressions, newFilterExpression, newBeforeOpFilterExpression, op.getOperation(),
+                        op.isBulkload(), op.getNumberOfAdditionalNonFilteringFields());
         indexInsertDeleteOp.setAdditionalFilteringExpressions(newLSMComponentFilterExpressions);
         for (ILogicalPlan plan : op.getNestedPlans()) {
             indexInsertDeleteOp.getNestedPlans().add(OperatorManipulationUtil.deepCopy(plan, indexInsertDeleteOp));

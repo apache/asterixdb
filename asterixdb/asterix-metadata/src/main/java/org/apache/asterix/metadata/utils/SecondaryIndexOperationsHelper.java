@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
@@ -43,6 +44,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
+import org.apache.asterix.om.functions.AbstractFunctionDescriptor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.types.ARecordType;
@@ -50,6 +52,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsUnknownDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NotDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.OrDescriptor;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -386,9 +389,20 @@ public abstract class SecondaryIndexOperationsHelper {
         return treeIndexBulkLoadOp;
     }
 
-    public AlgebricksMetaOperatorDescriptor createFilterNullsSelectOp(JobSpecification spec, int numSecondaryKeyFields,
-            RecordDescriptor secondaryRecDesc) {
-        IScalarEvaluatorFactory[] andArgsEvalFactories = new IScalarEvaluatorFactory[numSecondaryKeyFields];
+    public AlgebricksMetaOperatorDescriptor createFilterAllUnknownsSelectOp(JobSpecification spec,
+            int numSecondaryKeyFields, RecordDescriptor secondaryRecDesc) throws AlgebricksException {
+        return createFilterSelectOp(spec, numSecondaryKeyFields, secondaryRecDesc, OrDescriptor::new);
+    }
+
+    public AlgebricksMetaOperatorDescriptor createFilterAnyUnknownSelectOp(JobSpecification spec,
+            int numSecondaryKeyFields, RecordDescriptor secondaryRecDesc) throws AlgebricksException {
+        return createFilterSelectOp(spec, numSecondaryKeyFields, secondaryRecDesc, AndDescriptor::new);
+    }
+
+    private AlgebricksMetaOperatorDescriptor createFilterSelectOp(JobSpecification spec, int numSecondaryKeyFields,
+            RecordDescriptor secondaryRecDesc, Supplier<AbstractFunctionDescriptor> predicatesCombinerFuncSupplier)
+            throws AlgebricksException {
+        IScalarEvaluatorFactory[] predicateArgsEvalFactories = new IScalarEvaluatorFactory[numSecondaryKeyFields];
         NotDescriptor notDesc = new NotDescriptor();
         notDesc.setSourceLocation(sourceLoc);
         IsUnknownDescriptor isUnknownDesc = new IsUnknownDescriptor();
@@ -400,17 +414,15 @@ public abstract class SecondaryIndexOperationsHelper {
                     isUnknownDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { columnAccessEvalFactory });
             IScalarEvaluatorFactory notEvalFactory =
                     notDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { isUnknownEvalFactory });
-            andArgsEvalFactories[i] = notEvalFactory;
+            predicateArgsEvalFactories[i] = notEvalFactory;
         }
         IScalarEvaluatorFactory selectCond;
         if (numSecondaryKeyFields > 1) {
-            // Create conjunctive condition where all secondary index keys must
-            // satisfy 'is not null'.
-            AndDescriptor andDesc = new AndDescriptor();
-            andDesc.setSourceLocation(sourceLoc);
-            selectCond = andDesc.createEvaluatorFactory(andArgsEvalFactories);
+            AbstractFunctionDescriptor predicatesCombiner = predicatesCombinerFuncSupplier.get();
+            predicatesCombiner.setSourceLocation(sourceLoc);
+            selectCond = predicatesCombiner.createEvaluatorFactory(predicateArgsEvalFactories);
         } else {
-            selectCond = andArgsEvalFactories[0];
+            selectCond = predicateArgsEvalFactories[0];
         }
         StreamSelectRuntimeFactory select =
                 new StreamSelectRuntimeFactory(selectCond, null, BinaryBooleanInspector.FACTORY, false, -1, null);

@@ -55,6 +55,7 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
     private final List<LogicalVariable> primaryKeys;
     private final List<LogicalVariable> secondaryKeys;
     private final ILogicalExpression filterExpr;
+    private final ILogicalExpression prevFilterExpr;
     private final IDataSourceIndex<?, ?> dataSourceIndex;
     private final List<LogicalVariable> additionalFilteringKeys;
     private final LogicalVariable operationVar;
@@ -64,15 +65,20 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
 
     public IndexInsertDeleteUpsertPOperator(List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalFilteringKeys, Mutable<ILogicalExpression> filterExpr,
-            IDataSourceIndex<?, ?> dataSourceIndex, LogicalVariable operationVar,
-            List<LogicalVariable> prevSecondaryKeys, LogicalVariable prevAdditionalFilteringKey,
-            int numOfAdditionalNonFilteringFields) {
+            Mutable<ILogicalExpression> prevFilterExpr, IDataSourceIndex<?, ?> dataSourceIndex,
+            LogicalVariable operationVar, List<LogicalVariable> prevSecondaryKeys,
+            LogicalVariable prevAdditionalFilteringKey, int numOfAdditionalNonFilteringFields) {
         this.primaryKeys = primaryKeys;
         this.secondaryKeys = secondaryKeys;
         if (filterExpr != null) {
             this.filterExpr = filterExpr.getValue();
         } else {
             this.filterExpr = null;
+        }
+        if (prevFilterExpr != null) {
+            this.prevFilterExpr = prevFilterExpr.getValue();
+        } else {
+            this.prevFilterExpr = null;
         }
         this.dataSourceIndex = dataSourceIndex;
         this.additionalFilteringKeys = additionalFilteringKeys;
@@ -157,8 +163,9 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
                 break;
             case UPSERT:
                 runtimeAndConstraints = mp.getIndexUpsertRuntime(dataSourceIndex, propagatedSchema, inputSchemas,
-                        typeEnv, primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, operationVar,
-                        prevSecondaryKeys, prevAdditionalFilteringKey, inputDesc, context, spec, secondaryKeyPipelines);
+                        typeEnv, primaryKeys, secondaryKeys, additionalFilteringKeys, filterExpr, prevFilterExpr,
+                        operationVar, prevSecondaryKeys, prevAdditionalFilteringKey, inputDesc, context, spec,
+                        secondaryKeyPipelines);
                 break;
             default:
                 throw new AlgebricksException("Unsupported Operation " + operation);

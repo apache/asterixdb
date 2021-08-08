@@ -161,7 +161,7 @@ public class MultiPartitionLSMIndexTest {
                         partitioningKeys, null, null, null, false, null, null),
                 null, DatasetType.INTERNAL, DATASET_ID, 0);
         secondaryIndex = new Index(dvName, DATASET_NAME, INDEX_NAME, INDEX_TYPE, INDEX_FIELD_NAMES,
-                INDEX_FIELD_INDICATORS, INDEX_FIELD_TYPES, false, false, false, 0);
+                INDEX_FIELD_INDICATORS, INDEX_FIELD_TYPES, false, false, false, 0, false);
         taskCtxs = new IHyracksTaskContext[NUM_PARTITIONS];
         primaryIndexDataflowHelpers = new IIndexDataflowHelper[NUM_PARTITIONS];
         secondaryIndexDataflowHelpers = new IIndexDataflowHelper[NUM_PARTITIONS];

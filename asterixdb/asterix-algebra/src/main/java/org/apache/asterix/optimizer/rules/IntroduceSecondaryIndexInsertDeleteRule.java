@@ -313,6 +313,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             // Set our key variables and expressions for non-array indexes. Our secondary keys for array indexes will
             // always be an empty list.
             List<LogicalVariable> secondaryKeyVars = new ArrayList<>();
+            List<LogicalVariable> beforeOpSecondaryKeyVars = new ArrayList<>();
             List<Mutable<ILogicalExpression>> secondaryExpressions = new ArrayList<>();
             List<Mutable<ILogicalExpression>> beforeOpSecondaryExpressions = new ArrayList<>();
             ILogicalOperator replicateOutput;
@@ -324,23 +325,30 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     secondaryKeyVars.add(skVar);
                     VariableReferenceExpression skVarRef = new VariableReferenceExpression(skVar);
                     skVarRef.setSourceLocation(sourceLoc);
-                    secondaryExpressions.add(new MutableObject<ILogicalExpression>(skVarRef));
+                    secondaryExpressions.add(new MutableObject<>(skVarRef));
                     if (primaryIndexModificationOp.getOperation() == Kind.UPSERT) {
-                        VariableReferenceExpression varRef =
-                                new VariableReferenceExpression(fieldVarsForBeforeOperation.get(indexFieldId));
+                        LogicalVariable beforeKeyVar = fieldVarsForBeforeOperation.get(indexFieldId);
+                        beforeOpSecondaryKeyVars.add(beforeKeyVar);
+                        VariableReferenceExpression varRef = new VariableReferenceExpression(beforeKeyVar);
                         varRef.setSourceLocation(sourceLoc);
-                        beforeOpSecondaryExpressions.add(new MutableObject<ILogicalExpression>(varRef));
+                        beforeOpSecondaryExpressions.add(new MutableObject<>(varRef));
                     }
                 }
             }
 
             IndexInsertDeleteUpsertOperator indexUpdate;
             if (index.getIndexType() != IndexType.RTREE) {
+                // B-Tree, inverted index, array index
                 // Create an expression per key
-                Mutable<ILogicalExpression> filterExpression = (primaryIndexModificationOp.getOperation() == Kind.UPSERT
-                        || index.getIndexType() == IndexType.BTREE) ? null
-                                : createFilterExpression(secondaryKeyVars, context.getOutputTypeEnvironment(currentTop),
-                                        index.getIndexDetails().isOverridingKeyFieldTypes());
+                Mutable<ILogicalExpression> filterExpression =
+                        createFilterExpression(index, secondaryKeyVars, context.getOutputTypeEnvironment(currentTop),
+                                index.getIndexDetails().isOverridingKeyFieldTypes());
+                Mutable<ILogicalExpression> beforeOpFilterExpression = null;
+                if (primaryIndexModificationOp.getOperation() == Kind.UPSERT) {
+                    beforeOpFilterExpression = createFilterExpression(index, beforeOpSecondaryKeyVars,
+                            context.getOutputTypeEnvironment(currentTop),
+                            index.getIndexDetails().isOverridingKeyFieldTypes());
+                }
                 DataSourceIndex dataSourceIndex = new DataSourceIndex(index, dataverseName, datasetName, mp);
 
                 // Introduce the TokenizeOperator only when doing bulk-load,
@@ -406,8 +414,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
                             OperatorManipulationUtil
                                     .cloneExpressions(primaryIndexModificationOp.getPrimaryKeyExpressions()),
-                            tokenizeKeyExprs, filterExpression, primaryIndexModificationOp.getOperation(),
-                            primaryIndexModificationOp.isBulkload(),
+                            tokenizeKeyExprs, filterExpression, beforeOpFilterExpression,
+                            primaryIndexModificationOp.getOperation(), primaryIndexModificationOp.isBulkload(),
                             primaryIndexModificationOp.getAdditionalNonFilteringExpressions() == null ? 0
                                     : primaryIndexModificationOp.getAdditionalNonFilteringExpressions().size());
                     indexUpdate.setSourceLocation(sourceLoc);
@@ -419,8 +427,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
                             OperatorManipulationUtil
                                     .cloneExpressions(primaryIndexModificationOp.getPrimaryKeyExpressions()),
-                            secondaryExpressions, filterExpression, primaryIndexModificationOp.getOperation(),
-                            primaryIndexModificationOp.isBulkload(),
+                            secondaryExpressions, filterExpression, beforeOpFilterExpression,
+                            primaryIndexModificationOp.getOperation(), primaryIndexModificationOp.isBulkload(),
                             primaryIndexModificationOp.getAdditionalNonFilteringExpressions() == null ? 0
                                     : primaryIndexModificationOp.getAdditionalNonFilteringExpressions().size());
                     indexUpdate.setSourceLocation(sourceLoc);
@@ -453,7 +461,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
                         // If there exists a filter expression, add it to the top of our nested plan.
                         filterExpression = (primaryIndexModificationOp.getOperation() == Kind.UPSERT) ? null
-                                : createFilterExpression(unnestSIDXBranch.lastFieldVars,
+                                : createAnyUnknownFilterExpression(unnestSIDXBranch.lastFieldVars,
                                         context.getOutputTypeEnvironment(unnestSIDXBranch.currentTop),
                                         index.getIndexDetails().isOverridingKeyFieldTypes());
                         if (filterExpression != null) {
@@ -498,7 +506,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                         indexUpdate.setSecondaryKeyExprs(secondaryExpressions);
 
                         // Update the filter expression to include these new keys.
-                        filterExpression = createFilterExpression(unnestSIDXBranch.lastFieldVars,
+                        filterExpression = createAnyUnknownFilterExpression(unnestSIDXBranch.lastFieldVars,
                                 context.getOutputTypeEnvironment(unnestSIDXBranch.currentTop),
                                 index.getIndexDetails().isOverridingKeyFieldTypes());
                         indexUpdate.setFilterExpression(filterExpression);
@@ -560,8 +568,11 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 assignCoordinates.getInputs().add(new MutableObject<ILogicalOperator>(currentTop));
                 context.computeAndSetTypeEnvironmentForOperator(assignCoordinates);
                 replicateOutput = assignCoordinates;
-                Mutable<ILogicalExpression> filterExpression = null;
+                boolean forceFilter = keyPairType.second;
+                Mutable<ILogicalExpression> filterExpression = createAnyUnknownFilterExpression(keyVarList,
+                        context.getOutputTypeEnvironment(assignCoordinates), forceFilter);
                 AssignOperator originalAssignCoordinates = null;
+                Mutable<ILogicalExpression> beforeOpFilterExpression = null;
                 // We do something similar for beforeOp key if the operation is an upsert
                 if (primaryIndexModificationOp.getOperation() == Kind.UPSERT) {
                     List<LogicalVariable> originalKeyVarList = new ArrayList<>();
@@ -592,19 +603,15 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     originalAssignCoordinates.setSourceLocation(sourceLoc);
                     originalAssignCoordinates.getInputs().add(new MutableObject<ILogicalOperator>(assignCoordinates));
                     context.computeAndSetTypeEnvironmentForOperator(originalAssignCoordinates);
-                } else {
-                    // We must enforce the filter if the originating spatial type is
-                    // nullable.
-                    boolean forceFilter = keyPairType.second;
-                    filterExpression = createFilterExpression(keyVarList,
-                            context.getOutputTypeEnvironment(assignCoordinates), forceFilter);
+                    beforeOpFilterExpression = createAnyUnknownFilterExpression(originalKeyVarList,
+                            context.getOutputTypeEnvironment(originalAssignCoordinates), forceFilter);
                 }
                 DataSourceIndex dataSourceIndex = new DataSourceIndex(index, dataverseName, datasetName, mp);
                 indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
                         OperatorManipulationUtil
                                 .cloneExpressions(primaryIndexModificationOp.getPrimaryKeyExpressions()),
-                        secondaryExpressions, filterExpression, primaryIndexModificationOp.getOperation(),
-                        primaryIndexModificationOp.isBulkload(),
+                        secondaryExpressions, filterExpression, beforeOpFilterExpression,
+                        primaryIndexModificationOp.getOperation(), primaryIndexModificationOp.isBulkload(),
                         primaryIndexModificationOp.getAdditionalNonFilteringExpressions() == null ? 0
                                 : primaryIndexModificationOp.getAdditionalNonFilteringExpressions().size());
                 indexUpdate.setSourceLocation(sourceLoc);
@@ -937,11 +944,42 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         return new MutableObject<>(new ConstantExpression(new AsterixConstantValue(constantObject)));
     }
 
-    private Mutable<ILogicalExpression> createFilterExpression(List<LogicalVariable> secondaryKeyVars,
+    private Mutable<ILogicalExpression> createFilterExpression(Index index, List<LogicalVariable> secondaryKeyVars,
             IVariableTypeEnvironment typeEnv, boolean forceFilter) throws AlgebricksException {
+        IndexType indexType = index.getIndexType();
+        if (indexType == IndexType.BTREE) {
+            if (index.isPrimaryKeyIndex()) {
+                return createAnyUnknownFilterExpression(secondaryKeyVars, typeEnv, forceFilter);
+            } else {
+                Boolean excludeUnknownKey = ((Index.ValueIndexDetails) index.getIndexDetails()).isExcludeUnknownKey();
+                boolean excludeUnknown = excludeUnknownKey != null && excludeUnknownKey;
+                return createAllUnknownFilterExpression(secondaryKeyVars, typeEnv, forceFilter, excludeUnknown);
+            }
+        } else {
+            // inverted index && array index
+            return createAnyUnknownFilterExpression(secondaryKeyVars, typeEnv, forceFilter);
+        }
+    }
+
+    private Mutable<ILogicalExpression> createAnyUnknownFilterExpression(List<LogicalVariable> secondaryKeyVars,
+            IVariableTypeEnvironment typeEnv, boolean forceFilter) throws AlgebricksException {
+        return createFilterExpression(secondaryKeyVars, typeEnv, forceFilter, true, BuiltinFunctions.AND);
+    }
+
+    private Mutable<ILogicalExpression> createAllUnknownFilterExpression(List<LogicalVariable> secondaryKeyVars,
+            IVariableTypeEnvironment typeEnv, boolean forceFilter, boolean excludeUnknownKey)
+            throws AlgebricksException {
+        return createFilterExpression(secondaryKeyVars, typeEnv, forceFilter, excludeUnknownKey, BuiltinFunctions.OR);
+    }
+
+    private Mutable<ILogicalExpression> createFilterExpression(List<LogicalVariable> secondaryKeyVars,
+            IVariableTypeEnvironment typeEnv, boolean forceFilter, boolean excludeUnknownKey,
+            FunctionIdentifier combiner) throws AlgebricksException {
+        if (!excludeUnknownKey) {
+            return null;
+        }
         List<Mutable<ILogicalExpression>> filterExpressions = new ArrayList<>();
-        // Add 'is not null' to all nullable secondary index keys as a filtering
-        // condition.
+        // Add 'is not null' to all nullable secondary index keys as a filtering condition
         for (LogicalVariable secondaryKeyVar : secondaryKeyVars) {
             IAType secondaryKeyType = (IAType) typeEnv.getVarType(secondaryKeyVar);
             if (!NonTaggedFormatUtil.isOptional(secondaryKeyType) && !forceFilter) {
@@ -965,11 +1003,11 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
         Mutable<ILogicalExpression> filterExpression;
         if (filterExpressions.size() > 1) {
-            // Create a conjunctive condition.
-            ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
-                    FunctionUtil.getFunctionInfo(BuiltinFunctions.AND), filterExpressions);
-            andExpr.setSourceLocation(sourceLoc);
-            filterExpression = new MutableObject<>(andExpr);
+            // Combine the conditions
+            ScalarFunctionCallExpression combinerExpr = new ScalarFunctionCallExpression(
+                    BuiltinFunctions.getBuiltinFunctionInfo(combiner), filterExpressions);
+            combinerExpr.setSourceLocation(sourceLoc);
+            filterExpression = new MutableObject<>(combinerExpr);
         } else {
             filterExpression = filterExpressions.get(0);
         }

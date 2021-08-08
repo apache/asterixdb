@@ -1234,6 +1234,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 indexFieldTypes.add(fieldTypes);
             }
 
+            boolean unknownKeyOptionAllowed = indexType == IndexType.BTREE && !isSecondaryPrimary;
+            if (stmtCreateIndex.hasExcludeUnknownKey() && !unknownKeyOptionAllowed) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                        "can only specify exclude/include unknown key for B-Tree indexes");
+            }
             Index.IIndexDetails indexDetails;
             if (Index.IndexCategory.of(indexType) == Index.IndexCategory.ARRAY) {
                 if (!hadUnnest) {
@@ -1280,7 +1285,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 switch (Index.IndexCategory.of(indexType)) {
                     case VALUE:
                         indexDetails = new Index.ValueIndexDetails(keyFieldNames, keyFieldSourceIndicators,
-                                keyFieldTypes, overridesFieldTypes);
+                                keyFieldTypes, overridesFieldTypes, stmtCreateIndex.isExcludeUnknownKey());
                         break;
                     case TEXT:
                         indexDetails = new Index.TextIndexDetails(keyFieldNames, keyFieldSourceIndicators,
@@ -1488,10 +1493,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     // Get snapshot from External File System
                     externalFilesSnapshot = ExternalIndexingOperations.getSnapshotFromExternalFileSystem(ds);
                     // Add an entry for the files index
+                    Index.IndexCategory indexCategory = Index.IndexCategory.of(index.getIndexType());
+                    Boolean excludeUnknownKey = null;
+                    if (indexCategory == Index.IndexCategory.VALUE) {
+                        excludeUnknownKey = ((Index.ValueIndexDetails) index.getIndexDetails()).isExcludeUnknownKey();
+                    }
                     filesIndex = new Index(index.getDataverseName(), index.getDatasetName(),
                             IndexingConstants.getFilesIndexName(index.getDatasetName()), IndexType.BTREE,
                             new Index.ValueIndexDetails(ExternalIndexingOperations.FILE_INDEX_FIELD_NAMES, null,
-                                    ExternalIndexingOperations.FILE_INDEX_FIELD_TYPES, false),
+                                    ExternalIndexingOperations.FILE_INDEX_FIELD_TYPES, false, excludeUnknownKey),
                             false, false, MetadataUtil.PENDING_ADD_OP);
                     MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), filesIndex);
                     // Add files to the external files index
