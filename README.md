@@ -27,9 +27,7 @@ A semistructured NoSQL style data model ([ADM](https://ci.apache.org/projects/as
 extending JSON with object database ideas
 
 - __Query languages__<br/>
-Two expressive and declarative query languages ([SQL++](http://asterixdb.apache.org/docs/0.9.1/sqlpp/manual.html)
-and [AQL](http://asterixdb.apache.org/docs/0.9.1/aql/manual.html)) that support a broad range of queries and analysis
-over semistructured data
+An expressive and declarative query language ([SQL++](http://asterixdb.apache.org/docs/0.9.7/sqlpp/manual.html) that supports a broad range of queries and analysis over semistructured data
 
 - __Scalability__<br/>
 A parallel runtime query execution engine, Apache Hyracks, that has been scale-tested on up to 1000+ cores and 500+ disks
@@ -95,6 +93,7 @@ Be sure to run `mvn package` beforehand or run `mvn site` in asterix-lang-sqlpp 
 are used in the documentation that are generated directly from the grammar.
 
 * [master](https://ci.apache.org/projects/asterixdb/index.html) |
+  [0.9.7](http://asterixdb.apache.org/docs/0.9.7/index.html) |
   [0.9.6](http://asterixdb.apache.org/docs/0.9.6/index.html) |
   [0.9.5](http://asterixdb.apache.org/docs/0.9.5/index.html) |
   [0.9.4.1](http://asterixdb.apache.org/docs/0.9.4.1/index.html) |
