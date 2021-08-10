@@ -273,6 +273,24 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         return resourcesMap;
     }
 
+    public synchronized void deleteInvalidIndexes(Predicate<LocalResource> filter) throws HyracksDataException {
+        for (Path root : storageRoots) {
+            final Collection<File> files = FileUtils.listFiles(root.toFile(), METADATA_FILES_FILTER, ALL_DIR_FILTER);
+            try {
+                for (File file : files) {
+                    final LocalResource localResource = readLocalResource(file);
+                    if (filter.test(localResource)) {
+                        LOGGER.warn("deleting invalid metadata index {}", file.getParentFile());
+                        IoUtil.delete(file.getParentFile());
+                    }
+                }
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
+            }
+        }
+        resourceCache.invalidateAll();
+    }
+
     public Map<Long, LocalResource> loadAndGetAllResources() throws HyracksDataException {
         return getResources(p -> true);
     }

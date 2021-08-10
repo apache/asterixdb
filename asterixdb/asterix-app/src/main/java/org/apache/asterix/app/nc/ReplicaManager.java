@@ -123,8 +123,6 @@ public class ReplicaManager implements IReplicaManager {
         if (!partitions.contains(partition)) {
             return;
         }
-        final IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
-        datasetLifecycleManager.flushDataset(appCtx.getReplicationManager().getReplicationStrategy());
         closePartitionResources(partition);
         final List<IPartitionReplica> partitionReplicas = getReplicas(partition);
         for (IPartitionReplica replica : partitionReplicas) {
@@ -139,10 +137,12 @@ public class ReplicaManager implements IReplicaManager {
     }
 
     public void closePartitionResources(int partition) throws HyracksDataException {
+        final IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
+        //TODO(mhubail) we can flush only datasets of the requested partition
+        datasetLifecycleManager.flushAllDatasets();
         final PersistentLocalResourceRepository resourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         final Map<Long, LocalResource> partitionResources = resourceRepository.getPartitionResources(partition);
-        final IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
         for (LocalResource resource : partitionResources.values()) {
             datasetLifecycleManager.closeIfOpen(resource.getPath());
         }

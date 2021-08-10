@@ -37,6 +37,7 @@ import org.apache.asterix.app.nc.task.BindMetadataNodeTask;
 import org.apache.asterix.app.nc.task.CheckpointTask;
 import org.apache.asterix.app.nc.task.ExportMetadataNodeTask;
 import org.apache.asterix.app.nc.task.LocalRecoveryTask;
+import org.apache.asterix.app.nc.task.LocalStorageCleanupTask;
 import org.apache.asterix.app.nc.task.MetadataBootstrapTask;
 import org.apache.asterix.app.nc.task.RetrieveLibrariesTask;
 import org.apache.asterix.app.nc.task.StartLifecycleComponentsTask;
@@ -213,6 +214,8 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             Set<Integer> activePartitions) {
         final List<INCLifecycleTask> tasks = new ArrayList<>();
         tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING));
+        int metadataPartitionId = clusterManager.getMetadataPartition().getPartitionId();
+        tasks.add(new LocalStorageCleanupTask(metadataPartitionId));
         if (state == SystemState.CORRUPTED) {
             // need to perform local recovery for node active partitions
             LocalRecoveryTask rt = new LocalRecoveryTask(activePartitions);
@@ -222,7 +225,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             tasks.add(new StartReplicationServiceTask());
         }
         if (metadataNode) {
-            tasks.add(new MetadataBootstrapTask(clusterManager.getMetadataPartition().getPartitionId()));
+            tasks.add(new MetadataBootstrapTask(metadataPartitionId));
         }
         tasks.add(new CheckpointTask());
         tasks.add(new StartLifecycleComponentsTask());
