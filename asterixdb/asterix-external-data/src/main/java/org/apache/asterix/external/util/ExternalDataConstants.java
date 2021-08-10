@@ -348,18 +348,10 @@ public class ExternalDataConstants {
         }
 
         public static final String CONNECTION_STRING_FIELD_NAME = "connectionString";
-        public static final String ACCOUNT_NAME_FIELD_NAME = "accountName";
-        public static final String ACCOUNT_KEY_FIELD_NAME = "accountKey";
-        public static final String SHARED_ACCESS_SIGNATURE_FIELD_NAME = "sharedAccessSignature";
-        public static final String BLOB_ENDPOINT_FIELD_NAME = "blobEndpoint";
-        public static final String ENDPOINT_SUFFIX_FIELD_NAME = "endpointSuffix";
-
-        // Connection string requires PascalCase (MyFieldFormat)
-        public static final String CONNECTION_STRING_CONNECTION_STRING = "ConnectionString";
-        public static final String CONNECTION_STRING_ACCOUNT_NAME = "AccountName";
-        public static final String CONNECTION_STRING_ACCOUNT_KEY = "AccountKey";
-        public static final String CONNECTION_STRING_SHARED_ACCESS_SIGNATURE = "SharedAccessSignature";
-        public static final String CONNECTION_STRING_BLOB_ENDPOINT = "BlobEndpoint";
-        public static final String CONNECTION_STRING_ENDPOINT_SUFFIX = "EndpointSuffix";
+        public static final String TENANT_ID_FIELD_NAME = "tenantId";
+        public static final String CLIENT_ID_FIELD_NAME = "clientId";
+        public static final String CLIENT_SECRET_FIELD_NAME = "clientSecret";
+        public static final String CLIENT_CERTIFICATE_FIELD_NAME = "clientCertificate";
+        public static final String CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME = "clientCertificatePassword";
     }
 }

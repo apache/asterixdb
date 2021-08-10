@@ -18,7 +18,11 @@
  */
 package org.apache.asterix.external.util;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
+import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
+import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_OR_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ERROR_METHOD_NOT_IMPLEMENTED;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_ACCESS_KEY_ID;
@@ -30,17 +34,12 @@ import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOO
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_SESSION_TOKEN;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_TEMP_ACCESS;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_KEY_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_NAME_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.BLOB_ENDPOINT_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ACCOUNT_KEY;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ACCOUNT_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_BLOB_ENDPOINT;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_ENDPOINT_SUFFIX;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_CERTIFICATE_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_SECRET_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_SHARED_ACCESS_SIGNATURE;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ENDPOINT_SUFFIX_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.TENANT_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
@@ -51,6 +50,10 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
 import static org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils.RESERVED_REGEX_CHARS;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -59,10 +62,12 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Stream;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -98,6 +103,8 @@ import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import org.apache.hyracks.util.StorageUtil;
 
+import com.azure.identity.ClientCertificateCredentialBuilder;
+import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
@@ -1142,72 +1149,97 @@ public class ExternalDataUtils {
          */
         public static BlobServiceClient buildAzureClient(Map<String, String> configuration)
                 throws CompilationException {
-            // TODO(Hussain): Need to ensure that all required parameters are present in a previous step
             String connectionString = configuration.get(CONNECTION_STRING_FIELD_NAME);
-            String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
-            String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
-            String sharedAccessSignature = configuration.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
-            String blobEndpoint = configuration.get(BLOB_ENDPOINT_FIELD_NAME);
-            String endpointSuffix = configuration.get(ENDPOINT_SUFFIX_FIELD_NAME);
+            String tenantId = configuration.get(TENANT_ID_FIELD_NAME);
+            String clientId = configuration.get(CLIENT_ID_FIELD_NAME);
+            String clientSecret = configuration.get(CLIENT_SECRET_FIELD_NAME);
+            String clientCertificate = configuration.get(CLIENT_CERTIFICATE_FIELD_NAME);
+            String clientCertificatePassword = configuration.get(CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME);
 
-            // Construct the connection string
-            // Connection string format: name1=value1;name2=value2;....
-            StringBuilder connectionStringBuilder = new StringBuilder();
+            // Client builder
             BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
 
-            boolean authMethodFound = false;
-
+            // Connection string is used
             if (connectionString != null) {
-                // connection string
-                authMethodFound = true;
-                connectionStringBuilder.append(connectionString).append(";");
-            }
-
-            if (accountName != null && accountKey != null) {
-                if (authMethodFound) {
-                    throw new CompilationException(ErrorCode.ONLY_SINGLE_AUTHENTICATION_IS_ALLOWED);
+                try {
+                    builder.connectionString(connectionString);
+                } catch (Exception ex) {
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
                 }
-                authMethodFound = true;
-                // account name + account key
-                connectionStringBuilder.append(CONNECTION_STRING_ACCOUNT_NAME).append("=").append(accountName)
-                        .append(";").append(CONNECTION_STRING_ACCOUNT_KEY).append("=").append(accountKey).append(";");
             }
 
-            if (accountName != null && sharedAccessSignature != null) {
-                if (authMethodFound) {
-                    throw new CompilationException(ErrorCode.ONLY_SINGLE_AUTHENTICATION_IS_ALLOWED);
-                }
-                // account name + shared access token
-                connectionStringBuilder.append(CONNECTION_STRING_ACCOUNT_NAME).append("=").append(accountName)
-                        .append(";").append(CONNECTION_STRING_SHARED_ACCESS_SIGNATURE).append("=")
-                        .append(sharedAccessSignature).append(";");
-            }
-
-            // Add blobEndpoint and endpointSuffix if present, adjust any '/' as needed
-            if (blobEndpoint != null) {
-                connectionStringBuilder.append(CONNECTION_STRING_BLOB_ENDPOINT).append("=").append(blobEndpoint)
-                        .append(";");
-                if (endpointSuffix != null) {
-                    String endpointSuffixUpdated;
-                    if (blobEndpoint.endsWith("/")) {
-                        endpointSuffixUpdated =
-                                endpointSuffix.startsWith("/") ? endpointSuffix.substring(1) : endpointSuffix;
+            // Active Directory authentication
+            if (clientId != null) {
+                // Both (or neither) client secret and client secret were provided, only one is allowed
+                if ((clientSecret == null) == (clientCertificate == null)) {
+                    if (clientSecret != null) {
+                        throw new CompilationException(PARAMETERS_NOT_ALLOWED_AT_SAME_TIME, CLIENT_SECRET_FIELD_NAME,
+                                CLIENT_CERTIFICATE_FIELD_NAME);
                     } else {
-                        endpointSuffixUpdated = endpointSuffix.startsWith("/") ? endpointSuffix : "/" + endpointSuffix;
+                        throw new CompilationException(REQUIRED_PARAM_OR_PARAM_IF_PARAM_IS_PRESENT,
+                                CLIENT_SECRET_FIELD_NAME, CLIENT_CERTIFICATE_FIELD_NAME, CLIENT_ID_FIELD_NAME);
                     }
-                    connectionStringBuilder.append(CONNECTION_STRING_ENDPOINT_SUFFIX).append("=")
-                            .append(endpointSuffixUpdated).append(";");
+                }
+
+                // Tenant ID is required
+                if (tenantId == null) {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, TENANT_ID_FIELD_NAME,
+                            CLIENT_ID_FIELD_NAME);
+                }
+
+                // Client certificate is required if client certificate password is present
+                if (clientCertificatePassword != null && clientCertificate == null) {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, CLIENT_CERTIFICATE_FIELD_NAME,
+                            CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME);
+                }
+
+                // Use AD authentication
+                if (clientSecret != null) {
+                    ClientSecretCredentialBuilder secret = new ClientSecretCredentialBuilder();
+                    secret.clientId(clientId);
+                    secret.tenantId(tenantId);
+                    secret.clientSecret(clientSecret);
+                    builder.credential(secret.build());
+                } else {
+                    // Certificate
+                    ClientCertificateCredentialBuilder certificate = new ClientCertificateCredentialBuilder();
+                    certificate.clientId(clientId);
+                    certificate.tenantId(tenantId);
+                    try {
+                        InputStream certificateContent = new ByteArrayInputStream(clientCertificate.getBytes(UTF_8));
+                        if (clientCertificatePassword == null) {
+                            Method pemCertificate = ClientCertificateCredentialBuilder.class
+                                    .getDeclaredMethod("pemCertificate", InputStream.class);
+                            pemCertificate.setAccessible(true);
+                            pemCertificate.invoke(certificate, certificateContent);
+                        } else {
+                            Method pemCertificate = ClientCertificateCredentialBuilder.class
+                                    .getDeclaredMethod("pfxCertificate", InputStream.class, String.class);
+                            pemCertificate.setAccessible(true);
+                            pemCertificate.invoke(certificate, certificateContent, clientCertificatePassword);
+                        }
+                    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
+                        throw new CompilationException(EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                    }
+                    builder.credential(certificate.build());
                 }
             }
 
-            // No credentials or endpoint provided
-            if (connectionStringBuilder.length() == 0) {
-                throw new CompilationException(ErrorCode.NO_AUTH_PROVIDED_ENDPOINT_REQUIRED_FOR_ANONYMOUS_ACCESS,
-                        BLOB_ENDPOINT_FIELD_NAME);
+            // If client id is not present, ensure client secret, certificate, tenant id and client certificate
+            // password are not present
+            if (clientId == null) {
+                Optional<String> param = Stream
+                        .of(CLIENT_SECRET_FIELD_NAME, CLIENT_CERTIFICATE_FIELD_NAME, TENANT_ID_FIELD_NAME,
+                                CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME)
+                        .filter(field -> configuration.get(field) != null).findFirst();
+                if (param.isPresent()) {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, CLIENT_ID_FIELD_NAME,
+                            param.get());
+                }
             }
 
             try {
-                return builder.connectionString(connectionStringBuilder.toString()).buildClient();
+                return builder.buildClient();
             } catch (Exception ex) {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
             }
