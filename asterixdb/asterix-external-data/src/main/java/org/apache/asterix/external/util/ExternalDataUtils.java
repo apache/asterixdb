@@ -25,6 +25,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOO
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_ANONYMOUS_ACCESS;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_CREDENTIAL_PROVIDER_KEY;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_PATH_STYLE_ACCESS;
+import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_S3_CONNECTION_POOL_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_SECRET_ACCESS_KEY;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_SESSION_TOKEN;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_TEMP_ACCESS;
@@ -121,7 +122,6 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.S3Response;
 
 public class ExternalDataUtils {
-
     private static final Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = new EnumMap<>(ATypeTag.class);
     private static final int DEFAULT_MAX_ARGUMENT_SZ = 1024 * 1024;
     private static final int HEADER_FUDGE = 64;
@@ -833,9 +833,11 @@ public class ExternalDataUtils {
         /**
          * Builds the S3 client using the provided configuration
          *
-         * @param configuration properties
+         * @param configuration      properties
+         * @param numberOfPartitions number of partitions in the cluster
          */
-        public static void configureAwsS3HdfsJobConf(JobConf conf, Map<String, String> configuration) {
+        public static void configureAwsS3HdfsJobConf(JobConf conf, Map<String, String> configuration,
+                int numberOfPartitions) {
             String accessKeyId = configuration.get(ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME);
             String secretAccessKey = configuration.get(ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME);
             String sessionToken = configuration.get(ExternalDataConstants.AwsS3.SESSION_TOKEN_FIELD_NAME);
@@ -866,6 +868,11 @@ public class ExternalDataUtils {
              * way we access files in S3
              */
             conf.set(HADOOP_PATH_STYLE_ACCESS, ExternalDataConstants.TRUE);
+
+            /*
+             * Set the size of S3 connection pool to be the number of partitions
+             */
+            conf.set(HADOOP_S3_CONNECTION_POOL_SIZE, String.valueOf(numberOfPartitions));
 
             if (serviceEndpoint != null) {
                 // Validation of the URL should be done at hadoop-aws level

@@ -320,9 +320,17 @@ public class ExternalDataConstants {
         public static final String HADOOP_ACCESS_KEY_ID = "fs.s3a.access.key";
         public static final String HADOOP_SECRET_ACCESS_KEY = "fs.s3a.secret.key";
         public static final String HADOOP_SESSION_TOKEN = "fs.s3a.session.token";
-        public static final String HADOOP_PATH_STYLE_ACCESS = "fs.s3a.path.style.access";
         public static final String HADOOP_REGION = "fs.s3a.region";
         public static final String HADOOP_SERVICE_END_POINT = "fs.s3a.endpoint";
+
+        /*
+         * Internal configurations
+         */
+        //Allows accessing directories as file system path
+        public static final String HADOOP_PATH_STYLE_ACCESS = "fs.s3a.path.style.access";
+        //The number of maximum HTTP connections in connection pool
+        public static final String HADOOP_S3_CONNECTION_POOL_SIZE = "fs.s3a.connection.maximum";
+        //S3 used protocol
         public static final String HADOOP_S3_PROTOCOL = "s3a";
 
         //Hadoop credentials provider key
