@@ -21,6 +21,7 @@ package org.apache.asterix.lang.sqlpp.util;
 import java.util.List;
 
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.hyracks.util.OptionalBoolean;
 
 public class SqlppStatementUtil {
 
@@ -71,12 +72,12 @@ public class SqlppStatementUtil {
 
     @SuppressWarnings("squid:S1172") // unused variable
     public static StringBuilder getCreateIndexStatement(StringBuilder stringBuilder, DataverseName dataverseName,
-            String datasetName, String indexName, String fields, Boolean excludeUnknown, int version) {
+            String datasetName, String indexName, String fields, OptionalBoolean excludeUnknown, int version) {
         stringBuilder.append(CREATE_INDEX);
         enclose(stringBuilder, indexName).append(ON);
         StringBuilder appender = enclose(stringBuilder, dataverseName, datasetName).append(fields);
-        if (excludeUnknown != null) {
-            if (excludeUnknown) {
+        if (excludeUnknown.isPresent()) {
+            if (excludeUnknown.get()) {
                 appender.append(EXCLUDE_UNKNOWN_KEY);
             } else {
                 appender.append(INCLUDE_UNKNOWN_KEY);

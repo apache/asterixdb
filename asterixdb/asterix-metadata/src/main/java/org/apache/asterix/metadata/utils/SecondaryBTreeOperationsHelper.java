@@ -54,6 +54,7 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
+import org.apache.hyracks.util.OptionalBoolean;
 
 public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperationsHelper {
 
@@ -313,8 +314,8 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
         if (index.isPrimaryKeyIndex()) {
             return true;
         } else {
-            Boolean excludeUnknownKey = details.isExcludeUnknownKey();
-            return excludeUnknownKey != null && excludeUnknownKey;
+            OptionalBoolean excludeUnknownKey = details.isExcludeUnknownKey();
+            return excludeUnknownKey.isPresent() && excludeUnknownKey.get();
         }
     }
 }

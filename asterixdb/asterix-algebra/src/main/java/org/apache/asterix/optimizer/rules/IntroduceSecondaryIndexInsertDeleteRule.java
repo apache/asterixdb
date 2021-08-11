@@ -92,6 +92,7 @@ import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.util.OptionalBoolean;
 
 /**
  * This rule matches the pattern:
@@ -951,8 +952,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             if (index.isPrimaryKeyIndex()) {
                 return createAnyUnknownFilterExpression(secondaryKeyVars, typeEnv, forceFilter);
             } else {
-                Boolean excludeUnknownKey = ((Index.ValueIndexDetails) index.getIndexDetails()).isExcludeUnknownKey();
-                boolean excludeUnknown = excludeUnknownKey != null && excludeUnknownKey;
+                OptionalBoolean excludeUnknownKey =
+                        ((Index.ValueIndexDetails) index.getIndexDetails()).isExcludeUnknownKey();
+                boolean excludeUnknown = excludeUnknownKey.isPresent() && excludeUnknownKey.get();
                 return createAllUnknownFilterExpression(secondaryKeyVars, typeEnv, forceFilter, excludeUnknown);
             }
         } else {

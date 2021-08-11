@@ -70,6 +70,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
+import org.apache.hyracks.util.OptionalBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.After;
@@ -187,7 +188,7 @@ public class LSMFlushRecoveryTest {
         dataset = StorageTestUtils.DATASET;
         secondaryIndexEntity = new Index(dataset.getDataverseName(), dataset.getDatasetName(), SECONDARY_INDEX_NAME,
                 SECONDARY_INDEX_TYPE, SECONDARY_INDEX_FIELD_NAMES, SECONDARY_INDEX_FIELD_INDICATORS,
-                SECONDARY_INDEX_FIELD_TYPES, false, false, false, 0, false);
+                SECONDARY_INDEX_FIELD_TYPES, false, false, false, 0, OptionalBoolean.of(false));
 
         primaryIndexInfos = new PrimaryIndexInfo[NUM_PARTITIONS];
         secondaryIndexInfo = new SecondaryIndexInfo[NUM_PARTITIONS];

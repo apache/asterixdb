@@ -76,6 +76,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
+import org.apache.hyracks.util.OptionalBoolean;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -171,7 +172,7 @@ public class CheckpointInSecondaryIndexTest {
                         partitioningKeys, null, null, null, false, null, null),
                 null, DatasetType.INTERNAL, DATASET_ID, 0);
         secondaryIndex = new Index(dvName, DATASET_NAME, INDEX_NAME, INDEX_TYPE, INDEX_FIELD_NAMES,
-                INDEX_FIELD_INDICATORS, INDEX_FIELD_TYPES, false, false, false, 0, false);
+                INDEX_FIELD_INDICATORS, INDEX_FIELD_TYPES, false, false, false, 0, OptionalBoolean.of(false));
         taskCtx = null;
         primaryIndexDataflowHelper = null;
         secondaryIndexDataflowHelper = null;

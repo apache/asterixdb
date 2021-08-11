@@ -253,6 +253,7 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.TokenizerCategory;
+import org.apache.hyracks.util.OptionalBoolean;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1494,7 +1495,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     externalFilesSnapshot = ExternalIndexingOperations.getSnapshotFromExternalFileSystem(ds);
                     // Add an entry for the files index
                     Index.IndexCategory indexCategory = Index.IndexCategory.of(index.getIndexType());
-                    Boolean excludeUnknownKey = null;
+                    OptionalBoolean excludeUnknownKey = OptionalBoolean.empty();
                     if (indexCategory == Index.IndexCategory.VALUE) {
                         excludeUnknownKey = ((Index.ValueIndexDetails) index.getIndexDetails()).isExcludeUnknownKey();
                     }

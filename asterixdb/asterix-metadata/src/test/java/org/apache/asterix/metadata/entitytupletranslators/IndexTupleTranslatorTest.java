@@ -44,6 +44,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.util.OptionalBoolean;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -73,7 +74,7 @@ public class IndexTupleTranslatorTest {
             Index index = new Index(dvTest, "d1", "i1", IndexType.BTREE,
                     Collections.singletonList(Collections.singletonList("row_id")),
                     indicator == null ? null : Collections.singletonList(indicator),
-                    Collections.singletonList(BuiltinType.AINT64), false, false, false, 0, false);
+                    Collections.singletonList(BuiltinType.AINT64), false, false, false, 0, OptionalBoolean.of(false));
 
             MetadataNode mockMetadataNode = mock(MetadataNode.class);
             when(mockMetadataNode.getDatatype(any(), any(DataverseName.class), anyString())).thenReturn(new Datatype(
