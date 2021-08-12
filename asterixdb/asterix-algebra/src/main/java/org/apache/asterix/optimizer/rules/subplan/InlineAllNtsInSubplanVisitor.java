@@ -743,7 +743,7 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
         gbyOp.getNestedPlans().add(nestedPlan);
 
         OperatorManipulationUtil.computeTypeEnvironmentBottomUp(gbyOp, context);
-        return op;
+        return gbyOp;
     }
 
     private ILogicalOperator visitMultiInputOperator(ILogicalOperator op) throws AlgebricksException {
