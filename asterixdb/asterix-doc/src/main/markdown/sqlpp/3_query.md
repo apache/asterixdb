@@ -742,7 +742,7 @@ Of course, a grouping expression need not be a simple field-name. In Q3.18, orde
     WHERE get_year(date(o.order_date)) = 2020
     GROUP BY get_month(date(o.order_date)) AS month
     SELECT month, COUNT(*) AS order_count
-    ORDER BY order_count desc
+    ORDER BY order_count DESC, month DESC
     LIMIT 3;
 
 Result:
@@ -793,6 +793,327 @@ Result:
             "total_revenue": 130.45
         }
     ]
+
+#### <a id="Rollup">ROLLUP</a>
+
+The `ROLLUP` subclause is an aggregation feature that extends the functionality of the `GROUP BY` clause.
+It returns extra _super-aggregate_ items in the query results, giving subtotals and a grand total for the aggregate
+functions in the query.
+To illustrate, first consider the following query.
+
+##### Example
+
+(Q3.R1) List the number of orders, grouped by customer region and city.
+
+    SELECT customer_region AS Region,
+           customer_city AS City,
+           COUNT(o.orderno) AS `Order Count`
+    FROM customers AS c LEFT OUTER JOIN orders AS o ON c.custid = o.custid
+    LET address_line = SPLIT(c.address.city, ","),
+        customer_city = TRIM(address_line[0]),
+        customer_region = TRIM(address_line[1])
+    GROUP BY customer_region, customer_city
+    ORDER BY customer_region ASC, customer_city ASC, `Order Count` DESC;
+
+Result:
+
+    [
+      {
+        "Region": "Italy",
+        "City": "Rome",
+        "Order Count": 0
+      },
+      {
+        "Region": "MA",
+        "City": "Boston",
+        "Order Count": 2
+      },
+      {
+        "Region": "MA",
+        "City": "Hanover",
+        "Order Count": 0
+      },
+      {
+        "Region": "MO",
+        "City": "St. Louis",
+        "Order Count": 7
+      }
+    ]
+
+This query uses string functions to split each customer's address into city and region.
+The query then counts the total number of orders placed by each customer, and groups the results first by customer
+region, then by customer city.
+The aggregate results (labeled `Order Count`) are only shown by city, and there are no subtotals or grand total.
+We can add these using the `ROLLUP` subclause, as in the following example.
+
+##### Example
+
+(Q3.R2) List the number of orders by customer region and city, including subtotals and a grand total.
+
+    SELECT customer_region AS Region,
+           customer_city AS City,
+           COUNT(o.orderno) AS `Order Count`
+    FROM customers AS c LEFT OUTER JOIN orders AS o ON c.custid = o.custid
+    LET address_line = SPLIT(c.address.city, ","),
+        customer_city = TRIM(address_line[0]),
+        customer_region = TRIM(address_line[1])
+    GROUP BY ROLLUP(customer_region, customer_city)
+    ORDER BY customer_region ASC, customer_city ASC, `Order Count` DESC;
+
+Result:
+
+    [
+      {
+        "Region": null,
+        "City": null,
+        "Order Count": 9
+      },
+      {
+        "Region": "Italy",
+        "City": null,
+        "Order Count": 0
+      },
+      {
+        "Region": "Italy",
+        "City": "Rome",
+        "Order Count": 0
+      },
+      {
+        "Region": "MA",
+        "City": null,
+        "Order Count": 2
+      },
+      {
+        "Region": "MA",
+        "City": "Boston",
+        "Order Count": 2
+      },
+      {
+        "Region": "MA",
+        "City": "Hanover",
+        "Order Count": 0
+      },
+      {
+        "Region": "MO",
+        "City": null,
+        "Order Count": 7
+      },
+      {
+        "Region": "MO",
+        "City": "St. Louis",
+        "Order Count": 7
+      }
+    ]
+
+With the addition of the `ROLLUP` subclause, the results now include an extra item at the start of each region,
+giving the subtotal for that region.
+There is also another extra item at the very start of the results, giving the grand total for all regions.
+
+The order of the fields specified by the `ROLLUP` subclause determines the hierarchy of the super-aggregate items.
+The customer region is specified first, followed by the customer city; so the results are aggregated by region first,
+and then by city within each region.
+
+The grand total returns `null` as a value for the city and the region, and the subtotals return `null` as the
+value for the city, which may make the results hard to understand at first glance.
+A workaround for this is given in the next example.
+
+##### Example
+
+(Q3.R3) List the number of orders by customer region and city, with meaningful subtotals and grand total.
+
+    SELECT IFNULL(customer_region, "All regions") AS Region,
+           IFNULL(customer_city, "All cities") AS City,
+           COUNT(o.orderno) AS `Order Count`
+    FROM customers AS c LEFT OUTER JOIN orders AS o ON c.custid = o.custid
+    LET address_line = SPLIT(c.address.city, ","),
+        customer_city = TRIM(address_line[0]),
+        customer_region = TRIM(address_line[1])
+    GROUP BY ROLLUP(customer_region, customer_city)
+    ORDER BY customer_region ASC, customer_city ASC, `Order Count` DESC;
+
+Result:
+
+    [
+      {
+        "Region": "All regions",
+        "City": "All cities",
+        "Order Count": 9
+      },
+      {
+        "Region": "Italy",
+        "City": "All cities",
+        "Order Count": 0
+      },
+      {
+        "Region": "Italy",
+        "City": "Rome",
+        "Order Count": 0
+      },
+      {
+        "Region": "MA",
+        "City": "All cities",
+        "Order Count": 2
+      },
+      {
+        "Region": "MA",
+        "City": "Boston",
+        "Order Count": 2
+      },
+      {
+        "Region": "MA",
+        "City": "Hanover",
+        "Order Count": 0
+      },
+      {
+        "Region": "MO",
+        "City": "All cities",
+        "Order Count": 7
+      },
+      {
+        "Region": "MO",
+        "City": "St. Louis",
+        "Order Count": 7
+      }
+    ]
+
+This query uses the `IFNULL` function to populate the region and city fields with meaningful values for the
+super-aggregate items.
+This makes the results clearer and more readable.
+
+#### <a id="Cube">CUBE</a>
+
+The `CUBE` subclause is similar to the `ROLLUP` subclause, in that it returns extra super-aggregate items in the query
+results, giving subtotals and a grand total for the aggregate functions.
+Whereas `ROLLUP` returns a grand total and a hierarchy of subtotals based on the specified fields,
+the `CUBE` subclause returns a grand total and subtotals for every possible combination of the specified fields.
+
+The following example is a modification of Q3.R3 which illustrates the `CUBE` subclause.
+
+##### Example
+
+(Q3.C) List the number of orders by customer region and order date, with all possible subtotals and a grand total.
+
+    SELECT IFNULL(customer_region, "All regions") AS Region,
+           IFNULL(order_month, "All months") AS Month,
+           COUNT(o.orderno) AS `Order Count`
+    FROM customers AS c INNER JOIN orders AS o ON c.custid = o.custid
+    LET address_line = SPLIT(c.address.city, ","),
+        customer_region = TRIM(address_line[1]),
+        order_month = get_month(date(o.order_date))
+    GROUP BY CUBE(customer_region, order_month)
+    ORDER BY customer_region ASC, order_month ASC;
+
+Result:
+
+    [
+      {
+        "Region": "All regions",
+        "Order Count": 9,
+        "Month": "All months"
+      },
+      {
+        "Region": "All regions",
+        "Order Count": 1,
+        "Month": 4
+      },
+      {
+        "Region": "All regions",
+        "Order Count": 1,
+        "Month": 5
+      },
+      {
+        "Region": "All regions",
+        "Order Count": 1,
+        "Month": 6
+      },
+      {
+        "Region": "All regions",
+        "Order Count": 1,
+        "Month": 7
+      },
+      {
+        "Region": "All regions",
+        "Order Count": 1,
+        "Month": 8
+      },
+      {
+        "Region": "All regions",
+        "Order Count": 2,
+        "Month": 9
+      },
+      {
+        "Region": "All regions",
+        "Order Count": 2,
+        "Month": 10
+      },
+      {
+        "Region": "MA",
+        "Order Count": 2,
+        "Month": "All months"
+      },
+      {
+        "Region": "MA",
+        "Order Count": 1,
+        "Month": 7
+      },
+      {
+        "Region": "MA",
+        "Order Count": 1,
+        "Month": 8
+      },
+      {
+        "Region": "MO",
+        "Order Count": 7,
+        "Month": "All months"
+      },
+      {
+        "Region": "MO",
+        "Order Count": 1,
+        "Month": 4
+      },
+      {
+        "Region": "MO",
+        "Order Count": 1,
+        "Month": 5
+      },
+      {
+        "Region": "MO",
+        "Order Count": 1,
+        "Month": 6
+      },
+      {
+        "Region": "MO",
+        "Order Count": 2,
+        "Month": 9
+      },
+      {
+        "Region": "MO",
+        "Order Count": 2,
+        "Month": 10
+      }
+    ]
+
+To simplify the results, this query uses an inner join, so that customers who have not placed an order are not included
+in the totals.
+The query uses string functions to extract the region from each customer's address,
+and a temporal function to extract the year from the order date.
+
+The query uses the `CUBE` subclause with customer region and order month.
+This means that there are four possible aggregates to calculate:
+
+* All regions, all months
+* All regions, each month
+* Each region, all months
+* Each region, each month
+
+The results start with the grand total, showing the total number of orders across all regions for all months.
+This is followed by date subtotals, showing the number of orders across all regions for each month.
+Following that are the regional subtotals, showing the total number of orders for all months in each region;
+and the result items, giving the number of orders for each month in each region.
+
+The query also uses the `IFNULL` function to populate the region and date fields with meaningful values for the
+super-aggregate items.
+This makes the results clearer and more readable.
 
 ### <a id="Having_clauses">HAVING Clause</a>
 
