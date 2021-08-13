@@ -343,6 +343,7 @@
                 <aliasUrl>http://www.apache.org/licenses/LICENSE-2.0</aliasUrl>
                 <aliasUrl>https://www.apache.org/licenses/LICENSE-2.0.txt</aliasUrl>
                 <aliasUrl>http://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
+                <aliasUrl>https://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
                 <aliasUrl>https://aws.amazon.com/apache2.0</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/jorabin/KeePassJava2/KeePassJava2-2.1.4/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-netty/v1.0.7/LICENSE</aliasUrl>
