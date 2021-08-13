@@ -91,6 +91,7 @@
     <parquet.version>1.12.0</parquet.version>
     <hadoop-awsjavasdk.version>1.12.1</hadoop-awsjavasdk.version>
     <azurejavasdk.version>12.12.0</azurejavasdk.version>
+    <gcsjavasdk.version>1.114.0</gcsjavasdk.version>
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
     <implementation.version>${project.version}</implementation.version>
@@ -1734,6 +1735,13 @@
         </exclusions>
       </dependency>
       <!-- Azure Blob Storage end -->
+      <!-- Google Cloud Storage start -->
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-storage</artifactId>
+        <version>${gcsjavasdk.version}</version>
+      </dependency>
+      <!-- Google Cloud Storage end -->
       <dependency>
         <groupId>org.mindrot</groupId>
         <artifactId>jbcrypt</artifactId>

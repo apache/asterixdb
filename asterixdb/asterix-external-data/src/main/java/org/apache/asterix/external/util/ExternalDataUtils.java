@@ -40,6 +40,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.C
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_SECRET_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.TENANT_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.GCS.JSON_CREDENTIALS_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
@@ -51,6 +52,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_
 import static org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils.RESERVED_REGEX_CHARS;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -110,6 +112,9 @@ import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.ListBlobsOptions;
+import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -1299,6 +1304,40 @@ public class ExternalDataUtils {
             } catch (Exception ex) {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
             }
+        }
+    }
+
+    public static class GCS {
+        private GCS() {
+            throw new AssertionError("do not instantiate");
+
+        }
+
+        //TODO(htowaileb): Add validation step similar to other externals, which also checks if empty bucket
+        //upon creating the external dataset
+
+        /**
+         * Builds the client using the provided configuration
+         *
+         * @param configuration properties
+         * @return clientasterixdb/asterix-external-data/src/main/java/org/apache/asterix/external/util/ExternalDataUtils.java
+         * @throws CompilationException CompilationException
+         */
+        public static Storage buildClient(Map<String, String> configuration) throws CompilationException {
+            String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);
+
+            StorageOptions.Builder builder = StorageOptions.newBuilder();
+
+            // Use credentials if available
+            if (jsonCredentials != null) {
+                try (InputStream credentialsStream = new ByteArrayInputStream(jsonCredentials.getBytes())) {
+                    builder.setCredentials(ServiceAccountCredentials.fromStream(credentialsStream));
+                } catch (IOException ex) {
+                    throw new CompilationException(EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                }
+            }
+
+            return builder.build().getService();
         }
     }
 

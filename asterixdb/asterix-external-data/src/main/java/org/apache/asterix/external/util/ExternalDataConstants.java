@@ -136,6 +136,7 @@ public class ExternalDataConstants {
     public static final String KEY_ADAPTER_NAME_HTTP = "http_adapter";
     public static final String KEY_ADAPTER_NAME_AWS_S3 = "S3";
     public static final String KEY_ADAPTER_NAME_AZURE_BLOB = "AZUREBLOB";
+    public static final String KEY_ADAPTER_NAME_GCS = "GCS";
 
     /**
      * HDFS class names
@@ -353,5 +354,13 @@ public class ExternalDataConstants {
         public static final String CLIENT_SECRET_FIELD_NAME = "clientSecret";
         public static final String CLIENT_CERTIFICATE_FIELD_NAME = "clientCertificate";
         public static final String CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME = "clientCertificatePassword";
+    }
+
+    public static class GCS {
+        private GCS() {
+            throw new AssertionError("do not instantiate");
+        }
+
+        public static final String JSON_CREDENTIALS_FIELD_NAME = "jsonCredentials";
     }
 }

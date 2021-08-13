@@ -866,6 +866,11 @@
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-1.2-api</artifactId>
     </dependency>
+    <!-- Google Cloud Storage SDK -->
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-storage</artifactId>
+    </dependency>
     <!-- Needed for inferring the schema for writing Parquet files -->
     <dependency>
       <groupId>org.kitesdk</groupId>
