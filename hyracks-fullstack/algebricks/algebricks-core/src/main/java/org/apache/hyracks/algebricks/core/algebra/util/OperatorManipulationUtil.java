@@ -202,6 +202,16 @@ public class OperatorManipulationUtil {
         }
     }
 
+    public static void substituteOpInInput(ILogicalOperator workingOp, ILogicalOperator oldOp,
+            Mutable<ILogicalOperator> newOpRef) {
+        for (int i = 0; i < workingOp.getInputs().size(); i++) {
+            if (workingOp.getInputs().get(i).getValue().equals(oldOp)) {
+                workingOp.getInputs().set(i, newOpRef);
+                break;
+            }
+        }
+    }
+
     public static ILogicalPlan deepCopy(ILogicalPlan plan, ILogicalOperator dataSource) throws AlgebricksException {
         List<Mutable<ILogicalOperator>> roots = plan.getRoots();
         List<Mutable<ILogicalOperator>> newRoots = clonePipeline(roots);

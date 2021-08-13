@@ -6144,6 +6144,11 @@
         <output-dir compare="Text">rtree-spatial-self-intersect-point</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="index-join">
+      <compilation-unit name="btree-multiple-join">
+        <output-dir compare="Text">btree-multiple-join</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-selection">
     <test-case FilePath="index-selection">
@@ -8298,6 +8303,28 @@
       <test-case FilePath="array-index/insert-upsert-delete/closed">
         <compilation-unit name="with-filter-fields">
           <output-dir compare="Text">with-filter-fields</output-dir>
+        </compilation-unit>
+      </test-case>
+    </test-group>
+    <test-group name="array-index/join-quantified-queries">
+      <test-case FilePath="array-index/join-quantified-queries">
+        <compilation-unit name="use-case-1">
+          <output-dir compare="Text">use-case-1</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="array-index/join-quantified-queries">
+        <compilation-unit name="use-case-2">
+          <output-dir compare="Text">use-case-2</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="array-index/join-quantified-queries">
+        <compilation-unit name="use-case-3">
+          <output-dir compare="Text">use-case-3</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="array-index/join-quantified-queries">
+        <compilation-unit name="use-case-4">
+          <output-dir compare="Text">use-case-4</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>

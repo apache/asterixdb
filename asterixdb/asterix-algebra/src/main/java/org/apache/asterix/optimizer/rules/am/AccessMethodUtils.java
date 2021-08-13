@@ -1637,11 +1637,25 @@ public class AccessMethodUtils {
 
         // Non-index-only plan case: creates (ORDER)? -> (DISTINCT)? -> UNNEST-MAP(PIDX) and return that unnest-map op.
         if (!isIndexOnlyPlan) {
-            // If we have a join + an array index, we need add the join source PK to the DISTINCT + ORDER.
-            List<LogicalVariable> joinPKVars = Collections.emptyList();
+            // If we have a join + an array index, we need add the join source PK(s) to the DISTINCT + ORDER.
+            List<LogicalVariable> joinPKVars;
             if (isArrayIndex && probeSubTree != null) {
-                joinPKVars = probeSubTree.getDataSourceVariables().subList(0,
-                        probeSubTree.getDataSourceVariables().size() - 1);
+                joinPKVars = new ArrayList<>();
+                List<LogicalVariable> liveVars = new ArrayList<>();
+                VariableUtilities.getSubplanLocalLiveVariables(probeSubTree.getRoot(), liveVars);
+
+                for (LogicalVariable liveVar : liveVars) {
+                    List<LogicalVariable> keyVars = context.findPrimaryKey(liveVar);
+                    if (keyVars != null) {
+                        for (LogicalVariable keyVar : keyVars) {
+                            if (!joinPKVars.contains(keyVar)) {
+                                joinPKVars.add(keyVar);
+                            }
+                        }
+                    }
+                }
+            } else {
+                joinPKVars = Collections.emptyList();
             }
 
             return createFinalNonIndexOnlySearchPlan(dataset, inputOp, context, !isArrayIndex && sortPrimaryKeys,

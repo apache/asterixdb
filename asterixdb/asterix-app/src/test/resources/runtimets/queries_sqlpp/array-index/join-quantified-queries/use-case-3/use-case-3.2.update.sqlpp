@@ -1,0 +1,69 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE TestYelp;
+
+INSERT INTO YelpCheckin (
+    [
+        {
+            "business_id": "1",
+            "checkin_times": [
+                {"date": "2016-04-26", "time": "19:49:16"},
+                {"date": "2016-08-30", "time": "18:36:57"},
+                {"date": "2016-10-15", "time": "02:45:18"},
+                {"date": "2016-11-18", "time": "01:54:50"},
+                {"date": "2017-04-20", "time": "18:39:06"},
+                {"date": "2017-05-03", "time": "17:58:02"},
+                {"date": "2019-03-19", "time": "22:04:48"}
+             ]
+        },
+        {
+            "business_id": "2",
+            "checkin_times": [
+                {"date": "2018-05-25", "time": "19:52:07"},
+                {"date": "2018-09-18", "time": "16:09:44"},
+                {"date": "2019-06-07", "time": "21:29:09"}
+             ]
+        },
+        {
+            "business_id": "3",
+            "checkin_times": [
+                {"date": "2019-06-07", "time": "17:54:58"}
+             ]
+        }
+    ]
+);
+INSERT INTO YelpCheckinDateMarkers (
+    [
+        { "marker": "4fa1e250-7a68-3adb-04ec-6569c36882f5", "datetime": "2019-06-07 17:54:58", "date": "2019-06-07", "time": "19:49:16" },
+        { "marker": "4fa1e250-7a68-3adb-04ec-6569c368832f", "datetime": "2018-07-22 19:55:31", "date": "2018-07-22", "time": "19:55:31" },
+        { "marker": "4fa1e250-7a68-3adb-04ec-6569c3688330", "datetime": "2018-09-07 01:42:54", "date": "2018-09-07", "time": "01:42:54" },
+        { "marker": "4fa1e250-7a68-3adb-04ec-6569c3688331", "datetime": "2019-03-08 03:41:06", "date": "2019-03-08", "time": "03:41:06" },
+        { "marker": "991ed2f7-3374-33a5-ee65-77f067848381", "datetime": "2019-06-07 17:54:58", "date": "2019-06-07", "time": "17:54:58" },
+        { "marker": "991ed2f7-3374-33a5-ee65-77f0678483a6", "datetime": "2019-02-27 14:03:08", "date": "2019-02-27", "time": "14:03:08" },
+        { "marker": "991ed2f7-3374-33a5-ee65-77f0678483a7", "datetime": "2015-05-29 16:46:17", "date": "2015-05-29", "time": "16:46:17" },
+        { "marker": "991ed2f7-3374-33a5-ee65-77f0678483a8", "datetime": "2015-06-01 15:03:53", "date": "2015-06-01", "time": "15:03:53" },
+        { "marker": "BAD_ENTRY_1", "datetime": "NA", "date": "NA", "time": "NA" },
+        { "marker": "BAD_ENTRY_2", "datetime": "NA", "date": "NA", "time": "NA" },
+        { "marker": "BAD_ENTRY_3", "datetime": "NA", "date": "NA", "time": "NA" },
+        { "marker": "BAD_ENTRY_4", "datetime": "NA", "date": "NA", "time": "NA" },
+        { "marker": "BAD_ENTRY_5", "datetime": "NA", "date": "NA", "time": "NA" },
+        { "marker": "BAD_ENTRY_6", "datetime": "NA", "date": "NA", "time": "NA" }
+    ]
+);

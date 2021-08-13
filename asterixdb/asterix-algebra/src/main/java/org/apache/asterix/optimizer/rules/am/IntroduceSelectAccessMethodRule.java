@@ -30,7 +30,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.optimizer.rules.util.SelectInSubplanBranchCreator;
+import org.apache.asterix.optimizer.rules.subplan.SelectFromSubplanCreator;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -123,7 +123,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     protected IVariableTypeEnvironment typeEnvironment = null;
     protected final OptimizableOperatorSubTree subTree = new OptimizableOperatorSubTree();
     protected List<Mutable<ILogicalOperator>> afterSelectRefs = null;
-    private final SelectInSubplanBranchCreator selectInSubplanBranchCreator = new SelectInSubplanBranchCreator();
+    private final SelectFromSubplanCreator selectFromSubplanCreator = new SelectFromSubplanCreator();
 
     // Register access methods.
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<>();
@@ -134,7 +134,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(ArrayBTreeAccessMethod.INSTANCE, accessMethods);
         for (Pair<FunctionIdentifier, Boolean> f : ArrayBTreeAccessMethod.INSTANCE.getOptimizableFunctions()) {
-            SelectInSubplanBranchCreator.addOptimizableFunction(f.first);
+            SelectFromSubplanCreator.addOptimizableFunction(f.first);
         }
     }
 
@@ -383,15 +383,20 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             // If successful, this will create a non-index only plan that replaces the subplan's
             // DATA-SCAN with a PIDX SEARCH <- DISTINCT <- ORDER <- SIDX SEARCH.
             if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()) {
-                SelectOperator selectRewrite = selectInSubplanBranchCreator.createSelect(selectOp, context);
-                if (selectRewrite != null
-                        && checkAndApplyTheSelectTransformation(new MutableObject<>(selectRewrite), context)) {
-                    return true;
+                SelectOperator selectRewrite = selectFromSubplanCreator.createOperator(selectOp, context);
+                boolean transformationResult = false;
+                if (selectRewrite != null) {
+                    Mutable<ILogicalOperator> selectRuleInput = new MutableObject<>(selectRewrite);
+                    transformationResult = checkAndApplyTheSelectTransformation(selectRuleInput, context);
+                }
 
-                } else {
-                    // If this optimization or temp-branch creation was not successful, restore our state.
-                    selectRef = selectRefFromThisOp;
-                    selectOp = selectInSubplanBranchCreator.getOriginalSelect();
+                // Restore our state, so we can look for more optimizations if this transformation failed.
+                selectOp = selectFromSubplanCreator.restoreBeforeRewrite(null, null);
+                selectRef = selectRefFromThisOp;
+
+                if (transformationResult) {
+                    // Rewrite was successful. Exit early.
+                    return true;
                 }
             }
 
