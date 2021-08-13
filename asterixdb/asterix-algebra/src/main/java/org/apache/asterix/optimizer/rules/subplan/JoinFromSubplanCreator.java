@@ -31,10 +31,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
@@ -42,7 +39,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 
 /**
@@ -133,8 +129,7 @@ public class JoinFromSubplanCreator extends AbstractOperatorFromSubplanCreator<A
 
         // Additionally, verify that our SELECT is conditioning on a variable.
         joinContext.selectAfterSubplan = (SelectOperator) afterJoinOp2;
-        if (!joinContext.selectAfterSubplan.getCondition().getValue().getExpressionTag()
-                .equals(LogicalExpressionTag.VARIABLE)) {
+        if (getConditioningVariable(joinContext.selectAfterSubplan.getCondition().getValue()) == null) {
             return;
         }
 
@@ -175,18 +170,9 @@ public class JoinFromSubplanCreator extends AbstractOperatorFromSubplanCreator<A
             return null;
         }
 
-        // Verify that the subplan does not produce any other variable other than the SELECT var from its parent.
-        SelectOperator selectAfterSubplan = joinContext.selectAfterSubplan;
-        LogicalVariable originalSelectVar =
-                ((VariableReferenceExpression) selectAfterSubplan.getCondition().getValue()).getVariableReference();
-        SubplanOperator subplanOperator = (SubplanOperator) selectAfterSubplan.getInputs().get(0).getValue();
-        List<LogicalVariable> subplanProducedVars = new ArrayList<>();
-        VariableUtilities.getProducedVariables(subplanOperator, subplanProducedVars);
-        if (subplanProducedVars.size() != 1 || !subplanProducedVars.get(0).equals(originalSelectVar)) {
-            return null;
-        }
-
         // Traverse our subplan and generate a SELECT branch if applicable.
+        SubplanOperator subplanOperator =
+                (SubplanOperator) joinContext.selectAfterSubplan.getInputs().get(0).getValue();
         Pair<SelectOperator, UnnestOperator> traversalOutput =
                 traverseSubplanBranch(subplanOperator, originalOperator.getInputs().get(1).getValue());
         if (traversalOutput == null) {

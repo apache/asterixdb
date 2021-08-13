@@ -43,10 +43,8 @@ CREATE DATASET YelpCheckinDateMarkers (CheckinDatesToMarkersType) PRIMARY KEY ma
 CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times UNNEST dates);
 
 FROM    YelpCheckinDateMarkers M, YelpCheckin C
-WHERE   ( EVERY CT IN C.checkin_times
-          SATISFIES ( EVERY D IN CT.dates
-                      SATISFIES D /*+ indexnl */ = M.date ) AND
-                    LEN (CT.dates) > 0 ) AND
-        LEN (C.checkin_times) > 0 AND
+WHERE   ( SOME AND EVERY CT IN C.checkin_times
+          SATISFIES ( SOME AND EVERY D IN CT.dates
+                      SATISFIES D /*+ indexnl */ = M.date ) ) AND
         C.business_id = "--Ni3oJ4VOqfOEu7Sj2Vzg"
 SELECT  COUNT(*);

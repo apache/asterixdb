@@ -10,10 +10,9 @@
                   -- SUBPLAN  |PARTITIONED|
                           {
                             -- AGGREGATE  |LOCAL|
-                              -- STREAM_SELECT  |LOCAL|
-                                -- ASSIGN  |LOCAL|
-                                  -- UNNEST  |LOCAL|
-                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                              -- ASSIGN  |LOCAL|
+                                -- UNNEST  |LOCAL|
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                           }
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- STREAM_SELECT  |PARTITIONED|
@@ -26,7 +25,7 @@
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- STABLE_SORT [$$75(ASC), $$65(ASC)]  |PARTITIONED|
+                                          -- STABLE_SORT [$$73(ASC), $$64(ASC)]  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -21,8 +21,7 @@ SET `compiler.arrayindex` "true";
 USE TestYelp;
 
 FROM    YelpCheckin C
-WHERE   LEN(C.checkin_times) > 0 AND
-        ( EVERY CT IN C.checkin_times
-          SATISFIES ( SOME D IN CT.dates
-                      SATISFIES "2019-06-07" = D ) )
+WHERE   SOME AND EVERY CT IN C.checkin_times
+        SATISFIES ( SOME D IN CT.dates
+                    SATISFIES "2019-06-07" = D )
 SELECT  C.business_id;

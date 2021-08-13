@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
@@ -53,6 +54,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -78,6 +80,22 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
         this.context = context;
     }
 
+    protected LogicalVariable getConditioningVariable(ILogicalExpression condition) {
+        List<Mutable<ILogicalExpression>> selectConjuncts = new ArrayList<>();
+        if (condition.splitIntoConjuncts(selectConjuncts)) {
+            for (Mutable<ILogicalExpression> conjunct : selectConjuncts) {
+                if (conjunct.getValue().getExpressionTag().equals(LogicalExpressionTag.VARIABLE)) {
+                    return ((VariableReferenceExpression) conjunct.getValue()).getVariableReference();
+                }
+            }
+
+        } else if (condition.getExpressionTag().equals(LogicalExpressionTag.VARIABLE)) {
+            return ((VariableReferenceExpression) condition).getVariableReference();
+
+        }
+        return null;
+    }
+
     protected Pair<SelectOperator, UnnestOperator> traverseSubplanBranch(SubplanOperator subplanOperator,
             ILogicalOperator parentInput) throws AlgebricksException {
         // We only expect one plan, and one root.
@@ -94,43 +112,26 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
         }
         workingSubplanRootAsAggregate = (AggregateOperator) workingSubplanRoot;
 
-        // Try to find a SELECT that we can optimize (i.e. has a function call).
-        Pair<SelectOperator, UnnestOperator> traversalOutput;
-        SelectOperator optimizableSelect = null;
-        for (Mutable<ILogicalOperator> opInput : workingSubplanRoot.getInputs()) {
-            ILogicalOperator subplanOrSelect = findSubplanOrOptimizableSelect(opInput.getValue(), optimizableFunctions);
-            if (subplanOrSelect == null) {
-                return null;
-
-            } else if (subplanOrSelect.getOperatorTag().equals(LogicalOperatorTag.SUBPLAN)) {
-                traversalOutput = traverseSubplanBranch((SubplanOperator) subplanOrSelect, opInput.getValue());
-                if (traversalOutput != null) {
-                    optimizableSelect = traversalOutput.first;
-                }
-
-            } else {
-                optimizableSelect = (SelectOperator) subplanOrSelect;
-                break;
-            }
-        }
+        // Find (or create, in the SOME AND EVERY case) a SELECT that we can potentially optimize.
+        SelectOperator optimizableSelect = getSelectFromPlan(workingSubplanRootAsAggregate);
         if (optimizableSelect == null) {
             return null;
         }
 
         // We have found a SELECT with a variable. Create a copy, and set this to our rewrite root.
-        SelectOperator newSelectOperator = new SelectOperator(optimizableSelect.getCondition(),
+        SelectOperator rewriteRootSelect = new SelectOperator(optimizableSelect.getCondition(),
                 optimizableSelect.getRetainMissing(), optimizableSelect.getMissingPlaceholderVariable());
 
         // Ensure that this SELECT represents a predicate for an existential query, and is a query we can optimize.
-        newSelectOperator = normalizeSelectCondition(workingSubplanRootAsAggregate, newSelectOperator);
-        if (newSelectOperator == null) {
+        rewriteRootSelect = normalizeSelectCondition(workingSubplanRootAsAggregate, rewriteRootSelect);
+        if (rewriteRootSelect == null) {
             return null;
         }
-        newSelectOperator.setSourceLocation(sourceLocation);
-        newSelectOperator.setExecutionMode(optimizableSelect.getExecutionMode());
+        rewriteRootSelect.setSourceLocation(sourceLocation);
+        rewriteRootSelect.setExecutionMode(optimizableSelect.getExecutionMode());
 
         // Follow this SELECT to the root of our nested-plan branch (i.e. the NESTED-TUPLE-SOURCE).
-        ILogicalOperator workingNewOperator = newSelectOperator;
+        ILogicalOperator workingNewOperator = rewriteRootSelect;
         UnnestOperator bottommostNewUnnest = null;
         ILogicalOperator workingOriginalOperator = optimizableSelect.getInputs().get(0).getValue();
         while (!workingOriginalOperator.getOperatorTag().equals(LogicalOperatorTag.NESTEDTUPLESOURCE)) {
@@ -164,8 +165,8 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
                     // If we encounter another SELECT, then we have multiple quantifiers. Transform our new SELECT to
                     // include this condition.
                     List<Mutable<ILogicalExpression>> selectArguments = new ArrayList<>();
-                    if (!newSelectOperator.getCondition().getValue().splitIntoConjuncts(selectArguments)) {
-                        selectArguments.add(newSelectOperator.getCondition());
+                    if (!rewriteRootSelect.getCondition().getValue().splitIntoConjuncts(selectArguments)) {
+                        selectArguments.add(rewriteRootSelect.getCondition());
                     }
                     if (!((SelectOperator) workingOriginalOperator).getCondition().getValue()
                             .splitIntoConjuncts(selectArguments)) {
@@ -174,10 +175,10 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
                     ScalarFunctionCallExpression andCond = new ScalarFunctionCallExpression(
                             BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND), selectArguments);
                     SelectOperator updatedSelectOperator = new SelectOperator(new MutableObject<>(andCond),
-                            newSelectOperator.getRetainMissing(), newSelectOperator.getMissingPlaceholderVariable());
+                            rewriteRootSelect.getRetainMissing(), rewriteRootSelect.getMissingPlaceholderVariable());
                     updatedSelectOperator.setSourceLocation(sourceLocation);
-                    updatedSelectOperator.getInputs().addAll(newSelectOperator.getInputs());
-                    newSelectOperator = updatedSelectOperator;
+                    updatedSelectOperator.getInputs().addAll(rewriteRootSelect.getInputs());
+                    rewriteRootSelect = updatedSelectOperator;
                     break;
 
                 case AGGREGATE:
@@ -196,9 +197,9 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
                     "UNNEST expected in nested plan branch, but not found.");
         }
 
-        // If we are working with universal quantification, then we must also check whether or not we have a conjunct 
-        // that asserts that the array should also be non-empty.
-        if (isUniversalQuantification(workingSubplanRootAsAggregate)
+        // If we are working with strict universal quantification, then we must also check whether or not we have a
+        // conjunct that asserts that the array should also be non-empty.
+        if (isStrictUniversalQuantification(workingSubplanRootAsAggregate)
                 && isArrayNonEmptyConjunctMissing(bottommostNewUnnest, subplanOperator.getInputs().get(0).getValue())
                 && (parentInput == null || isArrayNonEmptyConjunctMissing(bottommostNewUnnest, parentInput))) {
             return null;
@@ -207,24 +208,82 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
         // We have added everything we need in our nested-plan branch. Now, connect the input of our SUBPLAN to our
         // current working branch.
         bottommostNewUnnest.getInputs().addAll(subplanOperator.getInputs());
-        OperatorManipulationUtil.computeTypeEnvironmentBottomUp(newSelectOperator, context);
+        OperatorManipulationUtil.computeTypeEnvironmentBottomUp(rewriteRootSelect, context);
 
-        return new Pair<>(newSelectOperator, bottommostNewUnnest);
+        return new Pair<>(rewriteRootSelect, bottommostNewUnnest);
     }
 
-    private boolean isUniversalQuantification(AggregateOperator workingSubplanRoot) throws CompilationException {
-        AggregateFunctionCallExpression aggregateFunctionCallExpression =
-                (AggregateFunctionCallExpression) workingSubplanRoot.getExpressions().get(0).getValue();
-        if (aggregateFunctionCallExpression.getFunctionIdentifier().equals(BuiltinFunctions.EMPTY_STREAM)) {
-            return true;
+    protected SelectOperator getSelectFromPlan(AggregateOperator subplanRoot) throws AlgebricksException {
+        ILogicalOperator subplanRootInput = subplanRoot.getInputs().get(0).getValue();
+        ILogicalOperator subplanOrSelect = findSubplanOrOptimizableSelect(subplanRootInput);
 
-        } else if (aggregateFunctionCallExpression.getFunctionIdentifier().equals(BuiltinFunctions.NON_EMPTY_STREAM)) {
-            return false;
+        if (subplanOrSelect != null && subplanOrSelect.getOperatorTag().equals(LogicalOperatorTag.SUBPLAN)) {
+            // We have found a SUBPLAN. Recurse by calling our caller.
+            Pair<SelectOperator, UnnestOperator> traversalOutput =
+                    traverseSubplanBranch((SubplanOperator) subplanOrSelect, subplanRootInput);
+            return (traversalOutput != null) ? traversalOutput.first : null;
+
+        } else if (subplanOrSelect != null && subplanOrSelect.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
+            // We have found a SELECT. Return this to our caller.
+            return (SelectOperator) subplanOrSelect;
 
         } else {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, workingSubplanRoot.getSourceLocation(),
-                    "Unexpected aggregate function: " + aggregateFunctionCallExpression.getFunctionIdentifier());
+            // We were not able to find a SELECT or a SUBPLAN. Try to find an expression in our aggregate that we
+            // can optimize (i.e. handle SOME AND EVERY case).
+            AbstractFunctionCallExpression optimizableCondition = null;
+            boolean isNonEmptyStream = false;
+            for (Mutable<ILogicalExpression> expression : subplanRoot.getExpressions()) {
+                AggregateFunctionCallExpression aggExpression = (AggregateFunctionCallExpression) expression.getValue();
+                if (aggExpression.getFunctionIdentifier().equals(BuiltinFunctions.NON_EMPTY_STREAM)) {
+                    isNonEmptyStream = true;
+
+                } else if (aggExpression.isTwoStep()
+                        && aggExpression.getStepOneAggregate().getFunctionIdentifier()
+                                .equals(BuiltinFunctions.SQL_COUNT)
+                        && aggExpression.getStepTwoAggregate().getFunctionIdentifier().equals(BuiltinFunctions.SQL_SUM)
+                        && aggExpression.getArguments().get(0).getValue().getExpressionTag()
+                                .equals(LogicalExpressionTag.FUNCTION_CALL)) {
+                    AbstractFunctionCallExpression switchExpression =
+                            (AbstractFunctionCallExpression) aggExpression.getArguments().get(0).getValue();
+                    if (!switchExpression.getArguments().get(0).getValue().getExpressionTag()
+                            .equals(LogicalExpressionTag.FUNCTION_CALL)) {
+                        continue;
+                    }
+                    AbstractFunctionCallExpression switchCondition =
+                            (AbstractFunctionCallExpression) switchExpression.getArguments().get(0).getValue();
+
+                    ILogicalExpression arg2 = switchExpression.getArguments().get(1).getValue();
+                    ILogicalExpression arg3 = switchExpression.getArguments().get(2).getValue();
+                    ILogicalExpression arg4 = switchExpression.getArguments().get(3).getValue();
+                    if (arg2.getExpressionTag().equals(LogicalExpressionTag.CONSTANT)
+                            && arg3.getExpressionTag().equals(LogicalExpressionTag.CONSTANT)
+                            && arg4.getExpressionTag().equals(LogicalExpressionTag.CONSTANT)
+                            && ((ConstantExpression) arg2).getValue().isTrue()
+                            && ((ConstantExpression) arg3).getValue().isNull()
+                            && ((ConstantExpression) arg4).getValue().isTrue()) {
+                        optimizableCondition = switchCondition;
+                    }
+                }
+            }
+            if (isNonEmptyStream && optimizableCondition != null) {
+                SelectOperator newSelectFromAggregate =
+                        new SelectOperator(new MutableObject<>(optimizableCondition), false, null);
+                newSelectFromAggregate.getInputs().addAll(subplanRoot.getInputs());
+                newSelectFromAggregate.setSourceLocation(sourceLocation);
+                return newSelectFromAggregate;
+            }
+            return null;
         }
+    }
+
+    private boolean isStrictUniversalQuantification(AggregateOperator workingSubplanRoot) {
+        for (Mutable<ILogicalExpression> expression : workingSubplanRoot.getExpressions()) {
+            AggregateFunctionCallExpression funcExpr = (AggregateFunctionCallExpression) expression.getValue();
+            if (funcExpr.getFunctionIdentifier().equals(BuiltinFunctions.EMPTY_STREAM)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isArrayNonEmptyConjunctMissing(UnnestOperator firstUnnestInNTS, ILogicalOperator subplanInput)
@@ -299,22 +358,21 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
             }
         }
 
-        // TODO (GLENN): Handle the cases 1) where the arrayVar is explicitly indexed, 2) the NOT function.
         return false;
     }
 
     private SelectOperator normalizeSelectCondition(AggregateOperator aggregateOperator, SelectOperator selectOperator)
             throws AlgebricksException {
-        // The purpose of this function is to remove the NOT(IF-MISSING-OR-NULL(...)) functions for a universal
+        // The purpose of this function is to remove the NOT(IF-MISSING-OR-NULL(...)) functions for a strict universal
         // quantification query. The {@code ArrayBTreeAccessMethod} does not recognize the former as optimizable
         // functions, so we remove them here. This SELECT will never make it to the final query plan (after the
         // {@code IntroduceSelectAccessMethodRule}), which allows us to get away with this logically incorrect branch.
-        if (aggregateOperator != null && !isUniversalQuantification(aggregateOperator)) {
-            // We are working with an existential quantification query. Do not modify the SELECT.
+        if (aggregateOperator != null && !isStrictUniversalQuantification(aggregateOperator)) {
+            // We are working with an existential quantification OR an EACH AND EVERY query. Do not modify the SELECT.
             return selectOperator;
 
         } else {
-            // We are working with a universal quantification query.
+            // We are working with a strict universal quantification query.
             ScalarFunctionCallExpression notFunction =
                     (ScalarFunctionCallExpression) selectOperator.getCondition().getValue();
             if (!notFunction.getFunctionIdentifier().equals(BuiltinFunctions.NOT)) {
@@ -335,13 +393,13 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
         }
     }
 
-    private ILogicalOperator findSubplanOrOptimizableSelect(ILogicalOperator operator,
-            Set<FunctionIdentifier> optimizableFunctions) {
+    private ILogicalOperator findSubplanOrOptimizableSelect(ILogicalOperator operator) throws AlgebricksException {
         // We are trying to find a SELECT operator with an optimizable function call.
         if (operator.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
             SelectOperator selectOperator = (SelectOperator) operator;
             ILogicalExpression selectCondExpr = selectOperator.getCondition().getValue();
-            if (selectCondExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            boolean containsValidVar = isAnyVarFromUnnestOrAssign(operator);
+            if (containsValidVar && selectCondExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
 
                 // We have a NOT function call. Determine if this follows the NOT(IF-MISSING-OR-NULL(...)) pattern.
                 ScalarFunctionCallExpression notExpr = (ScalarFunctionCallExpression) selectCondExpr;
@@ -358,11 +416,11 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
                     // Inside the NOT(IF-MISSING-OR-NULL(...)) is an optimizable function. Return this.
                     ScalarFunctionCallExpression ifMissingOrNullExpr = (ScalarFunctionCallExpression) notCondExpr;
                     ILogicalExpression finalExpr = ifMissingOrNullExpr.getArguments().get(0).getValue();
-                    if (doesExpressionContainOptimizableFunction(finalExpr, optimizableFunctions)) {
+                    if (doesExpressionContainOptimizableFunction(finalExpr)) {
                         return selectOperator;
                     }
 
-                } else if (doesExpressionContainOptimizableFunction(selectCondExpr, optimizableFunctions)) {
+                } else if (doesExpressionContainOptimizableFunction(selectCondExpr)) {
                     // We have an optimizable function. Return this.
                     return selectOperator;
 
@@ -374,23 +432,18 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
         }
 
         // No matching operator found. Recurse on current operator input.
-        if (operator.getInputs().isEmpty()) {
-            return null;
-
-        } else {
-            return findSubplanOrOptimizableSelect(operator.getInputs().get(0).getValue(), optimizableFunctions);
-        }
+        return (operator.getInputs().isEmpty()) ? null
+                : findSubplanOrOptimizableSelect(operator.getInputs().get(0).getValue());
     }
 
-    private boolean doesExpressionContainOptimizableFunction(ILogicalExpression inputExpr,
-            Set<FunctionIdentifier> optimizableFunctions) {
+    private boolean doesExpressionContainOptimizableFunction(ILogicalExpression inputExpr) {
         if (!inputExpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
             return false;
         }
 
         // Check if the input expression itself is an optimizable function.
         ScalarFunctionCallExpression inputExprAsFunc = (ScalarFunctionCallExpression) inputExpr;
-        if (isFunctionOptimizable(inputExprAsFunc, optimizableFunctions)) {
+        if (isFunctionOptimizable(inputExprAsFunc)) {
             return true;
         }
 
@@ -400,8 +453,7 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
             for (Mutable<ILogicalExpression> mutableConjunct : conjuncts) {
                 ILogicalExpression workingConjunct = mutableConjunct.getValue();
                 if (workingConjunct.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)
-                        && (isFunctionOptimizable((ScalarFunctionCallExpression) workingConjunct,
-                                optimizableFunctions))) {
+                        && isFunctionOptimizable((ScalarFunctionCallExpression) workingConjunct)) {
                     return true;
                 }
             }
@@ -410,8 +462,7 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
         return false;
     }
 
-    private boolean isFunctionOptimizable(ScalarFunctionCallExpression inputExpr,
-            Set<FunctionIdentifier> optimizableFunctions) {
+    private boolean isFunctionOptimizable(ScalarFunctionCallExpression inputExpr) {
         if (inputExpr.getFunctionIdentifier().equals(BuiltinFunctions.GT)) {
             // Avoid the GT(LEN(array-field), 0) function.
             ILogicalExpression gtExpr = inputExpr.getArguments().get(0).getValue();
@@ -430,5 +481,24 @@ abstract public class AbstractOperatorFromSubplanCreator<T> {
 
         // Otherwise, check if the function itself is optimizable.
         return (optimizableFunctions.contains(inputExpr.getFunctionIdentifier()));
+    }
+
+    private boolean isAnyVarFromUnnestOrAssign(ILogicalOperator op) throws AlgebricksException {
+        List<LogicalVariable> opUsedVars = new ArrayList<>(), relevantVars = new ArrayList<>();
+        VariableUtilities.getUsedVariables(op, opUsedVars);
+        ILogicalOperator workingOp = op;
+        boolean isMatchFound = false;
+        while (workingOp != null) {
+            if (workingOp.getOperatorTag().equals(LogicalOperatorTag.UNNEST)
+                    || workingOp.getOperatorTag().equals(LogicalOperatorTag.ASSIGN)) {
+                VariableUtilities.getProducedVariables(workingOp, relevantVars);
+                if (opUsedVars.stream().anyMatch(relevantVars::contains)) {
+                    isMatchFound = true;
+                    break;
+                }
+            }
+            workingOp = (workingOp.getInputs().isEmpty()) ? null : workingOp.getInputs().get(0).getValue();
+        }
+        return isMatchFound;
     }
 }

@@ -14,8 +14,8 @@
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                           }
                     -- STREAM_PROJECT  |PARTITIONED|
-                      -- ASSIGN  |PARTITIONED|
-                        -- STREAM_SELECT  |PARTITIONED|
+                      -- STREAM_SELECT  |PARTITIONED|
+                        -- ASSIGN  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- BTREE_SEARCH (TestYelp.YelpCheckin.YelpCheckin)  |PARTITIONED|
@@ -24,7 +24,7 @@
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- STABLE_SORT [$$73(ASC), $$64(ASC)]  |PARTITIONED|
+                                          -- STABLE_SORT [$$71(ASC), $$63(ASC)]  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

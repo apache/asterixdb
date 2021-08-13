@@ -10,17 +10,15 @@
                   -- SUBPLAN  |PARTITIONED|
                           {
                             -- AGGREGATE  |LOCAL|
-                              -- STREAM_SELECT  |LOCAL|
-                                -- SUBPLAN  |LOCAL|
-                                        {
-                                          -- AGGREGATE  |LOCAL|
-                                            -- STREAM_SELECT  |LOCAL|
-                                              -- UNNEST  |LOCAL|
-                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
-                                  -- ASSIGN  |LOCAL|
-                                    -- UNNEST  |LOCAL|
-                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                              -- SUBPLAN  |LOCAL|
+                                      {
+                                        -- AGGREGATE  |LOCAL|
+                                          -- UNNEST  |LOCAL|
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                      }
+                                -- ASSIGN  |LOCAL|
+                                  -- UNNEST  |LOCAL|
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                           }
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- STREAM_SELECT  |PARTITIONED|
@@ -33,7 +31,7 @@
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- STABLE_SORT [$$93(ASC), $$80(ASC)]  |PARTITIONED|
+                                          -- STABLE_SORT [$$88(ASC), $$77(ASC)]  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

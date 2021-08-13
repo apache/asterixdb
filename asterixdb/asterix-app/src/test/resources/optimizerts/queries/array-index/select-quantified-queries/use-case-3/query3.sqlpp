@@ -36,6 +36,5 @@ CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times SELECT dat
 
 SELECT C.business_id
 FROM YelpCheckin C
-WHERE LEN(C.checkin_times) > 0 AND
-      (EVERY D IN C.checkin_times
-       SATISFIES D.date BETWEEN "2016" AND "2017");
+WHERE SOME AND EVERY D IN C.checkin_times
+      SATISFIES D.date BETWEEN "2016" AND "2017";

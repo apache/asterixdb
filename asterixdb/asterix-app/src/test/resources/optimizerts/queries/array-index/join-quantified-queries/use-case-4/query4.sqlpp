@@ -45,14 +45,10 @@ CREATE INDEX IdxYelpCheckinDatesA ON YelpCheckinA (UNNEST checkin_times UNNEST d
 CREATE INDEX IdxYelpCheckinDatesB ON YelpCheckinB (UNNEST checkin_times UNNEST dates);
 
 FROM    YelpCheckinDateMarkers M, YelpCheckinA A, YelpCheckinB B
-WHERE   ( EVERY CT IN A.checkin_times
-          SATISFIES ( EVERY D IN CT.dates
-                      SATISFIES D /*+ indexnl */ = M.date ) AND
-                    LEN (CT.dates) > 0 ) AND
-        LEN (A.checkin_times) > 0 AND
-        ( EVERY CT IN B.checkin_times
-          SATISFIES ( EVERY D IN CT.dates
-                      SATISFIES D /*+ indexnl */ = M.date ) AND
-                    LEN (CT.dates) > 0 ) AND
-        LEN (B.checkin_times) > 0
+WHERE   ( SOME AND EVERY CT IN A.checkin_times
+          SATISFIES SOME AND EVERY D IN CT.dates
+                    SATISFIES D /*+ indexnl */ = M.date ) AND
+        ( SOME AND EVERY CT IN B.checkin_times
+          SATISFIES SOME AND EVERY D IN CT.dates
+                    SATISFIES D /*+ indexnl */ = M.date )
 SELECT  COUNT(*);

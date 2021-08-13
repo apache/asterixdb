@@ -20,7 +20,7 @@ SET `compiler.arrayindex` "true";
 USE TestYelp;
 
 FROM     YelpCheckinDateMarkers M, YelpCheckin C
-WHERE    ( SOME D IN C.checkin_times
-           SATISFIES D.date /*+ indexnl */ = M.date )
+WHERE    SOME D IN C.checkin_times
+         SATISFIES D.date /*+ indexnl */ = M.date
 SELECT   M.marker, C.business_id
 ORDER BY M.marker, C.business_id;

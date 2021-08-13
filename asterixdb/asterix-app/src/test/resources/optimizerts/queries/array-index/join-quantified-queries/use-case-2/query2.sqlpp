@@ -43,7 +43,6 @@ CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times.dates);
 
 FROM    YelpCheckinDateMarkers M, YelpCheckin C
 WHERE   C.business_id = "--Ni3oJ4VOqfOEu7Sj2Vzg" AND
-        LEN(C.checkin_times.dates) > 0 AND
-        ( EVERY D IN C.checkin_times.dates
+        ( SOME AND EVERY D IN C.checkin_times.dates
           SATISFIES M.date /*+ indexnl */ = D )
 SELECT  COUNT(*);

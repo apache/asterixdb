@@ -100,10 +100,9 @@ The following universal quantification query will utilize the index we just crea
 
     SELECT o
     FROM orders o
-    WHERE LEN(o.items) > 0 AND
-          (EVERY i IN o.items SATISFIES i.qty > 100 AND i.price < 5.00);
+    WHERE SOME AND EVERY i IN o.items SATISFIES i.qty > 100 AND i.price < 5.00;
 
-Take note of the `LEN(o.items) > 0` conjunct.
+Take note of the `SOME AND EVERY` quantifier instead of the `EVERY` quantifier.
 Array indexes cannot be used for queries with potentially empty arrays.
 
 

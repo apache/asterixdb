@@ -19,7 +19,6 @@
 package org.apache.asterix.optimizer.rules.subplan;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -30,15 +29,12 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 
 /**
  * For use in writing a "throwaway" branch which removes NTS and subplan operators. The result of this invocation is to
@@ -113,23 +109,14 @@ public class SelectFromSubplanCreator extends AbstractOperatorFromSubplanCreator
         reset(originalOperator.getSourceLocation(), context, optimizableFunctions);
 
         // We expect a) a SUBPLAN as input to this SELECT, and b) our SELECT to be conditioning on a variable.
+        LogicalVariable originalSelectVar = getConditioningVariable(originalOperator.getCondition().getValue());
         if (!originalOperator.getInputs().get(0).getValue().getOperatorTag().equals(LogicalOperatorTag.SUBPLAN)
-                || !originalOperator.getCondition().getValue().getExpressionTag()
-                        .equals(LogicalExpressionTag.VARIABLE)) {
-            return null;
-        }
-        LogicalVariable originalSelectVar =
-                ((VariableReferenceExpression) originalOperator.getCondition().getValue()).getVariableReference();
-
-        // Additionally, verify that the subplan does not produce any other variable other than the SELECT var above.
-        SubplanOperator subplanOperator = (SubplanOperator) originalOperator.getInputs().get(0).getValue();
-        List<LogicalVariable> subplanProducedVars = new ArrayList<>();
-        VariableUtilities.getProducedVariables(subplanOperator, subplanProducedVars);
-        if (subplanProducedVars.size() != 1 || !subplanProducedVars.get(0).equals(originalSelectVar)) {
+                || originalSelectVar == null) {
             return null;
         }
 
         // Traverse our subplan and generate a SELECT branch if applicable.
+        SubplanOperator subplanOperator = (SubplanOperator) originalOperator.getInputs().get(0).getValue();
         Pair<SelectOperator, UnnestOperator> traversalOutput = traverseSubplanBranch(subplanOperator, null);
         return (traversalOutput == null) ? null : traversalOutput.first;
     }

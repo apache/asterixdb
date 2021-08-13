@@ -20,10 +20,8 @@ SET `compiler.arrayindex` "true";
 USE TestYelp;
 
 FROM     YelpCheckinDateMarkers M, YelpCheckinA A
-WHERE    ( EVERY CT IN A.checkin_times
-           SATISFIES ( EVERY D IN CT.dates
-                       SATISFIES D /*+ indexnl */ = M.date ) AND
-                     LEN (CT.dates) > 0 ) AND
-         LEN (A.checkin_times) > 0
+WHERE    SOME AND EVERY CT IN A.checkin_times
+         SATISFIES ( SOME AND EVERY D IN CT.dates
+                     SATISFIES D /*+ indexnl */ = M.date )
 SELECT   M.marker, A.business_id
 ORDER BY M.marker, A.business_id;

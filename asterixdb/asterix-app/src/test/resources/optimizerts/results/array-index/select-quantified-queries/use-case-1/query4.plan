@@ -21,7 +21,7 @@
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- STABLE_SORT [$$59(ASC)]  |PARTITIONED|
+                                    -- STABLE_SORT [$$57(ASC)]  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
