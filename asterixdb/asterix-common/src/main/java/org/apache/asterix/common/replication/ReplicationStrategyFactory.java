@@ -21,7 +21,7 @@ package org.apache.asterix.common.replication;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ReplicationStrategyFactory {
+public class ReplicationStrategyFactory implements IReplicationStrategyFactory {
 
     private static final Map<String, Class<? extends IReplicationStrategy>> BUILT_IN_REPLICATION_STRATEGY =
             new HashMap<>();
@@ -32,11 +32,8 @@ public class ReplicationStrategyFactory {
         BUILT_IN_REPLICATION_STRATEGY.put("metadata", MetadataOnlyReplicationStrategy.class);
     }
 
-    private ReplicationStrategyFactory() {
-        throw new AssertionError();
-    }
-
-    public static IReplicationStrategy create(String name) {
+    @Override
+    public IReplicationStrategy create(String name) {
         String strategyName = name.toLowerCase();
         if (!BUILT_IN_REPLICATION_STRATEGY.containsKey(strategyName)) {
             throw new IllegalStateException("Couldn't find strategy with name: " + name);

@@ -53,6 +53,7 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
+import org.apache.asterix.common.replication.IReplicationStrategyFactory;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.transactions.IRecoveryManager;
@@ -176,7 +177,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
 
     @Override
     public void initialize(IRecoveryManagerFactory recoveryManagerFactory, IReceptionistFactory receptionistFactory,
-            IConfigValidatorFactory configValidatorFactory, boolean initialRun) throws IOException {
+            IConfigValidatorFactory configValidatorFactory, IReplicationStrategyFactory replicationStrategyFactory,
+            boolean initialRun) throws IOException {
         ioManager = getServiceContext().getIoManager();
         int ioQueueLen = getServiceContext().getAppConfig().getInt(NCConfig.Option.IO_QUEUE_SIZE);
         threadExecutor =
@@ -231,7 +233,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         receptionist = receptionistFactory.create();
 
         if (replicationProperties.isReplicationEnabled()) {
-            replicationManager = new ReplicationManager(this, replicationProperties);
+            replicationManager = new ReplicationManager(this, replicationStrategyFactory, replicationProperties);
 
             //pass replication manager to replication required object
             //LogManager to replicate logs

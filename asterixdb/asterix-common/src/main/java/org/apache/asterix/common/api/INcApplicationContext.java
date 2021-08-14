@@ -26,6 +26,7 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
+import org.apache.asterix.common.replication.IReplicationStrategyFactory;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.transactions.IRecoveryManagerFactory;
@@ -71,7 +72,8 @@ public interface INcApplicationContext extends IApplicationContext {
     IResourceIdFactory getResourceIdFactory();
 
     void initialize(IRecoveryManagerFactory recoveryManagerFactory, IReceptionistFactory receptionistFactory,
-            IConfigValidatorFactory configValidatorFactory, boolean initialRun) throws IOException, AlgebricksException;
+            IConfigValidatorFactory configValidatorFactory, IReplicationStrategyFactory replicationStrategyFactory,
+            boolean initialRun) throws IOException, AlgebricksException;
 
     void setShuttingdown(boolean b);
 

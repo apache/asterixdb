@@ -79,4 +79,11 @@ public interface IReplicaManager {
      * @return the synchronization lock
      */
     Object getReplicaSyncLock();
+
+    /**
+     * Gets the partition replicas matching {@code id}
+     * @param id
+     * @return The partition replica if found. Otherwise, null.
+     */
+    IPartitionReplica getReplica(ReplicaIdentifier id);
 }

@@ -69,6 +69,8 @@ import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.config.PropertiesFactory;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.replication.IReplicationStrategyFactory;
+import org.apache.asterix.common.replication.ReplicationStrategyFactory;
 import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
@@ -163,7 +165,7 @@ public class NCApplication extends BaseNCApplication {
             updateOnNodeJoin();
         }
         runtimeContext.initialize(getRecoveryManagerFactory(), getReceptionistFactory(), getConfigValidatorFactory(),
-                runtimeContext.getNodeProperties().isInitialRun());
+                getReplicationStrategyFactory(), runtimeContext.getNodeProperties().isInitialRun());
         MessagingProperties messagingProperties = runtimeContext.getMessagingProperties();
         NCMessageBroker messageBroker = new NCMessageBroker(controllerService, messagingProperties);
         this.ncServiceCtx.setMessageBroker(messageBroker);
@@ -192,6 +194,10 @@ public class NCApplication extends BaseNCApplication {
 
     protected IReceptionistFactory getReceptionistFactory() {
         return Receptionist::new;
+    }
+
+    protected IReplicationStrategyFactory getReplicationStrategyFactory() {
+        return new ReplicationStrategyFactory();
     }
 
     protected IConfigValidatorFactory getConfigValidatorFactory() {

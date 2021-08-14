@@ -101,6 +101,11 @@ public class ReplicaManager implements IReplicaManager {
     }
 
     @Override
+    public synchronized IPartitionReplica getReplica(ReplicaIdentifier id) {
+        return replicas.get(id);
+    }
+
+    @Override
     public synchronized Set<Integer> getPartitions() {
         return Collections.unmodifiableSet(partitions);
     }

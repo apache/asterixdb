@@ -30,7 +30,7 @@ import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.replication.IReplicationDestination;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategy;
-import org.apache.asterix.common.replication.ReplicationStrategyFactory;
+import org.apache.asterix.common.replication.IReplicationStrategyFactory;
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.replication.api.ReplicationDestination;
 import org.apache.hyracks.api.replication.IReplicationJob;
@@ -50,10 +50,11 @@ public class ReplicationManager implements IReplicationManager {
     private final LogReplicationManager logReplicationManager;
     private final IndexReplicationManager lsnIndexReplicationManager;
 
-    public ReplicationManager(INcApplicationContext appCtx, ReplicationProperties replicationProperties) {
+    public ReplicationManager(INcApplicationContext appCtx, IReplicationStrategyFactory replicationStrategyFactory,
+            ReplicationProperties replicationProperties) {
         this.replicationProperties = replicationProperties;
         this.appCtx = appCtx;
-        strategy = ReplicationStrategyFactory.create(replicationProperties.getReplicationStrategy());
+        strategy = replicationStrategyFactory.create(replicationProperties.getReplicationStrategy());
         logReplicationManager = new LogReplicationManager(appCtx, this);
         lsnIndexReplicationManager = new IndexReplicationManager(appCtx, this);
     }
