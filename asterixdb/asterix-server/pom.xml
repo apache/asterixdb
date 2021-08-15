@@ -205,10 +205,11 @@
             </override>
             <override>
               <gavs>
-                <gav>com.azure:azure-core:1.4.0</gav>
-                <gav>com.azure:azure-core-http-netty:1.5.0</gav>
-                <gav>com.azure:azure-storage-blob:12.6.0</gav>
-                <gav>com.azure:azure-storage-common:12.6.0</gav>
+                <gav>com.azure:azure-core:1.17.0</gav>
+                <gav>com.azure:azure-core-http-netty:1.10.0</gav>
+                <gav>com.azure:azure-storage-blob:12.12.0</gav>
+                <gav>com.azure:azure-storage-common:12.12.0</gav>
+                <gav>com.azure:azure-storage-internal-avro:12.0.5</gav>
               </gavs>
               <noticeUrl>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/master/NOTICE.txt</noticeUrl>
               <url>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/master/LICENSE.txt</url>

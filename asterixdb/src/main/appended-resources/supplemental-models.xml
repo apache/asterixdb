@@ -561,10 +561,10 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-storage-blob</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>12.6.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>12.6.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>12.6.0</license.ignoreLicenseOverride>
-        <license.ignoreNoticeOverride>12.6.0</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>12.12.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>12.12.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>12.12.0</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>12.12.0</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -574,10 +574,23 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-storage-common</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>12.6.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>12.6.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>12.6.0</license.ignoreLicenseOverride>
-        <license.ignoreNoticeOverride>12.6.0</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>12.12.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>12.12.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>12.12.0</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>12.12.0</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <supplement>
+    <project>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-storage-internal-avro</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>12.0.5</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>12.0.5</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>12.0.5</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>12.0.5</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -587,10 +600,10 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-core</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.4.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.4.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.4.0</license.ignoreLicenseOverride>
-        <license.ignoreNoticeOverride>1.4.0</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>1.17.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.17.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.17.0</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>1.17.0</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -600,10 +613,10 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-core-http-netty</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.5.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.5.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.5.0</license.ignoreLicenseOverride>
-        <license.ignoreNoticeOverride>1.5.0</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>1.10.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.10.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.10.0</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>1.10.0</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -616,7 +629,7 @@
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jsr310</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>2.10.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>2.12.3</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -628,7 +641,7 @@
       <groupId>com.fasterxml.woodstox</groupId>
       <artifactId>woodstox-core</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>6.0.2</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>6.2.4</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -640,29 +653,100 @@
       <groupId>org.codehaus.woodstox</groupId>
       <artifactId>stax2-api</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>4.2</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>4.2.1</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
 
+  <!-- io.projectreactor:reactor-core uses ALv2 license and has no notice -->
   <supplement>
     <project>
       <groupId>io.projectreactor</groupId>
       <artifactId>reactor-core</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>3.3.3.RELEASE</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>3.3.3.RELEASE</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>3.4.6</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>3.4.6</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
 
+  <!-- io.projectreactor.netty:reactor-netty uses ALv2 license and has no notice -->
   <supplement>
     <project>
       <groupId>io.projectreactor.netty</groupId>
       <artifactId>reactor-netty</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>0.9.5.RELEASE</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>0.9.5.RELEASE</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.0.7</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.0.7</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- io.projectreactor.netty:reactor-netty-core uses ALv2 license and has no notice -->
+  <supplement>
+    <project>
+      <groupId>io.projectreactor.netty</groupId>
+      <artifactId>reactor-netty-core</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>1.0.7</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.0.7</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- io.projectreactor.netty:reactor-netty-http uses ALv2 license and has no notice -->
+  <supplement>
+    <project>
+      <groupId>io.projectreactor.netty</groupId>
+      <artifactId>reactor-netty-http</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>1.0.7</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.0.7</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- io.projectreactor.netty:reactor-netty-http-brave uses ALv2 license and has no notice -->
+  <supplement>
+    <project>
+      <groupId>io.projectreactor.netty</groupId>
+      <artifactId>reactor-netty-http-brave</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>1.0.7</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.0.7</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- io.zipkin2:zipkin has embedded license but no notice -->
+  <supplement>
+    <project>
+      <groupId>io.zipkin.zipkin2</groupId>
+      <artifactId>zipkin</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedNotice>2.23.2</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- io.zipkin.reporter2:zipkin-reporter has embedded license but no notice -->
+  <supplement>
+    <project>
+      <groupId>io.zipkin.reporter2</groupId>
+      <artifactId>zipkin-reporter</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedNotice>2.16.3</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- io.zipkin.reporter2:zipkin-reporter-brave has embedded license but no notice -->
+  <supplement>
+    <project>
+      <groupId>io.zipkin.reporter2</groupId>
+      <artifactId>zipkin-reporter-brave</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedNotice>2.16.3</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
