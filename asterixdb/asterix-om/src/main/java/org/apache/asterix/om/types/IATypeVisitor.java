@@ -18,24 +18,18 @@
  */
 package org.apache.asterix.om.types;
 
-import java.io.Serializable;
+/**
+ * Allows for a specialized processing for the {@link IAType}
+ *
+ * @param <R> return type
+ * @param <T> argument type
+ */
+public interface IATypeVisitor<R, T> {
+    R visit(ARecordType recordType, T arg);
 
-import org.apache.asterix.om.base.IAObject;
-import org.apache.hyracks.api.io.IJsonSerializable;
+    R visit(AbstractCollectionType collectionType, T arg);
 
-public interface IAType extends IAObject, Serializable, IJsonSerializable {
+    R visit(AUnionType unionType, T arg);
 
-    public ATypeTag getTypeTag();
-
-    public String getDisplayName();
-
-    public String getTypeName();
-
-    /**
-     * Allow for additional traversal and processing for {@link IAType}
-     *
-     * @param visitor visitor
-     * @param arg     visitor's argument
-     */
-    <R, T> R accept(IATypeVisitor<R, T> visitor, T arg);
+    R visitFlat(IAType flatType, T arg);
 }

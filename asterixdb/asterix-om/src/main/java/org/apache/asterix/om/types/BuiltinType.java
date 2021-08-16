@@ -1081,6 +1081,14 @@ public abstract class BuiltinType implements IAType {
         return getType().getTypeTag().serialize();
     }
 
+    /**
+     * Visit built-in type as a flat type
+     */
+    @Override
+    public <R, T> R accept(IATypeVisitor<R, T> visitor, T arg) {
+        return visitor.visitFlat(this, arg);
+    }
+
     private static JsonNode convertToJson(IPersistedResourceRegistry registry, short tag, long version) {
         ObjectNode jsonNode = registry.getClassIdentifier(BuiltinType.class, version);
         jsonNode.put(TAG_FIELD, tag);
@@ -1090,7 +1098,10 @@ public abstract class BuiltinType implements IAType {
     @SuppressWarnings("squid:S1172") // unused parameter
     public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json) {
         byte tag = (byte) json.get(TAG_FIELD).shortValue();
-        ATypeTag typeTag = VALUE_TYPE_MAPPING[tag];
+        return getBuiltinType(VALUE_TYPE_MAPPING[tag]);
+    }
+
+    public static IAType getBuiltinType(ATypeTag typeTag) {
         switch (typeTag) {
             case TYPE:
                 return ALL_TYPE;

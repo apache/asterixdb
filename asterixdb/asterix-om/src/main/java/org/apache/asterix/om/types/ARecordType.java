@@ -428,4 +428,9 @@ public class ARecordType extends AbstractComplexType {
         }
         return false;
     }
+
+    @Override
+    public <R, T> R accept(IATypeVisitor<R, T> visitor, T arg) {
+        return visitor.visit(this, arg);
+    }
 }

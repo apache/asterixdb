@@ -70,6 +70,11 @@ public abstract class AbstractCollectionType extends AbstractComplexType {
         return isTyped() && itemType.getTypeName().equals(type.getTypeName());
     }
 
+    @Override
+    public <R, T> R accept(IATypeVisitor<R, T> visitor, T arg) {
+        return visitor.visit(this, arg);
+    }
+
     JsonNode convertToJson(IPersistedResourceRegistry registry, Class<? extends IJsonSerializable> clazz, long version)
             throws HyracksDataException {
         final ObjectNode jsonObject = registry.getClassIdentifier(clazz, version);

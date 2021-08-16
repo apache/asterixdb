@@ -70,6 +70,16 @@ public class AUnionType extends AbstractComplexType {
         return false;
     }
 
+    public IAType getType(ATypeTag typeTag) {
+        for (int i = 0; i < unionList.size(); i++) {
+            IAType type = unionList.get(i);
+            if (typeTag == type.getTypeTag()) {
+                return type;
+            }
+        }
+        return null;
+    }
+
     public IAType getActualType() {
         return unionList.get(AUnionType.OPTIONAL_TYPE_INDEX_IN_UNION_LIST);
     }
@@ -239,6 +249,11 @@ public class AUnionType extends AbstractComplexType {
         }
         jsonObject.set(UNION_LIST_FIELD, fieldTypesArray);
         return jsonObject;
+    }
+
+    @Override
+    public <R, T> R accept(IATypeVisitor<R, T> visitor, T arg) {
+        return visitor.visit(this, arg);
     }
 
     public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
