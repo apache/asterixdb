@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.app.nc;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -139,6 +140,11 @@ public class ReplicaManager implements IReplicaManager {
     @Override
     public Object getReplicaSyncLock() {
         return replicaSyncLock;
+    }
+
+    @Override
+    public synchronized List<IPartitionReplica> getReplicas() {
+        return new ArrayList<>(replicas.values());
     }
 
     public void closePartitionResources(int partition) throws HyracksDataException {

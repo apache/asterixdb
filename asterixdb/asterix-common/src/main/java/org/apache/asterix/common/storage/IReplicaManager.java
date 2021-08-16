@@ -86,4 +86,11 @@ public interface IReplicaManager {
      * @return The partition replica if found. Otherwise, null.
      */
     IPartitionReplica getReplica(ReplicaIdentifier id);
+
+    /**
+     * Gets the list of replicas
+     *
+     * @return the list of replicas
+     */
+    List<IPartitionReplica> getReplicas();
 }

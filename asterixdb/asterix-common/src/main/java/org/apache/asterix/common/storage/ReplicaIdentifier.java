@@ -75,6 +75,10 @@ public class ReplicaIdentifier {
         return id.hashCode();
     }
 
+    public String getId() {
+        return id;
+    }
+
     @Override
     public String toString() {
         return id;
