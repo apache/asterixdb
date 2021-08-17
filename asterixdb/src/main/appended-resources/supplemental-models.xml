@@ -632,9 +632,9 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-storage-blob</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>12.6.0,12.12.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>12.6.0,12.12.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>12.6.0,12.12.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>12.12.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>12.12.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>12.12.0</license.ignoreLicenseOverride>
         <license.ignoreNoticeOverride>12.12.0</license.ignoreNoticeOverride>
       </properties>
     </project>
@@ -645,9 +645,9 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-storage-common</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>12.6.0,12.12.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>12.6.0,12.12.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>12.6.0,12.12.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>12.12.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>12.12.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>12.12.0</license.ignoreLicenseOverride>
         <license.ignoreNoticeOverride>12.12.0</license.ignoreNoticeOverride>
       </properties>
     </project>
@@ -671,9 +671,9 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-core</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.4.0,1.17.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.4.0,1.17.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.4.0,1.17.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.17.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.17.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.17.0</license.ignoreLicenseOverride>
         <license.ignoreNoticeOverride>1.17.0</license.ignoreNoticeOverride>
       </properties>
     </project>
@@ -684,9 +684,9 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-core-http-netty</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.5.0,1.10.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.5.0,1.10.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.5.0,1.10.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.10.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.10.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.10.0</license.ignoreLicenseOverride>
         <license.ignoreNoticeOverride>1.10.0</license.ignoreNoticeOverride>
       </properties>
     </project>
@@ -763,8 +763,8 @@
       <groupId>io.projectreactor.netty</groupId>
       <artifactId>reactor-netty</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>0.9.5.RELEASE,1.0.7</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>0.9.5.RELEASE,1.0.7</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.0.7</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.0.7</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1001,7 +1001,7 @@
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jsr310</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>2.10.1,2.12.3</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>2.12.3</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1013,7 +1013,7 @@
       <groupId>com.fasterxml.woodstox</groupId>
       <artifactId>woodstox-core</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>6.0.2,6.2.4</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>6.2.4</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1025,7 +1025,7 @@
       <groupId>org.codehaus.woodstox</groupId>
       <artifactId>stax2-api</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>4.2,4.2.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>4.2.1</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>

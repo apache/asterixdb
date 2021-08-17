@@ -88,7 +88,6 @@
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.14.1</log4j.version>
     <awsjavasdk.version>2.10.83</awsjavasdk.version>
-    <azurejavasdk.version>12.6.0</azurejavasdk.version>
     <parquet.version>1.12.0</parquet.version>
     <hadoop-awsjavasdk.version>1.12.1</hadoop-awsjavasdk.version>
     <azurejavasdk.version>12.12.0</azurejavasdk.version>
