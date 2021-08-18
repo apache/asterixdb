@@ -87,8 +87,7 @@ public class PhysicalOptimizationConfig {
     }
 
     public int getMaxFramesForJoinLeftInput() {
-        int frameSize = getFrameSize();
-        return getInt(MAX_FRAMES_FOR_JOIN_LEFT_INPUT, (int) (140L * 1024 * MB / frameSize));
+        return getInt(MAX_FRAMES_FOR_JOIN_LEFT_INPUT, -1);
     }
 
     public void setMaxFramesForJoinLeftInput(int frameLimit) {
