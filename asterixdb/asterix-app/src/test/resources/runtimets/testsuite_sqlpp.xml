@@ -6561,6 +6561,17 @@
   </test-group>
   <test-group name="join">
     <test-case FilePath="join">
+      <compilation-unit name="cross-join-01">
+        <output-dir compare="Text">cross-join-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
+      <compilation-unit name="cross-join-02-negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1077: Cannot find dataset x in dataverse Default nor an alias with name x (in line 26, at column 39)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
       <compilation-unit name="hash_join_array">
         <output-dir compare="Text">hash_join_array</output-dir>
       </compilation-unit>

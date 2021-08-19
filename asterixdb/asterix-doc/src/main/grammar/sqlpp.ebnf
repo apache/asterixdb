@@ -69,7 +69,8 @@ FromTerm ::= NamedExpr (JoinStep | UnnestStep)*
 
 NamedExpr ::= Expr ("AS"? Variable)?
 
-JoinStep ::= ("INNER" | ( ( "LEFT" | "RIGHT" ) "OUTER"?))? "JOIN" NamedExpr "ON" Expr
+JoinStep ::= ( ("INNER" | ( ( "LEFT" | "RIGHT" ) "OUTER"?))? "JOIN" NamedExpr "ON" Expr ) |
+             ( "CROSS" "JOIN" NamedExpr )
 
 UnnestStep ::= ("INNER" | ( "LEFT" "OUTER"?))? "UNNEST" NamedExpr
 

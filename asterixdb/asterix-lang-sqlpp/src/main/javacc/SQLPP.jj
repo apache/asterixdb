@@ -4570,6 +4570,7 @@ FromTerm FromTerm() throws ParseException :
       | ( <INNER> correlateClause = JoinOrUnnestClause(JoinType.INNER, UnnestType.INNER) )
       | ( <LEFT> ( <OUTER> )? correlateClause = JoinOrUnnestClause(JoinType.LEFTOUTER, UnnestType.LEFTOUTER) )
       | ( <RIGHT> ( <OUTER> )? correlateClause = JoinClause(JoinType.RIGHTOUTER) )
+      | ( <CROSS> correlateClause = CrossJoinClause() )
      )
      {
         correlateClauses.add(correlateClause);
@@ -4599,19 +4600,46 @@ AbstractBinaryCorrelateClause JoinOrUnnestClause(JoinType joinType, UnnestType u
 JoinClause JoinClause(JoinType joinType) throws ParseException :
 {
     Token startToken = null;
-    Expression rightExpr = null;
-    VariableExpr rightVar = null;
-    VariableExpr posVar = null;
+    Triple<Expression, VariableExpr, VariableExpr> rightInput = null;
     Expression conditionExpr = null;
 }
 {
-  <JOIN> { startToken = token; } rightExpr = Expression() ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())? <ON> conditionExpr = Expression()
+  <JOIN> { startToken = token; } rightInput = JoinClauseRightInput() <ON> conditionExpr = Expression()
+  {
+    JoinClause joinClause = new JoinClause(joinType, rightInput.first, rightInput.second, rightInput.third,
+      conditionExpr);
+    return addSourceLocation(joinClause, startToken);
+  }
+}
+
+JoinClause CrossJoinClause() throws ParseException :
+{
+    Token startToken = null;
+    Triple<Expression, VariableExpr, VariableExpr> rightInput = null;
+    Expression conditionExpr = null;
+}
+{
+  <JOIN> { startToken = token; } rightInput = JoinClauseRightInput()
+  {
+    JoinClause joinClause = new JoinClause(JoinType.INNER, rightInput.first, rightInput.second, rightInput.third,
+      new LiteralExpr(TrueLiteral.INSTANCE));
+    return addSourceLocation(joinClause, startToken);
+  }
+}
+
+Triple<Expression, VariableExpr, VariableExpr> JoinClauseRightInput() throws ParseException :
+{
+    Expression rightExpr = null;
+    VariableExpr rightVar = null;
+    VariableExpr posVar = null;
+}
+{
+  rightExpr = Expression() ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())?
   {
     if (rightVar == null) {
       rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
     }
-    JoinClause joinClause = new JoinClause(joinType, rightExpr, rightVar, posVar, conditionExpr);
-    return addSourceLocation(joinClause, startToken);
+    return new Triple<Expression, VariableExpr, VariableExpr>(rightExpr, rightVar, posVar);
   }
 }
 
@@ -5068,6 +5096,7 @@ TOKEN [IGNORE_CASE]:
   | <CASE : "case">
   | <CLOSED : "closed">
   | <CREATE : "create">
+  | <CROSS : "cross">
   | <COMPACTION : "compaction"> // no longer used
   | <COMPACT : "compact">
   | <CONNECT : "connect">
