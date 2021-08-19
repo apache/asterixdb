@@ -29,13 +29,17 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression.Quantifier;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.FalseLiteral;
+import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
+import org.apache.asterix.lang.sqlpp.expression.CaseExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
@@ -71,8 +75,9 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
             case BETWEEN:
             case NOT_BETWEEN:
                 return processBetweenOperator(operatorExpr, opType);
-            default:
-                break;
+            case DISTINCT:
+            case NOT_DISTINCT:
+                return processDistinctOperator(operatorExpr, opType);
         }
         return operatorExpr;
     }
@@ -144,18 +149,83 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         Expression targetCopy = (Expression) SqlppRewriteUtil.deepCopy(target);
         Expression rightComparison = createOperatorExpression(OperatorType.LE, targetCopy, right,
                 operatorExpr.getHints(), operatorExpr.getSourceLocation());
-        OperatorExpr andExpr = new OperatorExpr();
-        andExpr.addOperand(leftComparison);
-        andExpr.addOperand(rightComparison);
-        andExpr.addOperator(OperatorType.AND);
-        andExpr.setSourceLocation(operatorExpr.getSourceLocation());
-        if (opType == OperatorType.BETWEEN) {
-            return andExpr;
-        } else {
-            CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.NOT),
-                    new ArrayList<>(Collections.singletonList(andExpr)));
-            callExpr.setSourceLocation(operatorExpr.getSourceLocation());
-            return callExpr;
+        Expression andExpr = createOperatorExpression(OperatorType.AND, leftComparison, rightComparison, null,
+                operatorExpr.getSourceLocation());
+        switch (opType) {
+            case BETWEEN:
+                return andExpr;
+            case NOT_BETWEEN:
+                CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.NOT),
+                        new ArrayList<>(Collections.singletonList(andExpr)));
+                callExpr.setSourceLocation(operatorExpr.getSourceLocation());
+                return callExpr;
+            default:
+                throw new IllegalArgumentException(String.valueOf(opType));
+        }
+    }
+
+    private Expression processDistinctOperator(OperatorExpr operatorExpr, OperatorType opType)
+            throws CompilationException {
+
+        // lhs IS NOT DISTINCT FROM rhs =>
+        //   CASE
+        //      WHEN (lhs = rhs) OR (lhs IS NULL AND rhs IS NULL) OR (lhs IS MISSING AND rhs IS MISSING)
+        //      THEN TRUE
+        //      ELSE FALSE
+        //   END
+        //
+        // lhs IS DISTINCT FROM rhs => NOT ( lhs IS NOT DISTINCT FROM rhs )
+
+        Expression lhs = operatorExpr.getExprList().get(0);
+        Expression rhs = operatorExpr.getExprList().get(1);
+
+        Expression lhsEqRhs = createOperatorExpression(OperatorType.EQ, lhs, rhs, operatorExpr.getHints(),
+                operatorExpr.getSourceLocation());
+
+        CallExpr lhsIsNull = new CallExpr(new FunctionSignature(BuiltinFunctions.IS_NULL),
+                new ArrayList<>(Collections.singletonList((Expression) SqlppRewriteUtil.deepCopy(lhs))));
+        lhsIsNull.setSourceLocation(operatorExpr.getSourceLocation());
+
+        CallExpr rhsIsNull = new CallExpr(new FunctionSignature(BuiltinFunctions.IS_NULL),
+                new ArrayList<>(Collections.singletonList((Expression) SqlppRewriteUtil.deepCopy(rhs))));
+        rhsIsNull.setSourceLocation(operatorExpr.getSourceLocation());
+
+        CallExpr lhsIsMissing = new CallExpr(new FunctionSignature(BuiltinFunctions.IS_MISSING),
+                new ArrayList<>(Collections.singletonList((Expression) SqlppRewriteUtil.deepCopy(lhs))));
+        lhsIsMissing.setSourceLocation(operatorExpr.getSourceLocation());
+
+        CallExpr rhsIsMissing = new CallExpr(new FunctionSignature(BuiltinFunctions.IS_MISSING),
+                new ArrayList<>(Collections.singletonList((Expression) SqlppRewriteUtil.deepCopy(rhs))));
+        rhsIsMissing.setSourceLocation(operatorExpr.getSourceLocation());
+
+        Expression bothAreNull = createOperatorExpression(OperatorType.AND, lhsIsNull, rhsIsNull, null,
+                operatorExpr.getSourceLocation());
+
+        Expression bothAreMissing = createOperatorExpression(OperatorType.AND, lhsIsMissing, rhsIsMissing, null,
+                operatorExpr.getSourceLocation());
+
+        Expression bothAreNullOrMissing = createOperatorExpression(OperatorType.OR, bothAreNull, bothAreMissing, null,
+                operatorExpr.getSourceLocation());
+
+        Expression eqOrNullOrMissing = createOperatorExpression(OperatorType.OR, lhsEqRhs, bothAreNullOrMissing, null,
+                operatorExpr.getSourceLocation());
+
+        CaseExpression caseExpr = new CaseExpression(new LiteralExpr(TrueLiteral.INSTANCE),
+                new ArrayList<>(Collections.singletonList(eqOrNullOrMissing)),
+                new ArrayList<>(Collections.singletonList(new LiteralExpr(TrueLiteral.INSTANCE))),
+                new LiteralExpr(FalseLiteral.INSTANCE));
+        caseExpr.setSourceLocation(operatorExpr.getSourceLocation());
+
+        switch (opType) {
+            case NOT_DISTINCT:
+                return caseExpr;
+            case DISTINCT:
+                CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.NOT),
+                        new ArrayList<>(Collections.singletonList(caseExpr)));
+                callExpr.setSourceLocation(operatorExpr.getSourceLocation());
+                return callExpr;
+            default:
+                throw new IllegalArgumentException(String.valueOf(opType));
         }
     }
 
@@ -173,5 +243,4 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         }
         return comparison;
     }
-
 }

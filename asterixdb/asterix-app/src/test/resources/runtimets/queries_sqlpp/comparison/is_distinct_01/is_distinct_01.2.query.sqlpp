@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+let
+  x = 2, y = 3
+select
+  /* test expression */
+  x between 1 and 3 is not distinct from x between 0 and 4 as t1,
+  /* expected operator precedence */
+  (x between 1 and 3) is not distinct from (x between 0 and 4) as t1_expected,
+  /* unexpected operator precedence */
+  (((x between 1 and 3) is not distinct from x) between 0 and 4) as t1_unexpected,
+
+  /* test expression */
+  x is unknown is not distinct from y is unknown as t2,
+  /* expected operator precedence */
+  (x is unknown) is not distinct from (y is unknown) as t2_expected,
+  /* unexpected operator precedence */
+  (((x is unknown) is not distinct from y) is unknown) as t2_unexpected,
+
+  /* test expression */
+  x is not unknown is distinct from y is unknown as t3,
+  /* expected operator precedence */
+  (x is not unknown) is distinct from (y is unknown) as t3_expected,
+  /* unexpected operator precedence */
+  (((x is not unknown) is distinct from y) is unknown) as t3_unexpected;

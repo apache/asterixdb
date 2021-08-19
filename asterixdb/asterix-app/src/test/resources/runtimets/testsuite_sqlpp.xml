@@ -3431,6 +3431,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="comparison">
+      <compilation-unit name="is_distinct_01">
+        <output-dir compare="Text">is_distinct_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="comparison">
       <compilation-unit name="like">
         <output-dir compare="Text">like</output-dir>
       </compilation-unit>

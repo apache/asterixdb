@@ -53,7 +53,7 @@ The following table summarizes the precedence order (from higher to lower) of th
 | &#124;&#124;                                                                |  String concatenation |
 | IS NULL, IS NOT NULL, IS MISSING, IS NOT MISSING, <br/>IS UNKNOWN, IS NOT UNKNOWN, IS VALUED, IS NOT VALUED | Unknown value comparison |
 | BETWEEN, NOT BETWEEN                                                        | Range comparison (inclusive on both sides) |
-| =, !=, <>, <, >, <=, >=, LIKE, NOT LIKE, IN, NOT IN                             | Comparison  |
+| =, !=, <>, <, >, <=, >=, LIKE, NOT LIKE, IN, NOT IN, IS DISTINCT FROM, IS NOT DISTINCT FROM | Comparison  |
 | NOT                                                                         | Logical negation |
 | AND                                                                         | Conjunction |
 | OR                                                                          | Disjunction |
@@ -130,6 +130,8 @@ The following table enumerates all of the comparison operators available in SQL+
 | >=             |  Greater than or equal to                      | FROM customers AS c <br/> WHERE c.rating >= 640 <br/> SELECT *; |
 | LIKE           |  Test if the left side matches a pattern defined on the right side; in the pattern,  "%" matches any string while "&#95;" matches any character. | FROM customers AS c WHERE c.name LIKE "%Dodge%" SELECT *;|
 | NOT LIKE       |  Test if the left side does not match a pattern defined on the right side; in the pattern, "%" matches any string while "&#95;" matches any character. | FROM customers AS c WHERE c.name NOT LIKE "%Dodge%" SELECT *;|
+| IS DISTINCT FROM | Inequality test that that treats NULL values as equal to each other and MISSING values as equal to each other | FROM orders AS o <br/> WHERE o.order_date IS DISTINCT FROM o.ship_date <br/> SELECT *; | |
+| IS NOT DISTINCT FROM | Equality test that treats NULL values as equal to each other and MISSING values as equal to each other | FROM orders AS o <br/> WHERE o.order_date IS NOT DISTINCT FROM o.ship_date <br/> SELECT *;  |
 
 The following table summarizes how the missing value comparison operators work.
 

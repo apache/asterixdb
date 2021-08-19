@@ -41,7 +41,9 @@ public enum OperatorType {
     IN("in"),
     NOT_IN("not_in"),
     BETWEEN("between"),
-    NOT_BETWEEN("not_between");
+    NOT_BETWEEN("not_between"),
+    DISTINCT("distinct"),
+    NOT_DISTINCT("not_distinct");
 
     private static final OperatorType[] VALUES = values();
 

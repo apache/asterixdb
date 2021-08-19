@@ -3264,6 +3264,7 @@ Expression RelExpr() throws ParseException:
 {
   boolean not = false;
   OperatorExpr op = null;
+  Token opToken = null;
   Expression operand = null;
   IExpressionAnnotation annotation = null;
 }
@@ -3271,8 +3272,12 @@ Expression RelExpr() throws ParseException:
     operand = BetweenExpr()
 
     (
-      LOOKAHEAD(2)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> | <LG> |<SIMILAR> | (<NOT> { not = true; })? <IN>)
+      LOOKAHEAD(3)( <LT> | <GT> | <LE> | <GE> | <EQ> | <NE> | <LG> |<SIMILAR> | (<NOT> { not = true; })? <IN> |
+                    <IS> (<NOT> { not = true; })? <DISTINCT> { opToken = token; } <FROM> )
         {
+          if (opToken == null) {
+            opToken = token;
+          }
           Token hintToken = fetchHint(token,
             SqlppHint.HASH_BROADCAST_JOIN_HINT, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
             SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT
@@ -3280,7 +3285,7 @@ Expression RelExpr() throws ParseException:
           if (hintToken != null) {
             annotation = parseExpressionAnnotation(hintToken);
           }
-          String operator = token.image.toLowerCase();
+          String operator = opToken.image.toLowerCase();
           if (operator.equals("<>")){
               operator = "!=";
           }
@@ -3382,7 +3387,9 @@ Expression IsExpr() throws ParseException:
 }
 {
     operand = LikeExpr()
-    ( <IS>
+    (
+      LOOKAHEAD(3)
+      <IS>
         (<NOT> { not = true; notToken = token; })?
         (
             <NULL> { fn = BuiltinFunctions.IS_NULL; } |
