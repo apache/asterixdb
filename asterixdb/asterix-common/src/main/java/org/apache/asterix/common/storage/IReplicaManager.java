@@ -57,6 +57,13 @@ public interface IReplicaManager {
     Set<Integer> getPartitions();
 
     /**
+     * Sets the node active partitions
+     *
+     * @param activePartitions
+     */
+    void setActivePartitions(Set<Integer> activePartitions);
+
+    /**
      * Promotes a partition by making this node its master replica
      *
      * @param partition

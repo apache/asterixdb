@@ -215,11 +215,15 @@ public class LogReplicationManager {
         if (failedSockets.contains(replicaSocket)) {
             return;
         }
-        LOGGER.error("Replica failed", e);
+        LOGGER.debug("Replica failed", e);
         failedSockets.add(replicaSocket);
         Optional<ReplicationDestination> socketDest = destinations.entrySet().stream()
                 .filter(entry -> entry.getValue().equals(replicaSocket)).map(Map.Entry::getKey).findFirst();
-        socketDest.ifPresent(dest -> replicationManager.notifyFailure(dest, e));
+        if (socketDest.isPresent()) {
+            ReplicationDestination dest = socketDest.get();
+            LOGGER.error("replica at {} failed", dest);
+            replicationManager.notifyFailure(dest, e);
+        }
     }
 
     private class TxnAckListener implements Runnable {

@@ -35,7 +35,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.api.http.server.BasicAuthServlet;
@@ -82,7 +81,6 @@ import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.messaging.MessagingChannelInterfaceFactory;
 import org.apache.asterix.messaging.NCMessageBroker;
-import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.translator.Receptionist;
 import org.apache.asterix.util.MetadataBuiltinFunctions;
 import org.apache.asterix.utils.RedactionUtil;
@@ -319,16 +317,7 @@ public class NCApplication extends BaseNCApplication {
     }
 
     private void performLocalCleanUp() throws HyracksDataException {
-        //Delete working area files from failed jobs
         runtimeContext.getIoManager().deleteWorkspaceFiles();
-        // Reclaim storage for orphaned index artifacts in NCs.
-        final Set<Integer> nodePartitions = runtimeContext.getReplicaManager().getPartitions();
-        final PersistentLocalResourceRepository localResourceRepository =
-                (PersistentLocalResourceRepository) runtimeContext.getLocalResourceRepository();
-        localResourceRepository.deleteCorruptedResources();
-        for (Integer partition : nodePartitions) {
-            localResourceRepository.cleanup(partition);
-        }
     }
 
     private void updateOnNodeJoin() {

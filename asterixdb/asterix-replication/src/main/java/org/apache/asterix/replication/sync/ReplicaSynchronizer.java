@@ -43,7 +43,7 @@ public class ReplicaSynchronizer {
         this.replica = replica;
     }
 
-    public void sync() throws IOException {
+    public void sync(boolean register) throws IOException {
         synchronized (appCtx.getReplicaManager().getReplicaSyncLock()) {
             final ICheckpointManager checkpointManager = appCtx.getTransactionSubsystem().getCheckpointManager();
             try {
@@ -51,7 +51,9 @@ public class ReplicaSynchronizer {
                 checkpointManager.suspend();
                 syncFiles();
                 checkpointReplicaIndexes();
-                appCtx.getReplicationManager().register(replica);
+                if (register) {
+                    appCtx.getReplicationManager().register(replica);
+                }
             } finally {
                 checkpointManager.resume();
             }

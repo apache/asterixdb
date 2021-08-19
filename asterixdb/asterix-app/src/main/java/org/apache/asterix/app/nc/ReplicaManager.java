@@ -112,10 +112,17 @@ public class ReplicaManager implements IReplicaManager {
     }
 
     @Override
+    public synchronized void setActivePartitions(Set<Integer> activePartitions) {
+        partitions.clear();
+        partitions.addAll(activePartitions);
+    }
+
+    @Override
     public synchronized void promote(int partition) throws HyracksDataException {
         if (partitions.contains(partition)) {
             return;
         }
+        LOGGER.warn("promoting partition {}", partition);
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         localResourceRepository.cleanup(partition);

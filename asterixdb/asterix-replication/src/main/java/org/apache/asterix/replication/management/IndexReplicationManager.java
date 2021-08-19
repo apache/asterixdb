@@ -83,8 +83,9 @@ public class IndexReplicationManager {
             if (failedDest.contains(dest)) {
                 return;
             }
-            LOGGER.error("Replica failed", e);
+            LOGGER.debug("Replica failed", e);
             if (destinations.contains(dest)) {
+                LOGGER.error("replica at {} failed", dest);
                 failedDest.add(dest);
             }
             replicationManager.notifyFailure(dest, e);

@@ -213,12 +213,13 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     protected List<INCLifecycleTask> buildIdleNcRegTasks(String newNodeId, boolean metadataNode, SystemState state,
             Set<Integer> activePartitions) {
         final List<INCLifecycleTask> tasks = new ArrayList<>();
-        tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING));
+        Set<Integer> nodeActivePartitions = getNodeActivePartitions(newNodeId, activePartitions, metadataNode);
+        tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING, nodeActivePartitions));
         int metadataPartitionId = clusterManager.getMetadataPartition().getPartitionId();
         tasks.add(new LocalStorageCleanupTask(metadataPartitionId));
         if (state == SystemState.CORRUPTED) {
             // need to perform local recovery for node active partitions
-            LocalRecoveryTask rt = new LocalRecoveryTask(activePartitions);
+            LocalRecoveryTask rt = new LocalRecoveryTask(nodeActivePartitions);
             tasks.add(rt);
         }
         if (replicationEnabled) {
@@ -243,7 +244,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
             tasks.add(new ExportMetadataNodeTask(true));
             tasks.add(new BindMetadataNodeTask());
         }
-        tasks.add(new UpdateNodeStatusTask(NodeStatus.ACTIVE));
+        tasks.add(new UpdateNodeStatusTask(NodeStatus.ACTIVE, nodeActivePartitions));
         return tasks;
     }
 
@@ -298,6 +299,13 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
 
     protected boolean isLibraryFetchEnabled() {
         return true;
+    }
+
+    protected Set<Integer> getNodeActivePartitions(String nodeId, Set<Integer> nodePartitions, boolean metadataNode) {
+        if (metadataNode) {
+            nodePartitions.add(clusterManager.getMetadataPartition().getPartitionId());
+        }
+        return nodePartitions;
     }
 
     private void notifyFailedReplica(IClusterStateManager clusterManager, String nodeID,

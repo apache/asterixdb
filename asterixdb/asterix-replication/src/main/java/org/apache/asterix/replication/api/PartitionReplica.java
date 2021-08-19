@@ -77,13 +77,17 @@ public class PartitionReplica implements IPartitionReplica {
     }
 
     public synchronized void sync() {
+        sync(true);
+    }
+
+    public synchronized void sync(boolean register) {
         if (status == IN_SYNC || status == CATCHING_UP) {
             return;
         }
         setStatus(CATCHING_UP);
         appCtx.getThreadExecutor().execute(() -> {
             try {
-                new ReplicaSynchronizer(appCtx, this).sync();
+                new ReplicaSynchronizer(appCtx, this).sync(register);
                 setStatus(IN_SYNC);
             } catch (Exception e) {
                 LOGGER.error(() -> "Failed to sync replica " + this, e);

@@ -135,7 +135,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                 for (ILSMIndex lsmIndex : indexes) {
                     if (lsmIndex.isPrimaryIndex()) {
                         if (lsmIndex.isCurrentMutableComponentEmpty()) {
-                            LOGGER.info("Primary index on dataset {} and partition {} is empty... skipping flush",
+                            LOGGER.debug("Primary index on dataset {} and partition {} is empty... skipping flush",
                                     dsInfo.getDatasetID(), partition);
                             return;
                         }

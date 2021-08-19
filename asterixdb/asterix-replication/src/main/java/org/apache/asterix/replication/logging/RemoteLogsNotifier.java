@@ -70,7 +70,7 @@ class RemoteLogsNotifier implements Runnable {
                                         + System.lineSeparator()).getBytes());
                         break;
                     case LogType.FLUSH:
-                        checkpointReplicaIndexes(logRecord, logRecord.getDatasetId());
+                        checkpointReplicaIndexes(logRecord, logRecord.getDatasetId(), logRecord.getResourcePartition());
                         break;
                     default:
                         throw new IllegalStateException("Unexpected log type: " + logRecord.getLogType());
@@ -83,11 +83,13 @@ class RemoteLogsNotifier implements Runnable {
         }
     }
 
-    private void checkpointReplicaIndexes(RemoteLogRecord remoteLogMapping, int datasetId) throws HyracksDataException {
+    private void checkpointReplicaIndexes(RemoteLogRecord remoteLogMapping, int datasetId, int resourcePartition)
+            throws HyracksDataException {
         final Set<Integer> masterPartitions = appCtx.getReplicaManager().getPartitions();
         final Predicate<LocalResource> replicaIndexesPredicate = lr -> {
             DatasetLocalResource dls = (DatasetLocalResource) lr.getResource();
-            return dls.getDatasetId() == datasetId && !masterPartitions.contains(dls.getPartition());
+            return dls.getDatasetId() == datasetId && dls.getPartition() == resourcePartition
+                    && !masterPartitions.contains(dls.getPartition());
         };
         final Map<Long, LocalResource> resources = localResourceRep.getResources(replicaIndexesPredicate);
         final List<DatasetResourceReference> replicaIndexesRef =

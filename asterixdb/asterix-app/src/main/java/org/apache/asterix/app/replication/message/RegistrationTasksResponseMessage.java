@@ -73,7 +73,7 @@ public class RegistrationTasksResponseMessage extends CcIdentifiedMessage
             }
             NcLocalCounters localCounter = success ? NcLocalCounters.collect(getCcId(),
                     (NodeControllerService) appCtx.getServiceContext().getControllerService()) : null;
-            Set<Integer> nodeActivePartitions = appCtx.getMetadataProperties().getNodeActivePartitions(nodeId);
+            Set<Integer> nodeActivePartitions = appCtx.getReplicaManager().getPartitions();
             NCLifecycleTaskReportMessage result =
                     new NCLifecycleTaskReportMessage(nodeId, success, localCounter, nodeActivePartitions);
             result.setException(exception);

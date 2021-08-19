@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.nc.task;
 
+import java.util.Set;
+
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
@@ -41,6 +43,17 @@ public class LocalStorageCleanupTask implements INCLifecycleTask {
         INcApplicationContext appContext = (INcApplicationContext) cs.getApplicationContext();
         PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appContext.getLocalResourceRepository();
+        deleteInvalidMetadataIndexes(localResourceRepository);
+        final Set<Integer> nodePartitions = appContext.getReplicaManager().getPartitions();
+        localResourceRepository.deleteCorruptedResources();
+        //TODO optimize this to cleanup all active partitions at once
+        for (Integer partition : nodePartitions) {
+            localResourceRepository.cleanup(partition);
+        }
+    }
+
+    private void deleteInvalidMetadataIndexes(PersistentLocalResourceRepository localResourceRepository)
+            throws HyracksDataException {
         localResourceRepository.deleteInvalidIndexes(r -> {
             DatasetLocalResource lr = (DatasetLocalResource) r.getResource();
             return MetadataIndexImmutableProperties.isMetadataDataset(lr.getDatasetId())
