@@ -771,6 +771,23 @@ public class ExternalDataUtils {
 
     public static boolean supportsPushdown(Map<String, String> properties) {
         //Currently, only Apache Parquet format is supported
+        return isParquetFormat(properties);
+    }
+
+    /**
+     * Validate the dataset type declared with a given type
+     *
+     * @param properties        external dataset configuration
+     * @param datasetRecordType dataset declared type
+     */
+    public static void validateType(Map<String, String> properties, ARecordType datasetRecordType)
+            throws CompilationException {
+        if (isParquetFormat(properties) && datasetRecordType.getFieldTypes().length != 0) {
+            throw new CompilationException(ErrorCode.UNSUPPORTED_TYPE_FOR_PARQUET, datasetRecordType.getTypeName());
+        }
+    }
+
+    private static boolean isParquetFormat(Map<String, String> properties) {
         String inputFormat = properties.get(ExternalDataConstants.KEY_INPUT_FORMAT);
         return ExternalDataConstants.CLASS_NAME_PARQUET_INPUT_FORMAT.equals(inputFormat)
                 || ExternalDataConstants.INPUT_FORMAT_PARQUET.equals(inputFormat)

@@ -967,7 +967,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Datatype itemType, MetadataProvider metadataProvider, MetadataTransactionContext mdTxnCtx)
             throws AlgebricksException {
         ExternalDetailsDecl externalDetails = (ExternalDetailsDecl) dd.getDatasetDetailsDecl();
-        return externalDetails.getProperties();
+        Map<String, String> properties = externalDetails.getProperties();
+        ExternalDataUtils.validateType(properties, (ARecordType) itemType.getDatatype());
+        return properties;
     }
 
     protected static void validateIfResourceIsActiveInFeed(ICcApplicationContext appCtx, Dataset dataset,
