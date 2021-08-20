@@ -1437,20 +1437,20 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
   Token beginPos = null, endPos = null;
   Expression viewBodyExpr = null;
   Boolean defaultNull = null;
-  RecordConstructor withRecord = null;
+  Map<String, String> viewConfig = null;
   DataverseName currentDataverse = defaultDataverse;
 }
 {
   nameComponents = QualifiedName()
   (
-    (
-      typeExpr = DatasetTypeSpecification()
-      ifNotExists = IfNotExists()
-      <IDENTIFIER> { expectToken(DEFAULT); } <NULL> { defaultNull = true; }
-      ( <WITH> withRecord = RecordConstructor() )?
-    )
-    |
-    ( ifNotExists = IfNotExists() )
+      (
+        typeExpr = DatasetTypeSpecification()
+        ifNotExists = IfNotExists()
+        <IDENTIFIER> { expectToken(DEFAULT); } <NULL> { defaultNull = true; }
+        viewConfig = ViewConfiguration()
+      )
+      |
+      ( ifNotExists = IfNotExists() )
   )
   {
     if (orReplace && ifNotExists) {
@@ -1474,7 +1474,7 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
     defaultDataverse = currentDataverse;
     try {
       CreateViewStatement stmt = new CreateViewStatement(nameComponents.first, nameComponents.second.getValue(),
-        typeExpr, viewBody, viewBodyExpr, defaultNull, withRecord, orReplace, ifNotExists);
+        typeExpr, viewBody, viewBodyExpr, defaultNull, viewConfig, orReplace, ifNotExists);
     return addSourceLocation(stmt, startStmtToken);
     } catch (CompilationException e) {
        throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
@@ -1493,6 +1493,27 @@ Expression ViewBody() throws ParseException:
   )
   {
     return viewBodyExpr;
+  }
+}
+
+Map<String, String> ViewConfiguration() throws ParseException:
+{
+  Map<String, String> config = null;
+  String name = null, value = null;
+}
+{
+  (
+    <IDENTIFIER> { name = token.image.toLowerCase(); }
+    value = StringLiteral()
+    {
+      if (config == null) {
+        config = new LinkedHashMap<String, String>();
+      }
+      config.put(name, value);
+    }
+  )*
+  {
+    return config;
   }
 }
 

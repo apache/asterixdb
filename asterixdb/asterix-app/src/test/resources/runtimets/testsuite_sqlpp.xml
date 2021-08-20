@@ -13160,7 +13160,7 @@
         <expected-error>ASX1004: Unsupported type: view cannot process input type t1_a (in line 30, at column 1)</expected-error>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1(r bigint, a [bigint]) default null as<< Encountered "[" at column 33]]></expected-error>
         <expected-error>ASX1079: Compilation error: Invalid type for field r. The type must allow MISSING and NULL (in line 29, at column 1)</expected-error>
-        <expected-error>ASX1001: Syntax error: ASX1059: Field(s) [date-illegal-property-name] unsupported in the with clause (in line 25, at column 1)</expected-error>
+        <expected-error>ASX1001: Syntax error: ASX1092: Parameter date_illegal_property_name cannot be set (in line 25, at column 1)</expected-error>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1(r bigint) as<< Encountered "as" at column 31]]></expected-error>
         <source-location>false</source-location>
       </compilation-unit>

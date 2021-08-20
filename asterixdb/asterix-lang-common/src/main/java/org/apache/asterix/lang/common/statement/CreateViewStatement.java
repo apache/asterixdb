@@ -19,6 +19,7 @@
 
 package org.apache.asterix.lang.common.statement;
 
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -26,11 +27,9 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.util.ViewUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
-import org.apache.asterix.object.base.AdmObjectNode;
 
 public final class CreateViewStatement extends AbstractStatement {
 
@@ -44,7 +43,7 @@ public final class CreateViewStatement extends AbstractStatement {
 
     private final Expression viewBodyExpression;
 
-    private final AdmObjectNode withObjectNode;
+    private final Map<String, String> viewConfig;
 
     private final Boolean defaultNull;
 
@@ -53,7 +52,7 @@ public final class CreateViewStatement extends AbstractStatement {
     private final boolean ifNotExists;
 
     public CreateViewStatement(DataverseName dataverseName, String viewName, TypeExpression itemType, String viewBody,
-            Expression viewBodyExpression, Boolean defaultNull, RecordConstructor withRecord, boolean replaceIfExists,
+            Expression viewBodyExpression, Boolean defaultNull, Map<String, String> viewConfig, boolean replaceIfExists,
             boolean ifNotExists) throws CompilationException {
         this.dataverseName = dataverseName;
         this.viewName = Objects.requireNonNull(viewName);
@@ -61,7 +60,7 @@ public final class CreateViewStatement extends AbstractStatement {
         this.viewBody = Objects.requireNonNull(viewBody);
         this.viewBodyExpression = Objects.requireNonNull(viewBodyExpression);
         this.defaultNull = defaultNull;
-        this.withObjectNode = ViewUtil.validateAndGetWithObjectNode(withRecord, itemType != null);
+        this.viewConfig = ViewUtil.validateViewConfiguration(viewConfig, itemType != null);
         this.replaceIfExists = replaceIfExists;
         this.ifNotExists = ifNotExists;
     }
@@ -115,15 +114,15 @@ public final class CreateViewStatement extends AbstractStatement {
     }
 
     public String getDatetimeFormat() {
-        return withObjectNode.getOptionalString(ViewUtil.DATETIME_PARAMETER_NAME);
+        return viewConfig.get(ViewUtil.DATETIME_PARAMETER_NAME);
     }
 
     public String getDateFormat() {
-        return withObjectNode.getOptionalString(ViewUtil.DATE_PARAMETER_NAME);
+        return viewConfig.get(ViewUtil.DATE_PARAMETER_NAME);
     }
 
     public String getTimeFormat() {
-        return withObjectNode.getOptionalString(ViewUtil.TIME_PARAMETER_NAME);
+        return viewConfig.get(ViewUtil.TIME_PARAMETER_NAME);
     }
 
     @Override

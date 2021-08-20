@@ -21,9 +21,9 @@ package org.apache.asterix.lang.common.util;
 
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -37,7 +37,6 @@ import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
-import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.NullLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
@@ -45,7 +44,6 @@ import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.entities.ViewDetails;
-import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -63,16 +61,7 @@ public final class ViewUtil {
     public static final String DATE_PARAMETER_NAME = BuiltinType.ADATE.getTypeName();
     public static final String TIME_PARAMETER_NAME = BuiltinType.ATIME.getTypeName();
 
-    private static final ARecordType WITH_OBJECT_TYPE_FOR_TYPED_VIEW = getWithObjectTypeForTypedView();
-
     private ViewUtil() {
-    }
-
-    private static ARecordType getWithObjectTypeForTypedView() {
-        String[] fieldNames = { DATETIME_PARAMETER_NAME, DATE_PARAMETER_NAME, TIME_PARAMETER_NAME };
-        IAType[] fieldTypes = new IAType[fieldNames.length];
-        Arrays.fill(fieldTypes, AUnionType.createUnknownableType(BuiltinType.ASTRING));
-        return new ARecordType("withObject", fieldNames, fieldTypes, false);
     }
 
     public static ViewDecl parseStoredView(DatasetFullyQualifiedName viewName, ViewDetails view,
@@ -138,22 +127,28 @@ public final class ViewUtil {
         }
     }
 
-    public static AdmObjectNode validateAndGetWithObjectNode(RecordConstructor withRecord, boolean hasItemType)
+    public static Map<String, String> validateViewConfiguration(Map<String, String> viewConfig, boolean hasItemType)
             throws CompilationException {
-        if (withRecord == null) {
-            return DatasetDeclParametersUtil.EMPTY_WITH_OBJECT;
-        }
-        AdmObjectNode node = ExpressionUtils.toNode(withRecord);
-        if (node.isEmpty()) {
-            return DatasetDeclParametersUtil.EMPTY_WITH_OBJECT;
+        if (viewConfig == null) {
+            viewConfig = Collections.emptyMap();
         }
         if (hasItemType) {
-            ConfigurationTypeValidator validator = new ConfigurationTypeValidator();
-            validator.validateType(WITH_OBJECT_TYPE_FOR_TYPED_VIEW, node);
-            return node;
-        } else {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, "Invalid WITH clause in view definition");
+            for (Map.Entry<String, String> me : viewConfig.entrySet()) {
+                String name = me.getKey();
+                String value = me.getValue();
+                if (DATETIME_PARAMETER_NAME.equals(name) || DATE_PARAMETER_NAME.equals(name)
+                        || TIME_PARAMETER_NAME.equals(name)) {
+                    if (value == null) {
+                        throw new CompilationException(ErrorCode.INVALID_REQ_PARAM_VAL, name, value);
+                    }
+                } else {
+                    throw new CompilationException(ErrorCode.ILLEGAL_SET_PARAMETER, name);
+                }
+            }
+        } else if (!viewConfig.isEmpty()) {
+            throw new CompilationException(ErrorCode.ILLEGAL_SET_PARAMETER, viewConfig.keySet().iterator().next());
         }
+        return viewConfig;
     }
 
     public static Expression createTypeConvertExpression(Expression inExpr, IAType targetType,

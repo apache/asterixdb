@@ -53,20 +53,20 @@ create view v2_ref_type(t2) default null as
   from t1
 ;
 
-/* custom date/time format (with clause) */
+/* custom date/time format  */
 create view v3_datetime_format(
   c_id int32,
   c_datetime datetime, c_date date, c_time time
-) default null with {
-  'datetime':'MM/DD/YYYY hh:mm:ss.nnna',
-  'date':'MM/DD/YYYY',
-  'time':'hh:mm:ss.nnna'
-} as t2;
+) default null
+  datetime 'MM/DD/YYYY hh:mm:ss.nnna'
+  date 'MM/DD/YYYY'
+  time 'hh:mm:ss.nnna'
+as t2;
 
-/* custom date format (with clause) */
+/* custom date format */
 create view v4_date_format_only(
   c_id int32,
   c_datetime datetime, c_date date, c_time time
-) default null with {
-  'date':'MM/DD/YYYY'
-} as t2;
+) default null
+  date 'MM/DD/YYYY'
+as t2;

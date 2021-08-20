@@ -28,8 +28,8 @@ create dataset t1(c_id int32 not unknown) open type primary key c_id;
 create view v1_invalid_datetime_format(
   c_id int32,
   c_datetime datetime, c_date date, c_time time
-) default null with {
-  'datetime':'XX.ZZ.11',
-  'date':'XX.ZZ.22',
-  'time':'XX.ZZ.33'
-} as t1;
+) default null
+  datetime 'XX.ZZ.11'
+  date 'XX.ZZ.22'
+  time 'XX.ZZ.33'
+as t1;
