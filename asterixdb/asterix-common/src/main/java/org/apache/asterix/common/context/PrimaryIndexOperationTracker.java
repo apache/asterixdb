@@ -145,8 +145,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                 }
             }
             if (primaryLsmIndex == null) {
-                throw new IllegalStateException(
-                        "Primary index not found in dataset " + dsInfo.getDatasetID() + " and partition " + partition);
+                throw new IllegalStateException("Primary index not found in dataset " + dsInfo.getDatasetID()
+                        + " and partition " + partition + " open indexes " + indexes);
             }
             for (ILSMIndex lsmIndex : indexes) {
                 ILSMOperationTracker opTracker = lsmIndex.getOperationTracker();

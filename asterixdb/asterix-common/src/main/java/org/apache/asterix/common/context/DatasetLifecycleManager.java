@@ -170,9 +170,15 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         closeIndex(iInfo);
         dsInfo.removeIndex(resourceID);
         synchronized (dsInfo) {
-            if (dsInfo.getReferenceCount() == 0 && dsInfo.isOpen() && dsInfo.getIndexes().isEmpty()
-                    && !dsInfo.isExternal()) {
+            int referenceCount = dsInfo.getReferenceCount();
+            boolean open = dsInfo.isOpen();
+            boolean empty = dsInfo.getIndexes().isEmpty();
+            if (referenceCount == 0 && open && empty && !dsInfo.isExternal()) {
+                LOGGER.debug("removing dataset {} from cache", dsInfo.getDatasetID());
                 removeDatasetFromCache(dsInfo.getDatasetID());
+            } else {
+                LOGGER.debug("keeping dataset {} in cache, ref count {}, open {}, indexes count: {}",
+                        dsInfo.getDatasetID(), referenceCount, open, dsInfo.getIndexes().size());
             }
         }
     }
@@ -414,9 +420,10 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         logManager.log(waitLog);
         for (PrimaryIndexOperationTracker primaryOpTracker : dsr.getOpTrackers()) {
             // flush each partition one by one
-            if (primaryOpTracker.getNumActiveOperations() > 0) {
-                throw new IllegalStateException(
-                        "flushDatasetOpenIndexes is called on a dataset with currently active operations");
+            int numActiveOperations = primaryOpTracker.getNumActiveOperations();
+            if (numActiveOperations > 0) {
+                throw new IllegalStateException("flushDatasetOpenIndexes is called on dataset " + dsInfo.getDatasetID()
+                        + " with currently " + "active operations, count=" + numActiveOperations);
             }
             primaryOpTracker.setFlushOnExit(true);
             primaryOpTracker.flushIfNeeded();
