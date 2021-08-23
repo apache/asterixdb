@@ -246,11 +246,11 @@ class Wrapper(object):
                         return
                     pos += read
                 while pos < self.sz:
-                    vszchunk = sys.stdin.buffer.read1()
+                    vszchunk = sys.stdin.buffer.read1(FRAMESZ)
                     if len(vszchunk) == 0:
                         self.alive = False
                         return
-                    self.readview = None
+                    self.readview.release()
                     self.readbuf.extend(vszchunk)
                     self.readview = memoryview(self.readbuf)
                     pos += len(vszchunk)
@@ -258,7 +258,7 @@ class Wrapper(object):
                 self.unpacked_msg = list(self.unpacker)
                 self.msg_type = MessageType(self.unpacked_msg[0])
                 self.type_handler[self.msg_type](self)
-            except BaseException as e:
+            except BaseException:
                 self.handle_error(traceback.format_exc())
 
     def send_msg(self):

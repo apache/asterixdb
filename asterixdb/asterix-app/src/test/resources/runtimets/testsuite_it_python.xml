@@ -57,7 +57,7 @@
     result[0].append(self.next_tuple(*arg, key=self.mid))
   File "entrypoint.py", line 99, in next_tuple
     return self.wrapped_fns[key](*args)
-  File "site-packages/roundtrip.py", line 29, in warning
+  File "site-packages/roundtrip.py", line 32, in warning
     raise ArithmeticError("oof")
 ArithmeticError: oof
  (in line 28, at column 1)</expected-warn>
@@ -78,6 +78,11 @@ ArithmeticError: oof
         <output-dir compare="Text">crash</output-dir>
         <expected-warn>ASX0201: External UDF returned exception. Returned exception was: Function externallibtest:crash#0 failed to execute (in line 23, at column 1)</expected-warn>
         <expected-warn>ASX0201: External UDF returned exception. Returned exception was: java.io.IOException: Python process exited with code: 1 (in line 23, at column 1)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="big_object_pyudf">
+        <output-dir compare="Text">big_object_pyudf</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

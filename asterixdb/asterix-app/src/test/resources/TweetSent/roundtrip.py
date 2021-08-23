@@ -25,6 +25,9 @@ class Tests(object):
     def roundtrip(self, *args):
         return args
 
+    def roundstr(self, arg):
+        return arg
+
     def warning(self):
         raise ArithmeticError("oof")
 
