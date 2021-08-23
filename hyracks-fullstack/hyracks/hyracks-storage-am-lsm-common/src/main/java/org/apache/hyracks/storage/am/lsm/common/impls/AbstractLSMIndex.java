@@ -139,6 +139,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         this.inactiveMemoryComponents = new ArrayList<>();
         this.durable = durable;
         this.tracer = tracer;
+        fileManager.initLastUsedSeq(ioOpCallback.getLastValidSequence());
         lsmHarness = new LSMHarness(this, ioScheduler, mergePolicy, opTracker, diskBufferCache.isReplicationEnabled(),
                 tracer);
         isActive = false;
@@ -184,6 +185,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         filterManager = null;
         treeFields = null;
         filterFields = null;
+        fileManager.initLastUsedSeq(ioOpCallback.getLastValidSequence());
     }
 
     @Override

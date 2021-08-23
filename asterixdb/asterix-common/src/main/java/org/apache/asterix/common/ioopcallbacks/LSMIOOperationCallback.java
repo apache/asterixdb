@@ -294,6 +294,12 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         // no op
     }
 
+    @Override
+    public long getLastValidSequence() throws HyracksDataException {
+        ResourceReference resourceReference = ResourceReference.ofIndex(lsmIndex.getIndexIdentifier());
+        return indexCheckpointManagerProvider.get(resourceReference).getValidComponentSequence();
+    }
+
     private boolean isMerge(ILSMIOOperation operation) {
         return operation.getIOOpertionType() == LSMIOOperationType.MERGE
                 && operation.getAccessor().getOpContext().getOperation() != IndexOperation.DELETE_COMPONENTS;

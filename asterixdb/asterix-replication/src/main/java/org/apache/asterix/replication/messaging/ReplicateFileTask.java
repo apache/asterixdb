@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.replication.messaging;
 
+import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.UNINITIALIZED_COMPONENT_SEQ;
+
 import java.io.DataInput;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -100,7 +102,7 @@ public class ReplicateFileTask implements IReplicaTask {
         final IIndexCheckpointManager indexCheckpointManager = checkpointManagerProvider.get(indexRef);
         final long currentLSN = appCtx.getTransactionSubsystem().getLogManager().getAppendLSN();
         indexCheckpointManager.delete();
-        indexCheckpointManager.init(Long.MIN_VALUE, currentLSN,
+        indexCheckpointManager.init(UNINITIALIZED_COMPONENT_SEQ, currentLSN,
                 LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId());
         LOGGER.info(() -> "Checkpoint index: " + indexRef);
     }

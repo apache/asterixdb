@@ -100,6 +100,11 @@ public class EncapsulatingIoCallback implements ILSMIOOperationCallback {
         encapsulated.allocated(component);
     }
 
+    @Override
+    public long getLastValidSequence() throws HyracksDataException {
+        return encapsulated.getLastValidSequence();
+    }
+
     public ILSMIOOperationCallback getEncapsulated() {
         return encapsulated;
     }

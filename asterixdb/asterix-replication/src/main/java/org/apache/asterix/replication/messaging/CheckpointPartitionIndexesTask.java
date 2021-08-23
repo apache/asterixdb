@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.replication.messaging;
 
+import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.UNINITIALIZED_COMPONENT_SEQ;
+
 import java.io.DataInput;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -72,7 +74,7 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
                 throw HyracksDataException
                         .create(new IOException(indexPath + " is not a directory or an IO Error occurred"));
             }
-            long maxComponentSequence = Long.MIN_VALUE;
+            long maxComponentSequence = UNINITIALIZED_COMPONENT_SEQ;
             for (String file : files) {
                 maxComponentSequence =
                         Math.max(maxComponentSequence, IndexComponentFileReference.of(file).getSequenceEnd());

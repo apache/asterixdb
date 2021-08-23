@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 
 public interface ILSMIOOperationCallback {
 
@@ -80,4 +81,8 @@ public interface ILSMIOOperationCallback {
      *            the allocated component
      */
     void allocated(ILSMMemoryComponent component) throws HyracksDataException;
+
+    default long getLastValidSequence() throws HyracksDataException {
+        return AbstractLSMIndexFileManager.UNINITIALIZED_COMPONENT_SEQ;
+    }
 }

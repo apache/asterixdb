@@ -23,6 +23,7 @@ import static org.apache.asterix.common.utils.StorageConstants.INDEX_CHECKPOINT_
 import static org.apache.asterix.common.utils.StorageConstants.METADATA_FILE_NAME;
 import static org.apache.hyracks.api.exceptions.ErrorCode.CANNOT_CREATE_FILE;
 import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.COMPONENT_FILES_FILTER;
+import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.UNINITIALIZED_COMPONENT_SEQ;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -198,8 +199,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             createResourceFileMask(resourceFile);
             byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(resource.toJson(persistedResourceRegistry));
             FileUtil.writeAndForce(Paths.get(resourceFile.getAbsolutePath()), bytes);
-            indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(Long.MIN_VALUE, 0,
-                    LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId());
+            indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(UNINITIALIZED_COMPONENT_SEQ,
+                    0, LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId());
             deleteResourceFileMask(resourceFile);
         } catch (Exception e) {
             cleanup(resourceFile);

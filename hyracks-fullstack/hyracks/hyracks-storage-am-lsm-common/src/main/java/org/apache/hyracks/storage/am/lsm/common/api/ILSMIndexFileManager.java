@@ -78,4 +78,11 @@ public interface ILSMIndexFileManager {
      * @throws IOException
      */
     LSMComponentFileReferences getNewTransactionFileReference() throws IOException;
+
+    /**
+     * Initializes the last used sequence
+     *
+     * @param lastUsedSeq
+     */
+    void initLastUsedSeq(long lastUsedSeq);
 }

@@ -83,20 +83,19 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
      * Hides transaction components until they are either committed by removing this file or deleted along with the file
      */
     public static final String TXN_PREFIX = ".T";
-
+    public static final long UNINITIALIZED_COMPONENT_SEQ = -1;
     public static final FilenameFilter COMPONENT_FILES_FILTER = (dir, name) -> !name.startsWith(".");
     protected static final FilenameFilter txnFileNameFilter = (dir, name) -> name.startsWith(TXN_PREFIX);
     protected static FilenameFilter bloomFilterFilter =
             (dir, name) -> !name.startsWith(".") && name.endsWith(BLOOM_FILTER_SUFFIX);
     protected static final Comparator<String> cmp = new FileNameComparator();
     private static final FilenameFilter dummyFilter = (dir, name) -> true;
-    private static final long UNINITALIZED_COMPONENT_SEQ = -1;
     protected final IIOManager ioManager;
     // baseDir should reflect dataset name and partition name and be absolute
     protected final FileReference baseDir;
     protected final Comparator<IndexComponentFileReference> recencyCmp = new RecencyComparator();
     protected final TreeIndexFactory<? extends ITreeIndex> treeFactory;
-    private long lastUsedComponentSeq = UNINITALIZED_COMPONENT_SEQ;
+    private long lastUsedComponentSeq = UNINITIALIZED_COMPONENT_SEQ;
     private final ICompressorDecompressorFactory compressorDecompressorFactory;
 
     public AbstractLSMIndexFileManager(IIOManager ioManager, FileReference file,
@@ -348,6 +347,11 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         return null;
     }
 
+    @Override
+    public void initLastUsedSeq(long lastUsedSeq) {
+        lastUsedComponentSeq = lastUsedSeq;
+    }
+
     private static FilenameFilter createTransactionFilter(String transactionFileName, final boolean inclusive) {
         final String timeStamp =
                 transactionFileName.substring(transactionFileName.indexOf(TXN_PREFIX) + TXN_PREFIX.length());
@@ -372,7 +376,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     protected String getNextComponentSequence(FilenameFilter filenameFilter) throws HyracksDataException {
-        if (lastUsedComponentSeq == UNINITALIZED_COMPONENT_SEQ) {
+        if (lastUsedComponentSeq == UNINITIALIZED_COMPONENT_SEQ) {
             lastUsedComponentSeq = getOnDiskLastUsedComponentSequence(filenameFilter);
         }
         return IndexComponentFileReference.getFlushSequence(++lastUsedComponentSeq);

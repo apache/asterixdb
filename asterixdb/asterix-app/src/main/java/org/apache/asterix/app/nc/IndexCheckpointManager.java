@@ -34,6 +34,7 @@ import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IndexCheckpoint;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
@@ -119,7 +120,10 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
 
     @Override
     public long getValidComponentSequence() throws HyracksDataException {
-        return getLatest().getValidComponentSequence();
+        if (getCheckpointCount() > 0) {
+            return getLatest().getValidComponentSequence();
+        }
+        return AbstractLSMIndexFileManager.UNINITIALIZED_COMPONENT_SEQ;
     }
 
     @Override
