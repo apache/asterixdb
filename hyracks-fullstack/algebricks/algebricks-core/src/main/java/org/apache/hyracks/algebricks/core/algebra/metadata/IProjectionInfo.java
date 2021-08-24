@@ -18,17 +18,15 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.metadata;
 
-import java.util.List;
-
 /**
  * Generic interface to include the projection information for
  * {@link org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator}
  */
 public interface IProjectionInfo<T> {
     /**
-     * @return list of projected values' information
+     * @return projected values' information
      */
-    List<T> getProjectionInfo();
+    T getProjectionInfo();
 
     /**
      * @return a copy of the {@link IProjectionInfo}

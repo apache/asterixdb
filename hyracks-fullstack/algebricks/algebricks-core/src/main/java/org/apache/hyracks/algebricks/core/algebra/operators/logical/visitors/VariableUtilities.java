@@ -30,8 +30,11 @@ import java.util.Set;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
@@ -179,4 +182,10 @@ public class VariableUtilities {
         return varSet.equals(varArgSet);
     }
 
+    public static LogicalVariable getVariable(ILogicalExpression expr) {
+        if (expr != null && expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            return ((VariableReferenceExpression) expr).getVariableReference();
+        }
+        return null;
+    }
 }

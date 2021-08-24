@@ -52,30 +52,10 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
- * Pushes field-access expression to the external dataset scan to minimize the size of the record.
- * This rule currently does not remove the field access expression in ASSIGN and SCAN operators. Instead,
- * it adds the requested field names to external dataset details to produce records that only contain the requested
- * fields. Thus, no changes would occur in the plan's structure after firing this rule.
- * Example:
- * Before plan:
- * ...
- * select (and(gt($$00, 20), gt($$r.getField("salary"), 70000)))
- * ...
- * assign [$$00] <- [$$r.getField("personalInfo").getField("age")]
- * ...
- * data-scan []<-[$$r] <- ParquetDataverse.ParquetDataset
- * <p>
- * After plan:
- * ...
- * select (and(gt($$00, 20), gt($$r.getField("salary"), 70000)))
- * ...
- * assign [$$00] <- [$$r.getField("personalInfo").getField("age")]
- * ...
- * data-scan []<-[$$r] <- ParquetDataverse.ParquetDataset project (personalInfo.age, salary)
- * <p>
- * The resulting record $$r will be {"personalInfo":{"age": *AGE*}, "salary": *SALARY*}
- * and other fields will not be included in $$r.
+ * TODO Use {@link PushValueAccessToExternalDataScanRule}
+ * Will be removed in a follow up change
  */
+@Deprecated
 public class PushFieldAccessToExternalDataScanRule implements IAlgebraicRewriteRule {
     //Datasets payload variables
     private final List<LogicalVariable> recordVariables = new ArrayList<>();

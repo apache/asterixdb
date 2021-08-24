@@ -26,7 +26,12 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 
-public class ExternalDataProjectionInfo implements IProjectionInfo<List<String>> {
+/**
+ * TODO Use {@link org.apache.asterix.runtime.projection.DataProjectionInfo}
+ * Will be removed in a follow up change
+ */
+@Deprecated
+public class ExternalDataProjectionInfo implements IProjectionInfo<List<List<String>>> {
     private final List<List<String>> projectedFieldNames;
 
     public ExternalDataProjectionInfo() {
@@ -47,7 +52,7 @@ public class ExternalDataProjectionInfo implements IProjectionInfo<List<String>>
     }
 
     @Override
-    public IProjectionInfo<List<String>> createCopy() {
+    public IProjectionInfo<List<List<String>>> createCopy() {
         return new ExternalDataProjectionInfo(projectedFieldNames);
     }
 
@@ -61,6 +66,7 @@ public class ExternalDataProjectionInfo implements IProjectionInfo<List<String>>
                 && VariableUtilities.varListEqualUnordered(projectedFieldNames, otherProjectedFieldNames);
     }
 
+    @Override
     public String toString() {
         if (projectedFieldNames.isEmpty()) {
             return "";
