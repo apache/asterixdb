@@ -17,7 +17,8 @@
  * under the License.
  */
 
-select DataverseName, DatasetName, ViewDetails
-from Metadata.`Dataset` d
-where DatasetType='VIEW'
-order by DataverseName, DatasetName;
+use test1;
+
+select c_id, c_date
+from v5_pk
+order by c_id;

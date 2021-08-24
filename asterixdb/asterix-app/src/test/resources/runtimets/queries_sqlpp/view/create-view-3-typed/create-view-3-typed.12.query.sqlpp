@@ -17,13 +17,7 @@
  * under the License.
  */
 
---- Negative: invalid view parameter clause
-
-drop dataverse test if exists;
-create dataverse test;
-
-create view test.v1(cd date) default null
-  date 'YYYY-MM-DD'
-  date_illegal_property_name 'YYYY-MM-DD'
-as
-  select string(current_date()) cd from range(1,2) r;
+select DataverseName, DatasetName, ViewDetails
+from Metadata.`Dataset` d
+where DatasetType='VIEW'
+order by DataverseName, DatasetName;

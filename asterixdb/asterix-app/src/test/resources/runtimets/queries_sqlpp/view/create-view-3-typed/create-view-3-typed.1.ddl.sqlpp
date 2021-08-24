@@ -70,3 +70,55 @@ create view v4_date_format_only(
 ) default null
   date 'MM/DD/YYYY'
 as t2;
+
+/* primary key (not enforced) */
+
+create view v5_pk(
+  c_id int32 not unknown,
+  c_datetime datetime
+) default null
+  datetime 'MM/DD/YYYY hh:mm:ss.nnna'
+  primary key (c_id) not enforced
+as t2;
+
+/* primary key (not enforced), check that invalid tuples are eliminated */
+
+create view v6_pk_no_nulls(
+  c_i64 int64 not unknown,
+  c_id int32
+) default null
+  primary key (c_i64) not enforced
+as t1;
+
+/* no primary key, check that invalid tuples are eliminated if target field type is declared as not unknown */
+
+create view v7_no_nulls(
+  c_i64 int64 not unknown,
+  c_id int32
+) default null
+as t1;
+
+/* no primary key, check that invalid tuples are eliminated if target field type is declared as not unknown */
+
+create view v8_no_nulls_multi(
+  c_id int32,
+  c_x int64 not unknown,
+  c_y int64 not unknown
+) default null
+as
+  select
+    c_id,
+    case when to_bigint(c_i32) >= 0 then to_bigint(c_i32) when to_bigint(c_i32) < 0 then null else 0 end as c_x,
+    case when to_bigint(c_i64) >= 0 then null when to_bigint(c_i64) < 0 then to_bigint(c_i64) else 0 end as c_y
+  from t1;
+
+/* composite pk */
+
+create view v9_pk_composite(
+  c_id1 int32 not unknown,
+  c_id2 int32 not unknown
+) default null
+  primary key (c_id1, c_id2) not enforced
+as
+  select c_id as c_id1, -c_id as c_id2
+  from t1;

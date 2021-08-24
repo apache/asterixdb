@@ -17,13 +17,10 @@
  * under the License.
  */
 
---- Negative: invalid view parameter clause
+--- Negative: cannot declare primary key
 
 drop dataverse test if exists;
 create dataverse test;
 
-create view test.v1(cd date) default null
-  date 'YYYY-MM-DD'
-  date_illegal_property_name 'YYYY-MM-DD'
-as
-  select string(current_date()) cd from range(1,2) r;
+create view test.v1 primary key (r) not enforced as
+  select r from range(1,2) r;

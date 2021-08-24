@@ -19,6 +19,7 @@
 
 package org.apache.asterix.lang.common.statement;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -30,6 +31,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.util.ViewUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public final class CreateViewStatement extends AbstractStatement {
 
@@ -45,6 +47,8 @@ public final class CreateViewStatement extends AbstractStatement {
 
     private final Map<String, String> viewConfig;
 
+    private final List<String> primaryKeyFields;
+
     private final Boolean defaultNull;
 
     private final boolean replaceIfExists;
@@ -52,15 +56,18 @@ public final class CreateViewStatement extends AbstractStatement {
     private final boolean ifNotExists;
 
     public CreateViewStatement(DataverseName dataverseName, String viewName, TypeExpression itemType, String viewBody,
-            Expression viewBodyExpression, Boolean defaultNull, Map<String, String> viewConfig, boolean replaceIfExists,
-            boolean ifNotExists) throws CompilationException {
+            Expression viewBodyExpression, Boolean defaultNull, Map<String, String> viewConfig,
+            Pair<List<Integer>, List<List<String>>> primaryKeyFields, boolean replaceIfExists, boolean ifNotExists)
+            throws CompilationException {
         this.dataverseName = dataverseName;
         this.viewName = Objects.requireNonNull(viewName);
         this.itemType = itemType;
+        boolean hasItemType = itemType != null;
         this.viewBody = Objects.requireNonNull(viewBody);
         this.viewBodyExpression = Objects.requireNonNull(viewBodyExpression);
         this.defaultNull = defaultNull;
-        this.viewConfig = ViewUtil.validateViewConfiguration(viewConfig, itemType != null);
+        this.viewConfig = ViewUtil.validateViewConfiguration(viewConfig, hasItemType);
+        this.primaryKeyFields = ViewUtil.validateViewPrimaryKey(primaryKeyFields, hasItemType);
         this.replaceIfExists = replaceIfExists;
         this.ifNotExists = ifNotExists;
     }
@@ -111,6 +118,10 @@ public final class CreateViewStatement extends AbstractStatement {
 
     public Boolean getDefaultNull() {
         return defaultNull;
+    }
+
+    public List<String> getPrimaryKeyFields() {
+        return primaryKeyFields;
     }
 
     public String getDatetimeFormat() {

@@ -2499,6 +2499,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
+            List<String> primaryKeyFields = cvs.getPrimaryKeyFields();
             Datatype itemTypeEntity = null;
             boolean itemTypeIsInline = false;
             if (cvs.hasItemType()) {
@@ -2506,6 +2507,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         itemTypeDataverseName, itemTypeName, cvs.getItemType(), false, metadataProvider, sourceLoc);
                 itemTypeEntity = itemTypePair.first;
                 itemTypeIsInline = itemTypePair.second;
+                if (primaryKeyFields != null) {
+                    ValidateUtil.validatePartitioningExpressions((ARecordType) itemTypeEntity.getDatatype(), null,
+                            primaryKeyFields.stream().map(Collections::singletonList).collect(Collectors.toList()),
+                            Collections.nCopies(primaryKeyFields.size(), Index.RECORD_INDICATOR), false, sourceLoc);
+                }
+            } else if (primaryKeyFields != null) {
+                throw new CompilationException(ErrorCode.INVALID_PRIMARY_KEY_DEFINITION, sourceLoc);
             }
 
             // Check whether the view is usable:
@@ -2523,10 +2531,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             List<List<Triple<DataverseName, String, String>>> dependencies =
                     ViewUtil.getViewDependencies(viewDecl, queryRewriter);
 
-            ViewDetails viewDetails = cvs.hasItemType()
-                    ? new ViewDetails(cvs.getViewBody(), dependencies, cvs.getDefaultNull(), cvs.getDatetimeFormat(),
-                            cvs.getDateFormat(), cvs.getTimeFormat())
-                    : new ViewDetails(cvs.getViewBody(), dependencies, null, null, null, null);
+            ViewDetails viewDetails = new ViewDetails(cvs.getViewBody(), dependencies, cvs.getDefaultNull(),
+                    primaryKeyFields, cvs.getDatetimeFormat(), cvs.getDateFormat(), cvs.getTimeFormat());
 
             Dataset view = new Dataset(dataverseName, viewName, itemTypeDataverseName, itemTypeName,
                     MetadataConstants.METADATA_NODEGROUP_NAME, "", Collections.emptyMap(), viewDetails,

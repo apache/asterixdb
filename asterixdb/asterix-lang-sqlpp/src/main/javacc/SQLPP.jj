@@ -1438,6 +1438,7 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
   Expression viewBodyExpr = null;
   Boolean defaultNull = null;
   Map<String, String> viewConfig = null;
+  Pair<List<Integer>, List<List<String>>> primaryKeyFields = null;
   DataverseName currentDataverse = defaultDataverse;
 }
 {
@@ -1448,6 +1449,7 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
         ifNotExists = IfNotExists()
         <IDENTIFIER> { expectToken(DEFAULT); } <NULL> { defaultNull = true; }
         viewConfig = ViewConfiguration()
+        ( <PRIMARY> <KEY> <LEFTPAREN> primaryKeyFields = PrimaryKeyFields() <RIGHTPAREN> <NOT> <ENFORCED> )?
       )
       |
       ( ifNotExists = IfNotExists() )
@@ -1474,7 +1476,7 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
     defaultDataverse = currentDataverse;
     try {
       CreateViewStatement stmt = new CreateViewStatement(nameComponents.first, nameComponents.second.getValue(),
-        typeExpr, viewBody, viewBodyExpr, defaultNull, viewConfig, orReplace, ifNotExists);
+        typeExpr, viewBody, viewBodyExpr, defaultNull, viewConfig, primaryKeyFields, orReplace, ifNotExists);
     return addSourceLocation(stmt, startStmtToken);
     } catch (CompilationException e) {
        throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
@@ -1950,12 +1952,23 @@ int FunctionArity() throws ParseException:
 
 Pair<List<Integer>, List<List<String>>> PrimaryKey() throws ParseException:
 {
+  Pair<List<Integer>, List<List<String>>> primaryKeyFields = null;
+}
+{
+  <PRIMARY> <KEY> primaryKeyFields = PrimaryKeyFields()
+  {
+    return primaryKeyFields;
+  }
+}
+
+Pair<List<Integer>, List<List<String>>> PrimaryKeyFields() throws ParseException:
+{
   Pair<Integer, List<String>> tmp = null;
   List<Integer> keyFieldSourceIndicators = new ArrayList<Integer>();
   List<List<String>> primaryKeyFields = new ArrayList<List<String>>();
 }
 {
-  <PRIMARY> <KEY> tmp = NestedField()
+  tmp = NestedField()
     {
       keyFieldSourceIndicators.add(tmp.first);
       primaryKeyFields.add(tmp.second);

@@ -13106,6 +13106,7 @@
         <expected-error>ASX1149: Illegal function or view recursion (in line 31, at column 1)</expected-error>
         <expected-error>ASX1149: Illegal function or view recursion (in line 32, at column 1)</expected-error>
         <expected-error>ASX1149: Illegal function or view recursion (in line 33, at column 1)</expected-error>
+        <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1 primary key (r) not enforced as<< Encountered "primary" at column 21]]></expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="view">
@@ -13159,9 +13160,15 @@
         <expected-error>ASX1079: Compilation error: view type cannot have open fields (in line 29, at column 1)</expected-error>
         <expected-error>ASX1004: Unsupported type: view cannot process input type t1_a (in line 30, at column 1)</expected-error>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1(r bigint, a [bigint]) default null as<< Encountered "[" at column 33]]></expected-error>
-        <expected-error>ASX1079: Compilation error: Invalid type for field r. The type must allow MISSING and NULL (in line 29, at column 1)</expected-error>
         <expected-error>ASX1001: Syntax error: ASX1092: Parameter date_illegal_property_name cannot be set (in line 25, at column 1)</expected-error>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1(r bigint) as<< Encountered "as" at column 31]]></expected-error>
+        <expected-error><![CDATA[ASX1014: Field "unknown_field" is not found (in line 25, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1014: Field "unknown_field_2" is not found (in line 25, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1001: Syntax error: In line 28 >>  as select r from range(1,2) r;<< Encountered "as" at column 3]]></expected-error>
+        <expected-error><![CDATA[ASX1021: The primary key field "r" cannot be nullable (in line 25, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1021: The primary key field "r2" cannot be nullable (in line 25, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1001: Syntax error: ASX1162: Invalid primary key definition (in line 25, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1001: Syntax error: ASX1162: Invalid primary key definition (in line 26, at column 1)]]></expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

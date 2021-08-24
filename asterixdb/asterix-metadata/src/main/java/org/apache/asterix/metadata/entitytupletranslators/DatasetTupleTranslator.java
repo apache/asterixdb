@@ -35,6 +35,8 @@ import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.TransactionState;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -274,6 +276,25 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                     defaultNull = defaultValue.getType().getTypeTag() == ATypeTag.NULL;
                 }
 
+                // Primary Key
+                List<String> primaryKeyFields = null;
+                int primaryKeyFieldPos =
+                        datasetDetailsRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_PRIMARY_KEY);
+                if (primaryKeyFieldPos >= 0) {
+                    AOrderedList primaryKeyFieldList =
+                            ((AOrderedList) datasetDetailsRecord.getValueByPos(primaryKeyFieldPos));
+                    int n = primaryKeyFieldList.size();
+                    primaryKeyFields = new ArrayList<>(n);
+                    for (int i = 0; i < n; i++) {
+                        AOrderedList list = (AOrderedList) primaryKeyFieldList.getItem(i);
+                        if (list.size() != 1) {
+                            throw new AsterixException(ErrorCode.METADATA_ERROR, list.toJSON());
+                        }
+                        AString str = (AString) list.getItem(0);
+                        primaryKeyFields.add(str.getStringValue());
+                    }
+                }
+
                 // Format fields
                 String datetimeFormat = null, dateFormat = null, timeFormat = null;
                 int formatFieldPos =
@@ -292,8 +313,8 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                     }
                 }
 
-                datasetDetails =
-                        new ViewDetails(definition, dependencies, defaultNull, datetimeFormat, dateFormat, timeFormat);
+                datasetDetails = new ViewDetails(definition, dependencies, defaultNull, primaryKeyFields,
+                        datetimeFormat, dateFormat, timeFormat);
                 break;
             }
         }

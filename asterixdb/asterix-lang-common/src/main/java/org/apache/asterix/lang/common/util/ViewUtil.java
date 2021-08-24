@@ -43,6 +43,7 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
@@ -50,6 +51,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -110,16 +112,17 @@ public final class ViewUtil {
         IAType[] fieldTypes = recordType.getFieldTypes();
         for (int i = 0, n = fieldNames.length; i < n; i++) {
             IAType fieldType = fieldTypes[i];
-            if (fieldType.getTypeTag() != ATypeTag.UNION) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, String
-                        .format("Invalid type for field %s. The type must allow MISSING and NULL", fieldNames[i]));
+            IAType primeType;
+            if (fieldType.getTypeTag() == ATypeTag.UNION) {
+                AUnionType unionType = (AUnionType) fieldType;
+                if (!unionType.isNullableType()) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                            String.format("Invalid type for field %s. Optional type must allow NULL", fieldNames[i]));
+                }
+                primeType = unionType.getActualType();
+            } else {
+                primeType = fieldType;
             }
-            AUnionType unionType = (AUnionType) fieldType;
-            if (!unionType.isMissableType() || !unionType.isNullableType()) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, String
-                        .format("Invalid type for field %s. The type must allow MISSING and NULL", fieldNames[i]));
-            }
-            IAType primeType = unionType.getActualType();
             if (getTypeConstructor(primeType) == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, "view",
                         primeType.getTypeName());
@@ -149,6 +152,31 @@ public final class ViewUtil {
             throw new CompilationException(ErrorCode.ILLEGAL_SET_PARAMETER, viewConfig.keySet().iterator().next());
         }
         return viewConfig;
+    }
+
+    public static List<String> validateViewPrimaryKey(Pair<List<Integer>, List<List<String>>> primaryKeyFieldsPair,
+            boolean hasItemType) throws CompilationException {
+        if (primaryKeyFieldsPair == null || primaryKeyFieldsPair.second.isEmpty()) {
+            return null;
+        }
+        if (!hasItemType) {
+            throw new CompilationException(ErrorCode.INVALID_PRIMARY_KEY_DEFINITION);
+        }
+        List<Integer> sourceIndicators = primaryKeyFieldsPair.first;
+        List<List<String>> primaryKeyFields = primaryKeyFieldsPair.second;
+        int n = primaryKeyFields.size();
+        List<String> resultFields = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) {
+            if (sourceIndicators.get(i) != Index.RECORD_INDICATOR) {
+                throw new CompilationException(ErrorCode.INVALID_PRIMARY_KEY_DEFINITION);
+            }
+            List<String> nestedField = primaryKeyFields.get(i);
+            if (nestedField.size() != 1) {
+                throw new CompilationException(ErrorCode.INVALID_PRIMARY_KEY_DEFINITION);
+            }
+            resultFields.add(nestedField.get(0));
+        }
+        return resultFields;
     }
 
     public static Expression createTypeConvertExpression(Expression inExpr, IAType targetType,
@@ -181,6 +209,18 @@ public final class ViewUtil {
         CallExpr missing2NullExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.IF_MISSING), missing2NullArgs);
         missing2NullExpr.setSourceLocation(sourceLoc);
         return missing2NullExpr;
+    }
+
+    public static Expression createNotIsNullExpression(Expression inExpr, SourceLocation sourceLoc) {
+        List<Expression> isNullArgs = new ArrayList<>(1);
+        isNullArgs.add(inExpr);
+        CallExpr isNullExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.IS_NULL), isNullArgs);
+        isNullExpr.setSourceLocation(sourceLoc);
+        List<Expression> notExprArgs = new ArrayList<>(1);
+        notExprArgs.add(isNullExpr);
+        CallExpr notExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.NOT), notExprArgs);
+        notExpr.setSourceLocation(sourceLoc);
+        return notExpr;
     }
 
     public static Expression createFieldAccessExpression(VarIdentifier inVar, String fieldName,

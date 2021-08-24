@@ -25,26 +25,35 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
+import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IReturningStatement;
+import org.apache.asterix.lang.common.clause.LetClause;
+import org.apache.asterix.lang.common.clause.WhereClause;
+import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.FieldBinding;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.ViewUtil;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
 import org.apache.asterix.lang.sqlpp.clause.FromTerm;
-import org.apache.asterix.lang.sqlpp.clause.Projection;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.clause.SelectClause;
-import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
+import org.apache.asterix.lang.sqlpp.clause.SelectElement;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
-import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -142,16 +151,49 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
             throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, viewName,
                     itemType.getTypeName());
         }
-        List<Projection> projections = new ArrayList<>(n);
+        List<FieldBinding> projections = new ArrayList<>(n);
+        List<AbstractClause> letWhereClauseList = new ArrayList<>(n + 1);
+        List<Expression> filters = null;
         VarIdentifier fromVar = context.newVariable();
         for (int i = 0; i < n; i++) {
             String fieldName = fieldNames[i];
-            IAType targetType = TypeComputeUtils.getActualType(fieldTypes[i]);
+            IAType fieldType = fieldTypes[i];
+            IAType primeType;
+            boolean fieldTypeNullable;
+            if (fieldType.getTypeTag() == ATypeTag.UNION) {
+                AUnionType unionType = (AUnionType) fieldType;
+                fieldTypeNullable = unionType.isNullableType();
+                if (!fieldTypeNullable) {
+                    throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, viewName,
+                            unionType.toString());
+                }
+                primeType = unionType.getActualType();
+            } else {
+                fieldTypeNullable = false;
+                primeType = fieldType;
+            }
             Expression expr = ViewUtil.createFieldAccessExpression(fromVar, fieldName, sourceLoc);
             expr = ViewUtil.createMissingToNullExpression(expr, sourceLoc); // Default Null handling
             Expression projectExpr =
-                    ViewUtil.createTypeConvertExpression(expr, targetType, temporalDataFormat, viewName, sourceLoc);
-            projections.add(new Projection(projectExpr, fieldName, false, false));
+                    ViewUtil.createTypeConvertExpression(expr, primeType, temporalDataFormat, viewName, sourceLoc);
+            VarIdentifier projectVar = context.newVariable();
+            VariableExpr projectVarRef1 = new VariableExpr(projectVar);
+            projectVarRef1.setSourceLocation(sourceLoc);
+            LetClause letClause = new LetClause(projectVarRef1, projectExpr);
+            letWhereClauseList.add(letClause);
+            VariableExpr projectVarRef2 = new VariableExpr(projectVar);
+            projectVarRef2.setSourceLocation(sourceLoc);
+            projections.add(new FieldBinding(new LiteralExpr(new StringLiteral(fieldName)), projectVarRef2));
+
+            if (!fieldTypeNullable) {
+                VariableExpr projectVarRef3 = new VariableExpr(projectVar);
+                projectVarRef3.setSourceLocation(sourceLoc);
+                Expression notIsNullExpr = ViewUtil.createNotIsNullExpression(projectVarRef3, sourceLoc);
+                if (filters == null) {
+                    filters = new ArrayList<>();
+                }
+                filters.add(notIsNullExpr);
+            }
         }
 
         VariableExpr fromVarRef = new VariableExpr(fromVar);
@@ -159,9 +201,27 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         FromClause fromClause =
                 new FromClause(Collections.singletonList(new FromTerm(bodyExpr, fromVarRef, null, null)));
         fromClause.setSourceLocation(sourceLoc);
-        SelectClause selectClause = new SelectClause(null, new SelectRegular(projections), false);
+
+        if (filters != null && !filters.isEmpty()) {
+            Expression whereExpr;
+            if (filters.size() == 1) {
+                whereExpr = filters.get(0);
+            } else {
+                CallExpr andExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.AND), filters);
+                andExpr.setSourceLocation(sourceLoc);
+                whereExpr = andExpr;
+            }
+            WhereClause whereClause = new WhereClause(whereExpr);
+            whereClause.setSourceLocation(sourceLoc);
+            letWhereClauseList.add(whereClause);
+        }
+
+        RecordConstructor recordConstr = new RecordConstructor(projections);
+        recordConstr.setSourceLocation(sourceLoc);
+
+        SelectClause selectClause = new SelectClause(new SelectElement(recordConstr), null, false);
         selectClause.setSourceLocation(sourceLoc);
-        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, null, null, null);
+        SelectBlock selectBlock = new SelectBlock(selectClause, fromClause, letWhereClauseList, null, null);
         selectBlock.setSourceLocation(sourceLoc);
         SelectSetOperation selectSetOperation = new SelectSetOperation(new SetOperationInput(selectBlock, null), null);
         selectSetOperation.setSourceLocation(sourceLoc);

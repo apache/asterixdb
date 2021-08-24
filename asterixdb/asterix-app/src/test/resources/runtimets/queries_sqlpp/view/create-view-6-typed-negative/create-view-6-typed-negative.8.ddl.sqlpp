@@ -17,10 +17,12 @@
  * under the License.
  */
 
---- Negative: default null is required
+--- Negative: primary key declaration refers to a non-existent field
 
 drop dataverse test if exists;
 create dataverse test;
 
-create view test.v1(r bigint) as
-  select r from range(1,2) r;
+create view test.v1(r bigint)
+  default null
+  primary key (unknown_field) not enforced
+  as select r from range(1,2) r;

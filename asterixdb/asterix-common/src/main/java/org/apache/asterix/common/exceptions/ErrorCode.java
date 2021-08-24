@@ -246,6 +246,7 @@ public enum ErrorCode implements IError {
     UNKNOWN_VIEW(1159),
     VIEW_EXISTS(1160),
     UNSUPPORTED_TYPE_FOR_PARQUET(1161),
+    INVALID_PRIMARY_KEY_DEFINITION(1162),
 
     // Feed errors
     DATAFLOW_ILLEGAL_STATE(3001),
