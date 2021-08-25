@@ -212,7 +212,11 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         resourceCache.put(resource.getPath(), resource);
         //if replication enabled, send resource metadata info to remote nodes
         if (isReplicationEnabled) {
-            createReplicationJob(ReplicationOperation.REPLICATE, resourceFile);
+            try {
+                createReplicationJob(ReplicationOperation.REPLICATE, resourceFile);
+            } catch (Exception e) {
+                LOGGER.error("failed to send resource file {} to replicas", resourceFile);
+            }
         }
     }
 
@@ -233,8 +237,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         FileReference resourceFile = getLocalResourceFileByName(ioManager, relativePath);
         try {
             if (resourceFile.getFile().exists()) {
-                if (isReplicationEnabled) {
+                try {
                     createReplicationJob(ReplicationOperation.DELETE, resourceFile);
+                } catch (Exception e) {
+                    LOGGER.error("failed to delete resource file {} from replicas", resourceFile);
                 }
                 final LocalResource localResource = readLocalResource(resourceFile.getFile());
                 IoUtil.delete(resourceFile);
