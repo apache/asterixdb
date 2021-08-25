@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.util;
 
+import static com.google.cloud.storage.Storage.BlobListOption;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME;
@@ -40,7 +41,9 @@ import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.C
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_SECRET_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.TENANT_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.CONTAINER_NAME_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.GCS.JSON_CREDENTIALS_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ADAPTER_NAME_GCS;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
@@ -112,7 +115,9 @@ import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.ListBlobsOptions;
+import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 
@@ -572,6 +577,9 @@ public class ExternalDataUtils {
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
                 Azure.validateProperties(configuration, srcLoc, collector);
+                break;
+            case KEY_ADAPTER_NAME_GCS:
+                GCS.validateProperties(configuration, srcLoc, collector);
                 break;
             default:
                 // Nothing needs to be done
@@ -1338,6 +1346,40 @@ public class ExternalDataUtils {
             }
 
             return builder.build().getService();
+        }
+
+        /**
+         * Validate external dataset properties
+         *
+         * @param configuration properties
+         * @throws CompilationException Compilation exception
+         */
+        public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
+                IWarningCollector collector) throws CompilationException {
+
+            // check if the format property is present
+            if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+                throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
+            }
+
+            validateIncludeExclude(configuration);
+            String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+
+            try {
+                BlobListOption limitOption = BlobListOption.pageSize(1);
+                BlobListOption prefixOption = BlobListOption.prefix(getPrefix(configuration));
+                Storage storage = buildClient(configuration);
+                Page<Blob> items = storage.list(container, limitOption, prefixOption);
+
+                if (!items.iterateAll().iterator().hasNext() && collector.shouldWarn()) {
+                    Warning warning = Warning.of(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                    collector.warn(warning);
+                }
+            } catch (CompilationException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+            }
         }
     }
 

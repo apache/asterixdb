@@ -67,10 +67,11 @@ public class GCSInputStreamFactory extends AbstractExternalInputStreamFactory {
         List<Blob> filesOnly = new ArrayList<>();
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
         Storage gcs = ExternalDataUtils.GCS.buildClient(configuration);
+        Storage.BlobListOption options = Storage.BlobListOption.prefix(ExternalDataUtils.getPrefix(configuration));
         Page<Blob> items;
 
         try {
-            items = gcs.list(container);
+            items = gcs.list(container, options);
         } catch (BaseServiceException ex) {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
         }
