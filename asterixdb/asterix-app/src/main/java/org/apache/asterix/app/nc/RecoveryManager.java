@@ -161,14 +161,12 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     public void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException {
         state = SystemState.RECOVERING;
         LOGGER.info("starting recovery for partitions {}", partitions);
-
         long readableSmallestLSN = logMgr.getReadableSmallestLSN();
         Checkpoint checkpointObject = checkpointManager.getLatest();
         long lowWaterMarkLSN = checkpointObject.getMinMCTFirstLsn();
         if (lowWaterMarkLSN < readableSmallestLSN) {
             lowWaterMarkLSN = readableSmallestLSN;
         }
-
         //delete any recovery files from previous failed recovery attempts
         deleteRecoveryTemporaryFiles();
 
@@ -538,6 +536,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             if (flush) {
                 appCtx.getDatasetLifecycleManager().flushAllDatasets();
             }
+            cleanUp(partitions);
         } catch (IOException | ACIDException e) {
             throw HyracksDataException.create(e);
         } finally {
@@ -569,6 +568,10 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         String recoveryDirPath = getRecoveryDirPath();
         Path recoveryFolderPath = Paths.get(recoveryDirPath);
         FileUtils.deleteQuietly(recoveryFolderPath.toFile());
+    }
+
+    protected void cleanUp(Set<Integer> partitions) throws HyracksDataException {
+        // the cleanup is currently done by PersistentLocalResourceRepository#clean
     }
 
     private String getRecoveryDirPath() {
