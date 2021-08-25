@@ -37,6 +37,7 @@ public class StorageConstants {
      * begin with ".". Otherwise {@link AbstractLSMIndexFileManager} will try to
      * use them as index files.
      */
+    public static final String INDEX_NON_DATA_FILES_PREFIX = ".";
     public static final String INDEX_CHECKPOINT_FILE_PREFIX = ".idx_checkpoint_";
     public static final String METADATA_FILE_NAME = ".metadata";
     public static final String MASK_FILE_PREFIX = ".mask_";

@@ -19,7 +19,7 @@
 package org.apache.asterix.transaction.management.resource;
 
 import static org.apache.asterix.common.storage.ResourceReference.getComponentSequence;
-import static org.apache.asterix.common.utils.StorageConstants.INDEX_CHECKPOINT_FILE_PREFIX;
+import static org.apache.asterix.common.utils.StorageConstants.INDEX_NON_DATA_FILES_PREFIX;
 import static org.apache.asterix.common.utils.StorageConstants.METADATA_FILE_NAME;
 import static org.apache.hyracks.api.exceptions.ErrorCode.CANNOT_CREATE_FILE;
 import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.COMPONENT_FILES_FILTER;
@@ -90,7 +90,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private static final String METADATA_FILE_MASK_NAME =
             StorageConstants.MASK_FILE_PREFIX + StorageConstants.METADATA_FILE_NAME;
     private static final FilenameFilter LSM_INDEX_FILES_FILTER =
-            (dir, name) -> !name.startsWith(INDEX_CHECKPOINT_FILE_PREFIX);
+            (dir, name) -> name.startsWith(METADATA_FILE_NAME) || !name.startsWith(INDEX_NON_DATA_FILES_PREFIX);
     private static final FilenameFilter MASK_FILES_FILTER =
             (dir, name) -> name.startsWith(StorageConstants.MASK_FILE_PREFIX);
     private static final int MAX_CACHED_RESOURCES = 1000;
@@ -200,7 +200,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(resource.toJson(persistedResourceRegistry));
             FileUtil.writeAndForce(Paths.get(resourceFile.getAbsolutePath()), bytes);
             indexCheckpointManagerProvider.get(DatasetResourceReference.of(resource)).init(UNINITIALIZED_COMPONENT_SEQ,
-                    0, LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId());
+                    0, LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId(), null);
             deleteResourceFileMask(resourceFile);
         } catch (Exception e) {
             cleanup(resourceFile);
@@ -398,6 +398,20 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             DatasetLocalResource dsResource = (DatasetLocalResource) resource.getResource();
             return dsResource.getPartition() == partition;
         });
+    }
+
+    public Map<String, Long> getPartitionReplicatedResources(int partition, IReplicationStrategy strategy)
+            throws HyracksDataException {
+        final Map<String, Long> partitionReplicatedResources = new HashMap<>();
+        final Map<Long, LocalResource> partitionResources = getPartitionResources(partition);
+        for (LocalResource lr : partitionResources.values()) {
+            DatasetLocalResource datasetLocalResource = (DatasetLocalResource) lr.getResource();
+            if (strategy.isMatch(datasetLocalResource.getDatasetId())) {
+                DatasetResourceReference drr = DatasetResourceReference.of(lr);
+                partitionReplicatedResources.put(drr.getFileRelativePath().toString(), lr.getId());
+            }
+        }
+        return partitionReplicatedResources;
     }
 
     public List<String> getPartitionReplicatedFiles(int partition, IReplicationStrategy strategy)

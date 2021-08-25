@@ -46,11 +46,13 @@ public class MarkComponentValidTask implements IReplicaTask {
     private final long masterLsn;
     private final long lastComponentId;
     private final String file;
+    private final String masterNodeId;
 
-    public MarkComponentValidTask(String file, long masterLsn, long lastComponentId) {
+    public MarkComponentValidTask(String file, long masterLsn, long lastComponentId, String masterNodeId) {
         this.file = file;
         this.lastComponentId = lastComponentId;
         this.masterLsn = masterLsn;
+        this.masterNodeId = masterNodeId;
     }
 
     @Override
@@ -95,7 +97,7 @@ public class MarkComponentValidTask implements IReplicaTask {
                 replicationTimeOut -= TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
             }
             final long componentSequence = IndexComponentFileReference.of(indexRef.getName()).getSequenceEnd();
-            indexCheckpointManager.replicated(componentSequence, masterLsn, lastComponentId);
+            indexCheckpointManager.replicated(componentSequence, masterLsn, lastComponentId, masterNodeId);
         }
     }
 
@@ -111,6 +113,11 @@ public class MarkComponentValidTask implements IReplicaTask {
             dos.writeUTF(file);
             dos.writeLong(masterLsn);
             dos.writeLong(lastComponentId);
+            boolean hasMaster = masterNodeId != null;
+            dos.writeBoolean(hasMaster);
+            if (hasMaster) {
+                dos.writeUTF(masterNodeId);
+            }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -120,6 +127,8 @@ public class MarkComponentValidTask implements IReplicaTask {
         final String indexFile = input.readUTF();
         final long lsn = input.readLong();
         final long lastComponentId = input.readLong();
-        return new MarkComponentValidTask(indexFile, lsn, lastComponentId);
+        final boolean hasMaster = input.readBoolean();
+        final String masterNodeId = hasMaster ? input.readUTF() : null;
+        return new MarkComponentValidTask(indexFile, lsn, lastComponentId, masterNodeId);
     }
 }

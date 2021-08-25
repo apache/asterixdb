@@ -44,8 +44,11 @@ public class IndexCheckpoint {
     private long lowWatermark;
     private long lastComponentId;
     private Map<Long, Long> masterNodeFlushMap;
+    private String masterNodeId;
+    private long masterValidSeq;
 
-    public static IndexCheckpoint first(long lastComponentSequence, long lowWatermark, long validComponentId) {
+    public static IndexCheckpoint first(long lastComponentSequence, long lowWatermark, long validComponentId,
+            String masterNodeId) {
         IndexCheckpoint firstCheckpoint = new IndexCheckpoint();
         firstCheckpoint.id = INITIAL_CHECKPOINT_ID;
         firstCheckpoint.lowWatermark = lowWatermark;
@@ -53,11 +56,13 @@ public class IndexCheckpoint {
         firstCheckpoint.lastComponentId = validComponentId;
         firstCheckpoint.masterNodeFlushMap = new HashMap<>();
         firstCheckpoint.masterNodeFlushMap.put(HAS_NULL_MISSING_VALUES_FIX, HAS_NULL_MISSING_VALUES_FIX);
+        firstCheckpoint.masterNodeId = masterNodeId;
+        firstCheckpoint.masterValidSeq = lastComponentSequence;
         return firstCheckpoint;
     }
 
     public static IndexCheckpoint next(IndexCheckpoint latest, long lowWatermark, long validComponentSequence,
-            long lastComponentId) {
+            long lastComponentId, String masterNodeId) {
         if (lowWatermark < latest.getLowWatermark()) {
             if (LOGGER.isErrorEnabled()) {
                 LOGGER.error("low watermark {} less than the latest checkpoint low watermark {}", lowWatermark, latest);
@@ -70,6 +75,13 @@ public class IndexCheckpoint {
         next.lastComponentId = lastComponentId;
         next.validComponentSequence = validComponentSequence;
         next.masterNodeFlushMap = latest.getMasterNodeFlushMap();
+        if (masterNodeId != null) {
+            next.masterNodeId = masterNodeId;
+            next.masterValidSeq = validComponentSequence;
+        } else {
+            next.masterNodeId = latest.getMasterNodeId();
+            next.masterValidSeq = latest.getMasterValidSeq();
+        }
         // remove any lsn from the map that wont be used anymore
         next.masterNodeFlushMap.values().removeIf(lsn -> lsn < lowWatermark && lsn != HAS_NULL_MISSING_VALUES_FIX);
         return next;
@@ -109,6 +121,14 @@ public class IndexCheckpoint {
         } catch (JsonProcessingException e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    public String getMasterNodeId() {
+        return masterNodeId;
+    }
+
+    public long getMasterValidSeq() {
+        return masterValidSeq;
     }
 
     public static IndexCheckpoint fromJson(String json) throws HyracksDataException {

@@ -23,7 +23,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.replication.api.IReplicationMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -31,11 +33,16 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class PartitionResourcesListResponse implements IReplicationMessage {
 
     private final int partition;
-    private final List<String> resources;
+    private Map<String, Long> partitionReplicatedResources;
+    private final List<String> files;
+    private final boolean owner;
 
-    public PartitionResourcesListResponse(int partition, List<String> resources) {
+    public PartitionResourcesListResponse(int partition, Map<String, Long> partitionReplicatedResources,
+            List<String> files, boolean owner) {
         this.partition = partition;
-        this.resources = resources;
+        this.partitionReplicatedResources = partitionReplicatedResources;
+        this.files = files;
+        this.owner = owner;
     }
 
     @Override
@@ -48,17 +55,23 @@ public class PartitionResourcesListResponse implements IReplicationMessage {
         try {
             DataOutputStream dos = new DataOutputStream(out);
             dos.writeInt(partition);
-            dos.writeInt(resources.size());
-            for (String file : resources) {
+            dos.writeInt(files.size());
+            for (String file : files) {
                 dos.writeUTF(file);
+            }
+            dos.writeBoolean(owner);
+            dos.writeInt(partitionReplicatedResources.size());
+            for (Map.Entry<String, Long> stringLongEntry : partitionReplicatedResources.entrySet()) {
+                dos.writeUTF(stringLongEntry.getKey());
+                dos.writeLong(stringLongEntry.getValue());
             }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
     }
 
-    public List<String> getResources() {
-        return resources;
+    public List<String> getFiles() {
+        return files;
     }
 
     public static PartitionResourcesListResponse create(DataInput input) throws IOException {
@@ -68,6 +81,20 @@ public class PartitionResourcesListResponse implements IReplicationMessage {
         for (int i = 0; i < size; i++) {
             resources.add(input.readUTF());
         }
-        return new PartitionResourcesListResponse(partition, resources);
+        boolean owner = input.readBoolean();
+        int resourceSize = input.readInt();
+        Map<String, Long> partitionReplicatedResources = new HashMap<>();
+        for (int i = 0; i < resourceSize; i++) {
+            partitionReplicatedResources.put(input.readUTF(), input.readLong());
+        }
+        return new PartitionResourcesListResponse(partition, partitionReplicatedResources, resources, owner);
+    }
+
+    public boolean isOwner() {
+        return owner;
+    }
+
+    public Map<String, Long> getPartitionReplicatedResources() {
+        return partitionReplicatedResources;
     }
 }

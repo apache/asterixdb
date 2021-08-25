@@ -55,11 +55,13 @@ public class ReplicateFileTask implements IReplicaTask {
     private final String file;
     private final long size;
     private final boolean indexMetadata;
+    private final String masterNodeId;
 
-    public ReplicateFileTask(String file, long size, boolean indexMetadata) {
+    public ReplicateFileTask(String file, long size, boolean indexMetadata, String masterNodeId) {
         this.file = file;
         this.size = size;
         this.indexMetadata = indexMetadata;
+        this.masterNodeId = masterNodeId;
     }
 
     @Override
@@ -103,7 +105,7 @@ public class ReplicateFileTask implements IReplicaTask {
         final long currentLSN = appCtx.getTransactionSubsystem().getLogManager().getAppendLSN();
         indexCheckpointManager.delete();
         indexCheckpointManager.init(UNINITIALIZED_COMPONENT_SEQ, currentLSN,
-                LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId());
+                LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID.getMaxId(), masterNodeId);
         LOGGER.info(() -> "Checkpoint index: " + indexRef);
     }
 
@@ -119,6 +121,11 @@ public class ReplicateFileTask implements IReplicaTask {
             dos.writeUTF(file);
             dos.writeLong(size);
             dos.writeBoolean(indexMetadata);
+            boolean hasMaster = masterNodeId != null;
+            dos.writeBoolean(hasMaster);
+            if (hasMaster) {
+                dos.writeUTF(masterNodeId);
+            }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -128,7 +135,9 @@ public class ReplicateFileTask implements IReplicaTask {
         final String s = input.readUTF();
         final long i = input.readLong();
         final boolean isMetadata = input.readBoolean();
-        return new ReplicateFileTask(s, i, isMetadata);
+        final boolean hasMaster = input.readBoolean();
+        final String masterNodeId = hasMaster ? input.readUTF() : null;
+        return new ReplicateFileTask(s, i, isMetadata, masterNodeId);
     }
 
     @Override

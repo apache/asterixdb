@@ -19,6 +19,7 @@
 package org.apache.asterix.app.nc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,6 +31,7 @@ import java.util.stream.Stream;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
@@ -58,10 +60,12 @@ public class ReplicaManager implements IReplicaManager {
      */
     private final Map<ReplicaIdentifier, PartitionReplica> replicas = new HashMap<>();
     private final Object replicaSyncLock = new Object();
+    private final Set<Integer> nodeOwnedPartitions = new HashSet<>();
 
     public ReplicaManager(INcApplicationContext appCtx, Set<Integer> partitions) {
         this.appCtx = appCtx;
         this.partitions.addAll(partitions);
+        setNodeOwnedPartitions(appCtx);
     }
 
     @Override
@@ -154,6 +158,11 @@ public class ReplicaManager implements IReplicaManager {
         return new ArrayList<>(replicas.values());
     }
 
+    @Override
+    public boolean isPartitionOwner(int partition) {
+        return nodeOwnedPartitions.contains(partition);
+    }
+
     public void closePartitionResources(int partition) throws HyracksDataException {
         final IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
         //TODO(mhubail) we can flush only datasets of the requested partition
@@ -170,5 +179,14 @@ public class ReplicaManager implements IReplicaManager {
     private boolean isSelf(ReplicaIdentifier id) {
         String nodeId = appCtx.getServiceContext().getNodeId();
         return id.getNodeId().equals(nodeId);
+    }
+
+    private void setNodeOwnedPartitions(INcApplicationContext appCtx) {
+        ClusterPartition[] clusterPartitions =
+                appCtx.getMetadataProperties().getNodePartitions().get(appCtx.getServiceContext().getNodeId());
+        if (clusterPartitions != null) {
+            nodeOwnedPartitions.addAll(Arrays.stream(clusterPartitions).map(ClusterPartition::getPartitionId)
+                    .collect(Collectors.toList()));
+        }
     }
 }

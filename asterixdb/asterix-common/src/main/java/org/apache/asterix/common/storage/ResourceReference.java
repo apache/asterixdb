@@ -147,6 +147,10 @@ public class ResourceReference {
         return ResourceReference.ofIndex(relativePath.getParent().resolve(dataset).toFile().getPath());
     }
 
+    public boolean isMetadataResource() {
+        return getName().equals(StorageConstants.METADATA_FILE_NAME);
+    }
+
     public Path getFileRelativePath() {
         return relativePath.resolve(name);
     }

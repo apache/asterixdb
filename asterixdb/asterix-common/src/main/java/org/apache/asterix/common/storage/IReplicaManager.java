@@ -100,4 +100,12 @@ public interface IReplicaManager {
      * @return the list of replicas
      */
     List<IPartitionReplica> getReplicas();
+
+    /**
+     * Returns true if {@code partition} is owned by this node, otherwise false.
+     *
+     * @param partition
+     * @return true if the partition is owned by this node, otherwise false.
+     */
+    boolean isPartitionOwner(int partition);
 }

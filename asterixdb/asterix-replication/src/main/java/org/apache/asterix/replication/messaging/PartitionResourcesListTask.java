@@ -23,6 +23,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -50,11 +51,15 @@ public class PartitionResourcesListTask implements IReplicaTask {
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         localResourceRepository.cleanup(partition);
         final IReplicationStrategy replicationStrategy = appCtx.getReplicationManager().getReplicationStrategy();
-        final List<String> partitionResources =
+        // .metadata file -> resource id
+        Map<String, Long> partitionReplicatedResources =
+                localResourceRepository.getPartitionReplicatedResources(partition, replicationStrategy);
+        // all data files in partitions + .metadata files
+        final List<String> partitionFiles =
                 localResourceRepository.getPartitionReplicatedFiles(partition, replicationStrategy).stream()
                         .map(StoragePathUtil::getFileRelativePath).collect(Collectors.toList());
-        final PartitionResourcesListResponse response =
-                new PartitionResourcesListResponse(partition, partitionResources);
+        final PartitionResourcesListResponse response = new PartitionResourcesListResponse(partition,
+                partitionReplicatedResources, partitionFiles, appCtx.getReplicaManager().isPartitionOwner(partition));
         ReplicationProtocol.sendTo(worker.getChannel(), response, worker.getReusableBuffer());
     }
 

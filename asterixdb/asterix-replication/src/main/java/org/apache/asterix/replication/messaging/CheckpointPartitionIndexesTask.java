@@ -48,10 +48,12 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
 
     private final int partition;
     private final long maxComponentId;
+    private final String masterNodeId;
 
-    public CheckpointPartitionIndexesTask(int partition, long maxComponentId) {
+    public CheckpointPartitionIndexesTask(int partition, long maxComponentId, String masterNodeId) {
         this.partition = partition;
         this.maxComponentId = maxComponentId;
+        this.masterNodeId = masterNodeId;
     }
 
     @Override
@@ -66,7 +68,6 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
         for (LocalResource ls : partitionResources) {
             DatasetResourceReference ref = DatasetResourceReference.of(ls);
             final IIndexCheckpointManager indexCheckpointManager = indexCheckpointManagerProvider.get(ref);
-            indexCheckpointManager.delete();
             // Get most recent sequence of existing files to avoid deletion
             Path indexPath = StoragePathUtil.getIndexPath(ioManager, ref);
             String[] files = indexPath.toFile().list(AbstractLSMIndexFileManager.COMPONENT_FILES_FILTER);
@@ -79,7 +80,11 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
                 maxComponentSequence =
                         Math.max(maxComponentSequence, IndexComponentFileReference.of(file).getSequenceEnd());
             }
-            indexCheckpointManager.init(maxComponentSequence, currentLSN, maxComponentId);
+            if (indexCheckpointManager.getCheckpointCount() > 0) {
+                indexCheckpointManager.flushed(maxComponentSequence, currentLSN, maxComponentId, masterNodeId);
+            } else {
+                indexCheckpointManager.init(maxComponentSequence, currentLSN, maxComponentId, masterNodeId);
+            }
         }
         ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());
     }
@@ -95,6 +100,11 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
             DataOutputStream dos = new DataOutputStream(out);
             dos.writeInt(partition);
             dos.writeLong(maxComponentId);
+            boolean hasMaster = masterNodeId != null;
+            dos.writeBoolean(hasMaster);
+            if (hasMaster) {
+                dos.writeUTF(masterNodeId);
+            }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -104,7 +114,9 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
         try {
             int partition = input.readInt();
             long maxComponentId = input.readLong();
-            return new CheckpointPartitionIndexesTask(partition, maxComponentId);
+            final boolean hasMaster = input.readBoolean();
+            final String masterNodeId = hasMaster ? input.readUTF() : null;
+            return new CheckpointPartitionIndexesTask(partition, maxComponentId, masterNodeId);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

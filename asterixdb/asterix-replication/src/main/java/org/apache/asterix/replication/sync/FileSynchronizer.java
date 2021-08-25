@@ -55,7 +55,9 @@ public class FileSynchronizer {
             final IIOManager ioManager = appCtx.getIoManager();
             final ISocketChannel channel = replica.getChannel();
             final FileReference filePath = ioManager.resolve(file);
-            ReplicateFileTask task = new ReplicateFileTask(file, filePath.getFile().length(), metadata);
+            String masterNode = appCtx.getReplicaManager().isPartitionOwner(replica.getIdentifier().getPartition())
+                    ? appCtx.getServiceContext().getNodeId() : null;
+            ReplicateFileTask task = new ReplicateFileTask(file, filePath.getFile().length(), metadata, masterNode);
             LOGGER.info("attempting to replicate {} to replica {}", task, replica);
             ReplicationProtocol.sendTo(replica, task);
             // send the file itself
