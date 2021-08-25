@@ -143,7 +143,6 @@ public class ExternalDataConstants {
      */
     public static final String CLASS_NAME_TEXT_INPUT_FORMAT = "org.apache.hadoop.mapred.TextInputFormat";
     public static final String CLASS_NAME_SEQUENCE_INPUT_FORMAT = "org.apache.hadoop.mapred.SequenceFileInputFormat";
-    public static final String CLASS_NAME_RC_INPUT_FORMAT = "org.apache.asterix.hivecompat.io.RCFileInputFormat";
     public static final String CLASS_NAME_PARQUET_INPUT_FORMAT =
             "org.apache.asterix.external.input.record.reader.hdfs.parquet.MapredParquetInputFormat";
     public static final String CLASS_NAME_HDFS_FILESYSTEM = "org.apache.hadoop.hdfs.DistributedFileSystem";
@@ -152,7 +151,6 @@ public class ExternalDataConstants {
      */
     public static final String INPUT_FORMAT_TEXT = "text-input-format";
     public static final String INPUT_FORMAT_SEQUENCE = "sequence-input-format";
-    public static final String INPUT_FORMAT_RC = "rc-input-format";
     public static final String INPUT_FORMAT_PARQUET = "parquet-input-format";
     /**
      * Builtin streams
@@ -165,7 +163,6 @@ public class ExternalDataConstants {
 
     public static final String CLUSTER_LOCATIONS = "cluster-locations";
     public static final String SCHEDULER = "hdfs-scheduler";
-    public static final String PARSER_HIVE = "hive-parser";
     public static final String HAS_HEADER = "has.header";
     public static final String TIME_TRACKING = "time.tracking";
     public static final String DEFAULT_QUOTE = "\"";

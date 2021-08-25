@@ -96,8 +96,6 @@ public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
                 return (ILookupRecordReader<? extends T>) new TextLookupReader(snapshotAccessor, fs, conf);
             case ExternalDataConstants.INPUT_FORMAT_SEQUENCE:
                 return (ILookupRecordReader<? extends T>) new SequenceLookupReader(snapshotAccessor, fs, conf);
-            case ExternalDataConstants.INPUT_FORMAT_RC:
-                return (ILookupRecordReader<? extends T>) new RCLookupReader(snapshotAccessor, fs, conf);
             default:
                 throw new HyracksDataException("Unrecognised input format: " + inputFormatParameter);
         }

@@ -23,7 +23,6 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.indexing.FileOffsetIndexer;
-import org.apache.asterix.external.indexing.RecordColumnarIndexer;
 import org.apache.asterix.external.util.ExternalDataConstants;
 
 public class ExternalIndexerProvider {
@@ -35,9 +34,6 @@ public class ExternalIndexerProvider {
                 || inputFormatParameter.equalsIgnoreCase(ExternalDataConstants.INPUT_FORMAT_SEQUENCE)
                 || inputFormatParameter.equalsIgnoreCase(ExternalDataConstants.CLASS_NAME_SEQUENCE_INPUT_FORMAT)) {
             return new FileOffsetIndexer();
-        } else if (inputFormatParameter.equalsIgnoreCase(ExternalDataConstants.INPUT_FORMAT_RC)
-                || inputFormatParameter.equalsIgnoreCase(ExternalDataConstants.CLASS_NAME_RC_INPUT_FORMAT)) {
-            return new RecordColumnarIndexer();
         } else {
             throw new AsterixException("Unable to create indexer for data with format: " + inputFormatParameter);
         }

@@ -915,7 +915,6 @@
     <module>asterix-runtime</module>
     <module>asterix-om</module>
     <module>asterix-external-data</module>
-    <module>asterix-hivecompat</module>
     <module>asterix-examples</module>
     <module>asterix-metadata</module>
     <module>asterix-test-framework</module>
@@ -1088,21 +1087,6 @@
         </exclusions>
       </dependency>
       <dependency>
-        <groupId>org.apache.hive</groupId>
-        <artifactId>hive-serde</artifactId>
-        <version>0.13.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
         <version>1.20</version>
@@ -1116,36 +1100,6 @@
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
         <version>1.2</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hive.shims</groupId>
-        <artifactId>hive-shims-common</artifactId>
-        <version>0.13.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hive</groupId>
-        <artifactId>hive-common</artifactId>
-        <version>0.13.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>

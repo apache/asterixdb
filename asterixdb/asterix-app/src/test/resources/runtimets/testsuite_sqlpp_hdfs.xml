@@ -143,11 +143,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-indexing">
-      <compilation-unit name="rc-format">
-        <output-dir compare="Text">rc-format</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-indexing">
       <compilation-unit name="rtree-index">
         <output-dir compare="Text">rtree-index</output-dir>
       </compilation-unit>

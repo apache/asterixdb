@@ -35,8 +35,7 @@ public class LookupReaderFactoryProvider {
             Map<String, String> configuration, IWarningCollector warningCollector) throws AsterixException {
         String inputFormat = HDFSUtils.getInputFormatClassName(configuration);
         if (inputFormat.equals(ExternalDataConstants.CLASS_NAME_TEXT_INPUT_FORMAT)
-                || inputFormat.equals(ExternalDataConstants.CLASS_NAME_SEQUENCE_INPUT_FORMAT)
-                || inputFormat.equals(ExternalDataConstants.CLASS_NAME_RC_INPUT_FORMAT)) {
+                || inputFormat.equals(ExternalDataConstants.CLASS_NAME_SEQUENCE_INPUT_FORMAT)) {
             HDFSLookupReaderFactory<Object> readerFactory = new HDFSLookupReaderFactory<>();
             readerFactory.configure(serviceCtx, configuration, warningCollector);
             return readerFactory;

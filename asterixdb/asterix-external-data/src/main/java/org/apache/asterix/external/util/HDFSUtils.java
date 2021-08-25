@@ -35,7 +35,6 @@ import org.apache.asterix.external.indexing.RecordId.RecordIdType;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.MapredParquetInputFormat;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.ParquetReadSupport;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
-import org.apache.asterix.hivecompat.io.RCFileInputFormat;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -170,8 +169,6 @@ public class HDFSUtils {
                 return ExternalDataConstants.CLASS_NAME_TEXT_INPUT_FORMAT;
             case ExternalDataConstants.INPUT_FORMAT_SEQUENCE:
                 return ExternalDataConstants.CLASS_NAME_SEQUENCE_INPUT_FORMAT;
-            case ExternalDataConstants.INPUT_FORMAT_RC:
-                return ExternalDataConstants.CLASS_NAME_RC_INPUT_FORMAT;
             case ExternalDataConstants.INPUT_FORMAT_PARQUET:
                 return ExternalDataConstants.CLASS_NAME_PARQUET_INPUT_FORMAT;
             default:
@@ -186,8 +183,6 @@ public class HDFSUtils {
                 return TextInputFormat.class;
             case ExternalDataConstants.INPUT_FORMAT_SEQUENCE:
                 return SequenceFileInputFormat.class;
-            case ExternalDataConstants.INPUT_FORMAT_RC:
-                return RCFileInputFormat.class;
             case ExternalDataConstants.INPUT_FORMAT_PARQUET:
                 return MapredParquetInputFormat.class;
             default:
@@ -243,8 +238,6 @@ public class HDFSUtils {
             case ExternalDataConstants.INPUT_FORMAT_TEXT:
             case ExternalDataConstants.INPUT_FORMAT_SEQUENCE:
                 return RecordIdType.OFFSET;
-            case ExternalDataConstants.INPUT_FORMAT_RC:
-                return RecordIdType.RC;
             default:
                 return null;
         }

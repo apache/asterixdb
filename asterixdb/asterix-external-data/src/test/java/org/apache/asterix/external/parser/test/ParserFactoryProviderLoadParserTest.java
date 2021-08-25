@@ -22,7 +22,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.parser.factory.ADMDataParserFactory;
 import org.apache.asterix.external.parser.factory.DelimitedDataParserFactory;
-import org.apache.asterix.external.parser.factory.HiveDataParserFactory;
 import org.apache.asterix.external.parser.factory.RSSParserFactory;
 import org.apache.asterix.external.parser.factory.TweetParserFactory;
 import org.apache.asterix.external.provider.ParserFactoryProvider;
@@ -42,8 +41,6 @@ public class ParserFactoryProviderLoadParserTest {
         result = result && factory instanceof ADMDataParserFactory;
         factory = ParserFactoryProvider.getDataParserFactory("rss");
         result = result && factory instanceof RSSParserFactory;
-        factory = ParserFactoryProvider.getDataParserFactory("hive");
-        result = result && factory instanceof HiveDataParserFactory;
         factory = ParserFactoryProvider.getDataParserFactory("twitter-status");
         result = result && factory instanceof TweetParserFactory;
         Assert.assertTrue(result);

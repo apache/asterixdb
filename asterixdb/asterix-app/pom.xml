@@ -150,7 +150,6 @@
         <configuration>
           <ignoredUsedUndeclaredDependencies combine.children="append">
             <ignoredUsedUndeclaredDependency>commons-logging:commons-logging-api:*</ignoredUsedUndeclaredDependency>
-            <ignoredUsedUndeclaredDependency>org.apache.hive:hive-exec:*</ignoredUsedUndeclaredDependency>
           </ignoredUsedUndeclaredDependencies>
           <usedDependencies combine.children="append">
             <usedDependency>org.apache.hadoop:hadoop-common</usedDependency>

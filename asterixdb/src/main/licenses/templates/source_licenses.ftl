@@ -131,13 +131,6 @@
     SOFTWARE.
     </@license>
 </#if>
-<#if !hivecompatSkip!false>
-    <@license component="AsterixDB runtime" files="org/apache/asterix/hivecompat/io/*"
-        licenseName="The Apache License, Version 2.0"
-        location="${hivecompatLocation!}" filePrefix="${hivecompatPrefix!}">
-Source files in asterix-hivecompat are derived from portions of Apache Hive Query Language v0.13.0 (org.apache.hive:hive-exec).
-    </@license>
-</#if>
 <#if !asterixDashboardSkip!false>
     <#include "../../../../asterix-dashboard/src/main/licenses/dashboard-source-license.ftl">
 </#if>
