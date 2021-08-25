@@ -16,8 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+SET               `compiler.arrayindex` "true";
+USE               TestDataverse;
 
-FROM       Metadata.`Index` D
-WHERE      D.IndexName LIKE "IdxYelp%" AND D.DataverseName = "TestYelp"
-SELECT     D.SearchKey, D.SearchKeyElements, D.SearchKeyType
-ORDER BY   D.IndexName;
+-- Explicit UNNEST join query with all fields of a composite index.
+FROM      Dataset2 D2
+INNER JOIN  (
+    FROM    Dataset1 D1
+    UNNEST  D1.items D1I
+    SELECT  D1.field1, D1I.field2, D1I.field3, D1.field4
+) AS      D1IV
+ON        D1IV.field1 /* +indexnl */ = D2.field1 AND
+          D1IV.field2 /* +indexnl */ = D2.field2 AND
+          D1IV.field3 /* +indexnl */ = D2.field3 AND
+          D1IV.field4 /* +indexnl */ = D2.field4
+SELECT    D2.field1, D2.field2, D2.field3, D2.field4
+ORDER BY  D2.field1, D2.field2, D2.field3, D2.field4;

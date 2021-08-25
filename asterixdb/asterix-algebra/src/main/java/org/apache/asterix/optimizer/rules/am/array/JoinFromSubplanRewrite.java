@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.subplan;
+package org.apache.asterix.optimizer.rules.am.array;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -29,16 +29,24 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 
 /**
@@ -91,7 +99,7 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
  *
  * In the case of nested-subplans, we return a copy of the innermost SELECT followed by all relevant UNNEST/ASSIGNs.
  */
-public class JoinFromSubplanCreator extends AbstractOperatorFromSubplanCreator<AbstractBinaryJoinOperator> {
+public class JoinFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite<AbstractBinaryJoinOperator> {
     private final static Set<FunctionIdentifier> optimizableFunctions = new HashSet<>();
     private final Deque<JoinFromSubplanContext> contextStack = new ArrayDeque<>();
 
@@ -174,26 +182,34 @@ public class JoinFromSubplanCreator extends AbstractOperatorFromSubplanCreator<A
         SubplanOperator subplanOperator =
                 (SubplanOperator) joinContext.selectAfterSubplan.getInputs().get(0).getValue();
         Pair<SelectOperator, UnnestOperator> traversalOutput =
-                traverseSubplanBranch(subplanOperator, originalOperator.getInputs().get(1).getValue());
+                traverseSubplanBranch(subplanOperator, originalOperator.getInputs().get(1).getValue(), true);
         if (traversalOutput == null) {
             return null;
         }
 
         // We have successfully generated a SELECT branch. Create the new JOIN operator.
-        if (originalOperator.getOperatorTag().equals(LogicalOperatorTag.INNERJOIN)) {
-            joinContext.newJoinRoot = new InnerJoinOperator(traversalOutput.first.getCondition());
-
-        } else { // originalOperator.getOperatorTag().equals(LogicalOperatorTag.LEFTOUTERJOIN)
-            joinContext.newJoinRoot = new LeftOuterJoinOperator(traversalOutput.first.getCondition());
-        }
+        ScalarFunctionCallExpression newCond = coalesceConditions(traversalOutput.first, joinContext.originalJoinRoot);
+        joinContext.newJoinRoot = new InnerJoinOperator(new MutableObject<>(newCond));
         joinContext.newJoinRoot.getInputs().add(0, originalOperator.getInputs().get(0));
 
-        // Create the index join branch.
+        // Connect the join branches together.
         traversalOutput.second.getInputs().clear();
         traversalOutput.second.getInputs().add(originalOperator.getInputs().get(1));
         context.computeAndSetTypeEnvironmentForOperator(traversalOutput.second);
         joinContext.newJoinRoot.getInputs().add(1, traversalOutput.first.getInputs().get(0));
         context.computeAndSetTypeEnvironmentForOperator(joinContext.newJoinRoot);
+
+        // To support type casting that is performed on the index subtree and still make this expression recognizable,
+        // push all function calls to a lower ASSIGN.
+        List<Mutable<ILogicalExpression>> conjuncts = new ArrayList<>();
+        if (newCond.splitIntoConjuncts(conjuncts)) {
+            for (Mutable<ILogicalExpression> conjunct : conjuncts) {
+                extractFunctionCallToAssign(joinContext.newJoinRoot, context, conjunct.getValue());
+            }
+
+        } else {
+            extractFunctionCallToAssign(joinContext.newJoinRoot, context, newCond);
+        }
 
         // Reconnect our after-join operator to our new join.
         OperatorManipulationUtil.substituteOpInInput(joinContext.afterJoinOpForRewrite,
@@ -215,6 +231,56 @@ public class JoinFromSubplanCreator extends AbstractOperatorFromSubplanCreator<A
         }
 
         return joinContext.originalJoinRoot;
+    }
+
+    private void extractFunctionCallToAssign(AbstractBinaryJoinOperator joinOp, IOptimizationContext context,
+            ILogicalExpression condition) throws AlgebricksException {
+        if (!condition.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
+            return;
+        }
+        AbstractFunctionCallExpression conditionAsFuncCall = (AbstractFunctionCallExpression) condition;
+        if (!AlgebricksBuiltinFunctions.isComparisonFunction(conditionAsFuncCall.getFunctionIdentifier())) {
+            return;
+        }
+
+        for (Mutable<ILogicalExpression> arg : conditionAsFuncCall.getArguments()) {
+            if (!arg.getValue().getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
+                continue;
+            }
+
+            LogicalVariable newVar = context.newVar();
+            VariableReferenceExpression newVarRef = new VariableReferenceExpression(newVar);
+            newVarRef.setSourceLocation(joinOp.getSourceLocation());
+            AssignOperator newAssign =
+                    new AssignOperator(newVar, new MutableObject<>(arg.getValue().cloneExpression()));
+            newAssign.setSourceLocation(arg.getValue().getSourceLocation());
+            newAssign.setExecutionMode(joinOp.getExecutionMode());
+
+            // Place the new ASSIGN in the appropriate join branch.
+            ILogicalOperator leftBranchRoot = joinOp.getInputs().get(0).getValue();
+            ILogicalOperator rightBranchRoot = joinOp.getInputs().get(1).getValue();
+            List<LogicalVariable> usedVarsFromFunc = new ArrayList<>();
+            List<LogicalVariable> varsFromLeftBranch = new ArrayList<>();
+            List<LogicalVariable> varsFromRightBranch = new ArrayList<>();
+            VariableUtilities.getUsedVariables(newAssign, usedVarsFromFunc);
+            VariableUtilities.getProducedVariablesInDescendantsAndSelf(leftBranchRoot, varsFromLeftBranch);
+            VariableUtilities.getProducedVariablesInDescendantsAndSelf(rightBranchRoot, varsFromRightBranch);
+            if (varsFromLeftBranch.containsAll(usedVarsFromFunc)) {
+                newAssign.getInputs().add(new MutableObject<>(leftBranchRoot));
+                context.computeAndSetTypeEnvironmentForOperator(newAssign);
+                joinOp.getInputs().get(0).setValue(newAssign);
+                context.computeAndSetTypeEnvironmentForOperator(joinOp);
+                arg.setValue(newVarRef);
+
+            } else if (varsFromRightBranch.containsAll(usedVarsFromFunc)) {
+                newAssign.getInputs().add(new MutableObject<>(rightBranchRoot));
+                context.computeAndSetTypeEnvironmentForOperator(newAssign);
+                joinOp.getInputs().get(1).setValue(newAssign);
+                context.computeAndSetTypeEnvironmentForOperator(joinOp);
+                arg.setValue(newVarRef);
+
+            }
+        }
     }
 
     /**

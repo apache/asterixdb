@@ -30,7 +30,9 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.optimizer.rules.subplan.SelectFromSubplanCreator;
+import org.apache.asterix.optimizer.rules.am.array.IIntroduceAccessMethodRuleLocalRewrite;
+import org.apache.asterix.optimizer.rules.am.array.MergedSelectRewrite;
+import org.apache.asterix.optimizer.rules.am.array.SelectFromSubplanRewrite;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -123,7 +125,10 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     protected IVariableTypeEnvironment typeEnvironment = null;
     protected final OptimizableOperatorSubTree subTree = new OptimizableOperatorSubTree();
     protected List<Mutable<ILogicalOperator>> afterSelectRefs = null;
-    private final SelectFromSubplanCreator selectFromSubplanCreator = new SelectFromSubplanCreator();
+
+    // For plan rewriting to recognize applicable array indexes.
+    private final SelectFromSubplanRewrite selectFromSubplanRewrite = new SelectFromSubplanRewrite();
+    private final MergedSelectRewrite mergedSelectRewrite = new MergedSelectRewrite();
 
     // Register access methods.
     protected static Map<FunctionIdentifier, List<IAccessMethod>> accessMethods = new HashMap<>();
@@ -134,7 +139,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(ArrayBTreeAccessMethod.INSTANCE, accessMethods);
         for (Pair<FunctionIdentifier, Boolean> f : ArrayBTreeAccessMethod.INSTANCE.getOptimizableFunctions()) {
-            SelectFromSubplanCreator.addOptimizableFunction(f.first);
+            SelectFromSubplanRewrite.addOptimizableFunction(f.first);
         }
     }
 
@@ -376,26 +381,18 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                 analyzedAMs = new TreeMap<>();
             }
 
-            // If there exists a SUBPLAN in our plan, and we are conditioning on a variable,
-            // attempt to rewrite this subplan to allow an array-index AM to be introduced.
-            // This rewrite is to be used **solely** for the purpose of changing a DATA-SCAN into a
-            // non-index-only plan branch. No nodes from this rewrite will be used beyond this point. 
-            // If successful, this will create a non-index only plan that replaces the subplan's
-            // DATA-SCAN with a PIDX SEARCH <- DISTINCT <- ORDER <- SIDX SEARCH.
             if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()) {
-                SelectOperator selectRewrite = selectFromSubplanCreator.createOperator(selectOp, context);
-                boolean transformationResult = false;
-                if (selectRewrite != null) {
-                    Mutable<ILogicalOperator> selectRuleInput = new MutableObject<>(selectRewrite);
-                    transformationResult = checkAndApplyTheSelectTransformation(selectRuleInput, context);
+                // If there exists a composite atomic-array index, our conjuncts will be split across multiple
+                // SELECTs. This rewrite is to be used **solely** for the purpose of changing a DATA-SCAN into a
+                // non-index-only plan branch. No nodes introduced from this rewrite will be used beyond this point.
+                if (rewriteLocallyAndTransform(selectRef, context, mergedSelectRewrite)) {
+                    return true;
                 }
 
-                // Restore our state, so we can look for more optimizations if this transformation failed.
-                selectOp = selectFromSubplanCreator.restoreBeforeRewrite(null, null);
-                selectRef = selectRefFromThisOp;
-
-                if (transformationResult) {
-                    // Rewrite was successful. Exit early.
+                // If there exists a SUBPLAN in our plan, and we are conditioning on a variable, attempt to rewrite
+                // this subplan to allow an array-index AM to be introduced. Again, this rewrite is to be used
+                // **solely** for the purpose of changing a DATA-SCAN into a non-index-only plan branch.
+                if (rewriteLocallyAndTransform(selectRef, context, selectFromSubplanRewrite)) {
                     return true;
                 }
             }
@@ -491,6 +488,21 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     @Override
     public Map<FunctionIdentifier, List<IAccessMethod>> getAccessMethods() {
         return accessMethods;
+    }
+
+    private boolean rewriteLocallyAndTransform(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
+            IIntroduceAccessMethodRuleLocalRewrite<SelectOperator> rewriter) throws AlgebricksException {
+        SelectOperator selectRewrite = rewriter.createOperator(selectOp, context);
+        boolean transformationResult = false;
+        if (selectRewrite != null) {
+            Mutable<ILogicalOperator> selectRuleInput = new MutableObject<>(selectRewrite);
+            transformationResult = checkAndApplyTheSelectTransformation(selectRuleInput, context);
+        }
+
+        // Restore our state, so we can look for more optimizations if this transformation failed.
+        selectOp = rewriter.restoreBeforeRewrite(null, null);
+        selectRef = opRef;
+        return transformationResult;
     }
 
     private void clear() {

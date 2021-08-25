@@ -487,6 +487,25 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 if (lastFieldMatched < 0) {
                     indexExprAndVarIt.remove();
                     continue;
+
+                } else if (Index.IndexCategory.of(indexType).equals(Index.IndexCategory.ARRAY)) {
+                    // For array indexes, we cannot make the decision to apply the prefix until we see a conjunct
+                    // conditioning on an array. We should improve using array indexes for queries that don't involve
+                    // the array component in the future.
+                    Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) index.getIndexDetails();
+                    int indexOfFirstArrayField = 0;
+                    for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
+                        if (!e.getUnnestList().isEmpty()) {
+                            break;
+                        }
+                        for (List<String> ignored : e.getProjectList()) {
+                            indexOfFirstArrayField++;
+                        }
+                    }
+                    if (lastFieldMatched < indexOfFirstArrayField) {
+                        indexExprAndVarIt.remove();
+                        continue;
+                    }
                 }
             }
             analysisCtx.putNumberOfMatchedKeys(index, numMatchedKeys);

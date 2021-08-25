@@ -1,1 +1,4 @@
+{ "SearchKey": [  ], "SearchKeyElements": [ { "UnnestList": [ [ "outer_dates_1" ] ], "ProjectList": [ [ "date" ] ] }, [ [ "backup_business_id" ] ] ], "SearchKeyType": [ [ "string" ], [ "string" ] ] }
+{ "SearchKey": [  ], "SearchKeyElements": [ [ [ "business_id" ] ], { "UnnestList": [ [ "outer_dates_2" ] ], "ProjectList": [ [ "time" ] ] } ], "SearchKeyType": [ [ "string" ], [ "string" ] ] }
+{ "SearchKey": [  ], "SearchKeyElements": [ [ [ "business_id" ] ], { "UnnestList": [ [ "outer_dates" ], [ "inner_dates" ] ], "ProjectList": [ [ "date" ], [ "time" ] ] }, [ [ "backup_business_id" ] ] ], "SearchKeyType": [ [ "string" ], [ "string", "string" ], [ "string" ] ] }
 { "SearchKey": [  ], "SearchKeyElements": [ [ [ "business_id" ] ], { "UnnestList": [ [ "dates" ] ] } ], "SearchKeyType": [ [ "string" ], [ "string" ] ] }

@@ -18,12 +18,10 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -678,31 +676,14 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             boolean hasMetaPart) throws AlgebricksException {
         Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) index.getIndexDetails();
 
-        // First, locate a field having the required UNNEST path. Queue this first, and all other keys will follow.
-        Deque<Integer> keyPositionQueue = new ArrayDeque<>();
-        for (int i = 0; i < arrayIndexDetails.getElementList().size(); i++) {
-            Index.ArrayIndexElement e = arrayIndexDetails.getElementList().get(i);
-            if (e.getUnnestList().isEmpty()) {
-                keyPositionQueue.addLast(i);
-            } else {
-                keyPositionQueue.addFirst(i);
-            }
-        }
-
         // Get the record variable associated with our record path.
-        Index.ArrayIndexElement workingElement = arrayIndexDetails.getElementList().get(keyPositionQueue.getFirst());
-        int sourceIndicatorForBaseRecord = workingElement.getSourceIndicator();
+        int sourceIndicatorForBaseRecord = arrayIndexDetails.getElementList().get(0).getSourceIndicator();
         LogicalVariable sourceVarForBaseRecord = hasMetaPart
                 ? ((sourceIndicatorForBaseRecord == Index.RECORD_INDICATOR) ? recordVar : metaVar) : recordVar;
         UnnestBranchCreator branchCreator = new UnnestBranchCreator(sourceVarForBaseRecord, unnestSourceOp);
 
-        int initialKeyPositionQueueSize = keyPositionQueue.size();
-        Set<LogicalVariable> secondaryKeyVars = new HashSet<>();
-        for (int i = 0; i < initialKeyPositionQueueSize; i++) {
-
-            // Poll from our queue, and get a key position.
-            int workingKeyPos = keyPositionQueue.pollFirst();
-            workingElement = arrayIndexDetails.getElementList().get(workingKeyPos);
+        Set<LogicalVariable> secondaryKeyVars = new LinkedHashSet<>();
+        for (Index.ArrayIndexElement workingElement : arrayIndexDetails.getElementList()) {
             int sourceIndicator = workingElement.getSourceIndicator();
             ARecordType recordType =
                     hasMetaPart ? ((sourceIndicator == Index.RECORD_INDICATOR) ? recType : metaType) : recType;
@@ -714,7 +695,6 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 isOpenOrNestedField =
                         (atomicFieldName.size() != 1) || !recordType.isClosedField(atomicFieldName.get(0));
 
-                // The UNNEST path has already been created (we queued this first), so we look at the current top.
                 LogicalVariable newVar = context.newVar();
                 VariableReferenceExpression varRef = new VariableReferenceExpression(sourceVarForBaseRecord);
                 varRef.setSourceLocation(sourceLoc);
@@ -723,10 +703,14 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                                 recordType.getFieldIndex(atomicFieldName.get(0)), atomicFieldName)
                         : getFieldAccessFunction(new MutableObject<>(varRef), -1, atomicFieldName);
 
+                // Add an assign on top to extract the atomic element.
                 AssignOperator newAssignOp = new AssignOperator(newVar, new MutableObject<>(newVarRef));
                 newAssignOp.setSourceLocation(sourceLoc);
                 branchCreator.currentTop = introduceNewOp(branchCreator.currentTop, newAssignOp, true);
                 secondaryKeyVars.add(newVar);
+                if (branchCreator.currentBottom == null) {
+                    branchCreator.currentBottom = branchCreator.currentTop;
+                }
 
             } else {
                 // We have an array element.  Walk the array path.
@@ -735,6 +719,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 List<Boolean> firstUnnestFlags = ArrayIndexUtil.getUnnestFlags(workingElement.getUnnestList(),
                         workingElement.getProjectList().get(0));
                 ArrayIndexUtil.walkArrayPath(recordType, flatFirstFieldName, firstUnnestFlags, branchCreator);
+                secondaryKeyVars.add(branchCreator.lastFieldVars.get(0));
 
                 // For all other elements in the PROJECT list, add an assign.
                 for (int j = 1; j < workingElement.getProjectList().size(); j++) {
@@ -749,15 +734,11 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     secondaryKeyVars.add(newVar);
                 }
             }
-
-            branchCreator.lowerIsFirstWalkFlag();
-            secondaryKeyVars.addAll(branchCreator.lastFieldVars);
         }
 
         // Update the variables we are to use for the head operators.
         branchCreator.lastFieldVars.clear();
         branchCreator.lastFieldVars.addAll(secondaryKeyVars);
-
         return branchCreator;
     }
 
@@ -1022,8 +1003,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
     private class UnnestBranchCreator implements ArrayIndexUtil.TypeTrackerCommandExecutor {
         private final List<LogicalVariable> lastFieldVars;
         private LogicalVariable lastRecordVar;
-        private ILogicalOperator currentTop, currentBottom;
-        private boolean isFirstWalk = true;
+        private ILogicalOperator currentTop, currentBottom = null;
 
         public UnnestBranchCreator(LogicalVariable recordVar, ILogicalOperator sourceOperator) {
             this.lastRecordVar = recordVar;
@@ -1033,10 +1013,6 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
         public ILogicalPlan buildBranch() {
             return new ALogicalPlanImpl(new MutableObject<>(currentTop));
-        }
-
-        public void lowerIsFirstWalkFlag() {
-            isFirstWalk = false;
         }
 
         public VariableReferenceExpression createLastRecordVarRef() {
@@ -1098,11 +1074,6 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         public void executeActionOnEachArrayStep(ARecordType startingStepRecordType, IAType workingType,
                 List<String> fieldName, boolean isFirstArrayStep, boolean isLastUnnestInIntermediateStep)
                 throws AlgebricksException {
-            if (!isFirstWalk) {
-                // We have already built the UNNEST path, do not build again.
-                return;
-            }
-
             // Get the field we want to UNNEST from our record.
             ILogicalExpression accessToUnnestVar;
             accessToUnnestVar = (startingStepRecordType != null)
@@ -1120,7 +1091,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             UnnestOperator unnestOp = new UnnestOperator(unnestVar, new MutableObject<>(scanCollection));
             unnestOp.setSourceLocation(sourceLoc);
             this.currentTop = introduceNewOp(currentTop, unnestOp, true);
-            if (isFirstArrayStep) {
+            if (isFirstArrayStep && this.currentBottom == null) {
                 this.currentBottom = unnestOp;
             }
 

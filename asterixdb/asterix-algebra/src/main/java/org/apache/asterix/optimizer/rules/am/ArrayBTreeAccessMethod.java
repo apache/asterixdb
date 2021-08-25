@@ -51,8 +51,8 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
 
     @Override
     public boolean matchAllIndexExprs(Index index) {
-        // Similar to BTree "matchAllIndexExprs", we only require all expressions to be matched if this is a composite
-        // key index with an unknowable field.
+        // We only require all expressions to be matched if this is a composite key index with an unknowable field.
+        // TODO (GLENN): When nulls become stored in array indexes, this should return false.
         return ((Index.ArrayIndexDetails) index.getIndexDetails()).getElementList().stream()
                 .map(e -> e.getProjectList().size()).reduce(0, Integer::sum) > 1 && hasUnknownableField(index);
     }

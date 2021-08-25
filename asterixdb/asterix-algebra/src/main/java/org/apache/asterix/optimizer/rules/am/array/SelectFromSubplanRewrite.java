@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.subplan;
+package org.apache.asterix.optimizer.rules.am.array;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -78,7 +78,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
  *
  * In the case of nested-subplans, we return a copy of the innermost SELECT followed by all relevant UNNEST/ASSIGNs.
  */
-public class SelectFromSubplanCreator extends AbstractOperatorFromSubplanCreator<SelectOperator> {
+public class SelectFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite<SelectOperator> {
     private final static Set<FunctionIdentifier> optimizableFunctions = new HashSet<>();
     private final Deque<SelectOperator> selectRootStack = new ArrayDeque<>();
 
@@ -117,7 +117,7 @@ public class SelectFromSubplanCreator extends AbstractOperatorFromSubplanCreator
 
         // Traverse our subplan and generate a SELECT branch if applicable.
         SubplanOperator subplanOperator = (SubplanOperator) originalOperator.getInputs().get(0).getValue();
-        Pair<SelectOperator, UnnestOperator> traversalOutput = traverseSubplanBranch(subplanOperator, null);
+        Pair<SelectOperator, UnnestOperator> traversalOutput = traverseSubplanBranch(subplanOperator, null, true);
         return (traversalOutput == null) ? null : traversalOutput.first;
     }
 

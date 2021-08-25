@@ -8071,13 +8071,6 @@
           <source-location>false</source-location>
         </compilation-unit>
       </test-case>
-      <test-case FilePath="array-index/error-handling">
-        <compilation-unit name="index-mixed-composite">
-          <output-dir compare="Text">index-mixed-composite</output-dir>
-          <expected-error>ASX1155: Incompatible index type ARRAY</expected-error>
-          <source-location>false</source-location>
-        </compilation-unit>
-      </test-case>
     </test-group>
     <test-group name="array-index/metadata">
       <test-case FilePath="array-index/metadata/closed">
@@ -8125,16 +8118,16 @@
           <output-dir compare="Text">complex-structures</output-dir>
         </compilation-unit>
       </test-case>
-      <!--      <test-case FilePath="array-index/metadata/closed">-->
-      <!--        <compilation-unit name="with-composite-sk">-->
-      <!--          <output-dir compare="Text">with-composite-sk</output-dir>-->
-      <!--        </compilation-unit>-->
-      <!--      </test-case>-->
-      <!--      <test-case FilePath="array-index/metadata/open">-->
-      <!--        <compilation-unit name="with-composite-sk">-->
-      <!--          <output-dir compare="Text">with-composite-sk</output-dir>-->
-      <!--        </compilation-unit>-->
-      <!--      </test-case>-->
+      <test-case FilePath="array-index/metadata/closed">
+        <compilation-unit name="with-composite-sk">
+          <output-dir compare="Text">with-composite-sk</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="array-index/metadata/open">
+        <compilation-unit name="with-composite-sk">
+          <output-dir compare="Text">with-composite-sk</output-dir>
+        </compilation-unit>
+      </test-case>
       <test-case FilePath="array-index/metadata/closed">
         <compilation-unit name="with-composite-array-different-indicators">
           <output-dir compare="Text">with-composite-array-different-indicators</output-dir>
@@ -8472,6 +8465,13 @@
       <test-case FilePath="array-index/select-quantified-queries">
         <compilation-unit name="with-open-index">
           <output-dir compare="Text">with-open-index</output-dir>
+        </compilation-unit>
+      </test-case>
+    </test-group>
+    <test-group name="array-index/composite-index-queries">
+      <test-case FilePath="array-index">
+        <compilation-unit name="composite-index-queries">
+          <output-dir compare="Text">composite-index-queries</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>

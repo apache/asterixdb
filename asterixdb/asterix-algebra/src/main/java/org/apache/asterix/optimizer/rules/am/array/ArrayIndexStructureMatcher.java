@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.asterix.optimizer.rules.am;
+package org.apache.asterix.optimizer.rules.am.array;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,6 +31,7 @@ import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.optimizer.rules.am.OptimizableOperatorSubTree;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -126,8 +127,6 @@ public class ArrayIndexStructureMatcher implements ArrayIndexUtil.TypeTrackerCom
                     lastMatchedPosition = searchPosition;
                     isStructureMatchedFoundForThisStep = true;
 
-                } else {
-                    isStructureMatchedFoundForThisStep = false;
                 }
             }
             searchPosition++;

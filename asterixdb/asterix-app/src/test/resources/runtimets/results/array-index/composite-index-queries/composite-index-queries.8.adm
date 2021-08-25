@@ -1,0 +1,2 @@
+{ "field1": 1, "outer_items": [ { "field2_notindexed": 2, "inner_items": [ { "field2": 2, "field3": 3, "field3_notindexed": 3 } ] } ], "field4": 4 }
+{ "field1": 1, "outer_items": [ { "field2_notindexed": 2, "inner_items": [ { "field2": 2, "field3": 3, "field3_notindexed": 3 } ] } ], "field4": 4 }

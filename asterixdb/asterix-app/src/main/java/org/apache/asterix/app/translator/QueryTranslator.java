@@ -1254,11 +1254,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_INDEX_TYPE, sourceLoc,
                             String.valueOf(indexType));
                 }
-                if (indexedElementsCount > 1) {
-                    // TODO (GLENN): Add in support for composite atomic / array indexes.
-                    throw new CompilationException(ErrorCode.COMPILATION_INCOMPATIBLE_INDEX_TYPE, sourceLoc,
-                            String.valueOf(indexType));
-                }
 
                 List<Index.ArrayIndexElement> indexElementList = new ArrayList<>(indexedElementsCount);
                 for (int i = 0; i < indexedElementsCount; i++) {

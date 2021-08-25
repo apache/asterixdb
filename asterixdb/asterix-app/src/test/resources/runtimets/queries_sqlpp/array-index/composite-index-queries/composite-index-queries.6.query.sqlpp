@@ -16,8 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+SET               `compiler.arrayindex` "true";
+USE               TestDataverse;
 
-FROM       Metadata.`Index` D
-WHERE      D.IndexName LIKE "IdxYelp%" AND D.DataverseName = "TestYelp"
-SELECT     D.SearchKey, D.SearchKeyElements, D.SearchKeyType
-ORDER BY   D.IndexName;
+-- Existential quantification query with all fields of a composite index, with extra clauses on non-indexed fields.
+FROM      Dataset1 D
+WHERE     D.field1 = 1 AND
+          ( SOME DOI IN D.outer_items
+            SATISFIES DOI.field2_notindexed = 2 AND
+                      ( SOME DII IN DOI.inner_items
+                        SATISFIES DII.field2 = 2 AND
+                                  DII.field3 = 3 AND
+                                  DII.field3_notindexed = 3 ) ) AND
+          D.field4 = 4
+SELECT    D.field1, D.outer_items, D.field4
+ORDER BY  D.field1, D.outer_items, D.field4;
