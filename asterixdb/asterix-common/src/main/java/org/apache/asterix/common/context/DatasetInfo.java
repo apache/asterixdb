@@ -45,6 +45,7 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     private int numActiveIOOps;
     private int pendingFlushes;
     private int pendingMerges;
+    private int pendingReplications;
     private long lastAccess;
     private boolean isExternal;
     private boolean isRegistered;
@@ -82,6 +83,9 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
             case MERGE:
                 pendingMerges++;
                 break;
+            case REPLICATE:
+                pendingReplications++;
+                break;
             default:
                 break;
         }
@@ -95,6 +99,9 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
                 break;
             case MERGE:
                 pendingMerges--;
+                break;
+            case REPLICATE:
+                pendingReplications--;
                 break;
             default:
                 break;
@@ -250,5 +257,9 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
 
     public synchronized int getPendingMerges() {
         return pendingMerges;
+    }
+
+    public synchronized int getPendingReplications() {
+        return pendingReplications;
     }
 }

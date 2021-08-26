@@ -22,6 +22,7 @@ public class StorageIOStats {
 
     private int pendingFlushes;
     private int pendingMerges;
+    private int pendingReplications;
 
     public void addPendingFlushes(int pending) {
         pendingFlushes += pending;
@@ -31,11 +32,19 @@ public class StorageIOStats {
         pendingMerges += pending;
     }
 
+    public void addPendingReplications(int pending) {
+        pendingReplications += pending;
+    }
+
     public int getPendingFlushes() {
         return pendingFlushes;
     }
 
     public int getPendingMerges() {
         return pendingMerges;
+    }
+
+    public int getPendingReplications() {
+        return pendingReplications;
     }
 }

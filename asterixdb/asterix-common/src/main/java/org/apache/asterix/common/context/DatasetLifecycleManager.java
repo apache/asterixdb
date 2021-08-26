@@ -562,6 +562,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         for (DatasetResource dsr : datasets.values()) {
             stats.addPendingFlushes(dsr.getDatasetInfo().getPendingFlushes());
             stats.addPendingMerges(dsr.getDatasetInfo().getPendingMerges());
+            stats.addPendingReplications(dsr.getDatasetInfo().getPendingReplications());
         }
         return stats;
     }
