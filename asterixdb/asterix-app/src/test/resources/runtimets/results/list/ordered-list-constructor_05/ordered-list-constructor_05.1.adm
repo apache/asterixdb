@@ -1,0 +1,2 @@
+{ "r": 1, "a1": [ "foo", "bar", "foobar" ], "a2": [ 1, [ 1 ], null ], "a3": [ [ 2 ], [ 3 ] ], "eq": true }
+{ "r": 2, "a1": [ "foo", "bar", "foobar" ], "a2": [ 2, [ 2 ], null ], "a3": [ [ 2 ], [ 5 ] ], "eq": true }

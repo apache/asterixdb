@@ -408,6 +408,9 @@ The following example illustrates the form of a case expression.
 ##### ArrayConstructor
 ![](../images/diagrams/ArrayConstructor.png)
 
+##### ParenthesizedArrayConstructor
+![](../images/diagrams/ParenthesizedArrayConstructor.png)
+
 ##### MultisetConstructor
 ![](../images/diagrams/MultisetConstructor.png)
 

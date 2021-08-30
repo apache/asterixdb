@@ -28,8 +28,6 @@ Literal ::=  StringLiteral
 
 ParenthesizedExpr ::= ("(" Expr ")") | Subquery
 
-Subquery ::= ("(" Selection ")")
-
 FunctionCall ::= OrdinaryFunctionCall | AggregateFunctionCall | WindowFunctionCall
 
 OrdinaryFunctionCall ::= (DataverseName ".")? Identifier "(" Expr ("," Expr)* ")"
@@ -42,11 +40,13 @@ SimpleCaseExpr ::= "CASE" Expr ("WHEN" Expr "THEN" Expr)+ ("ELSE" Expr)? "END"
 
 SearchedCaseExpr ::= "CASE" ("WHEN" Expr "THEN" Expr)+ ("ELSE" Expr)? "END"
 
-Constructor ::= ObjectConstructor | ArrayConstructor | MultisetConstructor
+Constructor ::= ObjectConstructor | ArrayConstructor | ParenthesizedArrayConstructor | MultisetConstructor
 
 ObjectConstructor ::= "{" ( Expr ( ":" Expr )? ( "," Expr ( ":" Expr )? )* )? "}"
 
 ArrayConstructor ::= "[" Expr ("," Expr)* "]"
+
+ParenthesizedArrayConstructor ::= "(" Expr ("," Expr)+ ")"
 
 MultisetConstructor ::= "{{" Expr ("," Expr)* "}}"
 

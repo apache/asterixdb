@@ -6689,6 +6689,22 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="list">
+      <compilation-unit name="ordered-list-constructor_04">
+        <output-dir compare="Text">ordered-list-constructor_04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="ordered-list-constructor_05">
+        <output-dir compare="Text">ordered-list-constructor_05</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
+      <compilation-unit name="ordered-list-constructor_06_negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error><![CDATA[ASX1001: Syntax error: In line 26 >>    from [r, r+1] x select value count(x),<< Encountered "," at column 42]]></expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="list">
       <compilation-unit name="scan-collection_01">
         <output-dir compare="Text">scan-collection_01</output-dir>
       </compilation-unit>

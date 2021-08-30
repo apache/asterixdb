@@ -4265,17 +4265,35 @@ WindowExpression.FrameExclusionKind WindowFrameExclusion() throws ParseException
 
 Expression ParenthesizedExpression() throws ParseException:
 {
-  Expression expr;
+  Token startToken = null;
+  Expression expr = null, expr2 = null;
+  List<Expression> exprList = null;
 }
 {
     (
     LOOKAHEAD(2)
-    <LEFTPAREN> expr = Expression() <RIGHTPAREN>
+    <LEFTPAREN> { startToken = token; } expr = Expression()
+    (
+      <COMMA> expr2 = Expression()
+      {
+        if (exprList == null) {
+          exprList = new ArrayList<Expression>();
+          exprList.add(expr);
+        }
+        exprList.add(expr2);
+      }
+    )*
+    <RIGHTPAREN>
     |
     expr = Subquery()
     )
     {
-      return expr;
+      if (exprList != null) {
+        ListConstructor listExpr = new ListConstructor(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, exprList);
+        return addSourceLocation(listExpr, startToken);
+      } else {
+        return expr;
+      }
     }
 }
 

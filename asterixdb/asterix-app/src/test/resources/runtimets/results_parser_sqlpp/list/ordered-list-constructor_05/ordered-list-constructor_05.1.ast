@@ -1,0 +1,114 @@
+Query:
+SELECT [
+Variable [ Name=$r ]
+r
+OrderedListConstructor [
+  LiteralExpr [STRING] [foo]
+  LiteralExpr [STRING] [bar]
+  LiteralExpr [STRING] [foobar]
+]
+a1
+OrderedListConstructor [
+  Variable [ Name=$r ]
+  OrderedListConstructor [
+    Variable [ Name=$r ]
+  ]
+  LiteralExpr [NULL]
+]
+a2
+OrderedListConstructor [
+  (
+    SELECT ELEMENT [
+    FunctionCall asterix.sql-count@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#3 ]
+          Field=x
+        ]
+        ]
+        FROM [          Variable [ Name=#1 ]
+          AS Variable [ Name=#3 ]
+        ]
+      )
+    ]
+    ]
+    FROM [      OrderedListConstructor [
+        Variable [ Name=$r ]
+        OperatorExpr [
+          Variable [ Name=$r ]
+          +
+          LiteralExpr [LONG] [1]
+        ]
+      ]
+      AS Variable [ Name=$x ]
+    ]
+    Group All
+      GROUP AS Variable [ Name=#1 ]
+      (
+        x:=Variable [ Name=$x ]
+      )
+
+  )
+  (
+    SELECT ELEMENT [
+    FunctionCall asterix.sql-sum@1[
+      (
+        SELECT ELEMENT [
+        FieldAccessor [
+          Variable [ Name=#4 ]
+          Field=x
+        ]
+        ]
+        FROM [          Variable [ Name=#2 ]
+          AS Variable [ Name=#4 ]
+        ]
+      )
+    ]
+    ]
+    FROM [      OrderedListConstructor [
+        Variable [ Name=$r ]
+        OperatorExpr [
+          Variable [ Name=$r ]
+          +
+          LiteralExpr [LONG] [1]
+        ]
+      ]
+      AS Variable [ Name=$x ]
+    ]
+    Group All
+      GROUP AS Variable [ Name=#2 ]
+      (
+        x:=Variable [ Name=$x ]
+      )
+
+  )
+]
+a3
+OperatorExpr [
+  OrderedListConstructor [
+    Variable [ Name=$r ]
+    OrderedListConstructor [
+      Variable [ Name=$r ]
+    ]
+  ]
+  =
+  OrderedListConstructor [
+    Variable [ Name=$r ]
+    OrderedListConstructor [
+      Variable [ Name=$r ]
+    ]
+  ]
+]
+eq
+]
+FROM [  FunctionCall asterix.range@2[
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [2]
+  ]
+  AS Variable [ Name=$r ]
+]
+Orderby
+  Variable [ Name=$r ]
+  ASC
+
