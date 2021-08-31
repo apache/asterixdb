@@ -199,23 +199,9 @@
               </gavs>
               <noticeUrl>https://raw.githubusercontent.com/aws/aws-sdk-java-v2/2.10.83/NOTICE.txt</noticeUrl>
             </override>
-            <!-- Hadoop AWS SDK -->
             <override>
-              <gavs>
-                <gav>com.amazonaws:aws-java-sdk-core:1.12.1</gav>
-                <gav>com.amazonaws:jmespath-java:1.12.1</gav>
-                <gav>com.amazonaws:aws-java-sdk-s3:1.12.1</gav>
-                <gav>com.amazonaws:aws-java-sdk-kms:1.12.1</gav>
-              </gavs>
+              <gav>com.amazonaws:aws-java-sdk-bundle:1.12.1</gav>
               <noticeUrl>https://raw.githubusercontent.com/aws/aws-sdk-java/1.12.1/NOTICE.txt</noticeUrl>
-            </override>
-            <override>
-              <gav>software.amazon.eventstream:eventstream:1.0.1</gav>
-              <noticeUrl>https://raw.githubusercontent.com/awslabs/aws-eventstream-java/7be2dd80e12f8835674c8ffb0f4a2efb64c7b585/NOTICE</noticeUrl>
-            </override>
-            <override>
-              <gav>software.amazon.ion:ion-java:1.0.2</gav>
-              <noticeUrl>https://raw.githubusercontent.com/amzn/ion-java/v1.0.2/NOTICE</noticeUrl>
             </override>
             <override>
               <gavs>
@@ -456,6 +442,7 @@
                 <aliasUrl>https://raw.githubusercontent.com/googleapis/java-common-protos/v2.1.0/proto-google-common-protos/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/googleapis/java-iam/v1.0.13/proto-google-iam-v1/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/googleapis/java-storage/v1.114.0/LICENSE</aliasUrl>
+                <aliasUrl>http://repository.jboss.org/licenses/apache-2.0.txt</aliasUrl>
               </aliasUrls>
               <metric>1</metric>
             </license>
@@ -526,6 +513,13 @@
               <aliasUrls>
                 <aliasURL>https://opensource.org/licenses/bsd-license.php</aliasURL>
                 <aliasUrl>https://raw.githubusercontent.com/luben/zstd-jni/v1.4.9-1/LICENSE</aliasUrl>
+              </aliasUrls>
+            </license>
+            <license>
+              <displayName>The Go license</displayName>
+              <url>http://golang.org/LICENSE</url>
+              <aliasUrls>
+                <aliasUrl>https://golang.org/LICENSE</aliasUrl>
               </aliasUrls>
             </license>
           </licenses>

@@ -27,7 +27,7 @@ import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public final class JInterval extends JObject<List<Long>> {
