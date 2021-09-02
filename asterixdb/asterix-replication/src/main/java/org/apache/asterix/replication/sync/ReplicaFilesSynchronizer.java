@@ -105,7 +105,12 @@ public class ReplicaFilesSynchronizer {
         final FileSynchronizer sync = new FileSynchronizer(appCtx, replica);
         // sort files to ensure index metadata files starting with "." are replicated first
         files.sort(String::compareTo);
-        files.forEach(sync::replicate);
+        int missingFilesCount = files.size();
+        for (int i = 0; i < missingFilesCount; i++) {
+            String file = files.get(i);
+            sync.replicate(file);
+            replica.setSyncProgress((i + 1d) / missingFilesCount);
+        }
     }
 
     private void deleteInvalidFiles(List<String> files) {

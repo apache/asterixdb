@@ -51,4 +51,18 @@ public interface IPartitionReplica {
      * @param failure
      */
     void notifyFailure(Exception failure);
+
+    /**
+     * Gets the current sync progress
+     *
+     * @return the current sync progress
+     */
+    double getSyncProgress();
+
+    /**
+     * Gets the last progress time of this replica based on System.nanoTime
+     *
+     * @return the last progress time
+     */
+    long getLastProgressTime();
 }

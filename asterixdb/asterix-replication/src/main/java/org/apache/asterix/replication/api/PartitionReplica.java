@@ -52,6 +52,8 @@ public class PartitionReplica implements IPartitionReplica {
     private static final int INITIAL_BUFFER_SIZE = StorageUtil.getIntSizeInBytes(4, StorageUtil.StorageUnit.KILOBYTE);
     private final INcApplicationContext appCtx;
     private final ReplicaIdentifier id;
+    private double syncProgress = -1;
+    private long lastProgressTime = -1;
     private ByteBuffer reusbaleBuf;
     private PartitionReplicaStatus status = DISCONNECTED;
     private ISocketChannel sc;
@@ -133,6 +135,16 @@ public class PartitionReplica implements IPartitionReplica {
         return reusbaleBuf;
     }
 
+    public synchronized void setSyncProgress(double syncProgress) {
+        this.syncProgress = syncProgress;
+        lastProgressTime = System.nanoTime();
+    }
+
+    @Override
+    public synchronized double getSyncProgress() {
+        return syncProgress;
+    }
+
     private JsonNode asJson() {
         ObjectNode json = OBJECT_MAPPER.createObjectNode();
         json.put("id", id.toString());
@@ -150,6 +162,19 @@ public class PartitionReplica implements IPartitionReplica {
         }
         PartitionReplica that = (PartitionReplica) o;
         return id.equals(that.id);
+    }
+
+    @Override
+    public synchronized long getLastProgressTime() {
+        switch (status) {
+            case IN_SYNC:
+                return System.nanoTime();
+            case CATCHING_UP:
+                return lastProgressTime;
+            case DISCONNECTED:
+                return -1;
+        }
+        return -1;
     }
 
     @Override
@@ -172,6 +197,17 @@ public class PartitionReplica implements IPartitionReplica {
         }
         LOGGER.info(() -> "Replica " + this + " status changing: " + this.status + " -> " + status);
         this.status = status;
+        switch (status) {
+            case IN_SYNC:
+                syncProgress = 1;
+                break;
+            case CATCHING_UP:
+                lastProgressTime = System.nanoTime();
+                break;
+            case DISCONNECTED:
+                syncProgress = -1;
+                break;
+        }
     }
 
     private void sendGoodBye() {
