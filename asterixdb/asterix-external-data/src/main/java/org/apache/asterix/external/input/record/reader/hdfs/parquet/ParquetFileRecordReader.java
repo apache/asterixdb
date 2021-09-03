@@ -22,10 +22,12 @@ import java.io.IOException;
 
 import org.apache.asterix.external.input.record.ValueReferenceRecord;
 import org.apache.asterix.external.input.record.reader.hdfs.AbstractHDFSRecordReader;
+import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 /**
@@ -33,15 +35,26 @@ import org.apache.hyracks.data.std.api.IValueReference;
  * The reader returns records in ADM format.
  */
 public class ParquetFileRecordReader<V extends IValueReference> extends AbstractHDFSRecordReader<Void, V> {
+    private final IWarningCollector warningCollector;
 
     public ParquetFileRecordReader(boolean[] read, InputSplit[] inputSplits, String[] readSchedule, String nodeName,
-            JobConf conf) {
+            JobConf conf, IWarningCollector warningCollector) {
         super(read, inputSplits, readSchedule, nodeName, new ValueReferenceRecord<>(), conf);
+        this.warningCollector = warningCollector;
     }
 
     @Override
     protected boolean onNextInputSplit() throws IOException {
         return false;
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        if (warningCollector.shouldWarn()) {
+            //report warnings
+            HDFSUtils.issueWarnings(warningCollector, conf);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -53,5 +66,4 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
         }
         return reader;
     }
-
 }

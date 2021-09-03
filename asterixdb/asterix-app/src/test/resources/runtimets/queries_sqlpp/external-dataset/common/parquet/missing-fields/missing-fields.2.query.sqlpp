@@ -23,5 +23,6 @@
 */
 USE test;
 
+SET `compiler.external.field.pushdown` "false";
 SELECT p.not_a_field1 IS MISSING as f1, p.user.not_a_field2 IS MISSING as f2
 FROM ParquetDataset p

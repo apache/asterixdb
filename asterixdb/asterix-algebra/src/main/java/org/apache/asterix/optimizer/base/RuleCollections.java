@@ -69,12 +69,12 @@ import org.apache.asterix.optimizer.rules.NestGroupByRule;
 import org.apache.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
 import org.apache.asterix.optimizer.rules.PushAggregateIntoNestedSubplanRule;
 import org.apache.asterix.optimizer.rules.PushFieldAccessRule;
-import org.apache.asterix.optimizer.rules.PushFieldAccessToExternalDataScanRule;
 import org.apache.asterix.optimizer.rules.PushGroupByThroughProduct;
 import org.apache.asterix.optimizer.rules.PushLimitIntoOrderByRule;
 import org.apache.asterix.optimizer.rules.PushLimitIntoPrimarySearchRule;
 import org.apache.asterix.optimizer.rules.PushProperJoinThroughProduct;
 import org.apache.asterix.optimizer.rules.PushSimilarityFunctionsBelowJoin;
+import org.apache.asterix.optimizer.rules.PushValueAccessToExternalDataScanRule;
 import org.apache.asterix.optimizer.rules.RemoveDuplicateFieldsRule;
 import org.apache.asterix.optimizer.rules.RemoveLeftOuterUnnestForLeftOuterJoinRule;
 import org.apache.asterix.optimizer.rules.RemoveRedundantListifyRule;
@@ -385,11 +385,12 @@ public final class RuleCollections {
         // We are going to apply a constant folding rule again for this case.
         physicalRewritesTopLevel.add(new ConstantFoldingRule(appCtx));
         physicalRewritesTopLevel.add(new PushLimitIntoOrderByRule());
+        //Must run before PushLimitIntoPrimarySearchRule to ensure the select condition is inspected
+        physicalRewritesTopLevel.add(new PushValueAccessToExternalDataScanRule());
         physicalRewritesTopLevel.add(new PushLimitIntoPrimarySearchRule());
         // remove assigns that could become unused after PushLimitIntoPrimarySearchRule
         physicalRewritesTopLevel.add(new RemoveUnusedAssignAndAggregateRule());
         physicalRewritesTopLevel.add(new IntroduceProjectsRule());
-        physicalRewritesTopLevel.add(new PushFieldAccessToExternalDataScanRule());
         physicalRewritesTopLevel.add(new SetAsterixPhysicalOperatorsRule());
         physicalRewritesTopLevel.add(new IntroduceRapidFrameFlushProjectAssignRule());
         physicalRewritesTopLevel.add(new SetExecutionModeRule());

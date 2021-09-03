@@ -60,6 +60,11 @@ public class ExternalDataConstants {
     public static final String KEY_HADOOP_SHORT_CIRCUIT = "dfs.client.read.shortcircuit";
     public static final String KEY_HADOOP_SOCKET_PATH = "dfs.domain.socket.path";
     public static final String KEY_HADOOP_BUFFER_SIZE = "io.file.buffer.size";
+    public static final String KEY_HADOOP_ASTERIX_WARNINGS_ENABLED = "org.apache.asterix.warnings.enabled";
+    //Base64 encoded warnings issued from Hadoop
+    public static final String KEY_HADOOP_ASTERIX_WARNINGS_LIST = "org.apache.asterix.warnings.list";
+    //Base64 encoded function call information
+    public static final String KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION = "org.apache.asterix.function.info";
     public static final String KEY_SOURCE_DATATYPE = "type-name";
     public static final String KEY_DELIMITER = "delimiter";
     public static final String KEY_PARSER_FACTORY = "parser-factory";

@@ -1,0 +1,52 @@
+distribute result [$$64]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$64])
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$64] <- [{"text": $$text, "$1": $$67}]
+      -- ASSIGN  |PARTITIONED|
+        exchange
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          group by ([$$text := $$74]) decor ([]) {
+                    aggregate [$$67] <- [agg-global-sql-sum($$73)]
+                    -- AGGREGATE  |LOCAL|
+                      nested tuple source
+                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                 }
+          -- SORT_GROUP_BY[$$74]  |PARTITIONED|
+            exchange
+            -- HASH_PARTITION_EXCHANGE [$$74]  |PARTITIONED|
+              group by ([$$74 := $$66]) decor ([]) {
+                        aggregate [$$73] <- [agg-local-sql-sum(sql-sum($$70))]
+                        -- AGGREGATE  |LOCAL|
+                          nested tuple source
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                     }
+              -- SORT_GROUP_BY[$$66]  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  select (eq(lowercase($$66), "string"))
+                  -- STREAM_SELECT  |PARTITIONED|
+                    project ([$$70, $$66])
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$70, $$66] <- [$$ht.getField("indices"), $$ht.getField("text")]
+                      -- ASSIGN  |PARTITIONED|
+                        project ([$$ht])
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          unnest $$ht <- scan-collection($$69)
+                          -- UNNEST  |PARTITIONED|
+                            project ([$$69])
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$69] <- [$$p1.getField("entities").getField("hashtags")]
+                              -- ASSIGN  |PARTITIONED|
+                                select (gt($$p1.getField("id"), 10))
+                                -- STREAM_SELECT  |PARTITIONED|
+                                  exchange
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    data-scan []<-[$$p1] <- test.ParquetDataset1 project ({entities:{hashtags:[{indices:any,text:any}]},id:any})
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,0 +1,39 @@
+distribute result [$$46]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$46] <- [agg-sql-sum($$52)]
+    -- AGGREGATE  |UNPARTITIONED|
+      exchange
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        aggregate [$$52] <- [agg-sql-count(1)]
+        -- AGGREGATE  |PARTITIONED|
+          select ($$39)
+          -- STREAM_SELECT  |PARTITIONED|
+            project ([$$39])
+            -- STREAM_PROJECT  |PARTITIONED|
+              subplan {
+                        aggregate [$$39] <- [empty-stream()]
+                        -- AGGREGATE  |LOCAL|
+                          select (not(if-missing-or-null(eq($$48, "string"), FALSE)))
+                          -- STREAM_SELECT  |LOCAL|
+                            assign [$$48] <- [$$ht.getField("display_url")]
+                            -- ASSIGN  |LOCAL|
+                              unnest $$ht <- scan-collection($$47)
+                              -- UNNEST  |LOCAL|
+                                nested tuple source
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                     }
+              -- SUBPLAN  |PARTITIONED|
+                project ([$$47])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$47] <- [$$p.getField("entities").getField("urls")]
+                  -- ASSIGN  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      data-scan []<-[$$p] <- test.ParquetDataset
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

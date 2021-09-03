@@ -26,11 +26,11 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.parquet.io.api.Converter;
 import org.apache.parquet.io.api.GroupConverter;
 import org.apache.parquet.schema.GroupType;
-import org.apache.parquet.schema.OriginalType;
+import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Type.Repetition;
 
-abstract class AbstractComplexConverter extends GroupConverter implements IFieldValue {
+public abstract class AbstractComplexConverter extends GroupConverter implements IFieldValue {
     protected final AbstractComplexConverter parent;
     private final IValueReference fieldName;
     private final int index;
@@ -38,12 +38,11 @@ abstract class AbstractComplexConverter extends GroupConverter implements IField
     protected final ParserContext context;
     protected IMutableValueStorage tempStorage;
 
-    public AbstractComplexConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
-            ParserContext context) {
+    AbstractComplexConverter(AbstractComplexConverter parent, int index, GroupType parquetType, ParserContext context) {
         this(parent, null, index, parquetType, context);
     }
 
-    public AbstractComplexConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
+    AbstractComplexConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
             GroupType parquetType, ParserContext context) {
         this.parent = parent;
         this.fieldName = fieldName;
@@ -52,9 +51,11 @@ abstract class AbstractComplexConverter extends GroupConverter implements IField
         converters = new Converter[parquetType.getFieldCount()];
         for (int i = 0; i < parquetType.getFieldCount(); i++) {
             final Type type = parquetType.getType(i);
-            if (type.isPrimitive()) {
+            if (type == AsterixTypeToParquetTypeVisitor.MISSING) {
+                converters[i] = MissingConverter.INSTANCE;
+            } else if (type.isPrimitive()) {
                 converters[i] = createAtomicConverter(parquetType, i);
-            } else if (type.getOriginalType() == OriginalType.LIST) {
+            } else if (LogicalTypeAnnotation.listType().equals(type.getLogicalTypeAnnotation())) {
                 converters[i] = createArrayConverter(parquetType, i);
             } else if (type.getRepetition() == Repetition.REPEATED) {
                 converters[i] = createRepeatedConverter(parquetType, i);
@@ -86,7 +87,6 @@ abstract class AbstractComplexConverter extends GroupConverter implements IField
      *
      * In Avro:
      * optional group urls (LIST) {
-     *    // if number of fields > 1, then should be treated as array of objects
      *    repeated group array {
      *       optional binary display_url (UTF8);
      *       optional binary expanded_url (UTF8);
@@ -106,12 +106,13 @@ abstract class AbstractComplexConverter extends GroupConverter implements IField
      *
      * @formatter:on
      */
-    public AbstractComplexConverter createRepeatedConverter(GroupType type, int index) {
-        final GroupType arrayType = type.getType(index).asGroupType();
-        if (arrayType.getFieldCount() == 1) {
-            return new RepeatedConverter(this, index, arrayType, context);
+    private AbstractComplexConverter createRepeatedConverter(GroupType type, int index) {
+        GroupType repeatedType = type.getType(index).asGroupType();
+        //The name "array" is used by Avro to represent group element (array of objects)
+        if (repeatedType.getFieldCount() > 1 || "array".equals(repeatedType.getName())) {
+            return new ObjectConverter(this, index, repeatedType, context);
         }
-        return new ObjectConverter(this, index, arrayType, context);
+        return new RepeatedConverter(this, index, repeatedType, context);
     }
 
     @Override
@@ -149,5 +150,4 @@ abstract class AbstractComplexConverter extends GroupConverter implements IField
         }
         parent.addValue(this);
     }
-
 }

@@ -17,13 +17,13 @@
  * under the License.
  */
 /*
-* Description  : Retrieve the number of texts in all tweets (with expression pushdown)
+* Description  : Retrieve the number of texts in all tweets
 * Expected Res : Success
 * Date         : June 22nd 2020
 */
 USE test;
 
-SET `compiler.external.field.pushdown` "true";
+SET `compiler.external.field.pushdown` "false";
 
 SELECT VALUE count(p.text)
 FROM ParquetDataset p;

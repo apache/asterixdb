@@ -96,9 +96,15 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
-      <compilation-unit name="common/parquet/expression-pushdown">
+      <compilation-unit name="common/parquet/field-access-pushdown">
         <placeholder name="adapter" value="S3" />
-        <output-dir compare="Text">common/parquet/expression-pushdown</output-dir>
+        <output-dir compare="Text">common/parquet/field-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/array-access-pushdown">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/array-access-pushdown</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
@@ -117,6 +123,27 @@
       <compilation-unit name="common/parquet/object-concat">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">common/parquet/object-concat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/type-mismatch">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/type-mismatch</output-dir>
+        <expected-warn>ASX0002: Type mismatch: function field-access-by-name expects its 1st input parameter to be of type object, but the actual input type is array (in line 31, at column 29)</expected-warn>
+        <expected-warn>ASX0002: Type mismatch: function array-star expects its 1st input parameter to be of type array, but the actual input type is object (in line 31, at column 24)</expected-warn>
+        <expected-warn>ASX0002: Type mismatch: function field-access-by-name expects its 1st input parameter to be of type object, but the actual input type is array (in line 31, at column 52)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/heterogeneous-access-pushdown">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/heterogeneous-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/pushdown-plans">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/pushdown-plans</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/s3">

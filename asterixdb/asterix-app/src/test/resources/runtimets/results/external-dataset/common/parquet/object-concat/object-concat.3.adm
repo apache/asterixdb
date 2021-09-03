@@ -16,7 +16,7 @@ distribute result [$$16]
               -- ASSIGN  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  data-scan []<-[$$p] <- test.ParquetDataset project (coordinates, user, id)
+                  data-scan []<-[$$p] <- test.ParquetDataset project ({coordinates:any,id:any,user:any})
                   -- DATASOURCE_SCAN  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

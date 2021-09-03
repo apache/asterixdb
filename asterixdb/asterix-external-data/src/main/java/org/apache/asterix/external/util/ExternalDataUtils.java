@@ -54,6 +54,8 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_
 import static org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils.RESERVED_REGEX_CHARS;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -62,6 +64,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
@@ -91,6 +94,8 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
+import org.apache.asterix.runtime.projection.DataProjectionInfo;
+import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hadoop.fs.s3a.Constants;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
@@ -805,6 +810,48 @@ public class ExternalDataUtils {
         return ExternalDataConstants.CLASS_NAME_PARQUET_INPUT_FORMAT.equals(inputFormat)
                 || ExternalDataConstants.INPUT_FORMAT_PARQUET.equals(inputFormat)
                 || ExternalDataConstants.FORMAT_PARQUET.equals(properties.get(ExternalDataConstants.KEY_FORMAT));
+    }
+
+    public static void setExternalDataProjectionInfo(DataProjectionInfo projectionInfo, Map<String, String> properties)
+            throws IOException {
+        properties.put(ExternalDataConstants.KEY_REQUESTED_FIELDS,
+                serializeExpectedTypeToString(projectionInfo.getProjectionInfo()));
+        properties.put(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION,
+                serializeFunctionCallInfoToString(projectionInfo.getFunctionCallInfoMap()));
+    }
+
+    /**
+     * Serialize {@link ARecordType} as Base64 string to pass it to {@link org.apache.hadoop.conf.Configuration}
+     *
+     * @param expectedType expected type
+     * @return the expected type as Base64 string
+     */
+    private static String serializeExpectedTypeToString(ARecordType expectedType) throws IOException {
+        if (expectedType == DataProjectionInfo.EMPTY_TYPE || expectedType == DataProjectionInfo.ALL_FIELDS_TYPE) {
+            //Return the type name of EMPTY_TYPE and ALL_FIELDS_TYPE
+            return expectedType.getTypeName();
+        }
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
+        Base64.Encoder encoder = Base64.getEncoder();
+        DataProjectionInfo.writeTypeField(expectedType, dataOutputStream);
+        return encoder.encodeToString(byteArrayOutputStream.toByteArray());
+    }
+
+    /**
+     * Serialize {@link FunctionCallInformation} map as Base64 string to pass it to
+     * {@link org.apache.hadoop.conf.Configuration}
+     *
+     * @param functionCallInfoMap function information map
+     * @return function information map as Base64 string
+     */
+    static String serializeFunctionCallInfoToString(Map<String, FunctionCallInformation> functionCallInfoMap)
+            throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
+        Base64.Encoder encoder = Base64.getEncoder();
+        DataProjectionInfo.writeFunctionCallInformationMapField(functionCallInfoMap, dataOutputStream);
+        return encoder.encodeToString(byteArrayOutputStream.toByteArray());
     }
 
     public static class AwsS3 {

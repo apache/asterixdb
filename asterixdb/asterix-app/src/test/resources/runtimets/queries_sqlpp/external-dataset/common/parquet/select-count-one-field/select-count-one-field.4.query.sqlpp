@@ -23,5 +23,7 @@
 */
 USE test;
 
+SET `compiler.external.field.pushdown` "false";
+
 SELECT VALUE count(p.user.name)
 FROM ParquetDataset p;

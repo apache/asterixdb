@@ -86,16 +86,16 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
             IWarningCollector warningCollector) throws AlgebricksException, HyracksDataException {
-        JobConf hdfsConf = createHdfsConf(serviceCtx, configuration);
+        JobConf hdfsConf = createHdfsConf(serviceCtx, configuration, warningCollector.shouldWarn());
         configureHdfsConf(hdfsConf, configuration);
     }
 
-    protected JobConf createHdfsConf(IServiceContext serviceCtx, Map<String, String> configuration)
+    protected JobConf createHdfsConf(IServiceContext serviceCtx, Map<String, String> configuration, boolean shouldWarn)
             throws HyracksDataException {
         this.serviceCtx = serviceCtx;
         this.configuration = configuration;
         init((ICCServiceContext) serviceCtx);
-        return HDFSUtils.configureHDFSJobConf(configuration);
+        return HDFSUtils.configureHDFSJobConf(configuration, shouldWarn);
     }
 
     protected void configureHdfsConf(JobConf conf, Map<String, String> configuration) throws AlgebricksException {
@@ -229,7 +229,19 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
                 }
             }
             restoreConfig(ctx);
-            return createRecordReader(configuration, read, inputSplits, readSchedule, nodeName, conf, files, indexer);
+            JobConf readerConf = conf;
+            if (ctx.getWarningCollector().shouldWarn()
+                    && configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT.trim())
+                            .equals(ExternalDataConstants.INPUT_FORMAT_PARQUET)) {
+                /*
+                 * JobConf is used to pass warnings from the ParquetReadSupport to ParquetReader. As multiple
+                 * partitions can issue different warnings, we might have a race condition on JobConf. Thus, we
+                 * should create a copy when warnings are enabled.
+                 */
+                readerConf = confFactory.getConf();
+            }
+            return createRecordReader(configuration, read, inputSplits, readSchedule, nodeName, readerConf, files,
+                    indexer, ctx.getWarningCollector());
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -257,10 +269,10 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
 
     private static IRecordReader<? extends Object> createRecordReader(Map<String, String> configuration, boolean[] read,
             InputSplit[] inputSplits, String[] readSchedule, String nodeName, JobConf conf, List<ExternalFile> files,
-            IExternalIndexer indexer) throws IOException {
+            IExternalIndexer indexer, IWarningCollector warningCollector) throws IOException {
         if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT.trim())
                 .equals(ExternalDataConstants.INPUT_FORMAT_PARQUET)) {
-            return new ParquetFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf);
+            return new ParquetFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, warningCollector);
         } else {
             return new HDFSRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, files, indexer);
         }

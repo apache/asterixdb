@@ -1,0 +1,32 @@
+distribute result [$$26]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$26])
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$26] <- [{"display_url": $$urls.getField("display_url")}]
+      -- ASSIGN  |PARTITIONED|
+        project ([$$urls])
+        -- STREAM_PROJECT  |PARTITIONED|
+          exchange
+          -- SORT_MERGE_EXCHANGE [$$29(ASC) ]  |PARTITIONED|
+            order (ASC, $$29)
+            -- STABLE_SORT [$$29(ASC)]  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$urls, $$29])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  unnest $$urls <- scan-collection($$28)
+                  -- UNNEST  |PARTITIONED|
+                    project ([$$28, $$29])
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$28, $$29] <- [$$p.getField("entities").getField("urls"), $$p.getField("id")]
+                      -- ASSIGN  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$p] <- test.ParquetDataset
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

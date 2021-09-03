@@ -24,6 +24,8 @@
 USE test;
 
 SET `compiler.external.field.pushdown` "true";
+
+
 EXPLAIN
 SELECT VALUE object_concat(p.coordinates, p.user)
 FROM ParquetDataset p

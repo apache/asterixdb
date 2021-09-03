@@ -23,6 +23,8 @@
 */
 USE test;
 
+SET `compiler.external.field.pushdown` "false";
+
 SELECT VALUE p
 FROM ParquetDataset p
 ORDER BY p.id;

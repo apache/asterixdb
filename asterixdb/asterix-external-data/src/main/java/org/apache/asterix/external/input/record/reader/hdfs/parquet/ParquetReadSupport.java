@@ -18,33 +18,28 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet;
 
+import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.HDFSUtils;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.parquet.hadoop.api.InitContext;
 import org.apache.parquet.hadoop.api.ReadSupport;
 import org.apache.parquet.io.api.GroupConverter;
 import org.apache.parquet.io.api.RecordMaterializer;
-import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.schema.PrimitiveType;
-import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
-import org.apache.parquet.schema.Type;
-import org.apache.parquet.schema.Type.Repetition;
-import org.apache.parquet.schema.Types;
-import org.apache.parquet.schema.Types.GroupBuilder;
-import org.apache.parquet.schema.Types.MessageTypeBuilder;
 
 public class ParquetReadSupport extends ReadSupport<IValueReference> {
-    private static final PrimitiveType NULL = Types.optional(PrimitiveTypeName.BOOLEAN).named("NULL");
-
     @Override
     public ReadContext init(InitContext context) {
-        final String requestedSchemaString = context.getConfiguration().get(ExternalDataConstants.KEY_REQUESTED_FIELDS);
-        final MessageType requestedSchema = getRequestedSchema(requestedSchemaString, context.getFileSchema());
+        MessageType requestedSchema = getRequestedSchema(context);
         return new ReadContext(requestedSchema, Collections.emptyMap());
     }
 
@@ -52,6 +47,30 @@ public class ParquetReadSupport extends ReadSupport<IValueReference> {
     public RecordMaterializer<IValueReference> prepareForRead(Configuration configuration,
             Map<String, String> keyValueMetaData, MessageType fileSchema, ReadContext readContext) {
         return new ADMRecordMaterializer(readContext);
+    }
+
+    private static MessageType getRequestedSchema(InitContext context) {
+        Configuration configuration = context.getConfiguration();
+        MessageType fileSchema = context.getFileSchema();
+        boolean shouldWarn = configuration.getBoolean(ExternalDataConstants.KEY_HADOOP_ASTERIX_WARNINGS_ENABLED, false);
+        AsterixTypeToParquetTypeVisitor visitor = new AsterixTypeToParquetTypeVisitor(shouldWarn);
+        try {
+            ARecordType expectedType = HDFSUtils.getExpectedType(configuration);
+            Map<String, FunctionCallInformation> functionCallInformationMap =
+                    HDFSUtils.getFunctionCallInformationMap(configuration);
+            MessageType requestedType = visitor.clipType(expectedType, fileSchema, functionCallInformationMap);
+            List<Warning> warnings = visitor.getWarnings();
+
+            if (shouldWarn && !warnings.isEmpty()) {
+                //New warnings were created, set the warnings in hadoop configuration to be reported
+                HDFSUtils.setWarnings(warnings, configuration);
+                //Update the reported warnings so that we do not report the same warning again
+                HDFSUtils.setFunctionCallInformationMap(functionCallInformationMap, configuration);
+            }
+            return requestedType;
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private static class ADMRecordMaterializer extends RecordMaterializer<IValueReference> {
@@ -70,43 +89,5 @@ public class ParquetReadSupport extends ReadSupport<IValueReference> {
         public GroupConverter getRootConverter() {
             return rootConverter;
         }
-
     }
-
-    private static MessageType getRequestedSchema(String requestedSchemaString, MessageType fileSchema) {
-        if ("*".equals(requestedSchemaString)) {
-            return fileSchema;
-        }
-
-        final MessageTypeBuilder builder = Types.buildMessage();
-        final String[] paths = requestedSchemaString.split(",");
-        for (int i = 0; i < paths.length; i++) {
-            buildRequestedType(paths[i].trim().split("[.]"), builder, fileSchema, 0);
-        }
-
-        return builder.named("asterix");
-
-    }
-
-    private static void buildRequestedType(String[] fieldNames, GroupBuilder<?> builder, GroupType groupType,
-            int start) {
-        final String fieldName = fieldNames[start].trim();
-
-        Type type = getType(groupType, fieldName);
-        if (type != NULL && start < fieldNames.length - 1) {
-            final GroupBuilder<GroupType> innerFieldBuilder = Types.buildGroup(Repetition.OPTIONAL);
-            buildRequestedType(fieldNames, innerFieldBuilder, type.asGroupType(), start + 1);
-            builder.addField(innerFieldBuilder.named(fieldName));
-        } else {
-            builder.addField(type);
-        }
-    }
-
-    private static Type getType(GroupType groupType, String fieldName) {
-        if (groupType.containsField(fieldName)) {
-            return groupType.getType(fieldName);
-        }
-        return NULL;
-    }
-
 }

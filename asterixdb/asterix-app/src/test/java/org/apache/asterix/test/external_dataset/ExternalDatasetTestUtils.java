@@ -240,6 +240,8 @@ public class ExternalDatasetTestUtils {
         loadData(dataBasePath, "", "id_age-string.parquet", definition, definitionSegment, false, false);
         loadData(dataBasePath, "", "id_name.parquet", definition, definitionSegment, false, false);
         loadData(dataBasePath, "", "id_name_comment.parquet", definition, definitionSegment, false, false);
+        loadData(dataBasePath, "", "heterogeneous_1.parquet", definition, definitionSegment, false, false);
+        loadData(dataBasePath, "", "heterogeneous_2.parquet", definition, definitionSegment, false, false);
     }
 
     private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,
