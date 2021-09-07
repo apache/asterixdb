@@ -362,4 +362,37 @@ public class UTF8StringPointableTest {
         assertEquals(0, expected.compareTo(result));
     }
 
+    @Test
+    public void testStringBuilder() throws Exception {
+        UTF8StringBuilder builder = new UTF8StringBuilder();
+        GrowableArray array = new GrowableArray();
+        UTF8StringPointable stringPointable = new UTF8StringPointable();
+        String writtenString;
+        int startIdx;
+
+        array.append(STRING_UTF8_MIX.getByteArray(), STRING_UTF8_MIX.getStartOffset(), STRING_UTF8_MIX.getLength());
+        String chunk = "ABC";
+        String originalString = chunk.repeat(699051);
+
+        // test grow path
+        startIdx = array.getLength();
+        builder.reset(array, 2);
+        builder.appendString(originalString);
+        builder.finish();
+        stringPointable.set(array.getByteArray(), startIdx, array.getLength());
+        writtenString = stringPointable.toString();
+        assertEquals(originalString, writtenString);
+
+        // test shrink path
+        array.reset();
+        array.append(STRING_UTF8_MIX.getByteArray(), STRING_UTF8_MIX.getStartOffset(), STRING_UTF8_MIX.getLength());
+        startIdx = array.getLength();
+        builder.reset(array, 699051);
+        builder.appendString(chunk);
+        builder.finish();
+        stringPointable.set(array.getByteArray(), startIdx, array.getLength());
+        writtenString = stringPointable.toString();
+        assertEquals(chunk, writtenString);
+    }
+
 }

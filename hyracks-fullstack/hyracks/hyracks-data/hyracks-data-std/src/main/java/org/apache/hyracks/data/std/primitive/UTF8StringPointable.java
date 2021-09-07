@@ -463,7 +463,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             return false;
         }
 
-        builder.reset(out, Math.min(utfLen - byteIdx, (int) (codePointLength * 1.0 * byteIdx / codePointIdx)));
+        int estimateOutBytes = byteIdx == 0 ? codePointLength : (int) (codePointLength * 1.0 * byteIdx / codePointIdx);
+        builder.reset(out, Math.min(utfLen - byteIdx, estimateOutBytes));
         codePointIdx = 0;
         while (byteIdx < utfLen && codePointIdx < codePointLength) {
             builder.appendCodePoint(src.codePointAt(src.getMetaDataLength() + byteIdx));
