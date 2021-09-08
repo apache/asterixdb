@@ -85,8 +85,9 @@ public abstract class AbstractVarLenObjectBuilder {
                 for (int i = 0; i < diff; i++) {
                     out.writeByte(0);
                 }
-                for (int i = ary.getLength() - 1; i >= actualDataStart + diff; i--) {
-                    ary.getByteArray()[i] = ary.getByteArray()[i - diff];
+                int firstCharIdx = startOffset + estimateMetaLen;
+                for (int dest = ary.getLength() - 1, src = dest - diff; src >= firstCharIdx; dest--, src--) {
+                    ary.getByteArray()[dest] = ary.getByteArray()[src];
                 }
             }
         }

@@ -10597,6 +10597,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="substr-ASTERIXDB-2949">
+        <output-dir compare="Text">substr-ASTERIXDB-2949</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="regexp_position_with_flag/offset0/regex_position0_with_flag">
         <output-dir compare="Text">regexp_position_with_flag/offset0/regex_position0_with_flag</output-dir>
       </compilation-unit>
