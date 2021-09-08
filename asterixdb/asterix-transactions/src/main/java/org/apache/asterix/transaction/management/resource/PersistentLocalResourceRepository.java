@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -645,5 +646,29 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     public Path[] getStorageRoots() {
         return storageRoots;
+    }
+
+    public void keepPartitions(Set<Integer> keepPartitions) {
+        List<File> onDiskPartitions = getOnDiskPartitions();
+        for (File onDiskPartition : onDiskPartitions) {
+            int partitionNum = StoragePathUtil.getPartitionNumFromRelativePath(onDiskPartition.getAbsolutePath());
+            if (!keepPartitions.contains(partitionNum)) {
+                LOGGER.warn("deleting partition {} since it is not on partitions to keep {}", partitionNum,
+                        keepPartitions);
+                FileUtils.deleteQuietly(onDiskPartition);
+            }
+        }
+    }
+
+    public List<File> getOnDiskPartitions() {
+        List<File> onDiskPartitions = new ArrayList<>();
+        for (Path root : storageRoots) {
+            File[] partitions = root.toFile().listFiles(
+                    (dir, name) -> dir.isDirectory() && name.startsWith(StorageConstants.PARTITION_DIR_PREFIX));
+            if (partitions != null) {
+                onDiskPartitions.addAll(Arrays.asList(partitions));
+            }
+        }
+        return onDiskPartitions;
     }
 }

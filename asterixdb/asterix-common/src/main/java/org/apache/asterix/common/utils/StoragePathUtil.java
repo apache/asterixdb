@@ -90,9 +90,11 @@ public class StoragePathUtil {
     }
 
     public static int getPartitionNumFromRelativePath(String relativePath) {
-        int startIdx = relativePath.indexOf(StorageConstants.PARTITION_DIR_PREFIX)
+        int startIdx = relativePath.lastIndexOf(StorageConstants.PARTITION_DIR_PREFIX)
                 + StorageConstants.PARTITION_DIR_PREFIX.length();
-        String partition = relativePath.substring(startIdx, relativePath.indexOf(File.separatorChar, startIdx));
+        int partitionEndIdx = relativePath.indexOf(File.separatorChar, startIdx);
+        int idxEnd = partitionEndIdx != -1 ? partitionEndIdx : relativePath.length();
+        String partition = relativePath.substring(startIdx, idxEnd);
         return Integer.parseInt(partition);
     }
 
