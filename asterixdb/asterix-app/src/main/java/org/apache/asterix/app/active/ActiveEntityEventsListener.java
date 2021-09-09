@@ -195,7 +195,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @SuppressWarnings("unchecked")
     protected void finish(ActiveEvent event) throws HyracksDataException {
         if (LOGGER.isEnabled(level)) {
-            LOGGER.log(level, "the job " + jobId + " finished");
+            LOGGER.log(level, "the job {} finished", jobId);
         }
         JobId lastJobId = jobId;
         if (numRegistered != numDeRegistered) {
@@ -208,7 +208,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         JobStatus jobStatus = status.getLeft();
         List<Exception> exceptions = status.getRight();
         if (LOGGER.isEnabled(level)) {
-            LOGGER.log(level, "The job finished with status: " + jobStatus);
+            LOGGER.log(level, "The job finished with status: {}", jobStatus);
         }
         if (!jobSuccessfullyTerminated(jobStatus)) {
             jobFailure = exceptions.isEmpty() ? new RuntimeDataException(ErrorCode.UNREPORTED_TASK_FAILURE_EXCEPTION)
@@ -440,8 +440,9 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     private void cancelJob(Throwable th) {
         cancelJobSafely(metadataProvider, th);
+        // we can come here due to a failure while in suspending state
         final WaitForStateSubscriber cancelSubscriber =
-                new WaitForStateSubscriber(this, EnumSet.of(ActivityState.STOPPED));
+                new WaitForStateSubscriber(this, EnumSet.of(ActivityState.STOPPED, ActivityState.TEMPORARILY_FAILED));
         final Span span = Span.start(2, TimeUnit.MINUTES);
         InvokeUtil.doUninterruptibly(() -> {
             if (!cancelSubscriber.sync(span)) {
@@ -491,6 +492,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             forceStop(subscriber, ie);
             Thread.currentThread().interrupt();
         } catch (Throwable e) {
+            LOGGER.error("forcing active job stop due to", e);
             forceStop(subscriber, e);
         } finally {
             Thread.currentThread().setName(nameBefore);
