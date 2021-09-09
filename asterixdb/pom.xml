@@ -1792,7 +1792,7 @@
       </dependency>
       <dependency>
         <groupId>com.amazonaws</groupId>
-        <artifactId>aws-java-sdk-bundle</artifactId>
+        <artifactId>aws-java-sdk-dynamodb</artifactId>
         <version>${hadoop-awsjavasdk.version}</version>
         <exclusions>
           <exclusion>
@@ -1805,6 +1805,12 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-aws</artifactId>
         <version>${hadoop.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-bundle</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <!-- Hadoop AWS end -->
     </dependencies>
