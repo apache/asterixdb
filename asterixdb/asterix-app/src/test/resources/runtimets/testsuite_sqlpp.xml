@@ -8217,8 +8217,13 @@
         </compilation-unit>
       </test-case>
       <test-case FilePath="array-index/bulk-loading/on-index-creation/closed">
-        <compilation-unit name="with-3-level-record-path">
-          <output-dir compare="Text">with-3-level-record-path</output-dir>
+      <compilation-unit name="with-3-level-record-path">
+        <output-dir compare="Text">with-3-level-record-path</output-dir>
+      </compilation-unit>
+    </test-case>
+      <test-case FilePath="array-index/bulk-loading/on-index-creation/open">
+        <compilation-unit name="composite-atomic">
+          <output-dir compare="Text">composite-atomic</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>

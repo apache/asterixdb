@@ -245,6 +245,7 @@ public class ArrayIndexUtil {
         ArrayPath arrayPath = new ArrayPath(flattenedFieldName, unnestFlags).invoke();
         List<List<String>> fieldNamesPerArray = arrayPath.fieldNamesPerArray;
         List<Boolean> unnestFlagsPerArray = arrayPath.unnestFlagsPerArray;
+        boolean requiresOnlyOneUnnest = unnestFlags.stream().filter(f -> f).count() == 1;
 
         // If we are given no base record type, then we do not need to keep track of the record type. We are solely
         // using this walk for its flags.
@@ -290,7 +291,6 @@ public class ArrayIndexUtil {
             }
 
             if (i == fieldNamesPerArray.size() - 1) {
-                boolean requiresOnlyOneUnnest = fieldNamesPerArray.size() == 1;
                 boolean isNonArrayStep = !unnestFlagsPerArray.get(i);
                 commandExecutor.executeActionOnFinalArrayStep(startingStepRecordType, fieldNamesPerArray.get(i),
                         isNonArrayStep, requiresOnlyOneUnnest);
