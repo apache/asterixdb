@@ -152,16 +152,13 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
         ITypeTraitProvider typeTraitProvider = metadataProvider.getDataFormat().getTypeTraitProvider();
         IBinaryComparatorFactoryProvider comparatorFactoryProvider =
                 metadataProvider.getDataFormat().getBinaryComparatorFactoryProvider();
-        // Record column is 0 for external datasets, numPrimaryKeys for internal ones
-        int recordColumn = dataset.getDatasetType() == DatasetType.INTERNAL ? numPrimaryKeys : 0;
         boolean isOverridingKeyFieldTypes = arrayIndexDetails.isOverridingKeyFieldTypes();
         int flattenedListPos = 0;
         for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
             for (int i = 0; i < e.getProjectList().size(); i++) {
-                ARecordType sourceType = (e.getSourceIndicator() == 0) ? itemType : metaType;
-                addSKEvalFactories(isOverridingKeyFieldTypes ? enforcedItemType : sourceType, flattenedListPos, false);
+                addSKEvalFactories(isOverridingKeyFieldTypes ? enforcedItemType : itemType, flattenedListPos, false);
                 Pair<IAType, Boolean> keyTypePair = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
-                        e.getUnnestList(), e.getProjectList().get(i), sourceType);
+                        e.getUnnestList(), e.getProjectList().get(i), itemType);
                 IAType keyType = keyTypePair.first;
                 anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
                 ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(keyType);
@@ -251,8 +248,8 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
     }
 
     /**
-     * The following job spec is produced: (key provider) -> (PIDX scan) -> (cast)? -> ((unnest) -> (assign))* ->
-     * (select)? -> (sort)? -> (bulk load) -> (sink)
+     * The following job spec is produced: (key provider) -> (PIDX scan) -> (cast)? -> (assign)? ->
+     * ((unnest) -> (assign))* -> (select)? -> (sort)? -> (bulk load) -> (sink)
      */
     @Override
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
@@ -271,6 +268,26 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
             if (arrayIndexDetails.isOverridingKeyFieldTypes() && !enforcedItemType.equals(itemType)) {
                 // If we have an enforced type, insert a "cast" after the primary index scan.
                 targetOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
+                spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
+                sourceOp = targetOp;
+            }
+
+            // We do not index meta fields. Project away meta fields if they exist.
+            if (dataset.hasMetaPart()) {
+                int[] outColumns = new int[] { primaryRecDesc.getFieldCount() };
+                int[] projectionList = new int[primaryRecDesc.getFieldCount() - 1];
+                for (int i = 0; i < projectionList.length - 1; i++) {
+                    projectionList[i] = i;
+                }
+                projectionList[projectionList.length - 1] = primaryRecDesc.getFieldCount() - 2;
+                ISerializerDeserializer[] fields = new ISerializerDeserializer[primaryRecDesc.getFieldCount() - 1];
+                ITypeTraits[] typeTraits = new ITypeTraits[primaryRecDesc.getFieldCount() - 1];
+                for (int i = 0; i < primaryRecDesc.getFieldCount() - 1; i++) {
+                    fields[i] = primaryRecDesc.getFields()[i];
+                    typeTraits[i] = primaryRecDesc.getTypeTraits()[i];
+                }
+                targetOp = createGenericAssignOp(spec, new ArrayList<>(), new RecordDescriptor(fields, typeTraits),
+                        outColumns, projectionList);
                 spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
                 sourceOp = targetOp;
             }
@@ -508,7 +525,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
         IScalarEvaluatorFactory sef = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
                 metadataProvider.getFunctionManager(), recordType, filterFieldName, numPrimaryKeys, sourceLoc);
         evalFactoryAndRecDescStackBuilder.addFilter(sef,
-                Index.getNonNullableKeyFieldType(filterFieldName, itemType).first);
+                Index.getNonNullableKeyFieldType(filterFieldName, recordType).first);
     }
 
     class EvalFactoryAndRecDescInvoker implements ArrayIndexUtil.TypeTrackerCommandExecutor {
@@ -690,8 +707,18 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
         public Stack<RecordDescriptor> buildRecDescStack() throws AlgebricksException {
             int initialUnnestEvalTypesSize = unnestEvalTypes.size();
             Deque<RecordDescriptor> resultantAsDeque = new ArrayDeque<>();
-            resultantAsDeque.addFirst(primaryRecDesc);
-            resultantAsDeque.addFirst(createUnnestRecDesc(primaryRecDesc, unnestEvalTypes.remove()));
+            RecordDescriptor recDescBeforeFirstUnnest = primaryRecDesc;
+            if (dataset.hasMetaPart()) {
+                ISerializerDeserializer[] fields = new ISerializerDeserializer[primaryRecDesc.getFieldCount() - 1];
+                ITypeTraits[] typeTraits = new ITypeTraits[primaryRecDesc.getFieldCount() - 1];
+                for (int i = 0; i < primaryRecDesc.getFieldCount() - 1; i++) {
+                    fields[i] = primaryRecDesc.getFields()[i];
+                    typeTraits[i] = primaryRecDesc.getTypeTraits()[i];
+                }
+                recDescBeforeFirstUnnest = new RecordDescriptor(fields, typeTraits);
+            }
+            resultantAsDeque.addFirst(recDescBeforeFirstUnnest);
+            resultantAsDeque.addFirst(createUnnestRecDesc(recDescBeforeFirstUnnest, unnestEvalTypes.remove()));
             for (int i = 0; i < initialUnnestEvalTypesSize - 1; i++) {
                 resultantAsDeque.addFirst(createAssignRecDesc(resultantAsDeque.getFirst(), i == 0));
                 resultantAsDeque.addFirst(createUnnestRecDesc(resultantAsDeque.getFirst(), unnestEvalTypes.remove()));
