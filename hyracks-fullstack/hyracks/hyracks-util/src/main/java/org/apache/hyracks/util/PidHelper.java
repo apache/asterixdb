@@ -20,9 +20,6 @@ package org.apache.hyracks.util;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -40,22 +37,8 @@ public class PidHelper {
     }
 
     public static long getPid(RuntimeMXBean runtimeMXBean) {
-        // TODO: replace with direct invoke of getPid() once compatibility is at JDK 10 or higher
         try {
-            Method getPidMethod = runtimeMXBean.getClass().getMethod("getPid");
-            return (Long) getPidMethod.invoke(runtimeMXBean);
-        } catch (NoSuchMethodException e) {
-            LOGGER.debug("ignoring exception trying to find getPid() (expected pre-JDK 10)", e);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            LOGGER.debug("ignoring exception trying to execute getPid()", e);
-        }
-        try {
-            Field jvmField = runtimeMXBean.getClass().getDeclaredField("jvm");
-            jvmField.setAccessible(true);
-            Object vmManagement = jvmField.get(runtimeMXBean);
-            Method getProcessIdMethod = vmManagement.getClass().getDeclaredMethod("getProcessId");
-            getProcessIdMethod.setAccessible(true);
-            return (Integer) getProcessIdMethod.invoke(vmManagement);
+            return runtimeMXBean.getPid();
         } catch (Exception e) {
             LOGGER.log(Level.INFO, "Unable to determine PID due to exception", e);
             return -1;
