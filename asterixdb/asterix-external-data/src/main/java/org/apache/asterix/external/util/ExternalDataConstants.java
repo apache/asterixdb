@@ -63,6 +63,8 @@ public class ExternalDataConstants {
     public static final String KEY_HADOOP_ASTERIX_WARNINGS_ENABLED = "org.apache.asterix.warnings.enabled";
     //Base64 encoded warnings issued from Hadoop
     public static final String KEY_HADOOP_ASTERIX_WARNINGS_LIST = "org.apache.asterix.warnings.list";
+    //Disable caching FileSystem for Hadoop
+    public static final String KEY_HADOOP_DISABLE_FS_CACHE_TEMPLATE = "fs.%s.impl.disable.cache";
     //Base64 encoded function call information
     public static final String KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION = "org.apache.asterix.function.info";
     public static final String KEY_SOURCE_DATATYPE = "type-name";
@@ -84,7 +86,6 @@ public class ExternalDataConstants {
     public static final String KEY_ESCAPE = "escape";
     public static final String KEY_PARSER = "parser";
     public static final String KEY_DATASET_RECORD = "dataset-record";
-    public static final String KEY_HIVE_SERDE = "hive-serde";
     public static final String KEY_RSS_URL = "url";
     public static final String KEY_INTERVAL = "interval";
     public static final String KEY_IS_FEED = "is-feed";
@@ -178,7 +179,6 @@ public class ExternalDataConstants {
     /**
      * supported builtin record formats
      */
-    public static final String FORMAT_HIVE = "hive";
     public static final String FORMAT_BINARY = "binary";
     public static final String FORMAT_ADM = "adm";
     public static final String FORMAT_JSON_LOWER_CASE = "json";
@@ -198,7 +198,6 @@ public class ExternalDataConstants {
 
     static {
         Set<String> formats = new HashSet<>(14);
-        formats.add(FORMAT_HIVE);
         formats.add(FORMAT_BINARY);
         formats.add(FORMAT_ADM);
         formats.add(FORMAT_JSON_LOWER_CASE);

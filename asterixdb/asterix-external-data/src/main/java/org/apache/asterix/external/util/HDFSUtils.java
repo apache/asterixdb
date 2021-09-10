@@ -336,4 +336,16 @@ public class HDFSUtils {
             conf.unset(ExternalDataConstants.KEY_HADOOP_ASTERIX_WARNINGS_LIST);
         }
     }
+
+    /**
+     * Hadoop can cache FileSystem instance if reading the same file. This method allows for disabling the cache
+     *
+     * @param conf     Hadoop configuration
+     * @param protocol fs scheme (or protocol). e.g., s3a
+     */
+    public static void disableHadoopFileSystemCache(Configuration conf, String protocol) {
+        //Disable fs cache
+        conf.set(String.format(ExternalDataConstants.KEY_HADOOP_DISABLE_FS_CACHE_TEMPLATE, protocol),
+                ExternalDataConstants.TRUE);
+    }
 }
