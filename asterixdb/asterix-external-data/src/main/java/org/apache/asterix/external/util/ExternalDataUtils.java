@@ -36,11 +36,16 @@ import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOO
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_SESSION_TOKEN;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_TEMP_ACCESS;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_KEY_PREFIX;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_CERTIFICATE_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_SECRET_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_BLOB_PROTOCOL;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_FS_ACCOUNT_KEY;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_FS_SAS;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.SAS_KEY_PREFIX;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.TENANT_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.GCS.JSON_CREDENTIALS_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ADAPTER_NAME_GCS;
@@ -1247,6 +1252,10 @@ public class ExternalDataUtils {
                 } catch (Exception ex) {
                     throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
                 }
+            } else if (isParquetFormat(configuration)) {
+                //TODO(wail) support AAD for parquet
+                throw new CompilationException(ErrorCode.UNSUPPORTED_AUTH_METHOD, "Azure Active Directory",
+                        ExternalDataConstants.FORMAT_PARQUET);
             }
 
             // Active Directory authentication
@@ -1326,6 +1335,66 @@ public class ExternalDataUtils {
             }
         }
 
+        public static List<BlobItem> listBlobItem(BlobServiceClient blobServiceClient,
+                Map<String, String> configuration, IncludeExcludeMatcher includeExcludeMatcher,
+                IWarningCollector warningCollector) throws CompilationException {
+            String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+
+            List<BlobItem> filesOnly = new ArrayList<>();
+
+            // Ensure the validity of include/exclude
+            ExternalDataUtils.validateIncludeExclude(configuration);
+
+            BlobContainerClient blobContainer;
+            try {
+                blobContainer = blobServiceClient.getBlobContainerClient(container);
+
+                // Get all objects in a container and extract the paths to files
+                ListBlobsOptions listBlobsOptions = new ListBlobsOptions();
+                listBlobsOptions.setPrefix(ExternalDataUtils.getPrefix(configuration));
+                Iterable<BlobItem> blobItems = blobContainer.listBlobs(listBlobsOptions, null);
+
+                // Collect the paths to files only
+                collectAndFilterFiles(blobItems, includeExcludeMatcher.getPredicate(),
+                        includeExcludeMatcher.getMatchersList(), filesOnly);
+
+                // Warn if no files are returned
+                if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
+                    Warning warning = Warning.of(null, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                    warningCollector.warn(warning);
+                }
+            } catch (Exception ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+            }
+
+            return filesOnly;
+        }
+
+        /**
+         * Collects and filters the files only, and excludes any folders
+         *
+         * @param items     storage items
+         * @param predicate predicate to test with for file filtration
+         * @param matchers  include/exclude matchers to test against
+         * @param filesOnly List containing the files only (excluding folders)
+         */
+        private static void collectAndFilterFiles(Iterable<BlobItem> items,
+                BiPredicate<List<Matcher>, String> predicate, List<Matcher> matchers, List<BlobItem> filesOnly) {
+            for (BlobItem item : items) {
+                String uri = item.getName();
+
+                // skip folders
+                if (uri.endsWith("/")) {
+                    continue;
+                }
+
+                // No filter, add file
+                if (predicate.test(matchers, uri)) {
+                    filesOnly.add(item);
+                }
+            }
+        }
+
         /**
          * Validate external dataset properties
          *
@@ -1363,6 +1432,49 @@ public class ExternalDataUtils {
             } catch (Exception ex) {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
             }
+        }
+
+        /**
+         * Builds the Azure Blob storage client using the provided configuration
+         *
+         * @param configuration properties
+         * @see <a href="https://docs.microsoft.com/en-us/azure/databricks/data/data-sources/azure/azure-storage">Azure Blob storage</a>
+         */
+        public static void configureAzureHdfsJobConf(JobConf conf, Map<String, String> configuration, String endPoint) {
+            String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+            String connectionString = configuration.get(CONNECTION_STRING_FIELD_NAME);
+
+            //Disable caching S3 FileSystem
+            HDFSUtils.disableHadoopFileSystemCache(conf, HADOOP_AZURE_BLOB_PROTOCOL);
+
+            //Key for Hadoop configuration
+            StringBuilder hadoopKey = new StringBuilder();
+            //Value for Hadoop configuration
+            String hadoopValue;
+            if (connectionString != null) {
+                if (connectionString.contains(ACCOUNT_KEY_PREFIX)) {
+                    hadoopKey.append(HADOOP_AZURE_FS_ACCOUNT_KEY).append('.');
+                    //Set only the AccountKey
+                    hadoopValue = extractKey(ACCOUNT_KEY_PREFIX, connectionString);
+                } else {
+                    //Use SAS for Hadoop FS as connectionString is provided
+                    hadoopKey.append(HADOOP_AZURE_FS_SAS).append('.');
+                    //Setting the container is required for SAS
+                    hadoopKey.append(container).append('.');
+                    //Set the connection string for SAS
+                    hadoopValue = extractKey(SAS_KEY_PREFIX, connectionString);
+                }
+                //Set the endPoint, which includes the AccountName
+                hadoopKey.append(endPoint);
+                //Tells Hadoop we are reading from Blob Storage
+                conf.set(hadoopKey.toString(), hadoopValue);
+            }
+        }
+
+        private static String extractKey(String prefix, String connectionString) {
+            int start = connectionString.indexOf(prefix) + prefix.length();
+            int end = connectionString.indexOf(';', start);
+            return connectionString.substring(start, end > 0 ? end : connectionString.length());
         }
     }
 

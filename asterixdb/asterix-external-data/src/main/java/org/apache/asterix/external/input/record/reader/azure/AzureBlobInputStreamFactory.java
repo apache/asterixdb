@@ -18,31 +18,22 @@
  */
 package org.apache.asterix.external.input.record.reader.azure;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.function.BiPredicate;
-import java.util.regex.Matcher;
 
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.Warning;
 
-import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.models.BlobItem;
-import com.azure.storage.blob.models.ListBlobsOptions;
 
 public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFactory {
 
@@ -58,64 +49,15 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
             throws AlgebricksException {
         super.configure(ctx, configuration, warningCollector);
 
-        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-
-        List<BlobItem> filesOnly = new ArrayList<>();
-
         // Ensure the validity of include/exclude
         ExternalDataUtils.validateIncludeExclude(configuration);
-
+        IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
         BlobServiceClient blobServiceClient = ExternalDataUtils.Azure.buildAzureClient(configuration);
-        BlobContainerClient blobContainer;
-        try {
-            blobContainer = blobServiceClient.getBlobContainerClient(container);
+        List<BlobItem> filesOnly = ExternalDataUtils.Azure.listBlobItem(blobServiceClient, configuration,
+                includeExcludeMatcher, warningCollector);
 
-            // Get all objects in a container and extract the paths to files
-            ListBlobsOptions listBlobsOptions = new ListBlobsOptions();
-            listBlobsOptions.setPrefix(ExternalDataUtils.getPrefix(configuration));
-            Iterable<BlobItem> blobItems = blobContainer.listBlobs(listBlobsOptions, null);
-
-            // Collect the paths to files only
-            IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
-            collectAndFilterFiles(blobItems, includeExcludeMatcher.getPredicate(),
-                    includeExcludeMatcher.getMatchersList(), filesOnly);
-
-            // Warn if no files are returned
-            if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
-                Warning warning = Warning.of(null, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
-                warningCollector.warn(warning);
-            }
-
-            // Distribute work load amongst the partitions
-            distributeWorkLoad(filesOnly, getPartitionsCount());
-        } catch (Exception ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
-        }
-    }
-
-    /**
-     * Collects and filters the files only, and excludes any folders
-     *
-     * @param items     storage items
-     * @param predicate predicate to test with for file filtration
-     * @param matchers  include/exclude matchers to test against
-     * @param filesOnly List containing the files only (excluding folders)
-     */
-    private void collectAndFilterFiles(Iterable<BlobItem> items, BiPredicate<List<Matcher>, String> predicate,
-            List<Matcher> matchers, List<BlobItem> filesOnly) {
-        for (BlobItem item : items) {
-            String uri = item.getName();
-
-            // skip folders
-            if (uri.endsWith("/")) {
-                continue;
-            }
-
-            // No filter, add file
-            if (predicate.test(matchers, uri)) {
-                filesOnly.add(item);
-            }
-        }
+        // Distribute work load amongst the partitions
+        distributeWorkLoad(filesOnly, getPartitionsCount());
     }
 
     /**

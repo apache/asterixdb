@@ -349,12 +349,28 @@ public class ExternalDataConstants {
             throw new AssertionError("do not instantiate");
         }
 
+        //ConnectionString prefixes
+        public static final String ACCOUNT_KEY_PREFIX = "AccountKey=";
+        public static final String SAS_KEY_PREFIX = "SharedAccessSignature=";
+
+        /*
+         * Asterix Configuration Keys
+         */
         public static final String CONNECTION_STRING_FIELD_NAME = "connectionString";
         public static final String TENANT_ID_FIELD_NAME = "tenantId";
         public static final String CLIENT_ID_FIELD_NAME = "clientId";
         public static final String CLIENT_SECRET_FIELD_NAME = "clientSecret";
         public static final String CLIENT_CERTIFICATE_FIELD_NAME = "clientCertificate";
         public static final String CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME = "clientCertificatePassword";
+
+        /*
+         * Hadoop-Azure
+         */
+        //Used when accountName and accessKey are provided
+        public static final String HADOOP_AZURE_FS_ACCOUNT_KEY = "fs.azure.account.key";
+        //Used when a connectionString is provided
+        public static final String HADOOP_AZURE_FS_SAS = "fs.azure.sas";
+        public static final String HADOOP_AZURE_BLOB_PROTOCOL = "wasbs";
     }
 
     public static class GCS {

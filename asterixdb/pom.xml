@@ -92,6 +92,8 @@
     <hadoop-awsjavasdk.version>1.12.1</hadoop-awsjavasdk.version>
     <azurejavasdk.version>12.12.0</azurejavasdk.version>
     <gcsjavasdk.version>1.114.0</gcsjavasdk.version>
+    <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
+
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
     <implementation.version>${project.version}</implementation.version>
@@ -1813,6 +1815,25 @@
         </exclusions>
       </dependency>
       <!-- Hadoop AWS end -->
+      <!-- Hadoop Azure start -->
+      <dependency>
+        <!-- Pick a newer Azure connector -->
+        <groupId>com.microsoft.azure</groupId>
+        <artifactId>azure-storage</artifactId>
+        <version>${hadoop-azuresdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-azure</artifactId>
+        <version>${hadoop.version}</version>
+      </dependency>
+      <!-- Hadoop Azure end -->
     </dependencies>
   </dependencyManagement>
 

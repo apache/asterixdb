@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.test.common;
 
+import org.apache.asterix.test.external_dataset.microsoft.AzureBlobStorageExternalDatasetTest;
+
 public class TestConstants {
     // AWS S3 constants and place holders
     public static final String S3_ACCESS_KEY_ID_PLACEHOLDER = "%accessKeyId%";
@@ -52,7 +54,7 @@ public class TestConstants {
     // blob endpoint
     public static final String AZURE_BLOB_ENDPOINT_PLACEHOLDER = "%azureblob-endpoint%";
     public static final String AZURE_BLOB_ENDPOINT_DEFAULT =
-            "http://localhost:20000/" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT;
+            "http://localhost:10000/" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT;
 
     // connection string with account name & account key
     public static final String AZURE_CONNECTION_STRING_ACCOUNT_KEY_PLACEHOLDER =
@@ -70,7 +72,6 @@ public class TestConstants {
     public static final String AZURE_TEMPLATE = "(\"accountName\"=\"" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT + "\"),\n"
             + "(\"accountKey\"=\"" + AZURE_AZURITE_ACCOUNT_KEY_DEFAULT + "\"),\n" + "(\"blobEndpoint\"=\""
             + AZURE_BLOB_ENDPOINT_PLACEHOLDER + "\")";
-    public static final String AZURE_TEMPLATE_DEFAULT = "(\"accountName\"=\"" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT
-            + "\"),\n" + "(\"accountKey\"=\"" + AZURE_AZURITE_ACCOUNT_KEY_DEFAULT + "\"),\n" + "(\"blobEndpoint\"=\""
-            + AZURE_BLOB_ENDPOINT_DEFAULT + "\")";
+    public static final String AZURE_TEMPLATE_DEFAULT =
+            "(\"connectionString\"=\"" + AzureBlobStorageExternalDatasetTest.CONNECTION_STRING + "\")";
 }

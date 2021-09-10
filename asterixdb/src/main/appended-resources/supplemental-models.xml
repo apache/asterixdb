@@ -744,6 +744,32 @@
   </supplement>
   <!-- Azure SDK for Java end -->
 
+  <!-- Azure SDK for Hadoop start -->
+  <supplement>
+    <project>
+      <groupId>com.microsoft.azure</groupId>
+      <artifactId>azure-storage</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>8.6.6</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>8.6.6</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>8.6.6</license.ignoreLicenseOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <supplement>
+    <project>
+      <groupId>com.microsoft.azure</groupId>
+      <artifactId>azure-keyvault-core</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>1.2.4</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.2.4</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.2.4</license.ignoreLicenseOverride>
+      </properties>
+    </project>
+  </supplement>
+  <!-- Azure SDK for Hadoop end -->
+
   <!-- jackson-dataformat-cbor does not contain embedded LICENSE and NOTICE -->
   <!-- See https://github.com/FasterXML/jackson-modules-java8 -->
   <supplement>
@@ -1638,5 +1664,4 @@
       </properties>
     </project>
   </supplement>
-
 </supplementalDataModels>

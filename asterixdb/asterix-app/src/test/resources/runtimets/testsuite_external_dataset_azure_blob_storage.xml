@@ -138,6 +138,14 @@
         <output-dir compare="Text">common/tsv/mixed</output-dir>
       </compilation-unit>
     </test-case>
+    <!-- Parquet Tests Start -->
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/object-concat">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/parquet/object-concat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <!-- Parquet Tests End -->
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">
         <placeholder name="adapter" value="AZUREBLOB" />
