@@ -67,7 +67,7 @@ public class ReplicateFileTask implements IReplicaTask {
     @Override
     public void perform(INcApplicationContext appCtx, IReplicationWorker worker) {
         try {
-            LOGGER.info("attempting to replicate {}", this);
+            LOGGER.debug("attempting to receive file {} from master", this);
             final IIOManager ioManager = appCtx.getIoManager();
             // resolve path
             final FileReference localPath = ioManager.resolve(file);
@@ -76,7 +76,6 @@ public class ReplicateFileTask implements IReplicaTask {
             final Path maskPath = Paths.get(resourceDir.toString(),
                     StorageConstants.MASK_FILE_PREFIX + localPath.getFile().getName());
             Files.createFile(maskPath);
-
             // receive actual file
             final Path filePath = Paths.get(resourceDir.toString(), localPath.getFile().getName());
             Files.createFile(filePath);
@@ -91,7 +90,7 @@ public class ReplicateFileTask implements IReplicaTask {
             }
             //delete mask
             Files.delete(maskPath);
-            LOGGER.info(() -> "Replicated file: " + localPath);
+            LOGGER.info("received file {} from master", localPath);
             ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());
         } catch (IOException e) {
             throw new ReplicationException(e);

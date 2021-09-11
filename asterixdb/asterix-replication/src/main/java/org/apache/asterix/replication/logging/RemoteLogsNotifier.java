@@ -19,6 +19,7 @@
 package org.apache.asterix.replication.logging;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,7 +92,8 @@ class RemoteLogsNotifier implements Runnable {
             return dls.getDatasetId() == datasetId && dls.getPartition() == resourcePartition
                     && !masterPartitions.contains(dls.getPartition());
         };
-        final Map<Long, LocalResource> resources = localResourceRep.getResources(replicaIndexesPredicate);
+        final Map<Long, LocalResource> resources =
+                localResourceRep.getResources(replicaIndexesPredicate, Collections.singleton(resourcePartition));
         final List<DatasetResourceReference> replicaIndexesRef =
                 resources.values().stream().map(DatasetResourceReference::of).collect(Collectors.toList());
         for (DatasetResourceReference replicaIndexRef : replicaIndexesRef) {

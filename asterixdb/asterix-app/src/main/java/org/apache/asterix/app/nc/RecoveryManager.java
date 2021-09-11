@@ -291,7 +291,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         final IIndexCheckpointManagerProvider indexCheckpointManagerProvider =
                 ((INcApplicationContext) (serviceCtx.getApplicationContext())).getIndexCheckpointManagerProvider();
 
-        Map<Long, LocalResource> resourcesMap = localResourceRepository.loadAndGetAllResources();
+        Map<Long, LocalResource> resourcesMap = localResourceRepository.getResources(r -> true, partitions);
         final Map<Long, Long> resourceId2MaxLSNMap = new HashMap<>();
         TxnEntityId tempKeyTxnEntityId = new TxnEntityId(-1, -1, -1, null, -1, false);
 
@@ -503,7 +503,8 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             final List<DatasetResourceReference> partitionResources = localResourceRepository.getResources(resource -> {
                 DatasetLocalResource dsResource = (DatasetLocalResource) resource.getResource();
                 return dsResource.getPartition() == partition;
-            }).values().stream().map(DatasetResourceReference::of).collect(Collectors.toList());
+            }, Collections.singleton(partition)).values().stream().map(DatasetResourceReference::of)
+                    .collect(Collectors.toList());
             for (DatasetResourceReference indexRef : partitionResources) {
                 try {
                     final IIndexCheckpointManager idxCheckpointMgr = idxCheckpointMgrProvider.get(indexRef);
