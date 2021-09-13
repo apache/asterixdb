@@ -35,6 +35,7 @@ import org.apache.asterix.common.storage.IndexCheckpoint;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.replication.api.PartitionReplica;
+import org.apache.asterix.replication.messaging.DeletePartitionTask;
 import org.apache.asterix.replication.messaging.PartitionResourcesListResponse;
 import org.apache.asterix.replication.messaging.PartitionResourcesListTask;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
@@ -55,14 +56,19 @@ public class ReplicaFilesSynchronizer {
     private static final Logger LOGGER = LogManager.getLogger();
     private final PartitionReplica replica;
     private final INcApplicationContext appCtx;
+    private final boolean deltaRecovery;
 
-    public ReplicaFilesSynchronizer(INcApplicationContext appCtx, PartitionReplica replica) {
+    public ReplicaFilesSynchronizer(INcApplicationContext appCtx, PartitionReplica replica, boolean deltaRecovery) {
         this.appCtx = appCtx;
         this.replica = replica;
+        this.deltaRecovery = deltaRecovery;
     }
 
     public void sync() throws IOException {
         final int partition = replica.getIdentifier().getPartition();
+        if (!deltaRecovery) {
+            deletePartitionFromReplica(partition);
+        }
         PartitionResourcesListResponse replicaResourceResponse = getReplicaFiles(partition);
         Map<ResourceReference, Long> resourceReferenceLongMap = getValidReplicaResources(
                 replicaResourceResponse.getPartitionReplicatedResources(), replicaResourceResponse.isOwner());
@@ -80,6 +86,12 @@ public class ReplicaFilesSynchronizer {
         replicaFiles.removeAll(deletedReplicaFiles);
         syncMissingFiles(replicaFiles, masterFiles);
         deleteReplicaExtraFiles(replicaFiles, masterFiles);
+    }
+
+    private void deletePartitionFromReplica(int partitionId) throws IOException {
+        DeletePartitionTask deletePartitionTask = new DeletePartitionTask(partitionId);
+        ReplicationProtocol.sendTo(replica, deletePartitionTask);
+        ReplicationProtocol.waitForAck(replica);
     }
 
     private void deleteReplicaExtraFiles(Set<String> replicaFiles, Set<String> masterFiles) {

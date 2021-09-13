@@ -43,13 +43,13 @@ public class ReplicaSynchronizer {
         this.replica = replica;
     }
 
-    public void sync(boolean register) throws IOException {
+    public void sync(boolean register, boolean deltaRecovery) throws IOException {
         synchronized (appCtx.getReplicaManager().getReplicaSyncLock()) {
             final ICheckpointManager checkpointManager = appCtx.getTransactionSubsystem().getCheckpointManager();
             try {
                 // suspend checkpointing datasets to prevent async IO operations while sync'ing replicas
                 checkpointManager.suspend();
-                syncFiles();
+                syncFiles(deltaRecovery);
                 checkpointReplicaIndexes();
                 if (register) {
                     appCtx.getReplicationManager().register(replica);
@@ -60,8 +60,8 @@ public class ReplicaSynchronizer {
         }
     }
 
-    private void syncFiles() throws IOException {
-        final ReplicaFilesSynchronizer fileSync = new ReplicaFilesSynchronizer(appCtx, replica);
+    private void syncFiles(boolean deltaRecovery) throws IOException {
+        final ReplicaFilesSynchronizer fileSync = new ReplicaFilesSynchronizer(appCtx, replica, deltaRecovery);
         // flush replicated dataset to generate disk component for any remaining in-memory components
         final IReplicationStrategy replStrategy = appCtx.getReplicationManager().getReplicationStrategy();
         appCtx.getDatasetLifecycleManager().flushDataset(replStrategy);

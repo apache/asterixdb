@@ -695,4 +695,16 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         FileReference resolve = ioManager.resolve(path.toString());
         return resolve.getFile().toPath();
     }
+
+    public void deletePartition(int partitionId) {
+        List<File> onDiskPartitions = getOnDiskPartitions();
+        for (File onDiskPartition : onDiskPartitions) {
+            int partitionNum = StoragePathUtil.getPartitionNumFromRelativePath(onDiskPartition.getAbsolutePath());
+            if (partitionNum == partitionId) {
+                LOGGER.warn("deleting partition {}", partitionNum);
+                FileUtils.deleteQuietly(onDiskPartition);
+                return;
+            }
+        }
+    }
 }

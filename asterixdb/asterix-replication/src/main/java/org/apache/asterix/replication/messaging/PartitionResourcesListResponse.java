@@ -33,7 +33,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class PartitionResourcesListResponse implements IReplicationMessage {
 
     private final int partition;
-    private Map<String, Long> partitionReplicatedResources;
+    private final Map<String, Long> partitionReplicatedResources;
     private final List<String> files;
     private final boolean owner;
 

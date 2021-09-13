@@ -61,7 +61,8 @@ public class ReplicationProtocol {
         LSM_COMPONENT_MASK,
         MARK_COMPONENT_VALID,
         DROP_INDEX,
-        REPLICATE_LOGS
+        REPLICATE_LOGS,
+        DELETE_PARTITION
     }
 
     private static final Map<Integer, ReplicationRequestType> TYPES = new HashMap<>();
@@ -177,6 +178,8 @@ public class ReplicationProtocol {
                         return MarkComponentValidTask.create(dis);
                     case REPLICATE_LOGS:
                         return ReplicateLogsTask.create(dis);
+                    case DELETE_PARTITION:
+                        return DeletePartitionTask.create(dis);
                     default:
                         throw new IllegalStateException("Unrecognized replication message");
                 }
