@@ -21,6 +21,7 @@ package org.apache.asterix.replication.sync;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -127,6 +128,10 @@ public class ReplicaFilesSynchronizer {
 
     private void deleteInvalidFiles(List<String> files) {
         final FileSynchronizer sync = new FileSynchronizer(appCtx, replica);
+        // sort files to ensure index metadata files starting with "." are deleted last
+        files.sort(String::compareTo);
+        Collections.reverse(files);
+        LOGGER.info("deleting {}", files);
         files.forEach(sync::delete);
     }
 
