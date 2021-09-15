@@ -156,7 +156,7 @@ public class ATimeParserFactory implements IValueParserFactory {
             timezone = parseTimezonePart(timeString, start + offset);
         }
 
-        return GregorianCalendarSystem.getInstance().getChronon(hour, min, sec, millis, timezone);
+        return GregorianCalendarSystem.getInstance().getChronon(hour, min, sec, millis);
     }
 
     /**
@@ -223,7 +223,6 @@ public class ATimeParserFactory implements IValueParserFactory {
         int offset = 0;
 
         int hour = 0, min = 0, sec = 0, millis = 0;
-        int timezone = 0;
 
         boolean isExtendedForm = false;
         if (timeString[start + offset + 2] == ':') {
@@ -307,10 +306,10 @@ public class ATimeParserFactory implements IValueParserFactory {
         }
 
         if (length > offset) {
-            timezone = parseTimezonePart(timeString, start + offset);
+            parseTimezonePart(timeString, start + offset); // parsed, then ignored
         }
 
-        return GregorianCalendarSystem.getInstance().getChronon(hour, min, sec, millis, timezone);
+        return GregorianCalendarSystem.getInstance().getChronon(hour, min, sec, millis);
     }
 
     /**
@@ -462,10 +461,10 @@ public class ATimeParserFactory implements IValueParserFactory {
         }
 
         if (length > offset) {
-            timezone = parseTimezonePart(timeString, start + offset);
+            parseTimezonePart(timeString, start + offset); // parsed and ignored
         }
 
-        return GregorianCalendarSystem.getInstance().getChronon(hour, min, sec, millis, timezone);
+        return GregorianCalendarSystem.getInstance().getChronon(hour, min, sec, millis);
     }
 
     /**

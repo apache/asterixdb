@@ -107,7 +107,7 @@ public class PrintDateTimeDescriptor extends AbstractScalarFunctionDynamicDescri
                             utf8Ptr.set(bytes1, offset1 + 1, len1 - 1);
                             int formatLength = utf8Ptr.getUTF8Length();
                             sbder.delete(0, sbder.length());
-                            util.printDateTime(chronon, 0, utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset(),
+                            util.printDateTime(chronon, utf8Ptr.getByteArray(), utf8Ptr.getCharStartOffset(),
                                     formatLength, sbder, DateTimeParseMode.DATETIME);
 
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);

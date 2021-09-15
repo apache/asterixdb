@@ -94,7 +94,7 @@ public class DurationArithmeticOperations {
             }
         }
 
-        return GREG_CAL.getChronon(year, month, day, hour, min, sec, ms, 0) + dayTimeDuration;
+        return GREG_CAL.getChronon(year, month, day, hour, min, sec, ms) + dayTimeDuration;
     }
 
 }

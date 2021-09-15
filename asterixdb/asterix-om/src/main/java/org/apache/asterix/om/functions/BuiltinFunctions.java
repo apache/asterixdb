@@ -1178,10 +1178,16 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval-ended-by", 2);
     public static final FunctionIdentifier CURRENT_TIME =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "current-time", 0);
+    public static final FunctionIdentifier CURRENT_TIME_IMMEDIATE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "current-time-immediate", 0);
     public static final FunctionIdentifier CURRENT_DATE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "current-date", 0);
+    public static final FunctionIdentifier CURRENT_DATE_IMMEDIATE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "current-date-immediate", 0);
     public static final FunctionIdentifier CURRENT_DATETIME =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "current-datetime", 0);
+    public static final FunctionIdentifier CURRENT_DATETIME_IMMEDIATE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "current-datetime-immediate", 0);
     public static final FunctionIdentifier DURATION_EQUAL =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "duration-equal", 2);
     public static final FunctionIdentifier YEAR_MONTH_DURATION_GREATER_THAN =
@@ -1427,8 +1433,12 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-time-in-ms", 1);
     public final static FunctionIdentifier UNIX_TIME_FROM_DATETIME_IN_MS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-datetime-in-ms", 1);
+    public final static FunctionIdentifier UNIX_TIME_FROM_DATETIME_IN_MS_WITH_TZ =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-datetime-in-ms", 2);
     public final static FunctionIdentifier UNIX_TIME_FROM_DATETIME_IN_SECS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-datetime-in-secs", 1);
+    public final static FunctionIdentifier UNIX_TIME_FROM_DATETIME_IN_SECS_WITH_TZ =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-datetime-in-secs", 2);
     public static final FunctionIdentifier DATE_FROM_UNIX_TIME_IN_DAYS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "date-from-unix-time-in-days", 1);
     public static final FunctionIdentifier DATE_FROM_DATETIME =
@@ -1439,8 +1449,12 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-time-from-datetime", 1);
     public static final FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_MS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-ms", 1);
+    public static final FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_MS_WITH_TZ =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-ms", 2);
     public static final FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_SECS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-secs", 1);
+    public static final FunctionIdentifier DATETIME_FROM_UNIX_TIME_IN_SECS_WITH_TZ =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime-from-unix-time-in-secs", 2);
     public static final FunctionIdentifier DATETIME_FROM_DATE_TIME =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime-from-date-time", 2);
     public static final FunctionIdentifier CALENDAR_DURATION_FROM_DATETIME =
@@ -1453,6 +1467,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "adjust-datetime-for-timezone", 2);
     public static final FunctionIdentifier DAY_OF_WEEK =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day-of-week", 1);
+    public static final FunctionIdentifier DAY_OF_WEEK2 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day-of-week", 2);
+    public static final FunctionIdentifier DAY_OF_YEAR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day-of-year", 1);
+    public static final FunctionIdentifier WEEK_OF_YEAR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "week-of-year", 1);
+    public static final FunctionIdentifier WEEK_OF_YEAR2 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "week-of-year", 2);
     public static final FunctionIdentifier PARSE_DATE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "parse-date", 2);
     public static final FunctionIdentifier PARSE_TIME =
@@ -2311,14 +2333,18 @@ public class BuiltinFunctions {
         addFunction(UNIX_TIME_FROM_DATE_IN_DAYS, AInt64TypeComputer.INSTANCE, true);
         addFunction(UNIX_TIME_FROM_TIME_IN_MS, AInt64TypeComputer.INSTANCE, true);
         addFunction(UNIX_TIME_FROM_DATETIME_IN_MS, AInt64TypeComputer.INSTANCE, true);
+        addFunction(UNIX_TIME_FROM_DATETIME_IN_MS_WITH_TZ, AInt64TypeComputer.INSTANCE, false);
         addFunction(UNIX_TIME_FROM_DATETIME_IN_SECS, AInt64TypeComputer.INSTANCE, true);
+        addFunction(UNIX_TIME_FROM_DATETIME_IN_SECS_WITH_TZ, AInt64TypeComputer.INSTANCE, false);
         addFunction(DATE_FROM_UNIX_TIME_IN_DAYS, ADateTypeComputer.INSTANCE, true);
         addFunction(DATE_FROM_DATETIME, ADateTypeComputer.INSTANCE, true);
         addFunction(TIME_FROM_UNIX_TIME_IN_MS, ATimeTypeComputer.INSTANCE, true);
         addFunction(TIME_FROM_DATETIME, ATimeTypeComputer.INSTANCE, true);
         addFunction(DATETIME_FROM_DATE_TIME, ADateTimeTypeComputer.INSTANCE, true);
         addFunction(DATETIME_FROM_UNIX_TIME_IN_MS, ADateTimeTypeComputer.INSTANCE, true);
+        addFunction(DATETIME_FROM_UNIX_TIME_IN_MS_WITH_TZ, ADateTimeTypeComputer.INSTANCE, false);
         addFunction(DATETIME_FROM_UNIX_TIME_IN_SECS, ADateTimeTypeComputer.INSTANCE, true);
+        addFunction(DATETIME_FROM_UNIX_TIME_IN_SECS_WITH_TZ, ADateTimeTypeComputer.INSTANCE, false);
         addFunction(CALENDAR_DURATION_FROM_DATETIME, ADurationTypeComputer.INSTANCE, true);
         addFunction(CALENDAR_DURATION_FROM_DATE, ADurationTypeComputer.INSTANCE, true);
         addFunction(ADJUST_DATETIME_FOR_TIMEZONE, AStringTypeComputer.INSTANCE, true);
@@ -2337,8 +2363,11 @@ public class BuiltinFunctions {
         addFunction(INTERVAL_ENDS, ABooleanTypeComputer.INSTANCE, true);
         addFunction(INTERVAL_ENDED_BY, ABooleanTypeComputer.INSTANCE, true);
         addFunction(CURRENT_DATE, ADateTypeComputer.INSTANCE, false);
+        addFunction(CURRENT_DATE_IMMEDIATE, ADateTypeComputer.INSTANCE, false);
         addFunction(CURRENT_TIME, ATimeTypeComputer.INSTANCE, false);
+        addFunction(CURRENT_TIME_IMMEDIATE, ATimeTypeComputer.INSTANCE, false);
         addFunction(CURRENT_DATETIME, ADateTimeTypeComputer.INSTANCE, false);
+        addFunction(CURRENT_DATETIME_IMMEDIATE, ADateTimeTypeComputer.INSTANCE, false);
         addPrivateFunction(DAY_TIME_DURATION_GREATER_THAN, ABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(DAY_TIME_DURATION_LESS_THAN, ABooleanTypeComputer.INSTANCE, true);
         addPrivateFunction(YEAR_MONTH_DURATION_GREATER_THAN, ABooleanTypeComputer.INSTANCE, true);
@@ -2352,6 +2381,10 @@ public class BuiltinFunctions {
         addFunction(GET_YEAR_MONTH_DURATION, AYearMonthDurationTypeComputer.INSTANCE, true);
         addFunction(INTERVAL_BIN, AIntervalTypeComputer.INSTANCE, true);
         addFunction(DAY_OF_WEEK, AInt64TypeComputer.INSTANCE, true);
+        addFunction(DAY_OF_WEEK2, AInt64TypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(DAY_OF_YEAR, AInt64TypeComputer.INSTANCE, true);
+        addFunction(WEEK_OF_YEAR, AInt64TypeComputer.INSTANCE, true);
+        addFunction(WEEK_OF_YEAR2, AInt64TypeComputer.INSTANCE_NULLABLE, true);
         addFunction(PARSE_DATE, ADateTypeComputer.INSTANCE, true);
         addFunction(PARSE_TIME, ATimeTypeComputer.INSTANCE, true);
         addFunction(PARSE_DATETIME, ADateTimeTypeComputer.INSTANCE, true);

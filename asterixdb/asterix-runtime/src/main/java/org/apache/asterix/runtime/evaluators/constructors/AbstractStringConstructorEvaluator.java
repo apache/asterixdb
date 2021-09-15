@@ -129,20 +129,20 @@ public abstract class AbstractStringConstructorEvaluator extends AbstractConstru
                 case DATE:
                     l = ADateSerializerDeserializer.getChronon(bytes, startOffset + 1)
                             * GregorianCalendarSystem.CHRONON_OF_DAY;
-                    GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(l, 0, sb,
-                            GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY, false);
+                    GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(l, sb,
+                            GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY);
                     builder.appendString(sb);
                     break;
                 case TIME:
                     i = ATimeSerializerDeserializer.getChronon(bytes, startOffset + 1);
-                    GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(i, 0, sb,
-                            GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND, false);
+                    GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(i, sb,
+                            GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND);
                     builder.appendString(sb);
                     break;
                 case DATETIME:
                     l = ADateTimeSerializerDeserializer.getChronon(bytes, startOffset + 1);
-                    GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(l, 0, sb,
-                            GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+                    GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(l, sb,
+                            GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND);
                     builder.appendString(sb);
                     break;
                 case YEARMONTHDURATION:

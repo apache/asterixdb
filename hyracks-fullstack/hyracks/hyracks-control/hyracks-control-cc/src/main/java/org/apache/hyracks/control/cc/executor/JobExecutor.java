@@ -519,7 +519,7 @@ public class JobExecutor {
                     node.getNodeController().startTasks(deploymentId, jobId, jagBytes, taskDescriptors,
                             connectorPolicies, jobRun.getFlags(),
                             ccs.createOrGetJobParameterByteStore(jobId).getParameterMap(), deployedJobSpecId,
-                            jobRun.getStartTime());
+                            jobRun.getStartTime(), jobRun.getStartTimeZoneId());
                 }
             }
         } catch (Exception e) {

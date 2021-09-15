@@ -115,8 +115,8 @@ public class ADateTime implements IAObject {
 
     private static StringBuilder appendDatetime(StringBuilder sbder, long chrononTime) {
         try {
-            GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTime, 0, sbder,
-                    GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+            GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTime, sbder,
+                    GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND);
             return sbder;
         } catch (IOException e) {
             throw new IllegalStateException(e);

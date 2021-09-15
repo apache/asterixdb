@@ -121,10 +121,8 @@ public class GregorianCalendarSystem implements ICalendarSystem {
 
     /**
      * Check whether the given date time value is a valid date time following the gregorian calendar system.
-     *
-     * @param fields
-     * @return
      */
+    @Override
     public boolean validate(int year, int month, int day, int hour, int min, int sec, int millis) {
         // Check whether each field is within the value domain
         if (year < FIELD_MINS[0] || year > FIELD_MAXS[0]) {
@@ -187,7 +185,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
     }
 
     /**
-     * Validate the given chronon time and time zone.
+     * Get the UTC chronon time of the given date time.
      *
      * @param year
      * @param month
@@ -196,30 +194,12 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * @param min
      * @param sec
      * @param millis
-     * @param timezone
-     * @return
      */
-    public boolean validate(int year, int month, int day, int hour, int min, int sec, int millis, int timezone) {
-        return validate(year, month, day, hour, min, sec, millis) && validateTimeZone(timezone);
-    }
-
-    /**
-     * Get the UTC chronon time of the given date time and time zone.
-     *
-     * @param year
-     * @param month
-     * @param day
-     * @param hour
-     * @param min
-     * @param sec
-     * @param millis
-     * @param timezone
-     * @return
-     */
-    public long getChronon(int year, int month, int day, int hour, int min, int sec, int millis, int timezone) {
+    @Override
+    public long getChronon(int year, int month, int day, int hour, int min, int sec, int millis) {
         // Added milliseconds for all fields but month and day
         long chrononTime = chrononizeBeginningOfYear(year) + hour * CHRONON_OF_HOUR + min * CHRONON_OF_MINUTE
-                + sec * CHRONON_OF_SECOND + millis + timezone;
+                + sec * CHRONON_OF_SECOND + millis;
 
         // Added milliseconds for days of the month.
         chrononTime += (day - 1 + DAYS_SINCE_MONTH_BEGIN_ORDI[month - 1]) * CHRONON_OF_DAY;
@@ -233,19 +213,17 @@ public class GregorianCalendarSystem implements ICalendarSystem {
     }
 
     /**
-     * Get the chronon time (number of milliseconds) of the given time and time zone.
+     * Get the UTC chronon time (number of milliseconds) of the given time and time zone.
      *
      * @param hour
      * @param min
      * @param sec
      * @param millis
-     * @param timezone
      * @return
      */
-    public int getChronon(int hour, int min, int sec, int millis, int timezone) {
+    public int getChronon(int hour, int min, int sec, int millis) {
         // Added milliseconds for all fields but month and day
-        long chrononTime =
-                hour * CHRONON_OF_HOUR + min * CHRONON_OF_MINUTE + sec * CHRONON_OF_SECOND + millis + timezone;
+        long chrononTime = hour * CHRONON_OF_HOUR + min * CHRONON_OF_MINUTE + sec * CHRONON_OF_SECOND + millis;
         return (int) chrononTime;
     }
 
@@ -254,43 +232,50 @@ public class GregorianCalendarSystem implements ICalendarSystem {
     }
 
     public int getChrononInDays(long chronon) {
-        int temp = (chronon < 0) && (chronon % CHRONON_OF_DAY != 0) ? 1 : 0;
-        return (int) (chronon / CHRONON_OF_DAY - temp);
+        int dateChrononInDays = (int) (chronon / GregorianCalendarSystem.CHRONON_OF_DAY);
+        if (dateChrononInDays < 0 && (chronon % GregorianCalendarSystem.CHRONON_OF_DAY != 0)) {
+            dateChrononInDays -= 1;
+        }
+        return dateChrononInDays;
+    }
+
+    public int getTimeChronon(long chronon) {
+        int timeChronon = (int) (chronon % GregorianCalendarSystem.CHRONON_OF_DAY);
+        if (timeChronon < 0) {
+            timeChronon += GregorianCalendarSystem.CHRONON_OF_DAY;
+        }
+        return timeChronon;
     }
 
     /**
-     * Get the extended string representation of the given UTC chronon time under the given time zone. Only fields
-     * before
-     * the given field index will be returned.
+     * Get the extended string representation of the given chronon time.
+     * Only fields before the given field index will be returned.
      * <p/>
      * The extended string representation is like:<br/>
-     * [-]YYYY-MM-DDThh:mm:ss.xxx[Z|[+|-]hh:mm]
+     * [-]YYYY-MM-DDThh:mm:ss.xxx
      *
      * @param chrononTime
-     * @param timezone
      * @param sbder
      * @param untilField
      */
-    public void getExtendStringRepUntilField(long chrononTime, int timezone, Appendable sbder, Fields startField,
-            Fields untilField, boolean withTimezone) throws IOException {
-        getExtendStringRepUntilField(chrononTime, timezone, sbder, startField, untilField, withTimezone, 'T');
+    public void getExtendStringRepUntilField(long chrononTime, Appendable sbder, Fields startField, Fields untilField)
+            throws IOException {
+        getExtendStringRepUntilField(chrononTime, sbder, startField, untilField, 'T');
     }
 
     /**
-     * Get the extended string representation of the given UTC chronon time under the given time zone. Only fields
-     * before
-     * the given field index will be returned.
+     * Get the extended string representation of the given chronon time.
+     * Only fields before the given field index will be returned.
      * <p/>
      * The extended string representation is like:<br/>
-     * [-]YYYY-MM-DDThh:mm:ss.xxx[Z|[+|-]hh:mm]
+     * [-]YYYY-MM-DDThh:mm:ss.xxx
      *
      * @param chrononTime
-     * @param timezone
      * @param sbder
      * @param untilField
      */
-    public void getExtendStringRepUntilField(long chrononTime, int timezone, Appendable sbder, Fields startField,
-            Fields untilField, boolean withTimezone, char dateTimeSeparator) throws IOException {
+    public void getExtendStringRepUntilField(long chrononTime, Appendable sbder, Fields startField, Fields untilField,
+            char dateTimeSeparator) throws IOException {
 
         int year = getYear(chrononTime);
         int month = getMonthOfYear(chrononTime, year);
@@ -350,28 +335,15 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 sbder.append(String.format("%03d", getMillisOfSec(chrononTime)));
                 break;
         }
-
-        if (withTimezone) {
-            if (timezone == 0) {
-                sbder.append('Z');
-            } else {
-                int tzMin = (int) ((timezone % CHRONON_OF_HOUR) / CHRONON_OF_MINUTE);
-                int tzHr = (int) (timezone / CHRONON_OF_HOUR);
-                sbder.append(tzHr >= 0 ? '-' : '+').append(String.format("%02d", tzHr < 0 ? -tzHr : tzHr)).append(':')
-                        .append(String.format("%02d", tzMin < 0 ? -tzMin : tzMin));
-            }
-        }
     }
 
     /**
-     * Get the basic string representation of a chronon time with the given time zone.
-     *
+     * Get the basic string representation of a chronon time.
      * @param chrononTime
-     * @param timezone
      * @param sbder
      */
-    public void getBasicStringRepUntilField(long chrononTime, int timezone, Appendable sbder, Fields startField,
-            Fields untilField, boolean withTimezone) throws IOException {
+    public void getBasicStringRepUntilField(long chrononTime, Appendable sbder, Fields startField, Fields untilField)
+            throws IOException {
         int year = getYear(chrononTime);
         int month = getMonthOfYear(chrononTime, year);
 
@@ -408,19 +380,22 @@ public class GregorianCalendarSystem implements ICalendarSystem {
                 sbder.append(String.format("%03d", getMillisOfSec(chrononTime)));
                 break;
         }
+    }
 
-        if (withTimezone) {
-            if (timezone == 0) {
-                sbder.append('Z');
-            } else {
-                int tzMin = (int) (timezone % CHRONON_OF_HOUR / CHRONON_OF_MINUTE);
-                if (tzMin < 0) {
-                    tzMin = (short) (-1 * tzMin);
-                }
-                int tzHr = (int) (timezone / CHRONON_OF_HOUR);
-                sbder.append((tzHr >= 0 ? '-' : '+')).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr)))
-                        .append(String.format("%02d", tzMin));
+    /**
+     * Get the string representation of a timezone: Z|[+|-]hh:mm
+     */
+    public void getTimezoneStringRep(int timezone, Appendable sbder) throws IOException {
+        if (timezone == 0) {
+            sbder.append('Z');
+        } else {
+            int tzMin = (int) (timezone % CHRONON_OF_HOUR / CHRONON_OF_MINUTE);
+            if (tzMin < 0) {
+                tzMin = (short) (-1 * tzMin);
             }
+            int tzHr = (int) (timezone / CHRONON_OF_HOUR);
+            sbder.append((tzHr >= 0 ? '-' : '+')).append(String.format("%02d", (tzHr < 0 ? -tzHr : tzHr))).append(':')
+                    .append(String.format("%02d", tzMin));
         }
     }
 
@@ -434,7 +409,6 @@ public class GregorianCalendarSystem implements ICalendarSystem {
      * @param months
      * @param sbder
      */
-
     public void getDurationExtendStringRepWithTimezoneUntilField(long milliseconds, int months, StringBuilder sbder) {
 
         boolean positive = true;
@@ -756,7 +730,7 @@ public class GregorianCalendarSystem implements ICalendarSystem {
     }
 
     /**
-     * Get the day of week for the given chronon time. 0 (Sunday) to 7 (Saturday)
+     * Get the day of week for the given chronon time. 0 (Sunday) to 6 (Saturday)
      *
      * @param millis
      * @return

@@ -43,6 +43,7 @@ public abstract class AbstractDateConstructorEvaluator extends AbstractConstruct
     private final ISerializerDeserializer<ADate> dateSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
+    private final GregorianCalendarSystem cal = GregorianCalendarSystem.getInstance();
 
     protected AbstractDateConstructorEvaluator(IEvaluatorContext ctx, IScalarEvaluator inputEval,
             SourceLocation sourceLoc) {
@@ -61,7 +62,8 @@ public abstract class AbstractDateConstructorEvaluator extends AbstractConstruct
                 break;
             case DATETIME:
                 long chronon = ADateTimeSerializerDeserializer.getChronon(bytes, startOffset + 1);
-                aDate.setValue(GregorianCalendarSystem.getInstance().getChrononInDays(chronon));
+                int chrononInDays = cal.getChrononInDays(chronon);
+                aDate.setValue(chrononInDays);
                 resultStorage.reset();
                 dateSerde.serialize(aDate, out);
                 result.set(resultStorage);
@@ -90,7 +92,7 @@ public abstract class AbstractDateConstructorEvaluator extends AbstractConstruct
         try {
             long chronon = ADateParserFactory.parseDatePart(textPtr.getByteArray(), textPtr.getCharStartOffset(),
                     stringLength);
-            int chrononInDays = GregorianCalendarSystem.getInstance().getChrononInDays(chronon);
+            int chrononInDays = cal.getChrononInDays(chronon);
             result.setValue(chrononInDays);
             return true;
         } catch (HyracksDataException e) {

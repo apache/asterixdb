@@ -18,67 +18,28 @@
  */
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
-import java.io.DataOutput;
-
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.om.base.ADate;
-import org.apache.asterix.om.base.AMutableDate;
-import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class CurrentDateDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
+    public final static IFunctionDescriptorFactory FACTORY = CurrentDateDescriptor::new;
     private static final long serialVersionUID = 1L;
     private final static FunctionIdentifier FID = BuiltinFunctions.CURRENT_DATE;
-
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new CurrentDateDescriptor();
-        }
-    };
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
-
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new IScalarEvaluator() {
-
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ADate> dateSerde =
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADATE);
-                    private AMutableDate aDate = new AMutableDate(0);
-
-                    @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        resultStorage.reset();
-                        int dateChronon = (int) (System.currentTimeMillis() / GregorianCalendarSystem.CHRONON_OF_DAY);
-                        aDate.setValue(dateChronon);
-                        dateSerde.serialize(aDate, out);
-                        result.set(resultStorage);
-                    }
-                };
+            public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) {
+                return new CurrentDateEval(ctx, sourceLoc, getIdentifier());
             }
         };
     }
@@ -87,5 +48,4 @@ public class CurrentDateDescriptor extends AbstractScalarFunctionDynamicDescript
     public FunctionIdentifier getIdentifier() {
         return FID;
     }
-
 }

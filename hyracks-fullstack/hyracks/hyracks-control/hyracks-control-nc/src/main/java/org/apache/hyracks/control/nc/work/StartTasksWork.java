@@ -97,10 +97,13 @@ public class StartTasksWork extends AbstractWork {
 
     private final long jobStartTime;
 
+    private final String jobStartTimeZoneId;
+
     public StartTasksWork(NodeControllerService ncs, DeploymentId deploymentId, JobId jobId, byte[] acgBytes,
             List<TaskAttemptDescriptor> taskDescriptors,
             Map<ConnectorDescriptorId, IConnectorPolicy> connectorPoliciesMap, Set<JobFlag> flags,
-            Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId, long jobStartTime) {
+            Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId, long jobStartTime,
+            String jobStartTimeZoneId) {
         this.ncs = ncs;
         this.deploymentId = deploymentId;
         this.jobId = jobId;
@@ -111,6 +114,7 @@ public class StartTasksWork extends AbstractWork {
         this.flags = flags;
         this.jobParameters = jobParameters;
         this.jobStartTime = jobStartTime;
+        this.jobStartTimeZoneId = jobStartTimeZoneId;
     }
 
     @Override
@@ -215,7 +219,7 @@ public class StartTasksWork extends AbstractWork {
                 }
                 listenerFactory.updateListenerJobParameters(ncs.createOrGetJobParameterByteStore(jobId));
             }
-            ji = new Joblet(ncs, deploymentId, jobId, appCtx, acg, listenerFactory, jobStartTime);
+            ji = new Joblet(ncs, deploymentId, jobId, appCtx, acg, listenerFactory, jobStartTime, jobStartTimeZoneId);
             jobletMap.put(jobId, ji);
         }
         return ji;

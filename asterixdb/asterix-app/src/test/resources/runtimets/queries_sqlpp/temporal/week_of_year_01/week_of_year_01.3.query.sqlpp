@@ -1,0 +1,41 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+select r, array_min(dows) mn, array_max(dows) mx
+from range(1, 7) r
+let
+  d = date("2021-01-10"),
+  dt = datetime_from_date_time(d, time("01:01:01")),
+  days = [ "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" ],
+  dows =
+  [
+    week_of_year(d, int8(r)),
+    week_of_year(dt, int16(r)),
+    week_of_year(d, int32(r)),
+    week_of_year(dt, int64(r)),
+    week_of_year(d, float(r)),
+    week_of_year(dt, double(r)),
+    week_of_year(d, days[r-1]),
+    week_of_year(dt, upper(days[r-1])),
+    week_of_year(d, lower(days[r-1])),
+    week_of_year(dt, substr(days[r-1], 0, 3)),
+    week_of_year(d, upper(substr(days[r-1], 0, 3))),
+    week_of_year(dt, lower(substr(days[r-1], 0, 3)))
+  ]
+order by r;

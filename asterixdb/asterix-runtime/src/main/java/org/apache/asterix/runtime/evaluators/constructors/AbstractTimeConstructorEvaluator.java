@@ -43,6 +43,7 @@ public abstract class AbstractTimeConstructorEvaluator extends AbstractConstruct
     private final ISerializerDeserializer<ATime> timeSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ATIME);
     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
+    private final GregorianCalendarSystem cal = GregorianCalendarSystem.getInstance();
 
     protected AbstractTimeConstructorEvaluator(IEvaluatorContext ctx, IScalarEvaluator inputEval,
             SourceLocation sourceLoc) {
@@ -61,7 +62,7 @@ public abstract class AbstractTimeConstructorEvaluator extends AbstractConstruct
                 break;
             case DATETIME:
                 long chronon = ADateTimeSerializerDeserializer.getChronon(bytes, startOffset + 1);
-                int chrononTime = (int) (chronon / GregorianCalendarSystem.CHRONON_OF_DAY);
+                int chrononTime = cal.getTimeChronon(chronon);
                 aTime.setValue(chrononTime);
                 resultStorage.reset();
                 timeSerde.serialize(aTime, out);

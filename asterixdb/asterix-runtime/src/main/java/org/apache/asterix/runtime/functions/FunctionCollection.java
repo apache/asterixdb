@@ -519,14 +519,21 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.AdjustTimeForTim
 import org.apache.asterix.runtime.evaluators.functions.temporal.CalendarDurationFromDateDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.CalendarDurationFromDateTimeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.CurrentDateDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.CurrentDateImmediateDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.CurrentDateTimeDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.CurrentDateTimeImmediateDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.CurrentTimeDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.CurrentTimeImmediateDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.DateFromDatetimeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.DateFromUnixTimeInDaysDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.DatetimeFromDateAndTimeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.DatetimeFromUnixTimeInMsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.DatetimeFromUnixTimeInMsWithTzDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.DatetimeFromUnixTimeInSecsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.DatetimeFromUnixTimeInSecsWithTzDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.DayOfWeek2Descriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.DayOfWeekDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.DayOfYearDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.DayTimeDurationGreaterThanComparatorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.DayTimeDurationLessThanComparatorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.DurationEqualDescriptor;
@@ -563,8 +570,12 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.TimeFromDatetime
 import org.apache.asterix.runtime.evaluators.functions.temporal.TimeFromUnixTimeInMsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDateInDaysDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDatetimeInMsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDatetimeInMsWithTzDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDatetimeInSecsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDatetimeInSecsWithTzDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromTimeInMsDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.WeekOfYear2Descriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.WeekOfYearDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationGreaterThanComparatorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.YearMonthDurationLessThanComparatorDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.DenseRankRunningAggregateDescriptor;
@@ -896,8 +907,11 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(CreateQueryUIDDescriptor.FACTORY);
         fc.add(RandomDescriptor.FACTORY);
         fc.add(CurrentDateDescriptor.FACTORY);
+        fc.add(CurrentDateImmediateDescriptor.FACTORY);
         fc.add(CurrentTimeDescriptor.FACTORY);
+        fc.add(CurrentTimeImmediateDescriptor.FACTORY);
         fc.add(CurrentDateTimeDescriptor.FACTORY);
+        fc.add(CurrentDateTimeImmediateDescriptor.FACTORY);
 
         fc.add(IsNumericAddCompatibleDescriptor.FACTORY);
 
@@ -1129,13 +1143,17 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(UnixTimeFromDateInDaysDescriptor.FACTORY);
         fc.add(UnixTimeFromTimeInMsDescriptor.FACTORY);
         fc.add(UnixTimeFromDatetimeInMsDescriptor.FACTORY);
+        fc.add(UnixTimeFromDatetimeInMsWithTzDescriptor.FACTORY);
         fc.add(UnixTimeFromDatetimeInSecsDescriptor.FACTORY);
+        fc.add(UnixTimeFromDatetimeInSecsWithTzDescriptor.FACTORY);
         fc.add(DateFromUnixTimeInDaysDescriptor.FACTORY);
         fc.add(DateFromDatetimeDescriptor.FACTORY);
         fc.add(TimeFromUnixTimeInMsDescriptor.FACTORY);
         fc.add(TimeFromDatetimeDescriptor.FACTORY);
         fc.add(DatetimeFromUnixTimeInMsDescriptor.FACTORY);
+        fc.add(DatetimeFromUnixTimeInMsWithTzDescriptor.FACTORY);
         fc.add(DatetimeFromUnixTimeInSecsDescriptor.FACTORY);
+        fc.add(DatetimeFromUnixTimeInSecsWithTzDescriptor.FACTORY);
         fc.add(DatetimeFromDateAndTimeDescriptor.FACTORY);
         fc.add(CalendarDurationFromDateTimeDescriptor.FACTORY);
         fc.add(CalendarDurationFromDateDescriptor.FACTORY);
@@ -1168,6 +1186,10 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(IntervalBinDescriptor.FACTORY);
         fc.add(OverlapBinsDescriptor.FACTORY);
         fc.add(DayOfWeekDescriptor.FACTORY);
+        fc.add(DayOfWeek2Descriptor.FACTORY);
+        fc.add(DayOfYearDescriptor.FACTORY);
+        fc.add(WeekOfYearDescriptor.FACTORY);
+        fc.add(WeekOfYear2Descriptor.FACTORY);
         fc.add(ParseDateDescriptor.FACTORY);
         fc.add(ParseTimeDescriptor.FACTORY);
         fc.add(ParseDateTimeDescriptor.FACTORY);

@@ -124,8 +124,8 @@ public class AdjustDateTimeForTimeZoneDescriptor extends AbstractScalarFunctionD
                             chronon = calInstance.adjustChrononByTimezone(chronon, timezone);
 
                             StringBuilder sbder = new StringBuilder();
-                            calInstance.getExtendStringRepUntilField(chronon, timezone, sbder, Fields.YEAR,
-                                    Fields.MILLISECOND, true);
+                            calInstance.getExtendStringRepUntilField(chronon, sbder, Fields.YEAR, Fields.MILLISECOND);
+                            GregorianCalendarSystem.getInstance().getTimezoneStringRep(timezone, sbder);
 
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             utf8Writer.writeUTF8(sbder, out);

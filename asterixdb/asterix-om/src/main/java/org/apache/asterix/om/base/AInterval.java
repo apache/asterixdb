@@ -100,28 +100,28 @@ public class AInterval implements IAObject {
                 sbder.append("date: { ");
 
                 GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalStart * ADate.CHRONON_OF_DAY,
-                        0, sbder, GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY, false);
+                        sbder, GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY);
 
                 sbder.append(" }, date: {");
                 GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalEnd * ADate.CHRONON_OF_DAY,
-                        0, sbder, GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY, false);
+                        sbder, GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY);
                 sbder.append(" }");
             } else if (typetag == ATypeTag.TIME.serialize()) {
                 sbder.append("time: { ");
-                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalStart, 0, sbder,
-                        GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalStart, sbder,
+                        GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND);
                 sbder.append(" }, time: { ");
 
-                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalEnd, 0, sbder,
-                        GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalEnd, sbder,
+                        GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND);
                 sbder.append(" }");
             } else if (typetag == ATypeTag.DATETIME.serialize()) {
                 sbder.append("datetime: { ");
-                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalStart, 0, sbder,
-                        GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalStart, sbder,
+                        GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND);
                 sbder.append(" }, datetime: { ");
-                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalEnd, 0, sbder,
-                        GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+                GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(intervalEnd, sbder,
+                        GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.MILLISECOND);
                 sbder.append(" }");
             }
         } catch (IOException e) {

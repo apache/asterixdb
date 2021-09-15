@@ -67,9 +67,9 @@ public class NodeControllerRemoteProxy implements INodeController {
     public void startTasks(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
             List<TaskAttemptDescriptor> taskDescriptors, Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies,
             Set<JobFlag> flags, Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId,
-            long jobStartTime) throws Exception {
+            long jobStartTime, String jobStartTimeZoneId) throws Exception {
         StartTasksFunction stf = new StartTasksFunction(deploymentId, jobId, planBytes, taskDescriptors,
-                connectorPolicies, flags, jobParameters, deployedJobSpecId, jobStartTime);
+                connectorPolicies, flags, jobParameters, deployedJobSpecId, jobStartTime, jobStartTimeZoneId);
         ipcHandle.send(-1, stf, null);
     }
 

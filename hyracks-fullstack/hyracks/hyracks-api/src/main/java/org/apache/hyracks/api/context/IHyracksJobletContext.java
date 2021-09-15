@@ -33,6 +33,8 @@ public interface IHyracksJobletContext extends IWorkspaceFileFactory, IDeallocat
 
     long getJobStartTime();
 
+    String getJobStartTimeZoneId();
+
     ICounterContext getCounterContext();
 
     Object getGlobalJobData();

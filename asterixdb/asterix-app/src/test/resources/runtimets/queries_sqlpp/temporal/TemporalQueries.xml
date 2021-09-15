@@ -33,6 +33,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="temporal">
+      <compilation-unit name="current_date_time_01">
+        <output-dir compare="Text">current_date_time_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
       <compilation-unit name="overlap_bins_gby_1">
         <output-dir compare="Text">overlap_bins_gby_1</output-dir>
       </compilation-unit>
@@ -70,6 +75,11 @@
     <test-case FilePath="temporal">
       <compilation-unit name="day_of_week_01">
         <output-dir compare="Text">day_of_week_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="day_of_year_01">
+        <output-dir compare="Text">day_of_year_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="temporal">
@@ -152,6 +162,11 @@
     <test-case FilePath="temporal">
       <compilation-unit name="duration_comps">
         <output-dir compare="Text">duration_comps</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
+      <compilation-unit name="week_of_year_01">
+        <output-dir compare="Text">week_of_year_01</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="temporal/interval_joins">

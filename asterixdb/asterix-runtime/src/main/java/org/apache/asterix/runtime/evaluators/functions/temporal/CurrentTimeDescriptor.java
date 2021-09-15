@@ -18,79 +18,34 @@
  */
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
-import java.io.DataOutput;
-
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.om.base.AMutableTime;
-import org.apache.asterix.om.base.ATime;
-import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class CurrentTimeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
-    private static final long serialVersionUID = 1L;
+    public final static IFunctionDescriptorFactory FACTORY = CurrentTimeDescriptor::new;
     public final static FunctionIdentifier FID = BuiltinFunctions.CURRENT_TIME;
+    private static final long serialVersionUID = 1L;
 
-    public final static IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new CurrentTimeDescriptor();
-        }
-    };
-
-    /* (non-Javadoc)
-     * @see org.apache.asterix.runtime.base.IScalarFunctionDynamicDescriptor#createEvaluatorFactory(org.apache.hyracks.algebricks.runtime.base.ICopyEvaluatorFactory[])
-     */
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
-                return new IScalarEvaluator() {
-
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-
-                    @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<ATime> timeSerde =
-                            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ATIME);
-                    private AMutableTime aTime = new AMutableTime(0);
-
-                    @Override
-                    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
-                        resultStorage.reset();
-                        int timeChronon = (int) (System.currentTimeMillis() % GregorianCalendarSystem.CHRONON_OF_DAY);
-                        aTime.setValue(timeChronon);
-                        timeSerde.serialize(aTime, out);
-                        result.set(resultStorage);
-                    }
-                };
+            public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) {
+                return new CurrentTimeEval(ctx, sourceLoc, getIdentifier());
             }
         };
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.asterix.om.functions.IFunctionDescriptor#getIdentifier()
-     */
     @Override
     public FunctionIdentifier getIdentifier() {
         return FID;
     }
-
 }

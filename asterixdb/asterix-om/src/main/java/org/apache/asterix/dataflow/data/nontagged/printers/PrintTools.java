@@ -43,8 +43,8 @@ public class PrintTools {
         long chrononTime = AInt32SerializerDeserializer.getInt(b, s + 1) * CHRONON_OF_DAY;
 
         try {
-            gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, GregorianCalendarSystem.Fields.YEAR,
-                    GregorianCalendarSystem.Fields.DAY, false);
+            gCalInstance.getExtendStringRepUntilField(chrononTime, ps, GregorianCalendarSystem.Fields.YEAR,
+                    GregorianCalendarSystem.Fields.DAY);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -54,8 +54,8 @@ public class PrintTools {
         long chrononTime = AInt64SerializerDeserializer.getLong(b, s + 1);
 
         try {
-            gCalInstance.getExtendStringRepUntilField(chrononTime, 0, ps, GregorianCalendarSystem.Fields.YEAR,
-                    GregorianCalendarSystem.Fields.MILLISECOND, true);
+            gCalInstance.getExtendStringRepUntilField(chrononTime, ps, GregorianCalendarSystem.Fields.YEAR,
+                    GregorianCalendarSystem.Fields.MILLISECOND);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -212,8 +212,8 @@ public class PrintTools {
         int time = AInt32SerializerDeserializer.getInt(b, s + 1);
 
         try {
-            gCalInstance.getExtendStringRepUntilField(time, 0, ps, GregorianCalendarSystem.Fields.HOUR,
-                    GregorianCalendarSystem.Fields.MILLISECOND, true);
+            gCalInstance.getExtendStringRepUntilField(time, ps, GregorianCalendarSystem.Fields.HOUR,
+                    GregorianCalendarSystem.Fields.MILLISECOND);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

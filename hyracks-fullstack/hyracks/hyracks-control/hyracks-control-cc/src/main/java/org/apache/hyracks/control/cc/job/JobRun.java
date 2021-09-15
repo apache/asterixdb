@@ -86,6 +86,8 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private long startTime;
 
+    private String startTimeZoneId;
+
     private long endTime;
 
     private JobStatus status;
@@ -198,6 +200,14 @@ public class JobRun implements IJobStatusConditionVariable {
 
     public void setStartTime(long startTime) {
         this.startTime = startTime;
+    }
+
+    public String getStartTimeZoneId() {
+        return startTimeZoneId;
+    }
+
+    public void setStartTimeZoneId(String startTimeZoneId) {
+        this.startTimeZoneId = startTimeZoneId;
     }
 
     public long getEndTime() {

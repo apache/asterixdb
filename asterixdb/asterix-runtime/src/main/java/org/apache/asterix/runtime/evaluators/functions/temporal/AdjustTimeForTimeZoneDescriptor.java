@@ -122,8 +122,8 @@ public class AdjustTimeForTimeZoneDescriptor extends AbstractScalarFunctionDynam
 
                             StringBuilder sbder = new StringBuilder();
 
-                            calInstance.getExtendStringRepUntilField(chronon, timezone, sbder, Fields.HOUR,
-                                    Fields.MILLISECOND, true);
+                            calInstance.getExtendStringRepUntilField(chronon, sbder, Fields.HOUR, Fields.MILLISECOND);
+                            GregorianCalendarSystem.getInstance().getTimezoneStringRep(timezone, sbder);
 
                             out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                             writer.writeUTF8(sbder, out);

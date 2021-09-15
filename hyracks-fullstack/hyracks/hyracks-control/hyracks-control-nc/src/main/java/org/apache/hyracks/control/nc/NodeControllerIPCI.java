@@ -74,7 +74,8 @@ final class NodeControllerIPCI implements IIPCI {
                 ncs.getWorkQueue()
                         .schedule(new StartTasksWork(ncs, stf.getDeploymentId(), stf.getJobId(), stf.getPlanBytes(),
                                 stf.getTaskDescriptors(), stf.getConnectorPolicies(), stf.getFlags(),
-                                stf.getJobParameters(), stf.getDeployedJobSpecId(), stf.getJobStartTime()));
+                                stf.getJobParameters(), stf.getDeployedJobSpecId(), stf.getJobStartTime(),
+                                stf.getJobStartTimeZoneId()));
                 return;
             case ABORT_TASKS:
                 CCNCFunctions.AbortTasksFunction atf = (CCNCFunctions.AbortTasksFunction) fn;

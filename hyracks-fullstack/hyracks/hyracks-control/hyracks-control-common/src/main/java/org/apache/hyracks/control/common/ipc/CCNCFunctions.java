@@ -796,11 +796,13 @@ public class CCNCFunctions {
         private final Map<byte[], byte[]> jobParameters;
         private final DeployedJobSpecId deployedJobSpecId;
         private final long jobStartTime;
+        private final String jobStartTimeZoneId;
 
         public StartTasksFunction(DeploymentId deploymentId, JobId jobId, byte[] planBytes,
                 List<TaskAttemptDescriptor> taskDescriptors,
                 Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicies, Set<JobFlag> flags,
-                Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId, long jobStartTime) {
+                Map<byte[], byte[]> jobParameters, DeployedJobSpecId deployedJobSpecId, long jobStartTime,
+                String jobStartTimeZoneId) {
             this.deploymentId = deploymentId;
             this.jobId = jobId;
             this.planBytes = planBytes;
@@ -810,6 +812,7 @@ public class CCNCFunctions {
             this.jobParameters = jobParameters;
             this.deployedJobSpecId = deployedJobSpecId;
             this.jobStartTime = jobStartTime;
+            this.jobStartTimeZoneId = jobStartTimeZoneId;
         }
 
         @Override
@@ -851,6 +854,10 @@ public class CCNCFunctions {
 
         public long getJobStartTime() {
             return jobStartTime;
+        }
+
+        public String getJobStartTimeZoneId() {
+            return jobStartTimeZoneId;
         }
 
         public static Object deserialize(ByteBuffer buffer, int length) throws Exception {
@@ -923,9 +930,10 @@ public class CCNCFunctions {
             }
 
             long jobStartTime = dis.readLong();
+            String jobStartTimeZoneId = dis.readUTF();
 
             return new StartTasksFunction(deploymentId, jobId, planBytes, taskDescriptors, connectorPolicies, flags,
-                    jobParameters, deployedJobSpecId, jobStartTime);
+                    jobParameters, deployedJobSpecId, jobStartTime, jobStartTimeZoneId);
         }
 
         public static void serialize(OutputStream out, Object object) throws Exception {
@@ -981,6 +989,10 @@ public class CCNCFunctions {
 
             //write job start time
             dos.writeLong(fn.jobStartTime);
+
+            //write job start timezone
+            dos.writeUTF(fn.jobStartTimeZoneId);
+
         }
     }
 

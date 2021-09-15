@@ -30,8 +30,8 @@ public class InvalidDataFormatException extends RuntimeDataException {
 
     public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, Throwable cause,
             byte expectedTypeTag) {
-        super(ErrorCode.INVALID_FORMAT, cause, sourceLoc, fid.getName(),
-                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(expectedTypeTag));
+        super(ErrorCode.INVALID_FORMAT, cause, sourceLoc,
+                EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(expectedTypeTag), fid.getName());
     }
 
     public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, byte expectedTypeTag) {
@@ -39,6 +39,6 @@ public class InvalidDataFormatException extends RuntimeDataException {
     }
 
     public InvalidDataFormatException(SourceLocation sourceLoc, FunctionIdentifier fid, String expectedType) {
-        super(ErrorCode.INVALID_FORMAT, sourceLoc, fid.getName(), expectedType);
+        super(ErrorCode.INVALID_FORMAT, sourceLoc, expectedType, fid.getName());
     }
 }

@@ -30,10 +30,9 @@ public interface ICalendarSystem {
      * @param min
      * @param sec
      * @param millis
-     * @param timezone
      * @return
      */
-    public boolean validate(int year, int month, int day, int hour, int min, int sec, int millis, int timezone);
+    public boolean validate(int year, int month, int day, int hour, int min, int sec, int millis);
 
     /**
      * get the chronon time for the given time stamp in the calendar system.
@@ -45,10 +44,9 @@ public interface ICalendarSystem {
      * @param min
      * @param sec
      * @param millis
-     * @param timezone
      * @return
      */
-    public long getChronon(int year, int month, int day, int hour, int min, int sec, int millis, int timezone);
+    public long getChronon(int year, int month, int day, int hour, int min, int sec, int millis);
 
     /**
      * get the chronon time for the given time in the calendar system
@@ -57,9 +55,8 @@ public interface ICalendarSystem {
      * @param min
      * @param sec
      * @param millis
-     * @param timezone
      * @return
      */
-    public int getChronon(int hour, int min, int sec, int millis, int timezone);
+    public int getChronon(int hour, int min, int sec, int millis);
 
 }

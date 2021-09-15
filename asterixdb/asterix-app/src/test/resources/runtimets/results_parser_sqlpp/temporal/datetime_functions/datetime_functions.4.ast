@@ -1,0 +1,110 @@
+Query:
+SELECT [
+Variable [ Name=$tz ]
+tz
+FunctionCall asterix.string@1[
+  Variable [ Name=$s1 ]
+]
+s1
+FunctionCall asterix.string@1[
+  Variable [ Name=$s2 ]
+]
+s2
+FunctionCall asterix.string@1[
+  Variable [ Name=$m1 ]
+]
+m1
+FunctionCall asterix.string@1[
+  Variable [ Name=$m2 ]
+]
+m2
+OperatorExpr [
+  FunctionCall asterix.unix-time-from-datetime-in-secs@1[
+    Variable [ Name=$s1 ]
+  ]
+  =
+  Variable [ Name=$ets ]
+]
+us1
+OperatorExpr [
+  FunctionCall asterix.unix-time-from-datetime-in-secs@2[
+    Variable [ Name=$s2 ]
+    Variable [ Name=$tz ]
+  ]
+  =
+  Variable [ Name=$ets ]
+]
+us2
+OperatorExpr [
+  FunctionCall asterix.unix-time-from-datetime-in-ms@1[
+    Variable [ Name=$m1 ]
+  ]
+  =
+  Variable [ Name=$etm ]
+]
+um1
+OperatorExpr [
+  FunctionCall asterix.unix-time-from-datetime-in-ms@2[
+    Variable [ Name=$m2 ]
+    Variable [ Name=$tz ]
+  ]
+  =
+  Variable [ Name=$etm ]
+]
+um2
+]
+FROM [  FunctionCall asterix.range@2[
+    LiteralExpr [LONG] [0]
+    LiteralExpr [LONG] [2]
+  ]
+  AS Variable [ Name=$r ]
+]
+Let Variable [ Name=$ets ]
+  :=
+  LiteralExpr [LONG] [1631671261]
+Let Variable [ Name=$etm ]
+  :=
+  OperatorExpr [
+    Variable [ Name=$ets ]
+    *
+    LiteralExpr [LONG] [1000]
+  ]
+Let Variable [ Name=$tzs ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [UTC]
+    LiteralExpr [STRING] [America/Los_Angeles]
+    LiteralExpr [STRING] [Asia/Tokyo]
+  ]
+Let Variable [ Name=$tz ]
+  :=
+  IndexAccessor [
+    Variable [ Name=$tzs ]
+    Index:     Variable [ Name=$r ]
+  ]
+Let Variable [ Name=$s1 ]
+  :=
+  FunctionCall asterix.datetime-from-unix-time-in-secs@1[
+    Variable [ Name=$ets ]
+  ]
+Let Variable [ Name=$s2 ]
+  :=
+  FunctionCall asterix.datetime-from-unix-time-in-secs@2[
+    Variable [ Name=$ets ]
+    Variable [ Name=$tz ]
+  ]
+Let Variable [ Name=$m1 ]
+  :=
+  FunctionCall asterix.datetime-from-unix-time-in-ms@1[
+    Variable [ Name=$etm ]
+  ]
+Let Variable [ Name=$m2 ]
+  :=
+  FunctionCall asterix.datetime-from-unix-time-in-ms@2[
+    Variable [ Name=$etm ]
+    Variable [ Name=$tz ]
+  ]
+Orderby
+  Variable [ Name=$r ]
+  ASC
+

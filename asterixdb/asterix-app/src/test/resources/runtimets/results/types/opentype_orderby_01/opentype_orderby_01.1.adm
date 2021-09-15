@@ -48,7 +48,7 @@
 { "emp.id": 34, "emp.supvrid": "7" }
 { "emp.id": 39, "emp.supvrid": "8" }
 { "emp.id": 44, "emp.supvrid": "9" }
-{ "emp.id": 54, "emp.supvrid": time("12:54:54.039Z") }
+{ "emp.id": 54, "emp.supvrid": time("12:54:54.039") }
 { "emp.id": 55, "emp.supvrid": duration("P101YT12M") }
 { "emp.id": 52, "emp.supvrid": point("5.1E-10,-1000000.0") }
 { "emp.id": 51, "emp.supvrid": point("80.1,-1000000.0") }

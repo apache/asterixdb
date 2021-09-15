@@ -4,46 +4,51 @@ RecordConstructor [
   (
     LiteralExpr [STRING] [1970-01-01]
     :
-    FunctionCall asterix.day-of-week@1[
+    FunctionCall asterix.day-of-week@2[
       FunctionCall asterix.date@1[
         LiteralExpr [STRING] [1970-01-01]
       ]
+      LiteralExpr [STRING] [Mon]
     ]
   )
   (
     LiteralExpr [STRING] [2013-08-06]
     :
-    FunctionCall asterix.day-of-week@1[
+    FunctionCall asterix.day-of-week@2[
       FunctionCall asterix.date@1[
         LiteralExpr [STRING] [2013-08-06]
       ]
+      LiteralExpr [STRING] [MON]
     ]
   )
   (
     LiteralExpr [STRING] [-2013-08-06]
     :
-    FunctionCall asterix.day-of-week@1[
+    FunctionCall asterix.day-of-week@2[
       FunctionCall asterix.date@1[
         LiteralExpr [STRING] [-2013-08-06]
       ]
+      LiteralExpr [STRING] [Monday]
     ]
   )
   (
     LiteralExpr [STRING] [1913-08-06T15:53:28Z]
     :
-    FunctionCall asterix.day-of-week@1[
+    FunctionCall asterix.day-of-week@2[
       FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [1913-08-06T15:53:28Z]
       ]
+      LiteralExpr [STRING] [MONDAY]
     ]
   )
   (
     LiteralExpr [STRING] [-1913-08-10T15:53:28Z]
     :
-    FunctionCall asterix.day-of-week@1[
+    FunctionCall asterix.day-of-week@2[
       FunctionCall asterix.datetime@1[
         LiteralExpr [STRING] [-1913-08-10T15:53:28Z]
       ]
+      LiteralExpr [LONG] [2]
     ]
   )
   (

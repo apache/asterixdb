@@ -82,6 +82,7 @@ public class TimeFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
                     private ISerializerDeserializer<ATime> timeSerde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ATIME);
                     private AMutableTime aTime = new AMutableTime(0);
+                    private final GregorianCalendarSystem cal = GregorianCalendarSystem.getInstance();
 
                     @Override
                     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -100,10 +101,7 @@ public class TimeFromDatetimeDescriptor extends AbstractScalarFunctionDynamicDes
                                     ATypeTag.SERIALIZED_DATETIME_TYPE_TAG);
                         }
                         long datetimeChronon = ADateTimeSerializerDeserializer.getChronon(bytes, offset + 1);
-                        int timeChronon = (int) (datetimeChronon % GregorianCalendarSystem.CHRONON_OF_DAY);
-                        if (timeChronon < 0) {
-                            timeChronon += GregorianCalendarSystem.CHRONON_OF_DAY;
-                        }
+                        int timeChronon = cal.getTimeChronon(datetimeChronon);
                         aTime.setValue(timeChronon);
                         timeSerde.serialize(aTime, out);
                         result.set(resultStorage);

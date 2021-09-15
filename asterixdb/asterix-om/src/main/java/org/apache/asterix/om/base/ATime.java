@@ -90,8 +90,8 @@ public class ATime implements IAObject {
         StringBuilder sbder = new StringBuilder();
         sbder.append("time: { ");
         try {
-            GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTime, 0, sbder,
-                    GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND, true);
+            GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTime, sbder,
+                    GregorianCalendarSystem.Fields.HOUR, GregorianCalendarSystem.Fields.MILLISECOND);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -105,11 +105,13 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     private final long jobStartTime;
 
+    private final String jobStartTimeZoneId;
+
     private final long maxWarnings;
 
     public Joblet(NodeControllerService nodeController, DeploymentId deploymentId, JobId jobId,
             INCServiceContext serviceCtx, ActivityClusterGraph acg,
-            IJobletEventListenerFactory jobletEventListenerFactory, long jobStartTime) {
+            IJobletEventListenerFactory jobletEventListenerFactory, long jobStartTime, String jobStartTimeZoneId) {
         this.nodeController = nodeController;
         this.serviceCtx = serviceCtx;
         this.deploymentId = deploymentId;
@@ -136,6 +138,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         IGlobalJobDataFactory gjdf = acg.getGlobalJobDataFactory();
         globalJobData = gjdf != null ? gjdf.createGlobalJobData(this) : null;
         this.jobStartTime = jobStartTime;
+        this.jobStartTimeZoneId = jobStartTimeZoneId;
         this.maxWarnings = acg.getMaxWarnings();
     }
 
@@ -160,6 +163,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     @Override
     public long getJobStartTime() {
         return jobStartTime;
+    }
+
+    @Override
+    public String getJobStartTimeZoneId() {
+        return jobStartTimeZoneId;
     }
 
     public void addTask(Task task) {

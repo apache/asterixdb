@@ -146,7 +146,7 @@ public class ADateParserFactory implements IValueParserFactory {
             throw new HyracksDataException(dateErrorMessage);
         }
 
-        return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0, 0);
+        return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0);
     }
 
     /**
@@ -242,7 +242,7 @@ public class ADateParserFactory implements IValueParserFactory {
             throw new HyracksDataException(dateErrorMessage);
         }
 
-        return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0, 0);
+        return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0);
     }
 
     /**
@@ -338,7 +338,7 @@ public class ADateParserFactory implements IValueParserFactory {
             throw new HyracksDataException(dateErrorMessage);
         }
 
-        return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0, 0);
+        return GregorianCalendarSystem.getInstance().getChronon(year, month, day, 0, 0, 0, 0);
     }
 
     /**

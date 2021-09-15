@@ -39,7 +39,7 @@
           "year": get_year(date("2010-10-30")),
           "month": get_month(datetime("1987-11-19T23:49:23.938")),
           "day": get_day(date("2010-10-30")),
-          "hour": get_hour(time("12:23:34.930+07:00")),
+          "hour": get_hour(time("12:23:34.930")),
           "min": get_minute(duration("P3Y73M632DT49H743M3948.94S")),
           "second": get_second(datetime("1987-11-19T23:49:23.938")),
           "ms": get_millisecond(duration("P3Y73M632DT49H743M3948.94S"))
@@ -48,7 +48,7 @@
 
  * The expected result is:
 
-        { "year": 2010, "month": 11, "day": 30, "hour": 5, "min": 28, "second": 23, "ms": 94 }
+        { "year": 2010, "month": 11, "day": 30, "hour": 12, "min": 28, "second": 23, "ms": 94 }
 
 
 ### adjust_datetime_for_timezone ###
@@ -282,6 +282,15 @@
     * a `date` value from the datetime,
     * any other non-datetime input value will cause a type error.
 
+* Example:
+
+       get_date_from_datetime(datetime("2016-03-26T10:10:00"));
+
+* The expected result is:
+
+       date("2016-03-26")
+
+
 ### get_time_from_datetime ###
  * Syntax:
 
@@ -302,74 +311,88 @@
 
  * The expected result is:
 
-        time("10:10:00.000Z")
+        time("10:10:00.000")
 
 
 ### day_of_week ###
 * Syntax:
 
-        day_of_week(date)
+        day_of_week(date[, week_start_day])
 
 * Finds the day of the week for a given date (1_7)
 * Arguments:
-    * `date`: a `date` value (Can also be a `datetime`)
+    * `date`: a `date` or a `datetime` value
+    * `week_start_day`: (Optional) an integer or a string value (case-insensitive) specifying the day of the week
+      to start counting from: 1=Sun[day], 2=Mon[day], ..., 7=Sat[urday]. If omitted, the default is 1 (Sunday).
 * Return Value:
-    * an `tinyint` representing the day of the week (1_7),
+    * an `bigint` representing the day of the week (1_7),
     * `missing` if the argument is a `missing` value,
     * `null` if the argument is a `null` value,
     * any other non-date input value will cause a type error.
 
 * Example:
 
-        day_of_week(datetime("2012-12-30T12:12:12.039Z"));
-
+        {
+          "day_1": day_of_week(datetime("2012-12-30T12:12:12.039")),
+          "day_2": day_of_week(datetime("2012-12-30T12:12:12.039"), 2),
+          "day_3": day_of_week(datetime("2012-12-30T12:12:12.039"), "Monday"),
+          "day_4": day_of_week(datetime("2012-12-30T12:12:12.039"), "MON")
+        };
 
 * The expected result is:
 
-        7
+        { "day_1": 1, "day_2": 7, "day_3": 7, "day_4": 7 }
 
+### day_of_year ###
+* Syntax:
 
-### date_from_unix_time_in_days ###
- * Syntax:
+        day_of_year(date)
 
-        date_from_unix_time_in_days(numeric_value)
-
- * Gets a date representing the time after `numeric_value` days since 1970_01_01.
- * Arguments:
-    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint` value representing the number of days.
- * Return Value:
-    * a `date` value as the time after `numeric_value` days since 1970-01-01,
+* Finds the day of the year for a given date
+* Arguments:
+    * `date`: a `date` or a `datetime` value
+* Return Value:
+    * an `bigint` representing the day of the year,
     * `missing` if the argument is a `missing` value,
     * `null` if the argument is a `null` value,
-    * any other non-numeric input value will cause a type error.
+    * any other non-date input value will cause a type error.
 
-### datetime_from_unix_time_in_ms ###
- * Syntax:
+* Example:
 
-        datetime_from_unix_time_in_ms(numeric_value)
+        day_of_year(date("2011-12-31"));
 
- * Gets a datetime representing the time after `numeric_value` milliseconds since 1970_01_01T00:00:00Z.
- * Arguments:
-    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint` value representing the number of milliseconds.
- * Return Value:
-    * a `datetime` value as the time after `numeric_value` milliseconds since 1970-01-01T00:00:00Z,
+* The expected result is:
+
+        365
+
+### week_of_year ###
+* Syntax:
+
+        week_of_year(date[, week_start_day])
+
+* Finds the week of the year for a given date
+* Arguments:
+    * `date`: a `date` or a `datetime` value
+    * `week_start_day`: (Optional) an integer or a string value (case-insensitive) specifying the day of the week
+      to start counting from: 1=Sun[day], 2=Mon[day], ..., 7=Sat[urday]. If omitted, the default is 1 (Sunday).
+* Return Value:
+    * an `bigint` representing the week of the year,
     * `missing` if the argument is a `missing` value,
     * `null` if the argument is a `null` value,
-    * any other non-numeric input value will cause a type error.
+    * any other non-date input value will cause a type error.
 
-### datetime_from_unix_time_in_secs ###
- * Syntax:
+* Example:
 
-        datetime_from_unix_time_in_secs(numeric_value)
+        {
+          "week_1": week_of_year(date("2012-12-01")),
+          "week_2": week_of_year(date("2012-12-01"), 2),
+          "week_3": week_of_year(date("2012-12-01"), "Monday"),
+          "week_4": week_of_year(date("2012-12-01"), "MON")
+        };
 
- * Gets a datetime representing the time after `numeric_value` seconds since 1970_01_01T00:00:00Z.
- * Arguments:
-    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint` value representing the number of seconds.
- * Return Value:
-    * a `datetime` value as the time after `numeric_value` seconds since 1970_01_01T00:00:00Z,
-    * `missing` if the argument is a `missing` value,
-    * `null` if the argument is a `null` value,
-    * any other non-numeric input value will cause a type error.
+* The expected result is:
+
+        { "week_1": 48, "week_2": 49, "week_3": 49, "week_4": 49 }
 
 ### datetime_from_date_time ###
 * Syntax:
@@ -388,40 +411,111 @@ datetime_from_date_time(date,time)
         * the first argument is any other non-date value,
         * or, the second argument is any other non-time value.
 
-### time_from_unix_time_in_ms ###
+### date_from_unix_time_in_days ###
  * Syntax:
 
-        time_from_unix_time_in_ms(numeric_value)
+        date_from_unix_time_in_days(numeric_value)
 
- * Gets a time representing the time after `numeric_value` milliseconds since 00:00:00.000Z.
+ * Gets a date representing the time after `numeric_value` days since 1970-01-01.
+ * Arguments:
+    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint` value representing the number of days.
+ * Return Value:
+    * a `date` value as the time after `numeric_value` days since 1970-01-01,
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value,
+    * any other non-numeric input value will cause a type error.
+
+* Example:
+
+        date_from_unix_time_in_days(15800);
+
+* The expected result is:
+
+       date("2013-04-05")
+
+
+### datetime_from_unix_time_in_ms ###
+ * Syntax:
+
+        datetime_from_unix_time_in_ms(numeric_value[, string])
+
+ * Gets a datetime representing the time after `numeric_value` milliseconds since 1970-01-01T00:00:00Z.
  * Arguments:
     * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint` value representing the number of milliseconds.
+    * `string` : (Optional) a string representing the target timezone as defined by IANA Time Zone Database.
+      If omitted, the default is UTC.
  * Return Value:
-    * a `time` value as the time after `numeric_value` milliseconds since 00:00:00.000Z,
+    * a `datetime` value as the time in the target time zone after `numeric_value` milliseconds since 1970-01-01T00:00:00Z,
     * `missing` if the argument is a `missing` value,
     * `null` if the argument is a `null` value,
     * any other non-numeric input value will cause a type error.
 
  * Example:
 
+         {
+           "datetime_1": datetime_from_unix_time_in_ms(1365139700000),
+           "datetime_2": datetime_from_unix_time_in_ms(1365139700000, "America/Los_Angeles")
+         };
+
+* The expected result is:
+
+       { "datetime_1": datetime("2013-04-05T05:28:20.000"), "datetime_2": datetime("2013-04-04T22:28:20.000") }
+
+### datetime_from_unix_time_in_secs ###
+ * Syntax:
+
+        datetime_from_unix_time_in_secs(numeric_value[, string])
+
+ * Gets a datetime representing the time after `numeric_value` seconds since 1970-01-01T00:00:00Z.
+ * Arguments:
+    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint` value representing the number of seconds.
+    * `string` : (Optional) a string representing the target timezone as defined by IANA Time Zone Database.
+      If omitted, the default is UTC.
+ * Return Value:
+    * a `datetime` value as the time in the target time zone after `numeric_value` seconds since 1970-01-01T00:00:00Z,
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value,
+    * any other non-numeric input value will cause a type error.
+
+* Example:
+
         {
-          "date": date_from_unix_time_in_days(15800),
-          "datetime": datetime_from_unix_time_in_ms(1365139700000),
-          "time": time_from_unix_time_in_ms(3748)
+          "datetime_1": datetime_from_unix_time_in_secs(1365139700),
+          "datetime_2": datetime_from_unix_time_in_secs(1365139700, "America/Los_Angeles")
         };
 
+* The expected result is:
+
+       { "datetime_1": datetime("2013-04-05T05:28:20.000"), "datetime_2": datetime("2013-04-04T22:28:20.000") }
+
+### time_from_unix_time_in_ms ###
+ * Syntax:
+
+        time_from_unix_time_in_ms(numeric_value)
+
+ * Gets a time representing the time after `numeric_value` milliseconds since 00:00:00.000.
+ * Arguments:
+    * `numeric_value`: a `tinyint`/`smallint`/`integer`/`bigint` value representing the number of milliseconds.
+ * Return Value:
+    * a `time` value as the time after `numeric_value` milliseconds since 00:00:00.000,
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value,
+    * any other non-numeric input value will cause a type error.
+
+ * Example:
+
+        time_from_unix_time_in_ms(3748);
 
  * The expected result is:
 
-        { "date": date("2013-04-05"), "datetime": datetime("2013-04-05T05:28:20.000Z"), "time": time("00:00:03.748Z") }
-
+        time("00:00:03.748")
 
 ### unix_time_from_date_in_days ###
  * Syntax:
 
         unix_time_from_date_in_days(date_value)
 
- * Gets an integer value representing the number of days since 1970_01_01 for `date_value`.
+ * Gets an integer value representing the number of days since 1970-01-01 for `date_value`.
  * Arguments:
     * `date_value`: a `date` value.
  * Return Value:
@@ -430,43 +524,76 @@ datetime_from_date_time(date,time)
     * `null` if the argument is a `null` value,
     * any other non-date input value will cause a type error.
 
+* Example:
+
+       unix_time_from_date_in_days(date("2013-04-05"));
+
+* The expected result is:
+
+       15800
 
 ### unix_time_from_datetime_in_ms ###
  * Syntax:
 
-        unix_time_from_datetime_in_ms(datetime_value)
+        unix_time_from_datetime_in_ms(datetime_value[, string])
 
- * Gets an integer value representing the time in milliseconds since 1970_01_01T00:00:00Z for `datetime_value`.
+ * Gets an integer value representing the time in milliseconds since 1970-01-01T00:00:00Z for `datetime_value`.
  * Arguments:
     * `datetime_value` : a `datetime` value.
+    * `string` : (Optional) a string representing the source timezone as defined by IANA Time Zone Database.
+      If omitted, the default is UTC.
+
  * Return Value:
     * a `bigint` value representing the number of milliseconds,
     * `missing` if the argument is a `missing` value,
     * `null` if the argument is a `null` value,
     * any other non-datetime input value will cause a type error.
 
+* Example:
+
+       {
+         "unix_time_1": unix_time_from_datetime_in_ms(datetime("2013-04-05T05:28:20.000")),
+         "unix_time_2": unix_time_from_datetime_in_ms(datetime("2013-04-04T22:28:20.000"), "America/Los_Angeles")
+       };
+
+* The expected result is:
+
+       { "unix_time_1": 1365139700000, "unix_time_2": 1365139700000 }
+
 
 ### unix_time_from_datetime_in_secs ###
  * Syntax:
 
-        unix_time_from_datetime_in_secs(datetime_value)
+        unix_time_from_datetime_in_secs(datetime_value[, string])
 
- * Gets an integer value representing the time in seconds since 1970_01_01T00:00:00Z for `datetime_value`.
+ * Gets an integer value representing the time in seconds since 1970-01-01T00:00:00Z for `datetime_value`.
  * Arguments:
     * `datetime_value` : a `datetime` value.
+   * `string` : (Optional) a string representing the source timezone as defined by IANA Time Zone Database.
+     If omitted, the default is UTC.
  * Return Value:
     * a `bigint` value representing the number of seconds,
     * `missing` if the argument is a `missing` value,
     * `null` if the argument is a `null` value,
     * any other non-datetime input value will cause a type error.
 
+* Example:
+
+       {
+         "unix_time_1": unix_time_from_datetime_in_secs(datetime("2013-04-05T05:28:20.000")),
+         "unix_time_2": unix_time_from_datetime_in_secs(datetime("2013-04-04T22:28:20.000"), "America/Los_Angeles")
+       };
+
+* The expected result is:
+
+       { "unix_time_1": 1365139700, "unix_time_2": 1365139700 }
 
 ### unix_time_from_time_in_ms ###
  * Syntax:
 
         unix_time_from_time_in_ms(time_value)
 
- * Gets an integer value representing the time the milliseconds since 00:00:00.000Z for `time_value`.
+ * Gets an integer value representing the time the milliseconds since 00:00:00.000 for `time_value`.
  * Arguments:
     * `time_value` : a `time` value.
  * Return Value:
@@ -477,17 +604,11 @@ datetime_from_date_time(date,time)
 
  * Example:
 
-        {
-          "date": date_from_unix_time_in_days(15800),
-          "datetime": datetime_from_unix_time_in_ms(1365139700000),
-          "time": time_from_unix_time_in_ms(3748)
-        }
-
+        unix_time_from_time_in_ms(time("00:00:03.748"));
 
  * The expected result is:
 
-        { "date": date("2013-04-05"), "datetime": datetime("2013-04-05T05:28:20.000Z"), "time": time("00:00:03.748Z") }
-
+        3748
 
 ### parse_date/parse_time/parse_datetime ###
 * Syntax:
@@ -523,7 +644,7 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
 
 * The expected result is:
 
-        time("00:30:30.000Z")
+        time("00:30:30.000")
 
 
 ### print_date/print_time/print_datetime ###
@@ -556,7 +677,7 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
 
 * Example:
 
-        print_time(time("00:30:30.000Z"),"m:s");
+        print_time(time("00:30:30.000"),"m:s");
 
 * The expected result is:
 
@@ -588,7 +709,7 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
 
  * The expected result is:
 
-        { "start": date("1984_01_01"), "end": date("1985_01_01") }
+        { "start": date("1984-01-01"), "end": date("1985-01-01") }
 
 
 ### get_interval_start_date/get_interval_start_datetimeget_interval_start_time, get_interval_end_date/get_interval_end_datetime/get_interval_end_time ###
@@ -622,10 +743,10 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
         {
           "start1": date("1984-01-01"),
           "end1": date("1985-01-01"),
-          "start2": datetime("1984-01-01T08:30:00.000Z"),
-          "end2": datetime("1985-01-01T09:30:00.000Z"),
-          "start3": time("08:30:00.000Z"),
-          "end3": time("09:30:00.000Z")
+          "start2": datetime("1984-01-01T08:30:00.000"),
+          "end2": datetime("1985-01-01T09:30:00.000"),
+          "start3": time("08:30:00.000"),
+          "end3": time("09:30:00.000")
         }
 
 
@@ -647,7 +768,8 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
 
  * Example:
 
-        { "overlap1": get_overlapping_interval(interval(time("11:23:39"), time("18:27:19")), interval(time("12:23:39"), time("23:18:00"))),
+        {
+          "overlap1": get_overlapping_interval(interval(time("11:23:39"), time("18:27:19")), interval(time("12:23:39"), time("23:18:00"))),
           "overlap2": get_overlapping_interval(interval(time("12:23:39"), time("18:27:19")), interval(time("07:19:39"), time("09:18:00"))),
           "overlap3": get_overlapping_interval(interval(date("1980-11-30"), date("1999-09-09")), interval(date("2013-01-01"), date("2014-01-01"))),
           "overlap4": get_overlapping_interval(interval(date("1980-11-30"), date("2099-09-09")), interval(date("2013-01-01"), date("2014-01-01"))),
@@ -657,11 +779,12 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
 
  * The expected result is:
 
-        { "overlap1": interval(time("12:23:39.000Z"), time("18:27:19.000Z")),
+        {
+          "overlap1": interval(time("12:23:39.000"), time("18:27:19.000")),
           "overlap2": null,
           "overlap3": null,
-          "overlap4": interval(date("2013-01-01"), date("2014_01_01")),
-          "overlap5": interval(datetime("1989-03-04T12:23:39.000Z"), datetime("2000-10-30T18:27:19.000Z")),
+          "overlap4": interval(date("2013-01-01"), date("2014-01-01")),
+          "overlap5": interval(datetime("1989-03-04T12:23:39.000"), datetime("2000-10-30T18:27:19.000")),
           "overlap6": null
         }
 
@@ -680,32 +803,32 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
         * date +|_ year_month_duration
         * date +|_ day_time_duration
         * time +|_ day_time_duration
-  * Return Value:
-    * a `interval` value representing the bin containing the `time_to_bin` value. Note that the internal type of
-      this interval value should be the same as the `time_to_bin` type,
-    * `missing` if any argument is a `missing` value,
-    * `null` if any argument is a `null` value but no argument is a `missing` value,
-    * a type error will be raised if:
-        * the first argument or the second argument is any other non-date/non-time/non-datetime value,
-        * or, the second argument is any other non-year_month_duration/non-day_time_duration value.
+ * Return Value:
+   * a `interval` value representing the bin containing the `time_to_bin` value. Note that the internal type of
+     this interval value should be the same as the `time_to_bin` type,
+   * `missing` if any argument is a `missing` value,
+   * `null` if any argument is a `null` value but no argument is a `missing` value,
+   * a type error will be raised if:
+       * the first argument or the second argument is any other non-date/non-time/non-datetime value,
+       * or, the second argument is any other non-year_month_duration/non-day_time_duration value.
 
-  * Example:
+ * Example:
 
-        {
-          "bin1": interval_bin(date("2010-10-30"), date("1990-01-01"), year_month_duration("P1Y")),
-          "bin2": interval_bin(datetime("1987-11-19T23:49:23.938"), datetime("1990-01-01T00:00:00.000Z"), year_month_duration("P6M")),
-          "bin3": interval_bin(time("12:23:34.930+07:00"), time("00:00:00"), day_time_duration("PT1M")),
-          "bin4": interval_bin(datetime("1987-11-19T23:49:23.938"), datetime("2013-01-01T00:00:00.000"), day_time_duration("PT24H"))
-        };
+       {
+         "bin1": interval_bin(date("2010-10-30"), date("1990-01-01"), year_month_duration("P1Y")),
+         "bin2": interval_bin(datetime("1987-11-19T23:49:23.938"), datetime("1990-01-01T00:00:00.000"), year_month_duration("P6M")),
+         "bin3": interval_bin(time("12:23:34.930+07:00"), time("00:00:00"), day_time_duration("PT1M")),
+         "bin4": interval_bin(datetime("1987-11-19T23:49:23.938"), datetime("2013-01-01T00:00:00.000"), day_time_duration("PT24H"))
+       };
 
-   * The expected result is:
+ * The expected result is:
 
-        {
-          "bin1": interval(date("2010-01-01"),date("2011-01-01")),
-          "bin2": interval(datetime("1987-07-01T00:00:00.000Z"), datetime("1988-01-01T00:00:00.000Z")),
-          "bin3": interval(time("05:23:00.000Z"), time("05:24:00.000Z")),
-          "bin4": interval(datetime("1987-11-19T00:00:00.000Z"), datetime("1987-11-20T00:00:00.000Z"))
-        }
+      {
+         "bin1": interval(date("2010-01-01"), date("2011-01-01")),
+         "bin2": interval(datetime("1987-07-01T00:00:00.000"), datetime("1988-01-01T00:00:00.000")),
+         "bin3": interval(time("12:23:00.000"), time("12:24:00.000")),
+         "bin4": interval(datetime("1987-11-19T00:00:00.000"), datetime("1987-11-20T00:00:00.000"))
+      }
 
 
 ### interval_start_from_date/time/datetime ###
@@ -733,12 +856,12 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
           "interval3": interval_start_from_datetime("1999-09-09T09:09:09.999", duration("P2M30D"))
         };
 
- * The expectecd result is:
+ * The expected result is:
 
         {
           "interval1": interval(date("1984-01-01"), date("1985-01-01")),
-          "interval2": interval(time("02:23:28.394Z"), time("05:47:28.394Z")),
-          "interval3": interval(datetime("1999-09-09T09:09:09.999Z"), datetime("1999-12-09T09:09:09.999Z"))
+          "interval2": interval(time("02:23:28.394"), time("05:47:28.394")),
+          "interval3": interval(datetime("1999-09-09T09:09:09.999"), datetime("1999-12-09T09:09:09.999"))
         }
 
 
@@ -746,20 +869,20 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
   * Return Value:
     * a `interval` value representing the bin containing the `time_to_bin` value. Note that the internal type of this interval value should be the same as the `time_to_bin` type.
 
- * Syntax:
+  * Syntax:
 
-        overlap_bins(interval, time_bin_anchor, duration_bin_size)
+         overlap_bins(interval, time_bin_anchor, duration_bin_size)
 
- * Returns an ordered list of `interval` values representing each bin that is overlapping the `interval`.
- * Arguments:
-    * `interval`: an `interval` value
-    * `time_bin_anchor`: a date/time/datetime value representing an anchor of a bin starts. The type of this argument should be the same as the first `time_to_bin` argument.
-    * `duration_bin_size`: the duration value representing the size of the bin, in the type of year_month_duration or day_time_duration. The type of this duration should be compatible with the type of `time_to_bin`, so that the arithmetic operation between `time_to_bin` and `duration_bin_size` is well_defined. Currently AsterixDB supports the following arithmetic operations:
-        * datetime +|_ year_month_duration
-        * datetime +|_ day_time_duration
-        * date +|_ year_month_duration
-        * date +|_ day_time_duration
-        * time +|_ day_time_duration
+  * Returns an ordered list of `interval` values representing each bin that is overlapping the `interval`.
+  * Arguments:
+     * `interval`: an `interval` value
+     * `time_bin_anchor`: a date/time/datetime value representing an anchor of a bin starts. The type of this argument should be the same as the first `time_to_bin` argument.
+     * `duration_bin_size`: the duration value representing the size of the bin, in the type of year_month_duration or day_time_duration. The type of this duration should be compatible with the type of `time_to_bin`, so that the arithmetic operation between `time_to_bin` and `duration_bin_size` is well_defined. Currently AsterixDB supports the following arithmetic operations:
+         * datetime +|_ year_month_duration
+         * datetime +|_ day_time_duration
+         * date +|_ year_month_duration
+         * date +|_ day_time_duration
+         * time +|_ day_time_duration
   * Return Value:
     * a ordered list of `interval` values representing each bin that is overlapping the `interval`.
       Note that the internal type as `time_to_bin` and `duration_bin_size`.
@@ -779,25 +902,25 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
                                       datetime("1900-01-01T00:00:00.000"), year_month_duration("P100Y"))
         };
 
-   * The expected result is:
+  * The expected result is:
 
-        {
-          "timebins": [
-                        interval(time("17:00:00.000Z"), time("17:30:00.000Z")),
-                        interval(time("17:30:00.000Z"), time("18:00:00.000Z")),
-                        interval(time("18:00:00.000Z"), time("18:30:00.000Z")),
-                        interval(time("18:30:00.000Z"), time("19:00:00.000Z"))
-                      ],
-          "datebins": [
-                        interval(date("1980-01-01"), date("1990-01-01")),
-                        interval(date("1990-01-01"), date("2000-01-01")),
-                        interval(date("2000-01-01"), date("2010-01-01")),
-                        interval(date("2010-01-01"), date("2020-01-01"))
-                      ],
-          "datetimebins": [
-                            interval(datetime("1800-01-01T00:00:00.000Z"), datetime("1900-01-01T00:00:00.000Z")),
-                            interval(datetime("1900-01-01T00:00:00.000Z"), datetime("2000-01-01T00:00:00.000Z")),
-                            interval(datetime("2000-01-01T00:00:00.000Z"), datetime("2100-01-01T00:00:00.000Z"))
-                           ]
-        };
-
+       {
+         "timebins": [
+                       interval(time("17:00:00.000"), time("17:30:00.000")),
+                       interval(time("17:30:00.000"), time("18:00:00.000")),
+                       interval(time("18:00:00.000"), time("18:30:00.000")),
+                       interval(time("18:30:00.000"), time("19:00:00.000"))
+                     ],
+         "datebins": [
+                       interval(date("1980-01-01"), date("1990-01-01")),
+                       interval(date("1990-01-01"), date("2000-01-01")),
+                       interval(date("2000-01-01"), date("2010-01-01")),
+                       interval(date("2010-01-01"), date("2020-01-01"))
+                     ],
+         "datetimebins":
+                     [
+                       interval(datetime("1800-01-01T00:00:00.000"), datetime("1900-01-01T00:00:00.000")),
+                       interval(datetime("1900-01-01T00:00:00.000"), datetime("2000-01-01T00:00:00.000")),
+                       interval(datetime("2000-01-01T00:00:00.000"), datetime("2100-01-01T00:00:00.000"))
+                     ]
+       };

@@ -21,6 +21,7 @@ package org.apache.hyracks.control.cc.job;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -305,6 +306,7 @@ public class JobManager implements IJobManager {
     // Executes a job when the required capacity for the job is met.
     private void executeJob(JobRun run) throws HyracksException {
         run.setStartTime(System.currentTimeMillis());
+        run.setStartTimeZoneId(ZoneId.systemDefault().getId());
         JobId jobId = run.getJobId();
         activeRunMap.put(jobId, run);
         run.setStatus(JobStatus.RUNNING, null);

@@ -1,0 +1,173 @@
+Query:
+SELECT [
+Variable [ Name=$r ]
+r
+FunctionCall asterix.sql-min@1[
+  Variable [ Name=$dows ]
+]
+mn
+FunctionCall asterix.sql-max@1[
+  Variable [ Name=$dows ]
+]
+mx
+]
+FROM [  FunctionCall asterix.range@2[
+    LiteralExpr [LONG] [1]
+    LiteralExpr [LONG] [7]
+  ]
+  AS Variable [ Name=$r ]
+]
+Let Variable [ Name=$d ]
+  :=
+  FunctionCall asterix.date@1[
+    LiteralExpr [STRING] [2021-09-05]
+  ]
+Let Variable [ Name=$dt ]
+  :=
+  FunctionCall asterix.datetime-from-date-time@2[
+    Variable [ Name=$d ]
+    FunctionCall asterix.time@1[
+      LiteralExpr [STRING] [01:01:01]
+    ]
+  ]
+Let Variable [ Name=$days ]
+  :=
+  OrderedListConstructor [
+    LiteralExpr [STRING] [sunday]
+    LiteralExpr [STRING] [monday]
+    LiteralExpr [STRING] [tuesday]
+    LiteralExpr [STRING] [wednesday]
+    LiteralExpr [STRING] [thursday]
+    LiteralExpr [STRING] [friday]
+    LiteralExpr [STRING] [saturday]
+  ]
+Let Variable [ Name=$dows ]
+  :=
+  OrderedListConstructor [
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$d ]
+      FunctionCall asterix.int8@1[
+        Variable [ Name=$r ]
+      ]
+    ]
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$dt ]
+      FunctionCall asterix.int16@1[
+        Variable [ Name=$r ]
+      ]
+    ]
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$d ]
+      FunctionCall asterix.int32@1[
+        Variable [ Name=$r ]
+      ]
+    ]
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$dt ]
+      FunctionCall asterix.int64@1[
+        Variable [ Name=$r ]
+      ]
+    ]
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$d ]
+      FunctionCall asterix.float@1[
+        Variable [ Name=$r ]
+      ]
+    ]
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$dt ]
+      FunctionCall asterix.double@1[
+        Variable [ Name=$r ]
+      ]
+    ]
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$d ]
+      IndexAccessor [
+        Variable [ Name=$days ]
+        Index:         OperatorExpr [
+          Variable [ Name=$r ]
+          -
+          LiteralExpr [LONG] [1]
+        ]
+      ]
+    ]
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$dt ]
+      FunctionCall asterix.uppercase@1[
+        IndexAccessor [
+          Variable [ Name=$days ]
+          Index:           OperatorExpr [
+            Variable [ Name=$r ]
+            -
+            LiteralExpr [LONG] [1]
+          ]
+        ]
+      ]
+    ]
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$d ]
+      FunctionCall asterix.lowercase@1[
+        IndexAccessor [
+          Variable [ Name=$days ]
+          Index:           OperatorExpr [
+            Variable [ Name=$r ]
+            -
+            LiteralExpr [LONG] [1]
+          ]
+        ]
+      ]
+    ]
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$dt ]
+      FunctionCall asterix.substring@3[
+        IndexAccessor [
+          Variable [ Name=$days ]
+          Index:           OperatorExpr [
+            Variable [ Name=$r ]
+            -
+            LiteralExpr [LONG] [1]
+          ]
+        ]
+        LiteralExpr [LONG] [0]
+        LiteralExpr [LONG] [3]
+      ]
+    ]
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$d ]
+      FunctionCall asterix.uppercase@1[
+        FunctionCall asterix.substring@3[
+          IndexAccessor [
+            Variable [ Name=$days ]
+            Index:             OperatorExpr [
+              Variable [ Name=$r ]
+              -
+              LiteralExpr [LONG] [1]
+            ]
+          ]
+          LiteralExpr [LONG] [0]
+          LiteralExpr [LONG] [3]
+        ]
+      ]
+    ]
+    FunctionCall asterix.day-of-week@2[
+      Variable [ Name=$dt ]
+      FunctionCall asterix.lowercase@1[
+        FunctionCall asterix.substring@3[
+          IndexAccessor [
+            Variable [ Name=$days ]
+            Index:             OperatorExpr [
+              Variable [ Name=$r ]
+              -
+              LiteralExpr [LONG] [1]
+            ]
+          ]
+          LiteralExpr [LONG] [0]
+          LiteralExpr [LONG] [3]
+        ]
+      ]
+    ]
+  ]
+Orderby
+  Variable [ Name=$r ]
+  ASC
+
