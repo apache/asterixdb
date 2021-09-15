@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.app.replication.message;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -73,7 +74,8 @@ public class RegistrationTasksResponseMessage extends CcIdentifiedMessage
             }
             NcLocalCounters localCounter = success ? NcLocalCounters.collect(getCcId(),
                     (NodeControllerService) appCtx.getServiceContext().getControllerService()) : null;
-            Set<Integer> nodeActivePartitions = appCtx.getReplicaManager().getPartitions();
+            // wrap the returned partitions in a hash set to make it serializable
+            Set<Integer> nodeActivePartitions = new HashSet<>(appCtx.getReplicaManager().getPartitions());
             NCLifecycleTaskReportMessage result =
                     new NCLifecycleTaskReportMessage(nodeId, success, localCounter, nodeActivePartitions);
             result.setException(exception);

@@ -24,6 +24,8 @@ import static org.apache.asterix.common.replication.IPartitionReplica.PartitionR
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
@@ -57,6 +59,7 @@ public class PartitionReplica implements IPartitionReplica {
     private ByteBuffer reusbaleBuf;
     private PartitionReplicaStatus status = DISCONNECTED;
     private ISocketChannel sc;
+    private Future<?> syncFuture;
 
     public PartitionReplica(ReplicaIdentifier id, INcApplicationContext appCtx) {
         this.id = id;
@@ -87,7 +90,8 @@ public class PartitionReplica implements IPartitionReplica {
             return;
         }
         setStatus(CATCHING_UP);
-        appCtx.getThreadExecutor().execute(() -> {
+        ExecutorService threadExecutor = (ExecutorService) appCtx.getThreadExecutor();
+        syncFuture = threadExecutor.submit(() -> {
             try {
                 new ReplicaSynchronizer(appCtx, this).sync(register, deltaRecovery);
                 setStatus(IN_SYNC);
@@ -98,6 +102,13 @@ public class PartitionReplica implements IPartitionReplica {
                 close();
             }
         });
+    }
+
+    public synchronized void abort() {
+        if (syncFuture != null) {
+            syncFuture.cancel(true);
+        }
+        syncFuture = null;
     }
 
     public synchronized ISocketChannel getChannel() {

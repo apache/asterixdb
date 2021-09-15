@@ -46,7 +46,7 @@ public class CheckpointManager extends AbstractCheckpointManager {
     private static final long NO_SECURED_LSN = -1L;
     private final long datasetCheckpointIntervalNanos;
     private final Map<TxnId, Long> securedLSNs;
-    private boolean suspended = false;
+    private int suspendCount = 0;
 
     public CheckpointManager(ITransactionSubsystem txnSubsystem, CheckpointProperties checkpointProperties) {
         super(txnSubsystem, checkpointProperties);
@@ -84,7 +84,7 @@ public class CheckpointManager extends AbstractCheckpointManager {
         }
         final long minFirstLSN = txnSubsystem.getRecoveryManager().getMinFirstLSN();
         boolean checkpointSucceeded = minFirstLSN >= checkpointTargetLSN;
-        if (!checkpointSucceeded && !suspended) {
+        if (!checkpointSucceeded && !isSuspended()) {
             // Flush datasets with indexes behind target checkpoint LSN
             final IDatasetLifecycleManager dlcm = txnSubsystem.getApplicationContext().getDatasetLifecycleManager();
             dlcm.asyncFlushMatchingIndexes(newLaggingDatasetPredicate(checkpointTargetLSN));
@@ -109,21 +109,25 @@ public class CheckpointManager extends AbstractCheckpointManager {
 
     @Override
     public synchronized void checkpointIdleDatasets() throws HyracksDataException {
-        if (suspended) {
+        if (isSuspended()) {
             return;
         }
         final IDatasetLifecycleManager dlcm = txnSubsystem.getApplicationContext().getDatasetLifecycleManager();
         dlcm.asyncFlushMatchingIndexes(newIdleDatasetPredicate());
     }
 
+    private synchronized boolean isSuspended() {
+        return suspendCount != 0;
+    }
+
     @Override
     public synchronized void suspend() {
-        suspended = true;
+        suspendCount++;
     }
 
     @Override
     public synchronized void resume() {
-        suspended = false;
+        suspendCount--;
     }
 
     private synchronized long getMinSecuredLSN() {

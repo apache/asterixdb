@@ -54,17 +54,18 @@ public class ReplicaManager implements IReplicaManager {
     /**
      * the partitions to which the current node is master
      */
-    private final Set<Integer> partitions = new HashSet<>();
+    private final Map<Integer, Object> partitions = new HashMap<>();
     /**
      * current replicas
      */
     private final Map<ReplicaIdentifier, PartitionReplica> replicas = new HashMap<>();
-    private final Object replicaSyncLock = new Object();
     private final Set<Integer> nodeOwnedPartitions = new HashSet<>();
 
     public ReplicaManager(INcApplicationContext appCtx, Set<Integer> partitions) {
         this.appCtx = appCtx;
-        this.partitions.addAll(partitions);
+        for (Integer partition : partitions) {
+            this.partitions.put(partition, new Object());
+        }
         setNodeOwnedPartitions(appCtx);
     }
 
@@ -77,7 +78,7 @@ public class ReplicaManager implements IReplicaManager {
             LOGGER.warn("Ignoring request to add replica. Node is not ACTIVE yet. Current status: {}", nodeStatus);
             return;
         }
-        if (!partitions.contains(id.getPartition())) {
+        if (!partitions.containsKey(id.getPartition())) {
             throw new IllegalStateException(
                     "This node is not the current master of partition(" + id.getPartition() + ")");
         }
@@ -96,7 +97,6 @@ public class ReplicaManager implements IReplicaManager {
         }
         PartitionReplica replica = replicas.remove(id);
         appCtx.getReplicationManager().unregister(replica);
-
     }
 
     @Override
@@ -112,18 +112,20 @@ public class ReplicaManager implements IReplicaManager {
 
     @Override
     public synchronized Set<Integer> getPartitions() {
-        return Collections.unmodifiableSet(partitions);
+        return Collections.unmodifiableSet(partitions.keySet());
     }
 
     @Override
     public synchronized void setActivePartitions(Set<Integer> activePartitions) {
         partitions.clear();
-        partitions.addAll(activePartitions);
+        for (Integer partition : activePartitions) {
+            partitions.put(partition, new Object());
+        }
     }
 
     @Override
     public synchronized void promote(int partition) throws HyracksDataException {
-        if (partitions.contains(partition)) {
+        if (partitions.containsKey(partition)) {
             return;
         }
         LOGGER.warn("promoting partition {}", partition);
@@ -132,12 +134,12 @@ public class ReplicaManager implements IReplicaManager {
         localResourceRepository.cleanup(partition);
         final IRecoveryManager recoveryManager = appCtx.getTransactionSubsystem().getRecoveryManager();
         recoveryManager.replayReplicaPartitionLogs(Stream.of(partition).collect(Collectors.toSet()), true);
-        partitions.add(partition);
+        partitions.put(partition, new Object());
     }
 
     @Override
     public synchronized void release(int partition) throws HyracksDataException {
-        if (!partitions.contains(partition)) {
+        if (!partitions.containsKey(partition)) {
             return;
         }
         closePartitionResources(partition);
@@ -149,8 +151,12 @@ public class ReplicaManager implements IReplicaManager {
     }
 
     @Override
-    public Object getReplicaSyncLock() {
-        return replicaSyncLock;
+    public synchronized Object getPartitionSyncLock(int partition) {
+        Object syncLock = partitions.get(partition);
+        if (syncLock == null) {
+            throw new IllegalStateException("partition " + partition + " is not active on this node");
+        }
+        return syncLock;
     }
 
     @Override

@@ -44,7 +44,8 @@ public class ReplicaSynchronizer {
     }
 
     public void sync(boolean register, boolean deltaRecovery) throws IOException {
-        synchronized (appCtx.getReplicaManager().getReplicaSyncLock()) {
+        Object partitionLock = appCtx.getReplicaManager().getPartitionSyncLock(replica.getIdentifier().getPartition());
+        synchronized (partitionLock) {
             final ICheckpointManager checkpointManager = appCtx.getTransactionSubsystem().getCheckpointManager();
             try {
                 // suspend checkpointing datasets to prevent async IO operations while sync'ing replicas
