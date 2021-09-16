@@ -61,6 +61,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy.TypeCastingMathFunctionType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
+import org.apache.asterix.optimizer.rules.util.EquivalenceClassUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -105,6 +106,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
+import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -744,7 +747,7 @@ public class AccessMethodUtils {
             OptimizableOperatorSubTree probeSubTree, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy,
             ILogicalOperator indexSearchOp, LogicalVariable newNullPlaceHolderVar,
-            Mutable<ILogicalExpression> conditionRef, Dataset dataset) throws AlgebricksException {
+            Mutable<ILogicalExpression> conditionRef, Dataset dataset, Index chosenIndex) throws AlgebricksException {
         boolean isIndexOnlyPlan = analysisCtx.getIndexOnlyPlanInfo().getFirst();
         List<LogicalVariable> probePKVars = null;
         ILogicalOperator finalIndexSearchOp = indexSearchOp;
@@ -773,6 +776,25 @@ public class AccessMethodUtils {
                 if (probeSubTree.hasDataSource()) {
                     probePKVars = new ArrayList<>();
                     probeSubTree.getPrimaryKeyVars(null, probePKVars);
+                }
+                if (chosenIndex.getIndexType() == IndexType.ARRAY) {
+                    ILogicalOperator probeRoot = probeSubTree.getRoot();
+                    Triple<Set<LogicalVariable>, ILogicalOperator, FunctionalDependency> primaryKeyOpAndVars =
+                            EquivalenceClassUtils.findOrCreatePrimaryKeyOpAndVariables(probeRoot, false, context);
+                    probePKVars = new ArrayList<>(primaryKeyOpAndVars.first);
+                    if (primaryKeyOpAndVars.third != null) {
+                        context.addPrimaryKey(primaryKeyOpAndVars.third);
+                    }
+                    if (primaryKeyOpAndVars.second != null) {
+                        // Update all previous usages of the probe subtree root to include this new ID op.
+                        Mutable<ILogicalOperator> assignIdOpRef = new MutableObject<>(primaryKeyOpAndVars.second);
+                        assignIdOpRef.getValue().getInputs().clear();
+                        assignIdOpRef.getValue().getInputs().add(new MutableObject<>(probeRoot));
+                        probeSubTree.setRoot(assignIdOpRef.getValue());
+                        probeSubTree.setRootRef(assignIdOpRef);
+                        context.computeAndSetTypeEnvironmentForOperator(assignIdOpRef.getValue());
+                        finalIndexSearchOp = assignIdOpRef.getValue();
+                    }
                 }
                 if (probePKVars == null || probePKVars.isEmpty()) {
                     return false;
@@ -1640,20 +1662,24 @@ public class AccessMethodUtils {
             // If we have a join + an array index, we need add the join source PK(s) to the DISTINCT + ORDER.
             List<LogicalVariable> joinPKVars;
             if (isArrayIndex && probeSubTree != null) {
-                joinPKVars = new ArrayList<>();
-                List<LogicalVariable> liveVars = new ArrayList<>();
-                VariableUtilities.getSubplanLocalLiveVariables(probeSubTree.getRoot(), liveVars);
-
-                for (LogicalVariable liveVar : liveVars) {
-                    List<LogicalVariable> keyVars = context.findPrimaryKey(liveVar);
-                    if (keyVars != null) {
-                        for (LogicalVariable keyVar : keyVars) {
-                            if (!joinPKVars.contains(keyVar)) {
-                                joinPKVars.add(keyVar);
-                            }
-                        }
-                    }
+                ILogicalOperator probeRoot = probeSubTree.getRoot();
+                Triple<Set<LogicalVariable>, ILogicalOperator, FunctionalDependency> primaryKeyOpAndVars =
+                        EquivalenceClassUtils.findOrCreatePrimaryKeyOpAndVariables(probeRoot, false, context);
+                joinPKVars = new ArrayList<>(primaryKeyOpAndVars.first);
+                if (primaryKeyOpAndVars.third != null) {
+                    context.addPrimaryKey(primaryKeyOpAndVars.third);
                 }
+                if (primaryKeyOpAndVars.second != null) {
+                    // Update all previous usages of the probe subtree root to include this new ID op.
+                    Mutable<ILogicalOperator> assignIdOpRef = new MutableObject<>(primaryKeyOpAndVars.second);
+                    OperatorManipulationUtil.substituteOpInInput(topOpRef.getValue(), probeRoot, assignIdOpRef);
+                    OperatorManipulationUtil.substituteOpInInput(inputOp, probeRoot, assignIdOpRef);
+                    probeSubTree.setRoot(primaryKeyOpAndVars.second);
+                    probeSubTree.setRootRef(assignIdOpRef);
+                    context.computeAndSetTypeEnvironmentForOperator(primaryKeyOpAndVars.second);
+                    context.computeAndSetTypeEnvironmentForOperator(topOpRef.getValue());
+                }
+
             } else {
                 joinPKVars = Collections.emptyList();
             }

@@ -8384,6 +8384,11 @@
           <output-dir compare="Text">with-open-index</output-dir>
         </compilation-unit>
       </test-case>
+      <test-case FilePath="array-index/join-unnest-queries">
+        <compilation-unit name="loj-subquery">
+          <output-dir compare="Text">loj-subquery</output-dir>
+        </compilation-unit>
+      </test-case>
     </test-group>
     <test-group name="array-index/select-unnest-queries">
       <test-case FilePath="array-index/select-unnest-queries/closed">

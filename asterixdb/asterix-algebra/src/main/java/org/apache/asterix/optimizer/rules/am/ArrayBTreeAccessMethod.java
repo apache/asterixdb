@@ -147,7 +147,7 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
 
         return AccessMethodUtils.finalizeJoinPlanTransformation(afterJoinRefs, joinRef, indexSubTree, probeSubTree,
                 analysisCtx, context, isLeftOuterJoin, isLeftOuterJoinWithSpecialGroupBy, indexSearchOp,
-                newNullPlaceHolderVar, conditionRef, dataset);
+                newNullPlaceHolderVar, conditionRef, dataset, chosenIndex);
     }
 
     @Override

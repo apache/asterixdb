@@ -366,7 +366,7 @@ public class RTreeAccessMethod implements IAccessMethod {
 
         return AccessMethodUtils.finalizeJoinPlanTransformation(afterJoinRefs, joinRef, indexSubTree, probeSubTree,
                 analysisCtx, context, isLeftOuterJoin, isLeftOuterJoinWithSpecialGroupBy, indexSearchOp,
-                newNullPlaceHolderVar, conditionRef, dataset);
+                newNullPlaceHolderVar, conditionRef, dataset, chosenIndex);
     }
 
     @Override
