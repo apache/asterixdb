@@ -381,7 +381,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                 analyzedAMs = new TreeMap<>();
             }
 
-            if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()) {
+            if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()
+                    && SelectFromSubplanRewrite.isApplicableForRewriteCursory(metadataProvider, selectOp)) {
                 // If there exists a composite atomic-array index, our conjuncts will be split across multiple
                 // SELECTs. This rewrite is to be used **solely** for the purpose of changing a DATA-SCAN into a
                 // non-index-only plan branch. No nodes introduced from this rewrite will be used beyond this point.

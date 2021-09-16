@@ -302,7 +302,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                 analyzedAMs = new HashMap<>();
             }
 
-            if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()) {
+            if (continueCheck && context.getPhysicalOptimizationConfig().isArrayIndexEnabled()
+                    && JoinFromSubplanRewrite.isApplicableForRewriteCursory(metadataProvider, joinOp)) {
                 // If there exists a SUBPLAN in our plan, and we are conditioning on a variable, attempt to rewrite
                 // this subplan to allow an array-index AM to be introduced. If successful, this rewrite will transform
                 // into an index-nested-loop-join. This rewrite is to be used for pushing the UNNESTs and ASSIGNs from

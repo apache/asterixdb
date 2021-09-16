@@ -23,14 +23,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.AInt16;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -52,6 +56,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
@@ -67,6 +72,26 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
     private Set<FunctionIdentifier> optimizableFunctions;
     private IOptimizationContext context;
     private SourceLocation sourceLocation;
+
+    public static boolean isApplicableForRewriteCursory(MetadataProvider metadataProvider, ILogicalOperator workingOp)
+            throws AlgebricksException {
+        boolean isApplicableForRewrite = false;
+        if (workingOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+            DataSourceScanOperator dataSourceScanOperator = (DataSourceScanOperator) workingOp;
+            Pair<DataverseName, String> datasetInfo = AnalysisUtil.getDatasetInfo(dataSourceScanOperator);
+            DataverseName dataverseName = datasetInfo.first;
+            String datasetName = datasetInfo.second;
+            if (metadataProvider.getDatasetIndexes(dataverseName, datasetName).stream()
+                    .anyMatch(i -> i.getIndexType() == DatasetConfig.IndexType.ARRAY)) {
+                return true;
+            }
+        }
+
+        for (Mutable<ILogicalOperator> inputOp : workingOp.getInputs()) {
+            isApplicableForRewrite |= isApplicableForRewriteCursory(metadataProvider, inputOp.getValue());
+        }
+        return isApplicableForRewrite;
+    }
 
     protected void reset(SourceLocation sourceLocation, IOptimizationContext context,
             Set<FunctionIdentifier> optimizableFunctions) {

@@ -16,8 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-SET `compiler.arrayindex` "true";
-
 DROP DATAVERSE TestYelp IF EXISTS;
 CREATE DATAVERSE TestYelp;
 USE TestYelp;
