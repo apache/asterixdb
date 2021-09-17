@@ -83,6 +83,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="temporal">
+      <compilation-unit name="quarter_of_year_01">
+        <output-dir compare="Text">quarter_of_year_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="temporal">
       <compilation-unit name="interval_bin">
         <output-dir compare="Text">interval_bin</output-dir>
       </compilation-unit>

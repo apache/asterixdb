@@ -1471,6 +1471,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day-of-week", 2);
     public static final FunctionIdentifier DAY_OF_YEAR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day-of-year", 1);
+    public static final FunctionIdentifier QUARTER_OF_YEAR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "quarter-of-year", 1);
     public static final FunctionIdentifier WEEK_OF_YEAR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "week-of-year", 1);
     public static final FunctionIdentifier WEEK_OF_YEAR2 =
@@ -2383,6 +2385,7 @@ public class BuiltinFunctions {
         addFunction(DAY_OF_WEEK, AInt64TypeComputer.INSTANCE, true);
         addFunction(DAY_OF_WEEK2, AInt64TypeComputer.INSTANCE_NULLABLE, true);
         addFunction(DAY_OF_YEAR, AInt64TypeComputer.INSTANCE, true);
+        addFunction(QUARTER_OF_YEAR, AInt64TypeComputer.INSTANCE, true);
         addFunction(WEEK_OF_YEAR, AInt64TypeComputer.INSTANCE, true);
         addFunction(WEEK_OF_YEAR2, AInt64TypeComputer.INSTANCE_NULLABLE, true);
         addFunction(PARSE_DATE, ADateTypeComputer.INSTANCE, true);

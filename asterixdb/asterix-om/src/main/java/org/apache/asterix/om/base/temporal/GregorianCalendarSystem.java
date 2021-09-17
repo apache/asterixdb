@@ -654,6 +654,14 @@ public class GregorianCalendarSystem implements ICalendarSystem {
     }
 
     /**
+     * Get the quarter of the year for the given chronon time and the year.
+     */
+    public int getQuarterOfYear(long millis, int year) {
+        int month = getMonthOfYear(millis, year);
+        return (month - 1) / 3 + 1;
+    }
+
+    /**
      * Get the hour of the day for the given chronon time.
      *
      * @param millis

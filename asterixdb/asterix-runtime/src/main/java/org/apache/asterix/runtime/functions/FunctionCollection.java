@@ -566,6 +566,7 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.ParseTimeDescrip
 import org.apache.asterix.runtime.evaluators.functions.temporal.PrintDateDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.PrintDateTimeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.PrintTimeDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.QuarterOfYearDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.TimeFromDatetimeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.TimeFromUnixTimeInMsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDateInDaysDescriptor;
@@ -1188,6 +1189,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(DayOfWeekDescriptor.FACTORY);
         fc.add(DayOfWeek2Descriptor.FACTORY);
         fc.add(DayOfYearDescriptor.FACTORY);
+        fc.add(QuarterOfYearDescriptor.FACTORY);
         fc.add(WeekOfYearDescriptor.FACTORY);
         fc.add(WeekOfYear2Descriptor.FACTORY);
         fc.add(ParseDateDescriptor.FACTORY);

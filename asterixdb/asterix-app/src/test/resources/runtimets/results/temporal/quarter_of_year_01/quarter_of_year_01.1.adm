@@ -1,0 +1,12 @@
+{ "month": 1, "qoy1": 1, "qoy2": 1, "cnt": 31 }
+{ "month": 2, "qoy1": 1, "qoy2": 1, "cnt": 29 }
+{ "month": 3, "qoy1": 1, "qoy2": 1, "cnt": 31 }
+{ "month": 4, "qoy1": 2, "qoy2": 2, "cnt": 30 }
+{ "month": 5, "qoy1": 2, "qoy2": 2, "cnt": 31 }
+{ "month": 6, "qoy1": 2, "qoy2": 2, "cnt": 30 }
+{ "month": 7, "qoy1": 3, "qoy2": 3, "cnt": 31 }
+{ "month": 8, "qoy1": 3, "qoy2": 3, "cnt": 31 }
+{ "month": 9, "qoy1": 3, "qoy2": 3, "cnt": 30 }
+{ "month": 10, "qoy1": 4, "qoy2": 4, "cnt": 31 }
+{ "month": 11, "qoy1": 4, "qoy2": 4, "cnt": 30 }
+{ "month": 12, "qoy1": 4, "qoy2": 4, "cnt": 31 }

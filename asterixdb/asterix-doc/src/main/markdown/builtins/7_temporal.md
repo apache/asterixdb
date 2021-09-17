@@ -394,6 +394,28 @@
 
         { "week_1": 48, "week_2": 49, "week_3": 49, "week_4": 49 }
 
+### quarter_of_year ###
+* Syntax:
+
+        quarter_of_year(date)
+
+* Finds the quarter of the year for a given date
+* Arguments:
+    * `date`: a `date` or a `datetime` value
+* Return Value:
+    * an `bigint` representing the quarter of the year (1_4),
+    * `missing` if the argument is a `missing` value,
+    * `null` if the argument is a `null` value,
+    * any other non-date input value will cause a type error.
+
+* Example:
+
+        quarter_of_year(date("2011-12-31"));
+
+* The expected result is:
+
+        4
+
 ### datetime_from_date_time ###
 * Syntax:
 
