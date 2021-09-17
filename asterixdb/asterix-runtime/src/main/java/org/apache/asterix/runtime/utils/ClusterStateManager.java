@@ -478,6 +478,11 @@ public class ClusterStateManager implements IClusterStateManager {
         return Collections.unmodifiableMap(clusterPartitions);
     }
 
+    @Override
+    public synchronized boolean nodesFailed(Set<String> nodeIds) {
+        return nodeIds.stream().anyMatch(failedNodes::contains);
+    }
+
     private void updateClusterCounters(String nodeId, NcLocalCounters localCounters) {
         final IResourceIdManager resourceIdManager = appCtx.getResourceIdManager();
         resourceIdManager.report(nodeId, localCounters.getMaxResourceId());

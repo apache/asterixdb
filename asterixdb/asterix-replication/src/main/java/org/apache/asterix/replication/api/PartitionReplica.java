@@ -160,6 +160,7 @@ public class PartitionReplica implements IPartitionReplica {
         ObjectNode json = OBJECT_MAPPER.createObjectNode();
         json.put("id", id.toString());
         json.put("status", status.name());
+        json.put("syncProgress", syncProgress);
         return json;
     }
 

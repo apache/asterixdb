@@ -272,4 +272,12 @@ public interface IClusterStateManager {
      * @return the cluster partitions map
      */
     Map<Integer, ClusterPartition> getClusterPartitions();
+
+    /**
+     * Returns true if any of the nodes in {@code nodesId} is currently inactive
+     *
+     * @param nodeIds
+     * @return true if any of the nodes is currently inactive, otherwise false
+     */
+    boolean nodesFailed(Set<String> nodeIds);
 }
