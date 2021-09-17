@@ -837,8 +837,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             IOptimizationContext context, List<Index> datasetIndexes, int optFuncExprIndex,
             AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
         boolean doesArrayIndexQualify = context.getPhysicalOptimizationConfig().isArrayIndexEnabled()
-                && datasetIndexes.stream().anyMatch(i -> i.getIndexType() == IndexType.ARRAY)
-                && assignOrUnnestIndex == subTree.getAssignsAndUnnests().size() - 1;
+                && datasetIndexes.stream().anyMatch(i -> i.getIndexType() == IndexType.ARRAY);
         List<LogicalVariable> varList = assignOp.getVariables();
         MutableInt fieldSource = new MutableInt(0);
         for (int varIndex = 0; varIndex < varList.size(); varIndex++) {

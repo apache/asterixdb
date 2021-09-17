@@ -203,6 +203,7 @@ public class TypeUtil {
             while (!typeStack.isEmpty()) {
                 Triple<IAType, String, Boolean> typeFromStack = typeStack.pop();
                 IAType typeIntermediate = unnestArrayType(typeFromStack.first, typeFromStack.third);
+                typeIntermediate = TypeComputeUtils.getActualType(typeIntermediate);
                 ARecordType recordType = (ARecordType) typeIntermediate;
                 IAType[] fieldTypes = recordType.getFieldTypes().clone();
                 fieldTypes[recordType.getFieldIndex(typeFromStack.second)] = resultant;

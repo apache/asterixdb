@@ -19,7 +19,9 @@
 
 package org.apache.asterix.optimizer.rules.am;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -38,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
@@ -96,6 +99,29 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
             probeSubTree = leftSubTree;
         } else {
             return false;
+        }
+
+        // TODO (GLENN): There is a bug with cross-products originating from the probe. Disable this case for now.
+        Deque<ILogicalOperator> opStack = new ArrayDeque<>();
+        List<ILogicalOperator> visited = new ArrayList<>();
+        opStack.add(probeSubTree.getRoot());
+        while (!opStack.isEmpty()) {
+            ILogicalOperator workingOp = opStack.pop();
+            if (!visited.contains(workingOp)) {
+                if (workingOp.getOperatorTag() == LogicalOperatorTag.INNERJOIN
+                        || workingOp.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
+                    AbstractBinaryJoinOperator joinOperator = (AbstractBinaryJoinOperator) workingOp;
+                    if (joinOperator.getCondition().getValue().equals(ConstantExpression.TRUE)) {
+                        return false;
+                    }
+                }
+                visited.add(workingOp);
+            }
+            for (Mutable<ILogicalOperator> opRef : workingOp.getInputs()) {
+                if (!visited.contains(opRef.getValue())) {
+                    opStack.push(opRef.getValue());
+                }
+            }
         }
 
         LogicalVariable newNullPlaceHolderVar = null;

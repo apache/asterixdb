@@ -22,11 +22,13 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
-import java.util.Stack;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -571,8 +573,8 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
     }
 
     class LoadingJobBuilder implements ArrayIndexUtil.ActionCounterCommandExecutor {
-        private final Stack<RecordDescriptor> recDescStack = evalFactoryAndRecDescStackBuilder.buildRecDescStack();
-        private final Stack<List<IScalarEvaluatorFactory>> sefStack =
+        private final Deque<RecordDescriptor> recDescStack = evalFactoryAndRecDescStackBuilder.buildRecDescStack();
+        private final Deque<List<IScalarEvaluatorFactory>> sefStack =
                 evalFactoryAndRecDescStackBuilder.buildEvalFactoryStack();
 
         private final JobSpecification spec;
@@ -595,9 +597,9 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
 
         @Override
         public void executeActionOnFirstArrayStep() throws AlgebricksException {
+            IScalarEvaluatorFactory sef = sefStack.pop().get(0);
             nextRecDesc = recDescStack.pop();
-            targetOpRef
-                    .setValue(createUnnestOp(spec, workingRecDesc.getFieldCount(), sefStack.pop().get(0), nextRecDesc));
+            targetOpRef.setValue(createUnnestOp(spec, workingRecDesc.getFieldCount(), sef, nextRecDesc));
             connectAndMoveToNextOp();
         }
 
@@ -611,45 +613,57 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
                     workingRecDesc.getFieldCount(), sefStack.pop(), nextRecDesc));
             connectAndMoveToNextOp();
 
+            IScalarEvaluatorFactory sef = sefStack.pop().get(0);
             nextRecDesc = recDescStack.pop();
-            targetOpRef
-                    .setValue(createUnnestOp(spec, workingRecDesc.getFieldCount(), sefStack.pop().get(0), nextRecDesc));
+            targetOpRef.setValue(createUnnestOp(spec, workingRecDesc.getFieldCount(), sef, nextRecDesc));
             connectAndMoveToNextOp();
         }
 
         @Override
-        public void executeActionOnFinalArrayStep(int numberOfActionsAlreadyPerformed) {
+        public void executeActionOnFinalArrayStep(int numberOfActionsAlreadyPerformed) throws AlgebricksException {
+            nextRecDesc = recDescStack.pop();
             targetOpRef.setValue(createFinalAssignOp(spec, numberOfActionsAlreadyPerformed < 2,
-                    workingRecDesc.getFieldCount(), sefStack.pop(), recDescStack.pop()));
+                    workingRecDesc.getFieldCount(), sefStack.pop(), nextRecDesc));
             connectAndMoveToNextOp();
         }
     }
 
     class EvalFactoryAndRecDescStackBuilder {
-        private final Stack<IScalarEvaluatorFactory> unnestEvalFactories = new Stack<>();
-        private final List<IScalarEvaluatorFactory> atomicSKEvalFactories = new ArrayList<>();
-        private final List<IScalarEvaluatorFactory> finalArraySKEvalFactories = new ArrayList<>();
+        class EvalFactoryAndPosition {
+            final IScalarEvaluatorFactory scalarEvaluatorFactory;
+            final int position;
+
+            EvalFactoryAndPosition(IScalarEvaluatorFactory scalarEvaluatorFactory) {
+                this.scalarEvaluatorFactory = scalarEvaluatorFactory;
+                this.position = workingPosition++;
+            }
+        }
+
+        private final Deque<EvalFactoryAndPosition> unnestEvalFactories = new ArrayDeque<>();
+        private final List<EvalFactoryAndPosition> atomicSKEvalFactories = new ArrayList<>();
+        private final List<EvalFactoryAndPosition> finalArraySKEvalFactories = new ArrayList<>();
         private final Queue<IAType> unnestEvalTypes = new LinkedList<>();
         private final List<IAType> atomicSKEvalTypes = new ArrayList<>();
-        private IScalarEvaluatorFactory filterEvalFactory = null;
+        private EvalFactoryAndPosition filterEvalFactory = null;
         private IAType filterEvalType = null;
+        private int workingPosition = 0;
 
         public void addAtomicSK(IScalarEvaluatorFactory sef, IAType type) {
-            atomicSKEvalFactories.add(sef);
+            atomicSKEvalFactories.add(new EvalFactoryAndPosition(sef));
             atomicSKEvalTypes.add(type);
         }
 
         public void addFilter(IScalarEvaluatorFactory sef, IAType type) {
-            filterEvalFactory = sef;
+            filterEvalFactory = new EvalFactoryAndPosition(sef);
             filterEvalType = type;
         }
 
         public void addFinalArraySK(IScalarEvaluatorFactory sef) {
-            finalArraySKEvalFactories.add(sef);
+            finalArraySKEvalFactories.add(new EvalFactoryAndPosition(sef));
         }
 
         public void addUnnest(IScalarEvaluatorFactory sef, IAType type) {
-            unnestEvalFactories.push(sef);
+            unnestEvalFactories.push(new EvalFactoryAndPosition(sef));
             unnestEvalTypes.add(type);
         }
 
@@ -669,8 +683,8 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
          *  [ final ASSIGN SEFs -- array SKs (record accessors) ---------------- ]
          * </pre>
          */
-        public Stack<List<IScalarEvaluatorFactory>> buildEvalFactoryStack() {
-            Stack<List<IScalarEvaluatorFactory>> resultant = new Stack<>();
+        public Deque<List<IScalarEvaluatorFactory>> buildEvalFactoryStack() {
+            Deque<List<EvalFactoryAndPosition>> resultant = new ArrayDeque<>();
             resultant.push(finalArraySKEvalFactories);
             int initialUnnestEvalFactorySize = unnestEvalFactories.size();
             for (int i = 0; i < initialUnnestEvalFactorySize - 1; i++) {
@@ -682,12 +696,22 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
                     resultant.push(new ArrayList<>());
                 }
             }
+
+            // Sort the SEFs according to the index order.
             resultant.peek().addAll(atomicSKEvalFactories);
+            List<EvalFactoryAndPosition> reorderedSEFs = new ArrayList<>(Objects.requireNonNull(resultant.peek()));
+            reorderedSEFs.sort(Comparator.comparingInt(s -> s.position));
+            resultant.pop();
+            resultant.push(reorderedSEFs);
+
+            // Append our filter eval factory last.
             if (filterEvalFactory != null) {
                 resultant.peek().add(filterEvalFactory);
             }
             resultant.push(Collections.singletonList(unnestEvalFactories.pop()));
-            return resultant;
+            return resultant.stream()
+                    .map(l -> l.stream().map(s -> s.scalarEvaluatorFactory).collect(Collectors.toList()))
+                    .collect(Collectors.toCollection(ArrayDeque::new));
         }
 
         /**
@@ -704,9 +728,9 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
          *  [ secondary record descriptor ------------------------------------- ]
          * </pre>
          */
-        public Stack<RecordDescriptor> buildRecDescStack() throws AlgebricksException {
+        public Deque<RecordDescriptor> buildRecDescStack() throws AlgebricksException {
             int initialUnnestEvalTypesSize = unnestEvalTypes.size();
-            Deque<RecordDescriptor> resultantAsDeque = new ArrayDeque<>();
+            Deque<RecordDescriptor> resultant = new ArrayDeque<>();
             RecordDescriptor recDescBeforeFirstUnnest = primaryRecDesc;
             if (dataset.hasMetaPart()) {
                 ISerializerDeserializer[] fields = new ISerializerDeserializer[primaryRecDesc.getFieldCount() - 1];
@@ -717,15 +741,13 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
                 }
                 recDescBeforeFirstUnnest = new RecordDescriptor(fields, typeTraits);
             }
-            resultantAsDeque.addFirst(recDescBeforeFirstUnnest);
-            resultantAsDeque.addFirst(createUnnestRecDesc(recDescBeforeFirstUnnest, unnestEvalTypes.remove()));
+            resultant.addLast(recDescBeforeFirstUnnest);
+            resultant.addLast(createUnnestRecDesc(recDescBeforeFirstUnnest, unnestEvalTypes.remove()));
             for (int i = 0; i < initialUnnestEvalTypesSize - 1; i++) {
-                resultantAsDeque.addFirst(createAssignRecDesc(resultantAsDeque.getFirst(), i == 0));
-                resultantAsDeque.addFirst(createUnnestRecDesc(resultantAsDeque.getFirst(), unnestEvalTypes.remove()));
+                resultant.addLast(createAssignRecDesc(resultant.getLast(), i == 0));
+                resultant.addLast(createUnnestRecDesc(resultant.getLast(), unnestEvalTypes.remove()));
             }
-            resultantAsDeque.addFirst(secondaryRecDesc);
-            Stack<RecordDescriptor> resultant = new Stack<>();
-            resultant.addAll(resultantAsDeque);
+            resultant.addLast(secondaryRecDesc);
             return resultant;
         }
 

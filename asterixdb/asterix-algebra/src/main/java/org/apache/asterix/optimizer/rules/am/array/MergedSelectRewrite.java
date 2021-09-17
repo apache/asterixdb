@@ -64,7 +64,10 @@ public class MergedSelectRewrite implements IIntroduceAccessMethodRuleLocalRewri
 
         // Explore all operators below this SELECT until the first data source operator.
         selectRootStack.push(originalOperator);
-        collectSelectConjuncts(originalOperator.getInputs().get(0));
+        if (!collectSelectConjuncts(originalOperator.getInputs().get(0))) {
+            // We encountered a JOIN operator. Exit early.
+            return null;
+        }
 
         if (thisSelectConjuncts.size() == selectConjuncts.size()) {
             // No other SELECTs were found. Return null to indicate there were no SELECTs to merge.
@@ -98,7 +101,7 @@ public class MergedSelectRewrite implements IIntroduceAccessMethodRuleLocalRewri
         return selectRootStack.pop();
     }
 
-    private void collectSelectConjuncts(Mutable<ILogicalOperator> workingOp) {
+    private boolean collectSelectConjuncts(Mutable<ILogicalOperator> workingOp) {
         switch (workingOp.getValue().getOperatorTag()) {
             case DATASOURCESCAN:
             case EMPTYTUPLESOURCE:
@@ -110,7 +113,7 @@ public class MergedSelectRewrite implements IIntroduceAccessMethodRuleLocalRewri
             case INNERJOIN:
             case LEFTOUTERJOIN:
                 // We are not interested in exploring joins in this class.
-                break;
+                return false;
 
             case SELECT:
                 SelectOperator selectOperator = (SelectOperator) workingOp.getValue();
@@ -123,9 +126,12 @@ public class MergedSelectRewrite implements IIntroduceAccessMethodRuleLocalRewri
             default:
                 // Explore the rest of our plan in our DFS fashion.
                 for (Mutable<ILogicalOperator> input : workingOp.getValue().getInputs()) {
-                    collectSelectConjuncts(input);
+                    if (!collectSelectConjuncts(input)) {
+                        return false;
+                    }
                 }
         }
+        return true;
     }
 
     private void removeSelectsFromPlan(ILogicalOperator parentOp, Mutable<ILogicalOperator> workingOp) {

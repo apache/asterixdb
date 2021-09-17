@@ -102,7 +102,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
 
     protected LogicalVariable getConditioningVariable(ILogicalExpression condition) {
         List<Mutable<ILogicalExpression>> selectConjuncts = new ArrayList<>();
-        if (condition.splitIntoConjuncts(selectConjuncts)) {
+        if (splitIntoConjuncts(condition, selectConjuncts)) {
             for (Mutable<ILogicalExpression> conjunct : selectConjuncts) {
                 if (conjunct.getValue().getExpressionTag().equals(LogicalExpressionTag.VARIABLE)) {
                     return ((VariableReferenceExpression) conjunct.getValue()).getVariableReference();
@@ -132,7 +132,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
         // Ensure that this SELECT represents a predicate for an existential query, and is a query we can optimize.
         ILogicalExpression normalizedSelectCondition =
                 normalizeCondition(workingSubplanRootAsAggregate, optimizableSelect.getCondition().getValue());
-        normalizedSelectCondition = keepOptimizableFunctions(normalizedSelectCondition);
+        normalizedSelectCondition = keepOptimizableFunctions(normalizedSelectCondition).cloneExpression();
 
         // Create a copy of this SELECT, and set this to our rewrite root.
         SelectOperator rewriteRootSelect = new SelectOperator(new MutableObject<>(normalizedSelectCondition),
@@ -226,9 +226,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
 
         // Sanity check: we should always be working with an UNNEST at this stage.
         if (bottommostNewUnnest == null) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR,
-                    workingSubplanRootAsAggregate.getSourceLocation(),
-                    "UNNEST expected in nested plan branch, but not found.");
+            return null;
         }
 
         // If we are working with strict universal quantification, then we must also check whether we have a
@@ -255,7 +253,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
         combinedCondition.setSourceLocation(selectOp.getSourceLocation());
 
         List<Mutable<ILogicalExpression>> conjuncts = new ArrayList<>();
-        if (selectOp.getCondition().getValue().splitIntoConjuncts(conjuncts)) {
+        if (splitIntoConjuncts(selectOp.getCondition().getValue(), conjuncts)) {
             combinedCondition.getArguments().addAll(conjuncts);
             conjuncts.clear();
         } else {
@@ -266,7 +264,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
             case LEFTOUTERJOIN:
             case INNERJOIN:
                 AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) auxOp;
-                if (joinOp.getCondition().getValue().splitIntoConjuncts(conjuncts)) {
+                if (splitIntoConjuncts(joinOp.getCondition().getValue(), conjuncts)) {
                     combinedCondition.getArguments().addAll(conjuncts);
                 } else {
                     combinedCondition.getArguments().add(joinOp.getCondition());
@@ -275,7 +273,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
 
             case SELECT:
                 SelectOperator selectOp2 = (SelectOperator) auxOp;
-                if (selectOp2.getCondition().getValue().splitIntoConjuncts(conjuncts)) {
+                if (splitIntoConjuncts(selectOp2.getCondition().getValue(), conjuncts)) {
                     combinedCondition.getArguments().addAll(conjuncts);
                 } else {
                     combinedCondition.getArguments().add(selectOp2.getCondition());
@@ -343,7 +341,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
         if (cond.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
             AbstractFunctionCallExpression func = (AbstractFunctionCallExpression) cond;
             List<Mutable<ILogicalExpression>> conjuncts = new ArrayList<>();
-            if (func.splitIntoConjuncts(conjuncts)) {
+            if (splitIntoConjuncts(func, conjuncts)) {
                 List<Mutable<ILogicalExpression>> optimizableConjuncts = new ArrayList<>();
                 for (Mutable<ILogicalExpression> conjunct : conjuncts) {
                     if (conjunct.getValue().getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)
@@ -415,7 +413,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
         ILogicalExpression selectCondExpr =
                 normalizeCondition(null, ((SelectOperator) subplanInput).getCondition().getValue());
         List<Mutable<ILogicalExpression>> conjunctsFromSelect = new ArrayList<>();
-        if (selectCondExpr.splitIntoConjuncts(conjunctsFromSelect)) {
+        if (splitIntoConjuncts(selectCondExpr, conjunctsFromSelect)) {
             // We have a collection of conjuncts. Analyze each conjunct w/ a function.
             for (Mutable<ILogicalExpression> mutableConjunct : conjunctsFromSelect) {
                 ILogicalExpression workingConjunct = mutableConjunct.getValue();
@@ -499,5 +497,21 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
             }
             return ifMissingOrNullFunction.getArguments().get(0).getValue().cloneExpression();
         }
+    }
+
+    private boolean splitIntoConjuncts(ILogicalExpression expression, List<Mutable<ILogicalExpression>> conjuncts) {
+        List<Mutable<ILogicalExpression>> exprConjuncts = new ArrayList<>();
+        if (expression.splitIntoConjuncts(exprConjuncts)) {
+            for (Mutable<ILogicalExpression> conjunct : exprConjuncts) {
+                List<Mutable<ILogicalExpression>> innerExprConjuncts = new ArrayList<>();
+                if (splitIntoConjuncts(conjunct.getValue(), innerExprConjuncts)) {
+                    conjuncts.addAll(innerExprConjuncts);
+                } else {
+                    conjuncts.add(conjunct);
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }

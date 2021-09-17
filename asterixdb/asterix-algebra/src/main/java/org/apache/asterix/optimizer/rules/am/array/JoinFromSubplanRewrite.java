@@ -181,8 +181,9 @@ public class JoinFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite<A
         // Traverse our subplan and generate a SELECT branch if applicable.
         SubplanOperator subplanOperator =
                 (SubplanOperator) joinContext.selectAfterSubplan.getInputs().get(0).getValue();
+        List<Mutable<ILogicalOperator>> originalOpInputs = originalOperator.getInputs();
         Pair<SelectOperator, UnnestOperator> traversalOutput =
-                traverseSubplanBranch(subplanOperator, originalOperator.getInputs().get(1).getValue(), true);
+                traverseSubplanBranch(subplanOperator, originalOpInputs.get(1).getValue(), true);
         if (traversalOutput == null) {
             return null;
         }
@@ -190,12 +191,11 @@ public class JoinFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite<A
         // We have successfully generated a SELECT branch. Create the new JOIN operator.
         ScalarFunctionCallExpression newCond = coalesceConditions(traversalOutput.first, joinContext.originalJoinRoot);
         joinContext.newJoinRoot = new InnerJoinOperator(new MutableObject<>(newCond));
-        joinContext.newJoinRoot.getInputs().add(0, originalOperator.getInputs().get(0));
+        joinContext.newJoinRoot.getInputs().add(0, new MutableObject<>(originalOpInputs.get(0).getValue()));
 
         // Connect the join branches together.
         traversalOutput.second.getInputs().clear();
-        traversalOutput.second.getInputs().add(originalOperator.getInputs().get(1));
-        context.computeAndSetTypeEnvironmentForOperator(traversalOutput.second);
+        traversalOutput.second.getInputs().add(new MutableObject<>(originalOpInputs.get(1).getValue()));
         joinContext.newJoinRoot.getInputs().add(1, traversalOutput.first.getInputs().get(0));
         context.computeAndSetTypeEnvironmentForOperator(joinContext.newJoinRoot);
 

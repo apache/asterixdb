@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.array.IIntroduceAccessMethodRuleLocalRewrite;
 import org.apache.asterix.optimizer.rules.am.array.JoinFromSubplanRewrite;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -105,7 +104,9 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         registerAccessMethod(BTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(RTreeAccessMethod.INSTANCE, accessMethods);
         registerAccessMethod(InvertedIndexAccessMethod.INSTANCE, accessMethods);
-        JoinFromSubplanRewrite.addOptimizableFunction(BuiltinFunctions.EQ);
+        for (Pair<FunctionIdentifier, Boolean> optFunc : BTreeAccessMethod.INSTANCE.getOptimizableFunctions()) {
+            JoinFromSubplanRewrite.addOptimizableFunction(optFunc.first);
+        }
     }
 
     /**
