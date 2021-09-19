@@ -357,11 +357,13 @@ public class ExternalDataConstants {
          * Asterix Configuration Keys
          */
         public static final String CONNECTION_STRING_FIELD_NAME = "connectionString";
+        public static final String MANAGED_IDENTITY_ID_FIELD_NAME = "managedIdentityId";
         public static final String TENANT_ID_FIELD_NAME = "tenantId";
         public static final String CLIENT_ID_FIELD_NAME = "clientId";
         public static final String CLIENT_SECRET_FIELD_NAME = "clientSecret";
         public static final String CLIENT_CERTIFICATE_FIELD_NAME = "clientCertificate";
         public static final String CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME = "clientCertificatePassword";
+        public static final String ENDPOINT_FIELD_NAME = "endpoint";
 
         /*
          * Hadoop-Azure

@@ -1054,6 +1054,10 @@
         <classifier>tests</classifier>
         <exclusions>
           <exclusion>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
           </exclusion>

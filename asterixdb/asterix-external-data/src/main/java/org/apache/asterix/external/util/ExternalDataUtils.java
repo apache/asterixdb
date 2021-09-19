@@ -22,6 +22,7 @@ import static com.google.cloud.storage.Storage.BlobListOption;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME;
+import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_REQUIRED;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_OR_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME;
@@ -42,9 +43,11 @@ import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.C
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_SECRET_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ENDPOINT_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_BLOB_PROTOCOL;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_FS_ACCOUNT_KEY;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_FS_SAS;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.MANAGED_IDENTITY_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.SAS_KEY_PREFIX;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.TENANT_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.GCS.JSON_CREDENTIALS_FIELD_NAME;
@@ -121,6 +124,7 @@ import org.apache.hyracks.util.StorageUtil;
 
 import com.azure.identity.ClientCertificateCredentialBuilder;
 import com.azure.identity.ClientSecretCredentialBuilder;
+import com.azure.identity.ManagedIdentityCredentialBuilder;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
@@ -1236,11 +1240,13 @@ public class ExternalDataUtils {
         public static BlobServiceClient buildAzureClient(Map<String, String> configuration)
                 throws CompilationException {
             String connectionString = configuration.get(CONNECTION_STRING_FIELD_NAME);
+            String managedIdentityId = configuration.get(MANAGED_IDENTITY_ID_FIELD_NAME);
             String tenantId = configuration.get(TENANT_ID_FIELD_NAME);
             String clientId = configuration.get(CLIENT_ID_FIELD_NAME);
             String clientSecret = configuration.get(CLIENT_SECRET_FIELD_NAME);
             String clientCertificate = configuration.get(CLIENT_CERTIFICATE_FIELD_NAME);
             String clientCertificatePassword = configuration.get(CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME);
+            String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
 
             // Client builder
             BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
@@ -1258,9 +1264,19 @@ public class ExternalDataUtils {
                         ExternalDataConstants.FORMAT_PARQUET);
             }
 
+            // TODO(htowaileb): Endpoint will be required for Data lake implementation
+            if (endpoint != null) {
+                builder.endpoint(endpoint);
+            }
+
+            // Managed identity credentials
+            if (managedIdentityId != null) {
+                builder.credential(new ManagedIdentityCredentialBuilder().clientId(managedIdentityId).build());
+            }
+
             // Active Directory authentication
             if (clientId != null) {
-                // Both (or neither) client secret and client secret were provided, only one is allowed
+                // Both (or neither) client secret and client certificate were provided, only one is allowed
                 if ((clientSecret == null) == (clientCertificate == null)) {
                     if (clientSecret != null) {
                         throw new CompilationException(PARAMETERS_NOT_ALLOWED_AT_SAME_TIME, CLIENT_SECRET_FIELD_NAME,
