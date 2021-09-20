@@ -30,6 +30,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.ArrayIndexUtil;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -38,9 +39,10 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
@@ -101,7 +103,7 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
             return false;
         }
 
-        // TODO (GLENN): There is a bug with cross-products originating from the probe. Disable this case for now.
+        // TODO (GLENN): There is a bug with nested-loop joins originating from the probe. Disable this case for now.
         Deque<ILogicalOperator> opStack = new ArrayDeque<>();
         List<ILogicalOperator> visited = new ArrayList<>();
         opStack.add(probeSubTree.getRoot());
@@ -111,8 +113,25 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
                 if (workingOp.getOperatorTag() == LogicalOperatorTag.INNERJOIN
                         || workingOp.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
                     AbstractBinaryJoinOperator joinOperator = (AbstractBinaryJoinOperator) workingOp;
-                    if (joinOperator.getCondition().getValue().equals(ConstantExpression.TRUE)) {
+                    ILogicalExpression joinCondition = joinOperator.getCondition().getValue();
+                    List<Mutable<ILogicalExpression>> conjuncts = new ArrayList<>();
+                    if (joinCondition.splitIntoConjuncts(conjuncts)) {
+                        for (Mutable<ILogicalExpression> conjunct : conjuncts) {
+                            if (conjunct.getValue().getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                                return false;
+                            }
+                            AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) joinCondition;
+                            if (expr.getFunctionIdentifier() != BuiltinFunctions.EQ) {
+                                return false;
+                            }
+                        }
+                    } else if (joinCondition.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                         return false;
+                    } else {
+                        AbstractFunctionCallExpression expr = (AbstractFunctionCallExpression) joinCondition;
+                        if (expr.getFunctionIdentifier() != BuiltinFunctions.EQ) {
+                            return false;
+                        }
                     }
                 }
                 visited.add(workingOp);
