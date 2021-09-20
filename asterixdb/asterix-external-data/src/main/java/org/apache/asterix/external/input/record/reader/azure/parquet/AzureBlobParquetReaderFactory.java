@@ -116,11 +116,6 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
         return uri.substring(uri.indexOf("//") + "//".length());
     }
 
-    private String extractEndPointForEmulator(String uri) {
-        String emulatorURI = extractEndPoint(uri);
-        return emulatorURI.substring(0, emulatorURI.indexOf('/'));
-    }
-
     private static void appendFileURI(StringBuilder builder, String container, String endPoint, BlobItem file) {
         builder.append(ExternalDataConstants.AzureBlob.HADOOP_AZURE_BLOB_PROTOCOL);
         builder.append("://");
