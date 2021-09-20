@@ -108,6 +108,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
+      <compilation-unit name="mixedudfs">
+        <output-dir compare="Text">mixedudfs</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-library">
       <compilation-unit name="udf_metadata">
         <output-dir compare="Text">udf_metadata</output-dir>
       </compilation-unit>

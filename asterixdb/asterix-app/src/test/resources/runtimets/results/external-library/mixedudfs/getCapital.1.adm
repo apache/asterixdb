@@ -1,0 +1,6 @@
+{ "natCap": { "country": "China", "capital": "Beijing" }, "sum": 3 }
+{ "natCap": { "country": "England", "capital": "London" }, "sum": 3 }
+{ "natCap": { "country": "India", "capital": "New Delhi" }, "sum": 3 }
+{ "natCap": { "country": "Italy", "capital": "Rome" }, "sum": 3 }
+{ "natCap": { "country": "Jupiter", "capital": "NOT_FOUND" }, "sum": 3 }
+{ "natCap": { "country": "United States", "capital": "Washington D.C." }, "sum": 3 }

@@ -316,7 +316,8 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         } else {
             FunctionDecl implem = usedUDFs.get(fs);
             if (implem == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_FUNCTION, f.getSourceLocation(), fs.toString());
+                //it's an external UDF
+                return new Pair<>(r, expr);
             }
             // it's one of the functions we want to inline
             boolean isVarargs = implem.getSignature().getArity() == FunctionIdentifier.VARARGS;
