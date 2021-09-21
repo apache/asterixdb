@@ -841,7 +841,8 @@ public class TestExecutor {
     }
 
     private static boolean setFormatInAccept(OutputFormat fmt) {
-        return fmt == OutputFormat.LOSSLESS_JSON || fmt == OutputFormat.CSV_HEADER;
+        return fmt == OutputFormat.LOSSLESS_JSON || fmt == OutputFormat.LOSSLESS_ADM_JSON
+                || fmt == OutputFormat.CSV_HEADER;
     }
 
     public void setAvailableCharsets(Charset... charsets) {

@@ -492,7 +492,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         sessionConfig.set(SessionConfig.OOB_HYRACKS_JOB, param.isJob());
         sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, param.isPretty());
         sessionConfig.set(SessionConfig.FORMAT_QUOTE_RECORD,
-                format != SessionConfig.OutputFormat.CLEAN_JSON && format != SessionConfig.OutputFormat.LOSSLESS_JSON);
+                format != SessionConfig.OutputFormat.CLEAN_JSON && format != SessionConfig.OutputFormat.LOSSLESS_JSON
+                        && format != SessionConfig.OutputFormat.LOSSLESS_ADM_JSON);
         sessionConfig.set(SessionConfig.FORMAT_CSV_HEADER, param.isCSVWithHeader());
     }
 

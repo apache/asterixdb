@@ -28,6 +28,7 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParser;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
+import org.apache.hyracks.util.StringUtil;
 
 public class ADurationParserFactory implements IValueParserFactory {
 
@@ -83,64 +84,48 @@ public class ADurationParserFactory implements IValueParserFactory {
         All
     }
 
-    interface IStringAccessor {
-        char getCharAt(int index);
+    public static void parseDuration(CharSequence durationString, final int start, int length, IAObject mutableObject,
+            ADurationParseOption parseOption) throws HyracksDataException {
+        parseDuration(durationString, start, length, mutableObject, parseOption, StringUtil.getCharSequenceAccessor());
     }
 
-    public static void parseDuration(final Object durationString, final int start, int length, IAObject mutableObject,
+    public static void parseDuration(char[] durationString, final int start, int length, IAObject mutableObject,
             ADurationParseOption parseOption) throws HyracksDataException {
+        parseDuration(durationString, start, length, mutableObject, parseOption, StringUtil.getCharArrayAccessor());
+    }
+
+    public static void parseDuration(byte[] durationString, final int start, int length, IAObject mutableObject,
+            ADurationParseOption parseOption) throws HyracksDataException {
+        parseDuration(durationString, start, length, mutableObject, parseOption,
+                StringUtil.getByteArrayAsCharAccessor());
+    }
+
+    public static <T> void parseDuration(T durationString, final int start, int length, IAObject mutableObject,
+            ADurationParseOption parseOption, StringUtil.ICharAccessor<T> charAccessor) throws HyracksDataException {
 
         int offset = 0;
         int value = 0, hour = 0, minute = 0, second = 0, millisecond = 0, year = 0, month = 0, day = 0;
         State state = State.NOTHING_READ;
 
-        IStringAccessor charAccessor;
-
-        if (durationString instanceof char[]) {
-            charAccessor = new IStringAccessor() {
-                @Override
-                public char getCharAt(int index) {
-                    return ((char[]) durationString)[start + index];
-                }
-            };
-        } else if (durationString instanceof byte[]) {
-            charAccessor = new IStringAccessor() {
-
-                @Override
-                public char getCharAt(int index) {
-                    return (char) (((byte[]) durationString)[start + index]);
-                }
-            };
-        } else if (durationString instanceof String) {
-            charAccessor = new IStringAccessor() {
-
-                @Override
-                public char getCharAt(int index) {
-                    return ((String) durationString).charAt(start + index);
-                }
-            };
-        } else {
-            throw new HyracksDataException(durationErrorMessage);
-        }
-
         short sign = 1;
-        if (charAccessor.getCharAt(offset) == '-') {
+        if (charAccessor.charAt(durationString, start + offset) == '-') {
             offset++;
             sign = -1;
         }
 
-        if (charAccessor.getCharAt(offset) != 'P') {
+        if (charAccessor.charAt(durationString, start + offset) != 'P') {
             throw new HyracksDataException(durationErrorMessage + ": Missing leading 'P'.");
         }
 
         offset++;
 
         for (; offset < length; offset++) {
-            if (charAccessor.getCharAt(offset) >= '0' && charAccessor.getCharAt(offset) <= '9') {
+            if (charAccessor.charAt(durationString, start + offset) >= '0'
+                    && charAccessor.charAt(durationString, start + offset) <= '9') {
                 // accumulate the digit fields
-                value = value * DECIMAL_UNIT + charAccessor.getCharAt(offset) - '0';
+                value = value * DECIMAL_UNIT + charAccessor.charAt(durationString, start + offset) - '0';
             } else {
-                switch (charAccessor.getCharAt(offset)) {
+                switch (charAccessor.charAt(durationString, start + offset)) {
                     case 'Y':
                         if (state.compareTo(State.YEAR) < 0) {
                             if (parseOption == ADurationParseOption.DAY_TIME) {
@@ -213,11 +198,11 @@ public class ADurationParserFactory implements IValueParserFactory {
                             }
                             int i = 1;
                             for (; offset + i < length; i++) {
-                                if (charAccessor.getCharAt(offset + i) >= '0'
-                                        && charAccessor.getCharAt(offset + i) <= '9') {
+                                if (charAccessor.charAt(durationString, start + offset + i) >= '0'
+                                        && charAccessor.charAt(durationString, start + offset + i) <= '9') {
                                     if (i < 4) {
-                                        millisecond =
-                                                millisecond * DECIMAL_UNIT + (charAccessor.getCharAt(offset + i) - '0');
+                                        millisecond = millisecond * DECIMAL_UNIT
+                                                + (charAccessor.charAt(durationString, start + offset + i) - '0');
                                     } else {
                                         throw new HyracksDataException(
                                                 durationErrorMessage + ": wrong MILLISECOND field.");
@@ -276,6 +261,8 @@ public class ADurationParserFactory implements IValueParserFactory {
             ((AMutableYearMonthDuration) mutableObject).setMonths(totalMonths);
         } else if (mutableObject instanceof AMutableDayTimeDuration) {
             ((AMutableDayTimeDuration) mutableObject).setMilliseconds(totalMilliseconds);
+        } else {
+            throw new IllegalArgumentException();
         }
     }
 }

@@ -37,12 +37,14 @@ public class HexPrinter {
         return (byte) (i < 10 ? i + '0' : i + (c.a - 10));
     }
 
-    public static Appendable printHexString(byte[] bytes, int start, int length, Appendable appendable)
-            throws IOException {
+    public static void printHexString(byte[] bytes, int start, int length, Appendable appendable) throws IOException {
         for (int i = 0; i < length; ++i) {
-            appendable.append((char) hex((bytes[start + i] >>> 4) & 0x0f, Case.UPPER_CASE));
-            appendable.append((char) hex((bytes[start + i] & 0x0f), Case.UPPER_CASE));
+            printByte(bytes[start + i], appendable);
         }
-        return appendable;
+    }
+
+    public static void printByte(byte b, Appendable appendable) throws IOException {
+        appendable.append((char) hex((b >>> 4) & 0x0f, Case.UPPER_CASE));
+        appendable.append((char) hex((b & 0x0f), Case.UPPER_CASE));
     }
 }

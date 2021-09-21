@@ -329,7 +329,7 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
                 break;
             case INT:
             case DOUBLE:
-                serailizeNumeric(actualType.getTypeTag(), out);
+                serializeNumeric(actualType.getTypeTag(), out);
                 break;
             case STRING:
                 serializeString(actualType.getTypeTag(), out);
@@ -352,7 +352,7 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
      * @param out
      * @throws IOException
      */
-    private void serailizeNumeric(ATypeTag numericType, DataOutput out) throws IOException {
+    protected void serializeNumeric(ATypeTag numericType, DataOutput out) throws IOException {
         final ATypeTag typeToUse = numericType == ATypeTag.ANY ? currentToken().getTypeTag() : numericType;
 
         switch (typeToUse) {
@@ -393,7 +393,7 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
      * @param out
      * @throws IOException
      */
-    private void serializeString(ATypeTag stringVariantType, DataOutput out) throws IOException {
+    protected void serializeString(ATypeTag stringVariantType, DataOutput out) throws IOException {
         char[] buffer = jsonParser.getTextCharacters();
         int begin = jsonParser.getTextOffset();
         int len = jsonParser.getTextLength();
@@ -411,6 +411,18 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
                 break;
             case TIME:
                 parseTime(buffer, begin, len, out);
+                break;
+            case YEARMONTHDURATION:
+                parseYearMonthDuration(buffer, begin, len, out);
+                break;
+            case DAYTIMEDURATION:
+                parseDateTimeDuration(buffer, begin, len, out);
+                break;
+            case DURATION:
+                parseDuration(buffer, begin, len, out);
+                break;
+            case UUID:
+                parseUUID(buffer, begin, len, out);
                 break;
             default:
                 throw new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, jsonParser.currentToken().toString());

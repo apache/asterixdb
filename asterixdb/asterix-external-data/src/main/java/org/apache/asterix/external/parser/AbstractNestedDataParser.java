@@ -183,8 +183,10 @@ public abstract class AbstractNestedDataParser<T> extends AbstractDataParser {
     protected boolean isConvertable(ATypeTag parsedTypeTag, ATypeTag definedTypeTag) {
         boolean convertable = parsedTypeTag == ATypeTag.STRING;
 
-        convertable &= definedTypeTag == ATypeTag.UUID || definedTypeTag == ATypeTag.DATE
-                || definedTypeTag == ATypeTag.TIME || definedTypeTag == ATypeTag.DATETIME;
+        convertable &=
+                definedTypeTag == ATypeTag.UUID || definedTypeTag == ATypeTag.DATE || definedTypeTag == ATypeTag.TIME
+                        || definedTypeTag == ATypeTag.DATETIME || definedTypeTag == ATypeTag.YEARMONTHDURATION
+                        || definedTypeTag == ATypeTag.DAYTIMEDURATION || definedTypeTag == ATypeTag.DURATION;
 
         return convertable || ATypeHierarchy.canPromote(parsedTypeTag, definedTypeTag)
                 || ATypeHierarchy.canDemote(parsedTypeTag, definedTypeTag);

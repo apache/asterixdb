@@ -9719,7 +9719,17 @@
     </test-case>
     <test-case FilePath="scan">
       <compilation-unit name="alltypes_01">
-        <output-dir compare="Text">alltypes_01</output-dir>
+        <output-dir compare="Clean-JSON">alltypes_01-cleanjson</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="alltypes_01">
+        <output-dir compare="Lossless-JSON">alltypes_01-losslessjson</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="scan">
+      <compilation-unit name="alltypes_01">
+        <output-dir compare="Lossless-ADM-JSON">alltypes_01-losslessadmjson</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="scan">

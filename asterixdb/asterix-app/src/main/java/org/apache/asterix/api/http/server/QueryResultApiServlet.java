@@ -94,7 +94,8 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             SessionOutput sessionOutput = initResponse(request, response, metadata.getFormat());
             ResponsePrinter printer = new ResponsePrinter(sessionOutput);
             if (metadata.getFormat() == SessionConfig.OutputFormat.CLEAN_JSON
-                    || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_JSON) {
+                    || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_JSON
+                    || metadata.getFormat() == SessionConfig.OutputFormat.LOSSLESS_ADM_JSON) {
                 final Stats stats = new Stats();
                 printer.begin();
                 printer.addResultPrinter(new ResultsPrinter(appCtx, resultReader, null, stats, sessionOutput));
@@ -150,7 +151,8 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
         // If it's JSON or ADM, check for the "wrapper-array" flag. Default is
         // "true" for JSON and "false" for ADM. (Not applicable for CSV.)
         boolean wrapperArray =
-                format == SessionConfig.OutputFormat.CLEAN_JSON || format == SessionConfig.OutputFormat.LOSSLESS_JSON;
+                format == SessionConfig.OutputFormat.CLEAN_JSON || format == SessionConfig.OutputFormat.LOSSLESS_JSON
+                        || format == SessionConfig.OutputFormat.LOSSLESS_ADM_JSON;
         String wrapperParam = request.getParameter("wrapper-array");
         if (wrapperParam != null) {
             wrapperArray = Boolean.valueOf(wrapperParam);
@@ -167,6 +169,8 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
             case ADM:
                 HttpUtil.setContentType(response, "application/x-adm", request);
                 break;
+            case LOSSLESS_ADM_JSON:
+                // No need to reflect in output type; fall through
             case CLEAN_JSON:
                 // No need to reflect "clean-ness" in output type; fall through
             case LOSSLESS_JSON:

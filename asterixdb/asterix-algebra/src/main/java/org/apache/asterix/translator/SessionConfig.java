@@ -48,7 +48,8 @@ public class SessionConfig implements Serializable {
         ADM,
         CSV,
         CLEAN_JSON,
-        LOSSLESS_JSON
+        LOSSLESS_JSON,
+        LOSSLESS_ADM_JSON
     }
 
     /**

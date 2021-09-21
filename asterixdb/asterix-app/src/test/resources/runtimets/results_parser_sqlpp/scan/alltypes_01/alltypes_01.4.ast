@@ -1,0 +1,20 @@
+DataverseUse test
+Query:
+RecordConstructor [
+  (
+    LiteralExpr [STRING] [t1_array_of_unknown]
+    :
+    OrderedListConstructor [
+      LiteralExpr [NULL]
+      LiteralExpr [MISSING]
+    ]
+  )
+  (
+    LiteralExpr [STRING] [t2_multiset_of_unknown]
+    :
+    UnorderedListConstructor [
+      LiteralExpr [NULL]
+      LiteralExpr [MISSING]
+    ]
+  )
+]

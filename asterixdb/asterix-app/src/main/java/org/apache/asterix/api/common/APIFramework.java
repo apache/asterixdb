@@ -344,6 +344,8 @@ public class APIFramework {
         switch (outputFormat) {
             case LOSSLESS_JSON:
                 return format.getLosslessJSONPrinterFactoryProvider();
+            case LOSSLESS_ADM_JSON:
+                return format.getLosslessADMJSONPrinterFactoryProvider();
             case CSV:
                 return format.getCSVPrinterFactoryProvider();
             case ADM:

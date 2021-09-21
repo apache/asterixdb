@@ -252,6 +252,7 @@
          <xs:enumeration value="Ignore"/>
          <xs:enumeration value="Clean-JSON"/>
          <xs:enumeration value="Lossless-JSON"/>
+         <xs:enumeration value="Lossless-ADM-JSON"/>
          <xs:enumeration value="CSV"/>
          <xs:enumeration value="CSV_Header"/>
          <xs:enumeration value="AST"/>

@@ -90,7 +90,8 @@ public class QueryServiceRequestParameters {
 
     private enum Attribute {
         HEADER("header"),
-        LOSSLESS("lossless");
+        LOSSLESS("lossless"),
+        LOSSLESS_ADM("lossless-adm");
 
         private final String str;
 
@@ -586,8 +587,11 @@ public class QueryServiceRequestParameters {
         if (mimeSplits.length > 0) {
             String format = mimeSplits[0].toLowerCase().trim();
             if (format.equals(HttpUtil.ContentType.APPLICATION_JSON)) {
-                return Pair.of(hasValue(mimeSplits, Attribute.LOSSLESS.str(), booleanValues)
-                        ? OutputFormat.LOSSLESS_JSON : OutputFormat.CLEAN_JSON, Boolean.FALSE);
+                return Pair
+                        .of(hasValue(mimeSplits, Attribute.LOSSLESS.str(), booleanValues) ? OutputFormat.LOSSLESS_JSON
+                                : hasValue(mimeSplits, Attribute.LOSSLESS_ADM.str(), booleanValues)
+                                        ? OutputFormat.LOSSLESS_ADM_JSON : OutputFormat.CLEAN_JSON,
+                                Boolean.FALSE);
             } else if (format.equals(HttpUtil.ContentType.TEXT_CSV)) {
                 return Pair.of(OutputFormat.CSV,
                         hasValue(mimeSplits, Attribute.HEADER.str(), csvHeaderValues) ? Boolean.TRUE : Boolean.FALSE);

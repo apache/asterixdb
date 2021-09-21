@@ -254,6 +254,7 @@ public class TestCaseContext {
         NONE("", ""),
         ADM("adm", "application/x-adm"),
         LOSSLESS_JSON("json", "application/json; lossless=true"),
+        LOSSLESS_ADM_JSON("json", "application/json; lossless-adm=true"),
         CLEAN_JSON("json", "application/json"),
         CSV("csv", "text/csv"),
         CSV_HEADER("csv-header", "text/csv; header=present"),
@@ -284,6 +285,8 @@ public class TestCaseContext {
                     return OutputFormat.ADM;
                 case LOSSLESS_JSON:
                     return OutputFormat.LOSSLESS_JSON;
+                case LOSSLESS_ADM_JSON:
+                    return OutputFormat.LOSSLESS_ADM_JSON;
                 case CLEAN_JSON:
                     return OutputFormat.CLEAN_JSON;
                 case CSV:

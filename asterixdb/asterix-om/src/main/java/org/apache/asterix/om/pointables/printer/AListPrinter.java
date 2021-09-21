@@ -74,7 +74,11 @@ public class AListPrinter {
         IVisitablePointable item = items.get(i);
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                 .deserialize(itemTypeTag.getByteArray()[itemTypeTag.getStartOffset()]);
-        itemVisitorArg.second = item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
+        itemVisitorArg.second = getItemTypeTag(item, typeTag);
         item.accept(visitor, itemVisitorArg);
+    }
+
+    protected ATypeTag getItemTypeTag(IVisitablePointable item, ATypeTag typeTag) {
+        return item.getLength() <= 1 ? ATypeTag.NULL : typeTag;
     }
 }

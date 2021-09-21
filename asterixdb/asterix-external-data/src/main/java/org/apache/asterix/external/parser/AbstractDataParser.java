@@ -41,6 +41,7 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.base.AInterval;
 import org.apache.asterix.om.base.ALine;
+import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.AMutableBinary;
 import org.apache.asterix.om.base.AMutableCircle;
 import org.apache.asterix.om.base.AMutableDate;
@@ -58,6 +59,7 @@ import org.apache.asterix.om.base.AMutableInterval;
 import org.apache.asterix.om.base.AMutableLine;
 import org.apache.asterix.om.base.AMutablePoint;
 import org.apache.asterix.om.base.AMutablePoint3D;
+import org.apache.asterix.om.base.AMutablePolygon;
 import org.apache.asterix.om.base.AMutableRectangle;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AMutableTime;
@@ -66,6 +68,7 @@ import org.apache.asterix.om.base.AMutableYearMonthDuration;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.APoint;
 import org.apache.asterix.om.base.APoint3D;
+import org.apache.asterix.om.base.APolygon;
 import org.apache.asterix.om.base.ARectangle;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.ATime;
@@ -78,8 +81,10 @@ import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParse
 import org.apache.asterix.om.base.temporal.ATimeParserFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.StringUtil;
 import org.apache.hyracks.util.bytes.Base64Parser;
 import org.apache.hyracks.util.bytes.HexParser;
 import org.apache.hyracks.util.string.UTF8StringReader;
@@ -114,6 +119,7 @@ public abstract class AbstractDataParser implements IDataParser {
     protected AMutableRectangle aRectangle = new AMutableRectangle(null, null);
     protected AMutablePoint aPoint2 = new AMutablePoint(0, 0);
     protected AMutableLine aLine = new AMutableLine(null, null);
+    protected AMutablePolygon aPolygon = new AMutablePolygon(null);
     protected AMutableDate aDate = new AMutableDate(0);
     protected AMutableInterval aInterval = new AMutableInterval(0L, 0L, (byte) 0);
 
@@ -145,6 +151,9 @@ public abstract class AbstractDataParser implements IDataParser {
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<ABoolean> booleanSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
+    @SuppressWarnings("unchecked")
+    protected ISerializerDeserializer<AMissing> missingSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AMISSING);
     @SuppressWarnings("unchecked")
     protected ISerializerDeserializer<ANull> nullSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
@@ -201,6 +210,9 @@ public abstract class AbstractDataParser implements IDataParser {
     protected final static ISerializerDeserializer<ALine> lineSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ALINE);
     @SuppressWarnings("unchecked")
+    protected final static ISerializerDeserializer<APolygon> polygonSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.APOLYGON);
+    @SuppressWarnings("unchecked")
     protected static final ISerializerDeserializer<AInterval> intervalSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINTERVAL);
 
@@ -235,13 +247,13 @@ public abstract class AbstractDataParser implements IDataParser {
 
     protected void parseDateTimeDuration(char[] buffer, int begin, int len, DataOutput out)
             throws HyracksDataException {
-        ADurationParserFactory.parseDuration(buffer, begin, len, aDayTimeDuration, ADurationParseOption.All);
+        ADurationParserFactory.parseDuration(buffer, begin, len, aDayTimeDuration, ADurationParseOption.DAY_TIME);
         dayTimeDurationSerde.serialize(aDayTimeDuration, out);
     }
 
     protected void parseYearMonthDuration(char[] buffer, int begin, int len, DataOutput out)
             throws HyracksDataException {
-        ADurationParserFactory.parseDuration(buffer, begin, len, aYearMonthDuration, ADurationParseOption.All);
+        ADurationParserFactory.parseDuration(buffer, begin, len, aYearMonthDuration, ADurationParseOption.YEAR_MONTH);
         yearMonthDurationSerde.serialize(aYearMonthDuration, out);
     }
 
@@ -342,6 +354,11 @@ public abstract class AbstractDataParser implements IDataParser {
         binarySerde.serialize(aBinary, out);
     }
 
+    protected void parseUUID(char[] buffer, int start, int length, DataOutput out) throws HyracksDataException {
+        aUUID.parseUUIDString(buffer, start, length);
+        uuidSerde.serialize(aUUID, out);
+    }
+
     protected long parseDatePart(String interval, int startOffset, int endOffset) throws HyracksDataException {
 
         while (interval.charAt(endOffset) == '"' || interval.charAt(endOffset) == ' ') {
@@ -368,16 +385,33 @@ public abstract class AbstractDataParser implements IDataParser {
         return ATimeParserFactory.parseTimePart(interval, startOffset, endOffset - startOffset + 1);
     }
 
-    protected double parseDouble(char[] buffer, int begin, int len) {
+    protected double parseDouble(char[] buffer, int begin, int len) throws ParseException {
         // TODO: parse double directly from char[]
         String str = new String(buffer, begin, len);
-        return Double.valueOf(str);
+        try {
+            return Double.parseDouble(str);
+        } catch (NumberFormatException e) {
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, e, str,
+                    BuiltinType.ADOUBLE.getTypeName());
+        }
     }
 
-    protected float parseFloat(char[] buffer, int begin, int len) {
-        //TODO: pares float directly from char[]
+    protected float parseFloat(char[] buffer, int begin, int len) throws ParseException {
+        // TODO: parse float directly from char[]
         String str = new String(buffer, begin, len);
-        return Float.valueOf(str);
+        try {
+            return Float.parseFloat(str);
+        } catch (NumberFormatException e) {
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, e, str,
+                    BuiltinType.AFLOAT.getTypeName());
+        }
+    }
+
+    protected void parseInt64(char[] buffer, int begin, int len, AMutableInt64 result) throws ParseException {
+        if (!NumberUtils.parseInt64(buffer, begin, begin + len, StringUtil.getCharArrayAccessor(), result)) {
+            throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, new String(buffer, begin, len),
+                    BuiltinType.AINT64.getTypeName());
+        }
     }
 
     protected int indexOf(char[] buffer, int begin, int len, char target) {

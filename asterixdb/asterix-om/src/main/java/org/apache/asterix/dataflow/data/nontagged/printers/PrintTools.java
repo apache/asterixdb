@@ -293,9 +293,15 @@ public class PrintTools {
 
     public static void writeUTF8StringAsJSON(byte[] b, int s, int l, OutputStream os) throws IOException {
         int utfLength = UTF8StringUtil.getUTFLength(b, s);
+        os.write('"');
+        writeUTF8StringAsJSONUnquoted(b, s, l, utfLength, os);
+        os.write('"');
+    }
+
+    public static void writeUTF8StringAsJSONUnquoted(byte[] b, int s, int l, int utfLength, OutputStream os)
+            throws IOException {
         int position = s + UTF8StringUtil.getNumBytesToStoreLength(utfLength); // skip 2 bytes containing string size
         int maxPosition = position + utfLength;
-        os.write('"');
         while (position < maxPosition) {
             char c = UTF8StringUtil.charAt(b, position);
             int sz = UTF8StringUtil.charSize(b, position);
@@ -385,7 +391,6 @@ public class PrintTools {
                     break;
             }
         }
-        os.write('\"');
     }
 
     private static void writeUEscape(OutputStream os, char c) throws IOException {

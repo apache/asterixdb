@@ -27,6 +27,7 @@ import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ACircle;
 import org.apache.asterix.om.base.ADate;
 import org.apache.asterix.om.base.ADateTime;
+import org.apache.asterix.om.base.ADayTimeDuration;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.ADuration;
 import org.apache.asterix.om.base.AFloat;
@@ -46,7 +47,9 @@ import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.ARectangle;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.ATime;
+import org.apache.asterix.om.base.AUUID;
 import org.apache.asterix.om.base.AUnorderedList;
+import org.apache.asterix.om.base.AYearMonthDuration;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
@@ -123,6 +126,8 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
                 return AUnorderedListSerializerDeserializer.SCHEMALESS_INSTANCE.deserialize(in);
             case GEOMETRY:
                 return AGeometrySerializerDeserializer.INSTANCE.deserialize(in);
+            case UUID:
+                return AUUIDSerializerDeserializer.INSTANCE.deserialize(in);
             default:
                 throw new NotImplementedException("No serializer/deserializer implemented for type " + typeTag + " .");
         }
@@ -180,6 +185,12 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
             case DATETIME:
                 ADateTimeSerializerDeserializer.INSTANCE.serialize((ADateTime) instance, out);
                 break;
+            case YEARMONTHDURATION:
+                AYearMonthDurationSerializerDeserializer.INSTANCE.serialize((AYearMonthDuration) instance, out);
+                break;
+            case DAYTIMEDURATION:
+                ADayTimeDurationSerializerDeserializer.INSTANCE.serialize((ADayTimeDuration) instance, out);
+                break;
             case DURATION:
                 ADurationSerializerDeserializer.INSTANCE.serialize((ADuration) instance, out);
                 break;
@@ -218,6 +229,9 @@ public class AObjectSerializerDeserializer implements ISerializerDeserializer<IA
                 break;
             case GEOMETRY:
                 AGeometrySerializerDeserializer.INSTANCE.serialize((AGeometry) instance, out);
+                break;
+            case UUID:
+                AUUIDSerializerDeserializer.INSTANCE.serialize((AUUID) instance, out);
                 break;
             default:
                 throw new HyracksDataException(

@@ -21,6 +21,8 @@ package org.apache.hyracks.util.bytes;
 
 import java.util.Arrays;
 
+import org.apache.hyracks.util.StringUtil;
+
 public class Base64Parser {
     private static final byte[] DECODE_MAP = initDecodeMap();
     private static final byte PADDING = 127;
@@ -52,42 +54,6 @@ public class Base64Parser {
 
     /**
      * Parse the Base64 sequence from {@code input} into {@code out}
-     * Note, the out should have enough space by checking the {@link #guessLength(char[], int, int)} first
-     *
-     * @param input
-     * @param start
-     * @param length
-     * @param out
-     * @param offset
-     * @return
-     */
-    public int parseBase64String(char[] input, int start, int length, byte[] out, int offset) {
-        int outLength = 0;
-
-        int i;
-        int q = 0;
-
-        // convert each quadruplet to three bytes.
-        for (i = 0; i < length; i++) {
-            char ch = input[start + i];
-            byte v = DECODE_MAP[ch];
-
-            if (v == -1) {
-                throw new IllegalArgumentException("Invalid Base64 character");
-            }
-            quadruplet[q++] = v;
-
-            if (q == 4) {
-                outLength += dumpQuadruplet(out, offset + outLength);
-                q = 0;
-            }
-        }
-
-        return outLength;
-    }
-
-    /**
-     * Parse the Base64 sequence from {@code input} into {@code out}
      * Note, the out should have enough space by checking the {@link #guessLength(byte[], int, int)} first
      *
      * @param input
@@ -98,6 +64,52 @@ public class Base64Parser {
      * @return the number of written bytes
      */
     public int parseBase64String(byte[] input, int start, int length, byte[] out, int offset) {
+        return parseBase64String(input, start, length, StringUtil.getByteArrayAsCharAccessor(), out, offset);
+    }
+
+    /**
+     * Parse the Base64 sequence from {@code input} into {@code out}
+     * Note, the out should have enough space by checking the {@link #guessLength(char[], int, int)} first
+     *
+     * @param input
+     * @param start
+     * @param length
+     * @param out
+     * @param offset
+     * @return
+     */
+    public int parseBase64String(char[] input, int start, int length, byte[] out, int offset) {
+        return parseBase64String(input, start, length, StringUtil.getCharArrayAccessor(), out, offset);
+    }
+
+    /**
+     * Parse the Base64 sequence from {@code input} into {@code out}
+     * Note, the out should have enough space by checking the {@link #guessLength(CharSequence, int, int)} first
+     *
+     * @param input
+     * @param start
+     * @param length
+     * @param out
+     * @param offset
+     * @return
+     */
+    public int parseBase64String(CharSequence input, int start, int length, byte[] out, int offset) {
+        return parseBase64String(input, start, length, StringUtil.getCharSequenceAccessor(), out, offset);
+    }
+
+    /**
+     * Parse the Base64 sequence from {@code input} into {@code out}
+     * Note, the out should have enough space by checking the {@link #guessLength(char[], int, int)} first
+     *
+     * @param input
+     * @param start
+     * @param length
+     * @param out
+     * @param offset
+     * @return
+     */
+    private <T> int parseBase64String(T input, int start, int length, StringUtil.ICharAccessor<T> stringAccessor,
+            byte[] out, int offset) {
         int outLength = 0;
 
         int i;
@@ -105,7 +117,7 @@ public class Base64Parser {
 
         // convert each quadruplet to three bytes.
         for (i = 0; i < length; i++) {
-            char ch = (char) input[start + i];
+            char ch = stringAccessor.charAt(input, start + i);
             byte v = DECODE_MAP[ch];
 
             if (v == -1) {
@@ -136,40 +148,66 @@ public class Base64Parser {
      * (like what most web services produce), then the speculation of this method
      * will be correct, so we get the performance benefit.
      */
-    public static int guessLength(char[] chars, int start, int length) {
-
-        // compute the tail '=' chars
-        int j = length - 1;
-        for (; j >= 0; j--) {
-            byte code = DECODE_MAP[chars[start + j]];
-            if (code == PADDING) {
-                continue;
-            }
-            if (code == -1) // most likely this base64 text is indented. go with the upper bound
-            {
-                return length / 4 * 3;
-            }
-            break;
-        }
-
-        j++; // text.charAt(j) is now at some base64 char, so +1 to make it the size
-        int padSize = length - j;
-        if (padSize > 2) // something is wrong with base64. be safe and go with the upper bound
-        {
-            return length / 4 * 3;
-        }
-
-        // so far this base64 looks like it's unindented tightly packed base64.
-        // take a chance and create an array with the expected size
-        return length / 4 * 3 - padSize;
+    public static int guessLength(byte[] input, int start, int length) {
+        return guessLength(input, start, length, StringUtil.getByteArrayAsCharAccessor());
     }
 
-    public static int guessLength(byte[] chars, int start, int length) {
+    /**
+     * computes the length of binary data speculatively.
+     * Our requirement is to create byte[] of the exact length to store the binary data.
+     * If we do this in a straight-forward way, it takes two passes over the data.
+     * Experiments show that this is a non-trivial overhead (35% or so is spent on
+     * the first pass in calculating the length.)
+     * So the approach here is that we compute the length speculatively, without looking
+     * at the whole contents. The obtained speculative value is never less than the
+     * actual length of the binary data, but it may be bigger. So if the speculation
+     * goes wrong, we'll pay the cost of reallocation and buffer copying.
+     * If the base64 text is tightly packed with no indentation nor illegal char
+     * (like what most web services produce), then the speculation of this method
+     * will be correct, so we get the performance benefit.
+     */
+    public static int guessLength(char[] input, int start, int length) {
+        return guessLength(input, start, length, StringUtil.getCharArrayAccessor());
+    }
 
+    /**
+     * computes the length of binary data speculatively.
+     * Our requirement is to create byte[] of the exact length to store the binary data.
+     * If we do this in a straight-forward way, it takes two passes over the data.
+     * Experiments show that this is a non-trivial overhead (35% or so is spent on
+     * the first pass in calculating the length.)
+     * So the approach here is that we compute the length speculatively, without looking
+     * at the whole contents. The obtained speculative value is never less than the
+     * actual length of the binary data, but it may be bigger. So if the speculation
+     * goes wrong, we'll pay the cost of reallocation and buffer copying.
+     * If the base64 text is tightly packed with no indentation nor illegal char
+     * (like what most web services produce), then the speculation of this method
+     * will be correct, so we get the performance benefit.
+     */
+    public static int guessLength(CharSequence input, int start, int length) {
+        return guessLength(input, start, length, StringUtil.getCharSequenceAccessor());
+    }
+
+    /**
+     * computes the length of binary data speculatively.
+     * Our requirement is to create byte[] of the exact length to store the binary data.
+     * If we do this in a straight-forward way, it takes two passes over the data.
+     * Experiments show that this is a non-trivial overhead (35% or so is spent on
+     * the first pass in calculating the length.)
+     * So the approach here is that we compute the length speculatively, without looking
+     * at the whole contents. The obtained speculative value is never less than the
+     * actual length of the binary data, but it may be bigger. So if the speculation
+     * goes wrong, we'll pay the cost of reallocation and buffer copying.
+     * If the base64 text is tightly packed with no indentation nor illegal char
+     * (like what most web services produce), then the speculation of this method
+     * will be correct, so we get the performance benefit.
+     */
+    private static <T> int guessLength(T input, int start, int length, StringUtil.ICharAccessor<T> charAtFunction) {
         // compute the tail '=' chars
         int j = length - 1;
         for (; j >= 0; j--) {
-            byte code = DECODE_MAP[chars[start + j]];
+            char ch = charAtFunction.charAt(input, start + j);
+            byte code = DECODE_MAP[ch];
             if (code == PADDING) {
                 continue;
             }
@@ -208,24 +246,47 @@ public class Base64Parser {
      * @param length
      */
     public void generatePureByteArrayFromBase64String(byte[] input, int start, int length) {
-        // The base64 character length equals to utf8length
-        if (length % 4 != 0) {
-            throw new IllegalArgumentException(
-                    "Invalid Base64 string, the length of the string should be a multiple of 4");
-        }
-        final int buflen = guessLength(input, start, length);
-        ensureCapacity(buflen);
-        this.length = parseBase64String(input, start, length, storage, 0);
+        generatePureByteArrayFromBase64String(input, start, length, StringUtil.getByteArrayAsCharAccessor());
     }
 
+    /**
+     * Same as {@link #parseBase64String(char[], int, int, byte[], int)}, but we will provide the storage for caller
+     *
+     * @param input
+     * @param start
+     * @param length
+     */
     public void generatePureByteArrayFromBase64String(char[] input, int start, int length) {
+        generatePureByteArrayFromBase64String(input, start, length, StringUtil.getCharArrayAccessor());
+    }
+
+    /**
+     * Same as {@link #parseBase64String(CharSequence, int, int, byte[], int)}, but we will provide the storage for caller
+     *
+     * @param input
+     * @param start
+     * @param length
+     */
+    public void generatePureByteArrayFromBase64String(CharSequence input, int start, int length) {
+        generatePureByteArrayFromBase64String(input, start, length, StringUtil.getCharSequenceAccessor());
+    }
+
+    /**
+     * Same as {@link #parseBase64String(Object, int, int, StringUtil.ICharAccessor, byte[], int)}, but we will provide the storage for caller
+     *
+     * @param input
+     * @param start
+     * @param length
+     */
+    private <T> void generatePureByteArrayFromBase64String(T input, int start, int length,
+            StringUtil.ICharAccessor<T> charAtFunction) {
         if (length % 4 != 0) {
             throw new IllegalArgumentException(
                     "Invalid Base64 string, the length of the string should be a multiple of 4");
         }
-        final int buflen = guessLength(input, start, length);
+        final int buflen = guessLength(input, start, length, charAtFunction);
         ensureCapacity(buflen);
-        this.length = parseBase64String(input, start, length, storage, 0);
+        this.length = parseBase64String(input, start, length, charAtFunction, storage, 0);
     }
 
     private void ensureCapacity(int length) {
@@ -246,5 +307,4 @@ public class Base64Parser {
         }
         return outLength;
     }
-
 }

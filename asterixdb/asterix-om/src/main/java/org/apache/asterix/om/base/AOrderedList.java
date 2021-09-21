@@ -79,7 +79,7 @@ public class AOrderedList implements IACollection {
             return false;
         } else {
             AOrderedList y = (AOrderedList) o;
-            return InMemUtils.cursorEquals(this.getCursor(), y.getCursor());
+            return InMemUtils.deepEqualCursors(this.getCursor(), y.getCursor());
         }
     }
 

@@ -84,29 +84,38 @@ public class AUUID implements IAObject {
 
     @Override
     public String toString() {
-        StringBuilder buf = new StringBuilder(UUID_CHARS + 9);
-        buf.append("uuid: { ");
-        return appendLiteralOnly(buf).append(" }").toString();
+        try {
+            StringBuilder buf = new StringBuilder(UUID_CHARS + 9);
+            buf.append("uuid: { ");
+            appendLiteralOnly(buf);
+            buf.append(" }");
+            return buf.toString();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
-    public StringBuilder appendLiteralOnly(StringBuilder buf) {
-        return appendLiteralOnly(uuidBytes, 0, buf);
+    public void appendLiteralOnly(Appendable buf) throws IOException {
+        appendLiteralOnly(uuidBytes, 0, buf);
     }
 
-    private static StringBuilder digits(byte b[], int offset, int count, StringBuilder result) {
+    private static void digits(byte b[], int offset, int count, Appendable result) throws IOException {
         for (int i = 0; i < count; i++) {
             result.append(CHARS[(b[offset + i] >> 4) & 0xf]);
             result.append(CHARS[b[offset + i] & 0xf]);
         }
-        return result;
     }
 
-    public static StringBuilder appendLiteralOnly(byte[] bytes, int offset, StringBuilder result) {
-        digits(bytes, offset, 4, result).append('-');
-        digits(bytes, offset + 4, 2, result).append('-');
-        digits(bytes, offset + 6, 2, result).append('-');
-        digits(bytes, offset + 8, 2, result).append('-');
-        return digits(bytes, offset + 10, 6, result);
+    public static void appendLiteralOnly(byte[] bytes, int offset, Appendable result) throws IOException {
+        digits(bytes, offset, 4, result);
+        result.append('-');
+        digits(bytes, offset + 4, 2, result);
+        result.append('-');
+        digits(bytes, offset + 6, 2, result);
+        result.append('-');
+        digits(bytes, offset + 8, 2, result);
+        result.append('-');
+        digits(bytes, offset + 10, 6, result);
     }
 
     public void writeTo(DataOutput out) throws HyracksDataException {

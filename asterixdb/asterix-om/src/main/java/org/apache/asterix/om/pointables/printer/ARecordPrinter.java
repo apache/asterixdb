@@ -86,11 +86,18 @@ public class ARecordPrinter {
             IVisitablePointable fieldValue, ATypeTag fieldTypeTag) throws HyracksDataException {
         itemVisitorArg.second = fieldTypeTag;
         if (fieldNameSeparator != null) {
-            // print field name
-            fieldName.accept(visitor, nameVisitorArg);
+            printFieldName(ps, visitor, fieldName);
             ps.print(fieldNameSeparator);
         }
-        // print field value
+        printFieldValue(visitor, fieldValue);
+    }
+
+    protected void printFieldName(PrintStream ps, IPrintVisitor visitor, IVisitablePointable fieldName)
+            throws HyracksDataException {
+        fieldName.accept(visitor, nameVisitorArg);
+    }
+
+    protected void printFieldValue(IPrintVisitor visitor, IVisitablePointable fieldValue) throws HyracksDataException {
         fieldValue.accept(visitor, itemVisitorArg);
     }
 }

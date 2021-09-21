@@ -49,4 +49,8 @@ public class AFloatSerializerDeserializer implements ISerializerDeserializer<AFl
     public static float getFloat(byte[] bytes, int offset) {
         return FloatPointable.getFloat(bytes, offset);
     }
+
+    public static int getIntBits(byte[] bytes, int offset) {
+        return FloatPointable.getIntBits(bytes, offset);
+    }
 }

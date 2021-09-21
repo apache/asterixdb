@@ -56,7 +56,7 @@ public class AUnorderedList implements IACollection {
             return false;
         } else {
             AUnorderedList y = (AUnorderedList) o;
-            return InMemUtils.cursorEquals(this.getCursor(), y.getCursor());
+            return InMemUtils.deepEqualCursors(this.getCursor(), y.getCursor());
         }
     }
 

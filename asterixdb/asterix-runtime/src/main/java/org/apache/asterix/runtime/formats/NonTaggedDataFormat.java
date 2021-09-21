@@ -33,6 +33,7 @@ import org.apache.asterix.formats.nontagged.BinaryHashFunctionFamilyProvider;
 import org.apache.asterix.formats.nontagged.BinaryIntegerInspector;
 import org.apache.asterix.formats.nontagged.CSVPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.CleanJSONPrinterFactoryProvider;
+import org.apache.asterix.formats.nontagged.LosslessADMJSONPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.LosslessJSONPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.NormalizedKeyComputerFactoryProvider;
 import org.apache.asterix.formats.nontagged.PredicateEvaluatorFactoryProvider;
@@ -297,6 +298,11 @@ public class NonTaggedDataFormat implements IDataFormat {
     @Override
     public IPrinterFactoryProvider getLosslessJSONPrinterFactoryProvider() {
         return LosslessJSONPrinterFactoryProvider.INSTANCE;
+    }
+
+    @Override
+    public IPrinterFactoryProvider getLosslessADMJSONPrinterFactoryProvider() {
+        return LosslessADMJSONPrinterFactoryProvider.INSTANCE;
     }
 
     @Override

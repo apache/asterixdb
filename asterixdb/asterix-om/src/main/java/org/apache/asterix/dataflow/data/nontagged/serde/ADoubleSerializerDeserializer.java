@@ -24,6 +24,7 @@ import java.io.DataOutput;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.DoublePointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 
 public class ADoubleSerializerDeserializer implements ISerializerDeserializer<ADouble> {
@@ -46,10 +47,10 @@ public class ADoubleSerializerDeserializer implements ISerializerDeserializer<AD
     }
 
     public static double getDouble(byte[] bytes, int offset) {
-        return Double.longBitsToDouble(getLongBits(bytes, offset));
+        return DoublePointable.getDouble(bytes, offset);
     }
 
     public static long getLongBits(byte[] bytes, int offset) {
-        return AInt64SerializerDeserializer.getLong(bytes, offset);
+        return DoublePointable.getLongBits(bytes, offset);
     }
 }

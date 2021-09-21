@@ -20,14 +20,14 @@ package org.apache.asterix.om.base;
 
 public class InMemUtils {
 
-    public final static boolean cursorEquals(IACursor c1, IACursor c2) {
+    public final static boolean deepEqualCursors(IACursor c1, IACursor c2) {
         while (c1.next()) {
             if (!(c2.next())) {
                 return false;
             }
             IAObject thisO = c1.get();
             IAObject otherO = c2.get();
-            if (!(thisO.equals(otherO))) {
+            if (!(thisO.deepEqual(otherO))) {
                 return false;
             }
         }

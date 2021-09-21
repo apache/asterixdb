@@ -97,7 +97,8 @@ public class ResultPrinterTest {
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
         sessionConfig.set(SessionConfig.FORMAT_INDENT_JSON, true);
         sessionConfig.set(SessionConfig.FORMAT_QUOTE_RECORD,
-                format != SessionConfig.OutputFormat.CLEAN_JSON && format != SessionConfig.OutputFormat.LOSSLESS_JSON);
+                format != SessionConfig.OutputFormat.CLEAN_JSON && format != SessionConfig.OutputFormat.LOSSLESS_JSON
+                        && format != SessionConfig.OutputFormat.LOSSLESS_ADM_JSON);
         return new SessionOutput(sessionConfig, resultWriter, resultPrefix, resultPostfix, appendHandle, appendStatus);
     }
 

@@ -50,4 +50,21 @@ public class StringUtil {
         }
         return sb.toString();
     }
+
+    @FunctionalInterface
+    public interface ICharAccessor<T> {
+        char charAt(T input, int index);
+    }
+
+    public static ICharAccessor<CharSequence> getCharSequenceAccessor() {
+        return CharSequence::charAt;
+    }
+
+    public static ICharAccessor<char[]> getCharArrayAccessor() {
+        return (input, index) -> input[index];
+    }
+
+    public static ICharAccessor<byte[]> getByteArrayAsCharAccessor() {
+        return (input, index) -> (char) input[index];
+    }
 }

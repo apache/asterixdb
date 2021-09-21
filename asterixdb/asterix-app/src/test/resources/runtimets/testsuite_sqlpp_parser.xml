@@ -4415,11 +4415,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="scan">
-      <compilation-unit name="alltypes_01">
-        <output-dir compare="AST">alltypes_01</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="scan">
       <compilation-unit name="alltypes_02">
         <output-dir compare="AST">alltypes_02</output-dir>
       </compilation-unit>

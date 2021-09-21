@@ -79,15 +79,17 @@ public class HexParser {
 
     public static void generateByteArrayFromHexString(char[] input, int start, int length, byte[] output, int offset) {
         for (int i = 0; i < length; i += 2) {
-            output[offset + i / 2] = (byte) ((getValueFromValidHexChar(input[start + i]) << 4)
-                    + getValueFromValidHexChar(input[start + i + 1]));
+            output[offset + i / 2] = getByteFromValidHexChars(input[start + i], input[start + i + 1]);
         }
     }
 
     public static void generateByteArrayFromHexString(byte[] input, int start, int length, byte[] output, int offset) {
         for (int i = 0; i < length; i += 2) {
-            output[offset + i / 2] = (byte) ((getValueFromValidHexChar((char) input[start + i]) << 4)
-                    + getValueFromValidHexChar((char) input[start + i + 1]));
+            output[offset + i / 2] = getByteFromValidHexChars((char) input[start + i], (char) input[start + i + 1]);
         }
+    }
+
+    public static byte getByteFromValidHexChars(char c0, char c1) {
+        return (byte) ((getValueFromValidHexChar(c0) << 4) + getValueFromValidHexChar(c1));
     }
 }
