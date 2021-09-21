@@ -863,8 +863,8 @@
       <groupId>com.nimbusds</groupId>
       <artifactId>nimbus-jose-jwt</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>4.41.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.41.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>9.9.3</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>9.9.3</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
