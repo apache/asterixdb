@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.evaluators.common;
 import org.apache.asterix.dataflow.data.nontagged.Coordinate;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.APolygonSerializerDeserializer;
+import org.apache.asterix.om.base.ARectangle;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SpatialUtils {
@@ -176,5 +177,19 @@ public class SpatialUtils {
 
     public static void setTriangleYCoordinate(DoubleArray trianglesY, int triangleId, int point, double value) {
         trianglesY.get()[triangleId * 3 + point] = value;
+    }
+
+    public static boolean intersects(ARectangle rect1, ARectangle rect2) {
+        // If one rectangle is on left side of other
+        if ((rect1.getP1().getX() > rect2.getP2().getX()) || (rect2.getP1().getX() > rect1.getP2().getX())) {
+            return false;
+        }
+
+        // If one rectangle is above other
+        if ((rect1.getP1().getY() > rect2.getP2().getY()) || (rect2.getP1().getY() > rect1.getP2().getY())) {
+            return false;
+        }
+
+        return true;
     }
 }

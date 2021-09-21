@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.lang.common.util;
 
+import static org.apache.asterix.lang.common.base.Literal.Type.DOUBLE;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -41,6 +43,8 @@ import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.literal.DoubleLiteral;
+import org.apache.asterix.lang.common.literal.FloatLiteral;
+import org.apache.asterix.lang.common.literal.IntegerLiteral;
 import org.apache.asterix.lang.common.literal.LongIntegerLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
@@ -55,6 +59,8 @@ import org.apache.asterix.object.base.AdmNullNode;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
+import org.apache.asterix.om.exceptions.TypeMismatchException;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -145,6 +151,74 @@ public class ExpressionUtils {
             }
         }
         return null;
+    }
+
+    public static Literal reverseSign(Literal lit) throws TypeMismatchException {
+        switch (lit.getLiteralType()) {
+            case DOUBLE:
+                DoubleLiteral dLit = (DoubleLiteral) lit;
+                DoubleLiteral reversedDLit = new DoubleLiteral(-dLit.getValue());
+                return reversedDLit;
+            case FLOAT:
+                FloatLiteral fLit = (FloatLiteral) lit;
+                FloatLiteral reversedFLit = new FloatLiteral(-fLit.getValue());
+                return reversedFLit;
+            case LONG:
+                LongIntegerLiteral lLit = (LongIntegerLiteral) lit;
+                LongIntegerLiteral reversedLLit = new LongIntegerLiteral(-lLit.getValue());
+                return reversedLLit;
+            case INTEGER:
+                IntegerLiteral iLit = (IntegerLiteral) lit;
+                IntegerLiteral reversedILit = new IntegerLiteral(-iLit.getValue());
+                return reversedILit;
+            case NULL:
+            case MISSING:
+                return lit;
+            default:
+                throw new TypeMismatchException(null, convertLiteralTypeTagToATypeTag(lit), ATypeTag.DOUBLE,
+                        ATypeTag.FLOAT, ATypeTag.BIGINT, ATypeTag.INTEGER);
+        }
+    }
+
+    public static double getDoubleValue(Literal item) throws TypeMismatchException {
+        if ((item.getLiteralType() == Literal.Type.DOUBLE) || (item.getLiteralType() == Literal.Type.FLOAT)
+                || (item.getLiteralType() == Literal.Type.LONG) || (item.getLiteralType() == Literal.Type.INTEGER)) {
+            return ((Number) item.getValue()).doubleValue();
+        } else {
+            throw new TypeMismatchException(null, convertLiteralTypeTagToATypeTag(item), ATypeTag.DOUBLE,
+                    ATypeTag.FLOAT, ATypeTag.BIGINT, ATypeTag.INTEGER);
+        }
+    }
+
+    public static long getLongValue(Literal item) throws TypeMismatchException {
+        if ((item.getLiteralType() == Literal.Type.LONG) || (item.getLiteralType() == Literal.Type.INTEGER)) {
+            return ((Number) item.getValue()).longValue();
+        } else {
+            throw new TypeMismatchException(null, convertLiteralTypeTagToATypeTag(item), ATypeTag.BIGINT,
+                    ATypeTag.INTEGER);
+        }
+    }
+
+    private static ATypeTag convertLiteralTypeTagToATypeTag(Literal lit) {
+        switch (lit.getLiteralType()) {
+            case DOUBLE:
+                return ATypeTag.DOUBLE;
+            case FLOAT:
+                return ATypeTag.FLOAT;
+            case LONG:
+                return ATypeTag.BIGINT;
+            case INTEGER:
+                return ATypeTag.INTEGER;
+            case TRUE:
+            case FALSE:
+                return ATypeTag.BOOLEAN;
+            case NULL:
+                return ATypeTag.NULL;
+            case MISSING:
+                return ATypeTag.MISSING;
+            default:
+                return ATypeTag.STRING;
+        }
     }
 
     public static void collectDependencies(Expression expression, IQueryRewriter rewriter,

@@ -41,6 +41,7 @@ public enum SqlppHint {
     LIST_VAL_FILE_HINT("list-val-file"),
     RANGE_HINT("range"),
     SKIP_SECONDARY_INDEX_SEARCH_HINT("skip-index"),
+    SPATIAL_JOIN_HINT("spatial-partitioning"),
     USE_SECONDARY_INDEX_SEARCH_HINT("use-index"),
     VAL_FILE_HINT("val-files"),
     VAL_FILE_SAME_INDEX_HINT("val-file-same-idx"),

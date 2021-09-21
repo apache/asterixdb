@@ -99,6 +99,7 @@
       <item name="GIS Support Overview" href="geo/quickstart.html"/>
       <item name="GIS Functions" href="geo/functions.html"/>
       <item name="Support of Interval Joins" href="interval_join.html"/>
+      <item name="Support of Spatial Joins" href="spatial_join.html"/>
       <item name="Support of Array Indexes" href="sqlpp/arrayindex.html"/>
     </menu>
 

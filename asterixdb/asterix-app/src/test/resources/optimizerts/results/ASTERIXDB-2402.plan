@@ -172,8 +172,8 @@
                                                       -- ASSIGN  |PARTITIONED|
                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            -- HYBRID_HASH_JOIN [$$230, $$232][$$224, $$225]  |PARTITIONED|
-                                                              -- HASH_PARTITION_EXCHANGE [$$230, $$232]  |PARTITIONED|
+                                                            -- HYBRID_HASH_JOIN [$$233, $$235][$$224, $$225]  |PARTITIONED|
+                                                              -- HASH_PARTITION_EXCHANGE [$$233, $$235]  |PARTITIONED|
                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                   -- ASSIGN  |PARTITIONED|
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

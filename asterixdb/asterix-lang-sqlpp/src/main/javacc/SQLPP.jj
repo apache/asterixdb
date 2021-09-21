@@ -63,6 +63,7 @@ import org.apache.asterix.common.annotations.ListValFileDataGen;
 import org.apache.asterix.common.annotations.RangeAnnotation;
 import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
+import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -171,6 +172,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.util.RangeMapBuilder;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
 import org.apache.asterix.lang.sqlpp.clause.FromClause;
@@ -203,6 +205,7 @@ import org.apache.asterix.lang.sqlpp.util.ExpressionToVariableUtil;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
+import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.commons.lang3.ArrayUtils;
@@ -399,6 +402,19 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     private static List<String> parseParenthesizedIdentifierList(String text) throws CompilationException {
         return new SQLPPParser(text).parseParenthesizedIdentifierList();
+    }
+
+    private List<Literal> parseParenthesizedLiteralList() throws CompilationException {
+        return parseImpl(new ParseFunction<List<Literal>>() {
+            @Override
+            public  List<Literal> parse() throws ParseException {
+                return SQLPPParser.this.ParenthesizedLiteralList();
+            }
+        });
+    }
+
+    private static List<Literal> parseParenthesizedLiteralList(String text) throws CompilationException {
+        return new SQLPPParser(text).parseParenthesizedLiteralList();
     }
 
     @Override
@@ -654,6 +670,47 @@ class SQLPPParser extends ScopeChecker implements IParser {
               // if parameter parsing fails then ignore this hint
               List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
               return SkipSecondaryIndexSearchExpressionAnnotation.newInstance(indexNames);
+            }
+          case SPATIAL_JOIN_HINT:
+            List<Literal> hintValues = parseParenthesizedLiteralList(hintToken.hintParams);
+
+            // Handle exceptions
+            if (hintValues.size() != 6) {
+              throw new SqlppParseException(getSourceLocation(hintToken), String.format("Unexpected hint: %s. 6 arguments are required.",
+                                hintToken.hint.toString()));
+            }
+
+            for (int i = 0; i < 4; i++) {
+              Literal lit = hintValues.get(i);
+              if ((lit.getLiteralType() != Literal.Type.DOUBLE)
+                    && (lit.getLiteralType() != Literal.Type.FLOAT)
+                    && (lit.getLiteralType() != Literal.Type.LONG)
+                    && (lit.getLiteralType() != Literal.Type.INTEGER)){
+                throw new SqlppParseException(getSourceLocation(hintToken), String.format("Unexpected hint: %s. Numeric value is required for first 4 arguments.",
+                                hintToken.hint.toString()));
+              }
+            }
+
+            for (int i = 4; i < 6; i++) {
+              Literal lit = hintValues.get(i);
+              if ((lit.getLiteralType() != Literal.Type.LONG)
+                    && (lit.getLiteralType() != Literal.Type.INTEGER)) {
+                throw new SqlppParseException(getSourceLocation(hintToken), String.format("Unexpected hint: %s. Long/int is required for last 2 arguments.",
+                              hintToken.hint.toString()));
+              }
+            }
+
+            try {
+              double minX = ExpressionUtils.getDoubleValue(hintValues.get(0));
+              double minY = ExpressionUtils.getDoubleValue(hintValues.get(1));
+              double maxX = ExpressionUtils.getDoubleValue(hintValues.get(2));
+              double maxY = ExpressionUtils.getDoubleValue(hintValues.get(3));
+              int numRows = (int) ExpressionUtils.getLongValue(hintValues.get(4));
+              int numColumns = (int) ExpressionUtils.getLongValue(hintValues.get(5));
+              SpatialJoinAnnotation spatialJoinAnn = new SpatialJoinAnnotation(minX, minY, maxX, maxY, numRows, numColumns);
+              return spatialJoinAnn;
+            } catch (TypeMismatchException e) {
+              throw new SqlppParseException(getSourceLocation(hintToken), e.getMessage());
             }
           case USE_SECONDARY_INDEX_SEARCH_HINT:
             if (hintToken.hintParams == null) {
@@ -2900,8 +2957,8 @@ FunctionName FunctionName() throws ParseException:
   // Note: there's a copy of this production in PrimaryExpr() (LOOKAHEAD for FunctionCallExpr())
   //       that copy must be kept in sync with this code
   prefix = MultipartIdentifierWithHints(
-    SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT, SqlppHint.RANGE_HINT,
-    SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT
+    SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT, SqlppHint.RANGE_HINT, SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT,
+    SqlppHint.SPATIAL_JOIN_HINT, SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT
   )
   (<SHARP> suffix = Identifier())?
   {
@@ -2974,6 +3031,49 @@ List<String> ParenthesizedIdentifierList() throws ParseException:
   <LEFTPAREN>
   ident = Identifier() { list.add(ident); }
   ( <COMMA> ident = Identifier() { list.add(ident); } )*
+  <RIGHTPAREN>
+  {
+    return list;
+  }
+}
+
+List<Literal> ParenthesizedLiteralList() throws ParseException:
+{
+  List<Literal> list = new ArrayList<Literal>();
+  boolean minus = false;
+  Expression litExpr = null;
+  Literal lit = null;
+}
+{
+  <LEFTPAREN>
+  (<MINUS> { minus = true; })? litExpr = Literal()
+  {
+    lit = ((LiteralExpr) litExpr).getValue();
+    if (minus)
+    {
+      try {
+        lit = ExpressionUtils.reverseSign(lit);
+      } catch (TypeMismatchException e) {
+        throw new SqlppParseException(getSourceLocation(token), e.getMessage());
+      }
+      minus = false;
+    }
+    list.add(lit);
+  }
+  ( <COMMA> (<MINUS> { minus = true; })? litExpr = Literal()
+  {
+    lit = ((LiteralExpr) litExpr).getValue();
+    if (minus)
+    {
+      try {
+        lit = ExpressionUtils.reverseSign(lit);
+      } catch (TypeMismatchException e) {
+        throw new SqlppParseException(getSourceLocation(token), e.getMessage());
+      }
+      minus = false;
+    }
+    list.add(lit);
+  } )*
   <RIGHTPAREN>
   {
     return list;

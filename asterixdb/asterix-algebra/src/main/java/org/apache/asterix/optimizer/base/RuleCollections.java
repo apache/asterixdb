@@ -45,6 +45,8 @@ import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractWindowExpressionsRule;
 import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
+import org.apache.asterix.optimizer.rules.FilterRefineSpatialJoinRuleForSTDistanceFunction;
+import org.apache.asterix.optimizer.rules.FilterRefineSpatialJoinRuleForSTFunctions;
 import org.apache.asterix.optimizer.rules.FindDataSourcesRule;
 import org.apache.asterix.optimizer.rules.FixReplicateOperatorOutputsRule;
 import org.apache.asterix.optimizer.rules.FullTextContainsParameterCheckAndSetRule;
@@ -66,6 +68,7 @@ import org.apache.asterix.optimizer.rules.ListifyUnnestingFunctionRule;
 import org.apache.asterix.optimizer.rules.LoadRecordFieldsRule;
 import org.apache.asterix.optimizer.rules.MetaFunctionToMetaVariableRule;
 import org.apache.asterix.optimizer.rules.NestGroupByRule;
+import org.apache.asterix.optimizer.rules.PullSelectOutOfSpatialJoin;
 import org.apache.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
 import org.apache.asterix.optimizer.rules.PushAggregateIntoNestedSubplanRule;
 import org.apache.asterix.optimizer.rules.PushFieldAccessRule;
@@ -279,6 +282,8 @@ public final class RuleCollections {
         fieldLoads.add(new NestedSubplanToJoinRule());
         fieldLoads.add(new InlineSubplanInputForNestedTupleSourceRule());
         fieldLoads.add(new RemoveLeftOuterUnnestForLeftOuterJoinRule());
+        fieldLoads.add(new FilterRefineSpatialJoinRuleForSTFunctions());
+        fieldLoads.add(new FilterRefineSpatialJoinRuleForSTDistanceFunction());
         return fieldLoads;
     }
 
@@ -374,6 +379,8 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new ConsolidateAssignsRule(true));
         // After adding projects, we may need need to set physical operators again.
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
+        // Optimized spatial join's query plan produces more join conditions, so we need to pull out these conditions
+        physicalRewritesAllLevels.add(new PullSelectOutOfSpatialJoin());
         return physicalRewritesAllLevels;
     }
 

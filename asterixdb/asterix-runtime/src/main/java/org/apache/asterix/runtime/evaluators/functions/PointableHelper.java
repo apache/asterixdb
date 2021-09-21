@@ -170,43 +170,49 @@ public class PointableHelper {
     // 1 pointable check
     public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1)
             throws HyracksDataException {
-        return checkAndSetMissingOrNull(result, null, pointable1, null, null, null);
+        return checkAndSetMissingOrNull(result, null, pointable1, null, null, null, null);
     }
 
     // 2 pointables check
     public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2)
             throws HyracksDataException {
-        return checkAndSetMissingOrNull(result, null, pointable1, pointable2, null, null);
+        return checkAndSetMissingOrNull(result, null, pointable1, pointable2, null, null, null);
     }
 
     // 3 pointables check
     public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2,
             IPointable pointable3) throws HyracksDataException {
-        return checkAndSetMissingOrNull(result, null, pointable1, pointable2, pointable3, null);
+        return checkAndSetMissingOrNull(result, null, pointable1, pointable2, pointable3, null, null);
     }
 
     // 4 pointables check
     public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2,
             IPointable pointable3, IPointable pointable4) throws HyracksDataException {
-        return checkAndSetMissingOrNull(result, null, pointable1, pointable2, pointable3, pointable4);
+        return checkAndSetMissingOrNull(result, null, pointable1, pointable2, pointable3, pointable4, null);
+    }
+
+    // 5 pointables check
+    public static boolean checkAndSetMissingOrNull(IPointable result, IPointable pointable1, IPointable pointable2,
+            IPointable pointable3, IPointable pointable4, IPointable pointable5) throws HyracksDataException {
+        return checkAndSetMissingOrNull(result, null, pointable1, pointable2, pointable3, pointable4, pointable5);
     }
 
     // 1 pointable check (check list members for missing values)
     public static boolean checkAndSetMissingOrNull(IPointable result, ListAccessor listAccessor, IPointable pointable1)
             throws HyracksDataException {
-        return checkAndSetMissingOrNull(result, listAccessor, pointable1, null, null, null);
+        return checkAndSetMissingOrNull(result, listAccessor, pointable1, null, null, null, null);
     }
 
     // 2 pointables check (check list members for missing values)
     public static boolean checkAndSetMissingOrNull(IPointable result, ListAccessor listAccessor, IPointable pointable1,
             IPointable pointable2) throws HyracksDataException {
-        return checkAndSetMissingOrNull(result, listAccessor, pointable1, pointable2, null, null);
+        return checkAndSetMissingOrNull(result, listAccessor, pointable1, pointable2, null, null, null);
     }
 
     // 3 pointables check (check list members for missing values)
     public static boolean checkAndSetMissingOrNull(IPointable result, ListAccessor listAccessor, IPointable pointable1,
             IPointable pointable2, IPointable pointable3) throws HyracksDataException {
-        return checkAndSetMissingOrNull(result, listAccessor, pointable1, pointable2, pointable3, null);
+        return checkAndSetMissingOrNull(result, listAccessor, pointable1, pointable2, pointable3, null, null);
     }
 
     /**
@@ -227,11 +233,13 @@ public class PointableHelper {
      * @param pointable2 the second pointable to be checked
      * @param pointable3 the third pointable to be checked
      * @param pointable4 the fourth pointable to be checked
+     * @param pointable5 the fourth pointable to be checked
      *
      * @return {@code true} if the pointable value is missing or null, {@code false} otherwise.
      */
     public static boolean checkAndSetMissingOrNull(IPointable result, ListAccessor listAccessor, IPointable pointable1,
-            IPointable pointable2, IPointable pointable3, IPointable pointable4) throws HyracksDataException {
+            IPointable pointable2, IPointable pointable3, IPointable pointable4, IPointable pointable5)
+            throws HyracksDataException {
 
         // this flag will keep an eye on whether a null value is encountered or not
         boolean isMeetNull = false;
@@ -269,6 +277,17 @@ public class PointableHelper {
 
         if (pointable4 != null) {
             switch (getPointableValueState(pointable4, listAccessor)) {
+                case MISSING:
+                    setMissing(result);
+                    return true;
+                case NULL:
+                    isMeetNull = true;
+                    break;
+            }
+        }
+
+        if (pointable5 != null) {
+            switch (getPointableValueState(pointable5, listAccessor)) {
                 case MISSING:
                     setMissing(result);
                     return true;

@@ -10005,6 +10005,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="spatial">
+      <compilation-unit name="hints_spatial_partitioning">
+        <output-dir compare="Text">hints_spatial_partitioning</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
       <compilation-unit name="line_accessor">
         <output-dir compare="Text">line_accessor</output-dir>
       </compilation-unit>
@@ -10102,6 +10107,21 @@
     <test-case FilePath="spatial">
       <compilation-unit name="spatial-large-data">
         <output-dir compare="Text">spatial-large-data</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="spatial_join_dynamic_partitioning">
+        <output-dir compare="Text">spatial_join_dynamic_partitioning</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="spatial_join_static_partitioning">
+        <output-dir compare="Text">spatial_join_static_partitioning</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="spatial_left_outer_join_st_intersects">
+        <output-dir compare="Text">spatial_left_outer_join_st_intersects</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -15147,7 +15167,7 @@
         <expected-warn>ASX1107: Unexpected hint: indexnl. "hash" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: hash. "hash-bcast", "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: auto. "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "range", "skip-index", "use-index" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: hash. "indexnl", "range", "skip-index", "spatial-partitioning", "use-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: hash. None expected at this location</expected-warn>
       </compilation-unit>
     </test-case>
@@ -15170,7 +15190,7 @@
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_groupby. "hash" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr. "hash-bcast", "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_between. "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
-        <expected-warn>ASX1107: Unexpected hint: unknown_hint_funcall. "indexnl", "range", "skip-index", "use-index" expected at this location</expected-warn>
+        <expected-warn>ASX1107: Unexpected hint: unknown_hint_funcall. "indexnl", "range", "skip-index", "spatial-partitioning", "use-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_elsewhere. None expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr_6. "hash-bcast", "indexnl", "skip-index", "use-index" expected at this location</expected-warn>
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr_6. "hash-bcast", "indexnl", "skip-index", "use-index" expected at this location</expected-warn>

@@ -134,6 +134,7 @@ import org.apache.asterix.om.typecomputer.impl.ToObjectTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.TreatAsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryBinaryInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UniformInputTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.UnionMbrAggTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnorderedListConstructorTypeComputer;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -607,6 +608,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-kurtosis", 1);
     public static final FunctionIdentifier NULL_WRITER =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-null-writer", 1);
+    public static final FunctionIdentifier UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-union_mbr", 1);
+    public static final FunctionIdentifier LOCAL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-union_mbr", 1);
+    public static final FunctionIdentifier INTERMEDIATE_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-union_mbr", 1);
+    public static final FunctionIdentifier GLOBAL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-union_mbr", 1);
 
     public static final FunctionIdentifier SCALAR_ARRAYAGG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "arrayagg", 1);
@@ -634,6 +643,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "skewness", 1);
     public static final FunctionIdentifier SCALAR_KURTOSIS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "kurtosis", 1);
+    public static final FunctionIdentifier SCALAR_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "union_mbr", 1);
 
     // serializable aggregate functions
     public static final FunctionIdentifier SERIAL_AVG =
@@ -836,6 +847,14 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-kurtosis", 1);
     public static final FunctionIdentifier LOCAL_SQL_KURTOSIS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-kurtosis", 1);
+    public static final FunctionIdentifier SQL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-union_mbr", 1);
+    public static final FunctionIdentifier LOCAL_SQL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-union_mbr", 1);
+    public static final FunctionIdentifier INTERMEDIATE_SQL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-sql-union_mbr", 1);
+    public static final FunctionIdentifier GLOBAL_SQL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-union_mbr", 1);
 
     public static final FunctionIdentifier SCALAR_SQL_AVG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-avg", 1);
@@ -859,6 +878,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-skewness", 1);
     public static final FunctionIdentifier SCALAR_SQL_KURTOSIS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-kurtosis", 1);
+    public static final FunctionIdentifier SCALAR_SQL_UNION_MBR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-union_mbr", 1);
 
     // serializable sql aggregate functions
     public static final FunctionIdentifier SERIAL_SQL_AVG =
@@ -1033,6 +1054,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "subset-collection", 3);
 
     public static final FunctionIdentifier RANGE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "range", 2);
+    public static final FunctionIdentifier SPATIAL_TILE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "spatial-tile", 4);
 
     // fuzzy functions
     public static final FunctionIdentifier FUZZY_EQ =
@@ -1247,6 +1270,10 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier CAST_TYPE = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast", 1);
     public static final FunctionIdentifier CAST_TYPE_LAX =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "cast-lax", 1);
+    public static final FunctionIdentifier REFERENCE_TILE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "reference-tile", 6);
+    public static final FunctionIdentifier GET_INTERSECTION =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "get-intersection", 2);
 
     public static final FunctionIdentifier CREATE_UUID =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "create-uuid", 0);
@@ -1389,6 +1416,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-sym-difference", 2);
     public static final FunctionIdentifier ST_POLYGONIZE =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-polygonize", 1);
+
+    public static final FunctionIdentifier ST_MBR = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-mbr", 1);
+    public static final FunctionIdentifier ST_MBR_ENLARGE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "st-mbr-enlarge", 2);
 
     // Spatial and temporal type accessors
     public static final FunctionIdentifier ACCESSOR_TEMPORAL_YEAR =
@@ -1869,6 +1900,8 @@ public class BuiltinFunctions {
                 new ScalarVersionOfAggregateResultType(NumericSumAggTypeComputer.INSTANCE);
         ScalarVersionOfAggregateResultType scalarMinMaxTypeComputer =
                 new ScalarVersionOfAggregateResultType(MinMaxAggTypeComputer.INSTANCE);
+        ScalarVersionOfAggregateResultType scalarUnionMbrTypeComputer =
+                new ScalarVersionOfAggregateResultType(UnionMbrAggTypeComputer.INSTANCE);
 
         addPrivateFunction(LISTIFY, OrderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(SCALAR_ARRAYAGG, ScalarArrayAggTypeComputer.INSTANCE, true);
@@ -1912,6 +1945,10 @@ public class BuiltinFunctions {
         addFunction(KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(NULL_WRITER, PropagateTypeComputer.INSTANCE_NULLABLE, true);
+        addFunction(UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERMEDIATE_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
 
         // SUM
         addFunction(SUM, NumericSumAggTypeComputer.INSTANCE, true);
@@ -1970,6 +2007,7 @@ public class BuiltinFunctions {
         addPrivateFunction(SERIAL_GLOBAL_SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_UNION_MBR, scalarUnionMbrTypeComputer, true);
 
         // SQL SUM
         addFunction(SQL_SUM, NumericSumAggTypeComputer.INSTANCE, true);
@@ -2030,6 +2068,11 @@ public class BuiltinFunctions {
         addPrivateFunction(LOCAL_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_KURTOSIS, LocalSingleVarStatisticsTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_KURTOSIS, NullableDoubleTypeComputer.INSTANCE, true);
+        addFunction(SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERMEDIATE_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
 
         addPrivateFunction(SERIAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE, true);
@@ -2174,6 +2217,9 @@ public class BuiltinFunctions {
         addFunction(GET_CIRCLE_RADIUS_ACCESSOR, ADoubleTypeComputer.INSTANCE, true);
         addFunction(GET_CIRCLE_CENTER_ACCESSOR, APointTypeComputer.INSTANCE, true);
         addFunction(GET_POINTS_LINE_RECTANGLE_POLYGON_ACCESSOR, OrderedListOfAPointTypeComputer.INSTANCE, true);
+        addPrivateFunction(SPATIAL_TILE, AInt32TypeComputer.INSTANCE, true);
+        addPrivateFunction(REFERENCE_TILE, AInt32TypeComputer.INSTANCE, true);
+        addPrivateFunction(GET_INTERSECTION, ARectangleTypeComputer.INSTANCE, true);
 
         //geo functions
         addFunction(ST_AREA, ADoubleTypeComputer.INSTANCE, true);
@@ -2243,6 +2289,9 @@ public class BuiltinFunctions {
         addPrivateFunction(ST_UNION_AGG, AGeometryTypeComputer.INSTANCE, true);
         addPrivateFunction(ST_UNION_SQL_AGG, AGeometryTypeComputer.INSTANCE, true);
         addFunction(ST_POLYGONIZE, AGeometryTypeComputer.INSTANCE, true);
+
+        addPrivateFunction(ST_MBR, ARectangleTypeComputer.INSTANCE, true);
+        addPrivateFunction(ST_MBR_ENLARGE, ARectangleTypeComputer.INSTANCE, true);
 
         // Binary functions
         addFunction(BINARY_HEX_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE_NULLABLE, true);
@@ -3066,6 +3115,18 @@ public class BuiltinFunctions {
         addScalarAgg(ST_UNION_SQL_AGG, SCALAR_ST_UNION_SQL_AGG);
         addDistinctAgg(ST_UNION_SQL_AGG_DISTINCT, ST_UNION_SQL_AGG);
         addScalarAgg(ST_UNION_SQL_AGG_DISTINCT, SCALAR_ST_UNION_SQL_AGG_DISTINCT);
+
+        // SQL UNION MBR
+        addAgg(SQL_UNION_MBR);
+        addAgg(LOCAL_SQL_UNION_MBR);
+        addAgg(GLOBAL_SQL_UNION_MBR);
+        addLocalAgg(SQL_UNION_MBR, LOCAL_SQL_UNION_MBR);
+        addIntermediateAgg(LOCAL_SQL_UNION_MBR, INTERMEDIATE_SQL_UNION_MBR);
+        addIntermediateAgg(GLOBAL_SQL_UNION_MBR, GLOBAL_SQL_UNION_MBR);
+        addIntermediateAgg(SQL_UNION_MBR, GLOBAL_SQL_UNION_MBR);
+        addGlobalAgg(SQL_UNION_MBR, GLOBAL_SQL_UNION_MBR);
+
+        addScalarAgg(SQL_UNION_MBR, SCALAR_SQL_UNION_MBR);
     }
 
     interface BuiltinFunctionProperty {
@@ -3110,6 +3171,7 @@ public class BuiltinFunctions {
         addUnnestFun(RANGE, true);
         addUnnestFun(SCAN_COLLECTION, false);
         addUnnestFun(SUBSET_COLLECTION, false);
+        addUnnestFun(SPATIAL_TILE, false);
     }
 
     public enum DataSourceFunctionProperty implements BuiltinFunctionProperty {
@@ -3306,11 +3368,18 @@ public class BuiltinFunctions {
     }
 
     public enum SpatialFilterKind {
-        SI
+        SI,
+        STFR
     }
 
     static {
         spatialFilterFunctions.put(BuiltinFunctions.SPATIAL_INTERSECT, SpatialFilterKind.SI);
+        spatialFilterFunctions.put(BuiltinFunctions.ST_INTERSECTS, SpatialFilterKind.STFR);
+        spatialFilterFunctions.put(BuiltinFunctions.ST_OVERLAPS, SpatialFilterKind.STFR);
+        spatialFilterFunctions.put(BuiltinFunctions.ST_TOUCHES, SpatialFilterKind.STFR);
+        spatialFilterFunctions.put(BuiltinFunctions.ST_CONTAINS, SpatialFilterKind.STFR);
+        spatialFilterFunctions.put(BuiltinFunctions.ST_CROSSES, SpatialFilterKind.STFR);
+        spatialFilterFunctions.put(BuiltinFunctions.ST_WITHIN, SpatialFilterKind.STFR);
     }
 
     public static boolean isGlobalAggregateFunction(FunctionIdentifier fi) {
@@ -3318,7 +3387,11 @@ public class BuiltinFunctions {
     }
 
     public static boolean isSpatialFilterFunction(FunctionIdentifier fi) {
-        return spatialFilterFunctions.get(fi) != null;
+        return spatialFilterFunctions.get(fi) == SpatialFilterKind.SI;
+    }
+
+    public static boolean isSTFilterRefineFunction(FunctionIdentifier fi) {
+        return spatialFilterFunctions.get(fi) == SpatialFilterKind.STFR;
     }
 
     static {
