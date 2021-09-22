@@ -18,15 +18,15 @@
  !-->
 
 ## <a id="ArrayIndexFlag">Controlling Array-Index Access Method Plan Parameter</a>
-By default, the system does not attempt to utilize array indexes as an access method (even if an array index is present and is applicable).
-If you believe that your query will benefit from an array index, toggle the parameter below.
+By default, the system attempts to utilize array indexes as an access method if an array index is present and is applicable.
+If you believe that your query will not benefit from an array index, toggle the parameter below.
 
-*  **compiler.arrayindex**: if this is set to true, array indexes will be considered as an access method for applicable queries; the default value is false.
+*  **compiler.arrayindex**: if this is set to true, array indexes will be considered as an access method for applicable queries; the default value is true.
 
 
 #### Example
 
-    set `compiler.arrayindex` "true";
+    set `compiler.arrayindex` "false";
 
     SELECT o.orderno
     FROM orders o

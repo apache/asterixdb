@@ -339,6 +339,13 @@ This index can be useful for accelerating exact-match queries, range search quer
 
     CREATE INDEX cCustIdx ON orders(custid) TYPE BTREE;
 
+The following example creates a btree index called `oCNameIdx` on the `cname` field of the orders dataset, but does not insert `NULL` and `MISSING` values into the index.
+By default, if `INCLUDE/EXCLUDE UNKNOWN KEY` is not specified, unknown values will be inserted into btree indexes.
+
+##### Example
+
+    CREATE INDEX oCNametIdx ON orders(cname) EXCLUDE UNKNOWN KEY;
+
 The following example creates an open btree index called `oCreatedTimeIdx` on the (non-declared) `createdTime` field of the `orders` dataset having `datetime` type.
 This index can be useful for accelerating exact-match queries, range search queries, and joins involving the `createdTime` field.
 The index is enforced so that records that do not have the `createdTime` field or have a mismatched type on the field
@@ -370,11 +377,11 @@ and joins involving the nested `orderUserName` field.
 
 The following example creates an array index called `oItemsPriceIdx` on the `price` field inside the `items` array of the `orders` dataset.
 This index can be useful for accelerating membership queries, existential or universal quantification queries, or joins involving the `price` field inside this array.
-(To enable array index query optimization, be sure to set the [`arrayindex` compiler option](manual.html#ArrayIndexFlag).)
+Unknown values cannot currently be stored inside array indexes, so `EXCLUDE UNKNOWN KEY` must be specified.
 
 #### Example
 
-    CREATE INDEX oItemsPriceIdx ON orders(UNNEST items SELECT price);
+    CREATE INDEX oItemsPriceIdx ON orders(UNNEST items SELECT price) EXCLUDE UNKNOWN KEY;
 
 The following example creates an open rtree index called `oOrderLocIdx` on the order-location field of the `orders` dataset. This index can be useful for accelerating queries that use the [`spatial-intersect` function](builtins.html#spatial_intersect) in a predicate involving the sender-location field.
 

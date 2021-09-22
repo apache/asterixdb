@@ -213,6 +213,7 @@ CreateIndex ::= CreateSecondaryIndex | CreatePrimaryKeyIndex
 
 CreateSecondaryIndex ::= "CREATE" "INDEX" Identifier ("IF" "NOT" "EXISTS")? "ON" QualifiedName
                        "(" IndexedElement ( "," IndexedElement )* ")" ("TYPE" IndexType)? ("ENFORCED")?
+                       (( "EXCLUDE" | "INCLUDE" ) "UNKNOWN" "KEY")?
 
 CreatePrimaryKeyIndex ::= "CREATE" "PRIMARY" "INDEX" Identifier? ("IF" "NOT" "EXISTS")? "ON" QualifiedName ("TYPE" "BTREE")?
 

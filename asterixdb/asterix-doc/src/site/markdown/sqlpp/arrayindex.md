@@ -70,12 +70,10 @@ All query examples here will use the orders and products datasets below.
 
 Let us now create an index on the `categories` multiset of the `products` dataset.
 
-    CREATE INDEX pCategoriesIdx ON products (UNNEST categories);
+    CREATE INDEX pCategoriesIdx ON products (UNNEST categories) EXCLUDE UNKNOWN KEY;
 
 Suppose we now want to find all products that have the category "Food".
 The following membership query will utilize the index we just created.
-
-    SET `compiler.arrayindex` "true";
 
     SELECT p
     FROM products p
@@ -83,20 +81,16 @@ The following membership query will utilize the index we just created.
 
 We can also rewrite the query above as an explicit existential quantification query with an equality predicate and the index will be utilized.
 
-    SET `compiler.arrayindex` "true";
-
     SELECT p
     FROM products p
     WHERE SOME c IN p.categories SATISFIES c = "Food";
 
 Let us now create an index on the `qty` and `price` fields in the `items` array of the `orders` dataset.
 
-    CREATE INDEX oItemsQtyPriceIdx ON orders (UNNEST items SELECT qty, price);
+    CREATE INDEX oItemsQtyPriceIdx ON orders (UNNEST items SELECT qty, price) EXCLUDE UNKNOWN KEY;
 
 Now suppose we want to find all orders that only have items with large quantities and low prices, not counting orders without any items.
 The following universal quantification query will utilize the index we just created.
-
-    SET `compiler.arrayindex` "true";
 
     SELECT o
     FROM orders o
@@ -112,16 +106,12 @@ Array indexes can also be used to accelerate queries that involve the explicit u
 We can express the same membership / existential example above using an explicit `UNNEST` query.
 (To keep the same cardinality as the query above (i.e. to undo the `UNNEST`), we add a `DISTINCT` clause, though the index would be utilized either way.)
 
-    SET `compiler.arrayindex` "true";
-
     SELECT DISTINCT p
     FROM products p, p.categories c
     WHERE c = "Food";
 
 As another example, suppose that we want to find all orders that have *some* item with a large quantity.
 The following query will utilize the `oItemsQtyPriceIdx` we created, using only the first field in the index `qty`.
-
-    SET `compiler.arrayindex` "true";
 
     SELECT DISTINCT o
     FROM orders o, o.items i
@@ -133,18 +123,16 @@ The following query will utilize the `oItemsQtyPriceIdx` we created, using only 
 Finally, array indexes can also be used for index nested-loop joins if the field being joined is located within an array.
 Let us create another index on the `items` array of the `orders` dataset, this time on the `productno` field.
 
-    CREATE INDEX oProductIDIdx ON orders (UNNEST items SELECT productno);
+    CREATE INDEX oProductIDIdx ON orders (UNNEST items SELECT productno) EXCLUDE UNKNOWN KEY;
 
 Now suppose we want to find all products located in a specific order.
 We can accomplish this with the join query below.
 Note that we must specify the `indexnl` join hint to tell AsterixDB that we want to optimize this specific join, as hash joins are the default join method otherwise.
 
-    SET `compiler.arrayindex` "true";
-
     SELECT DISTINCT p
-    FROM products p, orders o, o.items i
-    WHERE i.productno /*+ indexnl */ = p.productno
-          AND o.custid = "C41";
+    FROM products p, orders o
+    WHERE o.custid = "C41" AND 
+          SOME i IN o.items SATISFIES i.productno /*+ indexnl */ = p.productno;
 
 
 ## <a id="ComplexIndexingExamples">Complex Indexing Examples</a> <font size="4"><a href="#toc">[Back to TOC]</a></font> ##
@@ -154,9 +142,17 @@ Note that we must specify the `indexnl` join hint to tell AsterixDB that we want
 Similar to atomic indexes, array indexes are not limited to closed fields.
 The following DDLs illustrate how we could express `CREATE INDEX` statements comparable to those above if the to-be-indexed fields were not included in the their dataset's type definitions.
 
-    CREATE INDEX pCategoriesIdx ON products (UNNEST categories : string);
-    CREATE INDEX oItemsQtyPriceIdx ON orders (UNNEST items SELECT qty : int, price : int);
-    CREATE INDEX oProductIDIdx ON orders (UNNEST items SELECT productno : int);
+    CREATE INDEX pCategoriesIdx ON products (UNNEST categories : string) EXCLUDE UNKNOWN KEY;
+    CREATE INDEX oItemsQtyPriceIdx ON orders (UNNEST items SELECT qty : int, price : int) EXCLUDE UNKNOWN KEY;
+    CREATE INDEX oProductIDIdx ON orders (UNNEST items SELECT productno : int) EXCLUDE UNKNOWN KEY;
+
+### Composite Atomic-Array Indexes
+
+Indexed elements within array indexes are also not limited to fields within arrays.
+The following DDLs demonstrate indexing fields that are within an array and fields that are outside any array.
+
+    CREATE INDEX oOrderNoItemPriceIdx ON orders (orderno, ( UNNEST items SELECT price )) EXCLUDE UNKNOWN KEY;
+    CREATE INDEX oOrderItemPriceNoIdx ON orders (( UNNEST items SELECT price ), orderno) EXCLUDE UNKNOWN KEY;
 
 ### Arrays in Arrays
 
@@ -165,16 +161,14 @@ We can generalize this to arrays of arbitrary depth, as long as an object encaps
 The following DDLs describe indexing the `qty` field in an `items` array at various depths.
 
     // { orderno: ..., items0: [ { items1: [ { qty: int, ... } ] } ] }
-    CREATE INDEX oItemItemQtyIdx ON orders (UNNEST items0 UNNEST items1 SELECT qty);
+    CREATE INDEX oItemItemQtyIdx ON orders (UNNEST items0 UNNEST items1 SELECT qty) EXCLUDE UNKNOWN KEY;
 
     // { orderno: ..., items0: [ { items1: [ { items2: [ { qty: int, ... } ] } ] } ] }
-    CREATE INDEX oItemItemItemQtyIdx ON orders (UNNEST items0 UNNEST items1 UNNEST items2 SELECT qty);
+    CREATE INDEX oItemItemItemQtyIdx ON orders (UNNEST items0 UNNEST items1 UNNEST items2 SELECT qty) EXCLUDE UNKNOWN KEY;
 
 The queries below will utilize the indexes above.
 The first query utilizes the `oItemItemQtyIdx` index through nested existential quantification.
 The second query utilizes the `oItemItemItemQtyIdx` index with three unnesting clauses.
-
-    SET `compiler.arrayindex` "true";
 
     SELECT o
     FROM orders o
