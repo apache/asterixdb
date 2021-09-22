@@ -38,8 +38,9 @@ public class ArrayDataset {
     public static final String[] VALUES_FOR_ADDITIONAL_GROUPS = new String[] { "1", "2", "3", "4", "5" };
     public static final String[] VALUES_FOR_ADDITIONAL_FIELDS = new String[] { "1", "2" };
 
-    public static final String[] CONTAINER_OBJECT_NAMES = new String[] { "container_object_1", "container_object_2" };
     public static final String[] CONTAINED_OBJECT_NAMES = new String[] { "contained_object_1", "contained_object_2" };
+    public static final String[] CONTAINER_OBJECT_NAMES = new String[] { "container_object_A", "container_object_B",
+            "container_object_C", "container_object_D", "container_object_E" };
 
     private String fromBaseQuery;
 

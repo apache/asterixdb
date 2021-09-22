@@ -44,6 +44,7 @@ public class ValueSupplierFactory {
 
     private class BaseArrayIndexValueSupplier extends ArrayIndex.Builder.ValueSupplier {
         private final Set<BaseWisconsinTable.Field> consumedFields = new LinkedHashSet<>();
+        private final Set<String> consumedContainedNames = new LinkedHashSet<>();
 
         @Override
         public BaseWisconsinTable.Field getAtomicBaseField() {
@@ -78,8 +79,16 @@ public class ValueSupplierFactory {
             }
             fieldName.add(baseField.fieldName);
             if (randomGenerator.nextBoolean()) {
-                int index = randomGenerator.nextInt(ArrayDataset.CONTAINED_OBJECT_NAMES.length);
-                fieldName.add(ArrayDataset.CONTAINED_OBJECT_NAMES[index]);
+                // Three tries to generate a unique contained name. Otherwise, we default to no contained name.
+                for (int i = 0; i < 3; i++) {
+                    int index = randomGenerator.nextInt(ArrayDataset.CONTAINED_OBJECT_NAMES.length);
+                    String containedName = ArrayDataset.CONTAINED_OBJECT_NAMES[index];
+                    if (!consumedContainedNames.contains(containedName)) {
+                        fieldName.add(containedName);
+                        consumedContainedNames.add(containedName);
+                        break;
+                    }
+                }
             }
             return fieldName;
         }
