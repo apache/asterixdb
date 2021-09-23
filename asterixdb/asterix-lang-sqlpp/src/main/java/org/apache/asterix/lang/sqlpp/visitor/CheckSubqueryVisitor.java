@@ -107,10 +107,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
 
     @Override
     public Boolean visit(Projection projection, ILangExpression arg) throws CompilationException {
-        if (projection.star()) {
-            return false;
-        }
-        return visit(projection.getExpression(), arg);
+        return projection.hasExpression() && visit(projection.getExpression(), arg);
     }
 
     @Override

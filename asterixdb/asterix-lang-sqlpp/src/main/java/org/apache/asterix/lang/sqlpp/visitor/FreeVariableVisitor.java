@@ -146,10 +146,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
     @Override
     public Void visit(Projection projection, Collection<VariableExpr> freeVars) throws CompilationException {
-        if (!projection.star()) {
-            projection.getExpression().accept(this, freeVars);
-        }
-        return null;
+        return projection.hasExpression() ? projection.getExpression().accept(this, freeVars) : null;
     }
 
     @Override

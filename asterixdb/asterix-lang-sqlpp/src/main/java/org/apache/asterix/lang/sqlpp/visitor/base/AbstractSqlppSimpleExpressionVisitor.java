@@ -113,7 +113,7 @@ public class AbstractSqlppSimpleExpressionVisitor
 
     @Override
     public Expression visit(Projection projection, ILangExpression arg) throws CompilationException {
-        if (!projection.star()) {
+        if (projection.hasExpression()) {
             projection.setExpression(visit(projection.getExpression(), arg));
         }
         return null;

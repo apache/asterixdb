@@ -68,8 +68,16 @@ public class SelectExpression extends AbstractExpression {
         return selectSetOperation;
     }
 
+    public void setOrderbyClause(OrderbyClause orderbyClause) {
+        this.orderbyClause = orderbyClause;
+    }
+
     public OrderbyClause getOrderbyClause() {
         return orderbyClause;
+    }
+
+    public void setLimitClause(LimitClause limitClause) {
+        this.limitClause = limitClause;
     }
 
     public LimitClause getLimitClause() {

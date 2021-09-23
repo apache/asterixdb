@@ -48,6 +48,16 @@ public class SelectClause extends AbstractClause {
         return ClauseType.SELECT_CLAUSE;
     }
 
+    public void setSelectElement(SelectElement selectElement) {
+        this.selectElement = selectElement;
+        this.selectRegular = null;
+    }
+
+    public void setSelectRegular(SelectRegular selectRegular) {
+        this.selectRegular = selectRegular;
+        this.selectElement = null;
+    }
+
     public SelectElement getSelectElement() {
         return selectElement;
     }

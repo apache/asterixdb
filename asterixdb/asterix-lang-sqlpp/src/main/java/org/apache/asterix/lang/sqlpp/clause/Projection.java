@@ -29,16 +29,56 @@ import org.apache.asterix.lang.sqlpp.visitor.base.ISqlppVisitor;
 
 public class Projection extends AbstractClause {
 
+    public enum Kind {
+        NAMED_EXPR, // expr AS name
+        STAR, // *
+        VAR_STAR // variable.*
+    }
+
+    private Kind kind;
     private Expression expr;
     private String name;
-    private boolean star;
-    private boolean varStar;
 
-    public Projection(Expression expr, String name, boolean star, boolean varStar) {
+    public Projection(Kind kind, Expression expr, String name) {
+        validateKind(kind, expr, name);
+        this.kind = kind;
         this.expr = expr;
         this.name = name;
-        this.star = star;
-        this.varStar = varStar;
+    }
+
+    private static void validateKind(Kind kind, Expression expr, String name) {
+        switch (kind) {
+            case NAMED_EXPR:
+                if (expr == null) {
+                    throw new NullPointerException();
+                }
+                break;
+            case STAR:
+                if (expr != null || name != null) {
+                    throw new IllegalArgumentException();
+                }
+                break;
+            case VAR_STAR:
+                if (expr == null) {
+                    throw new NullPointerException();
+                }
+                if (name != null) {
+                    throw new IllegalArgumentException();
+                }
+                break;
+            default:
+                throw new IllegalArgumentException();
+        }
+    }
+
+    @Deprecated
+    public Projection(Expression expr, String name, boolean star, boolean varStar) {
+        this(asKind(star, varStar), expr, name);
+    }
+
+    @Deprecated
+    private static Kind asKind(boolean star, boolean varStar) {
+        return star ? Kind.STAR : varStar ? Kind.VAR_STAR : Kind.NAMED_EXPR;
     }
 
     @Override
@@ -59,6 +99,10 @@ public class Projection extends AbstractClause {
         this.expr = expr;
     }
 
+    public boolean hasExpression() {
+        return expr != null;
+    }
+
     public String getName() {
         return name;
     }
@@ -71,22 +115,41 @@ public class Projection extends AbstractClause {
         return name != null;
     }
 
-    public boolean star() {
-        return star;
+    public Kind getKind() {
+        return kind;
     }
 
+    public void setKind(Kind kind) {
+        this.kind = kind;
+    }
+
+    @Deprecated
+    public boolean star() {
+        return kind == Kind.STAR;
+    }
+
+    @Deprecated
     public boolean varStar() {
-        return varStar;
+        return kind == Kind.VAR_STAR;
     }
 
     @Override
     public String toString() {
-        return star ? "*" : (String.valueOf(expr) + (varStar ? ".*" : (hasName() ? " as " + getName() : "")));
+        switch (kind) {
+            case NAMED_EXPR:
+                return expr + (hasName() ? " as " + getName() : "");
+            case STAR:
+                return "*";
+            case VAR_STAR:
+                return expr + ".*";
+            default:
+                throw new IllegalStateException();
+        }
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(expr, varStar, name, star);
+        return Objects.hash(kind, expr, name);
     }
 
     @Override
@@ -98,7 +161,6 @@ public class Projection extends AbstractClause {
             return false;
         }
         Projection target = (Projection) object;
-        return Objects.equals(expr, target.expr) && Objects.equals(name, target.name) && varStar == target.varStar
-                && star == target.star;
+        return kind == target.kind && Objects.equals(expr, target.expr) && Objects.equals(name, target.name);
     }
 }

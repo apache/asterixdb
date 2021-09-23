@@ -370,7 +370,8 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
     }
 
     private Projection createProjection(VariableExpr var, String fieldName, SourceLocation sourceLoc) {
-        Projection projection = new Projection(newVariableExpr(var.getVar(), null), fieldName, false, false);
+        Projection projection =
+                new Projection(Projection.Kind.NAMED_EXPR, newVariableExpr(var.getVar(), null), fieldName);
         projection.setSourceLocation(sourceLoc);
         return projection;
     }

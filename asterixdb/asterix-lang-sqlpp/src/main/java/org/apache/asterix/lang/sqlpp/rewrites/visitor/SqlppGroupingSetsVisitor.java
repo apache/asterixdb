@@ -177,33 +177,43 @@ public final class SqlppGroupingSetsVisitor extends AbstractSqlppExpressionScopi
         List<VariableExpr> gbyBindingVars = null, postGbyBindingVars = null;
         for (VariableExpr freeVarPostSetOp : freeVarsPostSetOp) {
             String projectionName = null;
-            for (int i = projectionList.size() - 1; i >= 0; i--) {
+            inner_loop: for (int i = projectionList.size() - 1; i >= 0; i--) {
                 Projection projection = projectionList.get(i);
-                if (projection.varStar()) {
-                    throw new CompilationException(ErrorCode.UNSUPPORTED_GBY_OBY_SELECT_COMBO,
-                            selectBlock.getSourceLocation());
-                } else if (projection.star()) {
-                    if (gbyBindingVars == null) {
-                        gbyBindingVars = SqlppVariableUtil.getBindingVariables(selectBlock.getGroupbyClause());
-                    }
-                    if (postGbyBindingVars == null) {
-                        postGbyBindingVars = selectBlock.hasLetHavingClausesAfterGroupby()
-                                ? SqlppVariableUtil.getLetBindingVariables(selectBlock.getLetHavingListAfterGroupby())
-                                : Collections.emptyList();
-                    }
-                    if (gbyBindingVars.contains(freeVarPostSetOp) || postGbyBindingVars.contains(freeVarPostSetOp)) {
-                        projectionName = SqlppVariableUtil
-                                .variableNameToDisplayedFieldName(freeVarPostSetOp.getVar().getValue());
+                switch (projection.getKind()) {
+                    case VAR_STAR:
+                        throw new CompilationException(ErrorCode.UNSUPPORTED_GBY_OBY_SELECT_COMBO,
+                                selectBlock.getSourceLocation());
+                    case STAR:
+                        if (gbyBindingVars == null) {
+                            gbyBindingVars = SqlppVariableUtil.getBindingVariables(selectBlock.getGroupbyClause());
+                        }
+                        if (postGbyBindingVars == null) {
+                            postGbyBindingVars =
+                                    selectBlock.hasLetHavingClausesAfterGroupby()
+                                            ? SqlppVariableUtil
+                                                    .getLetBindingVariables(selectBlock.getLetHavingListAfterGroupby())
+                                            : Collections.emptyList();
+                        }
+                        if (gbyBindingVars.contains(freeVarPostSetOp)
+                                || postGbyBindingVars.contains(freeVarPostSetOp)) {
+                            projectionName = SqlppVariableUtil
+                                    .variableNameToDisplayedFieldName(freeVarPostSetOp.getVar().getValue());
+                            break;
+                        }
                         break;
-                    }
-                } else if (projection.hasName()) {
-                    if (projection.getExpression().equals(freeVarPostSetOp)) {
-                        projectionName = projection.getName();
+                    case NAMED_EXPR:
+                        if (!projection.hasName()) {
+                            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                    selectBlock.getSourceLocation(), "");
+                        }
+                        if (projection.getExpression().equals(freeVarPostSetOp)) {
+                            projectionName = projection.getName();
+                            break inner_loop;
+                        }
                         break;
-                    }
-                } else {
-                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, selectBlock.getSourceLocation(),
-                            "");
+                    default:
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                selectBlock.getSourceLocation(), "");
                 }
             }
 
@@ -396,7 +406,8 @@ public final class SqlppGroupingSetsVisitor extends AbstractSqlppExpressionScopi
         }
         SelectElement selectElement = selectClause.getSelectElement();
         List<Projection> projectionList = new ArrayList<>(1);
-        projectionList.add(new Projection(selectElement.getExpression(), mainProjectionName, false, false));
+        projectionList
+                .add(new Projection(Projection.Kind.NAMED_EXPR, selectElement.getExpression(), mainProjectionName));
         SelectRegular newSelectRegular = new SelectRegular(projectionList);
         newSelectRegular.setSourceLocation(selectElement.getSourceLocation());
         SelectClause newSelectClause = new SelectClause(null, newSelectRegular, selectClause.distinct());
@@ -412,8 +423,8 @@ public final class SqlppGroupingSetsVisitor extends AbstractSqlppExpressionScopi
         }
         SelectRegular selectRegular = selectClause.getSelectRegular();
         for (Map.Entry<VariableExpr, String> me : projections.entrySet()) {
-            Projection newProjection =
-                    new Projection((VariableExpr) SqlppRewriteUtil.deepCopy(me.getKey()), me.getValue(), false, false);
+            Projection newProjection = new Projection(Projection.Kind.NAMED_EXPR,
+                    (VariableExpr) SqlppRewriteUtil.deepCopy(me.getKey()), me.getValue());
             selectRegular.getProjections().add(newProjection);
         }
     }

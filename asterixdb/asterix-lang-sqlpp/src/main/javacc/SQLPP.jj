@@ -4507,7 +4507,7 @@ SelectClause SelectClause() throws ParseException:
   {
     SourceLocation sourceLoc = getSourceLocation(startToken);
     if (selectRegular == null && selectElement == null){
-        Projection projection = new Projection(null, null, true, false);
+        Projection projection = new Projection(Projection.Kind.STAR, null, null);
         projection.setSourceLocation(sourceLoc);
         List<Projection> projections = new ArrayList<Projection>();
         projections.add(projection);
@@ -4564,15 +4564,17 @@ Projection Projection() throws ParseException :
   Expression expr = null;
   Identifier identifier = null;
   String name = null;
+  Projection.Kind kind = null;
   boolean star = false;
   boolean varStar = false;
 }
 {
   (
-    <MUL> { star = true; startSrcLoc = getSourceLocation(token); }
-    | LOOKAHEAD(3) expr = VariableRef() <DOT> <MUL> { varStar = true; }
+    <MUL> { kind = Projection.Kind.STAR; startSrcLoc = getSourceLocation(token); }
+    | LOOKAHEAD(3) expr = VariableRef() <DOT> <MUL> { kind = Projection.Kind.VAR_STAR; }
     | expr = Expression() ((<AS>)? name = Identifier())?
       {
+        kind = Projection.Kind.NAMED_EXPR;
         if (name == null) {
           String generatedColumnIdentifier = ExpressionToVariableUtil.getGeneratedIdentifier(expr, false);
           if (generatedColumnIdentifier != null) {
@@ -4582,7 +4584,7 @@ Projection Projection() throws ParseException :
       }
   )
   {
-    Projection projection = new Projection(expr, name, star, varStar);
+    Projection projection = new Projection(kind, expr, name);
     projection.setSourceLocation(expr != null ? expr.getSourceLocation() : startSrcLoc);
     return projection;
   }

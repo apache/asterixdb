@@ -67,7 +67,7 @@ public class GenerateColumnNameVisitor extends AbstractSqlppExpressionScopingVis
 
     @Override
     public Expression visit(Projection projection, ILangExpression arg) throws CompilationException {
-        if (!projection.star() && !projection.varStar() && projection.getName() == null) {
+        if (projection.getKind() == Projection.Kind.NAMED_EXPR && !projection.hasName()) {
             projection.setName(SqlppVariableUtil.variableNameToDisplayedFieldName(context.newVariable().getValue()));
         }
         return super.visit(projection, arg);

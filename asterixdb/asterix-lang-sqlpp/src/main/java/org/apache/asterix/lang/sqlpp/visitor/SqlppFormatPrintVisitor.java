@@ -123,18 +123,21 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
 
     @Override
     public Void visit(Projection projection, Integer step) throws CompilationException {
-        if (projection.star()) {
-            out.print(" * ");
-            return null;
-        }
-        projection.getExpression().accept(this, step);
-        if (projection.varStar()) {
-            out.print(".* ");
-        } else {
-            String name = projection.getName();
-            if (name != null) {
-                out.print(" as " + name);
-            }
+        switch (projection.getKind()) {
+            case STAR:
+                out.print(" * ");
+                break;
+            case VAR_STAR:
+                projection.getExpression().accept(this, step);
+                out.print(".* ");
+                break;
+            case NAMED_EXPR:
+                projection.getExpression().accept(this, step);
+                String name = projection.getName();
+                if (name != null) {
+                    out.print(" as " + name);
+                }
+                break;
         }
         return null;
     }

@@ -89,10 +89,7 @@ public final class SqlppGatherFunctionCallsVisitor extends GatherFunctionCallsVi
 
     @Override
     public Void visit(Projection projection, Void arg) throws CompilationException {
-        if (!projection.star()) {
-            projection.getExpression().accept(this, arg);
-        }
-        return null;
+        return projection.hasExpression() ? projection.getExpression().accept(this, arg) : null;
     }
 
     @Override

@@ -143,9 +143,9 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
 
     @Override
     public Projection visit(Projection projection, Void arg) throws CompilationException {
-        Projection copy =
-                new Projection(projection.star() ? null : (Expression) projection.getExpression().accept(this, arg),
-                        projection.getName(), projection.star(), projection.varStar());
+        Projection copy = new Projection(projection.getKind(),
+                projection.hasExpression() ? (Expression) projection.getExpression().accept(this, arg) : null,
+                projection.getName());
         copy.setSourceLocation(projection.getSourceLocation());
         return copy;
     }

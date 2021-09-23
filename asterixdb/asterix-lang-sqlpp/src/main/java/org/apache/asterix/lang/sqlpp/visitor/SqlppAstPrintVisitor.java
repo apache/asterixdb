@@ -131,11 +131,18 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
 
     @Override
     public Void visit(Projection projection, Integer step) throws CompilationException {
-        if (projection.star()) {
-            out.println(skip(step) + "*");
-        } else {
-            projection.getExpression().accept(this, step);
-            out.println(skip(step) + (projection.varStar() ? ".*" : projection.getName()));
+        switch (projection.getKind()) {
+            case STAR:
+                out.println(skip(step) + "*");
+                break;
+            case VAR_STAR:
+                projection.getExpression().accept(this, step);
+                out.println(skip(step) + ".*");
+                break;
+            case NAMED_EXPR:
+                projection.getExpression().accept(this, step);
+                out.println(skip(step) + projection.getName());
+                break;
         }
         return null;
     }

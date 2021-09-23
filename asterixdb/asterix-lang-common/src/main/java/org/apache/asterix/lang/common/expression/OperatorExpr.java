@@ -77,6 +77,8 @@ public class OperatorExpr extends AbstractExpression {
             case GE:
             case LT:
             case LE:
+            case DISTINCT:
+            case NOT_DISTINCT:
                 return true;
             default:
                 return false;

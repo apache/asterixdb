@@ -119,7 +119,7 @@ public class SqlppInlineUdfsVisitor extends AbstractInlineUdfsVisitor implements
 
     @Override
     public Boolean visit(Projection projection, Void arg) throws CompilationException {
-        if (projection.star()) {
+        if (!projection.hasExpression()) {
             return false;
         }
         Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(projection.getExpression());

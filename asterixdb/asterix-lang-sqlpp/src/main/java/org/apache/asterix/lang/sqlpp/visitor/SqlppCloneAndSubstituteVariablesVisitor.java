@@ -202,11 +202,9 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
     @Override
     public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(Projection projection,
             VariableSubstitutionEnvironment env) throws CompilationException {
-        if (projection.star()) {
-            return new Pair<>(projection, env);
-        }
-        Projection newProjection = new Projection((Expression) projection.getExpression().accept(this, env).first,
-                projection.getName(), projection.star(), projection.varStar());
+        Projection newProjection = new Projection(projection.getKind(),
+                projection.hasExpression() ? (Expression) projection.getExpression().accept(this, env).first : null,
+                projection.getName());
         newProjection.setSourceLocation(projection.getSourceLocation());
         return new Pair<>(newProjection, env);
     }

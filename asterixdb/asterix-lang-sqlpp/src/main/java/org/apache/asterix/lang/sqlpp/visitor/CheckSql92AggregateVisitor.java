@@ -240,10 +240,7 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
 
     @Override
     public Boolean visit(Projection projection, ILangExpression parentSelectBlock) throws CompilationException {
-        if (projection.star()) {
-            return false;
-        }
-        return projection.getExpression().accept(this, parentSelectBlock);
+        return projection.hasExpression() ? projection.getExpression().accept(this, parentSelectBlock) : false;
     }
 
     @Override
