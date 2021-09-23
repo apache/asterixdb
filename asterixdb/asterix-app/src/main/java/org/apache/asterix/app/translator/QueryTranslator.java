@@ -39,6 +39,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -689,7 +690,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void doCreateDatasetStatement(MetadataProvider metadataProvider, DatasetDecl dd,
+    protected Optional<? extends Dataset> doCreateDatasetStatement(MetadataProvider metadataProvider, DatasetDecl dd,
             DataverseName dataverseName, String datasetName, DataverseName itemTypeDataverseName,
             TypeExpression itemTypeExpr, String itemTypeName, TypeExpression metaItemTypeExpr,
             DataverseName metaItemTypeDataverseName, String metaItemTypeName, IHyracksClientConnection hcc,
@@ -724,7 +725,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 if (dd.getIfNotExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                    return;
+                    return Optional.empty();
                 } else {
                     throw new CompilationException(ErrorCode.DATASET_EXISTS, sourceLoc, datasetName, dataverseName);
                 }
@@ -902,6 +903,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             throw e;
         }
+        return Optional.of(dataset);
     }
 
     protected Triple<DataverseName, String, Boolean> extractDatasetItemTypeName(DataverseName datasetDataverseName,
