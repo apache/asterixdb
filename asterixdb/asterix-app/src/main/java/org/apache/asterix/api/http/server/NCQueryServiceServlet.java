@@ -138,7 +138,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             int stmtCategoryRestrictionMask, boolean forceDropDataset) {
         return new ExecuteStatementRequestMessage(ncCtx.getNodeId(), responseFuture.getFutureId(), queryLanguage,
                 statementsText, sessionOutput.config(), resultProperties.getNcToCcResultProperties(),
-                param.getClientContextID(), handleUrl, optionalParameters, statementParameters,
+                param.getClientContextID(), param.getDataverse(), handleUrl, optionalParameters, statementParameters,
                 param.isMultiStatement(), param.getProfileType(), stmtCategoryRestrictionMask, requestReference,
                 forceDropDataset);
     }

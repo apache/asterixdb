@@ -512,8 +512,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             ResultProperties resultProperties, Stats stats, IStatementExecutor.StatementProperties statementProperties,
             Map<String, String> optionalParameters, Map<String, IAObject> stmtParams, int stmtCategoryRestriction) {
         return new RequestParameters(requestReference, statementsText, resultSet, resultProperties, stats,
-                statementProperties, null, param.getClientContextID(), optionalParameters, stmtParams,
-                param.isMultiStatement(), stmtCategoryRestriction);
+                statementProperties, null, param.getClientContextID(), param.getDataverse(), optionalParameters,
+                stmtParams, param.isMultiStatement(), stmtCategoryRestriction);
     }
 
     protected static boolean isPrintingProfile(IStatementExecutor.Stats stats) {

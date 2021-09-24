@@ -94,7 +94,7 @@ public abstract class AbstractInternalRequestMessage implements ICcAddressedMess
         ResponsePrinter printer = new ResponsePrinter(sessionOutput);
         ResultProperties resultProperties = new ResultProperties(IStatementExecutor.ResultDelivery.IMMEDIATE, 1);
         IRequestParameters requestParams = new RequestParameters(requestReference, "", null, resultProperties,
-                new IStatementExecutor.Stats(), new IStatementExecutor.StatementProperties(), null, null,
+                new IStatementExecutor.Stats(), new IStatementExecutor.StatementProperties(), null, null, null,
                 additionalParams, Collections.emptyMap(), false);
         MetadataManager.INSTANCE.init();
         IStatementExecutor translator =

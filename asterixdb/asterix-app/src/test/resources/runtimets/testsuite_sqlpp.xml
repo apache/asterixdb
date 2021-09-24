@@ -47,6 +47,13 @@
         <expected-error>ASX0044: DELETE statement is not supported in read-only mode</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="api" check-warnings="true">
+      <compilation-unit name="request-dataverse">
+        <output-dir compare="Text">request-dataverse</output-dir>
+        <expected-warn>ASX1063: Cannot find dataverse with name testUnknown</expected-warn>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="api">
       <compilation-unit name="request-param-validation">
         <output-dir compare="Text">request-param-validation</output-dir>

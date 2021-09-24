@@ -58,40 +58,42 @@ public class RequestParameters implements IRequestParameters {
     private final boolean multiStatement;
     private final int statementCategoryRestrictionMask;
     private final String statement;
+    private final String defaultDataverseName;
     private final boolean forceDropDataset;
     private final boolean skipAdmissionPolicy;
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
-            IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
+            IStatementExecutor.ResultMetadata outMetadata, String clientContextId, String defaultDataverseName,
             Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement) {
         this(requestReference, statement, resultSet, resultProperties, stats, statementProperties, outMetadata,
-                clientContextId, optionalParameters, statementParameters, multiStatement, NO_CATEGORY_RESTRICTION_MASK);
+                clientContextId, defaultDataverseName, optionalParameters, statementParameters, multiStatement,
+                NO_CATEGORY_RESTRICTION_MASK);
     }
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
-            IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
+            IStatementExecutor.ResultMetadata outMetadata, String clientContextId, String defaultDataverseName,
             Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement,
             int statementCategoryRestrictionMask) {
         this(requestReference, statement, resultSet, resultProperties, stats, statementProperties, outMetadata,
-                clientContextId, optionalParameters, statementParameters, multiStatement,
+                clientContextId, defaultDataverseName, optionalParameters, statementParameters, multiStatement,
                 statementCategoryRestrictionMask, false);
     }
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
-            IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
+            IStatementExecutor.ResultMetadata outMetadata, String clientContextId, String defaultDataverseName,
             Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement,
             int statementCategoryRestrictionMask, boolean forceDropDataset) {
         this(requestReference, statement, resultSet, resultProperties, stats, statementProperties, outMetadata,
-                clientContextId, optionalParameters, statementParameters, multiStatement,
+                clientContextId, defaultDataverseName, optionalParameters, statementParameters, multiStatement,
                 statementCategoryRestrictionMask, forceDropDataset, false);
     }
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
-            IStatementExecutor.ResultMetadata outMetadata, String clientContextId,
+            IStatementExecutor.ResultMetadata outMetadata, String clientContextId, String defaultDataverseName,
             Map<String, String> optionalParameters, Map<String, IAObject> statementParameters, boolean multiStatement,
             int statementCategoryRestrictionMask, boolean forceDropDataset, boolean skipAdmissionPolicy) {
         this.requestReference = requestReference;
@@ -107,6 +109,7 @@ public class RequestParameters implements IRequestParameters {
         this.multiStatement = multiStatement;
         this.statementCategoryRestrictionMask = statementCategoryRestrictionMask;
         this.forceDropDataset = forceDropDataset;
+        this.defaultDataverseName = defaultDataverseName;
         this.skipAdmissionPolicy = skipAdmissionPolicy;
     }
 
@@ -178,6 +181,11 @@ public class RequestParameters implements IRequestParameters {
     @Override
     public IRequestReference getRequestReference() {
         return requestReference;
+    }
+
+    @Override
+    public String getDefaultDataverseName() {
+        return defaultDataverseName;
     }
 
     public static Map<String, byte[]> serializeParameterValues(Map<String, JsonNode> inParams)

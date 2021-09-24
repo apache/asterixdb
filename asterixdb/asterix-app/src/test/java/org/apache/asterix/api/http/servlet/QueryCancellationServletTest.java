@@ -71,7 +71,7 @@ public class QueryCancellationServletTest {
 
         final RequestReference requestReference = RequestReference.of("1", "node1", System.currentTimeMillis());
         RequestParameters requestParameters = new RequestParameters(requestReference, "select 1", null, null, null,
-                null, null, "1", null, null, true);
+                null, null, "1", null, null, null, true);
         ClientRequest request = new ClientRequest(requestParameters);
         request.setJobId(new JobId(1));
         request.markCancellable();
@@ -88,7 +88,7 @@ public class QueryCancellationServletTest {
         // Tests the case that the job cancellation hit some exception from Hyracks.
         final RequestReference requestReference2 = RequestReference.of("2", "node1", System.currentTimeMillis());
         requestParameters = new RequestParameters(requestReference2, "select 1", null, null, null, null, null, "2",
-                null, null, true);
+                null, null, null, true);
         ClientRequest request2 = new ClientRequest(requestParameters);
         request2.setJobId(new JobId(2));
         request2.markCancellable();

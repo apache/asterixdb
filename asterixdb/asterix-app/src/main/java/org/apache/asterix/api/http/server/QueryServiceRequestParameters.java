@@ -60,6 +60,7 @@ public class QueryServiceRequestParameters {
         STATEMENT("statement"),
         FORMAT("format"),
         CLIENT_ID("client_context_id"),
+        DATAVERSE("dataverse"),
         PRETTY("pretty"),
         MODE("mode"),
         TIMEOUT("timeout"),
@@ -116,6 +117,7 @@ public class QueryServiceRequestParameters {
     private String path;
     private String statement;
     private String clientContextID;
+    private String dataverse;
     private OutputFormat format = OutputFormat.CLEAN_JSON;
     private ResultDelivery mode = ResultDelivery.IMMEDIATE;
     private PlanFormat planFormat = PlanFormat.JSON;
@@ -196,6 +198,14 @@ public class QueryServiceRequestParameters {
 
     public void setClientContextID(String clientContextID) {
         this.clientContextID = clientContextID;
+    }
+
+    public String getDataverse() {
+        return dataverse;
+    }
+
+    public void setDataverse(String dataverse) {
+        this.dataverse = dataverse;
     }
 
     public ResultDelivery getMode() {
@@ -341,6 +351,7 @@ public class QueryServiceRequestParameters {
         object.put("pretty", pretty);
         object.put("mode", mode.getName());
         object.put("clientContextID", clientContextID);
+        object.put("dataverse", dataverse);
         object.put("format", format.toString());
         object.put("timeout", timeout);
         object.put("maxResultReads", maxResultReads);
@@ -414,6 +425,7 @@ public class QueryServiceRequestParameters {
             throws HyracksDataException {
         setStatement(valGetter.apply(req, Parameter.STATEMENT.str()));
         setClientContextID(valGetter.apply(req, Parameter.CLIENT_ID.str()));
+        setDataverse(valGetter.apply(req, Parameter.DATAVERSE.str()));
 
         setFormatIfExists(req, acceptHeader, Parameter.FORMAT.str(), valGetter);
         setMode(parseIfExists(req, Parameter.MODE.str(), valGetter, getMode(), ResultDelivery::fromName));

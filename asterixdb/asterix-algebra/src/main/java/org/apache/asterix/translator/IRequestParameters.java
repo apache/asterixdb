@@ -75,4 +75,9 @@ public interface IRequestParameters extends ICommonRequestParameters {
     boolean isForceDropDataset();
 
     boolean isSkipAdmissionPolicy();
+
+    /**
+     * @return canonical name of the default dataverse for this statement
+     */
+    String getDefaultDataverseName();
 }

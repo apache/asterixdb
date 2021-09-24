@@ -39,6 +39,7 @@ __Parameters__
   used e.g. to match individual requests, jobs, and responses. Another option could be to use it for groups of requests
   if an application decides to put e.g. an group identifier into that field to route groups of responses to a
   particular response processor.
+* `dataverse` - Default dataverse for this statement (Optional). If the specified dataverse does not exist then this setting is ignored.
 * `mode` - Result delivery mode. Possible values are `immediate`, `deferred`, `async` (default: `immediate`).
   If the delivery mode is `immediate` the query result is returned with the response.
   If the delivery mode is `deferred` the response contains a handle to the <a href="#queryresult">result</a>.

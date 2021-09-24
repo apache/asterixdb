@@ -28,12 +28,23 @@ public class DataverseDecl extends AbstractStatement {
 
     private DataverseName dataverseName;
 
+    private boolean ifExists;
+
     public DataverseDecl(DataverseName dataverseName) {
+        this(dataverseName, false);
+    }
+
+    public DataverseDecl(DataverseName dataverseName, boolean ifExists) {
         this.dataverseName = dataverseName;
+        this.ifExists = ifExists;
     }
 
     public DataverseName getDataverseName() {
         return dataverseName;
+    }
+
+    public boolean getIfExists() {
+        return ifExists;
     }
 
     @Override

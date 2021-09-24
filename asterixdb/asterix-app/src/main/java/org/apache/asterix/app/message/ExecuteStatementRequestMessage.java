@@ -66,7 +66,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
     private static final Logger LOGGER = LogManager.getLogger();
     //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2062
     public static final long DEFAULT_NC_TIMEOUT_MILLIS = TimeUnit.MILLISECONDS.toMillis(Long.MAX_VALUE);
@@ -79,6 +79,7 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
     private final SessionConfig sessionConfig;
     private final ResultProperties resultProperties;
     private final String clientContextID;
+    private final String defaultDataverseName;
     private final String handleUrl;
     private final Map<String, String> optionalParameters;
     private final Map<String, byte[]> statementParameters;
@@ -91,20 +92,21 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
-            String clientContextID, String handleUrl, Map<String, String> optionalParameters,
-            Map<String, byte[]> statementParameters, boolean multiStatement, ProfileType profileType,
-            int statementCategoryRestrictionMask, IRequestReference requestReference, boolean forceDropDataset) {
+            String clientContextID, String defaultDataverseName, String handleUrl,
+            Map<String, String> optionalParameters, Map<String, byte[]> statementParameters, boolean multiStatement,
+            ProfileType profileType, int statementCategoryRestrictionMask, IRequestReference requestReference,
+            boolean forceDropDataset) {
         this(requestNodeId, requestMessageId, lang, statementsText, sessionConfig, resultProperties, clientContextID,
-                handleUrl, optionalParameters, statementParameters, multiStatement, profileType,
+                defaultDataverseName, handleUrl, optionalParameters, statementParameters, multiStatement, profileType,
                 statementCategoryRestrictionMask, requestReference, forceDropDataset, false);
     }
 
     protected ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
-            String clientContextID, String handleUrl, Map<String, String> optionalParameters,
-            Map<String, byte[]> statementParameters, boolean multiStatement, ProfileType profileType,
-            int statementCategoryRestrictionMask, IRequestReference requestReference, boolean forceDropDataset,
-            boolean skipAdmissionPolicy) {
+            String clientContextID, String defaultDataverseName, String handleUrl,
+            Map<String, String> optionalParameters, Map<String, byte[]> statementParameters, boolean multiStatement,
+            ProfileType profileType, int statementCategoryRestrictionMask, IRequestReference requestReference,
+            boolean forceDropDataset, boolean skipAdmissionPolicy) {
         this.requestNodeId = requestNodeId;
         this.requestMessageId = requestMessageId;
         this.lang = lang;
@@ -121,6 +123,7 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
         this.requestReference = requestReference;
         this.forceDropDataset = forceDropDataset;
         this.skipAdmissionPolicy = skipAdmissionPolicy;
+        this.defaultDataverseName = defaultDataverseName;
     }
 
     @Override
@@ -163,10 +166,10 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
             final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
             stats.setProfileType(profileType);
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
-            final IRequestParameters requestParameters =
-                    new RequestParameters(requestReference, statementsText, null, resultProperties, stats,
-                            statementProperties, outMetadata, clientContextID, optionalParameters, stmtParams,
-                            multiStatement, statementCategoryRestrictionMask, forceDropDataset, skipAdmissionPolicy);
+            final IRequestParameters requestParameters = new RequestParameters(requestReference, statementsText, null,
+                    resultProperties, stats, statementProperties, outMetadata, clientContextID, defaultDataverseName,
+                    optionalParameters, stmtParams, multiStatement, statementCategoryRestrictionMask, forceDropDataset,
+                    skipAdmissionPolicy);
             translator.compileAndExecute(ccApp.getHcc(), requestParameters);
             translator.getWarnings(warnings, maxWarnings - warnings.size());
             stats.updateTotalWarningsCount(parserTotalWarningsCount);

@@ -346,10 +346,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 validateOperation(appCtx, activeDataverse, stmt);
                 MetadataProvider metadataProvider = MetadataProvider.create(appCtx, activeDataverse);
-                metadataProvider.getConfig().putAll(config);
-                metadataProvider.setWriterFactory(writerFactory);
-                metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
-                metadataProvider.setOutputFile(outputFile);
+                configureMetadataProvider(metadataProvider, config, resultSerializerFactoryProvider, writerFactory,
+                        outputFile);
                 IStatementRewriter stmtRewriter = rewriterFactory.createStatementRewriter();
                 rewriteStatement(stmt, stmtRewriter, metadataProvider); // Rewrite the statement's AST.
                 Statement.Kind kind = stmt.getKind();
@@ -516,6 +514,24 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
+    protected void configureMetadataProvider(MetadataProvider metadataProvider, Map<String, String> config,
+            IResultSerializerFactoryProvider resultSerializerFactoryProvider, IAWriterFactory writerFactory,
+            FileSplit outputFile) {
+        metadataProvider.getConfig().putAll(config);
+        metadataProvider.setWriterFactory(writerFactory);
+        metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
+        metadataProvider.setOutputFile(outputFile);
+    }
+
+    protected DataverseDecl getRequestDataverseDecl(IRequestParameters requestParameters) throws AlgebricksException {
+        String requestDataverseName = requestParameters.getDefaultDataverseName();
+        if (requestDataverseName == null) {
+            return null;
+        }
+        DataverseName dvName = DataverseName.createFromCanonicalForm(requestDataverseName);
+        return new DataverseDecl(dvName, true);
+    }
+
     protected void handleSetStatement(Statement stmt, Map<String, String> config) throws CompilationException {
         SetStatement ss = (SetStatement) stmt;
         String pname = ss.getPropName();
@@ -559,7 +575,17 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             DataverseName dvName = stmtUseDataverse.getDataverseName();
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(), dvName);
             if (dv == null) {
-                throw new MetadataException(ErrorCode.UNKNOWN_DATAVERSE, stmtUseDataverse.getSourceLocation(), dvName);
+                if (stmtUseDataverse.getIfExists()) {
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(
+                                Warning.of(stmtUseDataverse.getSourceLocation(), ErrorCode.UNKNOWN_DATAVERSE, dvName));
+                    }
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return activeDataverse;
+                } else {
+                    throw new MetadataException(ErrorCode.UNKNOWN_DATAVERSE, stmtUseDataverse.getSourceLocation(),
+                            dvName);
+                }
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return dv;
@@ -4539,9 +4565,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void validateStatements(IRequestParameters requestParameters)
-            throws CompilationException, HyracksDataException {
+            throws AlgebricksException, HyracksDataException {
         validateStatements(statements, requestParameters.isMultiStatement(),
                 requestParameters.getStatementCategoryRestrictionMask());
+        DataverseDecl requestDataverseDecl = getRequestDataverseDecl(requestParameters);
+        if (requestDataverseDecl != null) {
+            statements.add(0, requestDataverseDecl);
+        }
     }
 
     public static void validateStatements(List<Statement> statements, boolean allowMultiStatement,
