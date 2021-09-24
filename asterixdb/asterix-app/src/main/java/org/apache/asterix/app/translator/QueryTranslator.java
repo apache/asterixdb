@@ -1239,13 +1239,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 indexFieldTypes.add(fieldTypes);
             }
 
-            boolean unknownKeyOptionAllowed = indexType == IndexType.BTREE && !isSecondaryPrimary;
+            boolean unknownKeyOptionAllowed =
+                    (indexType == IndexType.BTREE || indexType == IndexType.ARRAY) && !isSecondaryPrimary;
             if (stmtCreateIndex.hasExcludeUnknownKey() && !unknownKeyOptionAllowed) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "can only specify exclude/include unknown key for B-Tree indexes");
+                        "can only specify exclude/include unknown key for B-Tree & Array indexes");
             }
             Index.IIndexDetails indexDetails;
             if (Index.IndexCategory.of(indexType) == Index.IndexCategory.ARRAY) {
+                if (!stmtCreateIndex.hasExcludeUnknownKey()
+                        || !stmtCreateIndex.isExcludeUnknownKey().getOrElse(false)) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                            "Array indexes must specify EXCLUDE UNKNOWN KEY.");
+                }
                 if (!hadUnnest) {
                     // prohibited by the grammar
                     throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,

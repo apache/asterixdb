@@ -8058,6 +8058,14 @@
   <test-group name="array-index">
     <test-group name="array-index/error-handling">
       <test-case FilePath="array-index/error-handling">
+        <compilation-unit name="index-include-unknown-key">
+          <output-dir compare="Text">index-include-unknown-key</output-dir>
+          <expected-error>ASX1079: Compilation error: Array indexes must specify EXCLUDE UNKNOWN KEY</expected-error>
+          <expected-error>ASX1079: Compilation error: Array indexes must specify EXCLUDE UNKNOWN KEY</expected-error>
+          <source-location>false</source-location>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="array-index/error-handling">
         <compilation-unit name="index-two-array-fields">
           <output-dir compare="Text">index-two-array-fields</output-dir>
           <expected-error>ASX1079: Compilation error: Cannot create composite index with multiple array fields using different arrays</expected-error>
@@ -8217,10 +8225,10 @@
         </compilation-unit>
       </test-case>
       <test-case FilePath="array-index/bulk-loading/on-index-creation/closed">
-      <compilation-unit name="with-3-level-record-path">
-        <output-dir compare="Text">with-3-level-record-path</output-dir>
-      </compilation-unit>
-    </test-case>
+        <compilation-unit name="with-3-level-record-path">
+          <output-dir compare="Text">with-3-level-record-path</output-dir>
+        </compilation-unit>
+      </test-case>
       <test-case FilePath="array-index/bulk-loading/on-index-creation/open">
         <compilation-unit name="composite-atomic">
           <output-dir compare="Text">composite-atomic</output-dir>

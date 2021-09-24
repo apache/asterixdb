@@ -39,7 +39,8 @@ WITH META(MetaType)
 PRIMARY KEY business_id;
 
 CREATE INDEX checkinDatesIdx
-ON YelpCheckin ( UNNEST dates : string );
+ON YelpCheckin ( UNNEST dates : string )
+EXCLUDE UNKNOWN KEY;
 
 CREATE FEED YelpCheckinStream WITH {
  "adapter-name" : "localfs",

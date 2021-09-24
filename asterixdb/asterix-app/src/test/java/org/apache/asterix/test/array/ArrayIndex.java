@@ -190,7 +190,7 @@ public class ArrayIndex {
                     sb.append(", ");
                 }
             }
-            sb.append(" );\n");
+            sb.append(" ) EXCLUDE UNKNOWN KEY;\n");
             return sb.toString();
         }
     }

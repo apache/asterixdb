@@ -31,4 +31,4 @@ CREATE INDEX      TestIdx
 ON                IndexedDataset (
     UNNEST items
     SELECT val : bigint
-);
+) EXCLUDE UNKNOWN KEY;

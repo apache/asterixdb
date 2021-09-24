@@ -767,18 +767,31 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     }
 
     private void writeExcludeUnknownKey(Index index) throws HyracksDataException {
-        boolean unknownKeyOptionAllowed =
-                index.getIndexType() == IndexType.BTREE && !index.isPrimaryIndex() && !index.isPrimaryKeyIndex();
-        if (unknownKeyOptionAllowed) {
-            OptionalBoolean excludeUnknownKey =
-                    ((Index.ValueIndexDetails) index.getIndexDetails()).isExcludeUnknownKey();
-            ABoolean bVal = excludeUnknownKey.isEmpty() ? ABoolean.FALSE : ABoolean.valueOf(excludeUnknownKey.get());
-            fieldValue.reset();
-            nameValue.reset();
-            aString.setValue(INDEX_EXCLUDE_UNKNOWN_FIELD_NAME);
-            stringSerde.serialize(aString, nameValue.getDataOutput());
-            booleanSerde.serialize(bVal, fieldValue.getDataOutput());
-            recordBuilder.addField(nameValue, fieldValue);
+        switch (index.getIndexType()) {
+            case BTREE:
+                if (!index.isPrimaryIndex() && !index.isPrimaryKeyIndex()) {
+                    OptionalBoolean excludeUnknownKey =
+                            ((Index.ValueIndexDetails) index.getIndexDetails()).isExcludeUnknownKey();
+                    ABoolean bVal =
+                            excludeUnknownKey.isEmpty() ? ABoolean.FALSE : ABoolean.valueOf(excludeUnknownKey.get());
+                    fieldValue.reset();
+                    nameValue.reset();
+                    aString.setValue(INDEX_EXCLUDE_UNKNOWN_FIELD_NAME);
+                    stringSerde.serialize(aString, nameValue.getDataOutput());
+                    booleanSerde.serialize(bVal, fieldValue.getDataOutput());
+                    recordBuilder.addField(nameValue, fieldValue);
+                }
+                break;
+
+            case ARRAY:
+                // TODO: This value is written for back-compatibility, and is currently always assumed to be true.
+                fieldValue.reset();
+                nameValue.reset();
+                aString.setValue(INDEX_EXCLUDE_UNKNOWN_FIELD_NAME);
+                stringSerde.serialize(aString, nameValue.getDataOutput());
+                booleanSerde.serialize(ABoolean.TRUE, fieldValue.getDataOutput());
+                recordBuilder.addField(nameValue, fieldValue);
+                break;
         }
     }
 }

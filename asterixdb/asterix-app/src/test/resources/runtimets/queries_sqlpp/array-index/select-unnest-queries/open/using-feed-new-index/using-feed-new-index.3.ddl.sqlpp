@@ -20,4 +20,5 @@
 USE TestYelp;
 
 CREATE INDEX checkinDatesIdx
-ON YelpCheckin ( UNNEST dates : string );
+ON YelpCheckin ( UNNEST dates : string )
+EXCLUDE UNKNOWN KEY;

@@ -37,7 +37,7 @@ ON                Dataset1 (
       SELECT field2 : bigint,
              field3 : bigint ),
     field4 : bigint
-);
+) EXCLUDE UNKNOWN KEY;
 
 -- Explicit UNNEST join query with all fields of a composite index, with extra clauses on non-indexed fields.
 FROM    Dataset2 D2

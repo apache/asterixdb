@@ -19,4 +19,4 @@
 
 USE TestYelp;
 
-CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times.dates);
+CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times.dates) EXCLUDE UNKNOWN KEY;

@@ -35,7 +35,7 @@ ON                Dataset1 (
       SELECT field2 : bigint,
              field3 : bigint ),
     field4 : bigint
-);
+) EXCLUDE UNKNOWN KEY;
 CREATE INDEX      d2Idx
 ON                Dataset1 (
     field1 : bigint,
@@ -44,4 +44,4 @@ ON                Dataset1 (
       SELECT field2 : bigint,
              field3 : bigint ),
     field4 : bigint
-);
+) EXCLUDE UNKNOWN KEY;

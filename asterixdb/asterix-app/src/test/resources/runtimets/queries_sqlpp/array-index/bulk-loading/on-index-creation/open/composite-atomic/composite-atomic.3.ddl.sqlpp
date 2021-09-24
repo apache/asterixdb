@@ -23,4 +23,4 @@ ON                TestDataset (
     f : bigint,
     UNNEST a.b
     SELECT c.d : bigint
-);
+) EXCLUDE UNKNOWN KEY;

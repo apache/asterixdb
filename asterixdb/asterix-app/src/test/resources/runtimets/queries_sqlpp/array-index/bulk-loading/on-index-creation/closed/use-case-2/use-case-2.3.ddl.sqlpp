@@ -19,9 +19,9 @@
 
 USE TestYelp;
 
-CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times.dates);
+CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times.dates) EXCLUDE UNKNOWN KEY;
 
 /* It would be more user-friendly to use (UNNEST checkin_times.dates), (business_id), but we are able to infer this
    from our grammar alone. We leave this in to also exercise our parser. */
-// CREATE INDEX IdxYelpCheckinDatesBusiness ON YelpCheckin (UNNEST checkin_times.dates, business_id);
-// CREATE INDEX IdxYelpCheckinBusinessDates ON YelpCheckin (business_id, UNNEST checkin_times.dates);
+CREATE INDEX IdxYelpCheckinDatesBusiness ON YelpCheckin (UNNEST checkin_times.dates, business_id) EXCLUDE UNKNOWN KEY;
+CREATE INDEX IdxYelpCheckinBusinessDates ON YelpCheckin (business_id, UNNEST checkin_times.dates) EXCLUDE UNKNOWN KEY;

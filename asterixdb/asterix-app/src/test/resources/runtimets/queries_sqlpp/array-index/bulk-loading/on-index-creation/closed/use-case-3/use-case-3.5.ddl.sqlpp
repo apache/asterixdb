@@ -20,6 +20,13 @@
 USE TestYelp;
 
 DROP INDEX YelpCheckin.IdxYelpCheckinDates;
-CREATE INDEX IdxYelpCheckinDatesTimes ON YelpCheckin (UNNEST checkin_times SELECT date, time);
-// CREATE INDEX IdxYelpCheckinDatesTimesBusiness ON YelpCheckin ((UNNEST checkin_times SELECT date, time), (business_id));
-// CREATE INDEX IdxYelpCheckinBusinessDatesTimes ON YelpCheckin (business_id, UNNEST checkin_times SELECT date, time);
+CREATE INDEX IdxYelpCheckinDatesTimes ON YelpCheckin (UNNEST checkin_times SELECT date, time) EXCLUDE UNKNOWN KEY;
+
+CREATE INDEX  IdxYelpCheckinDatesTimesBusiness
+ON            YelpCheckin ((UNNEST checkin_times SELECT date, time),
+                           (business_id))
+EXCLUDE UNKNOWN KEY;
+CREATE INDEX  IdxYelpCheckinBusinessDatesTimes
+ON            YelpCheckin (business_id,
+                           UNNEST checkin_times SELECT date, time)
+EXCLUDE UNKNOWN KEY;

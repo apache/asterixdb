@@ -19,6 +19,13 @@
 
 USE TestYelp;
 
-CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times UNNEST dates);
-// CREATE INDEX IdxYelpCheckinDatesBusiness ON YelpCheckin ((UNNEST checkin_times UNNEST dates), business_id);
-// CREATE INDEX IdxYelpCheckinBusinessDates ON YelpCheckin (business_id, UNNEST checkin_times UNNEST dates);
+CREATE INDEX IdxYelpCheckinDates ON YelpCheckin (UNNEST checkin_times UNNEST dates) EXCLUDE UNKNOWN KEY;
+
+CREATE INDEX  IdxYelpCheckinDatesBusiness
+ON            YelpCheckin ((UNNEST checkin_times UNNEST dates),
+                           business_id)
+EXCLUDE UNKNOWN KEY;
+CREATE INDEX  IdxYelpCheckinBusinessDates
+ON            YelpCheckin (business_id,
+                           UNNEST checkin_times UNNEST dates)
+EXCLUDE UNKNOWN KEY;
