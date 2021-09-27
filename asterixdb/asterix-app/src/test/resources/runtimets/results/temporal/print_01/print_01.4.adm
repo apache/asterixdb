@@ -1,0 +1,7 @@
+{ "r": 0, "d3": "Sun", "d4": "Sunday", "dt3": "Sun", "dt4": "Sunday" }
+{ "r": 1, "d3": "Mon", "d4": "Monday", "dt3": "Mon", "dt4": "Monday" }
+{ "r": 2, "d3": "Tue", "d4": "Tuesday", "dt3": "Tue", "dt4": "Tuesday" }
+{ "r": 3, "d3": "Wed", "d4": "Wednesday", "dt3": "Wed", "dt4": "Wednesday" }
+{ "r": 4, "d3": "Thu", "d4": "Thursday", "dt3": "Thu", "dt4": "Thursday" }
+{ "r": 5, "d3": "Fri", "d4": "Friday", "dt3": "Fri", "dt4": "Friday" }
+{ "r": 6, "d3": "Sat", "d4": "Saturday", "dt3": "Sat", "dt4": "Saturday" }

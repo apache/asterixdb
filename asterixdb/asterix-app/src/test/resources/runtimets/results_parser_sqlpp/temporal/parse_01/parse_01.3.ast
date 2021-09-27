@@ -47,7 +47,7 @@ RecordConstructor [
     :
     FunctionCall asterix.parse-date@2[
       LiteralExpr [STRING] [Mon Aug 19 2013]
-      LiteralExpr [STRING] [W MMM D Y]
+      LiteralExpr [STRING] [EEE MMM D Y]
     ]
   )
   (
@@ -55,7 +55,7 @@ RecordConstructor [
     :
     FunctionCall asterix.parse-date@2[
       LiteralExpr [STRING] [SKIPMEPLEASE Mon Aug SKIPME1ALSO 19 2013]
-      LiteralExpr [STRING] [O W MMM O D Y]
+      LiteralExpr [STRING] [O EEE MMM O D Y]
     ]
   )
   (
@@ -143,7 +143,7 @@ RecordConstructor [
     :
     FunctionCall asterix.parse-datetime@2[
       LiteralExpr [STRING] [1970-01-01 Thu 23:59:23.392-04:00]
-      LiteralExpr [STRING] [MMM DD YYYY h:m:s a|MM/DD/YYY hh:mm:ss.nnn a z|YYYY-MM-DD W hh:mm:ss.nnnz]
+      LiteralExpr [STRING] [MMM DD YYYY h:m:s a|MM/DD/YYY hh:mm:ss.nnn a z|YYYY-MM-DD EEE hh:mm:ss.nnnz]
     ]
   )
   (

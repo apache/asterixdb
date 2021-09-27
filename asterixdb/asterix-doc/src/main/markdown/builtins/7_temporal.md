@@ -644,13 +644,14 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
        * `h` hours
        * `m` minutes
        * `s` seconds
-       * `n` milliseconds
+       * `n` (or `S`) milliseconds
        * `a` am/pm
-       * `z` timezone
+       * `z` timezone (parsed and ignored)
        * `Y` year
        * `M` month
        * `D` day
-       * `W` weekday
+       * `EEE` weekday (abbreviated name, parsed and ignored)
+       * `EEEE` weekday (full name, parsed and ignored)
        * `_`, `'`, `/`, `.`, `,`, `T` seperators for both time and date
 * Return Value:
     * a `date/time/date_time` value corresponding to `date`,
@@ -681,13 +682,16 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
        * `h` hours
        * `m` minutes
        * `s` seconds
-       * `n` milliseconds
+       * `n` (or `S`) milliseconds
        * `a` am/pm
-       * `z` timezone
        * `Y` year
        * `M` month
+       * `MMM` month (abbreviated name)
+       * `MMMM` month (full name)
        * `D` day
-       * `W` weekday
+       * `DDD` day of year 
+       * `EEE` weekday (abbreviated name)
+       * `EEEE` weekday (full name)
        * `_`, `'`, `/`, `.`, `,`, `T` seperators for both time and date
 * Return Value:
     * a `string` value corresponding to `date`,
