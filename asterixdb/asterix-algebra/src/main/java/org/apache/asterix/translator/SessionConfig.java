@@ -133,7 +133,7 @@ public class SessionConfig implements Serializable {
     private PlanFormat planFormat;
 
     // Standard execution flags.
-    private final boolean executeQuery;
+    private boolean executeQuery;
     private final boolean generateJobSpec;
     private final boolean optimize;
     private long maxWarnings;
@@ -215,6 +215,10 @@ public class SessionConfig implements Serializable {
      */
     public boolean isExecuteQuery() {
         return executeQuery;
+    }
+
+    public void setExecuteQuery(boolean executeQuery) {
+        this.executeQuery = executeQuery;
     }
 
     /**

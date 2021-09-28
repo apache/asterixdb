@@ -484,6 +484,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         sessionConfig.setFmt(format);
         sessionConfig.setPlanFormat(planFormat);
         sessionConfig.setMaxWarnings(param.getMaxWarnings());
+        sessionConfig.setExecuteQuery(!param.isCompileOnly());
         sessionConfig.set(SessionConfig.FORMAT_WRAPPER_ARRAY, true);
         sessionConfig.set(SessionConfig.OOB_EXPR_TREE, param.isExpressionTree());
         sessionConfig.set(SessionConfig.OOB_REWRITTEN_EXPR_TREE, param.isRewrittenExpressionTree());

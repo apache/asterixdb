@@ -193,6 +193,8 @@ public class CompiledStatements {
         DataverseName getDataverseName();
 
         String getDatasetName();
+
+        byte getCategory();
     }
 
     public static class CompiledCreateIndexStatement extends AbstractCompiledStatement
@@ -226,6 +228,11 @@ public class CompiledStatements {
         @Override
         public Statement.Kind getKind() {
             return Statement.Kind.CREATE_INDEX;
+        }
+
+        @Override
+        public byte getCategory() {
+            return Statement.Category.DDL;
         }
     }
 
@@ -271,6 +278,11 @@ public class CompiledStatements {
         @Override
         public Statement.Kind getKind() {
             return Statement.Kind.LOAD;
+        }
+
+        @Override
+        public byte getCategory() {
+            return Statement.Category.UPDATE;
         }
     }
 
@@ -322,6 +334,11 @@ public class CompiledStatements {
         public Statement.Kind getKind() {
             return Statement.Kind.INSERT;
         }
+
+        @Override
+        public byte getCategory() {
+            return Statement.Category.UPDATE;
+        }
     }
 
     public static class CompiledUpsertStatement extends CompiledInsertStatement {
@@ -370,6 +387,11 @@ public class CompiledStatements {
         public Statement.Kind getKind() {
             return Statement.Kind.SUBSCRIBE_FEED;
         }
+
+        @Override
+        public byte getCategory() {
+            return Statement.Category.UPDATE;
+        }
     }
 
     public static class CompiledDeleteStatement extends AbstractCompiledStatement implements ICompiledDmlStatement {
@@ -415,6 +437,10 @@ public class CompiledStatements {
             return Statement.Kind.DELETE;
         }
 
+        @Override
+        public byte getCategory() {
+            return Statement.Category.UPDATE;
+        }
     }
 
     public static class CompiledCompactStatement extends AbstractCompiledStatement {

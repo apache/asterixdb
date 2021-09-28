@@ -153,7 +153,7 @@ public class ATimeParserFactory implements IValueParserFactory {
         }
 
         if (length > offset) {
-            timezone = parseTimezonePart(timeString, start + offset);
+            parseTimezonePart(timeString, start + offset); // parsed, then ignored
         }
 
         return GregorianCalendarSystem.getInstance().getChronon(hour, min, sec, millis);

@@ -29,6 +29,11 @@
   &TemporalQueries;
   <test-group name="api">
     <test-case FilePath="api">
+      <compilation-unit name="compileonly">
+        <output-dir compare="Text">compileonly</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
       <compilation-unit name="multiple-param-values">
         <output-dir compare="Text">multiple-param-values</output-dir>
       </compilation-unit>

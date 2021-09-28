@@ -71,6 +71,7 @@ public class QueryServiceRequestParameters {
         LOGICAL_PLAN("logical-plan"),
         OPTIMIZED_LOGICAL_PLAN("optimized-logical-plan"),
         PARSE_ONLY("parse-only"),
+        COMPILE_ONLY("compile-only"),
         READ_ONLY("readonly"),
         JOB("job"),
         PROFILE("profile"),
@@ -127,6 +128,7 @@ public class QueryServiceRequestParameters {
     private boolean pretty = false;
     private boolean expressionTree = false;
     private boolean parseOnly = false; // don't execute; simply check for syntax correctness and named parameters.
+    private boolean compileOnly = false; // don't execute; compile only.
     private boolean readOnly = false; // only allow statements belonging to QUERY category, fail for other categories.
     private boolean rewrittenExpressionTree = false;
     private boolean logicalPlan = false;
@@ -290,6 +292,14 @@ public class QueryServiceRequestParameters {
         return parseOnly;
     }
 
+    public void setCompileOnly(boolean compileOnly) {
+        this.compileOnly = compileOnly;
+    }
+
+    public boolean isCompileOnly() {
+        return compileOnly;
+    }
+
     public void setReadOnly(boolean readOnly) {
         this.readOnly = readOnly;
     }
@@ -442,6 +452,7 @@ public class QueryServiceRequestParameters {
                 parseBoolean(req, Parameter.REWRITTEN_EXPRESSION_TREE.str(), valGetter, isRewrittenExpressionTree()));
         setLogicalPlan(parseBoolean(req, Parameter.LOGICAL_PLAN.str(), valGetter, isLogicalPlan()));
         setParseOnly(parseBoolean(req, Parameter.PARSE_ONLY.str(), valGetter, isParseOnly()));
+        setCompileOnly(parseBoolean(req, Parameter.COMPILE_ONLY.str, valGetter, isCompileOnly()));
         setReadOnly(parseBoolean(req, Parameter.READ_ONLY.str(), valGetter, isReadOnly()));
         setOptimizedLogicalPlan(
                 parseBoolean(req, Parameter.OPTIMIZED_LOGICAL_PLAN.str(), valGetter, isOptimizedLogicalPlan()));

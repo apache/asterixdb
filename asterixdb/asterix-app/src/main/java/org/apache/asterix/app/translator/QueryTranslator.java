@@ -108,6 +108,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
+import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.AdapterDropStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
@@ -193,6 +194,7 @@ import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -443,10 +445,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             metadataProvider.setMaxResultReads(maxResultReads);
                         }
                         handleInsertUpsertStatement(metadataProvider, stmt, hcc, resultSet, resultDelivery, outMetadata,
-                                stats, false, requestParameters, stmtParams, stmtRewriter);
+                                stats, requestParameters, stmtParams, stmtRewriter);
                         break;
                     case DELETE:
-                        handleDeleteStatement(metadataProvider, stmt, hcc, false, stmtParams, stmtRewriter);
+                        handleDeleteStatement(metadataProvider, stmt, hcc, stmtParams, stmtRewriter);
                         break;
                     case CREATE_FEED:
                         handleCreateFeedStatement(metadataProvider, stmt);
@@ -3418,7 +3420,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             afterCompile();
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
-            if (spec != null) {
+            if (spec != null && sessionConfig.isExecuteQuery()) {
                 runJob(hcc, spec);
             }
         } catch (Exception e) {
@@ -3433,7 +3435,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     public JobSpecification handleInsertUpsertStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IResultSet resultSet, ResultDelivery resultDelivery,
-            ResultMetadata outMetadata, Stats stats, boolean compileOnly, IRequestParameters requestParameters,
+            ResultMetadata outMetadata, Stats stats, IRequestParameters requestParameters,
             Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter) throws Exception {
         InsertStatement stmtInsertUpsert = (InsertStatement) stmt;
         String datasetName = stmtInsertUpsert.getDatasetName();
@@ -3463,7 +3465,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert, stmtParams);
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
-                return jobSpec;
+                return !sessionConfig.isExecuteQuery() ? null : jobSpec;
             } catch (Exception e) {
                 if (bActiveTxn) {
                     abort(e, e, mdTxnCtx);
@@ -3471,14 +3473,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw e;
             }
         };
-        if (compileOnly) {
-            locker.lock();
-            try {
-                return compiler.compile();
-            } finally {
-                locker.unlock();
-            }
-        }
 
         if (stmtInsertUpsert.getReturnExpression() != null) {
             deliverResult(hcc, resultSet, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats,
@@ -3499,8 +3493,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     public JobSpecification handleDeleteStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, boolean compileOnly, Map<String, IAObject> stmtParams,
-            IStatementRewriter stmtRewriter) throws Exception {
+            IHyracksClientConnection hcc, Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter)
+            throws Exception {
         DeleteStatement stmtDelete = (DeleteStatement) stmt;
         String datasetName = stmtDelete.getDatasetName();
         metadataProvider.validateDatabaseObjectName(stmtDelete.getDataverseName(), datasetName,
@@ -3522,7 +3516,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
 
-            if (jobSpec != null && !compileOnly) {
+            if (jobSpec != null && sessionConfig.isExecuteQuery()) {
                 runJob(hcc, jobSpec);
             }
             return jobSpec;
@@ -3542,7 +3536,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Map<String, IAObject> stmtParams, IRequestParameters requestParameters)
             throws AlgebricksException, ACIDException {
 
-        Map<VarIdentifier, IAObject> externalVars = createExternalVariables(stmtParams);
+        Map<VarIdentifier, IAObject> externalVars = createExternalVariables(query, stmtParams);
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
         Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions, null,
@@ -3559,7 +3553,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws AlgebricksException, ACIDException {
         SourceLocation sourceLoc = insertUpsert.getSourceLocation();
 
-        Map<VarIdentifier, IAObject> externalVars = createExternalVariables(stmtParams);
+        Map<VarIdentifier, IAObject> externalVars = createExternalVariables(insertUpsert, stmtParams);
 
         // Insert/upsert statement rewriting (happens under the same ongoing metadata transaction)
         Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions, null,
@@ -4612,16 +4606,31 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return i == 0;
     }
 
-    private Map<VarIdentifier, IAObject> createExternalVariables(Map<String, IAObject> stmtParams) {
-        if (stmtParams == null || stmtParams.isEmpty()) {
-            return Collections.emptyMap();
+    private Map<VarIdentifier, IAObject> createExternalVariables(IReturningStatement stmt,
+            Map<String, IAObject> stmtParams) throws CompilationException {
+        if (sessionConfig.isExecuteQuery()) {
+            if (stmtParams == null || stmtParams.isEmpty()) {
+                return Collections.emptyMap();
+            }
+            IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
+            Map<VarIdentifier, IAObject> result = new HashMap<>();
+            for (Map.Entry<String, IAObject> me : stmtParams.entrySet()) {
+                result.put(queryRewriter.toExternalVariableName(me.getKey()), me.getValue());
+            }
+            return result;
+        } else {
+            // compile only. extract statement parameters from the statement body and bind to NULL
+            IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
+            Set<VariableExpr> extVars = queryRewriter.getExternalVariables(stmt.getBody());
+            if (extVars.isEmpty()) {
+                return Collections.emptyMap();
+            }
+            Map<VarIdentifier, IAObject> result = new HashMap<>();
+            for (VariableExpr extVar : extVars) {
+                result.put(extVar.getVar(), ANull.NULL);
+            }
+            return result;
         }
-        IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
-        Map<VarIdentifier, IAObject> m = new HashMap<>();
-        for (Map.Entry<String, IAObject> me : stmtParams.entrySet()) {
-            m.put(queryRewriter.toExternalVariableName(me.getKey()), me.getValue());
-        }
-        return m;
     }
 
     protected void validateDatasetState(MetadataProvider metadataProvider, Dataset dataset, SourceLocation sourceLoc)

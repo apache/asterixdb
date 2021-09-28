@@ -1,0 +1,9 @@
+{
+	"logicalPlan": {
+	  "operator":"distribute-result",
+	  "expressions":"R{.*}",
+	  "operatorId":"R{.*}",
+	  "execution-mode":"R{.*}",
+	  "inputs":"R{.*}"
+  }
+}

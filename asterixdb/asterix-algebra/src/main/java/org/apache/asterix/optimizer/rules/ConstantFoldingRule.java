@@ -233,12 +233,15 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
 
             try {
                 if (expr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
-                    ARecordType rt = (ARecordType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
-                    String str = ConstantExpressionUtil.getStringConstant(expr.getArguments().get(1).getValue());
-                    int k = rt.getFieldIndex(str);
-                    if (k >= 0) {
-                        // wait for the ByNameToByIndex rule to apply
-                        return new Pair<>(changed, expr);
+                    IAType argType = (IAType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
+                    if (argType.getTypeTag() == ATypeTag.OBJECT) {
+                        ARecordType rt = (ARecordType) argType;
+                        String str = ConstantExpressionUtil.getStringConstant(expr.getArguments().get(1).getValue());
+                        int k = rt.getFieldIndex(str);
+                        if (k >= 0) {
+                            // wait for the ByNameToByIndex rule to apply
+                            return new Pair<>(changed, expr);
+                        }
                     }
                 }
                 IAObject c = FUNC_ID_TO_CONSTANT.get(expr.getFunctionIdentifier());
