@@ -639,7 +639,9 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
                 final INetworkSecurityConfig configuration = networkSecurityManager.getConfiguration();
                 KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
                 try (FileInputStream trustStoreFile = new FileInputStream(configuration.getTrustStoreFile())) {
-                    trustStore.load(trustStoreFile, configuration.getKeyStorePassword().toCharArray());
+                    String ksPassword = configuration.getKeyStorePassword();
+                    trustStore.load(trustStoreFile,
+                            ksPassword == null || ksPassword.isEmpty() ? null : ksPassword.toCharArray());
                 }
                 SSLContext sslcontext = SSLContexts.custom().loadTrustMaterial(trustStore, null).build();
                 SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext,
