@@ -64,12 +64,15 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_FILE_NUMBER = "FileNumber";
     public static final String FIELD_NAME_FILE_SIZE = "FileSize";
     public static final String FIELD_NAME_FILE_STRUCTURE = "FileStructure";
+    public static final String FIELD_NAME_FOREIGN_KEY = "ForeignKey";
+    public static final String FIELD_NAME_FOREIGN_KEYS = "ForeignKeys";
     public static final String FIELD_NAME_GROUP_NAME = "GroupName";
     public static final String FIELD_NAME_HINTS = "Hints";
     public static final String FIELD_NAME_INDEX_NAME = "IndexName";
     public static final String FIELD_NAME_INDEX_STRUCTURE = "IndexStructure";
     public static final String FIELD_NAME_INTERNAL_DETAILS = "InternalDetails";
     public static final String FIELD_NAME_IS_ANONYMOUS = "IsAnonymous";
+    public static final String FIELD_NAME_IS_ENFORCED = "IsEnforced";
     public static final String FIELD_NAME_IS_MISSABLE = "IsMissable";
     public static final String FIELD_NAME_IS_NULLABLE = "IsNullable";
     public static final String FIELD_NAME_IS_OPEN = "IsOpen";
@@ -98,6 +101,8 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_PRIMARY_KEY_ENFORCED = "PrimaryKeyEnforced";
     public static final String FIELD_NAME_PROPERTIES = "Properties";
     public static final String FIELD_NAME_RECORD = "Record";
+    public static final String FIELD_NAME_REF_DATAVERSE_NAME = "RefDataverseName";
+    public static final String FIELD_NAME_REF_DATASET_NAME = "RefDatasetName";
     public static final String FIELD_NAME_RETURN_TYPE = "ReturnType";
     public static final String FIELD_NAME_RETURN_TYPE_DATAVERSE_NAME = "ReturnTypeDataverseName";
     public static final String FIELD_NAME_SEARCH_KEY = "SearchKey";

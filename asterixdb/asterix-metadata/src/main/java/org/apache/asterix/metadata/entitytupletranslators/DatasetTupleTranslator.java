@@ -37,6 +37,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.TransactionState;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
@@ -295,6 +296,52 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                     }
                 }
 
+                // Foreign Keys
+                List<ViewDetails.ForeignKey> foreignKeys = null;
+                int foreignKeysFieldPos =
+                        datasetDetailsRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_FOREIGN_KEYS);
+                if (foreignKeysFieldPos >= 0) {
+                    AOrderedList foreignKeyRecordsList =
+                            ((AOrderedList) datasetDetailsRecord.getValueByPos(foreignKeysFieldPos));
+                    int nForeignKeys = foreignKeyRecordsList.size();
+                    foreignKeys = new ArrayList<>(nForeignKeys);
+                    for (int i = 0; i < nForeignKeys; i++) {
+                        ARecord foreignKeyRecord = (ARecord) foreignKeyRecordsList.getItem(i);
+                        // 'ForeignKey'
+                        int foreignKeyFieldPos =
+                                foreignKeyRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_FOREIGN_KEY);
+                        AOrderedList foreignKeyFieldList =
+                                ((AOrderedList) foreignKeyRecord.getValueByPos(foreignKeyFieldPos));
+                        int nForeignKeyFields = foreignKeyFieldList.size();
+                        List<String> foreignKeyFields = new ArrayList<>(nForeignKeyFields);
+                        for (int j = 0; j < nForeignKeyFields; j++) {
+                            AOrderedList list = (AOrderedList) foreignKeyFieldList.getItem(j);
+                            if (list.size() != 1) {
+                                throw new AsterixException(ErrorCode.METADATA_ERROR, list.toJSON());
+                            }
+                            AString str = (AString) list.getItem(0);
+                            foreignKeyFields.add(str.getStringValue());
+                        }
+
+                        // 'RefDataverseName'
+                        int refDataverseNameFieldPos = foreignKeyRecord.getType()
+                                .getFieldIndex(MetadataRecordTypes.FIELD_NAME_REF_DATAVERSE_NAME);
+                        String refDataverseCanonicalName =
+                                ((AString) foreignKeyRecord.getValueByPos(refDataverseNameFieldPos)).getStringValue();
+                        DataverseName refDataverseName =
+                                DataverseName.createFromCanonicalForm(refDataverseCanonicalName);
+
+                        // 'RefDatasetName'
+                        int refDatasetNameFieldPos = foreignKeyRecord.getType()
+                                .getFieldIndex(MetadataRecordTypes.FIELD_NAME_REF_DATASET_NAME);
+                        String refDatasetName =
+                                ((AString) foreignKeyRecord.getValueByPos(refDatasetNameFieldPos)).getStringValue();
+
+                        foreignKeys.add(new ViewDetails.ForeignKey(foreignKeyFields,
+                                new DatasetFullyQualifiedName(refDataverseName, refDatasetName)));
+                    }
+                }
+
                 // Format fields
                 String datetimeFormat = null, dateFormat = null, timeFormat = null;
                 int formatFieldPos =
@@ -313,7 +360,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                     }
                 }
 
-                datasetDetails = new ViewDetails(definition, dependencies, defaultNull, primaryKeyFields,
+                datasetDetails = new ViewDetails(definition, dependencies, defaultNull, primaryKeyFields, foreignKeys,
                         datetimeFormat, dateFormat, timeFormat);
                 break;
             }

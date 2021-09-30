@@ -13178,6 +13178,7 @@
         <expected-error>ASX1149: Illegal function or view recursion (in line 32, at column 1)</expected-error>
         <expected-error>ASX1149: Illegal function or view recursion (in line 33, at column 1)</expected-error>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1 primary key (r) not enforced as<< Encountered "primary" at column 21]]></expected-error>
+        <expected-error><![CDATA[ASX1001: Syntax error: In line 28 >>create view test.v2 foreign key (r) references v1 not enforced as<< Encountered <IDENTIFIER> "foreign" at column 21]]></expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="view">
@@ -13231,21 +13232,38 @@
         <expected-error>ASX1079: Compilation error: view type cannot have open fields (in line 29, at column 1)</expected-error>
         <expected-error>ASX1004: Unsupported type: view cannot process input type t1_a (in line 30, at column 1)</expected-error>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1(r bigint, a [bigint]) default null as<< Encountered "[" at column 33]]></expected-error>
-        <expected-error>ASX1001: Syntax error: ASX1092: Parameter date_illegal_property_name cannot be set (in line 25, at column 1)</expected-error>
+        <expected-error>ASX1092: Parameter date_illegal_property_name cannot be set (in line 25, at column 1)</expected-error>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1(r bigint) as<< Encountered "as" at column 31]]></expected-error>
         <expected-error><![CDATA[ASX1014: Field "unknown_field" is not found (in line 25, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1014: Field "unknown_field_2" is not found (in line 25, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 28 >>  as select r from range(1,2) r;<< Encountered "as" at column 3]]></expected-error>
         <expected-error><![CDATA[ASX1021: The primary key field "r" cannot be nullable (in line 25, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1021: The primary key field "r2" cannot be nullable (in line 25, at column 1)]]></expected-error>
-        <expected-error><![CDATA[ASX1001: Syntax error: ASX1162: Invalid primary key definition (in line 25, at column 1)]]></expected-error>
-        <expected-error><![CDATA[ASX1001: Syntax error: ASX1162: Invalid primary key definition (in line 26, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1162: Invalid primary key definition (in line 25, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1162: Invalid primary key definition (in line 26, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1001: Syntax error: In line 36 >>  as employee;<< Encountered "as" at column 3]]></expected-error>
+        <expected-error><![CDATA[ASX1165: Invalid foreign key definition: view test1.employee_v1 does not have a primary key (in line 32, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1166: Invalid foreign key definition: foreign key does not match primary key of view test1.employee_v1 (in line 34, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1166: Invalid foreign key definition: foreign key does not match primary key of view test1.employee_v2 (in line 34, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1164: Invalid foreign key definition (in line 34, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1063: Cannot find dataverse with name test3 (in line 42, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1159: Cannot find view with name test1.employee_v3 (in line 42, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1159: Cannot find view with name test1.employee (in line 43, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1164: Invalid foreign key definition (in line 43, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1164: Invalid foreign key definition (in line 39, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1166: Invalid foreign key definition: foreign key does not match primary key of view test1.employee_v1 (in line 39, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX1167: Cannot change primary key of view test1.employee_v1 (in line 38, at column 1)]]></expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="view">
+      <compilation-unit name="create-view-7-foreign-key">
+        <output-dir compare="Text">create-view-7-foreign-key</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="view">
       <compilation-unit name="drop-dataverse-1">
-        <output-dir compare="Text">none</output-dir>
+        <output-dir compare="Text">drop-dataverse-1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="view">
@@ -13257,6 +13275,7 @@
         <expected-error>ASX1147: Cannot drop dataverse: function test2.f2() being used by view test1.v1</expected-error>
         <expected-error>ASX1147: Cannot drop dataverse: synonym test2.s3 being used by view test1.v1</expected-error>
         <expected-error>ASX1147: Cannot drop dataverse: type test2.t1 being used by dataset test1.v1</expected-error>
+        <expected-error>ASX1147: Cannot drop dataverse: dataset (or view) test2.employee_v2 being used by view test1.employee_v1</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

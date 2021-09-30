@@ -17,32 +17,22 @@
  * under the License.
  */
 
---- test drop dataverse with views
+/*
+ * Negative: cannot create self-referenced foreign key if
+ *           its definition doesn't match the primary key
+ *           (foreign key declaration has more fields)
+ */
 
 drop dataverse test1 if exists;
 create dataverse test1;
 
-create view test1.v1 as
-  select r from range(0,2) r;
+use test1;
 
-create view test1.v2 as
-  select v1.* from v1;
+create dataset employee(e_id int not unknown, e_name string, e_mgr_id int, e_hrr_id int)
+  primary key e_id;
 
-create view test1.v3(r bigint) default null as v2;
-
-create type test1.t4 as closed { r:int64? };
-
-create view test1.v4(t4) default null as v2;
-
-create view test1.v5(r bigint not unknown)
+create view employee_v1(e_id int not unknown, e_mgr_id int, e_hrr_id int)
   default null
-  primary key (r) not enforced
-  as v3;
-
-create view test1.v6(r1 bigint not unknown, r2 bigint)
-  default null
-  primary key (r1) not enforced
-  foreign key (r2) references v5 not enforced
-  as select r r1, r+1 r2 from range(0,2) r;
-
-drop dataverse test1;
+  primary key (e_id) not enforced
+  foreign key (e_mgr_id, e_hrr_id) references employee_v1 not enforced
+  as employee;

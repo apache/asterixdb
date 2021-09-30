@@ -22,6 +22,7 @@ package org.apache.asterix.metadata.entities;
 import static org.apache.asterix.om.types.AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
 
 import java.io.DataOutput;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,6 +32,7 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.config.DatasetConfig;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
@@ -70,16 +72,19 @@ public class ViewDetails implements IDatasetDetails {
 
     private final List<String> primaryKeyFields;
 
+    private final List<ForeignKey> foreignKeys;
+
     public ViewDetails(String viewBody, List<List<Triple<DataverseName, String, String>>> dependencies,
-            Boolean defaultNull, List<String> primaryKeyFields, String datetimeFormat, String dateFormat,
-            String timeFormat) {
+            Boolean defaultNull, List<String> primaryKeyFields, List<ForeignKey> foreignKeys, String datetimeFormat,
+            String dateFormat, String timeFormat) {
         this.viewBody = Objects.requireNonNull(viewBody);
         this.dependencies = Objects.requireNonNull(dependencies);
         this.defaultNull = defaultNull;
+        this.primaryKeyFields = primaryKeyFields;
+        this.foreignKeys = foreignKeys;
         this.datetimeFormat = datetimeFormat;
         this.dateFormat = dateFormat;
         this.timeFormat = timeFormat;
-        this.primaryKeyFields = primaryKeyFields;
     }
 
     @Override
@@ -103,6 +108,10 @@ public class ViewDetails implements IDatasetDetails {
 
     public List<String> getPrimaryKeyFields() {
         return primaryKeyFields;
+    }
+
+    public List<ForeignKey> getForeignKeys() {
+        return foreignKeys;
     }
 
     public String getDatetimeFormat() {
@@ -196,23 +205,12 @@ public class ViewDetails implements IDatasetDetails {
             aString.setValue(MetadataRecordTypes.FIELD_NAME_PRIMARY_KEY);
             stringSerde.serialize(aString, fieldName.getDataOutput());
 
-            // write as list of lists to be consistent with how InternalDatasetDetails writes its primary key
-            OrderedListBuilder primaryKeyListBuilder = new OrderedListBuilder();
-            OrderedListBuilder listBuilder = new OrderedListBuilder();
-
-            primaryKeyListBuilder.reset(FULL_OPEN_ORDEREDLIST_TYPE);
-            for (String field : primaryKeyFields) {
-                listBuilder.reset(FULL_OPEN_ORDEREDLIST_TYPE);
-                itemValue.reset();
-                aString.setValue(field);
-                stringSerde.serialize(aString, itemValue.getDataOutput());
-                listBuilder.addItem(itemValue);
-                itemValue.reset();
-                listBuilder.write(itemValue.getDataOutput(), true);
-                primaryKeyListBuilder.addItem(itemValue);
-            }
+            // write value as list of lists to be consistent with how InternalDatasetDetails writes its primary key
             fieldValue.reset();
-            primaryKeyListBuilder.write(fieldValue.getDataOutput(), true);
+            OrderedListBuilder keyListBuilder = new OrderedListBuilder();
+            OrderedListBuilder fieldPathListBuilder = new OrderedListBuilder();
+            writeKeyFieldsList(primaryKeyFields, keyListBuilder, fieldPathListBuilder, aString, stringSerde, itemValue);
+            keyListBuilder.write(fieldValue.getDataOutput(), true);
             viewRecordBuilder.addField(fieldName, fieldValue);
 
             // write field 'PrimaryKeyEnforced'
@@ -221,6 +219,69 @@ public class ViewDetails implements IDatasetDetails {
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
             booleanSerde.serialize(ABoolean.FALSE, fieldValue.getDataOutput());
+            viewRecordBuilder.addField(fieldName, fieldValue);
+        }
+
+        // write field 'ForeignKeys'
+        if (foreignKeys != null && !foreignKeys.isEmpty()) {
+            OrderedListBuilder foreignKeysListBuilder = new OrderedListBuilder();
+            foreignKeysListBuilder.reset(FULL_OPEN_ORDEREDLIST_TYPE);
+
+            IARecordBuilder foreignKeyRecordBuilder = new RecordBuilder();
+            OrderedListBuilder keyListBuilder = new OrderedListBuilder();
+            OrderedListBuilder fieldPathListBuilder = new OrderedListBuilder();
+
+            for (ViewDetails.ForeignKey foreignKey : foreignKeys) {
+                foreignKeyRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
+
+                // write field 'ForeignKey'
+                fieldName.reset();
+                aString.setValue(MetadataRecordTypes.FIELD_NAME_FOREIGN_KEY);
+                stringSerde.serialize(aString, fieldName.getDataOutput());
+                // write value as list of lists to be consistent with how InternalDatasetDetails writes its primary key
+                fieldValue.reset();
+                writeKeyFieldsList(foreignKey.getForeignKeyFields(), keyListBuilder, fieldPathListBuilder, aString,
+                        stringSerde, itemValue);
+                keyListBuilder.write(fieldValue.getDataOutput(), true);
+                foreignKeyRecordBuilder.addField(fieldName, fieldValue);
+
+                // write field 'RefDataverseName'
+                fieldName.reset();
+                aString.setValue(MetadataRecordTypes.FIELD_NAME_REF_DATAVERSE_NAME);
+                stringSerde.serialize(aString, fieldName.getDataOutput());
+                fieldValue.reset();
+                aString.setValue(foreignKey.getReferencedDatasetName().getDataverseName().getCanonicalForm());
+                stringSerde.serialize(aString, fieldValue.getDataOutput());
+                foreignKeyRecordBuilder.addField(fieldName, fieldValue);
+
+                // write field 'RefDatasetName'
+                fieldName.reset();
+                aString.setValue(MetadataRecordTypes.FIELD_NAME_REF_DATASET_NAME);
+                stringSerde.serialize(aString, fieldName.getDataOutput());
+                fieldValue.reset();
+                aString.setValue(foreignKey.getReferencedDatasetName().getDatasetName());
+                stringSerde.serialize(aString, fieldValue.getDataOutput());
+                foreignKeyRecordBuilder.addField(fieldName, fieldValue);
+
+                // write field 'IsEnforced'
+                fieldName.reset();
+                aString.setValue(MetadataRecordTypes.FIELD_NAME_IS_ENFORCED);
+                stringSerde.serialize(aString, fieldName.getDataOutput());
+                fieldValue.reset();
+                booleanSerde.serialize(ABoolean.FALSE, fieldValue.getDataOutput());
+                foreignKeyRecordBuilder.addField(fieldName, fieldValue);
+
+                fieldValue.reset();
+                foreignKeyRecordBuilder.write(fieldValue.getDataOutput(), true);
+                foreignKeysListBuilder.addItem(fieldValue);
+            }
+
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_FOREIGN_KEYS);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            foreignKeysListBuilder.write(fieldValue.getDataOutput(), true);
+
             viewRecordBuilder.addField(fieldName, fieldValue);
         }
 
@@ -250,6 +311,22 @@ public class ViewDetails implements IDatasetDetails {
         viewRecordBuilder.write(out, true);
     }
 
+    private void writeKeyFieldsList(List<String> keyFields, OrderedListBuilder keyListBuilder,
+            OrderedListBuilder fieldListBuilder, AMutableString aString, ISerializerDeserializer<AString> stringSerde,
+            ArrayBackedValueStorage itemValue) throws HyracksDataException {
+        keyListBuilder.reset(FULL_OPEN_ORDEREDLIST_TYPE);
+        for (String field : keyFields) {
+            fieldListBuilder.reset(FULL_OPEN_ORDEREDLIST_TYPE);
+            itemValue.reset();
+            aString.setValue(field);
+            stringSerde.serialize(aString, itemValue.getDataOutput());
+            fieldListBuilder.addItem(itemValue);
+            itemValue.reset();
+            fieldListBuilder.write(itemValue.getDataOutput(), true);
+            keyListBuilder.addItem(itemValue);
+        }
+    }
+
     public static List<List<Triple<DataverseName, String, String>>> createDependencies(
             List<Triple<DataverseName, String, String>> datasetDependencies,
             List<Triple<DataverseName, String, String>> functionDependencies,
@@ -263,5 +340,27 @@ public class ViewDetails implements IDatasetDetails {
             depList.add(synonymDependencies);
         }
         return depList;
+    }
+
+    public static final class ForeignKey implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        private final List<String> foreignKeyFields;
+
+        private final DatasetFullyQualifiedName referencedDatasetName;
+
+        public ForeignKey(List<String> foreignKeyFields, DatasetFullyQualifiedName referencedDatasetName) {
+            this.foreignKeyFields = Objects.requireNonNull(foreignKeyFields);
+            this.referencedDatasetName = Objects.requireNonNull(referencedDatasetName);
+        }
+
+        public List<String> getForeignKeyFields() {
+            return foreignKeyFields;
+        }
+
+        public DatasetFullyQualifiedName getReferencedDatasetName() {
+            return referencedDatasetName;
+        }
     }
 }

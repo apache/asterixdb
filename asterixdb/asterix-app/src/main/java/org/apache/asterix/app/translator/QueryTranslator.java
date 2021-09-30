@@ -234,6 +234,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.data.IResultSerializerFactoryProvider;
 import org.apache.hyracks.algebricks.runtime.serializer.ResultSerializerFactoryProvider;
@@ -2530,28 +2531,118 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
-            List<String> primaryKeyFields = cvs.getPrimaryKeyFields();
+            DatasetFullyQualifiedName viewQualifiedName = new DatasetFullyQualifiedName(dataverseName, viewName);
+
             Datatype itemTypeEntity = null;
             boolean itemTypeIsInline = false;
+            CreateViewStatement.KeyDecl primaryKeyDecl = cvs.getPrimaryKeyDecl();
+            List<String> primaryKeyFields = null;
+            List<CreateViewStatement.ForeignKeyDecl> foreignKeyDecls = cvs.getForeignKeyDecls();
+            List<ViewDetails.ForeignKey> foreignKeys = null;
+            String datetimeFormat = null, dateFormat = null, timeFormat = null;
             if (cvs.hasItemType()) {
                 Pair<Datatype, Boolean> itemTypePair = fetchDatasetItemType(mdTxnCtx, DatasetType.VIEW,
                         itemTypeDataverseName, itemTypeName, cvs.getItemType(), false, metadataProvider, sourceLoc);
                 itemTypeEntity = itemTypePair.first;
                 itemTypeIsInline = itemTypePair.second;
-                if (primaryKeyFields != null) {
-                    ValidateUtil.validatePartitioningExpressions((ARecordType) itemTypeEntity.getDatatype(), null,
-                            primaryKeyFields.stream().map(Collections::singletonList).collect(Collectors.toList()),
-                            Collections.nCopies(primaryKeyFields.size(), Index.RECORD_INDICATOR), false, sourceLoc);
+                ARecordType itemType = (ARecordType) itemTypeEntity.getDatatype();
+                if (primaryKeyDecl != null) {
+                    primaryKeyFields = ValidateUtil.validateViewKeyFields(primaryKeyDecl, itemType, false, sourceLoc);
                 }
-            } else if (primaryKeyFields != null) {
-                throw new CompilationException(ErrorCode.INVALID_PRIMARY_KEY_DEFINITION, sourceLoc);
+                if (foreignKeyDecls != null) {
+                    foreignKeys = new ArrayList<>(foreignKeyDecls.size());
+                    for (CreateViewStatement.ForeignKeyDecl foreignKeyDecl : foreignKeyDecls) {
+                        List<String> foreignKeyFields =
+                                ValidateUtil.validateViewKeyFields(foreignKeyDecl, itemType, true, sourceLoc);
+                        DataverseName refDataverseName = foreignKeyDecl.getReferencedDataverseName();
+                        if (refDataverseName == null) {
+                            refDataverseName = dataverseName;
+                        } else {
+                            Dataverse refDataverse = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, refDataverseName);
+                            if (refDataverse == null) {
+                                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc,
+                                        refDataverseName);
+                            }
+                        }
+                        String refDatasetName = foreignKeyDecl.getReferencedDatasetName().getValue();
+                        boolean isSelfRef = refDataverseName.equals(dataverseName) && refDatasetName.equals(viewName);
+                        DatasetType refDatasetType;
+                        DatasetFullyQualifiedName refQualifiedName;
+                        List<String> refPrimaryKeyFields;
+                        if (isSelfRef) {
+                            refDatasetType = DatasetType.VIEW;
+                            refQualifiedName = viewQualifiedName;
+                            refPrimaryKeyFields = primaryKeyFields;
+                        } else {
+                            // findDataset() will acquire lock on referenced dataset (view)
+                            Dataset refDataset = metadataProvider.findDataset(refDataverseName, refDatasetName, true);
+                            if (refDataset == null || DatasetUtil.isNotView(refDataset)) {
+                                throw new CompilationException(ErrorCode.UNKNOWN_VIEW, sourceLoc,
+                                        DatasetUtil.getFullyQualifiedDisplayName(refDataverseName, refDatasetName));
+                            }
+                            ViewDetails refViewDetails = (ViewDetails) refDataset.getDatasetDetails();
+                            refDatasetType = refDataset.getDatasetType();
+                            refQualifiedName = new DatasetFullyQualifiedName(refDataverseName, refDatasetName);
+                            refPrimaryKeyFields = refViewDetails.getPrimaryKeyFields();
+                        }
+
+                        if (refPrimaryKeyFields == null) {
+                            throw new CompilationException(ErrorCode.INVALID_FOREIGN_KEY_DEFINITION_REF_PK_NOT_FOUND,
+                                    sourceLoc, DatasetUtil.getDatasetTypeDisplayName(refDatasetType),
+                                    DatasetUtil.getFullyQualifiedDisplayName(refDataverseName, refDatasetName));
+                        } else if (refPrimaryKeyFields.size() != foreignKeyFields.size()) {
+                            throw new CompilationException(ErrorCode.INVALID_FOREIGN_KEY_DEFINITION_REF_PK_MISMATCH,
+                                    sourceLoc, DatasetUtil.getDatasetTypeDisplayName(refDatasetType),
+                                    DatasetUtil.getFullyQualifiedDisplayName(refDataverseName, refDatasetName));
+                        } else if (isSelfRef
+                                && !OperatorPropertiesUtil.disjoint(refPrimaryKeyFields, foreignKeyFields)) {
+                            throw new CompilationException(ErrorCode.INVALID_FOREIGN_KEY_DEFINITION, sourceLoc);
+                        }
+
+                        foreignKeys.add(new ViewDetails.ForeignKey(foreignKeyFields, refQualifiedName));
+                    }
+                }
+
+                Map<String, String> viewConfig =
+                        ViewUtil.validateViewConfiguration(cvs.getViewConfiguration(), cvs.getSourceLocation());
+                datetimeFormat = ViewUtil.getDatetimeFormat(viewConfig);
+                dateFormat = ViewUtil.getDateFormat(viewConfig);
+                timeFormat = ViewUtil.getTimeFormat(viewConfig);
+
+            } else {
+                if (primaryKeyDecl != null) {
+                    throw new CompilationException(ErrorCode.INVALID_PRIMARY_KEY_DEFINITION, cvs.getSourceLocation());
+                }
+                if (foreignKeyDecls != null) {
+                    throw new CompilationException(ErrorCode.INVALID_FOREIGN_KEY_DEFINITION, cvs.getSourceLocation());
+                }
+                if (cvs.getViewConfiguration() != null) {
+                    throw new CompilationException(ErrorCode.ILLEGAL_SET_PARAMETER, cvs.getSourceLocation(),
+                            cvs.getViewConfiguration().keySet().iterator().next());
+                }
+            }
+
+            if (existingDataset != null) {
+                ViewDetails existingViewDetails = (ViewDetails) existingDataset.getDatasetDetails();
+                List<String> existingPrimaryKeyFields = existingViewDetails.getPrimaryKeyFields();
+                // For now don't allow view replacement if existing view has primary keys and they are different
+                // from the new view's primary keys, because there could be another view that references
+                // these primary keys via its foreign keys declaration.
+                // In the future we should relax this check: scan datasets metadata and allow replacement in this case
+                // if there's no view that references this view
+                boolean allowToReplace =
+                        existingPrimaryKeyFields == null || existingPrimaryKeyFields.equals(primaryKeyFields);
+                if (!allowToReplace) {
+                    throw new CompilationException(ErrorCode.CANNOT_CHANGE_PRIMARY_KEY, cvs.getSourceLocation(),
+                            DatasetUtil.getDatasetTypeDisplayName(existingDataset.getDatasetType()),
+                            DatasetUtil.getFullyQualifiedDisplayName(existingDataset));
+                }
             }
 
             // Check whether the view is usable:
             // create a view declaration for this function,
             // and a query body that queries this view:
-            ViewDecl viewDecl =
-                    new ViewDecl(new DatasetFullyQualifiedName(dataverseName, viewName), cvs.getViewBodyExpression());
+            ViewDecl viewDecl = new ViewDecl(viewQualifiedName, cvs.getViewBodyExpression());
             viewDecl.setSourceLocation(sourceLoc);
             IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
             Query wrappedQuery = queryRewriter.createViewAccessorQuery(viewDecl);
@@ -2560,10 +2651,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     wrappedQuery, sessionOutput, false, false, Collections.emptyList(), warningCollector);
 
             List<List<Triple<DataverseName, String, String>>> dependencies =
-                    ViewUtil.getViewDependencies(viewDecl, queryRewriter);
+                    ViewUtil.getViewDependencies(viewDecl, foreignKeys, queryRewriter);
 
             ViewDetails viewDetails = new ViewDetails(cvs.getViewBody(), dependencies, cvs.getDefaultNull(),
-                    primaryKeyFields, cvs.getDatetimeFormat(), cvs.getDateFormat(), cvs.getTimeFormat());
+                    primaryKeyFields, foreignKeys, datetimeFormat, dateFormat, timeFormat);
 
             Dataset view = new Dataset(dataverseName, viewName, itemTypeDataverseName, itemTypeName,
                     MetadataConstants.METADATA_NODEGROUP_NAME, "", Collections.emptyMap(), viewDetails,

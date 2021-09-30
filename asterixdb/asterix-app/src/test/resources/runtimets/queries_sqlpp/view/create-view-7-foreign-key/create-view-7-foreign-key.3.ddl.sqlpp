@@ -1,0 +1,52 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Test multiple foreign keys, cross-dataverse references, composite keys
+ */
+
+drop dataverse test1 if exists;
+create dataverse test1;
+
+drop dataverse test2 if exists;
+create dataverse test2;
+
+use test2;
+
+create dataset customers(c_id int not unknown, c_name string) primary key c_id;
+
+create dataset stores(s_id1 int not unknown, s_id2 int not unknown, s_name string) primary key s_id1, s_id2;
+
+create dataset orders(o_id int not unknown, o_cid int, o_sidX int, o_sidY int, o_amount int) primary key o_id;
+
+create view customers_v(c_id int not unknown, c_name string) default null
+   primary key (c_id) not enforced
+   as customers;
+
+use test1;
+
+create view stores_v(s_id1 int not unknown, s_id2 int not unknown, s_name string) default null
+   primary key (s_id1, s_id2) not enforced
+   as test2.stores;
+
+create view orders_v(o_id int not unknown, o_cid int, o_sidX int, o_sidY int, o_amount int) default null
+  primary key (o_id) not enforced
+  foreign key (o_cid) references test2.customers_v not enforced
+  foreign key (o_sidX, o_sidY) references test1.stores_v not enforced
+  as test2.orders;

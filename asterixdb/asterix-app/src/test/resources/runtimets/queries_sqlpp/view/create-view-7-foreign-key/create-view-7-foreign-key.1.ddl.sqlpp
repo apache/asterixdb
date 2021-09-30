@@ -1,0 +1,60 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Test 'self reference' foreign keys
+ */
+
+drop dataverse test1 if exists;
+create dataverse test1;
+
+drop dataverse test2 if exists;
+create dataverse test2;
+
+use test1;
+
+create dataset employee(e_id int not unknown, e_name string, e_mgr_id int, e_hrr_id int)
+  primary key e_id;
+
+create view employee_v1(e_id int not unknown, e_mgr_id int)
+  default null
+  primary key (e_id) not enforced
+  foreign key (e_mgr_id) references employee_v1 not enforced
+  as employee;
+
+create view employee_v2(e_id int not unknown, e_mgr_id int, e_hrr_id int)
+  default null
+  primary key (e_id) not enforced
+  foreign key (e_mgr_id) references test1.employee_v2 not enforced
+  foreign key (e_hrr_id) references test1.employee_v2 not enforced
+  as employee;
+
+use test2;
+
+create dataset employee2(e_id1 int not unknown, e_id2 int not unknown, e_name string,
+  e_mgr_id1 int, e_mgr_id2 int, e_hrr_id1 int, e_hrr_id2 int)
+  primary key e_id1, e_id2;
+
+create view employee2_v1(e_id1 int not unknown, e_id2 int not unknown,
+  e_mgr_id1 int, e_mgr_id2 int, e_hrr_id1 int, e_hrr_id2 int)
+  default null
+  primary key (e_id1, e_id2) not enforced
+  foreign key (e_mgr_id1, e_mgr_id2) references employee2_v1 not enforced
+  foreign key (e_hrr_id1, e_hrr_id2) references employee2_v1 not enforced
+  as employee2;

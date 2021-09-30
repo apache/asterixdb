@@ -230,6 +230,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String INCLUDE = "INCLUDE";
     private static final String FIRST = "FIRST";
     private static final String FOLLOWING = "FOLLOWING";
+    private static final String FOREIGN = "FOREIGN";
     private static final String GROUPING = "GROUPING";
     private static final String GROUPS = "GROUPS";
     private static final String IGNORE = "IGNORE";
@@ -241,6 +242,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String PARTITION = "PARTITION";
     private static final String PRECEDING = "PRECEDING";
     private static final String RANGE = "RANGE";
+    private static final String REFERENCES = "REFERENCES";
     private static final String RESPECT = "RESPECT";
     private static final String ROLLUP = "ROLLUP";
     private static final String ROW = "ROW";
@@ -1438,7 +1440,11 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
   Expression viewBodyExpr = null;
   Boolean defaultNull = null;
   Map<String, String> viewConfig = null;
+  String propertyName = null, propertyValue = null;
   Pair<List<Integer>, List<List<String>>> primaryKeyFields = null;
+  Pair<List<Integer>, List<List<String>>> foreignKeyFields = null;
+  Pair<DataverseName, Identifier> refNameComponents = null;
+  List<CreateViewStatement.ForeignKeyDecl> foreignKeyDecls = null;
   DataverseName currentDataverse = defaultDataverse;
 }
 {
@@ -1448,8 +1454,31 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
         typeExpr = DatasetTypeSpecification()
         ifNotExists = IfNotExists()
         <IDENTIFIER> { expectToken(DEFAULT); } <NULL> { defaultNull = true; }
-        viewConfig = ViewConfiguration()
-        ( <PRIMARY> <KEY> <LEFTPAREN> primaryKeyFields = PrimaryKeyFields() <RIGHTPAREN> <NOT> <ENFORCED> )?
+        (
+          LOOKAHEAD(2) <IDENTIFIER> { propertyName = token.image.toLowerCase(); } propertyValue = StringLiteral()
+          {
+            if (viewConfig == null) {
+              viewConfig = new HashMap<String, String>();
+            }
+            viewConfig.put(propertyName, propertyValue);
+          }
+        )*
+        (
+          <PRIMARY> <KEY> <LEFTPAREN> primaryKeyFields = PrimaryKeyFields() <RIGHTPAREN>
+          <NOT> <ENFORCED>
+        )?
+        (
+          <IDENTIFIER> { expectToken(FOREIGN); } <KEY> <LEFTPAREN> foreignKeyFields = PrimaryKeyFields() <RIGHTPAREN>
+          <IDENTIFIER> { expectToken(REFERENCES); } refNameComponents = QualifiedName()
+          <NOT> <ENFORCED>
+          {
+            if (foreignKeyDecls == null) {
+              foreignKeyDecls = new ArrayList<CreateViewStatement.ForeignKeyDecl>();
+            }
+            foreignKeyDecls.add(new CreateViewStatement.ForeignKeyDecl(foreignKeyFields.second,
+              foreignKeyFields.first, refNameComponents.first, refNameComponents.second));
+          }
+        )*
       )
       |
       ( ifNotExists = IfNotExists() )
@@ -1474,13 +1503,12 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
       endPos.endColumn + 1);
     removeCurrentScope();
     defaultDataverse = currentDataverse;
-    try {
-      CreateViewStatement stmt = new CreateViewStatement(nameComponents.first, nameComponents.second.getValue(),
-        typeExpr, viewBody, viewBodyExpr, defaultNull, viewConfig, primaryKeyFields, orReplace, ifNotExists);
+    CreateViewStatement.KeyDecl primaryKeyDecl = primaryKeyFields != null ?
+      new CreateViewStatement.KeyDecl(primaryKeyFields.second, primaryKeyFields.first) : null;
+    CreateViewStatement stmt = new CreateViewStatement(nameComponents.first, nameComponents.second.getValue(),
+      typeExpr, viewBody, viewBodyExpr, defaultNull, viewConfig, primaryKeyDecl, foreignKeyDecls, orReplace,
+      ifNotExists);
     return addSourceLocation(stmt, startStmtToken);
-    } catch (CompilationException e) {
-       throw new SqlppParseException(getSourceLocation(startStmtToken), e.getMessage());
-    }
   }
 }
 
@@ -1495,27 +1523,6 @@ Expression ViewBody() throws ParseException:
   )
   {
     return viewBodyExpr;
-  }
-}
-
-Map<String, String> ViewConfiguration() throws ParseException:
-{
-  Map<String, String> config = null;
-  String name = null, value = null;
-}
-{
-  (
-    <IDENTIFIER> { name = token.image.toLowerCase(); }
-    value = StringLiteral()
-    {
-      if (config == null) {
-        config = new LinkedHashMap<String, String>();
-      }
-      config.put(name, value);
-    }
-  )*
-  {
-    return config;
   }
 }
 

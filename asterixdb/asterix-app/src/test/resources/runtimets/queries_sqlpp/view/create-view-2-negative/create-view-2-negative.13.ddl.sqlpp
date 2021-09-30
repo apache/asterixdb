@@ -17,32 +17,13 @@
  * under the License.
  */
 
---- test drop dataverse with views
+--- Negative: untyped view cannot declare foreign key
 
-drop dataverse test1 if exists;
-create dataverse test1;
+drop dataverse test if exists;
+create dataverse test;
 
-create view test1.v1 as
-  select r from range(0,2) r;
+create view test.v1 as
+  select r from range(1,2) r;
 
-create view test1.v2 as
-  select v1.* from v1;
-
-create view test1.v3(r bigint) default null as v2;
-
-create type test1.t4 as closed { r:int64? };
-
-create view test1.v4(t4) default null as v2;
-
-create view test1.v5(r bigint not unknown)
-  default null
-  primary key (r) not enforced
-  as v3;
-
-create view test1.v6(r1 bigint not unknown, r2 bigint)
-  default null
-  primary key (r1) not enforced
-  foreign key (r2) references v5 not enforced
-  as select r r1, r+1 r2 from range(0,2) r;
-
-drop dataverse test1;
+create view test.v2 foreign key (r) references v1 not enforced as
+  select r from range(1,2) r;

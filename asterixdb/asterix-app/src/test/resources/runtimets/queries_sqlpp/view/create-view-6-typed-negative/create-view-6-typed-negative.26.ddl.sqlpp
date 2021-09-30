@@ -17,32 +17,25 @@
  * under the License.
  */
 
---- test drop dataverse with views
+/*
+ * Negative: cannot replace typed view if the replacement declaration has a different primary key
+ *           because there might be another typed view that refers to its primary key
+ *           via foreign key declaration.
+ *           (this limitation will be relaxed in the future)
+ */
 
 drop dataverse test1 if exists;
 create dataverse test1;
 
-create view test1.v1 as
-  select r from range(0,2) r;
+create dataset test1.employee(e_id int not unknown, e_name string, e_mgr_id int, e_hrr_id int)
+  primary key e_id;
 
-create view test1.v2 as
-  select v1.* from v1;
-
-create view test1.v3(r bigint) default null as v2;
-
-create type test1.t4 as closed { r:int64? };
-
-create view test1.v4(t4) default null as v2;
-
-create view test1.v5(r bigint not unknown)
+create view test1.employee_v1(e_id int not unknown, e_mgr_id int)
   default null
-  primary key (r) not enforced
-  as v3;
+  primary key (e_id) not enforced
+  as employee;
 
-create view test1.v6(r1 bigint not unknown, r2 bigint)
+create or replace view test1.employee_v1(e_id int not unknown, e_mgr_id int not unknown)
   default null
-  primary key (r1) not enforced
-  foreign key (r2) references v5 not enforced
-  as select r r1, r+1 r2 from range(0,2) r;
-
-drop dataverse test1;
+  primary key (e_id, e_mgr_id) not enforced
+  as employee;

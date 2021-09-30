@@ -17,7 +17,7 @@
  * under the License.
  */
 
---- Negative: cannot declare primary key
+--- Negative: untyped view cannot declare primary key
 
 drop dataverse test if exists;
 create dataverse test;

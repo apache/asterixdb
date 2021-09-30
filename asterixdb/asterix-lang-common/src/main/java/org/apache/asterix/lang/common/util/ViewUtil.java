@@ -43,7 +43,6 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
-import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
@@ -51,7 +50,6 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -84,7 +82,7 @@ public final class ViewUtil {
     }
 
     public static List<List<Triple<DataverseName, String, String>>> getViewDependencies(ViewDecl viewDecl,
-            IQueryRewriter rewriter) throws CompilationException {
+            List<ViewDetails.ForeignKey> foreignKeys, IQueryRewriter rewriter) throws CompilationException {
         Expression normBody = viewDecl.getNormalizedViewBody();
         if (normBody == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, viewDecl.getSourceLocation(),
@@ -98,9 +96,31 @@ public final class ViewUtil {
         ExpressionUtils.collectDependencies(normBody, rewriter, datasetDependencies, synonymDependencies,
                 functionDependencies);
 
+        if (foreignKeys != null) {
+            DatasetFullyQualifiedName viewName = viewDecl.getViewName();
+            for (ViewDetails.ForeignKey foreignKey : foreignKeys) {
+                DatasetFullyQualifiedName refName = foreignKey.getReferencedDatasetName();
+                boolean isSelfReference = refName.equals(viewName);
+                if (isSelfReference || containsDependency(datasetDependencies, refName)) {
+                    continue;
+                }
+                datasetDependencies.add(new Triple<>(refName.getDataverseName(), refName.getDatasetName(), null));
+            }
+        }
+
         List<Triple<DataverseName, String, String>> typeDependencies = Collections.emptyList();
         return ViewDetails.createDependencies(datasetDependencies, functionDependencies, typeDependencies,
                 synonymDependencies);
+    }
+
+    private static boolean containsDependency(List<Triple<DataverseName, String, String>> inList,
+            DatasetFullyQualifiedName searchName) {
+        for (Triple<DataverseName, String, String> d : inList) {
+            if (d.first.equals(searchName.getDataverseName()) && d.second.equals(searchName.getDatasetName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void validateViewItemType(ARecordType recordType, SourceLocation sourceLoc)
@@ -130,53 +150,24 @@ public final class ViewUtil {
         }
     }
 
-    public static Map<String, String> validateViewConfiguration(Map<String, String> viewConfig, boolean hasItemType)
-            throws CompilationException {
+    public static Map<String, String> validateViewConfiguration(Map<String, String> viewConfig,
+            SourceLocation sourceLoc) throws CompilationException {
         if (viewConfig == null) {
-            viewConfig = Collections.emptyMap();
+            return Collections.emptyMap();
         }
-        if (hasItemType) {
-            for (Map.Entry<String, String> me : viewConfig.entrySet()) {
-                String name = me.getKey();
-                String value = me.getValue();
-                if (DATETIME_PARAMETER_NAME.equals(name) || DATE_PARAMETER_NAME.equals(name)
-                        || TIME_PARAMETER_NAME.equals(name)) {
-                    if (value == null) {
-                        throw new CompilationException(ErrorCode.INVALID_REQ_PARAM_VAL, name, value);
-                    }
-                } else {
-                    throw new CompilationException(ErrorCode.ILLEGAL_SET_PARAMETER, name);
+        for (Map.Entry<String, String> me : viewConfig.entrySet()) {
+            String name = me.getKey();
+            String value = me.getValue();
+            if (DATETIME_PARAMETER_NAME.equals(name) || DATE_PARAMETER_NAME.equals(name)
+                    || TIME_PARAMETER_NAME.equals(name)) {
+                if (value == null) {
+                    throw new CompilationException(ErrorCode.INVALID_REQ_PARAM_VAL, sourceLoc, name, value);
                 }
+            } else {
+                throw new CompilationException(ErrorCode.ILLEGAL_SET_PARAMETER, sourceLoc, name);
             }
-        } else if (!viewConfig.isEmpty()) {
-            throw new CompilationException(ErrorCode.ILLEGAL_SET_PARAMETER, viewConfig.keySet().iterator().next());
         }
         return viewConfig;
-    }
-
-    public static List<String> validateViewPrimaryKey(Pair<List<Integer>, List<List<String>>> primaryKeyFieldsPair,
-            boolean hasItemType) throws CompilationException {
-        if (primaryKeyFieldsPair == null || primaryKeyFieldsPair.second.isEmpty()) {
-            return null;
-        }
-        if (!hasItemType) {
-            throw new CompilationException(ErrorCode.INVALID_PRIMARY_KEY_DEFINITION);
-        }
-        List<Integer> sourceIndicators = primaryKeyFieldsPair.first;
-        List<List<String>> primaryKeyFields = primaryKeyFieldsPair.second;
-        int n = primaryKeyFields.size();
-        List<String> resultFields = new ArrayList<>(n);
-        for (int i = 0; i < n; i++) {
-            if (sourceIndicators.get(i) != Index.RECORD_INDICATOR) {
-                throw new CompilationException(ErrorCode.INVALID_PRIMARY_KEY_DEFINITION);
-            }
-            List<String> nestedField = primaryKeyFields.get(i);
-            if (nestedField.size() != 1) {
-                throw new CompilationException(ErrorCode.INVALID_PRIMARY_KEY_DEFINITION);
-            }
-            resultFields.add(nestedField.get(0));
-        }
-        return resultFields;
     }
 
     public static Expression createTypeConvertExpression(Expression inExpr, IAType targetType,
@@ -295,5 +286,17 @@ public final class ViewUtil {
             default:
                 return null;
         }
+    }
+
+    public static String getDatetimeFormat(Map<String, String> viewConfig) {
+        return viewConfig.get(DATETIME_PARAMETER_NAME);
+    }
+
+    public static String getDateFormat(Map<String, String> viewConfig) {
+        return viewConfig.get(DATE_PARAMETER_NAME);
+    }
+
+    public static String getTimeFormat(Map<String, String> viewConfig) {
+        return viewConfig.get(TIME_PARAMETER_NAME);
     }
 }

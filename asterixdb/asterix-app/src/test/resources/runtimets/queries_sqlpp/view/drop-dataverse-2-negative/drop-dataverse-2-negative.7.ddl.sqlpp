@@ -17,32 +17,31 @@
  * under the License.
  */
 
---- test drop dataverse with views
+--- Test that DROP DATAVERSE fails due to cross-dataverse dependencies
+
+--- View refers to another view view foreign key declaration
 
 drop dataverse test1 if exists;
 create dataverse test1;
 
-create view test1.v1 as
-  select r from range(0,2) r;
+drop dataverse test2 if exists;
+create dataverse test2;
 
-create view test1.v2 as
-  select v1.* from v1;
+create dataset test2.employee_2(e_id int not unknown, e_name string, e_mgr_id int, e_hrr_id int)
+  primary key e_id;
 
-create view test1.v3(r bigint) default null as v2;
-
-create type test1.t4 as closed { r:int64? };
-
-create view test1.v4(t4) default null as v2;
-
-create view test1.v5(r bigint not unknown)
+create view test2.employee_v2(e_id int not unknown, e_mgr_id int)
   default null
-  primary key (r) not enforced
-  as v3;
+  primary key (e_id) not enforced
+  as employee_2;
 
-create view test1.v6(r1 bigint not unknown, r2 bigint)
+create dataset test1.employee_1(e_id int not unknown, e_name string, e_mgr_id int, e_hrr_id int)
+  primary key e_id;
+
+create view test1.employee_v1(e_id int not unknown, e_mgr_id int, e_hrr_id int)
   default null
-  primary key (r1) not enforced
-  foreign key (r2) references v5 not enforced
-  as select r r1, r+1 r2 from range(0,2) r;
+  primary key (e_id) not enforced
+  foreign key (e_mgr_id) references test2.employee_v2 not enforced
+  as employee_1;
 
-drop dataverse test1;
+drop dataverse test2;
