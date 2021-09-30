@@ -110,6 +110,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.ConcurrentMergePolicyFacto
 import org.apache.hyracks.storage.am.lsm.common.impls.ConstantMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIOOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.impls.NoOpPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.LSMInvertedIndexLocalResource;
 import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.FullTextConfigEvaluatorFactory;
@@ -193,6 +194,7 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         registeredClasses.put("NoOpIOOperationCallbackFactory", NoOpIOOperationCallbackFactory.class);
         registeredClasses.put("LSMBTreeIOOperationCallbackFactory", LSMIndexIOOperationCallbackFactory.class);
         registeredClasses.put("LSMIndexPageWriteCallbackFactory", LSMIndexPageWriteCallbackFactory.class);
+        registeredClasses.put("NoOpPageWriteCallbackFactory", NoOpPageWriteCallbackFactory.class);
 
         // ILSMIOOperationSchedulerProvider
         registeredClasses.put("AppendOnlyLinkedMetadataPageManagerFactory",
