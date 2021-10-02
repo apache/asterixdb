@@ -2505,9 +2505,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void doCreateView(MetadataProvider metadataProvider, CreateViewStatement cvs, DataverseName dataverseName,
-            String viewName, DataverseName itemTypeDataverseName, String itemTypeName, IStatementRewriter stmtRewriter,
-            IRequestParameters requestParameters) throws Exception {
+    protected CreateResult doCreateView(MetadataProvider metadataProvider, CreateViewStatement cvs,
+            DataverseName dataverseName, String viewName, DataverseName itemTypeDataverseName, String itemTypeName,
+            IStatementRewriter stmtRewriter, IRequestParameters requestParameters) throws Exception {
         SourceLocation sourceLoc = cvs.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -2524,7 +2524,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 if (cvs.getIfNotExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                    return;
+                    return CreateResult.NOOP;
                 } else if (!cvs.getReplaceIfExists()) {
                     throw new CompilationException(ErrorCode.VIEW_EXISTS, sourceLoc,
                             existingDataset.getDatasetFullyQualifiedName());
@@ -2671,6 +2671,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 MetadataManager.INSTANCE.updateDataset(mdTxnCtx, view);
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return existingDataset != null ? CreateResult.REPLACED : CreateResult.CREATED;
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
@@ -3422,7 +3423,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void doCreateSynonym(MetadataProvider metadataProvider, CreateSynonymStatement css,
+    protected CreateResult doCreateSynonym(MetadataProvider metadataProvider, CreateSynonymStatement css,
             DataverseName dataverseName, String synonymName, DataverseName objectDataverseName, String objectName)
             throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -3441,13 +3442,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         warningCollector
                                 .warn(Warning.of(css.getSourceLocation(), ErrorCode.SYNONYM_EXISTS, synonymName));
                     }
-                    return;
+                    return CreateResult.NOOP;
                 }
                 throw new CompilationException(ErrorCode.SYNONYM_EXISTS, css.getSourceLocation(), synonymName);
             }
             synonym = new Synonym(dataverseName, synonymName, objectDataverseName, objectName);
             MetadataManager.INSTANCE.addSynonym(metadataProvider.getMetadataTxnContext(), synonym);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return CreateResult.CREATED;
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
