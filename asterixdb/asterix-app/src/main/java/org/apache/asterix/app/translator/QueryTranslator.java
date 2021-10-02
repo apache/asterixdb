@@ -2775,7 +2775,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void doCreateFunction(MetadataProvider metadataProvider, CreateFunctionStatement cfs,
+    protected CreateResult doCreateFunction(MetadataProvider metadataProvider, CreateFunctionStatement cfs,
             FunctionSignature functionSignature, IStatementRewriter stmtRewriter, IRequestParameters requestParameters)
             throws Exception {
         DataverseName dataverseName = functionSignature.getDataverseName();
@@ -2792,7 +2792,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (existingFunction != null) {
                 if (cfs.getIfNotExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                    return;
+                    return CreateResult.NOOP;
                 } else if (!cfs.getReplaceIfExists()) {
                     throw new CompilationException(ErrorCode.FUNCTION_EXISTS, cfs.getSourceLocation(),
                             functionSignature.toString(false));
@@ -2951,12 +2951,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 MetadataManager.INSTANCE.updateFunction(mdTxnCtx, function);
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Installed function: " + functionSignature);
+            }
+            return existingFunction != null ? CreateResult.REPLACED : CreateResult.CREATED;
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
-        }
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Installed function: " + functionSignature);
         }
     }
 
@@ -3199,8 +3200,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void doCreateLibrary(MetadataProvider metadataProvider, DataverseName dataverseName, String libraryName,
-            String libraryHash, CreateLibraryStatement cls, IHyracksClientConnection hcc,
+    protected CreateResult doCreateLibrary(MetadataProvider metadataProvider, DataverseName dataverseName,
+            String libraryName, String libraryHash, CreateLibraryStatement cls, IHyracksClientConnection hcc,
             IRequestParameters requestParameters) throws Exception {
         JobUtils.ProgressState progress = ProgressState.NO_PROGRESS;
         boolean prepareJobSuccessful = false;
@@ -3257,6 +3258,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataManager.INSTANCE.updateLibrary(mdTxnCtx, newLibrary);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return existingLibrary != null ? CreateResult.REPLACED : CreateResult.CREATED;
         } catch (Exception e) {
             if (bActiveTxn) {
                 abort(e, e, mdTxnCtx);
@@ -4754,4 +4756,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws CompilationException {
         ExternalDataUtils.validateAdapterSpecificProperties(configuration, srcLoc, warningCollector);
     }
+
+    protected enum CreateResult {
+        NOOP,
+        CREATED,
+        REPLACED
+    }
+
 }
