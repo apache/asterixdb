@@ -19,6 +19,28 @@
 package org.apache.asterix.test.common;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.asterix.test.common.TestConstants.Azure.ACCOUNT_KEY_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.ACCOUNT_NAME_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.AZURITE_ACCOUNT_KEY_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.AZURITE_ACCOUNT_NAME_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.BLOB_ENDPOINT_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.BLOB_ENDPOINT_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_CERTIFICATE_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_CERTIFICATE_PASSWORD_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_CERTIFICATE_PASSWORD_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_CERTIFICATE_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_ID_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_ID_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_SECRET_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.CLIENT_SECRET_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.MANAGED_IDENTITY_ID_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.MANAGED_IDENTITY_ID_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.SAS_TOKEN_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.TEMPLATE;
+import static org.apache.asterix.test.common.TestConstants.Azure.TEMPLATE_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.TENANT_ID_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.TENANT_ID_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.sasToken;
 import static org.apache.hyracks.util.NetworkUtil.toHostPort;
 import static org.apache.hyracks.util.file.FileUtil.canonicalize;
 
@@ -2301,21 +2323,22 @@ public class TestExecutor {
         }
 
         // This replaces specific external dataset placeholders
-        str = str.replace(TestConstants.AZURE_CONNECTION_STRING_ACCOUNT_KEY_PLACEHOLDER,
-                TestConstants.AZURE_CONNECTION_STRING_ACCOUNT_KEY);
-        str = str.replace(TestConstants.AZURE_CONNECTION_STRING_SAS_TOKEN_PLACEHOLDER,
-                TestConstants.AZURE_CONNECTION_STRING_SAS_TOKEN);
-        str = str.replace(TestConstants.AZURE_ACCOUNT_NAME_PLACEHOLDER,
-                TestConstants.AZURE_AZURITE_ACCOUNT_NAME_DEFAULT);
-        str = str.replace(TestConstants.AZURE_ACCOUNT_KEY_PLACEHOLDER, TestConstants.AZURE_AZURITE_ACCOUNT_KEY_DEFAULT);
-        str = str.replace(TestConstants.AZURE_SAS_TOKEN_PLACEHOLDER, TestConstants.sasToken);
+        str = str.replace(ACCOUNT_NAME_PLACEHOLDER, AZURITE_ACCOUNT_NAME_DEFAULT);
+        str = str.replace(ACCOUNT_KEY_PLACEHOLDER, AZURITE_ACCOUNT_KEY_DEFAULT);
+        str = str.replace(SAS_TOKEN_PLACEHOLDER, sasToken);
+        str = str.replace(MANAGED_IDENTITY_ID_PLACEHOLDER, MANAGED_IDENTITY_ID_DEFAULT);
+        str = str.replace(CLIENT_ID_PLACEHOLDER, CLIENT_ID_DEFAULT);
+        str = str.replace(CLIENT_SECRET_PLACEHOLDER, CLIENT_SECRET_DEFAULT);
+        str = str.replace(CLIENT_CERTIFICATE_PLACEHOLDER, CLIENT_CERTIFICATE_DEFAULT);
+        str = str.replace(CLIENT_CERTIFICATE_PASSWORD_PLACEHOLDER, CLIENT_CERTIFICATE_PASSWORD_DEFAULT);
+        str = str.replace(TENANT_ID_PLACEHOLDER, TENANT_ID_DEFAULT);
         str = replaceExternalEndpoint(str);
 
         return str;
     }
 
     protected String replaceExternalEndpoint(String str) {
-        return str.replace(TestConstants.AZURE_BLOB_ENDPOINT_PLACEHOLDER, TestConstants.AZURE_BLOB_ENDPOINT_DEFAULT);
+        return str.replace(BLOB_ENDPOINT_PLACEHOLDER, BLOB_ENDPOINT_DEFAULT);
     }
 
     protected boolean noTemplateRequired(String str) {
@@ -2375,17 +2398,17 @@ public class TestExecutor {
 
     protected String applyAzureSubstitution(String str, List<Placeholder> placeholders) {
         boolean isReplaced = false;
-        boolean hasBlobEndpoint = false;
+        boolean hasEndpoint = false;
 
         for (Placeholder placeholder : placeholders) {
             // Stop if all parameters are met
-            if (hasBlobEndpoint) {
+            if (hasEndpoint) {
                 break;
-            } else if (placeholder.getName().equals("blobEndpoint")) {
-                hasBlobEndpoint = true;
+            } else if (placeholder.getName().equals("endpoint")) {
+                hasEndpoint = true;
                 isReplaced = true;
                 str = setAzureTemplate(str);
-                str = str.replace(TestConstants.AZURE_BLOB_ENDPOINT_PLACEHOLDER, placeholder.getValue());
+                str = str.replace(BLOB_ENDPOINT_PLACEHOLDER, placeholder.getValue());
             }
         }
 
@@ -2398,11 +2421,11 @@ public class TestExecutor {
     }
 
     protected String setAzureTemplate(String str) {
-        return str.replace("%template%", TestConstants.AZURE_TEMPLATE);
+        return str.replace("%template%", TEMPLATE);
     }
 
     protected String setAzureTemplateDefault(String str) {
-        return str.replace("%template%", TestConstants.AZURE_TEMPLATE_DEFAULT);
+        return str.replace("%template%", TEMPLATE_DEFAULT);
     }
 
     protected void fail(boolean runDiagnostics, TestCaseContext testCaseCtx, CompilationUnit cUnit,

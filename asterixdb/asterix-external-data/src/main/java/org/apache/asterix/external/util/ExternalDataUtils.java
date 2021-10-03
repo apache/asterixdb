@@ -23,6 +23,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_REQUIRED;
+import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_OR_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME;
@@ -37,18 +38,18 @@ import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOO
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_SESSION_TOKEN;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_TEMP_ACCESS;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_KEY_PREFIX;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_KEY_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_NAME_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_CERTIFICATE_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_SECRET_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CONNECTION_STRING_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ENDPOINT_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_BLOB_PROTOCOL;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_FS_ACCOUNT_KEY;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_FS_SAS;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.MANAGED_IDENTITY_ID_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.SAS_KEY_PREFIX;
+import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.TENANT_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.GCS.JSON_CREDENTIALS_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ADAPTER_NAME_GCS;
@@ -83,7 +84,6 @@ import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import java.util.stream.Stream;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -122,6 +122,7 @@ import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import org.apache.hyracks.util.StorageUtil;
 
+import com.azure.core.credential.AzureSasCredential;
 import com.azure.identity.ClientCertificateCredentialBuilder;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.identity.ManagedIdentityCredentialBuilder;
@@ -130,6 +131,7 @@ import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.ListBlobsOptions;
+import com.azure.storage.common.StorageSharedKeyCredential;
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.storage.Blob;
@@ -1239,8 +1241,10 @@ public class ExternalDataUtils {
          */
         public static BlobServiceClient buildAzureClient(Map<String, String> configuration)
                 throws CompilationException {
-            String connectionString = configuration.get(CONNECTION_STRING_FIELD_NAME);
             String managedIdentityId = configuration.get(MANAGED_IDENTITY_ID_FIELD_NAME);
+            String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
+            String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
+            String sharedAccessSignature = configuration.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
             String tenantId = configuration.get(TENANT_ID_FIELD_NAME);
             String clientId = configuration.get(CLIENT_ID_FIELD_NAME);
             String clientSecret = configuration.get(CLIENT_SECRET_FIELD_NAME);
@@ -1251,32 +1255,63 @@ public class ExternalDataUtils {
             // Client builder
             BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
 
-            // Connection string is used
-            if (connectionString != null) {
-                try {
-                    builder.connectionString(connectionString);
-                } catch (Exception ex) {
-                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+            // Endpoint is required
+            if (endpoint == null) {
+                throw new CompilationException(PARAMETERS_REQUIRED, ENDPOINT_FIELD_NAME);
+            }
+            builder.endpoint(endpoint);
+
+            // Shared Key
+            if (accountName != null || accountKey != null) {
+                if (accountName == null) {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ACCOUNT_NAME_FIELD_NAME,
+                            ACCOUNT_KEY_FIELD_NAME);
                 }
-            } else if (isParquetFormat(configuration)) {
-                //TODO(wail) support AAD for parquet
-                throw new CompilationException(ErrorCode.UNSUPPORTED_AUTH_METHOD, "Azure Active Directory",
-                        ExternalDataConstants.FORMAT_PARQUET);
+
+                if (accountKey == null) {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ACCOUNT_KEY_FIELD_NAME,
+                            ACCOUNT_NAME_FIELD_NAME);
+                }
+
+                Optional<String> provided = getFirstNotNull(configuration, SHARED_ACCESS_SIGNATURE_FIELD_NAME,
+                        MANAGED_IDENTITY_ID_FIELD_NAME, CLIENT_ID_FIELD_NAME, CLIENT_SECRET_FIELD_NAME,
+                        CLIENT_CERTIFICATE_FIELD_NAME, CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME, TENANT_ID_FIELD_NAME);
+                if (provided.isPresent()) {
+                    throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
+                            ACCOUNT_KEY_FIELD_NAME);
+                }
+                StorageSharedKeyCredential credential = new StorageSharedKeyCredential(accountName, accountKey);
+                builder.credential(credential);
             }
 
-            // TODO(htowaileb): Endpoint will be required for Data lake implementation
-            if (endpoint != null) {
-                builder.endpoint(endpoint);
+            // Shared access signature
+            if (sharedAccessSignature != null) {
+                Optional<String> provided = getFirstNotNull(configuration, MANAGED_IDENTITY_ID_FIELD_NAME,
+                        CLIENT_ID_FIELD_NAME, CLIENT_SECRET_FIELD_NAME, CLIENT_CERTIFICATE_FIELD_NAME,
+                        CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME, TENANT_ID_FIELD_NAME);
+                if (provided.isPresent()) {
+                    throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
+                            SHARED_ACCESS_SIGNATURE_FIELD_NAME);
+                }
+                AzureSasCredential credential = new AzureSasCredential(sharedAccessSignature);
+                builder.credential(credential);
             }
 
-            // Managed identity credentials
+            // Managed Identity auth
             if (managedIdentityId != null) {
+                Optional<String> provided = getFirstNotNull(configuration, CLIENT_ID_FIELD_NAME,
+                        CLIENT_SECRET_FIELD_NAME, CLIENT_CERTIFICATE_FIELD_NAME, CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME,
+                        TENANT_ID_FIELD_NAME);
+                if (provided.isPresent()) {
+                    throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
+                            MANAGED_IDENTITY_ID_FIELD_NAME);
+                }
                 builder.credential(new ManagedIdentityCredentialBuilder().clientId(managedIdentityId).build());
             }
 
-            // Active Directory authentication
+            // Client secret & certificate auth
             if (clientId != null) {
-                // Both (or neither) client secret and client certificate were provided, only one is allowed
+                // Both (or neither) client secret and client secret were provided, only one is allowed
                 if ((clientSecret == null) == (clientCertificate == null)) {
                     if (clientSecret != null) {
                         throw new CompilationException(PARAMETERS_NOT_ALLOWED_AT_SAME_TIME, CLIENT_SECRET_FIELD_NAME,
@@ -1293,10 +1328,10 @@ public class ExternalDataUtils {
                             CLIENT_ID_FIELD_NAME);
                 }
 
-                // Client certificate is required if client certificate password is present
-                if (clientCertificatePassword != null && clientCertificate == null) {
-                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, CLIENT_CERTIFICATE_FIELD_NAME,
-                            CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME);
+                // Client certificate password is not allowed if client secret is used
+                if (clientCertificatePassword != null && clientSecret != null) {
+                    throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT,
+                            CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME, CLIENT_SECRET_FIELD_NAME);
                 }
 
                 // Use AD authentication
@@ -1334,13 +1369,11 @@ public class ExternalDataUtils {
             // If client id is not present, ensure client secret, certificate, tenant id and client certificate
             // password are not present
             if (clientId == null) {
-                Optional<String> param = Stream
-                        .of(CLIENT_SECRET_FIELD_NAME, CLIENT_CERTIFICATE_FIELD_NAME, TENANT_ID_FIELD_NAME,
-                                CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME)
-                        .filter(field -> configuration.get(field) != null).findFirst();
-                if (param.isPresent()) {
-                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, CLIENT_ID_FIELD_NAME,
-                            param.get());
+                Optional<String> provided = getFirstNotNull(configuration, CLIENT_SECRET_FIELD_NAME,
+                        CLIENT_CERTIFICATE_FIELD_NAME, CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME, TENANT_ID_FIELD_NAME);
+                if (provided.isPresent()) {
+                    throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
+                            SHARED_ACCESS_SIGNATURE_FIELD_NAME);
                 }
             }
 
@@ -1458,7 +1491,10 @@ public class ExternalDataUtils {
          */
         public static void configureAzureHdfsJobConf(JobConf conf, Map<String, String> configuration, String endPoint) {
             String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-            String connectionString = configuration.get(CONNECTION_STRING_FIELD_NAME);
+            String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
+            String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
+            String sharedAccessSignature = configuration.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
+            String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
 
             //Disable caching S3 FileSystem
             HDFSUtils.disableHadoopFileSystemCache(conf, HADOOP_AZURE_BLOB_PROTOCOL);
@@ -1467,30 +1503,24 @@ public class ExternalDataUtils {
             StringBuilder hadoopKey = new StringBuilder();
             //Value for Hadoop configuration
             String hadoopValue;
-            if (connectionString != null) {
-                if (connectionString.contains(ACCOUNT_KEY_PREFIX)) {
+            if (accountKey != null || sharedAccessSignature != null) {
+                if (accountKey != null) {
                     hadoopKey.append(HADOOP_AZURE_FS_ACCOUNT_KEY).append('.');
                     //Set only the AccountKey
-                    hadoopValue = extractKey(ACCOUNT_KEY_PREFIX, connectionString);
+                    hadoopValue = accountKey;
                 } else {
                     //Use SAS for Hadoop FS as connectionString is provided
                     hadoopKey.append(HADOOP_AZURE_FS_SAS).append('.');
                     //Setting the container is required for SAS
                     hadoopKey.append(container).append('.');
                     //Set the connection string for SAS
-                    hadoopValue = extractKey(SAS_KEY_PREFIX, connectionString);
+                    hadoopValue = sharedAccessSignature;
                 }
                 //Set the endPoint, which includes the AccountName
                 hadoopKey.append(endPoint);
                 //Tells Hadoop we are reading from Blob Storage
                 conf.set(hadoopKey.toString(), hadoopValue);
             }
-        }
-
-        private static String extractKey(String prefix, String connectionString) {
-            int start = connectionString.indexOf(prefix) + prefix.length();
-            int end = connectionString.indexOf(';', start);
-            return connectionString.substring(start, end > 0 ? end : connectionString.length());
         }
     }
 
@@ -1576,5 +1606,9 @@ public class ExternalDataUtils {
             }
         }
         return maxArgSz;
+    }
+
+    private static Optional<String> getFirstNotNull(Map<String, String> configuration, String... parameters) {
+        return Arrays.stream(parameters).filter(field -> configuration.get(field) != null).findFirst();
     }
 }

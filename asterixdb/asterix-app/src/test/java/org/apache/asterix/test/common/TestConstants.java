@@ -18,10 +18,8 @@
  */
 package org.apache.asterix.test.common;
 
-import org.apache.asterix.test.external_dataset.microsoft.AzureBlobStorageExternalDatasetTest;
-
 public class TestConstants {
-    // AWS S3 constants and place holders
+    // AWS S3 constants and placeholders
     public static final String S3_ACCESS_KEY_ID_PLACEHOLDER = "%accessKeyId%";
     public static final String S3_ACCESS_KEY_ID_DEFAULT = "dummyAccessKey";
     public static final String S3_SECRET_ACCESS_KEY_PLACEHOLDER = "%secretAccessKey%";
@@ -37,41 +35,47 @@ public class TestConstants {
             + "(\"secretAccessKey\"=\"" + S3_SECRET_ACCESS_KEY_DEFAULT + "\"),\n" + "(\"region\"=\"" + S3_REGION_DEFAULT
             + "\"),\n" + "(\"serviceEndpoint\"=\"" + S3_SERVICE_ENDPOINT_DEFAULT + "\")";
 
-    // Azure blob storage constants and place holders
-    // account name
-    public static final String AZURE_ACCOUNT_NAME_PLACEHOLDER = "%azureblob-accountname%";
-    public static final String AZURE_AZURITE_ACCOUNT_NAME_DEFAULT = "devstoreaccount1";
+    // Azure blob storage constants and placeholders
+    public static class Azure {
+        // account name
+        public static final String ACCOUNT_NAME_PLACEHOLDER = "%azureblob-accountname%";
+        public static final String AZURITE_ACCOUNT_NAME_DEFAULT = "devstoreaccount1";
 
-    // account key
-    public static final String AZURE_ACCOUNT_KEY_PLACEHOLDER = "%azureblob-accountkey%";
-    public static final String AZURE_AZURITE_ACCOUNT_KEY_DEFAULT =
-            "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
+        // account key
+        public static final String ACCOUNT_KEY_PLACEHOLDER = "%azureblob-accountkey%";
+        public static final String AZURITE_ACCOUNT_KEY_DEFAULT =
+                "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
 
-    // SAS token: this is generated and assigned at runtime at the start of the test
-    public static final String AZURE_SAS_TOKEN_PLACEHOLDER = "%azureblob-sas%";
-    public static String sasToken = "";
+        // SAS token: this is generated and assigned at runtime at the start of the test
+        public static final String SAS_TOKEN_PLACEHOLDER = "%azureblob-sas%";
+        public static String sasToken = "";
 
-    // blob endpoint
-    public static final String AZURE_BLOB_ENDPOINT_PLACEHOLDER = "%azureblob-endpoint%";
-    public static final String AZURE_BLOB_ENDPOINT_DEFAULT =
-            "http://localhost:10000/" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT;
+        // blob endpoint
+        public static final String BLOB_ENDPOINT_PLACEHOLDER = "%azureblob-endpoint%";
+        public static final String BLOB_ENDPOINT_DEFAULT = "http://localhost:10000/" + AZURITE_ACCOUNT_NAME_DEFAULT;
 
-    // connection string with account name & account key
-    public static final String AZURE_CONNECTION_STRING_ACCOUNT_KEY_PLACEHOLDER =
-            "%azureblob-connectionstringaccountkey%";
-    public static final String AZURE_CONNECTION_STRING_ACCOUNT_KEY = "AccountName=" + AZURE_ACCOUNT_NAME_PLACEHOLDER
-            + ";AccountKey=" + AZURE_ACCOUNT_KEY_PLACEHOLDER + ";BlobEndpoint=" + AZURE_BLOB_ENDPOINT_PLACEHOLDER;
+        public static final String MANAGED_IDENTITY_ID_PLACEHOLDER = "%azureblob-managedidentityid%";
+        public static final String MANAGED_IDENTITY_ID_DEFAULT = "myManagedIdentityId";
 
-    // connection string with account name & sas token
-    public static final String AZURE_CONNECTION_STRING_SAS_TOKEN_PLACEHOLDER = "%azureblob-connectionstringsas%";
-    public static final String AZURE_CONNECTION_STRING_SAS_TOKEN =
-            "AccountName=" + AZURE_ACCOUNT_NAME_PLACEHOLDER + ";SharedAccessSignature=" + AZURE_SAS_TOKEN_PLACEHOLDER
-                    + ";BlobEndpoint=" + AZURE_BLOB_ENDPOINT_PLACEHOLDER;
+        public static final String CLIENT_ID_PLACEHOLDER = "%azureblob-clientid%";
+        public static final String CLIENT_ID_DEFAULT = "myClientId";
 
-    // azure template and default template
-    public static final String AZURE_TEMPLATE = "(\"accountName\"=\"" + AZURE_AZURITE_ACCOUNT_NAME_DEFAULT + "\"),\n"
-            + "(\"accountKey\"=\"" + AZURE_AZURITE_ACCOUNT_KEY_DEFAULT + "\"),\n" + "(\"blobEndpoint\"=\""
-            + AZURE_BLOB_ENDPOINT_PLACEHOLDER + "\")";
-    public static final String AZURE_TEMPLATE_DEFAULT =
-            "(\"connectionString\"=\"" + AzureBlobStorageExternalDatasetTest.CONNECTION_STRING + "\")";
+        public static final String CLIENT_SECRET_PLACEHOLDER = "%azureblob-clientsecret%";
+        public static final String CLIENT_SECRET_DEFAULT = "myClientSecret";
+
+        public static final String CLIENT_CERTIFICATE_PLACEHOLDER = "%azureblob-clientcertificate%";
+        public static final String CLIENT_CERTIFICATE_DEFAULT = "myClientCertificate";
+
+        public static final String CLIENT_CERTIFICATE_PASSWORD_PLACEHOLDER = "%azureblob-clientcertificatepassword%";
+        public static final String CLIENT_CERTIFICATE_PASSWORD_DEFAULT = "myClientCertificatePassword";
+
+        public static final String TENANT_ID_PLACEHOLDER = "%azureblob-tenantid%";
+        public static final String TENANT_ID_DEFAULT = "myTenantId";
+
+        // azure template and default template
+        public static final String TEMPLATE = "(\"accountName\"=\"" + AZURITE_ACCOUNT_NAME_DEFAULT + "\"),\n"
+                + "(\"accountKey\"=\"" + AZURITE_ACCOUNT_KEY_DEFAULT + "\"),\n" + "(\"endpoint\"=\""
+                + BLOB_ENDPOINT_PLACEHOLDER + "\")";
+        public static final String TEMPLATE_DEFAULT = TEMPLATE;
+    }
 }

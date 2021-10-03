@@ -81,7 +81,7 @@
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
       <compilation-unit name="anonymous-no-auth-no-endpoint">
         <output-dir compare="Text">anonymous-no-auth-no-endpoint</output-dir>
-        <expected-error>ASX1151: No authentication credentials provided, 'blobEndpoint' field is required for anonymous access</expected-error>
+        <expected-error>ASX1151: No authentication credentials provided, 'endpoint' field is required for anonymous access</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -178,7 +178,7 @@
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/invalid-endpoint">
         <placeholder name="adapter" value="AZUREBLOB" />
-        <placeholder name="blobEndpoint" value="http://^invalid-endpoint^" />
+        <placeholder name="endpoint" value="http://^invalid-endpoint^" />
         <output-dir compare="Text">common/invalid-endpoint</output-dir>
         <expected-error>External source error. java.net.URISyntaxException: Illegal character in authority at index 7: http://^invalid-endpoint^</expected-error>
       </compilation-unit>

@@ -18,8 +18,10 @@
  */
 package org.apache.asterix.test.external_dataset.microsoft;
 
-import static com.azure.storage.common.implementation.Constants.ConnectionStringConstants.EMULATOR_ACCOUNT_KEY;
-import static com.azure.storage.common.implementation.Constants.ConnectionStringConstants.EMULATOR_ACCOUNT_NAME;
+import static org.apache.asterix.test.common.TestConstants.Azure.AZURITE_ACCOUNT_KEY_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.AZURITE_ACCOUNT_NAME_DEFAULT;
+import static org.apache.asterix.test.common.TestConstants.Azure.BLOB_ENDPOINT_PLACEHOLDER;
+import static org.apache.asterix.test.common.TestConstants.Azure.sasToken;
 import static org.apache.asterix.test.external_dataset.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.PARQUET_DEFINITION;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
@@ -44,7 +46,6 @@ import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.test.common.TestConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
@@ -72,6 +73,7 @@ import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.PublicAccessType;
+import com.azure.storage.common.StorageSharedKeyCredential;
 import com.azure.storage.common.sas.AccountSasPermission;
 import com.azure.storage.common.sas.AccountSasResourceType;
 import com.azure.storage.common.sas.AccountSasService;
@@ -120,8 +122,6 @@ public class AzureBlobStorageExternalDatasetTest {
     private static final Set<String> fileNames = new HashSet<>();
 
     // Create a BlobServiceClient object which will be used to create a container client
-    public static final String CONNECTION_STRING = "AccountName=" + EMULATOR_ACCOUNT_NAME + ";" + "AccountKey="
-            + EMULATOR_ACCOUNT_KEY + ";" + "BlobEndpoint=" + BLOB_SERVICE_ENDPOINT + "/" + EMULATOR_ACCOUNT_NAME + ";";
     private static BlobServiceClient blobServiceClient;
     private static BlobContainerClient playgroundContainer;
     private static BlobContainerClient publicAccessContainer;
@@ -177,11 +177,14 @@ public class AzureBlobStorageExternalDatasetTest {
 
     private static void createBlobServiceClient() {
         LOGGER.info("Creating Azurite Blob Service client");
-        blobServiceClient = new BlobServiceClientBuilder().connectionString(CONNECTION_STRING).buildClient();
+        BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
+        builder.credential(new StorageSharedKeyCredential(AZURITE_ACCOUNT_NAME_DEFAULT, AZURITE_ACCOUNT_KEY_DEFAULT));
+        builder.endpoint(BLOB_ENDPOINT_PLACEHOLDER);
+        blobServiceClient = builder.buildClient();
         LOGGER.info("Azurite Blob Service client created successfully");
 
         // Generate the SAS token for the SAS test cases
-        TestConstants.sasToken = generateSasToken();
+        sasToken = generateSasToken();
 
         // Create the container and upload some json files
         PREPARE_PLAYGROUND_CONTAINER.run();
