@@ -19,6 +19,11 @@
 package org.apache.hyracks.api.result;
 
 import java.io.Serializable;
+import java.util.List;
 
 public interface IResultMetadata extends Serializable {
+
+    List<Object> getOutputTypes();
+
+    void setOutputTypes(List<Object> typeInfo);
 }

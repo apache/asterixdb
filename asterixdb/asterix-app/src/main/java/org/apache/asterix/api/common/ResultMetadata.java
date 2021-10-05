@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.api.common;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.translator.SessionConfig;
@@ -36,6 +37,7 @@ public class ResultMetadata implements IResultMetadata {
     private long diskIoCount;
     private Set<Warning> warnings;
     private long totalWarningsCount;
+    private transient List<Object> outputTypes;
 
     public ResultMetadata(SessionConfig.OutputFormat format) {
         this.format = format;
@@ -92,6 +94,15 @@ public class ResultMetadata implements IResultMetadata {
      */
     public long getTotalWarningsCount() {
         return totalWarningsCount;
+    }
+
+    @Override
+    public void setOutputTypes(List<Object> typeList) {
+        this.outputTypes = typeList;
+    }
+
+    public List<Object> getOutputTypes() {
+        return outputTypes;
     }
 
     @Override

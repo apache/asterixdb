@@ -121,6 +121,7 @@ import org.apache.hyracks.algebricks.rewriter.rules.IntroJoinInsideSubplanRule;
 import org.apache.hyracks.algebricks.rewriter.rules.IntroduceAggregateCombinerRule;
 import org.apache.hyracks.algebricks.rewriter.rules.IntroduceProjectsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.IsolateHyracksOperatorsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.PopulateResultMetadataRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PullSelectOutOfEqJoin;
 import org.apache.hyracks.algebricks.rewriter.rules.PushGroupByIntoSortRule;
 import org.apache.hyracks.algebricks.rewriter.rules.PushMapOperatorDownThroughProductRule;
@@ -413,6 +414,7 @@ public final class RuleCollections {
         prepareForJobGenRewrites.add(new SetAsterixMemoryRequirementsRule());
         prepareForJobGenRewrites.add(new SweepIllegalNonfunctionalFunctions());
         prepareForJobGenRewrites.add(new FixReplicateOperatorOutputsRule());
+        prepareForJobGenRewrites.add(new PopulateResultMetadataRule());
         return prepareForJobGenRewrites;
     }
 }
