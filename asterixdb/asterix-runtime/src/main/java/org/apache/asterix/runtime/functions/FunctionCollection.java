@@ -400,6 +400,7 @@ import org.apache.asterix.runtime.evaluators.functions.NumericRadiansDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericRoundDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericRoundHalfToEven2Descriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericRoundHalfToEvenDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.NumericRoundHalfUp2Descriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericRoundWithRoundDigitDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericSignDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.NumericSinDescriptor;
@@ -947,6 +948,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(NumericRoundWithRoundDigitDescriptor.FACTORY);
         fc.add(NumericRoundHalfToEvenDescriptor.FACTORY);
         fc.add(NumericRoundHalfToEven2Descriptor.FACTORY);
+        fc.add(NumericRoundHalfUp2Descriptor.FACTORY);
         fc.add(NumericACosDescriptor.FACTORY);
         fc.add(NumericASinDescriptor.FACTORY);
         fc.add(NumericATanDescriptor.FACTORY);

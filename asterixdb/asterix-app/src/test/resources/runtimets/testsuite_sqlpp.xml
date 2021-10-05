@@ -8971,6 +8971,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="numeric">
+      <compilation-unit name="round-half-up">
+        <output-dir compare="Text">round-half-up</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="numeric">
       <compilation-unit name="round0">
         <output-dir compare="Text">round0</output-dir>
       </compilation-unit>

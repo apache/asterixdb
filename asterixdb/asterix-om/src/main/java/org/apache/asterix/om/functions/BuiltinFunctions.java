@@ -360,6 +360,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "round-half-to-even", 1);
     public static final FunctionIdentifier NUMERIC_ROUND_HALF_TO_EVEN2 =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "round-half-to-even", 2);
+    public static final FunctionIdentifier NUMERIC_ROUND_HALF_UP2 =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "round-half-up", 2);
     public static final FunctionIdentifier NUMERIC_TRUNC =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "trunc", 2);
 
@@ -1755,6 +1757,7 @@ public class BuiltinFunctions {
         addFunction(NUMERIC_ROUND_WITH_ROUND_DIGIT, NumericRoundTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ROUND_HALF_TO_EVEN, NumericUnaryTypeComputer.INSTANCE, true);
         addFunction(NUMERIC_ROUND_HALF_TO_EVEN2, NumericRoundTypeComputer.INSTANCE_ROUND_HF_TRUNC, true);
+        addFunction(NUMERIC_ROUND_HALF_UP2, NumericRoundTypeComputer.INSTANCE_ROUND_HF_TRUNC, true);
         addFunction(NUMERIC_TRUNC, NumericRoundTypeComputer.INSTANCE_ROUND_HF_TRUNC, true);
 
         addFunction(BINARY_LENGTH, UnaryBinaryInt64TypeComputer.INSTANCE, true);
