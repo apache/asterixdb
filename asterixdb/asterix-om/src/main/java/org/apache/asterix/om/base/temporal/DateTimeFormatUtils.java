@@ -37,7 +37,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * <p/>
  * - <b>Y</b>: a digit for the year field. At most 4 year format characters are allowed for a valid format string.<br/>
  * - <b>M</b>: a digit or character for the month field. At most 3 month format characters are allowed for a valid format string. When three month format characters are used, the shorten month names (like JAN, FEB etc.) are expected in the string to be parsed. Otherwise digits are expected.<br/>
- * - <b>Q</b>: (print-only) a digit for the quarter field (1-4). At most 1 format character is allowed.<br/>
+ * - <b>Q</b>: a digit for the quarter field (1-4). At most 2 format characters are allowed.<br/>
  * - <b>D</b>: a digit for the day field. At most 2 day format characters are allowed.<br/>
  * - <b>h</b>: a digit for the hour field. At most 2 hour format characters are allowed.<br/>
  * - <b>m</b>: a digit for the minute field. At most 2 minute format characters are allowed.<br/>
@@ -100,7 +100,7 @@ public class DateTimeFormatUtils {
     private static final char WEEKDAY_CHAR = 'E';
 
     private static final int MAX_YEAR_CHARS = 4;
-    private static final int MAX_QUARTER_CHARS = 1;
+    private static final int MAX_QUARTER_CHARS = 2;
     private static final int MAX_MONTH_CHARS = 4;
     private static final int MAX_DAY_CHARS_PARSE = 2;
     private static final int MAX_DAY_CHARS_PRINT = 3; // + DDD = Day of Year
@@ -341,6 +341,13 @@ public class DateTimeFormatUtils {
                     formatPointer += pointerMove;
                     formatCharCopies += pointerMove;
                     break;
+                case QUARTER_CHAR:
+                    processState = DateTimeProcessState.QUARTER;
+                    pointerMove = parseFormatField(format, formatStart, formatLength, formatPointer, QUARTER_CHAR,
+                            MAX_QUARTER_CHARS);
+                    formatPointer += pointerMove;
+                    formatCharCopies += pointerMove;
+                    break;
                 case MONTH_CHAR:
                     processState = DateTimeProcessState.MONTH;
                     pointerMove = parseFormatField(format, formatStart, formatLength, formatPointer, MONTH_CHAR,
@@ -452,6 +459,7 @@ public class DateTimeFormatUtils {
 
             switch (processState) {
                 case YEAR:
+                case QUARTER:
                 case MONTH:
                 case DAY:
                     if (parseMode == DateTimeParseMode.TIME_ONLY) {
@@ -527,6 +535,52 @@ public class DateTimeFormatUtils {
                             }
                         }
                         day = parsedValue;
+                    }
+                    break;
+                case QUARTER:
+                    // the month is in the number format
+                    parsedValue = 0;
+                    int processedQuarterFieldsCount = 0;
+                    for (int i = 0; i < formatCharCopies; i++) {
+                        if (data[dataStart + dataStringPointer] < '0' || data[dataStart + dataStringPointer] > '9') {
+                            if (raiseParseDataError) {
+                                throw new AsterixTemporalTypeParseException("Unexpected char for quarter field at "
+                                        + (dataStart + dataStringPointer) + ": " + data[dataStart + dataStringPointer]);
+                            } else {
+                                return false;
+                            }
+                        }
+                        parsedValue = parsedValue * 10 + (data[dataStart + dataStringPointer] - '0');
+                        dataStringPointer++;
+                        if (processedQuarterFieldsCount++ > 2) {
+                            if (raiseParseDataError) {
+                                throw new AsterixTemporalTypeParseException("Unexpected char for quarter field at "
+                                        + (dataStart + dataStringPointer) + ": " + data[dataStart + dataStringPointer]);
+                            } else {
+                                return false;
+                            }
+                        }
+                    }
+                    // if there are more than 2 digits for the quarter string
+                    while (processedQuarterFieldsCount < 2 && dataStringPointer < dataLength
+                            && data[dataStart + dataStringPointer] >= '0'
+                            && data[dataStart + dataStringPointer] <= '9') {
+                        parsedValue = parsedValue * 10 + (data[dataStart + dataStringPointer] - '0');
+                        dataStringPointer++;
+                        processedQuarterFieldsCount++;
+                    }
+                    if (parsedValue == 0) {
+                        if (raiseParseDataError) {
+                            throw new AsterixTemporalTypeParseException(
+                                    "Incorrect quarter value at " + (dataStart + dataStringPointer));
+                        } else {
+                            return false;
+                        }
+                    }
+                    month = (parsedValue - 1) * 3 + 1;
+                    // Allow day to be missing if we parsed quarter
+                    if (day == 0) {
+                        day = GregorianCalendarSystem.FIELD_MINS[GregorianCalendarSystem.Fields.DAY.ordinal()];
                     }
                     break;
                 case MONTH:

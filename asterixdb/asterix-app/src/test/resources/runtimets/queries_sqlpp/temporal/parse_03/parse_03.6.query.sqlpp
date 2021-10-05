@@ -17,11 +17,12 @@
  * under the License.
  */
 
-/* Print quarter */
+/*
+ * Parse year and quarter
+ */
 
-select p1, p2, count(*) cnt
-from range(0, 365) r
-let d = date_from_unix_time_in_days(unix_time_from_date_in_days(date("2020-01-01")) + r),
-  p1 = print_date(d, "YYYY-Q"),
-  p2 = print_date(d, "YYYY-QQ")
-group by p1, p2;
+select r, d, dt
+from range(1, 4) r
+let d = parse_date("2020-" || string(r) , "YYYY-Q"),
+    dt = parse_datetime("2021-0" || string(r), "YYYY-QQ")
+order by r;

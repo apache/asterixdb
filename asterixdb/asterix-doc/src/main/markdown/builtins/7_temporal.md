@@ -648,6 +648,8 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
        * `a` am/pm
        * `z` timezone (parsed and ignored)
        * `Y` year
+       * `Q` quarter of year (1-4)
+       * `QQ` quarter of year (01-04)
        * `M` month
        * `D` day
        * `EEE` weekday (abbreviated name, parsed and ignored)
@@ -685,6 +687,8 @@ parse_date/parse_time/parse_datetime(date,formatting_expression)
        * `n` (or `S`) milliseconds
        * `a` am/pm
        * `Y` year
+       * `Q` quarter of year (1-4)
+       * `QQ` quarter of year (01-04)
        * `M` month
        * `MMM` month (abbreviated name)
        * `MMMM` month (full name)
