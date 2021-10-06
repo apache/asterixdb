@@ -19,9 +19,10 @@
 package org.apache.asterix.common.annotations;
 
 public interface IRecordTypeAnnotation {
-    public enum Kind {
-        RECORD_DATA_GEN
+    enum Kind {
+        RECORD_DATA_GEN,
+        RECORD_FIELD_ORDER
     }
 
-    public Kind getKind();
+    Kind getKind();
 }

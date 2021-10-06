@@ -22,8 +22,10 @@ package org.apache.asterix.om.types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
@@ -143,6 +145,17 @@ public class ARecordType extends AbstractComplexType {
 
     public List<IRecordTypeAnnotation> getAnnotations() {
         return annotations;
+    }
+
+    public IRecordTypeAnnotation findAnnotation(IRecordTypeAnnotation.Kind kind) {
+        if (annotations != null) {
+            for (IRecordTypeAnnotation ant : annotations) {
+                if (ant.getKind().equals(kind)) {
+                    return ant;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
@@ -312,7 +325,10 @@ public class ARecordType extends AbstractComplexType {
                 newTypes[i] = type.fieldTypes[i];
             }
         }
-        return new ARecordType(type.typeName, type.fieldNames, newTypes, type.isOpen);
+        Set<String> newAllPossibleAdditionalFieldNames =
+                allPossibleAdditionalFieldNames != null ? new HashSet<>(allPossibleAdditionalFieldNames) : null;
+        return new ARecordType(type.typeName, type.fieldNames, newTypes, type.isOpen,
+                newAllPossibleAdditionalFieldNames);
     }
 
     @Override
@@ -344,7 +360,8 @@ public class ARecordType extends AbstractComplexType {
         }
         ARecordType rt = (ARecordType) obj;
         return (isOpen == rt.isOpen) && Arrays.deepEquals(fieldNames, rt.fieldNames)
-                && Arrays.deepEquals(fieldTypes, rt.fieldTypes);
+                && Arrays.deepEquals(fieldTypes, rt.fieldTypes)
+                && Objects.equals(allPossibleAdditionalFieldNames, rt.allPossibleAdditionalFieldNames);
     }
 
     @Override

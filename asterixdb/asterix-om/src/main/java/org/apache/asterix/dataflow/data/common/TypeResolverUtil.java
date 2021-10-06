@@ -21,9 +21,12 @@ package org.apache.asterix.dataflow.data.common;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
+import org.apache.asterix.common.annotations.RecordFieldOrderAnnotation;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
@@ -168,9 +171,38 @@ public class TypeResolverUtil {
                 generalizeRecordFields(leftType, rightType, allPossibleAdditionalFieldNames, fieldNames, fieldTypes);
         boolean rightAllMatched =
                 generalizeRecordFields(rightType, leftType, allPossibleAdditionalFieldNames, fieldNames, fieldTypes);
-        return new ARecordType("generalized-record-type", fieldNames.toArray(new String[fieldNames.size()]),
-                fieldTypes.toArray(new IAType[fieldTypes.size()]), !(canBeClosed && leftAllMatched && rightAllMatched),
-                knowsAdditonalFieldNames ? allPossibleAdditionalFieldNames : null);
+        boolean resultTypeIsOpen = !(canBeClosed && leftAllMatched && rightAllMatched);
+        String[] fieldNamesArray = fieldNames.toArray(new String[0]);
+        IAType[] fieldTypesArray = fieldTypes.toArray(new IAType[0]);
+        ARecordType resultType;
+        if (resultTypeIsOpen && knowsAdditonalFieldNames) {
+            resultType = new ARecordType("generalized-record-type", fieldNamesArray, fieldTypesArray, resultTypeIsOpen,
+                    allPossibleAdditionalFieldNames);
+            LinkedHashSet<String> resultFieldOrder = generalizeRecordFieldOrderHint(leftType, rightType);
+            if (resultFieldOrder != null) {
+                resultType.getAnnotations().add(new RecordFieldOrderAnnotation(resultFieldOrder));
+            }
+        } else {
+            resultType = new ARecordType("generalized-record-type", fieldNamesArray, fieldTypesArray, resultTypeIsOpen);
+        }
+        return resultType;
+    }
+
+    private static LinkedHashSet<String> generalizeRecordFieldOrderHint(ARecordType leftType, ARecordType rightType) {
+        IRecordTypeAnnotation leftFieldOrderHint =
+                leftType.findAnnotation(IRecordTypeAnnotation.Kind.RECORD_FIELD_ORDER);
+        if (leftFieldOrderHint == null) {
+            return null;
+        }
+        IRecordTypeAnnotation rightFieldOrderHint =
+                rightType.findAnnotation(IRecordTypeAnnotation.Kind.RECORD_FIELD_ORDER);
+        if (rightFieldOrderHint == null) {
+            return null;
+        }
+        LinkedHashSet<String> resultFieldOrder = new LinkedHashSet<>();
+        resultFieldOrder.addAll(((RecordFieldOrderAnnotation) leftFieldOrderHint).getFieldNames());
+        resultFieldOrder.addAll(((RecordFieldOrderAnnotation) rightFieldOrderHint).getFieldNames());
+        return resultFieldOrder;
     }
 
     // Generates closed fields and possible additional fields of a generalized type of two record types.

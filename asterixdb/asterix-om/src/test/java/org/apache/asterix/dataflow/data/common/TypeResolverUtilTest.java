@@ -20,11 +20,15 @@
 package org.apache.asterix.dataflow.data.common;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
+import org.apache.asterix.common.annotations.RecordFieldOrderAnnotation;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
@@ -121,6 +125,42 @@ public class TypeResolverUtilTest {
         // Compares the resolved type with the expected type.
         Assert.assertEquals(expectedType, resolvedType);
         Assert.assertEquals(nestedRecordType.getAllPossibleAdditonalFieldNames(), nestedPossibleAdditionalFields);
+    }
+
+    @Test
+    public void testRecordTypeFieldOrderHint() {
+        // Constructs input types.
+        ARecordType leftRecordType = new ARecordType(null, new String[] { "a", "b", "c" },
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, }, true,
+                new HashSet<>(Arrays.asList("d", "e")));
+        leftRecordType.getAnnotations()
+                .add(new RecordFieldOrderAnnotation(new LinkedHashSet<>(Arrays.asList("a", "b", "c", "d", "e"))));
+
+        ARecordType rightRecordType = new ARecordType(null, new String[] { "a", "c", "d" },
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, }, true,
+                new HashSet<>(Arrays.asList("e", "f")));
+        rightRecordType.getAnnotations()
+                .add(new RecordFieldOrderAnnotation(new LinkedHashSet<>(Arrays.asList("a", "c", "d", "e", "f"))));
+
+        // Resolves input types to a generalized type.
+        List<IAType> inputTypes = new ArrayList<>();
+        inputTypes.add(leftRecordType);
+        inputTypes.add(rightRecordType);
+        ARecordType resolvedType = (ARecordType) TypeResolverUtil.resolve(inputTypes);
+
+        // Constructs the expected type.
+        Set<String> possibleAdditionalFields = new HashSet<>(Arrays.asList("b", "d", "e", "f"));
+        ARecordType expectedType = new ARecordType(null, new String[] { "a", "c" },
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING }, true, possibleAdditionalFields);
+        expectedType.getAnnotations()
+                .add(new RecordFieldOrderAnnotation(new LinkedHashSet<>(Arrays.asList("a", "b", "c", "d", "e", "f"))));
+
+        // Compares the resolved type with the expected type.
+        Assert.assertEquals(expectedType, resolvedType);
+
+        IRecordTypeAnnotation expecedAnn = expectedType.findAnnotation(IRecordTypeAnnotation.Kind.RECORD_FIELD_ORDER);
+        IRecordTypeAnnotation resolvedAnn = resolvedType.findAnnotation(IRecordTypeAnnotation.Kind.RECORD_FIELD_ORDER);
+        Assert.assertEquals(expecedAnn, resolvedAnn);
     }
 
     @Test
