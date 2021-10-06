@@ -63,6 +63,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
+import org.apache.asterix.hyracks.bootstrap.ApplicationConfigurator;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.Statement;
@@ -145,6 +146,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
         }
         response.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+        String server = getServerHeaderValue();
+        if (server != null) {
+            HttpUtil.setServerHeader(response, server);
+        }
         response.setStatus(HttpResponseStatus.OK);
     }
 
@@ -519,5 +524,22 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
 
     protected static boolean isPrintingProfile(IStatementExecutor.Stats stats) {
         return stats.getProfileType() == Stats.ProfileType.FULL && stats.getJobProfile() != null;
+    }
+
+    protected final String getServerHeaderValue() {
+        String name = getApplicationName();
+        if (name == null) {
+            return null;
+        }
+        String version = getApplicationVersion();
+        return version != null ? name + "/" + version : name;
+    }
+
+    protected String getApplicationName() {
+        return ApplicationConfigurator.APPLICATION_NAME;
+    }
+
+    protected String getApplicationVersion() {
+        return ApplicationConfigurator.getApplicationVersion(appCtx.getBuildProperties());
     }
 }

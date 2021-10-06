@@ -24,6 +24,7 @@ import java.io.StringWriter;
 import java.util.Properties;
 
 import org.apache.asterix.common.config.AsterixProperties;
+import org.apache.asterix.common.config.BuildProperties;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.config.IConfigManager;
@@ -36,8 +37,10 @@ import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-class ApplicationConfigurator {
+public class ApplicationConfigurator {
     private static final Logger LOGGER = LogManager.getLogger();
+
+    public static final String APPLICATION_NAME = "Apache AsterixDB";
 
     private ApplicationConfigurator() {
     }
@@ -82,5 +85,9 @@ class ApplicationConfigurator {
         } else {
             LOGGER.warn("JRE version \"" + javaVersion + "\" is untested");
         }
+    }
+
+    public static String getApplicationVersion(BuildProperties buildProperties) {
+        return buildProperties.getAllProps().get("git.build.version");
     }
 }

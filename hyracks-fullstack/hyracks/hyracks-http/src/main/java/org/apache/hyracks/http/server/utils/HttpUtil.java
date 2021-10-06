@@ -110,6 +110,10 @@ public class HttpUtil {
         response.setHeader(HttpHeaderNames.CONTENT_TYPE, type);
     }
 
+    public static void setServerHeader(IServletResponse response, String value) throws IOException {
+        response.setHeader(HttpHeaderNames.SERVER, value);
+    }
+
     public static Map<String, String> getRequestHeaders(IServletRequest request) {
         Map<String, String> headers = new HashMap<>();
         request.getHttpRequest().headers().forEach(entry -> headers.put(entry.getKey(), entry.getValue()));
