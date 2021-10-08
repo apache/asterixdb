@@ -26,7 +26,6 @@ import org.apache.asterix.app.message.ExecuteStatementResponseMessage;
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.asterix.common.api.IResponseFieldPrinter;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.SessionOutput;
@@ -36,24 +35,19 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.api.result.ResultSetId;
 
-public class NcResultPrinter implements IResponseFieldPrinter {
+public class NcResultPrinter extends AbstractResultsPrinter {
 
     private final IStatementExecutor.ResultDelivery delivery;
     private final ExecuteStatementResponseMessage responseMsg;
-    private final IApplicationContext appCtx;
     private final IResultSet resultSet;
-    private final SessionOutput sessionOutput;
-    private final IStatementExecutor.Stats stats;
 
     public NcResultPrinter(IApplicationContext appCtx, ExecuteStatementResponseMessage responseMsg,
             IResultSet resultSet, IStatementExecutor.ResultDelivery delivery, SessionOutput sessionOutput,
             IStatementExecutor.Stats stats) {
-        this.appCtx = appCtx;
+        super(appCtx, stats, sessionOutput);
         this.responseMsg = responseMsg;
         this.delivery = delivery;
         this.resultSet = resultSet;
-        this.sessionOutput = sessionOutput;
-        this.stats = stats;
     }
 
     @Override
@@ -72,10 +66,5 @@ public class NcResultPrinter implements IResponseFieldPrinter {
         } else {
             pw.append(responseMsg.getResult());
         }
-    }
-
-    @Override
-    public String getName() {
-        return ResultsPrinter.FIELD_NAME;
     }
 }

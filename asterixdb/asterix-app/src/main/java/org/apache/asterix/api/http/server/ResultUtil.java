@@ -26,9 +26,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,6 +41,7 @@ import org.apache.asterix.app.result.fields.ResultsPrinter;
 import org.apache.asterix.app.result.fields.StatusPrinter;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
@@ -318,7 +321,8 @@ public class ResultUtil {
     }
 
     public static class ParseOnlyResult {
-        private Set<VariableExpr> externalVariables;
+
+        private final Set<VariableExpr> externalVariables;
 
         private static final String STMT_PARAM_LBL = "statement-parameters";
 
@@ -327,13 +331,29 @@ public class ResultUtil {
         }
 
         public String asJson() {
+            StringBuilder output = new StringBuilder();
+            output.append("{\"").append(STMT_PARAM_LBL).append("\":");
+            printStatementParameters(externalVariables, VariableExpr::getVar, output);
+            output.append('}');
+            return output.toString();
+        }
 
-            ArrayList<String> positionalVars = new ArrayList<>();
-            ArrayList<String> namedVars = new ArrayList<>();
+        public static <T> String printStatementParameters(Collection<T> externalVariables,
+                Function<T, VarIdentifier> varIdentAccessor) {
+            StringBuilder output = new StringBuilder(externalVariables.size() * 12);
+            printStatementParameters(externalVariables, varIdentAccessor, output);
+            return output.toString();
+        }
 
-            for (VariableExpr extVarRef : externalVariables) {
-                String varname = extVarRef.getVar().getValue();
-                if (SqlppVariableUtil.isPositionalVariableIdentifier(extVarRef.getVar())) {
+        private static <T> void printStatementParameters(Collection<T> externalVariables,
+                Function<T, VarIdentifier> varIdentAccessor, StringBuilder output) {
+            List<String> positionalVars = new ArrayList<>();
+            List<String> namedVars = new ArrayList<>();
+
+            for (T extVarItem : externalVariables) {
+                VarIdentifier extVar = varIdentAccessor.apply(extVarItem);
+                String varname = extVar.getValue();
+                if (SqlppVariableUtil.isPositionalVariableIdentifier(extVar)) {
                     positionalVars.add(SqlppVariableUtil.toUserDefinedName(varname));
                 } else {
                     namedVars.add(SqlppVariableUtil.toUserDefinedName(varname));
@@ -341,14 +361,14 @@ public class ResultUtil {
             }
             Collections.sort(positionalVars);
             Collections.sort(namedVars);
-            final StringBuilder output = new StringBuilder();
-            output.append("{\"").append(STMT_PARAM_LBL).append("\":[");
+
+            output.append('[');
             boolean first = true;
             for (String posVar : positionalVars) {
                 if (first) {
                     first = false;
                 } else {
-                    output.append(",");
+                    output.append(',');
                 }
                 output.append(posVar);
             }
@@ -358,10 +378,9 @@ public class ResultUtil {
                 } else {
                     output.append(",");
                 }
-                output.append("\"").append(namedVar).append("\"");
+                output.append('"').append(namedVar).append('"');
             }
-            output.append("]}");
-            return output.toString();
+            output.append(']');
         }
     }
 }

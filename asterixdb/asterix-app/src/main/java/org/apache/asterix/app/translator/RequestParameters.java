@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.external.parser.JSONDataParser;
+import org.apache.asterix.external.parser.LosslessADMJSONDataParser;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.om.base.IAObject;
@@ -34,6 +35,7 @@ import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.IStatementExecutor.StatementProperties;
 import org.apache.asterix.translator.IStatementExecutor.Stats;
 import org.apache.asterix.translator.ResultProperties;
+import org.apache.asterix.translator.SessionConfig;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.result.IResultSet;
@@ -61,6 +63,7 @@ public class RequestParameters implements IRequestParameters {
     private final String defaultDataverseName;
     private final boolean forceDropDataset;
     private final boolean skipAdmissionPolicy;
+    private boolean printSignature;
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
@@ -188,12 +191,21 @@ public class RequestParameters implements IRequestParameters {
         return defaultDataverseName;
     }
 
-    public static Map<String, byte[]> serializeParameterValues(Map<String, JsonNode> inParams)
-            throws HyracksDataException {
+    public boolean isPrintSignature() {
+        return printSignature;
+    }
+
+    public void setPrintSignature(boolean printSignature) {
+        this.printSignature = printSignature;
+    }
+
+    public static Map<String, byte[]> serializeParameterValues(Map<String, JsonNode> inParams,
+            SessionConfig.OutputFormat format) throws HyracksDataException {
         if (inParams == null || inParams.isEmpty()) {
             return null;
         }
-        JSONDataParser parser = new JSONDataParser(null, null);
+        JSONDataParser parser = format == SessionConfig.OutputFormat.LOSSLESS_ADM_JSON
+                ? new LosslessADMJSONDataParser(null) : new JSONDataParser(null, null);
         ByteArrayAccessibleOutputStream buffer = new ByteArrayAccessibleOutputStream();
         DataOutputStream bufferDataOutput = new DataOutputStream(buffer);
         Map<String, byte[]> m = new HashMap<>();

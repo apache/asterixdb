@@ -33,7 +33,9 @@ import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
+import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.app.result.fields.ExplainOnlyResultsPrinter;
+import org.apache.asterix.app.result.fields.SignaturePrinter;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.config.CompilerProperties;
@@ -278,12 +280,32 @@ public class APIFramework {
                 }
             }
         }
+
+        if (conf.getClientType() == SessionConfig.ClientType.JDBC) {
+            executionPlans.setStatementCategory(Statement.Category.toString(getStatementCategory(query, statement)));
+            if (!conf.isExecuteQuery()) {
+                String stmtParams = ResultUtil.ParseOnlyResult.printStatementParameters(externalVars.keySet(), v -> v);
+                executionPlans.setStatementParameters(stmtParams);
+            }
+            if (isExplainOnly) {
+                executionPlans.setExplainOnly(true);
+            } else if (isQuery) {
+                executionPlans.setSignature(SignaturePrinter.generateFlatSignature(resultMetadata));
+            }
+        }
+
+        boolean printSignature = isQuery && requestParameters != null && requestParameters.isPrintSignature();
+
         if (isExplainOnly) {
-            printPlanAsResult(metadataProvider, output, printer);
+            printPlanAsResult(metadataProvider, output, printer, printSignature);
             if (!conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
                 executionPlans.setOptimizedLogicalPlan(null);
             }
             return null;
+        }
+
+        if (printSignature) {
+            printer.addResultPrinter(SignaturePrinter.newInstance(executionPlans));
         }
 
         if (!conf.isGenerateJobSpec()) {
@@ -328,9 +350,12 @@ public class APIFramework {
         return spec;
     }
 
-    private void printPlanAsResult(MetadataProvider metadataProvider, SessionOutput output, IResponsePrinter printer)
-            throws AlgebricksException {
+    private void printPlanAsResult(MetadataProvider metadataProvider, SessionOutput output, IResponsePrinter printer,
+            boolean printSignature) throws AlgebricksException {
         try {
+            if (printSignature) {
+                printer.addResultPrinter(SignaturePrinter.INSTANCE);
+            }
             printer.addResultPrinter(new ExplainOnlyResultsPrinter(metadataProvider.getApplicationContext(),
                     executionPlans.getOptimizedLogicalPlan(), output));
             printer.printResults();
@@ -360,6 +385,11 @@ public class APIFramework {
     private IPlanPrettyPrinter getPrettyPrintVisitor(SessionConfig.PlanFormat planFormat) {
         return planFormat.equals(SessionConfig.PlanFormat.JSON) ? PlanPrettyPrinter.createJsonPlanPrettyPrinter()
                 : PlanPrettyPrinter.createStringPlanPrettyPrinter();
+    }
+
+    private byte getStatementCategory(Query query, ICompiledDmlStatement statement) {
+        return statement != null ? statement.getCategory()
+                : query != null ? Statement.Category.QUERY : Statement.Category.DDL;
     }
 
     public void executeJobArray(IHyracksClientConnection hcc, JobSpecification[] specs, PrintWriter out)

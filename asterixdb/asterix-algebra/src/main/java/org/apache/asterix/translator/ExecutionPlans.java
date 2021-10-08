@@ -21,13 +21,17 @@ package org.apache.asterix.translator;
 import java.io.Serializable;
 
 public class ExecutionPlans implements Serializable {
-    private static final long serialVersionUID = 6853904213354224457L;
+    private static final long serialVersionUID = 6853904213354224458L;
 
     private String expressionTree;
     private String rewrittenExpressionTree;
     private String logicalPlan;
     private String optimizedLogicalPlan;
     private String job;
+    private String signature;
+    private String statementCategory;
+    private String statementParameters;
+    private boolean explainOnly;
 
     public String getExpressionTree() {
         return expressionTree;
@@ -67,5 +71,37 @@ public class ExecutionPlans implements Serializable {
 
     public void setJob(String job) {
         this.job = job;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
+
+    public String getStatementCategory() {
+        return statementCategory;
+    }
+
+    public void setStatementCategory(String statementCategory) {
+        this.statementCategory = statementCategory;
+    }
+
+    public String getStatementParameters() {
+        return statementParameters;
+    }
+
+    public void setStatementParameters(String statementParameters) {
+        this.statementParameters = statementParameters;
+    }
+
+    public boolean isExplainOnly() {
+        return explainOnly;
+    }
+
+    public void setExplainOnly(boolean explainOnly) {
+        this.explainOnly = explainOnly;
     }
 }

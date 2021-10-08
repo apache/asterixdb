@@ -173,6 +173,10 @@ public class ResultExtractor {
         return extract(resultStream, EnumSet.of(ResultField.PLANS), resultCharset, OutputFormat.ADM, plans).getResult();
     }
 
+    public static InputStream extractSignature(InputStream resultStream, Charset resultCharset) throws Exception {
+        return extract(resultStream, EnumSet.of(ResultField.SIGNATURE), resultCharset).getResult();
+    }
+
     public static InputStream extractStatus(InputStream resultStream, Charset resultCharset) throws Exception {
         return extract(resultStream, EnumSet.of(ResultField.STATUS), resultCharset).getResult();
     }

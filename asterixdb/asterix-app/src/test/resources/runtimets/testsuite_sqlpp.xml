@@ -145,6 +145,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="api">
+      <compilation-unit name="signature">
+        <output-dir compare="Text">signature</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
       <compilation-unit name="ignore-body-for-get">
         <output-dir compare="Text">ignore-body-for-get</output-dir>
       </compilation-unit>

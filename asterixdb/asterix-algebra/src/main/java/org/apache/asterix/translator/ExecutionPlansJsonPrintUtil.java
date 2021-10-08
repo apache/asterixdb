@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.translator;
 
+import static org.apache.asterix.translator.SessionConfig.PlanFormat.JSON;
 import static org.apache.asterix.translator.SessionConfig.PlanFormat.STRING;
 
 import org.apache.hyracks.util.JSONUtil;
@@ -29,6 +30,9 @@ public class ExecutionPlansJsonPrintUtil {
     private static final String REWRITTEN_EXPRESSION_TREE_LBL = "rewrittenExpressionTree";
     public static final String OPTIMIZED_LOGICAL_PLAN_LBL = "optimizedLogicalPlan";
     private static final String JOB_LBL = "job";
+    private static final String STATEMENT_CATEGORY_LBL = "statementCategory";
+    private static final String STATEMENT_PARAMETERS_LBL = "statementParameters";
+    private static final String EXPLAIN_ONLY_LBL = "explainOnly";
 
     private ExecutionPlansJsonPrintUtil() {
     }
@@ -42,6 +46,11 @@ public class ExecutionPlansJsonPrintUtil {
         appendNonNull(output, LOGICAL_PLAN_LBL, plans.getLogicalPlan(), format);
         appendNonNull(output, OPTIMIZED_LOGICAL_PLAN_LBL, plans.getOptimizedLogicalPlan(), format);
         appendNonNull(output, JOB_LBL, plans.getJob(), format);
+        appendNonNull(output, STATEMENT_CATEGORY_LBL, plans.getStatementCategory(), STRING);
+        appendNonNull(output, STATEMENT_PARAMETERS_LBL, plans.getStatementParameters(), JSON);
+        if (plans.isExplainOnly()) {
+            appendNonNull(output, EXPLAIN_ONLY_LBL, Boolean.toString(plans.isExplainOnly()), JSON);
+        }
         appendOutputPostfix(output);
         return output.toString();
     }

@@ -46,7 +46,6 @@ import org.apache.asterix.app.result.fields.ParseOnlyResultPrinter;
 import org.apache.asterix.app.result.fields.PlansPrinter;
 import org.apache.asterix.app.result.fields.ProfilePrinter;
 import org.apache.asterix.app.result.fields.RequestIdPrinter;
-import org.apache.asterix.app.result.fields.SignaturePrinter;
 import org.apache.asterix.app.result.fields.StatusPrinter;
 import org.apache.asterix.app.result.fields.TypePrinter;
 import org.apache.asterix.app.result.fields.WarningsPrinter;
@@ -297,7 +296,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 responsePrinter.addResultPrinter(new ParseOnlyResultPrinter(parseOnlyResult));
             } else {
                 Map<String, byte[]> statementParams = org.apache.asterix.app.translator.RequestParameters
-                        .serializeParameterValues(param.getStatementParams());
+                        .serializeParameterValues(param.getStatementParams(), sessionOutput.config().fmt());
                 setAccessControlHeaders(request, response);
                 stats.setProfileType(param.getProfileType());
                 IStatementExecutor.StatementProperties statementProperties =
@@ -334,9 +333,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         responsePrinter.addHeaderPrinter(new RequestIdPrinter(requestRef.getUuid()));
         if (param.getClientContextID() != null && !param.getClientContextID().isEmpty()) {
             responsePrinter.addHeaderPrinter(new ClientContextIdPrinter(param.getClientContextID()));
-        }
-        if (param.isSignature() && delivery != ResultDelivery.ASYNC && !param.isParseOnly()) {
-            responsePrinter.addHeaderPrinter(SignaturePrinter.INSTANCE);
         }
         if (sessionOutput.config().fmt() == SessionConfig.OutputFormat.ADM
                 || sessionOutput.config().fmt() == SessionConfig.OutputFormat.CSV) {
@@ -484,8 +480,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         String handleUrl = getHandleUrl(param.getHost(), param.getPath(), delivery);
         sessionOutput.setHandleAppender(ResultUtil.createResultHandleAppender(handleUrl));
         SessionConfig sessionConfig = sessionOutput.config();
+        SessionConfig.ClientType clientType = param.getClientType();
         SessionConfig.OutputFormat format = param.getFormat();
         SessionConfig.PlanFormat planFormat = param.getPlanFormat();
+        sessionConfig.setClientType(clientType);
         sessionConfig.setFmt(format);
         sessionConfig.setPlanFormat(planFormat);
         sessionConfig.setMaxWarnings(param.getMaxWarnings());
@@ -517,9 +515,11 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             IRequestReference requestReference, String statementsText, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, IStatementExecutor.StatementProperties statementProperties,
             Map<String, String> optionalParameters, Map<String, IAObject> stmtParams, int stmtCategoryRestriction) {
-        return new RequestParameters(requestReference, statementsText, resultSet, resultProperties, stats,
-                statementProperties, null, param.getClientContextID(), param.getDataverse(), optionalParameters,
-                stmtParams, param.isMultiStatement(), stmtCategoryRestriction);
+        RequestParameters requestParameters = new RequestParameters(requestReference, statementsText, resultSet,
+                resultProperties, stats, statementProperties, null, param.getClientContextID(), param.getDataverse(),
+                optionalParameters, stmtParams, param.isMultiStatement(), stmtCategoryRestriction);
+        requestParameters.setPrintSignature(param.isSignature());
+        return requestParameters;
     }
 
     protected static boolean isPrintingProfile(IStatementExecutor.Stats stats) {

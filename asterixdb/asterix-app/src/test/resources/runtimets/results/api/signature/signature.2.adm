@@ -1,0 +1,1 @@
+{"name":["c_int8","c_int16","c_int32","c_int64","c_float","c_double","c_string","c_boolean","c_datetime","c_date","c_time","c_duration","c_year_month_duration","c_day_time_month_duration","c_null"],"type":["int8","int16","int32","int64","float","double","string","boolean","datetime","date","time","duration","year-month-duration","day-time-duration","null"]}

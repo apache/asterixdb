@@ -33,6 +33,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.translator.IStatementExecutor.ResultDelivery;
 import org.apache.asterix.translator.IStatementExecutor.Stats.ProfileType;
+import org.apache.asterix.translator.SessionConfig.ClientType;
 import org.apache.asterix.translator.SessionConfig.OutputFormat;
 import org.apache.asterix.translator.SessionConfig.PlanFormat;
 import org.apache.commons.lang3.StringUtils;
@@ -60,6 +61,7 @@ public class QueryServiceRequestParameters {
         STATEMENT("statement"),
         FORMAT("format"),
         CLIENT_ID("client_context_id"),
+        CLIENT_TYPE("client-type"),
         DATAVERSE("dataverse"),
         PRETTY("pretty"),
         MODE("mode"),
@@ -108,6 +110,8 @@ public class QueryServiceRequestParameters {
 
     private static final Map<String, PlanFormat> planFormats = ImmutableMap.of(HttpUtil.ContentType.JSON,
             PlanFormat.JSON, "clean_json", PlanFormat.JSON, "string", PlanFormat.STRING);
+    private static final Map<String, ClientType> clientTypes =
+            ImmutableMap.of("asterix", ClientType.ASTERIX, "jdbc", ClientType.JDBC);
     private static final Map<String, Boolean> booleanValues =
             ImmutableMap.of(Boolean.TRUE.toString(), Boolean.TRUE, Boolean.FALSE.toString(), Boolean.FALSE);
     private static final Map<String, Boolean> csvHeaderValues =
@@ -119,6 +123,7 @@ public class QueryServiceRequestParameters {
     private String statement;
     private String clientContextID;
     private String dataverse;
+    private ClientType clientType = ClientType.ASTERIX;
     private OutputFormat format = OutputFormat.CLEAN_JSON;
     private ResultDelivery mode = ResultDelivery.IMMEDIATE;
     private PlanFormat planFormat = PlanFormat.JSON;
@@ -200,6 +205,14 @@ public class QueryServiceRequestParameters {
 
     public void setClientContextID(String clientContextID) {
         this.clientContextID = clientContextID;
+    }
+
+    public ClientType getClientType() {
+        return clientType;
+    }
+
+    public void setClientType(ClientType clientType) {
+        this.clientType = Objects.requireNonNull(clientType);
     }
 
     public String getDataverse() {
@@ -361,6 +374,7 @@ public class QueryServiceRequestParameters {
         object.put("pretty", pretty);
         object.put("mode", mode.getName());
         object.put("clientContextID", clientContextID);
+        object.put("clientType", clientType.toString());
         object.put("dataverse", dataverse);
         object.put("format", format.toString());
         object.put("timeout", timeout);
@@ -459,6 +473,7 @@ public class QueryServiceRequestParameters {
         setMultiStatement(parseBoolean(req, Parameter.MULTI_STATEMENT.str(), valGetter, isMultiStatement()));
         setJob(parseBoolean(req, Parameter.JOB.str(), valGetter, isJob()));
         setSignature(parseBoolean(req, Parameter.SIGNATURE.str(), valGetter, isSignature()));
+        setClientType(parseIfExists(req, Parameter.CLIENT_TYPE.str(), valGetter, getClientType(), clientTypes::get));
     }
 
     protected void setExtraParams(JsonNode jsonRequest) throws HyracksDataException {

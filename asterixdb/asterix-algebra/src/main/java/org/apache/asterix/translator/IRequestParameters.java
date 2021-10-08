@@ -47,7 +47,7 @@ public interface IRequestParameters extends ICommonRequestParameters {
 
     /**
      * @return a reference on which to write properties of executed queries (e.g. what kind of statement was parsed
-     *         by the parser)
+     * by the parser)
      */
     StatementProperties getStatementProperties();
 
@@ -63,8 +63,8 @@ public interface IRequestParameters extends ICommonRequestParameters {
 
     /**
      * @return a bitmask that restricts which statement
-     *   {@link org.apache.asterix.lang.common.base.Statement.Category categories} are permitted for this request,
-     *   {@code 0} if all categories are allowed
+     * {@link org.apache.asterix.lang.common.base.Statement.Category categories} are permitted for this request,
+     * {@code 0} if all categories are allowed
      */
     int getStatementCategoryRestrictionMask();
 
@@ -75,6 +75,8 @@ public interface IRequestParameters extends ICommonRequestParameters {
     boolean isForceDropDataset();
 
     boolean isSkipAdmissionPolicy();
+
+    boolean isPrintSignature();
 
     /**
      * @return canonical name of the default dataverse for this statement

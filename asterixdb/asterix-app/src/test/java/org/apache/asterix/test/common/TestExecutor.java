@@ -238,6 +238,7 @@ public class TestExecutor {
     private static final String METRICS_QUERY_TYPE = "metrics";
     private static final String PROFILE_QUERY_TYPE = "profile";
     private static final String PLANS_QUERY_TYPE = "plans";
+    private static final String SIGNATURE_QUERY_TYPE = "signature";
 
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
     private static Map<String, InetSocketAddress> ncEndPoints;
@@ -1202,6 +1203,7 @@ public class TestExecutor {
             case "metrics":
             case "profile":
             case "plans":
+            case "signature":
                 // isDmlRecoveryTest: insert Crash and Recovery
                 if (isDmlRecoveryTest) {
                     executeScript(pb, pb.environment().get("SCRIPT_HOME") + File.separator + "dml_recovery"
@@ -1576,6 +1578,9 @@ public class TestExecutor {
                 case PLANS_QUERY_TYPE:
                     String[] plans = plans(statement);
                     resultStream = ResultExtractor.extractPlans(resultStream, responseCharset, plans);
+                    break;
+                case SIGNATURE_QUERY_TYPE:
+                    resultStream = ResultExtractor.extractSignature(resultStream, responseCharset);
                     break;
                 default:
                     extractedResult = ResultExtractor.extract(resultStream, responseCharset, fmt);

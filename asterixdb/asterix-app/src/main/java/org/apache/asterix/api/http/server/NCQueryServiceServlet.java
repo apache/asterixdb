@@ -32,6 +32,7 @@ import org.apache.asterix.app.message.ExecuteStatementRequestMessage;
 import org.apache.asterix.app.message.ExecuteStatementResponseMessage;
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.app.result.fields.NcResultPrinter;
+import org.apache.asterix.app.result.fields.SignaturePrinter;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -122,6 +123,9 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         // if the was no error, we can set the result status to success
         executionState.setStatus(ResultStatus.SUCCESS, HttpResponseStatus.OK);
         updateStatsFromCC(stats, responseMsg);
+        if (param.isSignature() && delivery != IStatementExecutor.ResultDelivery.ASYNC && !param.isParseOnly()) {
+            responsePrinter.addResultPrinter(SignaturePrinter.newInstance(responseMsg.getExecutionPlans()));
+        }
         if (hasResult(responseMsg)) {
             responsePrinter.addResultPrinter(
                     new NcResultPrinter(appCtx, responseMsg, getResultSet(), delivery, sessionOutput, stats));

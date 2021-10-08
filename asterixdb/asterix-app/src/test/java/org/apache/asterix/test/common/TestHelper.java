@@ -41,6 +41,7 @@ import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.testframework.xml.ParameterTypeEnum;
 import org.apache.asterix.testframework.xml.TestCase;
+import org.apache.asterix.translator.SessionConfig;
 import org.apache.commons.compress.utils.IOUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.util.file.FileUtil;
@@ -164,7 +165,8 @@ public final class TestHelper {
             }
         }
 
-        return RequestParameters.deserializeParameterValues(RequestParameters.serializeParameterValues(stmtParams));
+        return RequestParameters.deserializeParameterValues(
+                RequestParameters.serializeParameterValues(stmtParams, SessionConfig.OutputFormat.CLEAN_JSON));
     }
 
     public static boolean equalJson(JsonNode expectedJson, JsonNode actualJson, boolean compareUnorderedArray,
