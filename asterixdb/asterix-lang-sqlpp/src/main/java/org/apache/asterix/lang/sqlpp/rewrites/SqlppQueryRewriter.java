@@ -100,6 +100,10 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
     public static final String INLINE_WITH_OPTION = "inline_with";
     private static final boolean INLINE_WITH_OPTION_DEFAULT = true;
+
+    public static final String SQL_COMPAT_OPTION = "sql_compat";
+    private static final boolean SQL_COMPAT_OPTION_DEFAULT = false;
+
     private final IParserFactory parserFactory;
     private SqlppFunctionBodyRewriter functionAndViewBodyRewriter;
     private IReturningStatement topStatement;

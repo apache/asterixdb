@@ -519,6 +519,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                 resultProperties, stats, statementProperties, null, param.getClientContextID(), param.getDataverse(),
                 optionalParameters, stmtParams, param.isMultiStatement(), stmtCategoryRestriction);
         requestParameters.setPrintSignature(param.isSignature());
+        requestParameters.setSQLCompatMode(param.isSQLCompatMode());
         return requestParameters;
     }
 

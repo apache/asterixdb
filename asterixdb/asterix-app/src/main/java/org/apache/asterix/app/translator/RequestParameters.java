@@ -64,6 +64,7 @@ public class RequestParameters implements IRequestParameters {
     private final boolean forceDropDataset;
     private final boolean skipAdmissionPolicy;
     private boolean printSignature;
+    private boolean sqlCompatMode;
 
     public RequestParameters(IRequestReference requestReference, String statement, IResultSet resultSet,
             ResultProperties resultProperties, Stats stats, StatementProperties statementProperties,
@@ -197,6 +198,15 @@ public class RequestParameters implements IRequestParameters {
 
     public void setPrintSignature(boolean printSignature) {
         this.printSignature = printSignature;
+    }
+
+    @Override
+    public boolean isSQLCompatMode() {
+        return sqlCompatMode;
+    }
+
+    public void setSQLCompatMode(boolean sqlCompatMode) {
+        this.sqlCompatMode = sqlCompatMode;
     }
 
     public static Map<String, byte[]> serializeParameterValues(Map<String, JsonNode> inParams,

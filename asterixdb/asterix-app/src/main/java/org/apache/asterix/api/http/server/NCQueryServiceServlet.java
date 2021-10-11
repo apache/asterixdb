@@ -140,11 +140,13 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             Map<String, String> optionalParameters, Map<String, byte[]> statementParameters, INCServiceContext ncCtx,
             MessageFuture responseFuture, ILangExtension.Language queryLanguage, String handleUrl,
             int stmtCategoryRestrictionMask, boolean forceDropDataset) {
-        return new ExecuteStatementRequestMessage(ncCtx.getNodeId(), responseFuture.getFutureId(), queryLanguage,
-                statementsText, sessionOutput.config(), resultProperties.getNcToCcResultProperties(),
-                param.getClientContextID(), param.getDataverse(), handleUrl, optionalParameters, statementParameters,
-                param.isMultiStatement(), param.getProfileType(), stmtCategoryRestrictionMask, requestReference,
-                forceDropDataset);
+        ExecuteStatementRequestMessage requestMessage = new ExecuteStatementRequestMessage(ncCtx.getNodeId(),
+                responseFuture.getFutureId(), queryLanguage, statementsText, sessionOutput.config(),
+                resultProperties.getNcToCcResultProperties(), param.getClientContextID(), param.getDataverse(),
+                handleUrl, optionalParameters, statementParameters, param.isMultiStatement(), param.getProfileType(),
+                stmtCategoryRestrictionMask, requestReference, forceDropDataset);
+        requestMessage.setSQLCompatMode(param.isSQLCompatMode());
+        return requestMessage;
     }
 
     private void cancelQuery(INCMessageBroker messageBroker, String nodeId, String uuid, String clientContextID,

@@ -158,6 +158,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.common.util.ViewUtil;
+import org.apache.asterix.lang.sqlpp.rewrites.SqlppQueryRewriter;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -350,7 +351,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 validateOperation(appCtx, activeDataverse, stmt);
                 MetadataProvider metadataProvider = MetadataProvider.create(appCtx, activeDataverse);
                 configureMetadataProvider(metadataProvider, config, resultSerializerFactoryProvider, writerFactory,
-                        outputFile);
+                        outputFile, requestParameters, stmt);
                 IStatementRewriter stmtRewriter = rewriterFactory.createStatementRewriter();
                 rewriteStatement(stmt, stmtRewriter, metadataProvider); // Rewrite the statement's AST.
                 Statement.Kind kind = stmt.getKind();
@@ -519,7 +520,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void configureMetadataProvider(MetadataProvider metadataProvider, Map<String, String> config,
             IResultSerializerFactoryProvider resultSerializerFactoryProvider, IAWriterFactory writerFactory,
-            FileSplit outputFile) {
+            FileSplit outputFile, IRequestParameters requestParameters, Statement statement) {
+        if (statement.getKind() == Statement.Kind.QUERY && requestParameters.isSQLCompatMode()) {
+            metadataProvider.getConfig().put(SqlppQueryRewriter.SQL_COMPAT_OPTION, Boolean.TRUE.toString());
+        }
         metadataProvider.getConfig().putAll(config);
         metadataProvider.setWriterFactory(writerFactory);
         metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);

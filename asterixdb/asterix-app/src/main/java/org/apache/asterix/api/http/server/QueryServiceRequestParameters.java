@@ -79,7 +79,8 @@ public class QueryServiceRequestParameters {
         PROFILE("profile"),
         SIGNATURE("signature"),
         MULTI_STATEMENT("multi-statement"),
-        MAX_WARNINGS("max-warnings");
+        MAX_WARNINGS("max-warnings"),
+        SQL_COMPAT("sql-compat");
 
         private final String str;
 
@@ -142,6 +143,7 @@ public class QueryServiceRequestParameters {
     private boolean isCSVWithHeader = false;
     private boolean signature = true;
     private boolean multiStatement = true;
+    private boolean sqlCompatMode = false;
     private long timeout = TimeUnit.MILLISECONDS.toMillis(Long.MAX_VALUE);
     private long maxResultReads = 1L;
     private long maxWarnings = 0L;
@@ -358,6 +360,14 @@ public class QueryServiceRequestParameters {
         this.multiStatement = multiStatement;
     }
 
+    public boolean isSQLCompatMode() {
+        return sqlCompatMode;
+    }
+
+    public void setSQLCompatMode(boolean sqlCompatMode) {
+        this.sqlCompatMode = sqlCompatMode;
+    }
+
     public void setMaxWarnings(long maxWarnings) {
         this.maxWarnings = maxWarnings;
     }
@@ -391,6 +401,7 @@ public class QueryServiceRequestParameters {
         object.put("parseOnly", parseOnly);
         object.put("readOnly", readOnly);
         object.put("maxWarnings", maxWarnings);
+        object.put("sqlCompat", sqlCompatMode);
         if (statementParams != null) {
             for (Map.Entry<String, JsonNode> statementParam : statementParams.entrySet()) {
                 object.set('$' + statementParam.getKey(), statementParam.getValue());
@@ -474,6 +485,7 @@ public class QueryServiceRequestParameters {
         setJob(parseBoolean(req, Parameter.JOB.str(), valGetter, isJob()));
         setSignature(parseBoolean(req, Parameter.SIGNATURE.str(), valGetter, isSignature()));
         setClientType(parseIfExists(req, Parameter.CLIENT_TYPE.str(), valGetter, getClientType(), clientTypes::get));
+        setSQLCompatMode(parseBoolean(req, Parameter.SQL_COMPAT.str(), valGetter, isSQLCompatMode()));
     }
 
     protected void setExtraParams(JsonNode jsonRequest) throws HyracksDataException {

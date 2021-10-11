@@ -78,6 +78,8 @@ public interface IRequestParameters extends ICommonRequestParameters {
 
     boolean isPrintSignature();
 
+    boolean isSQLCompatMode();
+
     /**
      * @return canonical name of the default dataverse for this statement
      */

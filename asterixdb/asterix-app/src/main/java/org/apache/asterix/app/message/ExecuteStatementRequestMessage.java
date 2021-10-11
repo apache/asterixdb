@@ -66,7 +66,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
     private static final Logger LOGGER = LogManager.getLogger();
     //TODO: Make configurable: https://issues.apache.org/jira/browse/ASTERIXDB-2062
     public static final long DEFAULT_NC_TIMEOUT_MILLIS = TimeUnit.MILLISECONDS.toMillis(Long.MAX_VALUE);
@@ -89,6 +89,7 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
     private final IRequestReference requestReference;
     private final boolean forceDropDataset;
     private final boolean skipAdmissionPolicy;
+    private boolean sqlCompatMode;
 
     public ExecuteStatementRequestMessage(String requestNodeId, long requestMessageId, ILangExtension.Language lang,
             String statementsText, SessionConfig sessionConfig, ResultProperties resultProperties,
@@ -124,6 +125,14 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
         this.forceDropDataset = forceDropDataset;
         this.skipAdmissionPolicy = skipAdmissionPolicy;
         this.defaultDataverseName = defaultDataverseName;
+    }
+
+    public boolean isSQLCompatMode() {
+        return sqlCompatMode;
+    }
+
+    public void setSQLCompatMode(boolean sqlCompatMode) {
+        this.sqlCompatMode = sqlCompatMode;
     }
 
     @Override
@@ -166,10 +175,8 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
             final IStatementExecutor.Stats stats = new IStatementExecutor.Stats();
             stats.setProfileType(profileType);
             Map<String, IAObject> stmtParams = RequestParameters.deserializeParameterValues(statementParameters);
-            final IRequestParameters requestParameters = new RequestParameters(requestReference, statementsText, null,
-                    resultProperties, stats, statementProperties, outMetadata, clientContextID, defaultDataverseName,
-                    optionalParameters, stmtParams, multiStatement, statementCategoryRestrictionMask, forceDropDataset,
-                    skipAdmissionPolicy);
+            final IRequestParameters requestParameters =
+                    createRequestParameters(statementProperties, stmtParams, outMetadata, stats);
             translator.compileAndExecute(ccApp.getHcc(), requestParameters);
             translator.getWarnings(warnings, maxWarnings - warnings.size());
             stats.updateTotalWarningsCount(parserTotalWarningsCount);
@@ -192,6 +199,17 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
         } catch (Exception e) {
             LOGGER.log(Level.WARN, e.toString(), e);
         }
+    }
+
+    protected IRequestParameters createRequestParameters(IStatementExecutor.StatementProperties statementProperties,
+            Map<String, IAObject> stmtParams, IStatementExecutor.ResultMetadata outMetadata,
+            IStatementExecutor.Stats stats) {
+        RequestParameters requestParameters = new RequestParameters(requestReference, statementsText, null,
+                resultProperties, stats, statementProperties, outMetadata, clientContextID, defaultDataverseName,
+                optionalParameters, stmtParams, multiStatement, statementCategoryRestrictionMask, forceDropDataset,
+                skipAdmissionPolicy);
+        requestParameters.setSQLCompatMode(sqlCompatMode);
+        return requestParameters;
     }
 
     protected CCMessageBroker getMessageBroker(ICcApplicationContext ccAppCtx) {

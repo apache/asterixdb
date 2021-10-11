@@ -150,7 +150,7 @@ public class APIFramework {
             SqlppExpressionToPlanTranslator.REWRITE_IN_AS_OR_OPTION, "hash_merge", "output-record-type",
             DisjunctivePredicateToJoinRule.REWRITE_OR_AS_JOIN_OPTION,
             SetAsterixPhysicalOperatorsRule.REWRITE_ATTEMPT_BATCH_ASSIGN,
-            EquivalenceClassUtils.REWRITE_INTERNAL_QUERYUID_PK);
+            EquivalenceClassUtils.REWRITE_INTERNAL_QUERYUID_PK, SqlppQueryRewriter.SQL_COMPAT_OPTION);
 
     private final IRewriterFactory rewriterFactory;
     private final IAstPrintVisitorFactory astPrintVisitorFactory;
