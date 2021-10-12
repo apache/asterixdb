@@ -10130,6 +10130,19 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="sql-compat">
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="select_star_01">
+        <output-dir compare="Text">select_star_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="select_star_02_negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1168: Ambiguous projection in SELECT clause (in line 32, at column 8)</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="statement-params">
     <test-case FilePath="statement-params">
       <compilation-unit name="index_01">

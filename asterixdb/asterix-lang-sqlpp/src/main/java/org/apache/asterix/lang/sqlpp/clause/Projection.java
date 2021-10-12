@@ -32,7 +32,8 @@ public class Projection extends AbstractClause {
     public enum Kind {
         NAMED_EXPR, // expr AS name
         STAR, // *
-        VAR_STAR // variable.*
+        VAR_STAR, // variable.*
+        EVERY_VAR_STAR // *.* (currently only used in SQL-compatible mode)
     }
 
     private Kind kind;
@@ -54,6 +55,7 @@ public class Projection extends AbstractClause {
                 }
                 break;
             case STAR:
+            case EVERY_VAR_STAR:
                 if (expr != null || name != null) {
                     throw new IllegalArgumentException();
                 }
@@ -142,6 +144,8 @@ public class Projection extends AbstractClause {
                 return "*";
             case VAR_STAR:
                 return expr + ".*";
+            case EVERY_VAR_STAR:
+                return "*.*";
             default:
                 throw new IllegalStateException();
         }

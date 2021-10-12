@@ -127,6 +127,9 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
             case STAR:
                 out.print(" * ");
                 break;
+            case EVERY_VAR_STAR:
+                out.print(" *.* ");
+                break;
             case VAR_STAR:
                 projection.getExpression().accept(this, step);
                 out.print(".* ");

@@ -778,45 +778,78 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         Set<String> fieldNames = new HashSet<>();
 
         for (Projection projection : selectRegular.getProjections()) {
-            if (projection.varStar()) {
-                if (!fieldBindings.isEmpty()) {
-                    RecordConstructor recordConstr = new RecordConstructor(new ArrayList<>(fieldBindings));
-                    recordConstr.setSourceLocation(selectRegular.getSourceLocation());
-                    recordExprs.add(recordConstr);
-                    fieldBindings.clear();
-                }
-                Expression projectionExpr = projection.getExpression();
-                SourceLocation sourceLoc = projection.getSourceLocation();
-                CallExpr toObjectExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.TO_OBJECT),
-                        Collections.singletonList(projectionExpr));
-                toObjectExpr.setSourceLocation(sourceLoc);
-                CallExpr ifMissingOrNullExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.IF_MISSING_OR_NULL),
-                        Arrays.asList(toObjectExpr, new RecordConstructor(Collections.emptyList())));
-                ifMissingOrNullExpr.setSourceLocation(sourceLoc);
-                recordExprs.add(ifMissingOrNullExpr);
-            } else if (projection.star()) {
-                if (selectBlock.hasGroupbyClause()) {
-                    getGroupBindings(selectBlock.getGroupbyClause(), fieldBindings, fieldNames,
-                            SqlppExpressionToPlanTranslator::includeInSelectStar);
-                    if (selectBlock.hasLetHavingClausesAfterGroupby()) {
-                        getLetBindings(selectBlock.getLetHavingListAfterGroupby(), fieldBindings, fieldNames,
+            boolean everyVarStar = false;
+            switch (projection.getKind()) {
+                case VAR_STAR:
+                    if (!fieldBindings.isEmpty()) {
+                        RecordConstructor recordConstr = new RecordConstructor(new ArrayList<>(fieldBindings));
+                        recordConstr.setSourceLocation(selectRegular.getSourceLocation());
+                        recordExprs.add(recordConstr);
+                        fieldBindings.clear();
+                    }
+                    Expression expr =
+                            translateProjectVarStar(projection.getExpression(), projection.getSourceLocation());
+                    recordExprs.add(expr);
+                    break;
+                case EVERY_VAR_STAR:
+                    everyVarStar = true;
+                    // fall thru to STAR
+                case STAR:
+                    List<FieldBinding> fieldBindingsForStar;
+                    Set<String> fieldNamesForStar;
+                    if (everyVarStar) {
+                        fieldBindingsForStar = new ArrayList<>();
+                        fieldNamesForStar = new HashSet<>();
+                    } else {
+                        fieldBindingsForStar = fieldBindings;
+                        fieldNamesForStar = fieldNames;
+                    }
+                    if (selectBlock.hasGroupbyClause()) {
+                        getGroupBindings(selectBlock.getGroupbyClause(), fieldBindingsForStar, fieldNamesForStar,
+                                SqlppExpressionToPlanTranslator::includeInSelectStar);
+                        if (selectBlock.hasLetHavingClausesAfterGroupby()) {
+                            getLetBindings(selectBlock.getLetHavingListAfterGroupby(), fieldBindingsForStar,
+                                    fieldNamesForStar, SqlppExpressionToPlanTranslator::includeInSelectStar);
+                        }
+                    } else if (selectBlock.hasFromClause()) {
+                        getFromBindings(selectBlock.getFromClause(), fieldBindingsForStar, fieldNamesForStar,
+                                SqlppExpressionToPlanTranslator::includeInSelectStar);
+                        if (selectBlock.hasLetWhereClauses()) {
+                            getLetBindings(selectBlock.getLetWhereList(), fieldBindingsForStar, fieldNamesForStar,
+                                    SqlppExpressionToPlanTranslator::includeInSelectStar);
+                        }
+                    } else if (selectBlock.hasLetWhereClauses()) {
+                        getLetBindings(selectBlock.getLetWhereList(), fieldBindingsForStar, fieldNamesForStar,
                                 SqlppExpressionToPlanTranslator::includeInSelectStar);
                     }
-                } else if (selectBlock.hasFromClause()) {
-                    getFromBindings(selectBlock.getFromClause(), fieldBindings, fieldNames,
-                            SqlppExpressionToPlanTranslator::includeInSelectStar);
-                    if (selectBlock.hasLetWhereClauses()) {
-                        getLetBindings(selectBlock.getLetWhereList(), fieldBindings, fieldNames,
-                                SqlppExpressionToPlanTranslator::includeInSelectStar);
+                    if (everyVarStar) {
+                        if (!fieldBindings.isEmpty()) {
+                            RecordConstructor recordConstr = new RecordConstructor(new ArrayList<>(fieldBindings));
+                            recordConstr.setSourceLocation(selectRegular.getSourceLocation());
+                            recordExprs.add(recordConstr);
+                            fieldBindings.clear();
+                        }
+                        // We currently only support EVERY_VAR_STAR over a single variable
+                        if (fieldBindingsForStar.size() > 1) {
+                            throw new CompilationException(ErrorCode.AMBIGUOUS_PROJECTION,
+                                    projection.getSourceLocation());
+                        }
+                        for (FieldBinding fieldBinding : fieldBindingsForStar) {
+                            expr = translateProjectVarStar(fieldBinding.getRightExpr(), projection.getSourceLocation());
+                            recordExprs.add(expr);
+                        }
                     }
-                } else if (selectBlock.hasLetWhereClauses()) {
-                    getLetBindings(selectBlock.getLetWhereList(), fieldBindings, fieldNames,
-                            SqlppExpressionToPlanTranslator::includeInSelectStar);
-                }
-            } else if (projection.hasName()) {
-                fieldBindings.add(getFieldBinding(projection, fieldNames));
-            } else {
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, projection.getSourceLocation(), "");
+                    break;
+                case NAMED_EXPR:
+                    if (!projection.hasName()) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                projection.getSourceLocation(), "");
+                    }
+                    fieldBindings.add(getFieldBinding(projection, fieldNames));
+                    break;
+                default:
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, projection.getSourceLocation(),
+                            "");
             }
         }
         if (!fieldBindings.isEmpty()) {
@@ -833,6 +866,17 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             recordConcatExpr.setSourceLocation(selectRegular.getSourceLocation());
             return recordConcatExpr;
         }
+    }
+
+    private Expression translateProjectVarStar(Expression projectionExpr, SourceLocation sourceLoc) {
+        // var.* -> if_missing_or_null(to_object(var), {})
+        CallExpr toObjectExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.TO_OBJECT),
+                Collections.singletonList(projectionExpr));
+        toObjectExpr.setSourceLocation(sourceLoc);
+        CallExpr ifMissingOrNullExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.IF_MISSING_OR_NULL),
+                Arrays.asList(toObjectExpr, new RecordConstructor(Collections.emptyList())));
+        ifMissingOrNullExpr.setSourceLocation(sourceLoc);
+        return ifMissingOrNullExpr;
     }
 
     private static boolean includeInSelectStar(VariableExpr varExpr) {

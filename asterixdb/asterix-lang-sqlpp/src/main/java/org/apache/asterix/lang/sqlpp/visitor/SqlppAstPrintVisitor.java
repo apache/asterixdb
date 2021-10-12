@@ -135,6 +135,9 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             case STAR:
                 out.println(skip(step) + "*");
                 break;
+            case EVERY_VAR_STAR:
+                out.println(skip(step) + "*.*");
+                break;
             case VAR_STAR:
                 projection.getExpression().accept(this, step);
                 out.println(skip(step) + ".*");

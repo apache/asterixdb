@@ -165,7 +165,7 @@ public final class SqlppGroupingSetsVisitor extends AbstractSqlppExpressionScopi
         // For regular SELECT we need to add ORDERBY/LIMIT free variables to the projection list of the SELECT clause,
         // so they can be accessed using field-access-by-name after SELECT.
         // Some of these variables might be already projected by SELECT, so we need to account for that.
-        // We currently do not support (fail) SELECT v.* because in this case we cannot statically compute
+        // We currently do not support (fail) SELECT v.* and *.* because in this case we cannot statically compute
         // the schema of the record produced by the SELECT and therefore cannot guarantee that the field
         // names we generate will not conflict with the existing fields in the SELECT output.
         // The added projections will be later removed by the outer query.
@@ -181,6 +181,7 @@ public final class SqlppGroupingSetsVisitor extends AbstractSqlppExpressionScopi
                 Projection projection = projectionList.get(i);
                 switch (projection.getKind()) {
                     case VAR_STAR:
+                    case EVERY_VAR_STAR:
                         throw new CompilationException(ErrorCode.UNSUPPORTED_GBY_OBY_SELECT_COMBO,
                                 selectBlock.getSourceLocation());
                     case STAR:

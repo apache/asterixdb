@@ -59,6 +59,7 @@ import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineColumnAliasVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.InlineWithExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.OperatorExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SetOperationVisitor;
+import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlCompatRewriteVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppCaseAggregateExtractionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppCaseExpressionVisitor;
 import org.apache.asterix.lang.sqlpp.rewrites.visitor.SqlppFunctionCallResolverVisitor;
@@ -138,6 +139,9 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Sets up parameters.
         setup(context, topStatement, externalVars, allowNonStoredUdfCalls, inlineUdfsAndViews);
 
+        // Initial SQL-compat mode rewrites
+        rewriteSqlCompat();
+
         // Resolves function calls
         resolveFunctionCalls();
 
@@ -216,6 +220,15 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     protected void rewriteListInputFunctions() throws CompilationException {
         SqlppListInputFunctionRewriteVisitor listInputFunctionVisitor = new SqlppListInputFunctionRewriteVisitor();
         rewriteTopExpr(listInputFunctionVisitor, null);
+    }
+
+    protected void rewriteSqlCompat() throws CompilationException {
+        boolean sqlCompatMode = metadataProvider.getBooleanProperty(SQL_COMPAT_OPTION, SQL_COMPAT_OPTION_DEFAULT);
+        if (!sqlCompatMode) {
+            return;
+        }
+        SqlCompatRewriteVisitor visitor = new SqlCompatRewriteVisitor();
+        rewriteTopExpr(visitor, null);
     }
 
     protected void resolveFunctionCalls() throws CompilationException {
