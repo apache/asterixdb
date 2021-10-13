@@ -3157,12 +3157,48 @@ String QuotedString() throws ParseException:
 
 String StringLiteral() throws ParseException:
 {
+  StringBuilder str = null;
+  char quote = 0;
+  boolean ext = false;
+  Token litToken = null;
+  String lit = null;
 }
 {
-  <STRING_LITERAL>
+  ( <STRING_LITERAL>
     {
-      return removeQuotesAndEscapes(token.image);
+      String quoted = token.image;
+      char q = quoted.charAt(0);
+      boolean e = q == 'E';
+      if (e) {
+        q = quoted.charAt(1);
+        quoted = quoted.substring(1);
+      }
+      if (lit == null) {
+        quote = q;
+        ext = e;
+      } else {
+        boolean isAdjacent = litToken.endLine == token.beginLine && litToken.endColumn + 1 == token.beginColumn;
+        if (!isAdjacent || ext || e || (q != quote)) {
+          throw new SqlppParseException(getSourceLocation(token), "Invalid string literal");
+        }
+        if (str == null) {
+          str = new StringBuilder();
+        }
+        str.append(lit);
+        str.append(quote);
+      }
+      lit = removeQuotesAndEscapes(quoted);
+      litToken = token;
     }
+  )+
+  {
+    if (str == null) {
+      return lit;
+    } else {
+      str.append(lit);
+      return str.toString();
+    }
+  }
 }
 
 Triple<List<String>, Token, Token> MultipartIdentifier() throws ParseException:
@@ -5472,7 +5508,7 @@ TOKEN :
         | <EscapeCr>
         | <EscapeTab>
         | ~["`","\\"])* "`">
-  | <STRING_LITERAL : ("\"" (
+  | <STRING_LITERAL : ( ("E")? "\"" (
           <EscapeQuot>
         | <EscapeBslash>
         | <EscapeSlash>
@@ -5482,7 +5518,7 @@ TOKEN :
         | <EscapeCr>
         | <EscapeTab>
         | ~["\"","\\"])* "\"")
-      | ("\'"(
+      | ( ("E")? "\'" (
           <EscapeApos>
         | <EscapeBslash>
         | <EscapeSlash>

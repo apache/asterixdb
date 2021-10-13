@@ -10835,6 +10835,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="string-literal1">
+        <output-dir compare="Text">string-literal1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="string-to-codepoint">
         <output-dir compare="Text">string-to-codepoint</output-dir>
       </compilation-unit>
