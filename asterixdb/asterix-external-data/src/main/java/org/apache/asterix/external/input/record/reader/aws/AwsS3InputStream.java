@@ -19,6 +19,7 @@
 package org.apache.asterix.external.input.record.reader.aws;
 
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3;
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.IOException;
 import java.util.List;
@@ -90,7 +91,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
                 return false;
             } catch (S3Exception ex) {
                 if (!shouldRetry(ex.awsErrorDetails().errorCode(), retries++)) {
-                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
                 }
                 LOGGER.debug(() -> "S3 retryable error: " + LogRedactionUtil.userData(ex.getMessage()));
 
@@ -101,7 +102,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
                     Thread.currentThread().interrupt();
                 }
             } catch (SdkException ex) {
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             }
         }
         return true;

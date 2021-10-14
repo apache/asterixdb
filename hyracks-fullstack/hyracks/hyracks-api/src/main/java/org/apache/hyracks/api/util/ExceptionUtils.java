@@ -197,4 +197,14 @@ public class ExceptionUtils {
         }
         return current;
     }
+
+    /**
+     * Returns the message of the throwable if available, otherwise, .toString() is returned
+     *
+     * @param e exception
+     * @return error message
+     */
+    public static String getMessageOrToString(Throwable e) {
+        return e instanceof IFormattedException ? e.getMessage() : e.toString();
+    }
 }

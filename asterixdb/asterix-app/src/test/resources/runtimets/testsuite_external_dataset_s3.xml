@@ -205,7 +205,7 @@
       <compilation-unit name="common/bucket-does-not-exist">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">common/bucket-does-not-exist</output-dir>
-        <expected-error>External source error. The specified bucket does not exist (Service: S3, Status Code: 404, Request ID: null)</expected-error>
+        <expected-error>External source error. software.amazon.awssdk.services.s3.model.NoSuchBucketException: The specified bucket does not exist (Service: S3, Status Code: 404, Request ID: null)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset" check-warnings="true">

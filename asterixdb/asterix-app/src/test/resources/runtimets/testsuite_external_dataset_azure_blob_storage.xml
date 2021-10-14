@@ -187,7 +187,7 @@
       <compilation-unit name="common/bucket-does-not-exist">
         <placeholder name="adapter" value="AZUREBLOB" />
         <output-dir compare="Text">common/bucket-does-not-exist</output-dir>
-        <expected-error>External source error. Status code 404</expected-error>
+        <expected-error>External source error. com.azure.storage.blob.models.BlobStorageException: Status code 404</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset" check-warnings="true">

@@ -62,6 +62,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
 import static org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils.RESERVED_REGEX_CHARS;
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -915,7 +916,7 @@ public class ExternalDataUtils {
                     try {
                         builder.endpointOverride(uri);
                     } catch (NullPointerException ex) {
-                        throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                        throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
                     }
                 } catch (URISyntaxException ex) {
                     throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR,
@@ -1031,10 +1032,10 @@ public class ExternalDataUtils {
                         throw ex;
                     }
                 } catch (SdkException ex2) {
-                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex2.getMessage());
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
                 }
             } catch (SdkException ex) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             } finally {
                 if (s3Client != null) {
                     CleanupUtils.close(s3Client, null);
@@ -1106,10 +1107,10 @@ public class ExternalDataUtils {
                         throw ex;
                     }
                 } catch (SdkException ex2) {
-                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex2.getMessage());
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
                 }
             } catch (SdkException ex) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             } finally {
                 if (s3Client != null) {
                     CleanupUtils.close(s3Client, null);
@@ -1360,7 +1361,7 @@ public class ExternalDataUtils {
                             pemCertificate.invoke(certificate, certificateContent, clientCertificatePassword);
                         }
                     } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
-                        throw new CompilationException(EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                        throw new CompilationException(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
                     }
                     builder.credential(certificate.build());
                 }
@@ -1380,7 +1381,7 @@ public class ExternalDataUtils {
             try {
                 return builder.buildClient();
             } catch (Exception ex) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             }
         }
 
@@ -1413,7 +1414,7 @@ public class ExternalDataUtils {
                     warningCollector.warn(warning);
                 }
             } catch (Exception ex) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             }
 
             return filesOnly;
@@ -1479,7 +1480,7 @@ public class ExternalDataUtils {
             } catch (CompilationException ex) {
                 throw ex;
             } catch (Exception ex) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             }
         }
 
@@ -1550,7 +1551,7 @@ public class ExternalDataUtils {
                 try (InputStream credentialsStream = new ByteArrayInputStream(jsonCredentials.getBytes())) {
                     builder.setCredentials(ServiceAccountCredentials.fromStream(credentialsStream));
                 } catch (IOException ex) {
-                    throw new CompilationException(EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                    throw new CompilationException(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
                 }
             }
 
@@ -1587,7 +1588,7 @@ public class ExternalDataUtils {
             } catch (CompilationException ex) {
                 throw ex;
             } catch (Exception ex) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             }
         }
     }

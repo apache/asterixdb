@@ -19,6 +19,7 @@
 package org.apache.asterix.external.input.record.reader.gcs;
 
 import static org.apache.asterix.external.util.ExternalDataUtils.getIncludeExcludeMatchers;
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -73,7 +74,7 @@ public class GCSInputStreamFactory extends AbstractExternalInputStreamFactory {
         try {
             items = gcs.list(container, options);
         } catch (BaseServiceException ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
         }
 
         // Collect the paths to files only

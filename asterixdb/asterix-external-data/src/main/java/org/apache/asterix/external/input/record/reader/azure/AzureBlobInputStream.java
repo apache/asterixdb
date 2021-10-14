@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.input.record.reader.azure;
 
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -70,10 +72,10 @@ public class AzureBlobInputStream extends AbstractExternalInputStream {
                         + "found in container " + container);
                 return false;
             } else {
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             }
         } catch (Exception ex) {
-            throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+            throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
         }
 
         return true;

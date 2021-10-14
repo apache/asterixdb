@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.input.record.reader.gcs;
 
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
@@ -92,7 +94,7 @@ public class GCSInputStream extends AbstractExternalInputStream {
                 break;
             } catch (BaseServiceException ex) {
                 if (!shouldRetry(retries++) && ex.isRetryable()) {
-                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
                 }
                 LOGGER.debug(() -> "Retryable error: " + LogRedactionUtil.userData(ex.getMessage()));
 
@@ -103,7 +105,7 @@ public class GCSInputStream extends AbstractExternalInputStream {
                     Thread.currentThread().interrupt();
                 }
             } catch (Exception ex) {
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             }
         }
         return true;
