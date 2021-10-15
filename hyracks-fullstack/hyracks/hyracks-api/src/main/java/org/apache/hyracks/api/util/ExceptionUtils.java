@@ -199,9 +199,9 @@ public class ExceptionUtils {
     }
 
     /**
-     * Returns the message of the throwable if available, otherwise, .toString() is returned
+     * Returns the message of the throwable if of type IFormattedException, otherwise, .toString() is returned
      *
-     * @param e exception
+     * @param e throwable
      * @return error message
      */
     public static String getMessageOrToString(Throwable e) {
