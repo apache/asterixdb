@@ -45,8 +45,7 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
             IWarningCollector warningCollector) throws AlgebricksException, HyracksDataException {
-        //We need to the client to parse connectionString
-        BlobServiceClient blobServiceClient = ExternalDataUtils.Azure.buildAzureClient(configuration);
+        BlobServiceClient blobServiceClient = ExternalDataUtils.Azure.buildAzureBlobClient(configuration);
         //Get endpoint
         String endPoint = extractEndPoint(blobServiceClient.getAccountUrl());
         //Get path
@@ -117,7 +116,7 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
     }
 
     private static void appendFileURI(StringBuilder builder, String container, String endPoint, BlobItem file) {
-        builder.append(ExternalDataConstants.AzureBlob.HADOOP_AZURE_BLOB_PROTOCOL);
+        builder.append(ExternalDataConstants.Azure.HADOOP_AZURE_BLOB_PROTOCOL);
         builder.append("://");
         builder.append(container);
         builder.append('@');

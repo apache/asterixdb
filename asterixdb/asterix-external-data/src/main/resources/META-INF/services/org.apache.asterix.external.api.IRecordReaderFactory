@@ -21,7 +21,8 @@ org.apache.asterix.external.input.HDFSDataSourceFactory
 org.apache.asterix.external.input.record.reader.stream.StreamRecordReaderFactory
 org.apache.asterix.external.input.record.reader.http.HttpServerRecordReaderFactory
 org.apache.asterix.external.input.record.reader.aws.AwsS3ReaderFactory
-org.apache.asterix.external.input.record.reader.azure.AzureBlobReaderFactory
 org.apache.asterix.external.input.record.reader.aws.parquet.AwsS3ParquetReaderFactory
 org.apache.asterix.external.input.record.reader.gcs.GCSReaderFactory
+org.apache.asterix.external.input.record.reader.azure.blob.AzureBlobReaderFactory
+org.apache.asterix.external.input.record.reader.azure.datalake.AzureDataLakeReaderFactory
 org.apache.asterix.external.input.record.reader.azure.parquet.AzureBlobParquetReaderFactory

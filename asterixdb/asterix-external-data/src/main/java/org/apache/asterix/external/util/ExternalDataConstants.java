@@ -142,6 +142,7 @@ public class ExternalDataConstants {
     public static final String KEY_ADAPTER_NAME_HTTP = "http_adapter";
     public static final String KEY_ADAPTER_NAME_AWS_S3 = "S3";
     public static final String KEY_ADAPTER_NAME_AZURE_BLOB = "AZUREBLOB";
+    public static final String KEY_ADAPTER_NAME_AZURE_DATA_LAKE = "AZUREDATALAKE";
     public static final String KEY_ADAPTER_NAME_GCS = "GCS";
 
     /**
@@ -344,8 +345,12 @@ public class ExternalDataConstants {
 
     }
 
-    public static class AzureBlob {
-        private AzureBlob() {
+    /*
+     * Note: Azure Blob and Azure Datalake use identical authentication, so they are using the same properties.
+     * If they end up diverging, then properties for AzureBlob and AzureDataLake need to be created.
+     */
+    public static class Azure {
+        private Azure() {
             throw new AssertionError("do not instantiate");
         }
 
@@ -362,6 +367,18 @@ public class ExternalDataConstants {
         public static final String CLIENT_CERTIFICATE_FIELD_NAME = "clientCertificate";
         public static final String CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME = "clientCertificatePassword";
         public static final String ENDPOINT_FIELD_NAME = "endpoint";
+
+        // Specific Azure data lake property
+        /*
+        The behavior of Data Lake (true file system) is to read the files of the specified prefix only, example:
+        storage/myData/personal/file1.json
+        storage/myData/personal/file2.json
+        storage/myData/file3.json
+        If the prefix used is "myData", then only the file file3.json is read. However, if the property "recursive"
+        is set to "true" when creating the external dataset, then it goes recursively overall the paths, and the result
+        is file1.json, file2.json and file3.json.
+         */
+        public static final String RECURSIVE_FIELD_NAME = "recursive";
 
         /*
          * Hadoop-Azure

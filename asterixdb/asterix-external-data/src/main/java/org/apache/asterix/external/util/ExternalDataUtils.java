@@ -38,19 +38,19 @@ import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOO
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_SESSION_TOKEN;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_TEMP_ACCESS;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.SECRET_ACCESS_KEY_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_KEY_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ACCOUNT_NAME_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_CERTIFICATE_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_ID_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.CLIENT_SECRET_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.ENDPOINT_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_BLOB_PROTOCOL;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_FS_ACCOUNT_KEY;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.HADOOP_AZURE_FS_SAS;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.MANAGED_IDENTITY_ID_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.AzureBlob.TENANT_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.ACCOUNT_KEY_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.ACCOUNT_NAME_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.CLIENT_CERTIFICATE_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.CLIENT_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.CLIENT_SECRET_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.ENDPOINT_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.HADOOP_AZURE_BLOB_PROTOCOL;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.HADOOP_AZURE_FS_ACCOUNT_KEY;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.HADOOP_AZURE_FS_SAS;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.MANAGED_IDENTITY_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.TENANT_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.GCS.JSON_CREDENTIALS_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ADAPTER_NAME_GCS;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
@@ -133,6 +133,11 @@ import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.ListBlobsOptions;
 import com.azure.storage.common.StorageSharedKeyCredential;
+import com.azure.storage.file.datalake.DataLakeFileSystemClient;
+import com.azure.storage.file.datalake.DataLakeServiceClient;
+import com.azure.storage.file.datalake.DataLakeServiceClientBuilder;
+import com.azure.storage.file.datalake.models.ListPathsOptions;
+import com.azure.storage.file.datalake.models.PathItem;
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.storage.Blob;
@@ -594,7 +599,10 @@ public class ExternalDataUtils {
                 AwsS3.validateProperties(configuration, srcLoc, collector);
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
-                Azure.validateProperties(configuration, srcLoc, collector);
+                Azure.validateAzureBlobProperties(configuration, srcLoc, collector);
+                break;
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE:
+                Azure.validateAzureDataLakeProperties(configuration, srcLoc, collector);
                 break;
             case KEY_ADAPTER_NAME_GCS:
                 GCS.validateProperties(configuration, srcLoc, collector);
@@ -715,9 +723,13 @@ public class ExternalDataUtils {
      * @param configuration configuration
      */
     public static String getPrefix(Map<String, String> configuration) {
+        return getPrefix(configuration, true);
+    }
+
+    public static String getPrefix(Map<String, String> configuration, boolean appendSlash) {
         String definition = configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
         if (definition != null && !definition.isEmpty()) {
-            return definition + (!definition.endsWith("/") ? "/" : "");
+            return appendSlash ? definition + (!definition.endsWith("/") ? "/" : "") : definition;
         }
         return "";
     }
@@ -1229,6 +1241,10 @@ public class ExternalDataUtils {
         }
     }
 
+    /*
+     * Note: Azure Blob and Azure Datalake use identical authentication, so they are using the same properties.
+     * If they end up diverging, then properties for AzureBlob and AzureDataLake need to be created.
+     */
     public static class Azure {
         private Azure() {
             throw new AssertionError("do not instantiate");
@@ -1240,7 +1256,7 @@ public class ExternalDataUtils {
          * @param configuration properties
          * @return client
          */
-        public static BlobServiceClient buildAzureClient(Map<String, String> configuration)
+        public static BlobServiceClient buildAzureBlobClient(Map<String, String> configuration)
                 throws CompilationException {
             String managedIdentityId = configuration.get(MANAGED_IDENTITY_ID_FIELD_NAME);
             String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
@@ -1255,6 +1271,157 @@ public class ExternalDataUtils {
 
             // Client builder
             BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
+
+            // Endpoint is required
+            if (endpoint == null) {
+                throw new CompilationException(PARAMETERS_REQUIRED, ENDPOINT_FIELD_NAME);
+            }
+            builder.endpoint(endpoint);
+
+            // Shared Key
+            if (accountName != null || accountKey != null) {
+                if (accountName == null) {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ACCOUNT_NAME_FIELD_NAME,
+                            ACCOUNT_KEY_FIELD_NAME);
+                }
+
+                if (accountKey == null) {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ACCOUNT_KEY_FIELD_NAME,
+                            ACCOUNT_NAME_FIELD_NAME);
+                }
+
+                Optional<String> provided = getFirstNotNull(configuration, SHARED_ACCESS_SIGNATURE_FIELD_NAME,
+                        MANAGED_IDENTITY_ID_FIELD_NAME, CLIENT_ID_FIELD_NAME, CLIENT_SECRET_FIELD_NAME,
+                        CLIENT_CERTIFICATE_FIELD_NAME, CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME, TENANT_ID_FIELD_NAME);
+                if (provided.isPresent()) {
+                    throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
+                            ACCOUNT_KEY_FIELD_NAME);
+                }
+                StorageSharedKeyCredential credential = new StorageSharedKeyCredential(accountName, accountKey);
+                builder.credential(credential);
+            }
+
+            // Shared access signature
+            if (sharedAccessSignature != null) {
+                Optional<String> provided = getFirstNotNull(configuration, MANAGED_IDENTITY_ID_FIELD_NAME,
+                        CLIENT_ID_FIELD_NAME, CLIENT_SECRET_FIELD_NAME, CLIENT_CERTIFICATE_FIELD_NAME,
+                        CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME, TENANT_ID_FIELD_NAME);
+                if (provided.isPresent()) {
+                    throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
+                            SHARED_ACCESS_SIGNATURE_FIELD_NAME);
+                }
+                AzureSasCredential credential = new AzureSasCredential(sharedAccessSignature);
+                builder.credential(credential);
+            }
+
+            // Managed Identity auth
+            if (managedIdentityId != null) {
+                Optional<String> provided = getFirstNotNull(configuration, CLIENT_ID_FIELD_NAME,
+                        CLIENT_SECRET_FIELD_NAME, CLIENT_CERTIFICATE_FIELD_NAME, CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME,
+                        TENANT_ID_FIELD_NAME);
+                if (provided.isPresent()) {
+                    throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
+                            MANAGED_IDENTITY_ID_FIELD_NAME);
+                }
+                builder.credential(new ManagedIdentityCredentialBuilder().clientId(managedIdentityId).build());
+            }
+
+            // Client secret & certificate auth
+            if (clientId != null) {
+                // Both (or neither) client secret and client secret were provided, only one is allowed
+                if ((clientSecret == null) == (clientCertificate == null)) {
+                    if (clientSecret != null) {
+                        throw new CompilationException(PARAMETERS_NOT_ALLOWED_AT_SAME_TIME, CLIENT_SECRET_FIELD_NAME,
+                                CLIENT_CERTIFICATE_FIELD_NAME);
+                    } else {
+                        throw new CompilationException(REQUIRED_PARAM_OR_PARAM_IF_PARAM_IS_PRESENT,
+                                CLIENT_SECRET_FIELD_NAME, CLIENT_CERTIFICATE_FIELD_NAME, CLIENT_ID_FIELD_NAME);
+                    }
+                }
+
+                // Tenant ID is required
+                if (tenantId == null) {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, TENANT_ID_FIELD_NAME,
+                            CLIENT_ID_FIELD_NAME);
+                }
+
+                // Client certificate password is not allowed if client secret is used
+                if (clientCertificatePassword != null && clientSecret != null) {
+                    throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT,
+                            CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME, CLIENT_SECRET_FIELD_NAME);
+                }
+
+                // Use AD authentication
+                if (clientSecret != null) {
+                    ClientSecretCredentialBuilder secret = new ClientSecretCredentialBuilder();
+                    secret.clientId(clientId);
+                    secret.tenantId(tenantId);
+                    secret.clientSecret(clientSecret);
+                    builder.credential(secret.build());
+                } else {
+                    // Certificate
+                    ClientCertificateCredentialBuilder certificate = new ClientCertificateCredentialBuilder();
+                    certificate.clientId(clientId);
+                    certificate.tenantId(tenantId);
+                    try {
+                        InputStream certificateContent = new ByteArrayInputStream(clientCertificate.getBytes(UTF_8));
+                        if (clientCertificatePassword == null) {
+                            Method pemCertificate = ClientCertificateCredentialBuilder.class
+                                    .getDeclaredMethod("pemCertificate", InputStream.class);
+                            pemCertificate.setAccessible(true);
+                            pemCertificate.invoke(certificate, certificateContent);
+                        } else {
+                            Method pemCertificate = ClientCertificateCredentialBuilder.class
+                                    .getDeclaredMethod("pfxCertificate", InputStream.class, String.class);
+                            pemCertificate.setAccessible(true);
+                            pemCertificate.invoke(certificate, certificateContent, clientCertificatePassword);
+                        }
+                    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
+                        throw new CompilationException(EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                    }
+                    builder.credential(certificate.build());
+                }
+            }
+
+            // If client id is not present, ensure client secret, certificate, tenant id and client certificate
+            // password are not present
+            if (clientId == null) {
+                Optional<String> provided = getFirstNotNull(configuration, CLIENT_SECRET_FIELD_NAME,
+                        CLIENT_CERTIFICATE_FIELD_NAME, CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME, TENANT_ID_FIELD_NAME);
+                if (provided.isPresent()) {
+                    throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, provided.get(),
+                            SHARED_ACCESS_SIGNATURE_FIELD_NAME);
+                }
+            }
+
+            try {
+                return builder.buildClient();
+            } catch (Exception ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            }
+        }
+
+        /**
+         * Builds the Azure data lake storage account using the provided configuration
+         *
+         * @param configuration properties
+         * @return client
+         */
+        public static DataLakeServiceClient buildAzureDatalakeClient(Map<String, String> configuration)
+                throws CompilationException {
+            String managedIdentityId = configuration.get(MANAGED_IDENTITY_ID_FIELD_NAME);
+            String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
+            String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
+            String sharedAccessSignature = configuration.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
+            String tenantId = configuration.get(TENANT_ID_FIELD_NAME);
+            String clientId = configuration.get(CLIENT_ID_FIELD_NAME);
+            String clientSecret = configuration.get(CLIENT_SECRET_FIELD_NAME);
+            String clientCertificate = configuration.get(CLIENT_CERTIFICATE_FIELD_NAME);
+            String clientCertificatePassword = configuration.get(CLIENT_CERTIFICATE_PASSWORD_FIELD_NAME);
+            String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
+
+            // Client builder
+            DataLakeServiceClientBuilder builder = new DataLakeServiceClientBuilder();
 
             // Endpoint is required
             if (endpoint == null) {
@@ -1451,7 +1618,7 @@ public class ExternalDataUtils {
          * @param configuration properties
          * @throws CompilationException Compilation exception
          */
-        public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
+        public static void validateAzureBlobProperties(Map<String, String> configuration, SourceLocation srcLoc,
                 IWarningCollector collector) throws CompilationException {
 
             // check if the format property is present
@@ -1465,13 +1632,52 @@ public class ExternalDataUtils {
             BlobServiceClient blobServiceClient;
             try {
                 String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-                blobServiceClient = buildAzureClient(configuration);
+                blobServiceClient = buildAzureBlobClient(configuration);
                 BlobContainerClient blobContainer = blobServiceClient.getBlobContainerClient(container);
 
                 // Get all objects in a container and extract the paths to files
                 ListBlobsOptions listBlobsOptions = new ListBlobsOptions();
                 listBlobsOptions.setPrefix(getPrefix(configuration));
                 Iterable<BlobItem> blobItems = blobContainer.listBlobs(listBlobsOptions, null);
+
+                if (!blobItems.iterator().hasNext() && collector.shouldWarn()) {
+                    Warning warning = Warning.of(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                    collector.warn(warning);
+                }
+            } catch (CompilationException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            }
+        }
+
+        /**
+         * Validate external dataset properties
+         *
+         * @param configuration properties
+         * @throws CompilationException Compilation exception
+         */
+        public static void validateAzureDataLakeProperties(Map<String, String> configuration, SourceLocation srcLoc,
+                IWarningCollector collector) throws CompilationException {
+
+            // check if the format property is present
+            if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+                throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
+            }
+
+            validateIncludeExclude(configuration);
+
+            // Check if the bucket is present
+            DataLakeServiceClient dataLakeServiceClient;
+            try {
+                String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+                dataLakeServiceClient = buildAzureDatalakeClient(configuration);
+                DataLakeFileSystemClient fileSystemClient = dataLakeServiceClient.getFileSystemClient(container);
+
+                // Get all objects in a container and extract the paths to files
+                ListPathsOptions listPathsOptions = new ListPathsOptions();
+                listPathsOptions.setPath(getPrefix(configuration));
+                Iterable<PathItem> blobItems = fileSystemClient.listPaths(listPathsOptions, null);
 
                 if (!blobItems.iterator().hasNext() && collector.shouldWarn()) {
                     Warning warning = Warning.of(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
@@ -1492,10 +1698,8 @@ public class ExternalDataUtils {
          */
         public static void configureAzureHdfsJobConf(JobConf conf, Map<String, String> configuration, String endPoint) {
             String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-            String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
             String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
             String sharedAccessSignature = configuration.get(SHARED_ACCESS_SIGNATURE_FIELD_NAME);
-            String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
 
             //Disable caching S3 FileSystem
             HDFSUtils.disableHadoopFileSystemCache(conf, HADOOP_AZURE_BLOB_PROTOCOL);

@@ -38,38 +38,38 @@ public class TestConstants {
     // Azure blob storage constants and placeholders
     public static class Azure {
         // account name
-        public static final String ACCOUNT_NAME_PLACEHOLDER = "%azureblob-accountname%";
+        public static final String ACCOUNT_NAME_PLACEHOLDER = "%azure-accountname%";
         public static final String AZURITE_ACCOUNT_NAME_DEFAULT = "devstoreaccount1";
 
         // account key
-        public static final String ACCOUNT_KEY_PLACEHOLDER = "%azureblob-accountkey%";
+        public static final String ACCOUNT_KEY_PLACEHOLDER = "%azure-accountkey%";
         public static final String AZURITE_ACCOUNT_KEY_DEFAULT =
                 "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
 
         // SAS token: this is generated and assigned at runtime at the start of the test
-        public static final String SAS_TOKEN_PLACEHOLDER = "%azureblob-sas%";
+        public static final String SAS_TOKEN_PLACEHOLDER = "%azure-sas%";
         public static String sasToken = "";
 
         // blob endpoint
-        public static final String BLOB_ENDPOINT_PLACEHOLDER = "%azureblob-endpoint%";
+        public static final String BLOB_ENDPOINT_PLACEHOLDER = "%azure-endpoint%";
         public static final String BLOB_ENDPOINT_DEFAULT = "http://localhost:10000/" + AZURITE_ACCOUNT_NAME_DEFAULT;
 
-        public static final String MANAGED_IDENTITY_ID_PLACEHOLDER = "%azureblob-managedidentityid%";
+        public static final String MANAGED_IDENTITY_ID_PLACEHOLDER = "%azure-managedidentityid%";
         public static final String MANAGED_IDENTITY_ID_DEFAULT = "myManagedIdentityId";
 
-        public static final String CLIENT_ID_PLACEHOLDER = "%azureblob-clientid%";
+        public static final String CLIENT_ID_PLACEHOLDER = "%azure-clientid%";
         public static final String CLIENT_ID_DEFAULT = "myClientId";
 
-        public static final String CLIENT_SECRET_PLACEHOLDER = "%azureblob-clientsecret%";
+        public static final String CLIENT_SECRET_PLACEHOLDER = "%azure-clientsecret%";
         public static final String CLIENT_SECRET_DEFAULT = "myClientSecret";
 
-        public static final String CLIENT_CERTIFICATE_PLACEHOLDER = "%azureblob-clientcertificate%";
+        public static final String CLIENT_CERTIFICATE_PLACEHOLDER = "%azure-clientcertificate%";
         public static final String CLIENT_CERTIFICATE_DEFAULT = "myClientCertificate";
 
-        public static final String CLIENT_CERTIFICATE_PASSWORD_PLACEHOLDER = "%azureblob-clientcertificatepassword%";
+        public static final String CLIENT_CERTIFICATE_PASSWORD_PLACEHOLDER = "%azure-clientcertificatepassword%";
         public static final String CLIENT_CERTIFICATE_PASSWORD_DEFAULT = "myClientCertificatePassword";
 
-        public static final String TENANT_ID_PLACEHOLDER = "%azureblob-tenantid%";
+        public static final String TENANT_ID_PLACEHOLDER = "%azure-tenantid%";
         public static final String TENANT_ID_DEFAULT = "myTenantId";
 
         // azure template and default template

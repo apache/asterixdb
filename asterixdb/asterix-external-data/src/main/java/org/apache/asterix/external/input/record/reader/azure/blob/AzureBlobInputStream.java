@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.azure;
+package org.apache.asterix.external.input.record.reader.azure.blob;
 
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
@@ -83,7 +83,7 @@ public class AzureBlobInputStream extends AbstractExternalInputStream {
 
     private BlobServiceClient buildAzureClient(Map<String, String> configuration) throws HyracksDataException {
         try {
-            return ExternalDataUtils.Azure.buildAzureClient(configuration);
+            return ExternalDataUtils.Azure.buildAzureBlobClient(configuration);
         } catch (CompilationException ex) {
             throw HyracksDataException.create(ex);
         }

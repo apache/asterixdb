@@ -27,9 +27,9 @@ create type test as open {
 
 drop dataset test if exists;
 CREATE EXTERNAL DATASET test(test) USING AZUREBLOB (
-("accountName"="%azureblob-accountname%"),
-("%azureblob-credentialsname%"="%azureblob-credentialsvalue%"),
-("endpoint"="%azureblob-endpoint%"),
+("accountName"="%azure-accountname%"),
+("%azure-credentialsname%"="%azure-credentialsvalue%"),
+("endpoint"="%azure-endpoint%"),
 ("container"="playground"),
 ("definition"="json-data/reviews/single-line/json"),
 ("format"="json")

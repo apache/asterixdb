@@ -90,7 +90,8 @@
     <awsjavasdk.version>2.10.83</awsjavasdk.version>
     <parquet.version>1.12.0</parquet.version>
     <hadoop-awsjavasdk.version>1.12.1</hadoop-awsjavasdk.version>
-    <azurejavasdk.version>12.12.0</azurejavasdk.version>
+    <azureblobjavasdk.version>12.12.0</azureblobjavasdk.version>
+    <azuredatalakejavasdk.version>12.7.0</azuredatalakejavasdk.version>
     <gcsjavasdk.version>1.114.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
 
@@ -1583,7 +1584,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-storage-blob</artifactId>
-        <version>${azurejavasdk.version}</version>
+        <version>${azureblobjavasdk.version}</version>
         <exclusions>
           <exclusion>
             <groupId>io.netty</groupId>
@@ -1654,7 +1655,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-storage-common</artifactId>
-        <version>${azurejavasdk.version}</version>
+        <version>${azureblobjavasdk.version}</version>
         <exclusions>
           <exclusion>
             <groupId>io.netty</groupId>
@@ -1730,6 +1731,13 @@
         <version>${gcsjavasdk.version}</version>
       </dependency>
       <!-- Google Cloud Storage end -->
+      <!-- Azure Data Lake start -->
+      <dependency>
+        <groupId>com.azure</groupId>
+        <artifactId>azure-storage-file-datalake</artifactId>
+        <version>${azuredatalakejavasdk.version}</version>
+      </dependency>
+      <!-- Azure Data Lake end -->
       <dependency>
         <groupId>org.mindrot</groupId>
         <artifactId>jbcrypt</artifactId>

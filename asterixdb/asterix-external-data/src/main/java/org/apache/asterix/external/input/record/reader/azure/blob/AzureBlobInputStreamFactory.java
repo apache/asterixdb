@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.azure;
+package org.apache.asterix.external.input.record.reader.azure.blob;
 
 import java.util.Comparator;
 import java.util.List;
@@ -52,7 +52,7 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
         // Ensure the validity of include/exclude
         ExternalDataUtils.validateIncludeExclude(configuration);
         IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
-        BlobServiceClient blobServiceClient = ExternalDataUtils.Azure.buildAzureClient(configuration);
+        BlobServiceClient blobServiceClient = ExternalDataUtils.Azure.buildAzureBlobClient(configuration);
         List<BlobItem> filesOnly = ExternalDataUtils.Azure.listBlobItem(blobServiceClient, configuration,
                 includeExcludeMatcher, warningCollector);
 

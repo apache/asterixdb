@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.azure;
+package org.apache.asterix.external.input.record.reader.azure.blob;
 
 import java.util.Collections;
 import java.util.List;
