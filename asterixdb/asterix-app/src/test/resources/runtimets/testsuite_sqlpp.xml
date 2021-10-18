@@ -10142,6 +10142,11 @@
         <expected-error>ASX1168: Ambiguous projection in SELECT clause (in line 32, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="in_non_list_01">
+        <output-dir compare="Text">in_non_list_01</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="statement-params">
     <test-case FilePath="statement-params">
