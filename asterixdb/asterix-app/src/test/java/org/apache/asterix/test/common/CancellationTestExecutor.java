@@ -19,10 +19,11 @@
 
 package org.apache.asterix.test.common;
 
+import static org.apache.asterix.api.http.server.QueryServiceRequestParameters.Parameter.CLIENT_ID;
+
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
@@ -40,8 +41,6 @@ import org.apache.asterix.testframework.xml.ParameterTypeEnum;
 import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.junit.Assert;
 
@@ -55,8 +54,8 @@ public class CancellationTestExecutor extends TestExecutor {
             Predicate<Integer> responseCodeValidator, boolean cancellable) throws Exception {
         cancellable = cancellable && !containsClientContextID(str);
         String clientContextId = UUID.randomUUID().toString();
-        final List<TestCase.CompilationUnit.Parameter> newParams = cancellable
-                ? upsertParam(params, "client_context_id", ParameterTypeEnum.STRING, clientContextId) : params;
+        final List<TestCase.CompilationUnit.Parameter> newParams =
+                cancellable ? upsertParam(params, CLIENT_ID.str(), ParameterTypeEnum.STRING, clientContextId) : params;
         Callable<InputStream> query = () -> {
             try {
                 return CancellationTestExecutor.super.executeQueryService(str, fmt, uri,
@@ -89,19 +88,8 @@ public class CancellationTestExecutor extends TestExecutor {
 
     // Cancels a submitted query through the cancellation REST API.
     private int cancelQuery(URI uri, List<TestCase.CompilationUnit.Parameter> params) throws Exception {
-        HttpUriRequest method = constructDeleteMethodUrl(uri, params);
-        HttpResponse response = executeHttpRequest(method);
+        HttpResponse response = executeHttpRequest(constructDeleteMethod(uri, params));
         return response.getStatusLine().getStatusCode();
-    }
-
-    // Constructs a HTTP DELETE request.
-    private HttpUriRequest constructDeleteMethodUrl(URI uri, List<TestCase.CompilationUnit.Parameter> otherParams) {
-        RequestBuilder builder = RequestBuilder.delete(uri);
-        for (TestCase.CompilationUnit.Parameter param : otherParams) {
-            builder.addParameter(param.getName(), param.getValue());
-        }
-        builder.setCharset(StandardCharsets.UTF_8);
-        return builder.build();
     }
 
     @Override

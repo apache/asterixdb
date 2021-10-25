@@ -142,7 +142,8 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
         IServletRequest servletRequest;
         try {
             HttpScheme scheme = HttpUtil.getScheme(server, request);
-            servletRequest = createServletRequest(ctx, request, scheme);
+            boolean ignoreParam = servlet.ignoresQueryParameters(request.method());
+            servletRequest = createServletRequest(ctx, request, scheme, ignoreParam);
         } catch (IllegalArgumentException e) {
             LOGGER.log(Level.WARN, "Failure Decoding Request", e);
             respond(ctx, request, HttpResponseStatus.BAD_REQUEST);
@@ -171,8 +172,8 @@ public class HttpServerHandler<T extends HttpServer> extends SimpleChannelInboun
     }
 
     protected IServletRequest createServletRequest(ChannelHandlerContext ctx, FullHttpRequest request,
-            HttpScheme scheme) {
-        return HttpUtil.toServletRequest(ctx, request, scheme);
+            HttpScheme scheme, boolean ignoreQueryParameters) {
+        return HttpUtil.toServletRequest(ctx, request, scheme, ignoreQueryParameters);
     }
 
     @Override

@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.hyracks.http.server.HttpServer;
 
+import io.netty.handler.codec.http.HttpMethod;
+
 /**
  * Represents a component that handles IServlet requests
  */
@@ -62,4 +64,9 @@ public interface IServlet {
      */
     default void init() throws IOException {
     }
+
+    /**
+     * @return {@code true} if the servlet ignores query parameters.
+     */
+    boolean ignoresQueryParameters(HttpMethod method);
 }

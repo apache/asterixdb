@@ -21,7 +21,6 @@ package org.apache.asterix.test.common;
 
 import java.io.File;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -35,8 +34,6 @@ import org.apache.asterix.testframework.xml.ComparisonEnum;
 import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.logging.log4j.Level;
 import org.junit.Assert;
@@ -102,18 +99,7 @@ public class RebalanceCancellationTestExecutor extends TestExecutor {
 
     // Cancels a submitted query through the cancellation REST API.
     private int cancelQuery(URI uri, List<TestCase.CompilationUnit.Parameter> params) throws Exception {
-        HttpUriRequest method = constructDeleteMethodUrl(uri, params);
-        HttpResponse response = executeHttpRequest(method);
+        HttpResponse response = executeHttpRequest(constructDeleteMethod(uri, params));
         return response.getStatusLine().getStatusCode();
-    }
-
-    // Constructs a HTTP DELETE request.
-    private HttpUriRequest constructDeleteMethodUrl(URI uri, List<TestCase.CompilationUnit.Parameter> otherParams) {
-        RequestBuilder builder = RequestBuilder.delete(uri);
-        for (TestCase.CompilationUnit.Parameter param : otherParams) {
-            builder.addParameter(param.getName(), param.getValue());
-        }
-        builder.setCharset(StandardCharsets.UTF_8);
-        return builder.build();
     }
 }

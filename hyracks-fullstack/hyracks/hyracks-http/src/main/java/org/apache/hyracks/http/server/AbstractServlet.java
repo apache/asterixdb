@@ -205,4 +205,8 @@ public abstract class AbstractServlet implements IServlet {
         return this.getClass().getSimpleName() + Arrays.toString(paths);
     }
 
+    @Override
+    public boolean ignoresQueryParameters(HttpMethod method) {
+        return false;
+    }
 }

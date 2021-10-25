@@ -168,4 +168,9 @@ public class BasicAuthServlet implements IServlet {
     private static String generateRandomString(int size) {
         return RandomStringUtils.randomAlphanumeric(size);
     }
+
+    @Override
+    public boolean ignoresQueryParameters(HttpMethod method) {
+        return delegate.ignoresQueryParameters(method);
+    }
 }

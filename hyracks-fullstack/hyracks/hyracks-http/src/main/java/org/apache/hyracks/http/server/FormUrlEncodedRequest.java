@@ -36,13 +36,16 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 
 public class FormUrlEncodedRequest extends BaseRequest implements IServletRequest {
 
-    public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request, HttpScheme scheme) {
+    public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request, HttpScheme scheme,
+            boolean ignoreQueryParameters) {
         Charset charset = HttpUtil.getRequestCharset(request);
         Map<String, List<String>> parameters = new LinkedHashMap<>();
         URLEncodedUtils.parse(request.content().toString(charset), charset).forEach(
                 pair -> parameters.computeIfAbsent(pair.getName(), a -> new ArrayList<>()).add(pair.getValue()));
-        new QueryStringDecoder(request.uri()).parameters()
-                .forEach((name, value) -> parameters.computeIfAbsent(name, a -> new ArrayList<>()).addAll(value));
+        if (!ignoreQueryParameters) {
+            new QueryStringDecoder(request.uri()).parameters()
+                    .forEach((name, value) -> parameters.computeIfAbsent(name, a -> new ArrayList<>()).addAll(value));
+        }
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
         return new FormUrlEncodedRequest(request, localAddress, remoteAddress, parameters, scheme);

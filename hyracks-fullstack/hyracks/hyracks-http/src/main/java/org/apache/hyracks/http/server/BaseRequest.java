@@ -43,9 +43,10 @@ public class BaseRequest implements IServletRequest {
     protected final HttpScheme scheme;
     protected final InetSocketAddress localAddress;
 
-    public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request, HttpScheme scheme) {
-        QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
-        Map<? extends CharSequence, List<String>> param = decoder.parameters();
+    public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request, HttpScheme scheme,
+            boolean ignoreQueryParameters) {
+        Map<? extends CharSequence, List<String>> param =
+                ignoreQueryParameters ? Collections.emptyMap() : new QueryStringDecoder(request.uri()).parameters();
         InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
         InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
         return new BaseRequest(request, localAddress, remoteAddress, param, scheme);

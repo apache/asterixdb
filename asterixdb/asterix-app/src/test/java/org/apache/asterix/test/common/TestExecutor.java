@@ -128,6 +128,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.http.Consts;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -136,6 +137,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -152,6 +154,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -171,6 +174,8 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.RawValue;
+
+import io.netty.handler.codec.http.HttpMethod;
 
 public class TestExecutor {
 
@@ -929,20 +934,6 @@ public class TestExecutor {
         return result;
     }
 
-    private HttpUriRequest constructHttpMethod(String statement, URI uri, String stmtParam, boolean postStmtAsParam,
-            List<Parameter> otherParams) {
-        String stmtParamName = (postStmtAsParam ? stmtParam : null);
-        return constructPostMethodUrl(statement, uri, stmtParamName, otherParams);
-    }
-
-    private HttpUriRequest constructGetMethod(URI endpoint, List<Parameter> params) {
-        RequestBuilder builder = RequestBuilder.get(endpoint);
-        for (Parameter param : params) {
-            builder.addParameter(param.getName(), param.getValue());
-        }
-        return builder.build();
-    }
-
     private boolean isMultipart(Parameter p) {
         return p != null && (ParameterTypeEnum.MULTIPART_TEXT == p.getType()
                 || ParameterTypeEnum.MULTIPART_BINARY == p.getType());
@@ -966,16 +957,30 @@ public class TestExecutor {
                         || p.getType() == ParameterTypeEnum.MULTIPART_TEXT)
                                 ? Optional.of(MultipartEntityBuilder.create().setMode(HttpMultipartMode.STRICT))
                                 : Optional.empty();
+        List<NameValuePair> parameters = new ArrayList<>();
         for (Parameter param : params) {
             if (isMultipart(param)) {
                 addMultipart(mPartBuilder.get(), param);
             } else {
-                builder.addParameter(param.getName(), param.getValue());
+                parameters.add(new BasicNameValuePair(param.getName(), param.getValue()));
             }
         }
         builder.setCharset(UTF_8);
         mPartBuilder.ifPresent(mpb -> builder.setEntity(mpb.build()));
-        body.ifPresent(s -> builder.setEntity(new StringEntity(s, contentType)));
+        if (body.isPresent()) {
+            builder.addParameters(parameters.toArray(new NameValuePair[0]));
+            builder.setEntity(new StringEntity(body.get(), contentType));
+        } else if (mPartBuilder.isPresent()) {
+            builder.addParameters(parameters.toArray(new NameValuePair[0]));
+            builder.setEntity(mPartBuilder.get().build());
+        } else {
+            boolean formParams = HttpUtil.ignoreQueryParameters(HttpMethod.valueOf(method));
+            if (formParams) {
+                builder.setEntity(new UrlEncodedFormEntity(parameters, Consts.UTF_8));
+            } else {
+                builder.addParameters(parameters.toArray(new NameValuePair[0]));
+            }
+        }
         return builder.build();
     }
 
@@ -992,6 +997,27 @@ public class TestExecutor {
         // Set accepted output response type
         method.setHeader("Accept", fmt.mimeType());
         return method;
+    }
+
+    public static HttpUriRequest constructGetMethod(URI endpoint, List<Parameter> params) {
+        RequestBuilder builder = RequestBuilder.get(endpoint);
+        for (Parameter param : params) {
+            builder.addParameter(param.getName(), param.getValue());
+        }
+        return builder.build();
+    }
+
+    public static HttpUriRequest constructDeleteMethod(URI uri, List<Parameter> params) {
+        List<NameValuePair> form = new ArrayList<>();
+        for (Parameter param : params) {
+            form.add(new BasicNameValuePair(param.getName(), param.getValue()));
+        }
+        return constructDeleteRequest(uri, form);
+    }
+
+    public static HttpUriRequest constructDeleteRequest(URI uri, List<NameValuePair> params) {
+        RequestBuilder builder = RequestBuilder.delete(uri);
+        return builder.setEntity(new UrlEncodedFormEntity(params, Consts.UTF_8)).setCharset(UTF_8).build();
     }
 
     private HttpUriRequest constructPostMethod(URI uri, List<Parameter> params) {
@@ -1062,12 +1088,6 @@ public class TestExecutor {
 
     public InputStream executeJSON(OutputFormat fmt, String method, URI uri, List<Parameter> params) throws Exception {
         return executeJSON(fmt, method, uri, params, code -> code == HttpStatus.SC_OK, Optional.empty(),
-                TEXT_PLAIN_UTF8);
-    }
-
-    public InputStream executeJSON(OutputFormat fmt, String method, URI uri, Predicate<Integer> responseCodeValidator)
-            throws Exception {
-        return executeJSON(fmt, method, uri, Collections.emptyList(), responseCodeValidator, Optional.empty(),
                 TEXT_PLAIN_UTF8);
     }
 
@@ -1491,24 +1511,23 @@ public class TestExecutor {
         final String mimeReqType = extractHttpRequestType(statement);
         final String saveResponseVar = getResultVariable(statement);
         ContentType contentType = mimeReqType != null ? ContentType.create(mimeReqType, UTF_8) : TEXT_PLAIN_UTF8;
-        if (!body.isPresent()) {
+        if (body.isEmpty()) {
             body = getBodyFromReference(statement, variableCtx);
         }
         final Pair<String, String> credentials = extractCredentials(statement);
         InputStream resultStream;
+        URI uri;
         if ("http".equals(extension)) {
-            if (credentials != null) {
-                resultStream = executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate, body,
-                        contentType, credentials);
-            } else {
-                resultStream =
-                        executeHttp(reqType, variablesReplaced, fmt, params, statusCodePredicate, body, contentType);
-            }
+            uri = createEndpointURI(variablesReplaced);
         } else if ("uri".equals(extension)) {
-            resultStream = executeURI(reqType, URI.create(variablesReplaced), fmt, params, statusCodePredicate, body,
-                    contentType);
+            uri = URI.create(variablesReplaced);
         } else {
             throw new IllegalArgumentException("Unexpected format for method " + reqType + ": " + extension);
+        }
+        if (credentials != null) {
+            resultStream = executeURI(reqType, uri, fmt, params, statusCodePredicate, body, contentType, credentials);
+        } else {
+            resultStream = executeURI(reqType, uri, fmt, params, statusCodePredicate, body, contentType);
         }
         if (extracResult) {
             resultStream = ResultExtractor.extract(resultStream, UTF_8).getResult();
@@ -1530,8 +1549,8 @@ public class TestExecutor {
                     LOGGER.info("Diagnostic output: {}", IOUtils.toString(resultStream, UTF_8));
                 } else {
                     LOGGER.info("Unexpected output: {}", IOUtils.toString(resultStream, UTF_8));
-                    Assert.fail("no result file for " + testFile.toString() + "; queryCount: " + queryCount
-                            + ", filectxs.size: " + numResultFiles);
+                    Assert.fail("no result file for " + testFile + "; queryCount: " + queryCount + ", filectxs.size: "
+                            + numResultFiles);
                 }
             } else {
                 writeOutputToFile(actualResultFile, resultStream);
@@ -1988,9 +2007,8 @@ public class TestExecutor {
     }
 
     public static Pair<String, String> extractCredentials(String statement) {
-        List<Parameter> params = new ArrayList<>();
         final Matcher m = HTTP_AUTH_PATTERN.matcher(statement);
-        while (m.find()) {
+        if (m.find()) {
             String username = m.group("username");
             String password = m.group("password");
             return new Pair<>(username, password);
@@ -2039,23 +2057,6 @@ public class TestExecutor {
         } else {
             return codes::contains;
         }
-    }
-
-    protected InputStream executeHttp(String ctxType, String endpoint, OutputFormat fmt, List<Parameter> params,
-            Predicate<Integer> statusCodePredicate, Optional<String> body, ContentType contentType) throws Exception {
-        URI uri = createEndpointURI(endpoint);
-        return executeURI(ctxType, uri, fmt, params, statusCodePredicate, body, contentType);
-    }
-
-    private InputStream executeHttp(String ctxType, String endpoint, OutputFormat fmt, List<Parameter> params,
-            Predicate<Integer> statusCodePredicate, Optional<String> body, ContentType contentType,
-            Pair<String, String> credentials) throws Exception {
-        URI uri = createEndpointURI(endpoint);
-        return executeURI(ctxType, uri, fmt, params, statusCodePredicate, body, contentType, credentials);
-    }
-
-    private InputStream executeURI(String ctxType, URI uri, OutputFormat fmt, List<Parameter> params) throws Exception {
-        return executeJSON(fmt, ctxType.toUpperCase(), uri, params);
     }
 
     private InputStream executeURI(String ctxType, URI uri, OutputFormat fmt, List<Parameter> params,

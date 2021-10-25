@@ -71,10 +71,15 @@ public class HttpUtil {
     }
 
     public static IServletRequest toServletRequest(ChannelHandlerContext ctx, FullHttpRequest request,
-            HttpScheme scheme) {
+            HttpScheme scheme, boolean ignoreQueryParameters) {
         return ContentType.APPLICATION_X_WWW_FORM_URLENCODED.equals(getContentTypeOnly(request))
-                && !HttpMethod.GET.equals(request.method()) ? FormUrlEncodedRequest.create(ctx, request, scheme)
-                        : BaseRequest.create(ctx, request, scheme);
+                && !HttpMethod.GET.equals(request.method())
+                        ? FormUrlEncodedRequest.create(ctx, request, scheme, ignoreQueryParameters)
+                        : BaseRequest.create(ctx, request, scheme, ignoreQueryParameters);
+    }
+
+    public static boolean ignoreQueryParameters(HttpMethod method) {
+        return HttpMethod.POST.equals(method) || HttpMethod.DELETE.equals(method) || HttpMethod.PUT.equals(method);
     }
 
     public static String getContentTypeOnly(IServletRequest request) {
