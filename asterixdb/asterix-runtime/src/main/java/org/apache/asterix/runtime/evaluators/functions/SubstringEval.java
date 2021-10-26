@@ -108,7 +108,7 @@ class SubstringEval extends AbstractScalarEval {
         string.set(bytes, offset + 1, length - 1);
         array.reset();
         try {
-            int actualStart = start >= 0 ? start - baseOffset : string.getStringLength() + start;
+            int actualStart = start >= 0 ? Math.max(start - baseOffset, 0) : string.getStringLength() + start;
             boolean success = UTF8StringPointable.substr(string, actualStart, len, builder, array);
             if (success) {
                 out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
