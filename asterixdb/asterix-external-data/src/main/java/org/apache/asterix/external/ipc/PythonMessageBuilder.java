@@ -26,15 +26,13 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.external.library.msgpack.MessagePackerFromADM;
-import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.asterix.external.library.msgpack.MessagePackUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class PythonMessageBuilder {
-    private static final int MAX_BUF_SIZE = 64 * 1024 * 1024; //64MB.
     MessageType type;
     long dataLength;
-    ByteBuffer buf;
+    private final ByteBuffer buf;
 
     public PythonMessageBuilder() {
         this.type = null;
@@ -42,12 +40,25 @@ public class PythonMessageBuilder {
         this.buf = ByteBuffer.allocate(4096);
     }
 
+    public void reset() {
+        //TODO: should be able to get away w/o clearing buf?
+        buf.clear();
+    }
+
+    public ByteBuffer getBuf() {
+        return buf;
+    }
+
+    public int getLength() {
+        return buf.position() - buf.arrayOffset();
+    }
+
     public void setType(MessageType type) {
         this.type = type;
     }
 
     public void packHeader() throws HyracksDataException {
-        MessagePackerFromADM.packFixPos(buf, (byte) type.ordinal());
+        MessagePackUtils.packFixPos(buf, (byte) type.ordinal());
     }
 
     //TODO: this is wrong for any multibyte chars
@@ -75,7 +86,7 @@ public class PythonMessageBuilder {
         this.type = MessageType.QUIT;
         dataLength = getStringLength("QUIT");
         packHeader();
-        MessagePackerFromADM.packFixStr(buf, "QUIT");
+        MessagePackUtils.packFixStr(buf, "QUIT");
     }
 
     public void init(final String module, final String clazz, final String fn) throws HyracksDataException {
@@ -89,46 +100,27 @@ public class PythonMessageBuilder {
         }
         packHeader();
         int numArgs = clazz == null ? 2 : 3;
-        MessagePackerFromADM.packFixArrayHeader(buf, (byte) numArgs);
-        MessagePackerFromADM.packStr(buf, module);
+        MessagePackUtils.packFixArrayHeader(buf, (byte) numArgs);
+        MessagePackUtils.packStr(buf, module);
         if (clazz != null) {
-            MessagePackerFromADM.packStr(buf, clazz);
+            MessagePackUtils.packStr(buf, clazz);
         }
-        MessagePackerFromADM.packStr(buf, fn);
+        MessagePackUtils.packStr(buf, fn);
     }
 
-    public void call(byte[] args, int lim, int numArgs) throws HyracksDataException {
-        if (args.length > buf.capacity()) {
-            int growTo = ExternalFunctionResultRouter.closestPow2(args.length);
-            if (growTo > MAX_BUF_SIZE) {
-                throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
-                        "Unable to allocate message buffer larger than:" + MAX_BUF_SIZE + " bytes");
-            }
-            buf = ByteBuffer.allocate(growTo);
-        }
+    public void call(int numArgs, int len) throws HyracksDataException {
         buf.clear();
         buf.position(0);
         this.type = MessageType.CALL;
-        dataLength = 5 + 1 + lim;
+        dataLength = 5 + 1 + len;
         packHeader();
         //TODO: make this switch between fixarray/array16/array32
         buf.put((byte) (FIXARRAY_PREFIX + 1));
-        buf.put(ARRAY32);
-        buf.putInt(numArgs);
-        if (numArgs > 0) {
-            buf.put(args, 0, lim);
-        }
+        buf.put(ARRAY16);
+        buf.putShort((short) numArgs);
     }
 
-    public void callMulti(byte[] args, int lim, int numArgs) throws HyracksDataException {
-        if (args.length > buf.capacity()) {
-            int growTo = ExternalFunctionResultRouter.closestPow2(args.length);
-            if (growTo > MAX_BUF_SIZE) {
-                throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
-                        "Unable to allocate message buffer larger than:" + MAX_BUF_SIZE + " bytes");
-            }
-            buf = ByteBuffer.allocate(growTo);
-        }
+    public void callMulti(int lim, int numArgs) throws HyracksDataException {
         buf.clear();
         buf.position(0);
         this.type = MessageType.CALL;
@@ -137,9 +129,6 @@ public class PythonMessageBuilder {
         //TODO: make this switch between fixarray/array16/array32
         buf.put(ARRAY16);
         buf.putShort((short) numArgs);
-        if (numArgs > 0) {
-            buf.put(args, 0, lim);
-        }
     }
 
     //this is used to send a serialized java inetaddress to the entrypoint so it can send it back

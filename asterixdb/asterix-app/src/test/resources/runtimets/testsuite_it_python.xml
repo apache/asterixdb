@@ -85,5 +85,10 @@ ArithmeticError: oof
         <output-dir compare="Text">big_object_pyudf</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-library">
+      <compilation-unit name="big_object_roundtrip_20M">
+        <output-dir compare="Text">big_object_roundtrip_20M</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

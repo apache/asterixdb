@@ -16,17 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Access a records nested records at each level.
-* Expected Res : Success
-* Date         : 04 Jun 2015
-*/
 
-use test;
+drop dataverse testdv2 if exists;
+create dataverse testdv2;
+use testdv2;
 
+create type testtype as closed {
+  id: int64,
+  name: string,
+  hobbies: {{string}}
+};
 
-select element result
-from  Animals as test
-with  result as roundtrip(test)[0].class.fullClassification.lower.lower.lower.lower.lower.lower.Species
-order by result
-;
+create dataset testds(testtype) primary key id;

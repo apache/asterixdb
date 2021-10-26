@@ -16,17 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Access a records nested records at each level.
-* Expected Res : Success
-* Date         : 04 Jun 2015
-*/
+package org.apache.asterix.external.library.msgpack;
 
-use test;
+import java.io.IOException;
 
-
-select element result
-from  Animals as test
-with  result as roundtrip(test)[0].class.fullClassification.lower.lower.lower.lower.lower.lower.Species
-order by result
-;
+@FunctionalInterface
+public interface IMsgPackAccessor<T, U, R> {
+    R apply(T t, U u) throws IOException;
+}

@@ -25,7 +25,7 @@ import org.apache.asterix.external.api.IJListAccessor;
 import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.external.api.IJObjectAccessor;
 import org.apache.asterix.external.api.IJRecordAccessor;
-import org.apache.asterix.external.library.TypeInfo;
+import org.apache.asterix.external.library.JavaTypeInfo;
 import org.apache.asterix.external.library.java.JObjectAccessors.JListAccessor;
 import org.apache.asterix.external.library.java.JObjectAccessors.JRecordAccessor;
 import org.apache.asterix.om.pointables.AFlatValuePointable;
@@ -37,7 +37,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObject, TypeInfo> {
+public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObject, JavaTypeInfo> {
 
     private final Map<ATypeTag, IJObjectAccessor> flatJObjectAccessors = new HashMap<ATypeTag, IJObjectAccessor>();
     private final Map<IVisitablePointable, IJRecordAccessor> raccessorToJObject =
@@ -46,7 +46,7 @@ public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObj
             new HashMap<IVisitablePointable, IJListAccessor>();
 
     @Override
-    public IJObject visit(AListVisitablePointable accessor, TypeInfo arg) throws HyracksDataException {
+    public IJObject visit(AListVisitablePointable accessor, JavaTypeInfo arg) throws HyracksDataException {
         IJObject result = null;
         IJListAccessor jListAccessor = laccessorToPrinter.get(accessor);
         if (jListAccessor == null) {
@@ -58,7 +58,7 @@ public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObj
     }
 
     @Override
-    public IJObject visit(ARecordVisitablePointable accessor, TypeInfo arg) throws HyracksDataException {
+    public IJObject visit(ARecordVisitablePointable accessor, JavaTypeInfo arg) throws HyracksDataException {
         IJObject result = null;
         IJRecordAccessor jRecordAccessor = raccessorToJObject.get(accessor);
         if (jRecordAccessor == null) {
@@ -70,7 +70,7 @@ public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObj
     }
 
     @Override
-    public IJObject visit(AFlatValuePointable accessor, TypeInfo arg) throws HyracksDataException {
+    public IJObject visit(AFlatValuePointable accessor, JavaTypeInfo arg) throws HyracksDataException {
         ATypeTag typeTag = arg.getTypeTag();
         IJObject result = null;
         IJObjectAccessor jObjectAccessor = flatJObjectAccessors.get(typeTag);
@@ -83,7 +83,8 @@ public class JObjectPointableVisitor implements IVisitablePointableVisitor<IJObj
         return result;
     }
 
-    public IJObject visit(AFlatValuePointable accessor, ATypeTag typeTag, TypeInfo arg) throws HyracksDataException {
+    public IJObject visit(AFlatValuePointable accessor, ATypeTag typeTag, JavaTypeInfo arg)
+            throws HyracksDataException {
         IJObject result = null;
         IJObjectAccessor jObjectAccessor = flatJObjectAccessors.get(typeTag);
         if (jObjectAccessor == null) {

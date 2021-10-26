@@ -34,7 +34,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.ipc.ExternalFunctionResultRouter;
 import org.apache.asterix.external.ipc.PythonIPCProto;
-import org.apache.asterix.external.library.msgpack.MessagePackerFromADM;
+import org.apache.asterix.external.library.msgpack.MessagePackUtils;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -50,6 +50,7 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.resources.IDeallocatable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.std.base.AbstractStateObject;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 
@@ -86,7 +87,6 @@ public class PythonLibraryEvaluator extends AbstractStateObject implements IDeal
         this.ipcSys = ipcSys;
         this.warningCollector = warningCollector;
         this.sourceLoc = sourceLoc;
-
     }
 
     private void initialize() throws IOException, AsterixException {
@@ -128,10 +128,11 @@ public class PythonLibraryEvaluator extends AbstractStateObject implements IDeal
         return proto.init(packageModule, clazz, fn);
     }
 
-    public ByteBuffer callPython(long id, ByteBuffer arguments, int numArgs) throws IOException {
+    public ByteBuffer callPython(long id, IAType[] argTypes, IValueReference[] valueReferences, boolean nullCall)
+            throws IOException {
         ByteBuffer ret = null;
         try {
-            ret = proto.call(id, arguments, numArgs);
+            ret = proto.call(id, argTypes, valueReferences, nullCall);
         } catch (AsterixException e) {
             if (warningCollector.shouldWarn()) {
                 warningCollector.warn(Warning.of(sourceLoc, EXTERNAL_UDF_EXCEPTION, e.getMessage()));
@@ -140,7 +141,7 @@ public class PythonLibraryEvaluator extends AbstractStateObject implements IDeal
         return ret;
     }
 
-    public ByteBuffer callPythonMulti(long id, ByteBuffer arguments, int numTuples) throws IOException {
+    public ByteBuffer callPythonMulti(long id, ArrayBackedValueStorage arguments, int numTuples) throws IOException {
         ByteBuffer ret = null;
         try {
             ret = proto.callMulti(id, arguments, numTuples);
@@ -169,20 +170,6 @@ public class PythonLibraryEvaluator extends AbstractStateObject implements IDeal
         router.removeRoute(proto.getRouteId());
     }
 
-    public static ATypeTag setArgument(IAType type, IValueReference valueReference, ByteBuffer argHolder,
-            boolean nullCall) throws IOException {
-        ATypeTag tag = type.getTypeTag();
-        if (tag == ATypeTag.ANY) {
-            TaggedValuePointable pointy = TaggedValuePointable.FACTORY.createPointable();
-            pointy.set(valueReference);
-            ATypeTag rtTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(pointy.getTag());
-            IAType rtType = TypeTagUtil.getBuiltinTypeByTag(rtTypeTag);
-            return MessagePackerFromADM.pack(valueReference, rtType, argHolder, nullCall);
-        } else {
-            return MessagePackerFromADM.pack(valueReference, type, argHolder, nullCall);
-        }
-    }
-
     public static ATypeTag peekArgument(IAType type, IValueReference valueReference) throws HyracksDataException {
         ATypeTag tag = type.getTypeTag();
         if (tag == ATypeTag.ANY) {
@@ -190,15 +177,15 @@ public class PythonLibraryEvaluator extends AbstractStateObject implements IDeal
             pointy.set(valueReference);
             ATypeTag rtTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(pointy.getTag());
             IAType rtType = TypeTagUtil.getBuiltinTypeByTag(rtTypeTag);
-            return MessagePackerFromADM.peekUnknown(rtType);
+            return MessagePackUtils.peekUnknown(rtType);
         } else {
-            return MessagePackerFromADM.peekUnknown(type);
+            return MessagePackUtils.peekUnknown(type);
         }
     }
 
-    public static void setVoidArgument(ByteBuffer argHolder) {
-        argHolder.put(ARRAY16);
-        argHolder.putShort((short) 0);
+    public static void setVoidArgument(ArrayBackedValueStorage argHolder) throws IOException {
+        argHolder.getDataOutput().writeByte(ARRAY16);
+        argHolder.getDataOutput().writeShort((short) 0);
     }
 
     public static PythonLibraryEvaluator getInstance(IExternalFunctionInfo finfo, ILibraryManager libMgr,
@@ -218,4 +205,5 @@ public class PythonLibraryEvaluator extends AbstractStateObject implements IDeal
         }
         return evaluator;
     }
+
 }

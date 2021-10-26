@@ -85,6 +85,7 @@ public enum ErrorCode implements IError {
 
     EXTERNAL_UDF_RESULT_TYPE_ERROR(200),
     EXTERNAL_UDF_EXCEPTION(201),
+    EXTERNAL_UDF_PROTO_RETURN_EXCEPTION(202),
 
     // Compilation errors
     PARSE_ERROR(1001),

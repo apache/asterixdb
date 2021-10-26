@@ -16,17 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Access a records nested records at each level.
-* Expected Res : Success
-* Date         : 04 Jun 2015
-*/
+package org.apache.asterix.external.input.stream.builders;
 
-use test;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
+import org.apache.asterix.om.util.container.IObjectFactory;
 
-select element result
-from  Animals as test
-with  result as roundtrip(test)[0].class.fullClassification.lower.lower.lower.lower.lower.lower.Species
-order by result
-;
+public class ListLikeNumericArrayFactory<T extends Number> implements IObjectFactory<List<T>, T> {
+
+    @Override
+    public List<T> create(T arg) {
+        List<T> list = new ArrayList<>(arg.intValue());
+        list.addAll(Collections.nCopies(arg.intValue(), arg));
+        return list;
+    }
+
+}

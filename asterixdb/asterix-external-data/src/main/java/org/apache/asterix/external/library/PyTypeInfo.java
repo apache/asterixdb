@@ -16,17 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Access a records nested records at each level.
-* Expected Res : Success
-* Date         : 04 Jun 2015
-*/
+package org.apache.asterix.external.library;
 
-use test;
+import java.io.DataOutput;
+import java.util.Objects;
 
+import org.apache.asterix.om.types.IAType;
 
-select element result
-from  Animals as test
-with  result as roundtrip(test)[0].class.fullClassification.lower.lower.lower.lower.lower.lower.Species
-order by result
-;
+public class PyTypeInfo {
+
+    private final IAType type;
+    private final DataOutput out;
+
+    public PyTypeInfo(IAType type, DataOutput out) {
+        this.type = type;
+        this.out = out;
+    }
+
+    public DataOutput getDataOutput() {
+        return out;
+    }
+
+    public IAType getType() {
+        return type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(out, type);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return out.equals(out) && type.equals(type);
+    }
+
+}

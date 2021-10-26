@@ -16,17 +16,4 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Access a records nested records at each level.
-* Expected Res : Success
-* Date         : 04 Jun 2015
-*/
-
-use test;
-
-
-select element result
-from  Animals as test
-with  result as roundtrip(test)[0].class.fullClassification.lower.lower.lower.lower.lower.lower.Species
-order by result
-;
+install testdv2 testlib python admin admin target/TweetSent.pyz

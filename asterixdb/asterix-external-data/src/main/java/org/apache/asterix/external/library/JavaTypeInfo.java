@@ -23,13 +23,13 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.util.container.IObjectPool;
 
-public class TypeInfo {
+public class JavaTypeInfo {
 
     private IObjectPool<IJObject, IAType> objectPool;
     private IAType atype;
     private ATypeTag typeTag;
 
-    public TypeInfo(IObjectPool<IJObject, IAType> objectPool, IAType atype, ATypeTag typeTag) {
+    public JavaTypeInfo(IObjectPool<IJObject, IAType> objectPool, IAType atype, ATypeTag typeTag) {
         this.objectPool = objectPool;
         this.atype = atype;
         this.typeTag = typeTag;

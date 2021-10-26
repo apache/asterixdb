@@ -42,7 +42,7 @@ import org.apache.asterix.external.api.IJListAccessor;
 import org.apache.asterix.external.api.IJObject;
 import org.apache.asterix.external.api.IJObjectAccessor;
 import org.apache.asterix.external.api.IJRecordAccessor;
-import org.apache.asterix.external.library.TypeInfo;
+import org.apache.asterix.external.library.JavaTypeInfo;
 import org.apache.asterix.external.library.java.base.JBoolean;
 import org.apache.asterix.external.library.java.base.JByte;
 import org.apache.asterix.external.library.java.base.JDate;
@@ -356,14 +356,14 @@ public class JObjectAccessors {
 
     public static class JRecordAccessor implements IJRecordAccessor {
 
-        private final TypeInfo typeInfo;
+        private final JavaTypeInfo typeInfo;
         private final JRecord jRecord;
         private final IJObject[] jObjects;
         private final LinkedHashMap<String, IJObject> openFields;
         private final UTF8StringReader reader = new UTF8StringReader();
 
         public JRecordAccessor(ARecordType recordType, IObjectPool<IJObject, IAType> objectPool) {
-            this.typeInfo = new TypeInfo(objectPool, null, null);
+            this.typeInfo = new JavaTypeInfo(objectPool, null, null);
             this.jObjects = new IJObject[recordType.getFieldNames().length];
             this.openFields = new LinkedHashMap<>();
             this.jRecord = new JRecord(recordType, jObjects, openFields);
@@ -439,10 +439,10 @@ public class JObjectAccessors {
 
     public static class JListAccessor implements IJListAccessor {
 
-        private final TypeInfo typeInfo;
+        private final JavaTypeInfo typeInfo;
 
         public JListAccessor(IObjectPool<IJObject, IAType> objectPool) {
-            this.typeInfo = new TypeInfo(objectPool, null, null);
+            this.typeInfo = new JavaTypeInfo(objectPool, null, null);
         }
 
         @Override

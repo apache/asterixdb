@@ -56,7 +56,7 @@ public class JavaFunctionHelper implements IFunctionHelper {
     private final IObjectPool<IJObject, IAType> objectPool = new ListObjectPool<>(JTypeObjectFactory.INSTANCE);
     private final JObjectPointableVisitor pointableVisitor;
     private final PointableAllocator pointableAllocator;
-    private final Map<Integer, TypeInfo> poolTypeInfo;
+    private final Map<Integer, JavaTypeInfo> poolTypeInfo;
     private final Map<String, String> parameters;
     private final IAType[] argTypes;
 
@@ -164,10 +164,10 @@ public class JavaFunctionHelper implements IFunctionHelper {
         arguments[index] = jObject;
     }
 
-    private TypeInfo getTypeInfo(int index, IAType type) {
-        TypeInfo typeInfo = poolTypeInfo.get(index);
+    private JavaTypeInfo getTypeInfo(int index, IAType type) {
+        JavaTypeInfo typeInfo = poolTypeInfo.get(index);
         if (typeInfo == null) {
-            typeInfo = new TypeInfo(objectPool, type, type.getTypeTag());
+            typeInfo = new JavaTypeInfo(objectPool, type, type.getTypeTag());
             poolTypeInfo.put(index, typeInfo);
         }
         return typeInfo;

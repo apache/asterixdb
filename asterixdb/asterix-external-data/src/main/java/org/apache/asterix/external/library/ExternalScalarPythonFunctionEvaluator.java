@@ -61,6 +61,7 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
 
     private MessageUnpacker unpacker;
     private ArrayBufferInput unpackerInput;
+    private MessageUnpackerToADM unpackerToADM;
 
     private long fnId;
 
@@ -87,6 +88,7 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
         this.sourceLocation = sourceLoc;
         this.unpackerInput = new ArrayBufferInput(new byte[0]);
         this.unpacker = MessagePack.newDefaultUnpacker(unpackerInput);
+        this.unpackerToADM = new MessageUnpackerToADM();
     }
 
     @Override
@@ -107,18 +109,13 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
                     hasNullArg = true;
                 }
             }
-            try {
-                PythonLibraryEvaluator.setArgument(argTypes[i], argValues[i], argHolder, nullCall);
-            } catch (IOException e) {
-                throw new HyracksDataException("Error evaluating Python UDF", e);
-            }
         }
         if (!nullCall && hasNullArg) {
             PointableHelper.setNull(result);
             return;
         }
         try {
-            ByteBuffer res = libraryEvaluator.callPython(fnId, argHolder, argTypes.length);
+            ByteBuffer res = libraryEvaluator.callPython(fnId, argTypes, argValues, nullCall);
             resultBuffer.reset();
             wrap(res, resultBuffer.getDataOutput());
         } catch (Exception e) {
@@ -133,30 +130,28 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
         outputWrapper.position(0);
         try {
             if (resultWrapper == null) {
-                outputWrapper.put(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
-                out.write(outputWrapper.array(), 0, outputWrapper.position() + outputWrapper.arrayOffset());
+                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                 return;
             }
             if ((resultWrapper.get() ^ FIXARRAY_PREFIX) != (byte) 2) {
-                throw HyracksDataException.create(AsterixException.create(ErrorCode.EXTERNAL_UDF_EXCEPTION,
-                        "Returned result missing outer wrapper"));
+                throw HyracksDataException
+                        .create(AsterixException.create(ErrorCode.EXTERNAL_UDF_PROTO_RETURN_EXCEPTION));
             }
             int numresults = resultWrapper.get() ^ FIXARRAY_PREFIX;
             if (numresults > 0) {
-                MessageUnpackerToADM.unpack(resultWrapper, outputWrapper, true);
+                unpackerToADM.unpack(resultWrapper, out, true);
             }
             unpackerInput.reset(resultWrapper.array(), resultWrapper.position() + resultWrapper.arrayOffset(),
                     resultWrapper.remaining());
             unpacker.reset(unpackerInput);
-            int numEntries = unpacker.unpackArrayHeader();
-            for (int j = 0; j < numEntries; j++) {
-                outputWrapper.put(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+            int numErrors = unpacker.unpackArrayHeader();
+            for (int j = 0; j < numErrors; j++) {
+                out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                 if (evaluatorContext.getWarningCollector().shouldWarn()) {
                     evaluatorContext.getWarningCollector().warn(
                             Warning.of(sourceLocation, ErrorCode.EXTERNAL_UDF_EXCEPTION, unpacker.unpackString()));
                 }
             }
-            out.write(outputWrapper.array(), 0, outputWrapper.position() + outputWrapper.arrayOffset());
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

@@ -18,18 +18,39 @@ package org.apache.asterix.external.library.msgpack;
 
 import static org.msgpack.core.MessagePack.Code.*;
 
+import java.io.DataOutput;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.List;
 
+import org.apache.asterix.builders.AbvsBuilderFactory;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.input.stream.StandardUTF8ToModifiedUTF8DataOutput;
+import org.apache.asterix.external.input.stream.builders.ListLikeNumericArrayFactory;
+import org.apache.asterix.external.input.stream.builders.StandardToModifiedUTF8DataOutputFactory;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.util.container.IObjectPool;
+import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
+import org.apache.hyracks.data.std.api.IMutableValueStorage;
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class MessageUnpackerToADM {
 
-    public static void unpack(ByteBuffer in, ByteBuffer out, boolean tagged) throws HyracksDataException {
+    private final IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool =
+            new ListObjectPool<>(new AbvsBuilderFactory());
+    private final IObjectPool<StandardUTF8ToModifiedUTF8DataOutput, ATypeTag> utfPool =
+            new ListObjectPool<>(new StandardToModifiedUTF8DataOutputFactory());
+    private final IObjectPool<List<Long>, Long> listPool = new ListObjectPool<>(new ListLikeNumericArrayFactory<>());
+
+    public MessageUnpackerToADM() {
+    }
+
+    public void unpack(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         byte tag = NIL;
         if (in != null) {
             tag = in.get();
@@ -38,12 +59,12 @@ public class MessageUnpackerToADM {
             unpackStr(in, out, (tag ^ FIXSTR_PREFIX), tagged);
         } else if (isFixInt(tag)) {
             if (tagged) {
-                out.put(ATypeTag.SERIALIZED_INT8_TYPE_TAG);
+                out.writeByte(ATypeTag.SERIALIZED_INT8_TYPE_TAG);
             }
             if (isPosFixInt(tag)) {
-                out.put(tag);
+                out.writeByte(tag);
             } else if (isNegFixInt(tag)) {
-                out.put(tag);
+                out.writeByte(tag);
             }
         } else if (isFixedArray(tag)) {
             unpackArray(in, out, (tag ^ FIXARRAY_PREFIX));
@@ -52,15 +73,15 @@ public class MessageUnpackerToADM {
         } else {
             switch (tag) {
                 case TRUE:
-                    out.put(ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
-                    out.put((byte) 1);
+                    out.writeByte(ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
+                    out.writeByte((byte) 1);
                     break;
                 case FALSE:
-                    out.put(ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
-                    out.put((byte) 0);
+                    out.writeByte(ATypeTag.SERIALIZED_BOOLEAN_TYPE_TAG);
+                    out.writeByte((byte) 0);
                     break;
                 case NIL:
-                    out.put(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                    out.writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                     break;
                 case UINT8:
                     unpackUByte(in, out, tagged);
@@ -113,7 +134,6 @@ public class MessageUnpackerToADM {
                 case MAP32:
                     unpackMap(in, out, (int) Integer.toUnsignedLong(in.getInt()));
                     break;
-
                 default:
                     throw HyracksDataException.create(AsterixException.create(
                             ErrorCode.PARSER_ADM_DATA_PARSER_CAST_ERROR, "msgpack tag " + tag + " ", "to an ADM type"));
@@ -121,154 +141,159 @@ public class MessageUnpackerToADM {
         }
     }
 
-    public static void unpackByte(ByteBuffer in, ByteBuffer out, boolean tagged) {
+    public static void unpackByte(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         if (tagged) {
-            out.put(ATypeTag.SERIALIZED_INT8_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_INT8_TYPE_TAG);
         }
-        out.put(in.get());
+        out.writeByte(in.get());
     }
 
-    public static void unpackShort(ByteBuffer in, ByteBuffer out, boolean tagged) {
+    public static void unpackShort(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         if (tagged) {
-            out.put(ATypeTag.SERIALIZED_INT16_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_INT16_TYPE_TAG);
         }
-        out.putShort(in.getShort());
+        out.writeShort(in.getShort());
     }
 
-    public static void unpackInt(ByteBuffer in, ByteBuffer out, boolean tagged) {
+    public static void unpackInt(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         if (tagged) {
-            out.put(ATypeTag.SERIALIZED_INT32_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_INT32_TYPE_TAG);
         }
-        out.putInt(in.getInt());
+        out.writeInt(in.getInt());
     }
 
-    public static void unpackLong(ByteBuffer in, ByteBuffer out, boolean tagged) {
+    public static void unpackLong(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         if (tagged) {
-            out.put(ATypeTag.SERIALIZED_INT64_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_INT64_TYPE_TAG);
         }
-        out.putLong(in.getLong());
+        out.writeLong(in.getLong());
     }
 
-    public static void unpackUByte(ByteBuffer in, ByteBuffer out, boolean tagged) {
+    public static void unpackUByte(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         if (tagged) {
-            out.put(ATypeTag.SERIALIZED_INT16_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_INT16_TYPE_TAG);
         }
-        out.putShort((short) (in.get() & ((short) 0x00FF)));
+        out.writeShort((short) (in.get() & ((short) 0x00FF)));
     }
 
-    public static void unpackUShort(ByteBuffer in, ByteBuffer out, boolean tagged) {
+    public static void unpackUShort(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         if (tagged) {
-            out.put(ATypeTag.SERIALIZED_INT32_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_INT32_TYPE_TAG);
         }
-        out.putInt(in.getShort() & 0x0000FFFF);
+        out.writeInt(in.getShort() & 0x0000FFFF);
     }
 
-    public static void unpackUInt(ByteBuffer in, ByteBuffer out, boolean tagged) {
+    public static void unpackUInt(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         if (tagged) {
-            out.put(ATypeTag.SERIALIZED_INT64_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_INT64_TYPE_TAG);
         }
-        out.putLong(in.getInt() & 0x00000000FFFFFFFFl);
+        out.writeLong(in.getInt() & 0x00000000FFFFFFFFl);
     }
 
-    public static void unpackULong(ByteBuffer in, ByteBuffer out, boolean tagged) {
+    public static void unpackULong(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         if (tagged) {
-            out.put(ATypeTag.SERIALIZED_INT64_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_INT64_TYPE_TAG);
         }
         long val = in.getLong();
         if (val < 0) {
             throw new IllegalArgumentException("Integer overflow");
         }
-        out.putLong(val);
+        out.writeLong(val);
     }
 
-    public static void unpackFloat(ByteBuffer in, ByteBuffer out, boolean tagged) {
+    public static void unpackFloat(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         if (tagged) {
-            out.put(ATypeTag.SERIALIZED_FLOAT_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_FLOAT_TYPE_TAG);
         }
-        out.putFloat(in.getFloat());
+        out.writeFloat(in.getFloat());
 
     }
 
-    public static void unpackDouble(ByteBuffer in, ByteBuffer out, boolean tagged) {
+    public static void unpackDouble(ByteBuffer in, DataOutput out, boolean tagged) throws IOException {
         if (tagged) {
-            out.put(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG);
         }
-        out.putDouble(in.getDouble());
+        out.writeDouble(in.getDouble());
     }
 
-    public static void unpackArray(ByteBuffer in, ByteBuffer out, long uLen) throws HyracksDataException {
+    public void unpackArray(ByteBuffer in, DataOutput out, long uLen) throws IOException {
         if (uLen > Integer.MAX_VALUE) {
             throw new UnsupportedOperationException("Array is too long");
         }
+        ArrayBackedValueStorage buildBuf = (ArrayBackedValueStorage) abvsBuilderPool.allocate(ATypeTag.ARRAY);
+        buildBuf.reset();
+        DataOutput bufOut = buildBuf.getDataOutput();
         int count = (int) uLen;
-        int offs = out.position();
-        out.put(ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
-        out.put(ATypeTag.ANY.serialize());
-        int asxLenPos = out.position();
+        bufOut.writeByte(ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG);
+        bufOut.writeByte(ATypeTag.ANY.serialize());
+        int asxLenPos = buildBuf.getLength();
         //reserve space
-        out.putInt(-1);
-        out.putInt(count);
-        int slotStartOffs = out.position() + out.arrayOffset();
+        bufOut.writeInt(-1);
+        bufOut.writeInt(count);
+        int slotStartOffs = buildBuf.getLength();
         for (int i = 0; i < count; i++) {
-            out.putInt(0xFFFF);
+            bufOut.writeInt(0xDEADBEEF);
         }
         for (int i = 0; i < count; i++) {
-            out.putInt(slotStartOffs + (i * 4), (out.position() - offs));
-            unpack(in, out, true);
+            IntegerPointable.setInteger(buildBuf.getByteArray(), ((slotStartOffs) + (i * 4)), buildBuf.getLength());
+            //tagged b/c any
+            unpack(in, bufOut, true);
         }
-        int totalLen = out.position() - offs;
-        out.putInt(asxLenPos, totalLen);
+        IntegerPointable.setInteger(buildBuf.getByteArray(), asxLenPos, buildBuf.getLength());
+        out.write(buildBuf.getByteArray(), buildBuf.getStartOffset(), buildBuf.getLength());
     }
 
-    public static void unpackMap(ByteBuffer in, ByteBuffer out, int count) throws HyracksDataException {
+    public void unpackMap(ByteBuffer in, DataOutput out, int count) throws IOException {
         //TODO: need to handle typed records. this only produces a completely open record.
+        ArrayBackedValueStorage buildBuf = (ArrayBackedValueStorage) abvsBuilderPool.allocate(ATypeTag.OBJECT);
+        List<Long> offsets = listPool.allocate((long) count);
+        DataOutput bufOut = buildBuf.getDataOutput();
         //hdr size = 6?
-        int startOffs = out.position();
-        out.put(ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
-        int totalSizeOffs = out.position();
-        out.putInt(-1);
+        bufOut.writeByte(ATypeTag.SERIALIZED_RECORD_TYPE_TAG);
+        int totalSizeOffs = buildBuf.getLength();
+        bufOut.writeInt(-1);
         //isExpanded
-        out.put((byte) 1);
-        int openPartOffs = out.position();
-        out.putInt(-1);
+        bufOut.writeByte((byte) 1);
+        int openPartOffs = buildBuf.getLength();
+        bufOut.writeInt(-1);
         //isExpanded, so num of open fields
-        out.putInt(openPartOffs, out.position() - startOffs);
-        out.putInt(count);
-        int offsetAryPos = out.position();
+        IntegerPointable.setInteger(buildBuf.getByteArray(), openPartOffs, buildBuf.getLength());
+        bufOut.writeInt(count);
+        int offsetAryPos = buildBuf.getLength();
         int offsetArySz = count * 2;
         //allocate space for open field offsets
         for (int i = 0; i < offsetArySz; i++) {
-            out.putInt(0xDEADBEEF);
+            bufOut.writeInt(0xDEADBEEF);
         }
         for (int i = 0; i < count; i++) {
-            int offs = out.position() + out.arrayOffset();
-            int relOffs = offs - startOffs;
-            unpack(in, out, false);
-            int hash = UTF8StringUtil.hash(out.array(), offs);
-            out.putInt(offsetAryPos, hash);
-            offsetAryPos += 4;
-            out.putInt(offsetAryPos, relOffs);
-            offsetAryPos += 4;
-            unpack(in, out, true);
+            int offs = buildBuf.getLength();
+            unpack(in, bufOut, false);
+            long hash = UTF8StringUtil.hash(buildBuf.getByteArray(), offs);
+            offsets.set(i, (hash << 32) + offs);
+            unpack(in, bufOut, true);
         }
-        out.putInt(totalSizeOffs, out.position() - startOffs);
+        Collections.sort(offsets);
+        for (Long l : offsets) {
+            IntegerPointable.setInteger(buildBuf.getByteArray(), offsetAryPos, (int) (l >> 32));
+            offsetAryPos += 4;
+            IntegerPointable.setInteger(buildBuf.getByteArray(), offsetAryPos, (int) ((l << 32) >> 32));
+            offsetAryPos += 4;
+        }
+        IntegerPointable.setInteger(buildBuf.getByteArray(), totalSizeOffs, buildBuf.getLength());
+        out.write(buildBuf.getByteArray(), buildBuf.getStartOffset(), buildBuf.getLength());
     }
 
-    public static void unpackStr(ByteBuffer in, ByteBuffer out, long uLen, boolean tag) {
-        //TODO: this probably breaks for 3 and 4 byte UTF-8
+    public void unpackStr(ByteBuffer in, DataOutput out, long uLen, boolean tag) throws IOException {
         if (tag) {
-            out.put(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+            out.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
         }
         if (Long.compareUnsigned(uLen, Integer.MAX_VALUE) > 0) {
             throw new UnsupportedOperationException("String is too long");
         }
         int len = (int) uLen;
-        int strLen = UTF8StringUtil.getStringLength(in.array(), in.position() + in.arrayOffset(), len);
-        int adv = VarLenIntEncoderDecoder.encode(strLen, out.array(), out.position() + out.arrayOffset());
-        out.position(out.position() + adv);
-        System.arraycopy(in.array(), in.arrayOffset() + in.position(), out.array(), out.arrayOffset() + out.position(),
-                len);
-        out.position(out.position() + len);
+        StandardUTF8ToModifiedUTF8DataOutput conv = utfPool.allocate(ATypeTag.STRING);
+        conv.setDataOutput(out);
+        conv.write(in.array(), in.arrayOffset() + in.position(), len);
         in.position(in.position() + len);
     }
 
