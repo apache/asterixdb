@@ -75,11 +75,9 @@ public abstract class SqlppRQGTestBase {
 
     private static final Logger LOGGER = LogManager.getLogger(SqlppRQGTestBase.class);
 
-    protected static final String TESTCONTAINERS_RYUK_DISABLED = "TESTCONTAINERS_RYUK_DISABLED";
-
     protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
 
-    protected static final String POSTGRES_IMAGE = "postgres:12.2";
+    protected static final String POSTGRES_IMAGE = "postgres:13.4";
 
     protected static final String TABLE_NAME = "tenk";
 
@@ -378,10 +376,6 @@ public abstract class SqlppRQGTestBase {
     }
 
     protected static void startPostgres() throws SQLException, IOException {
-        if (!Boolean.parseBoolean(System.getenv(TESTCONTAINERS_RYUK_DISABLED))) {
-            throw new IllegalStateException(
-                    String.format("Set environment variable %s=%s", TESTCONTAINERS_RYUK_DISABLED, true));
-        }
         LOGGER.info("Starting Postgres");
         postgres = new PostgreSQLContainer<>(POSTGRES_IMAGE);
         postgres.start();

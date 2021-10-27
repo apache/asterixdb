@@ -47,7 +47,7 @@ public class SqlppRQGJoinsIT extends SqlppRQGTestBase {
 
     static final String FILTER_FIELD = JOIN_FIELD;
 
-    static final char[] SHAPES = new char[] { 'c', 's' }; //TODO: 'q'
+    static final char[] SHAPES = new char[] { 'c', 's', 'q' };
 
     @Parameterized.Parameters(name = "SqlppRQGJoinsIT {index}: {3}")
     public static Collection<Object[]> tests() {
