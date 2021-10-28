@@ -70,10 +70,10 @@ public class LangRecordParseUtil {
             case LIST_CONSTRUCTOR_EXPRESSION:
                 return parseList((ListConstructor) expr);
             default:
-                throw new RuntimeDataException(ErrorCode.PARSE_ERROR, NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE,
-                        Expression.Kind.LITERAL_EXPRESSION.toString(),
-                        Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION.toString(),
-                        Expression.Kind.LIST_CONSTRUCTOR_EXPRESSION.toString());
+                throw new RuntimeDataException(ErrorCode.PARSE_ERROR,
+                        String.format(NOT_ALLOWED_EXPRESSIONS_ERROR_MESSAGE, Expression.Kind.LITERAL_EXPRESSION,
+                                Expression.Kind.RECORD_CONSTRUCTOR_EXPRESSION,
+                                Expression.Kind.LIST_CONSTRUCTOR_EXPRESSION));
         }
     }
 
