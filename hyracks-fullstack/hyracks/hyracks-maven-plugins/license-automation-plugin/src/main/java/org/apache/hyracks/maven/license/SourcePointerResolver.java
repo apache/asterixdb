@@ -296,5 +296,15 @@ public class SourcePointerResolver {
         public void setMirroredRepositories(List<ArtifactRepository> list) {
             // unused
         }
+
+        @java.lang.Override
+        public boolean isBlocked() {
+            return false;
+        }
+
+        @java.lang.Override
+        public void setBlocked(boolean blocked) {
+            // unused
+        }
     }
 }
