@@ -1815,7 +1815,7 @@ public class BuiltinFunctions {
         addFunction(IS_BIT_SET_WITH_ALL_FLAG, BitValuePositionFlagTypeComputer.INSTANCE_TEST_WITH_FLAG, true);
 
         // string functions
-        addFunction(STRING_CONSTRUCTOR, AStringTypeComputer.INSTANCE, true); // TODO(ali)
+        addFunction(STRING_CONSTRUCTOR, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_LIKE, BooleanFunctionTypeComputer.INSTANCE, true);
         addFunction(STRING_CONTAINS, UniformInputTypeComputer.STRING_BOOLEAN_INSTANCE, true);
         addFunction(STRING_TO_CODEPOINT, UniformInputTypeComputer.STRING_INT64_LIST_INSTANCE, true);
@@ -1876,7 +1876,7 @@ public class BuiltinFunctions {
         addFunction(TO_DOUBLE, ToDoubleTypeComputer.INSTANCE, true);
         addFunction(TO_NUMBER, ToNumberTypeComputer.INSTANCE, true);
         addFunction(TO_OBJECT, ToObjectTypeComputer.INSTANCE, true);
-        addFunction(TO_STRING, AStringTypeComputer.INSTANCE, true);
+        addFunction(TO_STRING, AStringTypeComputer.INSTANCE_NULLABLE, true);
 
         addPrivateFunction(TREAT_AS_INTEGER, TreatAsTypeComputer.INSTANCE_INTEGER, true);
         addPrivateFunction(IS_NUMERIC_ADD_COMPATIBLE, BooleanOnlyTypeComputer.INSTANCE, true);

@@ -1213,6 +1213,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         }
                     }
 
+                    boolean isFieldFromSchema = projectTypePrime != null;
+                    if (isFieldFromSchema && stmtCreateIndex.hasCastDefaultNull()) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, indexedElement.getSourceLocation(),
+                                "CAST is not allowed since field \"" + projectPath + "\" is typed");
+                    }
                     IAType fieldTypePrime;
                     boolean fieldTypeNullable, fieldTypeMissable;
                     if (projectTypeExpr == null) {
@@ -1227,7 +1232,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             }
                             // don't allow creating an enforced index on a closed-type field, fields that
                             // are part of schema get the field type, if it's not null, then the field is closed-type
-                            if (projectTypePrime != null) {
+                            if (isFieldFromSchema) {
                                 throw new CompilationException(ErrorCode.INDEX_ILLEGAL_ENFORCED_ON_CLOSED_FIELD,
                                         indexedElement.getSourceLocation(), String.valueOf(projectPath));
                             }
@@ -1236,7 +1241,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 throw new CompilationException(ErrorCode.INDEX_ILLEGAL_NON_ENFORCED_TYPED,
                                         indexedElement.getSourceLocation(), indexType);
                             }
-                            if (projectTypePrime != null) {
+                            if (isFieldFromSchema) {
                                 throw new CompilationException(ErrorCode.COMPILATION_ERROR,
                                         indexedElement.getSourceLocation(), "Typed index on \"" + projectPath
                                                 + "\" field could be created only for open datatype");
@@ -1278,10 +1283,21 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                         "can only specify exclude/include unknown key for B-Tree & Array indexes");
             }
+            boolean castDefaultNullAllowed = indexType == IndexType.BTREE && !isSecondaryPrimary;
+            if (stmtCreateIndex.hasCastDefaultNull() && !castDefaultNullAllowed) {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                        "Cast Default Null is only allowed for B-Tree indexes");
+            }
+            if (stmtCreateIndex.getCastDefaultNull().getOrElse(false)) {
+                if (stmtCreateIndex.isEnforced()) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                            "Cast Default Null cannot be specified together with ENFORCED");
+                }
+            }
             Index.IIndexDetails indexDetails;
             if (Index.IndexCategory.of(indexType) == Index.IndexCategory.ARRAY) {
                 if (!stmtCreateIndex.hasExcludeUnknownKey()
-                        || !stmtCreateIndex.isExcludeUnknownKey().getOrElse(false)) {
+                        || !stmtCreateIndex.getExcludeUnknownKey().getOrElse(false)) {
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                             "Array indexes must specify EXCLUDE UNKNOWN KEY.");
                 }
@@ -1324,7 +1340,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 switch (Index.IndexCategory.of(indexType)) {
                     case VALUE:
                         indexDetails = new Index.ValueIndexDetails(keyFieldNames, keyFieldSourceIndicators,
-                                keyFieldTypes, overridesFieldTypes, stmtCreateIndex.isExcludeUnknownKey());
+                                keyFieldTypes, overridesFieldTypes, stmtCreateIndex.getExcludeUnknownKey(),
+                                stmtCreateIndex.getCastDefaultNull());
                         break;
                     case TEXT:
                         indexDetails = new Index.TextIndexDetails(keyFieldNames, keyFieldSourceIndicators,
@@ -1535,12 +1552,17 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     Index.IndexCategory indexCategory = Index.IndexCategory.of(index.getIndexType());
                     OptionalBoolean excludeUnknownKey = OptionalBoolean.empty();
                     if (indexCategory == Index.IndexCategory.VALUE) {
-                        excludeUnknownKey = ((Index.ValueIndexDetails) index.getIndexDetails()).isExcludeUnknownKey();
+                        excludeUnknownKey = ((Index.ValueIndexDetails) index.getIndexDetails()).getExcludeUnknownKey();
+                    }
+                    OptionalBoolean castDefaultNull = OptionalBoolean.empty();
+                    if (indexCategory == Index.IndexCategory.VALUE) {
+                        castDefaultNull = ((Index.ValueIndexDetails) index.getIndexDetails()).getCastDefaultNull();
                     }
                     filesIndex = new Index(index.getDataverseName(), index.getDatasetName(),
                             IndexingConstants.getFilesIndexName(index.getDatasetName()), IndexType.BTREE,
                             new Index.ValueIndexDetails(ExternalIndexingOperations.FILE_INDEX_FIELD_NAMES, null,
-                                    ExternalIndexingOperations.FILE_INDEX_FIELD_TYPES, false, excludeUnknownKey),
+                                    ExternalIndexingOperations.FILE_INDEX_FIELD_TYPES, false, excludeUnknownKey,
+                                    castDefaultNull),
                             false, false, MetadataUtil.PENDING_ADD_OP);
                     MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), filesIndex);
                     // Add files to the external files index

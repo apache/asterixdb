@@ -50,10 +50,11 @@ public class CreateIndexStatement extends AbstractStatement {
     // Specific to FullText indexes.
     private final String fullTextConfigName;
     private final OptionalBoolean excludeUnknownKey;
+    private final OptionalBoolean castDefaultNull;
 
     public CreateIndexStatement(DataverseName dataverseName, Identifier datasetName, Identifier indexName,
             IndexType indexType, List<IndexedElement> indexedElements, boolean enforced, int gramLength,
-            String fullTextConfigName, boolean ifNotExists, Boolean excludeUnknownKey) {
+            String fullTextConfigName, boolean ifNotExists, Boolean excludeUnknownKey, Boolean castDefaultNull) {
         this.dataverseName = dataverseName;
         this.datasetName = Objects.requireNonNull(datasetName);
         this.indexName = Objects.requireNonNull(indexName);
@@ -64,6 +65,7 @@ public class CreateIndexStatement extends AbstractStatement {
         this.ifNotExists = ifNotExists;
         this.fullTextConfigName = fullTextConfigName;
         this.excludeUnknownKey = OptionalBoolean.ofNullable(excludeUnknownKey);
+        this.castDefaultNull = OptionalBoolean.ofNullable(castDefaultNull);
     }
 
     public String getFullTextConfigName() {
@@ -98,8 +100,16 @@ public class CreateIndexStatement extends AbstractStatement {
         return excludeUnknownKey.isPresent();
     }
 
-    public OptionalBoolean isExcludeUnknownKey() {
+    public OptionalBoolean getExcludeUnknownKey() {
         return excludeUnknownKey;
+    }
+
+    public boolean hasCastDefaultNull() {
+        return castDefaultNull.isPresent();
+    }
+
+    public OptionalBoolean getCastDefaultNull() {
+        return castDefaultNull;
     }
 
     public int getGramLength() {

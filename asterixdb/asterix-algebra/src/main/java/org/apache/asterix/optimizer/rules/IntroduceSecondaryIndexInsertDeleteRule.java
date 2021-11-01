@@ -41,11 +41,14 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.utils.ArrayIndexUtil;
+import org.apache.asterix.metadata.utils.IndexUtil;
+import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.asterix.om.functions.BuiltinFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.TypeCastUtils;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -90,7 +93,6 @@ import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
-import org.apache.hyracks.util.OptionalBoolean;
 
 /**
  * This rule matches the pattern:
@@ -840,12 +842,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     AbstractFunctionCallExpression fieldAccessFunc =
                             getFieldAccessFunction(new MutableObject<>(varRef), -1, indexFieldId.fieldName);
                     // create cast
-                    theFieldAccessFunc = new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(
-                            index.isEnforced() ? BuiltinFunctions.CAST_TYPE : BuiltinFunctions.CAST_TYPE_LAX));
-                    theFieldAccessFunc.setSourceLocation(sourceLoc);
-                    // The first argument is the field
-                    theFieldAccessFunc.getArguments().add(new MutableObject<ILogicalExpression>(fieldAccessFunc));
-                    TypeCastUtils.setRequiredAndInputTypes(theFieldAccessFunc, skTypes.get(i), BuiltinType.ANY);
+                    theFieldAccessFunc = createCastExpression(index, skTypes.get(i), fieldAccessFunc, sourceLoc);
                 } else {
                     // Get the desired field position
                     int pos = indexFieldId.fieldName.size() > 1 ? -1
@@ -855,7 +852,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                             getFieldAccessFunction(new MutableObject<>(varRef), pos, indexFieldId.fieldName);
                 }
                 vars.add(fieldVar);
-                exprs.add(new MutableObject<ILogicalExpression>(theFieldAccessFunc));
+                exprs.add(new MutableObject<>(theFieldAccessFunc));
                 fieldAccessVars.put(indexFieldId, fieldVar);
             }
         }
@@ -866,6 +863,50 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             return introduceNewOp(currentTop, castedFieldAssignOperator, afterOp);
         }
         return currentTop;
+    }
+
+    private AbstractFunctionCallExpression createCastExpression(Index index, IAType targetType,
+            AbstractFunctionCallExpression inputExpr, SourceLocation sourceLoc) throws CompilationException {
+        ScalarFunctionCallExpression castExpr;
+        if (IndexUtil.castDefaultNull(index)) {
+            castExpr = constructorFunction(targetType, inputExpr, sourceLoc);
+        } else if (index.isEnforced()) {
+            castExpr = castFunction(BuiltinFunctions.CAST_TYPE, targetType, inputExpr, sourceLoc);
+        } else {
+            castExpr = castFunction(BuiltinFunctions.CAST_TYPE_LAX, targetType, inputExpr, sourceLoc);
+        }
+        return castExpr;
+    }
+
+    private ScalarFunctionCallExpression castFunction(FunctionIdentifier castFun, IAType requiredType,
+            AbstractFunctionCallExpression inputExpr, SourceLocation sourceLoc) throws CompilationException {
+        BuiltinFunctionInfo castInfo = BuiltinFunctions.getBuiltinFunctionInfo(castFun);
+        ScalarFunctionCallExpression castExpr = new ScalarFunctionCallExpression(castInfo);
+        castExpr.setSourceLocation(sourceLoc);
+        castExpr.getArguments().add(new MutableObject<>(inputExpr));
+        TypeCastUtils.setRequiredAndInputTypes(castExpr, requiredType, BuiltinType.ANY);
+        return castExpr;
+    }
+
+    private ScalarFunctionCallExpression constructorFunction(IAType requiredType,
+            AbstractFunctionCallExpression inputExpr, SourceLocation sourceLoc) throws CompilationException {
+        FunctionIdentifier typeConstructorFun = TypeUtil.getTypeConstructor(requiredType);
+        if (typeConstructorFun == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, "index",
+                    requiredType.getTypeName());
+        }
+        // make CONSTRUCTOR(IF_MISSING(input, NULL))
+        BuiltinFunctionInfo ifMissingInfo = BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.IF_MISSING);
+        ScalarFunctionCallExpression ifMissingExpr = new ScalarFunctionCallExpression(ifMissingInfo);
+        ifMissingExpr.getArguments().add(new MutableObject<>(inputExpr));
+        ifMissingExpr.getArguments().add(new MutableObject<>(ConstantExpression.NULL));
+        ifMissingExpr.setSourceLocation(sourceLoc);
+
+        BuiltinFunctionInfo typeConstructorInfo = BuiltinFunctions.getBuiltinFunctionInfo(typeConstructorFun);
+        ScalarFunctionCallExpression constructorExpr = new ScalarFunctionCallExpression(typeConstructorInfo);
+        constructorExpr.getArguments().add(new MutableObject<>(ifMissingExpr));
+        constructorExpr.setSourceLocation(sourceLoc);
+        return constructorExpr;
     }
 
     private ILogicalOperator introduceNewOp(ILogicalOperator currentTopOp, ILogicalOperator newOp, boolean afterOp)
@@ -933,9 +974,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             if (index.isPrimaryKeyIndex()) {
                 return createAnyUnknownFilterExpression(secondaryKeyVars, typeEnv, forceFilter);
             } else {
-                OptionalBoolean excludeUnknownKey =
-                        ((Index.ValueIndexDetails) index.getIndexDetails()).isExcludeUnknownKey();
-                boolean excludeUnknown = excludeUnknownKey.isPresent() && excludeUnknownKey.get();
+                Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+                boolean excludeUnknown = indexDetails.getExcludeUnknownKey().getOrElse(false);
                 return createAllUnknownFilterExpression(secondaryKeyVars, typeEnv, forceFilter, excludeUnknown);
             }
         } else {

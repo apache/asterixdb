@@ -33,6 +33,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
@@ -45,6 +46,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 /**
  * Provider utility methods for data types
@@ -58,6 +60,58 @@ public class TypeUtil {
     private static final String FUNCTION_INLINE_TYPE_PREFIX = "$f$t$";
 
     private TypeUtil() {
+    }
+
+    public static FunctionIdentifier getTypeConstructor(IAType type) {
+        switch (type.getTypeTag()) {
+            case TINYINT:
+                return BuiltinFunctions.INT8_CONSTRUCTOR;
+            case SMALLINT:
+                return BuiltinFunctions.INT16_CONSTRUCTOR;
+            case INTEGER:
+                return BuiltinFunctions.INT32_CONSTRUCTOR;
+            case BIGINT:
+                return BuiltinFunctions.INT64_CONSTRUCTOR;
+            case FLOAT:
+                return BuiltinFunctions.FLOAT_CONSTRUCTOR;
+            case DOUBLE:
+                return BuiltinFunctions.DOUBLE_CONSTRUCTOR;
+            case BOOLEAN:
+                return BuiltinFunctions.BOOLEAN_CONSTRUCTOR;
+            case STRING:
+                return BuiltinFunctions.STRING_CONSTRUCTOR;
+            case DATE:
+                return BuiltinFunctions.DATE_CONSTRUCTOR;
+            case TIME:
+                return BuiltinFunctions.TIME_CONSTRUCTOR;
+            case DATETIME:
+                return BuiltinFunctions.DATETIME_CONSTRUCTOR;
+            case YEARMONTHDURATION:
+                return BuiltinFunctions.YEAR_MONTH_DURATION_CONSTRUCTOR;
+            case DAYTIMEDURATION:
+                return BuiltinFunctions.DAY_TIME_DURATION_CONSTRUCTOR;
+            case DURATION:
+                return BuiltinFunctions.DURATION_CONSTRUCTOR;
+            case UUID:
+                return BuiltinFunctions.UUID_CONSTRUCTOR;
+            case BINARY:
+                return BuiltinFunctions.BINARY_BASE64_CONSTRUCTOR;
+            default:
+                return null;
+        }
+    }
+
+    public static FunctionIdentifier getTypeConstructorWithFormat(IAType type) {
+        switch (type.getTypeTag()) {
+            case DATE:
+                return BuiltinFunctions.DATE_CONSTRUCTOR_WITH_FORMAT;
+            case TIME:
+                return BuiltinFunctions.TIME_CONSTRUCTOR_WITH_FORMAT;
+            case DATETIME:
+                return BuiltinFunctions.DATETIME_CONSTRUCTOR_WITH_FORMAT;
+            default:
+                return null;
+        }
     }
 
     private static class EnforcedTypeBuilder {

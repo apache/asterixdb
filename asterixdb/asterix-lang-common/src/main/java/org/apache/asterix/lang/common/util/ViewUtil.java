@@ -44,6 +44,7 @@ import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.metadata.entities.ViewDetails;
+import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -143,7 +144,7 @@ public final class ViewUtil {
             } else {
                 primeType = fieldType;
             }
-            if (getTypeConstructor(primeType) == null) {
+            if (TypeUtil.getTypeConstructor(primeType) == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, "view",
                         primeType.getTypeName());
             }
@@ -175,8 +176,8 @@ public final class ViewUtil {
             SourceLocation sourceLoc) throws CompilationException {
         String format = temporalDataFormat != null ? getTemporalFormat(targetType, temporalDataFormat) : null;
         boolean withFormat = format != null;
-        FunctionIdentifier constrFid =
-                withFormat ? getTypeConstructorWithFormat(targetType) : getTypeConstructor(targetType);
+        FunctionIdentifier constrFid = withFormat ? TypeUtil.getTypeConstructorWithFormat(targetType)
+                : TypeUtil.getTypeConstructor(targetType);
         if (constrFid == null) {
             throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, viewName.toString(),
                     targetType.getTypeName());
@@ -221,58 +222,6 @@ public final class ViewUtil {
         FieldAccessor fa = new FieldAccessor(inVarRef, new Identifier(fieldName));
         fa.setSourceLocation(sourceLoc);
         return fa;
-    }
-
-    public static FunctionIdentifier getTypeConstructor(IAType type) {
-        switch (type.getTypeTag()) {
-            case TINYINT:
-                return BuiltinFunctions.INT8_CONSTRUCTOR;
-            case SMALLINT:
-                return BuiltinFunctions.INT16_CONSTRUCTOR;
-            case INTEGER:
-                return BuiltinFunctions.INT32_CONSTRUCTOR;
-            case BIGINT:
-                return BuiltinFunctions.INT64_CONSTRUCTOR;
-            case FLOAT:
-                return BuiltinFunctions.FLOAT_CONSTRUCTOR;
-            case DOUBLE:
-                return BuiltinFunctions.DOUBLE_CONSTRUCTOR;
-            case BOOLEAN:
-                return BuiltinFunctions.BOOLEAN_CONSTRUCTOR;
-            case STRING:
-                return BuiltinFunctions.STRING_CONSTRUCTOR;
-            case DATE:
-                return BuiltinFunctions.DATE_CONSTRUCTOR;
-            case TIME:
-                return BuiltinFunctions.TIME_CONSTRUCTOR;
-            case DATETIME:
-                return BuiltinFunctions.DATETIME_CONSTRUCTOR;
-            case YEARMONTHDURATION:
-                return BuiltinFunctions.YEAR_MONTH_DURATION_CONSTRUCTOR;
-            case DAYTIMEDURATION:
-                return BuiltinFunctions.DAY_TIME_DURATION_CONSTRUCTOR;
-            case DURATION:
-                return BuiltinFunctions.DURATION_CONSTRUCTOR;
-            case UUID:
-                return BuiltinFunctions.UUID_CONSTRUCTOR;
-            case BINARY:
-                return BuiltinFunctions.BINARY_BASE64_CONSTRUCTOR;
-            default:
-                return null;
-        }
-    }
-
-    public static FunctionIdentifier getTypeConstructorWithFormat(IAType type) {
-        switch (type.getTypeTag()) {
-            case DATE:
-                return BuiltinFunctions.DATE_CONSTRUCTOR_WITH_FORMAT;
-            case TIME:
-                return BuiltinFunctions.TIME_CONSTRUCTOR_WITH_FORMAT;
-            case DATETIME:
-                return BuiltinFunctions.DATETIME_CONSTRUCTOR_WITH_FORMAT;
-            default:
-                return null;
-        }
     }
 
     public static String getTemporalFormat(IAType targetType, Triple<String, String, String> temporalFormatByType) {

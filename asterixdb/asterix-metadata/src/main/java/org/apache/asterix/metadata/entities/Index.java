@@ -84,18 +84,18 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes,
             boolean overrideKeyFieldTypes, boolean isEnforced, boolean isPrimaryIndex, int pendingOp,
             OptionalBoolean excludeUnknownKey) {
-        this(dataverseName, datasetName,
-                indexName, indexType, createSimpleIndexDetails(indexType, keyFieldNames, keyFieldSourceIndicators,
-                        keyFieldTypes, overrideKeyFieldTypes, excludeUnknownKey),
+        this(dataverseName, datasetName, indexName, indexType,
+                createSimpleIndexDetails(indexType, keyFieldNames, keyFieldSourceIndicators, keyFieldTypes,
+                        overrideKeyFieldTypes, excludeUnknownKey, OptionalBoolean.empty()),
                 isEnforced, isPrimaryIndex, pendingOp);
     }
 
     public static Index createPrimaryIndex(DataverseName dataverseName, String datasetName,
             List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes,
             int pendingOp) {
-        return new Index(dataverseName,
-                datasetName, datasetName, IndexType.BTREE, new ValueIndexDetails(keyFieldNames,
-                        keyFieldSourceIndicators, keyFieldTypes, false, OptionalBoolean.empty()),
+        return new Index(dataverseName, datasetName,
+                datasetName, IndexType.BTREE, new ValueIndexDetails(keyFieldNames, keyFieldSourceIndicators,
+                        keyFieldTypes, false, OptionalBoolean.empty(), OptionalBoolean.empty()),
                 false, true, pendingOp);
     }
 
@@ -229,7 +229,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
     @Override
     public int compareTo(Index otherIndex) {
-        /** Gives a primary index first priority. */
+        /* Gives a primary index first priority. */
         if (isPrimaryIndex && !otherIndex.isPrimaryIndex) {
             return -1;
         }
@@ -237,7 +237,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             return 1;
         }
 
-        /** Gives a B-Tree index the second priority. */
+        /* Gives a B-Tree index the second priority. */
         if (indexType == IndexType.BTREE && otherIndex.indexType != IndexType.BTREE) {
             return -1;
         }
@@ -245,7 +245,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             return 1;
         }
 
-        /** Gives a R-Tree index the third priority */
+        /* Gives a R-Tree index the third priority */
         if (indexType == IndexType.RTREE && otherIndex.indexType != IndexType.RTREE) {
             return -1;
         }
@@ -253,7 +253,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             return 1;
         }
 
-        /** Finally, compares based on names. */
+        /* Finally, compares based on names. */
         int result = indexName.compareTo(otherIndex.getIndexName());
         if (result != 0) {
             return result;
@@ -335,13 +335,17 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
         private final Boolean excludeUnknownKey;
 
+        private final Boolean castDefaultNull;
+
         public ValueIndexDetails(List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators,
-                List<IAType> keyFieldTypes, boolean overrideKeyFieldTypes, OptionalBoolean excludeUnknownKey) {
+                List<IAType> keyFieldTypes, boolean overrideKeyFieldTypes, OptionalBoolean excludeUnknownKey,
+                OptionalBoolean castDefaultNull) {
             this.keyFieldNames = keyFieldNames;
             this.keyFieldSourceIndicators = keyFieldSourceIndicators;
             this.keyFieldTypes = keyFieldTypes;
             this.overrideKeyFieldTypes = overrideKeyFieldTypes;
             this.excludeUnknownKey = excludeUnknownKey.isEmpty() ? null : excludeUnknownKey.get();
+            this.castDefaultNull = castDefaultNull.isEmpty() ? null : castDefaultNull.get();
         }
 
         @Override
@@ -361,8 +365,12 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             return keyFieldTypes;
         }
 
-        public OptionalBoolean isExcludeUnknownKey() {
+        public OptionalBoolean getExcludeUnknownKey() {
             return OptionalBoolean.ofNullable(excludeUnknownKey);
+        }
+
+        public OptionalBoolean getCastDefaultNull() {
+            return OptionalBoolean.ofNullable(castDefaultNull);
         }
 
         @Override
@@ -500,14 +508,14 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     @Deprecated
     private static Index.IIndexDetails createSimpleIndexDetails(IndexType indexType, List<List<String>> keyFieldNames,
             List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes, boolean overrideKeyFieldTypes,
-            OptionalBoolean excludeUnknownKey) {
+            OptionalBoolean excludeUnknownKey, OptionalBoolean castDefaultNull) {
         if (indexType == null) {
             return null;
         }
         switch (Index.IndexCategory.of(indexType)) {
             case VALUE:
                 return new ValueIndexDetails(keyFieldNames, keyFieldSourceIndicators, keyFieldTypes,
-                        overrideKeyFieldTypes, excludeUnknownKey);
+                        overrideKeyFieldTypes, excludeUnknownKey, castDefaultNull);
             case TEXT:
                 if (excludeUnknownKey.isPresent()) {
                     throw new IllegalArgumentException("excludeUnknownKey");

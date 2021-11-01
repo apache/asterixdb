@@ -179,4 +179,8 @@ public class IndexUtil {
         spec.setJobletEventListenerFactory(jobEventListenerFactory);
     }
 
+    public static boolean castDefaultNull(Index index) {
+        return Index.IndexCategory.of(index.getIndexType()) == Index.IndexCategory.VALUE
+                && ((Index.ValueIndexDetails) index.getIndexDetails()).getCastDefaultNull().getOrElse(false);
+    }
 }

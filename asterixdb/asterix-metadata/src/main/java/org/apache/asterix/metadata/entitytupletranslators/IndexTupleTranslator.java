@@ -19,6 +19,9 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_CAST;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DEFAULT;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -96,6 +99,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     protected OrderedListBuilder primaryKeyListBuilder;
     protected OrderedListBuilder complexSearchKeyNameListBuilder;
     protected IARecordBuilder complexSearchKeyNameRecordBuilder;
+    protected IARecordBuilder castRecordBuilder;
     protected AOrderedListType stringList;
     protected AOrderedListType int8List;
     protected ArrayBackedValueStorage nameValue;
@@ -114,6 +118,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             innerListBuilder = new OrderedListBuilder();
             primaryKeyListBuilder = new OrderedListBuilder();
             complexSearchKeyNameRecordBuilder = new RecordBuilder();
+            castRecordBuilder = new RecordBuilder();
             complexSearchKeyNameListBuilder = new OrderedListBuilder();
             stringList = new AOrderedListType(BuiltinType.ASTRING, null);
             int8List = new AOrderedListType(BuiltinType.AINT8, null);
@@ -383,21 +388,37 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                         searchElements.stream().map(Pair::getSecond).map(l -> l.get(0)).collect(Collectors.toList());
                 List<IAType> keyFieldTypes = searchKeyType.stream().map(l -> l.get(0)).collect(Collectors.toList());
 
-                // Read the exclude unknown key option if applicable for an index
                 OptionalBoolean excludeUnknownKey = OptionalBoolean.empty();
-                boolean unknownKeyOptionAllowed =
-                        indexType == IndexType.BTREE && !isPrimaryIndex && !keyFieldNames.isEmpty();
-                if (unknownKeyOptionAllowed) {
-                    // default to always include unknowns for normal b-trees
+                OptionalBoolean castDefaultNull = OptionalBoolean.empty();
+                boolean isBtreeIdx = indexType == IndexType.BTREE && !isPrimaryIndex && !keyFieldNames.isEmpty();
+                if (isBtreeIdx) {
+                    // exclude unknown key value; default to always include unknowns for normal b-trees
                     excludeUnknownKey = OptionalBoolean.FALSE();
                     int excludeUnknownKeyPos = indexRecord.getType().getFieldIndex(INDEX_EXCLUDE_UNKNOWN_FIELD_NAME);
                     if (excludeUnknownKeyPos >= 0) {
                         excludeUnknownKey = OptionalBoolean
                                 .of(((ABoolean) indexRecord.getValueByPos(excludeUnknownKeyPos)).getBoolean());
                     }
+                    // cast record
+                    int castPos = indexRecord.getType().getFieldIndex(FIELD_NAME_CAST);
+                    if (castPos >= 0) {
+                        IAObject recValue = indexRecord.getValueByPos(castPos);
+                        if (recValue.getType().getTypeTag() == ATypeTag.OBJECT) {
+                            ARecord castRec = (ARecord) recValue;
+                            ARecordType castRecType = castRec.getType();
+                            // cast default value
+                            int defaultFieldPos = castRecType.getFieldIndex(FIELD_NAME_DEFAULT);
+                            if (defaultFieldPos >= 0) {
+                                IAObject defaultVal = castRec.getValueByPos(defaultFieldPos);
+                                if (defaultVal.getType().getTypeTag() == ATypeTag.NULL) {
+                                    castDefaultNull = OptionalBoolean.TRUE();
+                                }
+                            }
+                        }
+                    }
                 }
                 indexDetails = new Index.ValueIndexDetails(keyFieldNames, keyFieldSourceIndicator, keyFieldTypes,
-                        isOverridingKeyTypes, excludeUnknownKey);
+                        isOverridingKeyTypes, excludeUnknownKey, castDefaultNull);
                 break;
             case TEXT:
                 keyFieldNames =
@@ -566,6 +587,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         writeEnforced(index);
         writeSearchKeySourceIndicator(index);
         writeExcludeUnknownKey(index);
+        writeCastDefaultNull(index);
     }
 
     private void writeComplexSearchKeys(Index.ArrayIndexDetails indexDetails) throws HyracksDataException {
@@ -770,10 +792,9 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         switch (index.getIndexType()) {
             case BTREE:
                 if (!index.isPrimaryIndex() && !index.isPrimaryKeyIndex()) {
-                    OptionalBoolean excludeUnknownKey =
-                            ((Index.ValueIndexDetails) index.getIndexDetails()).isExcludeUnknownKey();
-                    ABoolean bVal =
-                            excludeUnknownKey.isEmpty() ? ABoolean.FALSE : ABoolean.valueOf(excludeUnknownKey.get());
+                    OptionalBoolean excludeUnknown =
+                            ((Index.ValueIndexDetails) index.getIndexDetails()).getExcludeUnknownKey();
+                    ABoolean bVal = excludeUnknown.isEmpty() ? ABoolean.FALSE : ABoolean.valueOf(excludeUnknown.get());
                     fieldValue.reset();
                     nameValue.reset();
                     aString.setValue(INDEX_EXCLUDE_UNKNOWN_FIELD_NAME);
@@ -792,6 +813,30 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 booleanSerde.serialize(ABoolean.TRUE, fieldValue.getDataOutput());
                 recordBuilder.addField(nameValue, fieldValue);
                 break;
+        }
+    }
+
+    private void writeCastDefaultNull(Index index) throws HyracksDataException {
+        if (index.getIndexType() == IndexType.BTREE && !index.isPrimaryIndex() && !index.isPrimaryKeyIndex()) {
+            boolean defaultNull =
+                    ((Index.ValueIndexDetails) index.getIndexDetails()).getCastDefaultNull().getOrElse(false);
+            // "Default" field
+            if (defaultNull) {
+                castRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
+                fieldValue.reset();
+                nameValue.reset();
+                aString.setValue(FIELD_NAME_DEFAULT);
+                stringSerde.serialize(aString, nameValue.getDataOutput());
+                nullSerde.serialize(ANull.NULL, fieldValue.getDataOutput());
+                castRecordBuilder.addField(nameValue, fieldValue);
+
+                nameValue.reset();
+                fieldValue.reset();
+                aString.setValue(FIELD_NAME_CAST);
+                stringSerde.serialize(aString, nameValue.getDataOutput());
+                castRecordBuilder.write(fieldValue.getDataOutput(), true);
+                recordBuilder.addField(nameValue, fieldValue);
+            }
         }
     }
 }

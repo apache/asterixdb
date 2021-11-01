@@ -284,7 +284,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
         this.gramLength = gramLength;
         this.fullTextConfig = fullTextConfig;
       }
-    };
+    }
 
     private static class FunctionName {
        public DataverseName dataverse;
@@ -349,7 +349,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
         super.setInput(s);
     }
 
-    public static void main(String args[]) throws ParseException, TokenMgrError, IOException, FileNotFoundException, CompilationException {
+    public static void main(String[] args) throws ParseException, TokenMgrError, IOException, FileNotFoundException, CompilationException {
         File file = new File(args[0]);
         Reader fis = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
         SQLPPParser parser = new SQLPPParser(fis);
@@ -1192,6 +1192,7 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
   String fullTextConfigName = null;
   Token startElementToken = null;
   Boolean excludeUnknown = null;
+  Boolean castDefaultNull = null;
 }
 {
   (
@@ -1210,17 +1211,19 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
       )*
     <RIGHTPAREN>
     ( <TYPE> indexParams = IndexType() )? ( <ENFORCED> { enforced = true; } )?
-    ( <IDENTIFIER>
-      {
-        if (isToken(EXCLUDE)) {
-          excludeUnknown = true;
-        } else if (isToken(INCLUDE)) {
-          excludeUnknown = false;
-        } else {
-          throw createUnexpectedTokenError();
-        }
-      } <UNKNOWN> <KEY>
+    ( LOOKAHEAD({laIdentifier(EXCLUDE) || laIdentifier(INCLUDE)}) <IDENTIFIER>
+    {
+      if (isToken(EXCLUDE)) {
+        excludeUnknown = true;
+      } else if (isToken(INCLUDE)) {
+        excludeUnknown = false;
+      } else {
+        throw createUnexpectedTokenError();
+      }
+    } <UNKNOWN> <KEY>
     )?
+
+    ( <CAST><LEFTPAREN><IDENTIFIER> { expectToken(DEFAULT); } <NULL><RIGHTPAREN> { castDefaultNull = true; })?
   )
   {
     IndexType indexType;
@@ -1236,7 +1239,7 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
     }
     CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
       new Identifier(indexName), indexType, indexedElementList, enforced, gramLength, fullTextConfigName, ifNotExists,
-      excludeUnknown);
+      excludeUnknown, castDefaultNull);
     return addSourceLocation(stmt, startStmtToken);
   }
 }
@@ -1365,7 +1368,7 @@ CreateIndexStatement PrimaryIndexSpecification(Token startStmtToken) throws Pars
       indexName = "primary_idx_" + nameComponents.second;
     }
     CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
-      new Identifier(indexName), IndexType.BTREE, Collections.emptyList(), false, -1, null, ifNotExists, null);
+      new Identifier(indexName), IndexType.BTREE, Collections.emptyList(), false, -1, null, ifNotExists, null, null);
     return addSourceLocation(stmt, startStmtToken);
   }
 }
@@ -5291,6 +5294,7 @@ TOKEN [IGNORE_CASE]:
   | <BTREE : "btree">
   | <BY : "by">
   | <CASE : "case">
+  | <CAST : "cast">
   | <CLOSED : "closed">
   | <CREATE : "create">
   | <CROSS : "cross">

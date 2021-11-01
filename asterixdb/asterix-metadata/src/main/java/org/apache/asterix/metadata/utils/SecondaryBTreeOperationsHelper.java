@@ -21,18 +21,28 @@ package org.apache.asterix.metadata.utils;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
+import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.om.functions.IFunctionManager;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
@@ -48,13 +58,11 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
-import org.apache.hyracks.util.OptionalBoolean;
 
 public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperationsHelper {
 
@@ -84,11 +92,6 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             ExternalScanOperatorDescriptor primaryScanOp = createExternalIndexingOp(spec);
 
             // Assign op.
-            AbstractOperatorDescriptor sourceOp = primaryScanOp;
-            if (isOverridingKeyFieldTypes && !enforcedItemType.equals(itemType)) {
-                sourceOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
-                spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
-            }
             AlgebricksMetaOperatorDescriptor asterixAssignOp =
                     createExternalAssignOp(spec, indexDetails.getKeyFieldNames().size(), secondaryRecDesc);
 
@@ -119,7 +122,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             metaOp.setSourceLocation(sourceLoc);
             spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBulkLoadOp, 0, metaOp, 0);
             root = metaOp;
-            spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
+            spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
             if (excludeUnknown) {
                 spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
                 spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
@@ -141,13 +144,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
             sourceOp = targetOp;
-            if (isOverridingKeyFieldTypes && !enforcedItemType.equals(itemType)) {
-                // primary index scan ----> cast assign
-                targetOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
-                spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
-                sourceOp = targetOp;
-            }
-            // primary index OR cast assign ----> assign op
+            // primary index ----> cast assign op
             targetOp = createAssignOp(spec, indexDetails.getKeyFieldNames().size(), secondaryRecDesc);
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
@@ -233,18 +230,20 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
         boolean isOverridingKeyFieldTypes = indexDetails.isOverridingKeyFieldTypes();
         for (int i = 0; i < numSecondaryKeys; i++) {
             ARecordType sourceType;
+            ARecordType enforcedType;
             int sourceColumn;
             List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
             if (keySourceIndicators == null || keySourceIndicators.get(i) == 0) {
                 sourceType = itemType;
                 sourceColumn = recordColumn;
+                enforcedType = enforcedItemType;
             } else {
                 sourceType = metaType;
                 sourceColumn = recordColumn + 1;
+                enforcedType = enforcedMetaType;
             }
-            secondaryFieldAccessEvalFactories[i] = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
-                    metadataProvider.getFunctionManager(), isOverridingKeyFieldTypes ? enforcedItemType : sourceType,
-                    indexDetails.getKeyFieldNames().get(i), sourceColumn, sourceLoc);
+            secondaryFieldAccessEvalFactories[i] = createFieldAccessors(i, isOverridingKeyFieldTypes, enforcedType,
+                    sourceType, sourceColumn, indexDetails, indexDetails.getKeyFieldTypes().get(i));
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(
                     indexDetails.getKeyFieldTypes().get(i), indexDetails.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;
@@ -302,6 +301,51 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
 
     }
 
+    private IScalarEvaluatorFactory createFieldAccessors(int field, boolean isOverridingKeyFieldTypes,
+            IAType enforcedRecordType, ARecordType recordType, int recordColumn, Index.ValueIndexDetails indexDetails,
+            IAType fieldType) throws AlgebricksException {
+        IFunctionManager funManger = metadataProvider.getFunctionManager();
+        IDataFormat dataFormat = metadataProvider.getDataFormat();
+        IScalarEvaluatorFactory fieldEvalFactory = dataFormat.getFieldAccessEvaluatorFactory(funManger, recordType,
+                indexDetails.getKeyFieldNames().get(field), recordColumn, sourceLoc);
+        boolean castIndexedField = isOverridingKeyFieldTypes && !enforcedRecordType.equals(recordType);
+        if (!castIndexedField) {
+            return fieldEvalFactory;
+        }
+
+        IScalarEvaluatorFactory castFieldEvalFactory;
+        if (IndexUtil.castDefaultNull(index)) {
+            castFieldEvalFactory = createConstructorFunction(funManger, dataFormat, fieldEvalFactory, fieldType);
+        } else if (index.isEnforced()) {
+            IScalarEvaluatorFactory[] castArg = new IScalarEvaluatorFactory[] { fieldEvalFactory };
+            castFieldEvalFactory =
+                    createCastFunction(fieldType, BuiltinType.ANY, true, sourceLoc).createEvaluatorFactory(castArg);
+        } else {
+            IScalarEvaluatorFactory[] castArg = new IScalarEvaluatorFactory[] { fieldEvalFactory };
+            castFieldEvalFactory =
+                    createCastFunction(fieldType, BuiltinType.ANY, false, sourceLoc).createEvaluatorFactory(castArg);
+        }
+        return castFieldEvalFactory;
+    }
+
+    private IScalarEvaluatorFactory createConstructorFunction(IFunctionManager funManager, IDataFormat dataFormat,
+            IScalarEvaluatorFactory fieldEvalFactory, IAType fieldType) throws AlgebricksException {
+        // make CONSTRUCTOR(IF_MISSING(field_access, NULL))
+        IFunctionDescriptor ifMissing = funManager.lookupFunction(BuiltinFunctions.IF_MISSING, sourceLoc);
+        IScalarEvaluatorFactory nullEvalFactory = dataFormat.getConstantEvalFactory(ConstantExpression.NULL.getValue());
+        IScalarEvaluatorFactory[] ifMissingArgs = new IScalarEvaluatorFactory[] { fieldEvalFactory, nullEvalFactory };
+        ifMissing.setSourceLocation(sourceLoc);
+        IScalarEvaluatorFactory ifMissingEvalFactory = ifMissing.createEvaluatorFactory(ifMissingArgs);
+        FunctionIdentifier typeConstructorFun = TypeUtil.getTypeConstructor(TypeComputeUtils.getActualType(fieldType));
+        if (typeConstructorFun == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, "index",
+                    fieldType.getTypeName());
+        }
+        IFunctionDescriptor typeConstructor = funManager.lookupFunction(typeConstructorFun, sourceLoc);
+        typeConstructor.setSourceLocation(sourceLoc);
+        return typeConstructor.createEvaluatorFactory(new IScalarEvaluatorFactory[] { ifMissingEvalFactory });
+    }
+
     private int[] createFieldPermutationForBulkLoadOp(int numSecondaryKeyFields) {
         int[] fieldPermutation = new int[numSecondaryKeyFields + numPrimaryKeys + numFilterFields];
         for (int i = 0; i < fieldPermutation.length; i++) {
@@ -311,11 +355,6 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
     }
 
     private static boolean excludeUnknowns(Index index, Index.ValueIndexDetails details) {
-        if (index.isPrimaryKeyIndex()) {
-            return true;
-        } else {
-            OptionalBoolean excludeUnknownKey = details.isExcludeUnknownKey();
-            return excludeUnknownKey.isPresent() && excludeUnknownKey.get();
-        }
+        return index.isPrimaryKeyIndex() || details.getExcludeUnknownKey().getOrElse(false);
     }
 }

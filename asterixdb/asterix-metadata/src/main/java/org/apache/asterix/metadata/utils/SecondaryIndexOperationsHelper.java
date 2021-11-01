@@ -344,10 +344,15 @@ public abstract class SecondaryIndexOperationsHelper {
     }
 
     IFunctionDescriptor createCastFunction(boolean strictCast, SourceLocation sourceLoc) throws AlgebricksException {
+        return createCastFunction(enforcedItemType, itemType, strictCast, sourceLoc);
+    }
+
+    IFunctionDescriptor createCastFunction(IAType targetType, IAType inputType, boolean strictCast,
+            SourceLocation sourceLoc) throws AlgebricksException {
         IFunctionDescriptor castFuncDesc = metadataProvider.getFunctionManager()
                 .lookupFunction(strictCast ? BuiltinFunctions.CAST_TYPE : BuiltinFunctions.CAST_TYPE_LAX, sourceLoc);
         castFuncDesc.setSourceLocation(sourceLoc);
-        castFuncDesc.setImmutableStates(enforcedItemType, itemType);
+        castFuncDesc.setImmutableStates(targetType, inputType);
         return castFuncDesc;
     }
 
