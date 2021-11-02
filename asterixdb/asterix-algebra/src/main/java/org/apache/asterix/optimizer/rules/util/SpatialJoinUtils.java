@@ -185,7 +185,8 @@ public class SpatialJoinUtils {
                 context.getMetadataProvider(), typeEnvironment);
         IAType rightType = (IAType) context.getExpressionTypeComputer().getType(spatialJoinRightArg,
                 context.getMetadataProvider(), typeEnvironment);
-        if ((leftType != BuiltinType.ARECTANGLE) || (rightType != BuiltinType.ARECTANGLE)) {
+        if ((leftType.getTypeTag() != BuiltinType.ARECTANGLE.getTypeTag())
+                || (rightType.getTypeTag() != BuiltinType.ARECTANGLE.getTypeTag())) {
             return false;
         }
 

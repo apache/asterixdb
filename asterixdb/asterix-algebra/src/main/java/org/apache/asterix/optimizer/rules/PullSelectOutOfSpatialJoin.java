@@ -146,7 +146,8 @@ public class PullSelectOutOfSpatialJoin implements IAlgebraicRewriteRule {
                 context.getMetadataProvider(), typeEnvironment);
         IAType rightType = (IAType) context.getExpressionTypeComputer().getType(f.getArguments().get(1).getValue(),
                 context.getMetadataProvider(), typeEnvironment);
-        if ((leftType != BuiltinType.ARECTANGLE) || (rightType != BuiltinType.ARECTANGLE)) {
+        if ((leftType.getTypeTag() != BuiltinType.ARECTANGLE.getTypeTag())
+                || (rightType.getTypeTag() != BuiltinType.ARECTANGLE.getTypeTag())) {
             return false;
         }
 
