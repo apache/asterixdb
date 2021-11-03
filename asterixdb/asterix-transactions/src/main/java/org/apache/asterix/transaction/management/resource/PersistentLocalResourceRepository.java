@@ -60,7 +60,6 @@ import org.apache.asterix.common.storage.ResourceStorageStats;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
@@ -96,41 +95,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private static final FilenameFilter MASK_FILES_FILTER =
             (dir, name) -> name.startsWith(StorageConstants.MASK_FILE_PREFIX);
     private static final int MAX_CACHED_RESOURCES = 1000;
-    private static final IOFileFilter METADATA_FILES_FILTER = new IOFileFilter() {
-        @Override
-        public boolean accept(File file) {
-            return file.getName().equals(StorageConstants.METADATA_FILE_NAME);
-        }
-
-        @Override
-        public boolean accept(File dir, String name) {
-            return false;
-        }
-    };
-
-    private static final IOFileFilter METADATA_MASK_FILES_FILTER = new IOFileFilter() {
-        @Override
-        public boolean accept(File file) {
-            return file.getName().equals(METADATA_FILE_MASK_NAME);
-        }
-
-        @Override
-        public boolean accept(File dir, String name) {
-            return false;
-        }
-    };
-
-    private static final IOFileFilter ALL_DIR_FILTER = new IOFileFilter() {
-        @Override
-        public boolean accept(File file) {
-            return true;
-        }
-
-        @Override
-        public boolean accept(File dir, String name) {
-            return true;
-        }
-    };
+    private static final FilenameFilter METADATA_FILES_FILTER =
+            (dir, name) -> name.equals(StorageConstants.METADATA_FILE_NAME);
+    private static final FilenameFilter METADATA_MASK_FILES_FILTER =
+            (dir, name) -> name.equals(METADATA_FILE_MASK_NAME);
 
     // Finals
     private final IIOManager ioManager;
@@ -270,7 +238,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             if (!Files.exists(root) || !Files.isDirectory(root)) {
                 continue;
             }
-            final Collection<File> files = FileUtils.listFiles(root.toFile(), METADATA_FILES_FILTER, ALL_DIR_FILTER);
+            final Collection<File> files = IoUtil.getMatchingFiles(root, METADATA_FILES_FILTER);
             try {
                 for (File file : files) {
                     final LocalResource localResource = readLocalResource(file);
@@ -301,7 +269,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     public synchronized void deleteInvalidIndexes(Predicate<LocalResource> filter) throws HyracksDataException {
         for (Path root : storageRoots) {
-            final Collection<File> files = FileUtils.listFiles(root.toFile(), METADATA_FILES_FILTER, ALL_DIR_FILTER);
+            final Collection<File> files = IoUtil.getMatchingFiles(root, METADATA_FILES_FILTER);
             try {
                 for (File file : files) {
                     final LocalResource localResource = readLocalResource(file);
@@ -519,8 +487,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
 
     public synchronized void deleteCorruptedResources() throws HyracksDataException {
         for (Path root : storageRoots) {
-            final Collection<File> metadataMaskFiles =
-                    FileUtils.listFiles(root.toFile(), METADATA_MASK_FILES_FILTER, ALL_DIR_FILTER);
+            final Collection<File> metadataMaskFiles = IoUtil.getMatchingFiles(root, METADATA_MASK_FILES_FILTER);
             for (File metadataMaskFile : metadataMaskFiles) {
                 final File resourceFile = new File(metadataMaskFile.getParent(), METADATA_FILE_NAME);
                 if (resourceFile.exists()) {

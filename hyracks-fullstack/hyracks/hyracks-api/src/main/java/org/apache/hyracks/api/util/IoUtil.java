@@ -19,13 +19,18 @@
 package org.apache.hyracks.api.util;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Objects;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -149,6 +154,38 @@ public class IoUtil {
         } else {
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("Unable to flush directory " + path);
+            }
+        }
+    }
+
+    /**
+     * Gets a collection of files matching {@code filter} by searching {@code root} directory and
+     * all of its subdirectories
+     *
+     * @param root
+     * @param filter
+     * @return a collection of matching files
+     */
+    public static Collection<File> getMatchingFiles(Path root, FilenameFilter filter) {
+        if (!Files.isDirectory(root)) {
+            throw new IllegalArgumentException("Parameter 'root' is not a directory: " + root);
+        }
+        Objects.requireNonNull(filter);
+        Collection<File> files = new ArrayList<>();
+        FileFilter dirOrMatchingFileFilter = file -> file.isDirectory() || filter.accept(file, file.getName());
+        collectDirFiles(root.toFile(), dirOrMatchingFileFilter, files);
+        return files;
+    }
+
+    private static void collectDirFiles(File dir, FileFilter filter, Collection<File> files) {
+        File[] matchingFiles = dir.listFiles(filter);
+        if (matchingFiles != null) {
+            for (File file : matchingFiles) {
+                if (file.isDirectory()) {
+                    collectDirFiles(file, filter, files);
+                } else {
+                    files.add(file);
+                }
             }
         }
     }
