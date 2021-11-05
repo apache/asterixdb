@@ -207,6 +207,9 @@
               <usedDependency>com.sun.xml.bind:jaxb-impl</usedDependency>
               <usedDependency>com.sun.activation:javax.activation</usedDependency>
               <usedDependency>net.razorvine:serpent</usedDependency>
+              <usedDependency>io.netty:netty-resolver-dns</usedDependency>
+              <usedDependency>io.netty:netty-codec-http2</usedDependency>
+              <usedDependency>io.netty:netty-transport-native-unix-common</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -498,6 +501,18 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-azure</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-resolver-dns</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http2</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-native-unix-common</artifactId>
     </dependency>
   </dependencies>
 </project>
