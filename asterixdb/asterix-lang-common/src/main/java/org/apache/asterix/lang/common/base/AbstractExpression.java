@@ -58,4 +58,15 @@ public abstract class AbstractExpression extends AbstractLangExpression implemen
     public List<IExpressionAnnotation> getHints() {
         return hints;
     }
+
+    public <T extends IExpressionAnnotation> T findHint(Class<T> hintClass) {
+        if (hints != null) {
+            for (IExpressionAnnotation hint : hints) {
+                if (hint.getClass().equals(hintClass)) {
+                    return hintClass.cast(hint);
+                }
+            }
+        }
+        return null;
+    }
 }

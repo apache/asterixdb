@@ -96,6 +96,7 @@ public class SetOperationVisitor extends AbstractSqlppExpressionScopingVisitor {
         SelectExpression newSelectExpression = new SelectExpression(selectExpression.getLetList(),
                 newSelectSetOperation, orderBy, limit, selectExpression.isSubquery());
         newSelectExpression.setSourceLocation(sourceLoc);
+        newSelectExpression.addHints(selectExpression.getHints());
         return super.visit(newSelectExpression, arg);
     }
 

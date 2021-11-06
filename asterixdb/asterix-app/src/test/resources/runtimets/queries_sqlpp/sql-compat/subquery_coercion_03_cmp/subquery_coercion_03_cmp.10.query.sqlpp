@@ -1,0 +1,40 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * SQL-compat mode.
+ * Test subquery coercion into a scalar value when it's compared
+ * with an expression which is not an explicit array constructor
+ *
+ * lhs = expr, rhs = subquery
+ *
+ * Test when the subquery returns more than one tuple
+ * (coercion rewriting should produce MISSING and therefore an empty result)
+ */
+
+// requesttype=application/json
+// param sql-compat:json=true
+
+select count(*) cnt
+from [
+  { "r": 1, "x": [ { "y": 0 }, { "y": 1 } ] },
+  { "r": 2, "x": [ { "y": 0 }, { "y": 1 }, { "y": 2 } ] },
+  { "r": 3, "x": [ { "y": 0 }, { "y": 1 }, { "y": 2 }, { "y": 3 } ] }
+] v
+where v.x = (select y from range(0, v.r) y);

@@ -204,4 +204,9 @@ public class FunctionMapUtil {
         }
         return functionName;
     }
+
+    public static FunctionIdentifier createCoreAggregateFunctionIdentifier(FunctionIdentifier scalarfi) {
+        return BuiltinFunctions.getAggregateFunction(scalarfi) != null ? new FunctionIdentifier(scalarfi.getNamespace(),
+                CORE_AGGREGATE_PREFIX + scalarfi.getName(), scalarfi.getArity()) : null;
+    }
 }

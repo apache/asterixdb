@@ -227,7 +227,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         if (!sqlCompatMode) {
             return;
         }
-        SqlCompatRewriteVisitor visitor = new SqlCompatRewriteVisitor();
+        SqlCompatRewriteVisitor visitor = new SqlCompatRewriteVisitor(context);
         rewriteTopExpr(visitor, null);
     }
 

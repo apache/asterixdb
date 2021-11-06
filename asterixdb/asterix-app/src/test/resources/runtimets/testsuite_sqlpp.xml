@@ -10146,6 +10146,11 @@
   </test-group>
   <test-group name="sql-compat">
     <test-case FilePath="sql-compat">
+      <compilation-unit name="in_non_list_01">
+        <output-dir compare="Text">in_non_list_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sql-compat">
       <compilation-unit name="select_star_01">
         <output-dir compare="Text">select_star_01</output-dir>
       </compilation-unit>
@@ -10157,8 +10162,57 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="sql-compat">
-      <compilation-unit name="in_non_list_01">
-        <output-dir compare="Text">in_non_list_01</output-dir>
+      <compilation-unit name="subquery_coercion_01_scalar">
+        <output-dir compare="Text">subquery_coercion_01_scalar</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="subquery_coercion_02_scalar_negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1169: Unable to do subquery coercion. Subquery returns more than one field (in line 32, at column 29)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 32, at column 20)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Both SELECT and SELECT VALUE are present (in line 35, at column 4)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion.  (in line 34, at column 3)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="subquery_coercion_03_cmp">
+        <output-dir compare="Text">subquery_coercion_03_cmp</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="subquery_coercion_04_cmp_negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1169: Unable to do subquery coercion. Subquery returns more than one field (in line 35, at column 26)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Subquery returns more than one field (in line 35, at column 21)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Both SELECT and SELECT VALUE are present (in line 37, at column 3)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Both SELECT and SELECT VALUE are present (in line 38, at column 3)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion.  (in line 36, at column 3)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 35, at column 20)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 36, at column 11)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 37, at column 11)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="subquery_coercion_05_in">
+        <output-dir compare="Text">subquery_coercion_05_in</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="subquery_coercion_06_in_negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1169: Unable to do subquery coercion. Subquery returns more than one field (in line 36, at column 27)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Subquery returns more than one field (in line 37, at column 17)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Both SELECT and SELECT VALUE are present (in line 38, at column 3)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Both SELECT and SELECT VALUE are present (in line 39, at column 3)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion.  (in line 37, at column 3)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 36, at column 21)</expected-error>
+        <expected-error>ASX1169: Unable to do subquery coercion. Unsupported projection kind (in line 37, at column 25)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="subquery_coercion_07_from">
+        <output-dir compare="Text">subquery_coercion_07_from</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
