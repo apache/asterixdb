@@ -326,7 +326,7 @@
             </override>
             <override>
               <gav>com.madgag.spongycastle:core:1.54.0.0</gav>
-              <url>https://raw.githubusercontent.com/rtyley/spongycastle/sc-v1.54.0.0/LICENSE.txt</url>
+              <url>https://raw.githubusercontent.com/rtyley/spongycastle/sc-v1.54.0.0/LICENSE.html.txt</url>
             </override>
             <override>
               <gavs>
