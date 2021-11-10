@@ -4158,6 +4158,7 @@
       <compilation-unit name="bad-type-ddl">
         <output-dir compare="Text">none</output-dir>
         <expected-error>ASX1079: Compilation error: Reserved type name $x</expected-error>
+        <expected-error>ASX0013: Duplicate field name "c" (in line 29, at column 19)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4171,6 +4172,7 @@
         <expected-error>ASX1082: Cannot find datatype with name test.$d$t$i$Cust1</expected-error>
         <expected-error>ASX1082: Cannot find datatype with name test.$d$t$i$Cust2</expected-error>
         <expected-error>ASX1082: Cannot find datatype with name my_unknown_type</expected-error>
+        <expected-error>ASX0013: Duplicate field name "c_name" (in line 25, at column 22)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -13374,6 +13376,7 @@
         <expected-error><![CDATA[ASX1164: Invalid foreign key definition (in line 39, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1166: Invalid foreign key definition: foreign key does not match primary key of view test1.employee_v1 (in line 39, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1167: Cannot change primary key of view test1.employee_v1 (in line 38, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX0013: Duplicate field name "r" (in line 25, at column 20)]]></expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

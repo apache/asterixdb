@@ -313,6 +313,9 @@ public class TypeTranslator {
         IAType[] fldTypes = new IAType[n];
         int i = 0;
         for (String s : names) {
+            if (names.indexOf(s) < i) {
+                throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, rtd.getSourceLocation(), s);
+            }
             fldNames[i++] = s;
         }
         boolean isOpen = rtd.getRecordKind() == RecordKind.OPEN;
