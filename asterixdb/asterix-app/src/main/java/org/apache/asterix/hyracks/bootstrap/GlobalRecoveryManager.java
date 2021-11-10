@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.app.message.StorageCleanupRequestMessage;
@@ -64,6 +65,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
     protected final IHyracksClientConnection hcc;
     protected volatile boolean recoveryCompleted;
     protected volatile boolean recovering;
+    protected Future<?> recoveryFuture;
 
     public GlobalRecoveryManager(ICCServiceContext serviceCtx, IHyracksClientConnection hcc,
             IStorageComponentProvider componentProvider) {
@@ -98,7 +100,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
                      * Perform recovery on a different thread to avoid deadlocks in
                      * {@link org.apache.asterix.common.cluster.IClusterStateManager}
                      */
-                    serviceCtx.getControllerService().getExecutor().submit(() -> {
+                    recoveryFuture = serviceCtx.getControllerService().getExecutor().submit(() -> {
                         try {
                             recover(appCtx);
                         } catch (Throwable e) {
@@ -127,6 +129,9 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         recoveryCompleted = true;
         recovering = false;
+        synchronized (this) {
+            recoveryFuture = null;
+        }
         LOGGER.info("Global Recovery Completed. Refreshing cluster state...");
         appCtx.getClusterStateManager().refreshState();
     }
@@ -166,6 +171,12 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
 
     @Override
     public void notifyStateChange(ClusterState newState) {
+        synchronized (this) {
+            if (recovering && newState == ClusterState.UNUSABLE && recoveryFuture != null) {
+                // interrupt the recovery attempt since cluster became unusable during global recovery
+                recoveryFuture.cancel(true);
+            }
+        }
         if (newState != ClusterState.ACTIVE && newState != ClusterState.RECOVERING) {
             recoveryCompleted = false;
         }
