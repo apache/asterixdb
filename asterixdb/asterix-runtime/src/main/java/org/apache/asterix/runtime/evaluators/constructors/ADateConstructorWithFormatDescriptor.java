@@ -20,36 +20,19 @@
 package org.apache.asterix.runtime.evaluators.constructors;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
-import org.apache.asterix.om.base.AMutableDate;
-import org.apache.asterix.om.base.AMutableInt64;
-import org.apache.asterix.om.base.temporal.AsterixTemporalTypeParseException;
-import org.apache.asterix.om.base.temporal.DateTimeFormatUtils;
-import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 @MissingNullInOutFunction
 public class ADateConstructorWithFormatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
-        @Override
-        public IFunctionDescriptor createFunctionDescriptor() {
-            return new ADateConstructorWithFormatDescriptor();
-        }
-    };
+    public static final IFunctionDescriptorFactory FACTORY = ADateConstructorWithFormatDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -58,48 +41,7 @@ public class ADateConstructorWithFormatDescriptor extends AbstractScalarFunction
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new AbstractDateConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
-
-                    private final IScalarEvaluator formatEval = args[1].createScalarEvaluator(ctx);
-                    private final IPointable formatArg = new VoidPointable();
-                    private final UTF8StringPointable formatTextPtr = new UTF8StringPointable();
-                    private final AMutableInt64 aInt64 = new AMutableInt64(0);
-
-                    @Override
-                    protected void evaluateInput(IFrameTupleReference tuple) throws HyracksDataException {
-                        super.evaluateInput(tuple);
-                        formatEval.evaluate(tuple, formatArg);
-                    }
-
-                    @Override
-                    protected boolean checkAndSetMissingOrNull(IPointable result) throws HyracksDataException {
-                        return PointableHelper.checkAndSetMissingOrNull(result, inputArg, formatArg);
-                    }
-
-                    @Override
-                    protected boolean parseDate(UTF8StringPointable textPtr, AMutableDate result) {
-                        byte[] formatBytes = formatArg.getByteArray();
-                        int formatStartOffset = formatArg.getStartOffset();
-                        int formatLength = formatArg.getLength();
-                        if (formatBytes[formatStartOffset] != ATypeTag.SERIALIZED_STRING_TYPE_TAG) {
-                            return false;
-                        }
-                        formatTextPtr.set(formatBytes, formatStartOffset + 1, formatLength - 1);
-                        try {
-                            if (DateTimeFormatUtils.getInstance().parseDateTime(aInt64, textPtr.getByteArray(),
-                                    textPtr.getCharStartOffset(), textPtr.getUTF8Length(), formatBytes,
-                                    formatTextPtr.getCharStartOffset(), formatTextPtr.getUTF8Length(),
-                                    DateTimeFormatUtils.DateTimeParseMode.DATE_ONLY, false)) {
-                                result.setValue((int) (aInt64.getLongValue() / GregorianCalendarSystem.CHRONON_OF_DAY));
-                                return true;
-                            } else {
-                                return false;
-                            }
-                        } catch (AsterixTemporalTypeParseException e) {
-                            // shouldn't happen
-                            return false;
-                        }
-                    }
+                return new AbstractDateConstructorWithFormatEvaluator(ctx, args, sourceLoc) {
 
                     @Override
                     protected FunctionIdentifier getIdentifier() {

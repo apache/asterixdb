@@ -19,26 +19,14 @@
 package org.apache.asterix.runtime.evaluators.constructors;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
-import org.apache.asterix.dataflow.data.nontagged.serde.ADurationSerializerDeserializer;
-import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.om.base.AMutableYearMonthDuration;
-import org.apache.asterix.om.base.AYearMonthDuration;
-import org.apache.asterix.om.base.temporal.ADurationParserFactory;
-import org.apache.asterix.om.base.temporal.ADurationParserFactory.ADurationParseOption;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IPointable;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
 @MissingNullInOutFunction
 public class AYearMonthDurationConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
@@ -52,52 +40,8 @@ public class AYearMonthDurationConstructorDescriptor extends AbstractScalarFunct
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new AbstractConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
-
-                    private final AMutableYearMonthDuration aYearMonthDuration = new AMutableYearMonthDuration(0);
-                    @SuppressWarnings("unchecked")
-                    private final ISerializerDeserializer<AYearMonthDuration> yearMonthDurationSerde =
-                            SerializerDeserializerProvider.INSTANCE
-                                    .getSerializerDeserializer(BuiltinType.AYEARMONTHDURATION);
-                    private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
-
-                    @Override
-                    protected void evaluateImpl(IPointable result) throws HyracksDataException {
-                        byte[] bytes = inputArg.getByteArray();
-                        int startOffset = inputArg.getStartOffset();
-                        int len = inputArg.getLength();
-                        ATypeTag inputType = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(bytes[startOffset]);
-                        switch (inputType) {
-                            case YEARMONTHDURATION:
-                                result.set(inputArg);
-                                break;
-                            case DURATION:
-                                int months = ADurationSerializerDeserializer.getYearMonth(bytes, startOffset + 1);
-                                aYearMonthDuration.setMonths(months);
-                                resultStorage.reset();
-                                yearMonthDurationSerde.serialize(aYearMonthDuration, out);
-                                result.set(resultStorage);
-                                break;
-                            case STRING:
-                                utf8Ptr.set(bytes, startOffset + 1, len - 1);
-                                if (parseYearMonthDuration(utf8Ptr, aYearMonthDuration)) {
-                                    resultStorage.reset();
-                                    yearMonthDurationSerde.serialize(aYearMonthDuration, out);
-                                    result.set(resultStorage);
-                                } else {
-                                    handleParseError(utf8Ptr, result);
-                                }
-                                break;
-                            default:
-                                handleUnsupportedType(inputType, result);
-                                break;
-                        }
-                    }
-
-                    @Override
-                    protected BuiltinType getTargetType() {
-                        return BuiltinType.AYEARMONTHDURATION;
-                    }
+                return new AbstractYearMonthDurationConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx),
+                        sourceLoc) {
 
                     @Override
                     protected FunctionIdentifier getIdentifier() {
@@ -106,16 +50,6 @@ public class AYearMonthDurationConstructorDescriptor extends AbstractScalarFunct
                 };
             }
         };
-    }
-
-    private static boolean parseYearMonthDuration(UTF8StringPointable textPtr, AMutableYearMonthDuration result) {
-        try {
-            ADurationParserFactory.parseDuration(textPtr.getByteArray(), textPtr.getCharStartOffset(),
-                    textPtr.getUTF8Length(), result, ADurationParseOption.YEAR_MONTH);
-            return true;
-        } catch (HyracksDataException e) {
-            return false;
-        }
     }
 
     @Override

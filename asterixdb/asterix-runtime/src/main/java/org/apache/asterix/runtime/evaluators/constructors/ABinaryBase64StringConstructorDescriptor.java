@@ -28,6 +28,7 @@ import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.util.bytes.Base64Parser;
 
@@ -43,27 +44,7 @@ public class ABinaryBase64StringConstructorDescriptor extends AbstractScalarFunc
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new AbstractBinaryConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
-
-                    private final Base64Parser parser = new Base64Parser();
-
-                    @Override
-                    protected boolean parseBinary(UTF8StringPointable textPtr, AMutableBinary result) {
-                        try {
-                            parser.generatePureByteArrayFromBase64String(textPtr.getByteArray(),
-                                    textPtr.getCharStartOffset(), textPtr.getUTF8Length());
-                        } catch (IllegalArgumentException e) {
-                            return false;
-                        }
-                        result.setValue(parser.getByteArray(), 0, parser.getLength());
-                        return true;
-                    }
-
-                    @Override
-                    protected FunctionIdentifier getIdentifier() {
-                        return ABinaryBase64StringConstructorDescriptor.this.getIdentifier();
-                    }
-                };
+                return new ABinaryBase64StringConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc);
             }
         };
     }
@@ -71,5 +52,32 @@ public class ABinaryBase64StringConstructorDescriptor extends AbstractScalarFunc
     @Override
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.BINARY_BASE64_CONSTRUCTOR;
+    }
+
+    protected static class ABinaryBase64StringConstructorEvaluator extends AbstractBinaryConstructorEvaluator {
+
+        private final Base64Parser parser = new Base64Parser();
+
+        protected ABinaryBase64StringConstructorEvaluator(IEvaluatorContext ctx, IScalarEvaluator inputEval,
+                SourceLocation sourceLoc) {
+            super(ctx, inputEval, sourceLoc);
+        }
+
+        @Override
+        protected boolean parseBinary(UTF8StringPointable textPtr, AMutableBinary result) {
+            try {
+                parser.generatePureByteArrayFromBase64String(textPtr.getByteArray(), textPtr.getCharStartOffset(),
+                        textPtr.getUTF8Length());
+            } catch (IllegalArgumentException e) {
+                return false;
+            }
+            result.setValue(parser.getByteArray(), 0, parser.getLength());
+            return true;
+        }
+
+        @Override
+        protected FunctionIdentifier getIdentifier() {
+            return BuiltinFunctions.BINARY_BASE64_CONSTRUCTOR;
+        }
     }
 }

@@ -16,28 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 
-/**
- * Receives a canonical representation of UUID and construct a UUID value.
- * a UUID is represented by 32 lowercase hexadecimal digits (8-4-4-4-12). (E.g.
- * uuid("02a199ca-bf58-412e-bd9f-60a0c975a8ac"))
- */
-
-@MissingNullInOutFunction
-public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class ADateTimeDefaultNullConstructorWithFormatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = AUUIDFromStringConstructorDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = ADateTimeDefaultNullConstructorWithFormatDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -46,12 +41,19 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-                return new AbstractUUIDFromStringConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx),
-                        sourceLoc) {
+                return new AbstractDateTimeConstructorWithFormatEvaluator(ctx, args, sourceLoc) {
 
                     @Override
                     protected FunctionIdentifier getIdentifier() {
-                        return AUUIDFromStringConstructorDescriptor.this.getIdentifier();
+                        return ADateTimeDefaultNullConstructorWithFormatDescriptor.this.getIdentifier();
+                    }
+
+                    @Override
+                    protected boolean checkAndSetMissingOrNull(IPointable result) throws HyracksDataException {
+                        if (PointableHelper.checkAndSetNull(result, inputArg)) {
+                            return true;
+                        }
+                        return super.checkAndSetMissingOrNull(result);
                     }
                 };
             }
@@ -60,6 +62,6 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.UUID_CONSTRUCTOR;
+        return BuiltinFunctions.DATETIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT;
     }
 }

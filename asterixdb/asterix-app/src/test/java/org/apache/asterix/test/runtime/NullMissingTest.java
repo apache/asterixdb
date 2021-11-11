@@ -89,8 +89,9 @@ public class NullMissingTest {
                 // We test all functions except record, cast and full-text contains functions,
                 // which requires type settings or argument settings.
                 // Instead, we test them in runtime tests.
+                // TODO(ali): ASTERIXDB-2982 do it in a proper way so that it does not exclude classes inadvertently
                 if (!className.contains("record") && !className.contains("Cast")
-                        && !className.contains("FullTextContains")) {
+                        && !className.contains("FullTextContains") && !className.contains("DefaultNull")) {
                     tests.add(new Object[] { getTestName(functionDescriptor.getClass()), functionDescriptor });
                 } else {
                     LOGGER.log(Level.INFO, "Excluding " + className);

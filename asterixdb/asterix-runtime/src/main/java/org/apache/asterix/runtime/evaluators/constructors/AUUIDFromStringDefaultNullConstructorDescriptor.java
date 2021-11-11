@@ -22,11 +22,13 @@ import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 
 /**
  * Receives a canonical representation of UUID and construct a UUID value.
@@ -35,9 +37,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 
 @MissingNullInOutFunction
-public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class AUUIDFromStringDefaultNullConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = AUUIDFromStringConstructorDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = AUUIDFromStringDefaultNullConstructorDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -51,7 +53,12 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
 
                     @Override
                     protected FunctionIdentifier getIdentifier() {
-                        return AUUIDFromStringConstructorDescriptor.this.getIdentifier();
+                        return AUUIDFromStringDefaultNullConstructorDescriptor.this.getIdentifier();
+                    }
+
+                    @Override
+                    protected boolean checkAndSetMissingOrNull(IPointable result) throws HyracksDataException {
+                        return PointableHelper.checkAndSetNull(result, inputArg);
                     }
                 };
             }
@@ -60,6 +67,6 @@ public class AUUIDFromStringConstructorDescriptor extends AbstractScalarFunction
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.UUID_CONSTRUCTOR;
+        return BuiltinFunctions.UUID_DEFAULT_NULL_CONSTRUCTOR;
     }
 }

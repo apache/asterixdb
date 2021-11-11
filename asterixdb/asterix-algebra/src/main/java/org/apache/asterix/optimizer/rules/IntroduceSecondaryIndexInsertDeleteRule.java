@@ -890,21 +890,14 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
     private ScalarFunctionCallExpression constructorFunction(IAType requiredType,
             AbstractFunctionCallExpression inputExpr, SourceLocation sourceLoc) throws CompilationException {
-        FunctionIdentifier typeConstructorFun = TypeUtil.getTypeConstructor(requiredType);
+        FunctionIdentifier typeConstructorFun = TypeUtil.getTypeConstructorDefaultNull(requiredType);
         if (typeConstructorFun == null) {
             throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, "index",
                     requiredType.getTypeName());
         }
-        // make CONSTRUCTOR(IF_MISSING(input, NULL))
-        BuiltinFunctionInfo ifMissingInfo = BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.IF_MISSING);
-        ScalarFunctionCallExpression ifMissingExpr = new ScalarFunctionCallExpression(ifMissingInfo);
-        ifMissingExpr.getArguments().add(new MutableObject<>(inputExpr));
-        ifMissingExpr.getArguments().add(new MutableObject<>(ConstantExpression.NULL));
-        ifMissingExpr.setSourceLocation(sourceLoc);
-
         BuiltinFunctionInfo typeConstructorInfo = BuiltinFunctions.getBuiltinFunctionInfo(typeConstructorFun);
         ScalarFunctionCallExpression constructorExpr = new ScalarFunctionCallExpression(typeConstructorInfo);
-        constructorExpr.getArguments().add(new MutableObject<>(ifMissingExpr));
+        constructorExpr.getArguments().add(new MutableObject<>(inputExpr));
         constructorExpr.setSourceLocation(sourceLoc);
         return constructorExpr;
     }

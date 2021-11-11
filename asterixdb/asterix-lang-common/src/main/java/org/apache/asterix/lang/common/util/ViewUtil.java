@@ -144,7 +144,7 @@ public final class ViewUtil {
             } else {
                 primeType = fieldType;
             }
-            if (TypeUtil.getTypeConstructor(primeType) == null) {
+            if (TypeUtil.getTypeConstructorDefaultNull(primeType) == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, "view",
                         primeType.getTypeName());
             }
@@ -176,8 +176,8 @@ public final class ViewUtil {
             SourceLocation sourceLoc) throws CompilationException {
         String format = temporalDataFormat != null ? getTemporalFormat(targetType, temporalDataFormat) : null;
         boolean withFormat = format != null;
-        FunctionIdentifier constrFid = withFormat ? TypeUtil.getTypeConstructorWithFormat(targetType)
-                : TypeUtil.getTypeConstructor(targetType);
+        FunctionIdentifier constrFid = withFormat ? TypeUtil.getTypeConstructorWithFormatDefaultNull(targetType)
+                : TypeUtil.getTypeConstructorDefaultNull(targetType);
         if (constrFid == null) {
             throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, viewName.toString(),
                     targetType.getTypeName());

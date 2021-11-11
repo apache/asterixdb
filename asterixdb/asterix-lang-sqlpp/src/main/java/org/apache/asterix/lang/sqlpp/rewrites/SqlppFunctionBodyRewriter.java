@@ -173,7 +173,6 @@ class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
                 primeType = fieldType;
             }
             Expression expr = ViewUtil.createFieldAccessExpression(fromVar, fieldName, sourceLoc);
-            expr = ViewUtil.createMissingToNullExpression(expr, sourceLoc); // Default Null handling
             Expression projectExpr =
                     ViewUtil.createTypeConvertExpression(expr, primeType, temporalDataFormat, viewName, sourceLoc);
             VarIdentifier projectVar = context.newVariable();

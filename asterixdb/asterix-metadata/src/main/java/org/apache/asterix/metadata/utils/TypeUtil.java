@@ -62,53 +62,63 @@ public class TypeUtil {
     private TypeUtil() {
     }
 
-    public static FunctionIdentifier getTypeConstructor(IAType type) {
+    /**
+     * @param type type
+     *
+     * @return a type constructor that produces NULL for MISSING input
+     */
+    public static FunctionIdentifier getTypeConstructorDefaultNull(IAType type) {
         switch (type.getTypeTag()) {
             case TINYINT:
-                return BuiltinFunctions.INT8_CONSTRUCTOR;
+                return BuiltinFunctions.INT8_DEFAULT_NULL_CONSTRUCTOR;
             case SMALLINT:
-                return BuiltinFunctions.INT16_CONSTRUCTOR;
+                return BuiltinFunctions.INT16_DEFAULT_NULL_CONSTRUCTOR;
             case INTEGER:
-                return BuiltinFunctions.INT32_CONSTRUCTOR;
+                return BuiltinFunctions.INT32_DEFAULT_NULL_CONSTRUCTOR;
             case BIGINT:
-                return BuiltinFunctions.INT64_CONSTRUCTOR;
+                return BuiltinFunctions.INT64_DEFAULT_NULL_CONSTRUCTOR;
             case FLOAT:
-                return BuiltinFunctions.FLOAT_CONSTRUCTOR;
+                return BuiltinFunctions.FLOAT_DEFAULT_NULL_CONSTRUCTOR;
             case DOUBLE:
-                return BuiltinFunctions.DOUBLE_CONSTRUCTOR;
+                return BuiltinFunctions.DOUBLE_DEFAULT_NULL_CONSTRUCTOR;
             case BOOLEAN:
-                return BuiltinFunctions.BOOLEAN_CONSTRUCTOR;
+                return BuiltinFunctions.BOOLEAN_DEFAULT_NULL_CONSTRUCTOR;
             case STRING:
-                return BuiltinFunctions.STRING_CONSTRUCTOR;
+                return BuiltinFunctions.STRING_DEFAULT_NULL_CONSTRUCTOR;
             case DATE:
-                return BuiltinFunctions.DATE_CONSTRUCTOR;
+                return BuiltinFunctions.DATE_DEFAULT_NULL_CONSTRUCTOR;
             case TIME:
-                return BuiltinFunctions.TIME_CONSTRUCTOR;
+                return BuiltinFunctions.TIME_DEFAULT_NULL_CONSTRUCTOR;
             case DATETIME:
-                return BuiltinFunctions.DATETIME_CONSTRUCTOR;
+                return BuiltinFunctions.DATETIME_DEFAULT_NULL_CONSTRUCTOR;
             case YEARMONTHDURATION:
-                return BuiltinFunctions.YEAR_MONTH_DURATION_CONSTRUCTOR;
+                return BuiltinFunctions.YEAR_MONTH_DURATION_DEFAULT_NULL_CONSTRUCTOR;
             case DAYTIMEDURATION:
-                return BuiltinFunctions.DAY_TIME_DURATION_CONSTRUCTOR;
+                return BuiltinFunctions.DAY_TIME_DURATION_DEFAULT_NULL_CONSTRUCTOR;
             case DURATION:
-                return BuiltinFunctions.DURATION_CONSTRUCTOR;
+                return BuiltinFunctions.DURATION_DEFAULT_NULL_CONSTRUCTOR;
             case UUID:
-                return BuiltinFunctions.UUID_CONSTRUCTOR;
+                return BuiltinFunctions.UUID_DEFAULT_NULL_CONSTRUCTOR;
             case BINARY:
-                return BuiltinFunctions.BINARY_BASE64_CONSTRUCTOR;
+                return BuiltinFunctions.BINARY_BASE64_DEFAULT_NULL_CONSTRUCTOR;
             default:
                 return null;
         }
     }
 
-    public static FunctionIdentifier getTypeConstructorWithFormat(IAType type) {
+    /**
+     * @param type type
+     *
+     * @return a type constructor that produces NULL for MISSING input
+     */
+    public static FunctionIdentifier getTypeConstructorWithFormatDefaultNull(IAType type) {
         switch (type.getTypeTag()) {
             case DATE:
-                return BuiltinFunctions.DATE_CONSTRUCTOR_WITH_FORMAT;
+                return BuiltinFunctions.DATE_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT;
             case TIME:
-                return BuiltinFunctions.TIME_CONSTRUCTOR_WITH_FORMAT;
+                return BuiltinFunctions.TIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT;
             case DATETIME:
-                return BuiltinFunctions.DATETIME_CONSTRUCTOR_WITH_FORMAT;
+                return BuiltinFunctions.DATETIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT;
             default:
                 return null;
         }

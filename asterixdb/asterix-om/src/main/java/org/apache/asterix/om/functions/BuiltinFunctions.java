@@ -1115,24 +1115,42 @@ public class BuiltinFunctions {
     // constructors:
     public static final FunctionIdentifier BOOLEAN_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "boolean", 1);
+    public static final FunctionIdentifier BOOLEAN_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "boolean-default-null", 1);
     public static final FunctionIdentifier STRING_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string", 1);
+    public static final FunctionIdentifier STRING_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "string-default-null", 1);
     public static final FunctionIdentifier BINARY_HEX_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "hex", 1);
     public static final FunctionIdentifier BINARY_BASE64_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "base64", 1);
+    public static final FunctionIdentifier BINARY_BASE64_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "base64-default-null", 1);
     public static final FunctionIdentifier INT8_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int8", 1);
+    public static final FunctionIdentifier INT8_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int8-default-null", 1);
     public static final FunctionIdentifier INT16_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int16", 1);
+    public static final FunctionIdentifier INT16_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int16-default-null", 1);
     public static final FunctionIdentifier INT32_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int32", 1);
+    public static final FunctionIdentifier INT32_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int32-default-null", 1);
     public static final FunctionIdentifier INT64_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int64", 1);
+    public static final FunctionIdentifier INT64_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "int64-default-null", 1);
     public static final FunctionIdentifier FLOAT_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "float", 1);
+    public static final FunctionIdentifier FLOAT_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "float-default-null", 1);
     public static final FunctionIdentifier DOUBLE_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "double", 1);
+    public static final FunctionIdentifier DOUBLE_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "double-default-null", 1);
     public static final FunctionIdentifier POINT_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "point", 1);
     public static final FunctionIdentifier POINT3D_CONSTRUCTOR =
@@ -1147,25 +1165,45 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "polygon", 1);
     public static final FunctionIdentifier TIME_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "time", 1);
+    public static final FunctionIdentifier TIME_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "time-default-null", 1);
     public static final FunctionIdentifier TIME_CONSTRUCTOR_WITH_FORMAT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "time", 2);
+    public static final FunctionIdentifier TIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "time-default-null", 2);
     public static final FunctionIdentifier DATE_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "date", 1);
+    public static final FunctionIdentifier DATE_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "date-default-null", 1);
     public static final FunctionIdentifier DATE_CONSTRUCTOR_WITH_FORMAT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "date", 2);
+    public static final FunctionIdentifier DATE_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "date-default-null", 2);
     public static final FunctionIdentifier DATETIME_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime", 1);
+    public static final FunctionIdentifier DATETIME_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime-default-null", 1);
     public static final FunctionIdentifier DATETIME_CONSTRUCTOR_WITH_FORMAT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime", 2);
+    public static final FunctionIdentifier DATETIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "datetime-default-null", 2);
     public static final FunctionIdentifier DURATION_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "duration", 1);
+    public static final FunctionIdentifier DURATION_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "duration-default-null", 1);
     public static final FunctionIdentifier UUID_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "uuid", 1);
+    public static final FunctionIdentifier UUID_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "uuid-default-null", 1);
 
     public static final FunctionIdentifier YEAR_MONTH_DURATION_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "year-month-duration", 1);
+    public static final FunctionIdentifier YEAR_MONTH_DURATION_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "year-month-duration-default-null", 1);
     public static final FunctionIdentifier DAY_TIME_DURATION_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day-time-duration", 1);
+    public static final FunctionIdentifier DAY_TIME_DURATION_DEFAULT_NULL_CONSTRUCTOR =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "day-time-duration-default-null", 1);
 
     public static final FunctionIdentifier INTERVAL_CONSTRUCTOR =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "interval", 2);
@@ -1754,6 +1792,30 @@ public class BuiltinFunctions {
         addFunction(LINE_CONSTRUCTOR, ALineTypeComputer.INSTANCE, true);
         addPrivateFunction(MAKE_FIELD_INDEX_HANDLE, AnyTypeComputer.INSTANCE, true);
         addPrivateFunction(MAKE_FIELD_NAME_HANDLE, AnyTypeComputer.INSTANCE, true);
+
+        // cast null type constructors
+        addPrivateFunction(BOOLEAN_DEFAULT_NULL_CONSTRUCTOR, ABooleanTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(INT8_DEFAULT_NULL_CONSTRUCTOR, AInt8TypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(INT16_DEFAULT_NULL_CONSTRUCTOR, AInt16TypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(INT32_DEFAULT_NULL_CONSTRUCTOR, AInt32TypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(INT64_DEFAULT_NULL_CONSTRUCTOR, AInt64TypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(FLOAT_DEFAULT_NULL_CONSTRUCTOR, AFloatTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(DOUBLE_DEFAULT_NULL_CONSTRUCTOR, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(STRING_DEFAULT_NULL_CONSTRUCTOR, AStringTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(DATE_DEFAULT_NULL_CONSTRUCTOR, ADateTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(DATE_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT, ADateTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(TIME_DEFAULT_NULL_CONSTRUCTOR, ATimeTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(TIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT, ATimeTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(DATETIME_DEFAULT_NULL_CONSTRUCTOR, ADateTimeTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(DATETIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT, ADateTimeTypeComputer.INSTANCE_NULLABLE,
+                true);
+        addPrivateFunction(DURATION_DEFAULT_NULL_CONSTRUCTOR, ADurationTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(DAY_TIME_DURATION_DEFAULT_NULL_CONSTRUCTOR, ADayTimeDurationTypeComputer.INSTANCE_NULLABLE,
+                true);
+        addPrivateFunction(YEAR_MONTH_DURATION_DEFAULT_NULL_CONSTRUCTOR,
+                AYearMonthDurationTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(UUID_DEFAULT_NULL_CONSTRUCTOR, AUUIDTypeComputer.INSTANCE_NULLABLE, true);
+        addPrivateFunction(BINARY_BASE64_DEFAULT_NULL_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE_NULLABLE, true);
 
         addPrivateFunction(NUMERIC_UNARY_MINUS, NumericUnaryTypeComputer.INSTANCE, true);
         addPrivateFunction(NUMERIC_SUBTRACT, NumericAddSubMulDivTypeComputer.INSTANCE_SUB, true);

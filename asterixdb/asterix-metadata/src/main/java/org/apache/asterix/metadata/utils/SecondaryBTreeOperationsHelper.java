@@ -31,7 +31,6 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
-import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
@@ -41,7 +40,6 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
@@ -315,7 +313,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
 
         IScalarEvaluatorFactory castFieldEvalFactory;
         if (IndexUtil.castDefaultNull(index)) {
-            castFieldEvalFactory = createConstructorFunction(funManger, dataFormat, fieldEvalFactory, fieldType);
+            castFieldEvalFactory = createConstructorFunction(funManger, fieldEvalFactory, fieldType);
         } else if (index.isEnforced()) {
             IScalarEvaluatorFactory[] castArg = new IScalarEvaluatorFactory[] { fieldEvalFactory };
             castFieldEvalFactory =
@@ -328,22 +326,17 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
         return castFieldEvalFactory;
     }
 
-    private IScalarEvaluatorFactory createConstructorFunction(IFunctionManager funManager, IDataFormat dataFormat,
+    private IScalarEvaluatorFactory createConstructorFunction(IFunctionManager funManager,
             IScalarEvaluatorFactory fieldEvalFactory, IAType fieldType) throws AlgebricksException {
-        // make CONSTRUCTOR(IF_MISSING(field_access, NULL))
-        IFunctionDescriptor ifMissing = funManager.lookupFunction(BuiltinFunctions.IF_MISSING, sourceLoc);
-        IScalarEvaluatorFactory nullEvalFactory = dataFormat.getConstantEvalFactory(ConstantExpression.NULL.getValue());
-        IScalarEvaluatorFactory[] ifMissingArgs = new IScalarEvaluatorFactory[] { fieldEvalFactory, nullEvalFactory };
-        ifMissing.setSourceLocation(sourceLoc);
-        IScalarEvaluatorFactory ifMissingEvalFactory = ifMissing.createEvaluatorFactory(ifMissingArgs);
-        FunctionIdentifier typeConstructorFun = TypeUtil.getTypeConstructor(TypeComputeUtils.getActualType(fieldType));
+        FunctionIdentifier typeConstructorFun =
+                TypeUtil.getTypeConstructorDefaultNull(TypeComputeUtils.getActualType(fieldType));
         if (typeConstructorFun == null) {
             throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, "index",
                     fieldType.getTypeName());
         }
         IFunctionDescriptor typeConstructor = funManager.lookupFunction(typeConstructorFun, sourceLoc);
         typeConstructor.setSourceLocation(sourceLoc);
-        return typeConstructor.createEvaluatorFactory(new IScalarEvaluatorFactory[] { ifMissingEvalFactory });
+        return typeConstructor.createEvaluatorFactory(new IScalarEvaluatorFactory[] { fieldEvalFactory });
     }
 
     private int[] createFieldPermutationForBulkLoadOp(int numSecondaryKeyFields) {
