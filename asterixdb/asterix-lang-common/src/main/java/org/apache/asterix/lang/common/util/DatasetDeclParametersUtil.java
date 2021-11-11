@@ -18,9 +18,14 @@
  */
 package org.apache.asterix.lang.common.util;
 
+import java.util.List;
+
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
+import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
+import org.apache.asterix.lang.common.expression.TypeExpression;
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
@@ -126,5 +131,39 @@ public class DatasetDeclParametersUtil {
         final String[] schemeName = { NODE_GROUP_NAME_PARAMETER_NAME };
         final IAType[] schemeType = { BuiltinType.ASTRING };
         return new ARecordType(NODE_GROUP_NAME, schemeName, schemeType, false);
+    }
+
+    /**
+     *  Adjusts dataset inline type definition if it has primary key specification:
+     *  forces NOT UNKNOWN on fields that are part of primary key.
+     */
+    public static void adjustInlineTypeDecl(TypeExpression typeDecl, List<List<String>> primaryKeyFields,
+            List<Integer> primaryKeySources, boolean isMeta) {
+        switch (typeDecl.getTypeKind()) {
+            case RECORD:
+                RecordTypeDefinition recordTypeDef = (RecordTypeDefinition) typeDecl;
+                for (int i = 0, n = primaryKeyFields.size(); i < n; i++) {
+                    List<String> primaryKeyPath = primaryKeyFields.get(i);
+                    if (primaryKeyPath.size() == 1) {
+                        String primaryKeyFieldName = primaryKeyPath.get(0);
+                        boolean isMetaSource =
+                                primaryKeySources != null && primaryKeySources.get(i) == Index.META_RECORD_INDICATOR;
+                        boolean isSameSource = isMetaSource == isMeta;
+                        if (isSameSource) {
+                            int fieldIdx = recordTypeDef.getFieldNames().indexOf(primaryKeyFieldName);
+                            if (fieldIdx >= 0) {
+                                recordTypeDef.getMissableFields().set(fieldIdx, false);
+                                recordTypeDef.getNullableFields().set(fieldIdx, false);
+                            }
+                        }
+                    }
+                }
+                break;
+            case TYPEREFERENCE:
+                // this is not an inline type decl
+                break;
+            default:
+                throw new IllegalStateException(typeDecl.getTypeKind().toString());
+        }
     }
 }

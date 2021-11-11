@@ -13360,8 +13360,8 @@
         <expected-error><![CDATA[ASX1014: Field "unknown_field" is not found (in line 25, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1014: Field "unknown_field_2" is not found (in line 25, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 28 >>  as select r from range(1,2) r;<< Encountered "as" at column 3]]></expected-error>
-        <expected-error><![CDATA[ASX1021: The primary key field "r" cannot be nullable (in line 25, at column 1)]]></expected-error>
-        <expected-error><![CDATA[ASX1021: The primary key field "r2" cannot be nullable (in line 25, at column 1)]]></expected-error>
+        <expected-error><![CDATA[ASX0013: Duplicate field name "r" (in line 25, at column 20)]]></expected-error>
+        <expected-error><![CDATA[ASX1167: Cannot change primary key of view test1.employee_v1 (in line 38, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1162: Invalid primary key definition (in line 25, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1162: Invalid primary key definition (in line 26, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 36 >>  as employee;<< Encountered "as" at column 3]]></expected-error>
@@ -13375,8 +13375,6 @@
         <expected-error><![CDATA[ASX1164: Invalid foreign key definition (in line 43, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1164: Invalid foreign key definition (in line 39, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1166: Invalid foreign key definition: foreign key does not match primary key of view test1.employee_v1 (in line 39, at column 1)]]></expected-error>
-        <expected-error><![CDATA[ASX1167: Cannot change primary key of view test1.employee_v1 (in line 38, at column 1)]]></expected-error>
-        <expected-error><![CDATA[ASX0013: Duplicate field name "r" (in line 25, at column 20)]]></expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

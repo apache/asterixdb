@@ -25,7 +25,7 @@ USE test;
 
 CREATE FUNCTION listMetadata() {
   SELECT "Dataset" AS en, d.DatasetName, d.DatatypeDataverseName, d.DatatypeName,
-    d.MetatypeDataverseName, d.MetatypeName
+    d.MetatypeDataverseName, d.MetatypeName, d.InternalDetails.PrimaryKey, d.InternalDetails.KeySourceIndicator
   FROM Metadata.`Dataset` d
   WHERE d.DataverseName = "test"
   UNION ALL
@@ -52,11 +52,11 @@ CREATE DATASET A_Customers_Closed(
 ) CLOSED TYPE PRIMARY KEY c_custkey;
 
 CREATE DATASET A_Customers_Open(
-  c_custkey integer not unknown,
-  c_name string not unknown,
+  c_custkey integer /* auto NOT UNKNOWN if used in PRIMARY KEY */,
+  c_name string /* auto NOT UNKNOWN if used in PRIMARY KEY */,
   c_phone string,
   c_comment string
-) OPEN TYPE PRIMARY KEY c_custkey;
+) OPEN TYPE PRIMARY KEY c_custkey, c_name;
 
 /* External datasets */
 
@@ -117,16 +117,16 @@ WITH META(c_x integer not unknown, c_y integer)
 PRIMARY KEY c_custkey ;
 
 CREATE DATASET C_Customers_Meta_Closed(
-  c_custkey integer not unknown,
+  c_custkey integer /* auto NOT UNKNOWN if used in PRIMARY KEY */,
   c_name string not unknown,
   c_phone string,
   c_comment string
 ) CLOSED TYPE
 WITH META(
-  c_x integer not unknown,
+  c_x integer /* auto NOT UNKNOWN if used in PRIMARY KEY */,
   c_y integer
 ) CLOSED TYPE
-PRIMARY KEY c_custkey;
+PRIMARY KEY c_custkey, META().c_x;
 
 CREATE DATASET C_Customers_Meta_Open(
   c_custkey integer not unknown,
@@ -135,7 +135,7 @@ CREATE DATASET C_Customers_Meta_Open(
   c_comment string
 ) OPEN TYPE
 WITH META(
-  c_x integer not unknown,
-  c_y integer
+  c_x integer /* auto NOT UNKNOWN if used in PRIMARY KEY */,
+  c_y integer /* auto NOT UNKNOWN if used in PRIMARY KEY */
 ) OPEN TYPE
-PRIMARY KEY c_custkey;
+PRIMARY KEY META().c_x, META().c_y;

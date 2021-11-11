@@ -17,7 +17,8 @@
  * under the License.
  */
 
-select DataverseName, DatasetName, ViewDetails
+select d.DataverseName, d.DatasetName, d.ViewDetails, dt.Derived.Record.Fields as DatatypeFields
 from Metadata.`Dataset` d
-where DatasetType='VIEW'
-order by DataverseName, DatasetName;
+join Metadata.`Datatype` dt on d.DatatypeDataverseName = dt.DataverseName and d.DatatypeName = dt.DatatypeName
+where d.DatasetType='VIEW'
+order by d.DataverseName, d.DatasetName;

@@ -82,9 +82,10 @@ create view v5_pk(
 as t2;
 
 /* primary key (not enforced), check that invalid tuples are eliminated */
+/* also check that NOT UNKNOWN type quantifier is automatically assumed for primary keys */
 
 create view v6_pk_no_nulls(
-  c_i64 int64 not unknown,
+  c_i64 int64,
   c_id int32
 ) default null
   primary key (c_i64) not enforced

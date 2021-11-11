@@ -17,12 +17,10 @@
  * under the License.
  */
 
---- Negative: primary key field must be declared as "not unknown"
+--- Negative: view inline type has duplicate fields
 
 drop dataverse test if exists;
 create dataverse test;
 
-create view test.v1(r bigint)
-  default null
-  primary key (r) not enforced
-  as select r from range(1,2) r;
+create view test.v1(r bigint, r bigint) default null as
+  select r, [r] a from range(1,2) r;
