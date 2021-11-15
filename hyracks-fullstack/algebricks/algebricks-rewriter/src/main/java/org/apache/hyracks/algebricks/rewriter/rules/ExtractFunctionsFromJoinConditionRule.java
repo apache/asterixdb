@@ -104,6 +104,7 @@ public class ExtractFunctionsFromJoinConditionRule implements IAlgebraicRewriteR
         } else if (AlgebricksBuiltinFunctions.isComparisonFunction(fi) || isComparisonFunction(fi)) {
             for (Mutable<ILogicalExpression> exprRef : fexp.getArguments()) {
                 if (exprRef.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    boolean argModified = false;
                     SourceLocation exprRefSourceLoc = exprRef.getValue().getSourceLocation();
                     LogicalVariable newVar = context.newVar();
                     AssignOperator newAssign = new AssignOperator(newVar,
@@ -123,7 +124,7 @@ public class ExtractFunctionsFromJoinConditionRule implements IAlgebraicRewriteR
                         // place assign on left branch
                         newAssign.getInputs().add(new MutableObject<ILogicalOperator>(leftBranch));
                         leftBranchRef.setValue(newAssign);
-                        modified = true;
+                        argModified = true;
                     } else {
                         Mutable<ILogicalOperator> rightBranchRef = joinOp.getInputs().get(1);
                         ILogicalOperator rightBranch = rightBranchRef.getValue();
@@ -133,17 +134,18 @@ public class ExtractFunctionsFromJoinConditionRule implements IAlgebraicRewriteR
                             // place assign on right branch
                             newAssign.getInputs().add(new MutableObject<ILogicalOperator>(rightBranch));
                             rightBranchRef.setValue(newAssign);
-                            modified = true;
+                            argModified = true;
                         }
                     }
 
-                    if (modified) {
+                    if (argModified) {
                         // Replace original expr with variable reference.
                         VariableReferenceExpression newVarRef = new VariableReferenceExpression(newVar);
                         newVarRef.setSourceLocation(exprRefSourceLoc);
                         exprRef.setValue(newVarRef);
                         context.computeAndSetTypeEnvironmentForOperator(newAssign);
                         context.computeAndSetTypeEnvironmentForOperator(joinOp);
+                        modified = true;
                     }
                 }
             }
