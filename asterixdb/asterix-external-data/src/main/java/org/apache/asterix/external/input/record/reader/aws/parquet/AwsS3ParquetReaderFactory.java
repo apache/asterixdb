@@ -50,7 +50,7 @@ public class AwsS3ParquetReaderFactory extends HDFSDataSourceFactory {
         putS3ConfToHadoopConf(configuration, path);
 
         //Configure Hadoop S3 input splits
-        JobConf conf = createHdfsConf(serviceCtx, configuration, warningCollector.shouldWarn());
+        JobConf conf = createHdfsConf(serviceCtx, configuration);
         int numberOfPartitions = getPartitionConstraint().getLocations().length;
         ExternalDataUtils.AwsS3.configureAwsS3HdfsJobConf(conf, configuration, numberOfPartitions);
         configureHdfsConf(conf, configuration);

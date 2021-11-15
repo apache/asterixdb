@@ -49,8 +49,8 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
     private final List<Warning> warnings;
     private Map<String, FunctionCallInformation> funcInfo;
 
-    public AsterixTypeToParquetTypeVisitor(boolean shouldWarn) {
-        warnings = shouldWarn ? new ArrayList<>() : null;
+    public AsterixTypeToParquetTypeVisitor() {
+        warnings = new ArrayList<>();
     }
 
     public MessageType clipType(ARecordType rootType, MessageType fileSchema,
@@ -161,7 +161,7 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
         ATypeTag expectedType = node.getTypeTag();
 
         boolean isNotExpected = actualType != expectedType;
-        if (warnings != null && isNotExpected) {
+        if (isNotExpected) {
             //typeName is unique
             FunctionCallInformation info = funcInfo.get(node.getTypeName());
             //If no warning is created, then it means it has been reported

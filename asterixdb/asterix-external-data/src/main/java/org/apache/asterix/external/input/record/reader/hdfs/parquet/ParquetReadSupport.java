@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
@@ -52,8 +51,7 @@ public class ParquetReadSupport extends ReadSupport<IValueReference> {
     private static MessageType getRequestedSchema(InitContext context) {
         Configuration configuration = context.getConfiguration();
         MessageType fileSchema = context.getFileSchema();
-        boolean shouldWarn = configuration.getBoolean(ExternalDataConstants.KEY_HADOOP_ASTERIX_WARNINGS_ENABLED, false);
-        AsterixTypeToParquetTypeVisitor visitor = new AsterixTypeToParquetTypeVisitor(shouldWarn);
+        AsterixTypeToParquetTypeVisitor visitor = new AsterixTypeToParquetTypeVisitor();
         try {
             ARecordType expectedType = HDFSUtils.getExpectedType(configuration);
             Map<String, FunctionCallInformation> functionCallInformationMap =
@@ -61,7 +59,7 @@ public class ParquetReadSupport extends ReadSupport<IValueReference> {
             MessageType requestedType = visitor.clipType(expectedType, fileSchema, functionCallInformationMap);
             List<Warning> warnings = visitor.getWarnings();
 
-            if (shouldWarn && !warnings.isEmpty()) {
+            if (!warnings.isEmpty()) {
                 //New warnings were created, set the warnings in hadoop configuration to be reported
                 HDFSUtils.setWarnings(warnings, configuration);
                 //Update the reported warnings so that we do not report the same warning again

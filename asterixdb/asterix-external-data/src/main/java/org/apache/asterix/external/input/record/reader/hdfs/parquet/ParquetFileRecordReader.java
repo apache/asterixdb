@@ -51,10 +51,8 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
     @Override
     public void close() throws IOException {
         super.close();
-        if (warningCollector.shouldWarn()) {
-            //report warnings
-            HDFSUtils.issueWarnings(warningCollector, conf);
-        }
+        //Issue warning if any was reported
+        HDFSUtils.issueWarnings(warningCollector, conf);
     }
 
     @SuppressWarnings("unchecked")

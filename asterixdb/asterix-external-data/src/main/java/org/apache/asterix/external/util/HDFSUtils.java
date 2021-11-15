@@ -201,7 +201,7 @@ public class HDFSUtils {
         }
     }
 
-    public static JobConf configureHDFSJobConf(Map<String, String> configuration, boolean shouldWarn) {
+    public static JobConf configureHDFSJobConf(Map<String, String> configuration) {
         JobConf conf = new JobConf();
         String localShortCircuitSocketPath = configuration.get(ExternalDataConstants.KEY_LOCAL_SOCKET_PATH);
         String formatClassName = HDFSUtils.getInputFormatClassName(configuration);
@@ -235,11 +235,6 @@ public class HDFSUtils {
                 //Subset of the values were requested, set the functionCallInformation
                 conf.set(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION,
                         configuration.get(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION));
-                /*
-                 * Allows Parquet to issue warnings in case we found type mismatches (if warnings are enabled).
-                 * Warnings will be issued during the type matching of Parquet's schema with the requested schema
-                 */
-                conf.setBoolean(ExternalDataConstants.KEY_HADOOP_ASTERIX_WARNINGS_ENABLED, shouldWarn);
             }
             conf.set(ExternalDataConstants.KEY_REQUESTED_FIELDS, requestedValues);
         }
@@ -320,7 +315,7 @@ public class HDFSUtils {
 
     public static void issueWarnings(IWarningCollector warningCollector, Configuration conf) throws IOException {
         String warnings = conf.get(ExternalDataConstants.KEY_HADOOP_ASTERIX_WARNINGS_LIST, "");
-        if (!warnings.isEmpty() && warningCollector.shouldWarn()) {
+        if (!warnings.isEmpty()) {
             String[] encodedWarnings = warnings.split(",");
             Base64.Decoder decoder = Base64.getDecoder();
             for (int i = 0; i < encodedWarnings.length; i++) {
@@ -330,7 +325,9 @@ public class HDFSUtils {
                  */
                 byte[] warningBytes = decoder.decode(encodedWarnings[i]);
                 DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(warningBytes));
-                warningCollector.warn(Warning.create(dataInputStream));
+                if (warningCollector.shouldWarn()) {
+                    warningCollector.warn(Warning.create(dataInputStream));
+                }
             }
             //Remove reported warnings
             conf.unset(ExternalDataConstants.KEY_HADOOP_ASTERIX_WARNINGS_LIST);
@@ -347,5 +344,15 @@ public class HDFSUtils {
         //Disable fs cache
         conf.set(String.format(ExternalDataConstants.KEY_HADOOP_DISABLE_FS_CACHE_TEMPLATE, protocol),
                 ExternalDataConstants.TRUE);
+    }
+
+    /**
+     * Check whether the provided path is empty
+     *
+     * @param job Hadoop Configuration
+     * @return <code>true</code> if the path is empty, <code>false</code> otherwise
+     */
+    public static boolean isEmpty(JobConf job) {
+        return job.get(ExternalDataConstants.KEY_HADOOP_INPUT_DIR, "").isEmpty();
     }
 }

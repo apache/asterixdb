@@ -65,7 +65,7 @@ public class HDFSLookupReaderFactory<T> implements ILookupReaderFactory<T> {
             IWarningCollector warningCollector) throws AsterixException {
         this.serviceCtx = serviceCtx;
         this.configuration = configuration;
-        JobConf conf = HDFSUtils.configureHDFSJobConf(configuration, warningCollector.shouldWarn());
+        JobConf conf = HDFSUtils.configureHDFSJobConf(configuration);
         try {
             confFactory = new ConfFactory(conf);
         } catch (HyracksDataException e) {

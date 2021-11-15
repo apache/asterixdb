@@ -54,7 +54,7 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
         putAzureBlobConfToHadoopConf(configuration, path);
 
         //Configure Hadoop Azure input splits
-        JobConf conf = createHdfsConf(serviceCtx, configuration, warningCollector.shouldWarn());
+        JobConf conf = createHdfsConf(serviceCtx, configuration);
         ExternalDataUtils.Azure.configureAzureHdfsJobConf(conf, configuration, endPoint);
         configureHdfsConf(conf, configuration);
     }

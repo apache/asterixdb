@@ -163,6 +163,15 @@
         <expected-error>ASX1161: Type 'ParquetType' contains declared fields, which is not supported for 'parquet' format</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/no-files">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/no-files</output-dir>
+        <source-location>false</source-location>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+      </compilation-unit>
+    </test-case>
     <!-- Parquet Tests End -->
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">

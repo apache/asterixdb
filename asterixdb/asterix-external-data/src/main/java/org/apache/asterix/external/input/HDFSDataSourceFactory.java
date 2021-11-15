@@ -54,6 +54,7 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.hdfs.dataflow.ConfFactory;
 import org.apache.hyracks.hdfs.dataflow.InputSplitsFactory;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
@@ -86,16 +87,16 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
             IWarningCollector warningCollector) throws AlgebricksException, HyracksDataException {
-        JobConf hdfsConf = createHdfsConf(serviceCtx, configuration, warningCollector.shouldWarn());
+        JobConf hdfsConf = createHdfsConf(serviceCtx, configuration);
         configureHdfsConf(hdfsConf, configuration);
     }
 
-    protected JobConf createHdfsConf(IServiceContext serviceCtx, Map<String, String> configuration, boolean shouldWarn)
+    protected JobConf createHdfsConf(IServiceContext serviceCtx, Map<String, String> configuration)
             throws HyracksDataException {
         this.serviceCtx = serviceCtx;
         this.configuration = configuration;
         init((ICCServiceContext) serviceCtx);
-        return HDFSUtils.configureHDFSJobConf(configuration, shouldWarn);
+        return HDFSUtils.configureHDFSJobConf(configuration);
     }
 
     protected void configureHdfsConf(JobConf conf, Map<String, String> configuration) throws AlgebricksException {
@@ -106,7 +107,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
             // if files list was set, we restrict the splits to the list
             InputSplit[] inputSplits;
             if (files == null) {
-                inputSplits = conf.getInputFormat().getSplits(conf, numPartitions);
+                inputSplits = getInputSplits(conf, numPartitions);
             } else {
                 inputSplits = HDFSUtils.getSplits(conf, files);
             }
@@ -119,12 +120,12 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
             read = new boolean[readSchedule.length];
             Arrays.fill(read, false);
             String formatString = configuration.get(ExternalDataConstants.KEY_FORMAT);
-            if (formatString == null || formatString.equals(ExternalDataConstants.FORMAT_HDFS_WRITABLE)
-                    || formatString.equals(ExternalDataConstants.FORMAT_NOOP)
-                    || formatString.equals(ExternalDataConstants.FORMAT_PARQUET)) {
+            if (formatString == null || formatString.equals(ExternalDataConstants.FORMAT_HDFS_WRITABLE)) {
                 RecordReader<?, ?> reader = conf.getInputFormat().getRecordReader(inputSplits[0], conf, Reporter.NULL);
                 this.recordClass = reader.createValue().getClass();
                 reader.close();
+            } else if (formatString.equals(ExternalDataConstants.FORMAT_PARQUET)) {
+                recordClass = IValueReference.class;
             } else {
                 recordReaderClazz = StreamRecordReaderProvider.getRecordReaderClazz(configuration);
                 this.recordClass = char[].class;
@@ -132,6 +133,13 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
         } catch (IOException e) {
             throw new AsterixException(e);
         }
+    }
+
+    private InputSplit[] getInputSplits(JobConf conf, int numPartitions) throws IOException {
+        if (HDFSUtils.isEmpty(conf)) {
+            return Scheduler.EMPTY_INPUT_SPLITS;
+        }
+        return conf.getInputFormat().getSplits(conf, numPartitions);
     }
 
     // Used to tell the factory to restrict the splits to the intersection between this list a
