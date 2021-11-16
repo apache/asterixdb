@@ -328,6 +328,21 @@ public class PointableHelper {
     }
 
     /**
+     * Checks whether any pointable argument is null or missing, and if true, assigns null to the
+     * {@param result}.
+     *
+     * @param result the result pointable that will hold the null value
+     * @param pointable1 the pointable to be checked
+     * @param pointable2 the pointable to be checked
+     *
+     * @return {@code true} if any pointable is missing or null, {@code false} otherwise.
+     */
+    public static boolean checkAndSetNull(IPointable result, IPointable pointable1, IPointable pointable2)
+            throws HyracksDataException {
+        return checkAndSetNull(result, pointable1) || checkAndSetNull(result, pointable2);
+    }
+
+    /**
      * This method checks and returns the pointable value state.
      *
      * If a ListAccessor is passed to this function, it will check if the passed pointable is a list, and if so, it

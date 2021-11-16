@@ -102,6 +102,7 @@ import org.apache.asterix.om.typecomputer.impl.NonTaggedGetItemResultType;
 import org.apache.asterix.om.typecomputer.impl.NotUnknownTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NullIfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NullableDoubleTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.NullableTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericAddSubMulDivTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericBinaryToDoubleTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.NumericDivideTypeComputer;
@@ -1794,28 +1795,28 @@ public class BuiltinFunctions {
         addPrivateFunction(MAKE_FIELD_NAME_HANDLE, AnyTypeComputer.INSTANCE, true);
 
         // cast null type constructors
-        addPrivateFunction(BOOLEAN_DEFAULT_NULL_CONSTRUCTOR, ABooleanTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(INT8_DEFAULT_NULL_CONSTRUCTOR, AInt8TypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(INT16_DEFAULT_NULL_CONSTRUCTOR, AInt16TypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(INT32_DEFAULT_NULL_CONSTRUCTOR, AInt32TypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(INT64_DEFAULT_NULL_CONSTRUCTOR, AInt64TypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(FLOAT_DEFAULT_NULL_CONSTRUCTOR, AFloatTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(DOUBLE_DEFAULT_NULL_CONSTRUCTOR, ADoubleTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(STRING_DEFAULT_NULL_CONSTRUCTOR, AStringTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(DATE_DEFAULT_NULL_CONSTRUCTOR, ADateTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(DATE_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT, ADateTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(TIME_DEFAULT_NULL_CONSTRUCTOR, ATimeTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(TIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT, ATimeTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(DATETIME_DEFAULT_NULL_CONSTRUCTOR, ADateTimeTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(DATETIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT, ADateTimeTypeComputer.INSTANCE_NULLABLE,
+        addPrivateFunction(BOOLEAN_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_BOOLEAN, true);
+        addPrivateFunction(INT8_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_INT8, true);
+        addPrivateFunction(INT16_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_INT16, true);
+        addPrivateFunction(INT32_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_INT32, true);
+        addPrivateFunction(INT64_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_INT64, true);
+        addPrivateFunction(FLOAT_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_FLOAT, true);
+        addPrivateFunction(DOUBLE_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_DOUBLE, true);
+        addPrivateFunction(STRING_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_STRING, true);
+        addPrivateFunction(DATE_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_DATE, true);
+        addPrivateFunction(DATE_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT, NullableTypeComputer.INSTANCE_DATE, true);
+        addPrivateFunction(TIME_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_TIME, true);
+        addPrivateFunction(TIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT, NullableTypeComputer.INSTANCE_TIME, true);
+        addPrivateFunction(DATETIME_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_DATE_TIME, true);
+        addPrivateFunction(DATETIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT, NullableTypeComputer.INSTANCE_DATE_TIME,
                 true);
-        addPrivateFunction(DURATION_DEFAULT_NULL_CONSTRUCTOR, ADurationTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(DAY_TIME_DURATION_DEFAULT_NULL_CONSTRUCTOR, ADayTimeDurationTypeComputer.INSTANCE_NULLABLE,
+        addPrivateFunction(DURATION_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_DURATION, true);
+        addPrivateFunction(DAY_TIME_DURATION_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_DAY_TIME_DURATION,
                 true);
         addPrivateFunction(YEAR_MONTH_DURATION_DEFAULT_NULL_CONSTRUCTOR,
-                AYearMonthDurationTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(UUID_DEFAULT_NULL_CONSTRUCTOR, AUUIDTypeComputer.INSTANCE_NULLABLE, true);
-        addPrivateFunction(BINARY_BASE64_DEFAULT_NULL_CONSTRUCTOR, ABinaryTypeComputer.INSTANCE_NULLABLE, true);
+                NullableTypeComputer.INSTANCE_YEAR_MONTH_DURATION, true);
+        addPrivateFunction(UUID_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_UUID, true);
+        addPrivateFunction(BINARY_BASE64_DEFAULT_NULL_CONSTRUCTOR, NullableTypeComputer.INSTANCE_BINARY, true);
 
         addPrivateFunction(NUMERIC_UNARY_MINUS, NumericUnaryTypeComputer.INSTANCE, true);
         addPrivateFunction(NUMERIC_SUBTRACT, NumericAddSubMulDivTypeComputer.INSTANCE_SUB, true);

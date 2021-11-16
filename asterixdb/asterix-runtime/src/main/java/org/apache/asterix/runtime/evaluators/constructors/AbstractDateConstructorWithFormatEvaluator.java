@@ -39,7 +39,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public abstract class AbstractDateConstructorWithFormatEvaluator extends AbstractDateConstructorEvaluator {
 
     private final IScalarEvaluator formatEval;
-    private final IPointable formatArg = new VoidPointable();
+    protected final IPointable formatArg = new VoidPointable();
     private final UTF8StringPointable formatTextPtr = new UTF8StringPointable();
     private final AMutableInt64 aInt64 = new AMutableInt64(0);
 

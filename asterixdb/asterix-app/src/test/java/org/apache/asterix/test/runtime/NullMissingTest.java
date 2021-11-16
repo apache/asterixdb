@@ -20,6 +20,10 @@
 
 package org.apache.asterix.test.runtime;
 
+import static org.apache.asterix.common.annotations.MissingNullInOutFunction.MissingNullType.MISSING;
+import static org.apache.asterix.common.annotations.MissingNullInOutFunction.MissingNullType.NULL;
+import static org.apache.asterix.om.types.ATypeTag.SERIALIZED_MISSING_TYPE_TAG;
+import static org.apache.asterix.om.types.ATypeTag.SERIALIZED_NULL_TYPE_TAG;
 import static org.mockito.Mockito.mock;
 
 import java.util.ArrayList;
@@ -33,7 +37,6 @@ import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -91,7 +94,7 @@ public class NullMissingTest {
                 // Instead, we test them in runtime tests.
                 // TODO(ali): ASTERIXDB-2982 do it in a proper way so that it does not exclude classes inadvertently
                 if (!className.contains("record") && !className.contains("Cast")
-                        && !className.contains("FullTextContains") && !className.contains("DefaultNull")) {
+                        && !className.contains("FullTextContains")) {
                     tests.add(new Object[] { getTestName(functionDescriptor.getClass()), functionDescriptor });
                 } else {
                     LOGGER.log(Level.INFO, "Excluding " + className);
@@ -129,6 +132,9 @@ public class NullMissingTest {
         int inputArity = funcDesc.getIdentifier().getArity();
         Iterator<Pair<IScalarEvaluatorFactory[], IAType[]>> argEvalFactoryIterator = getArgCombinations(inputArity);
         int index = 0;
+        MissingNullInOutFunction annot = functionDescriptor.getClass().getAnnotation(MissingNullInOutFunction.class);
+        byte missingOut = annot.onMissing() == MISSING ? SERIALIZED_MISSING_TYPE_TAG : SERIALIZED_NULL_TYPE_TAG;
+        byte nullOut = annot.onNull() == NULL ? SERIALIZED_NULL_TYPE_TAG : SERIALIZED_MISSING_TYPE_TAG;
 
         // Test is happening here
         while (argEvalFactoryIterator.hasNext()) {
@@ -148,11 +154,9 @@ public class NullMissingTest {
 
             // Result checks
             if (index != 0) {
-                Assert.assertEquals(ATypeTag.SERIALIZED_MISSING_TYPE_TAG,
-                        resultPointable.getByteArray()[resultPointable.getStartOffset()]);
+                Assert.assertEquals(missingOut, resultPointable.getByteArray()[resultPointable.getStartOffset()]);
             } else {
-                Assert.assertEquals(ATypeTag.SERIALIZED_NULL_TYPE_TAG,
-                        resultPointable.getByteArray()[resultPointable.getStartOffset()]);
+                Assert.assertEquals(nullOut, resultPointable.getByteArray()[resultPointable.getStartOffset()]);
             }
             ++index;
         }
@@ -179,11 +183,10 @@ public class NullMissingTest {
                     if ((index & (1 << j)) != 0) {
                         argumentTypes[j] = BuiltinType.AMISSING;
                         scalarEvaluatorFactories[j] =
-                                new ConstantEvalFactory(new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG });
+                                new ConstantEvalFactory(new byte[] { SERIALIZED_MISSING_TYPE_TAG });
                     } else {
                         argumentTypes[j] = BuiltinType.ANULL;
-                        scalarEvaluatorFactories[j] =
-                                new ConstantEvalFactory(new byte[] { ATypeTag.SERIALIZED_NULL_TYPE_TAG });
+                        scalarEvaluatorFactories[j] = new ConstantEvalFactory(new byte[] { SERIALIZED_NULL_TYPE_TAG });
                     }
                 }
                 ++index;

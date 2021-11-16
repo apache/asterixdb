@@ -36,14 +36,16 @@ import org.apache.hyracks.data.std.api.IPointable;
  * uuid("02a199ca-bf58-412e-bd9f-60a0c975a8ac"))
  */
 
-@MissingNullInOutFunction
+@MissingNullInOutFunction(onMissing = MissingNullInOutFunction.MissingNullType.NULL)
 public class AUUIDFromStringDefaultNullConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = AUUIDFromStringDefaultNullConstructorDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
+
             private static final long serialVersionUID = 1L;
 
             @Override

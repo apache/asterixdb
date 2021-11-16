@@ -1046,15 +1046,16 @@ public class BTreeAccessMethod implements IAccessMethod {
         if (!finalStep) {
             return AccessMethodUtils.isFieldAccess(funId);
         }
-        if (AccessMethodUtils.isFieldAccess(funId)) {
-            return !defaultNull;
-        } else if (defaultNull && CAST_NULL_TYPE_CONSTRUCTORS.contains(funId)) {
+        if (defaultNull) {
+            if (!CAST_NULL_TYPE_CONSTRUCTORS.contains(funId)) {
+                return false;
+            }
             IAType nonNullableType = Index.getNonNullableType(indexedFieldType).first;
             FunctionIdentifier indexedFieldConstructor = TypeUtil.getTypeConstructorDefaultNull(nonNullableType);
-            // index should have CAST (DEFAULT NULL) and the applied function should be the same as the indexed field
+            // index has CAST (DEFAULT NULL); the applied function should be the same as the indexed field function
             return funId.equals(indexedFieldConstructor);
         } else {
-            return false;
+            return AccessMethodUtils.isFieldAccess(funId);
         }
     }
 

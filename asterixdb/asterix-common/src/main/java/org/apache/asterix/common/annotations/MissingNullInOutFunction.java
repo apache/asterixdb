@@ -25,10 +25,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * The functions to which this annotation is applied, respect the missing/null in -> missing/null out behaviour
+ * The functions to which this annotation is applied, specify what {@link MissingNullType} to return on MISSING or NULL
+ * input, and their runtimes respect the specification.
  */
 @Documented
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MissingNullInOutFunction {
+
+    enum MissingNullType {
+        MISSING,
+        NULL
+    }
+
+    MissingNullType onMissing() default MissingNullType.MISSING;
+
+    MissingNullType onNull() default MissingNullType.NULL;
 }

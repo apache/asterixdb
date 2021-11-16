@@ -19,6 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.constructors;
 
+import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
@@ -30,13 +31,16 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
+@MissingNullInOutFunction(onMissing = MissingNullInOutFunction.MissingNullType.NULL)
 public class ADateTimeDefaultNullConstructorWithFormatDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = ADateTimeDefaultNullConstructorWithFormatDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
+
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -50,10 +54,7 @@ public class ADateTimeDefaultNullConstructorWithFormatDescriptor extends Abstrac
 
                     @Override
                     protected boolean checkAndSetMissingOrNull(IPointable result) throws HyracksDataException {
-                        if (PointableHelper.checkAndSetNull(result, inputArg)) {
-                            return true;
-                        }
-                        return super.checkAndSetMissingOrNull(result);
+                        return PointableHelper.checkAndSetNull(result, inputArg, formatArg);
                     }
                 };
             }

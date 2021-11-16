@@ -30,19 +30,22 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 
-@MissingNullInOutFunction
+@MissingNullInOutFunction(onMissing = MissingNullInOutFunction.MissingNullType.NULL)
 public class ABooleanDefaultNullConstructorDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = ABooleanDefaultNullConstructorDescriptor::new;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
         return new IScalarEvaluatorFactory() {
+
             private static final long serialVersionUID = 1L;
 
             @Override
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
                 return new AbstractBooleanConstructorEvaluator(ctx, args[0].createScalarEvaluator(ctx), sourceLoc) {
+
                     @Override
                     protected FunctionIdentifier getIdentifier() {
                         return ABooleanDefaultNullConstructorDescriptor.this.getIdentifier();
