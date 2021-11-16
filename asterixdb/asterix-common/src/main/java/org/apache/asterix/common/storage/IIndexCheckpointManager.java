@@ -125,12 +125,13 @@ public interface IIndexCheckpointManager {
     IndexCheckpoint getLatest() throws HyracksDataException;
 
     /**
-     * Advance the last valid component sequence. Used for replicated bulkloaded components
+     * Advance the last valid component. Used for replicated bulkloaded components
      *
      * @param componentSequence
+     * @param componentId
      * @throws HyracksDataException
      */
-    void advanceValidComponentSequence(long componentSequence) throws HyracksDataException;
+    void advanceValidComponent(long componentSequence, long componentId) throws HyracksDataException;
 
     /**
      * Set the last component id. Used during recovery or after component delete

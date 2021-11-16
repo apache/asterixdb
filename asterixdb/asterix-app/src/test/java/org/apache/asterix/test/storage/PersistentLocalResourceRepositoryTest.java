@@ -189,7 +189,7 @@ public class PersistentLocalResourceRepositoryTest {
         DatasetResourceReference drr = DatasetResourceReference.of(localResource);
         IIndexCheckpointManagerProvider indexCheckpointManagerProvider = ncAppCtx.getIndexCheckpointManagerProvider();
         IIndexCheckpointManager indexCheckpointManager = indexCheckpointManagerProvider.get(drr);
-        indexCheckpointManager.advanceValidComponentSequence(validComponentSequence);
+        indexCheckpointManager.advanceValidComponent(validComponentSequence, 1);
         // create components to be merged
         String btree = "_b";
         String filter = "_f";

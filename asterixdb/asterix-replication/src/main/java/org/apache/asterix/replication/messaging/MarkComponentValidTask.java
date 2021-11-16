@@ -77,7 +77,7 @@ public class MarkComponentValidTask implements IReplicaTask {
         final IIndexCheckpointManagerProvider checkpointManagerProvider = appCtx.getIndexCheckpointManagerProvider();
         final IIndexCheckpointManager indexCheckpointManager = checkpointManagerProvider.get(indexRef);
         final long componentSequence = IndexComponentFileReference.of(indexRef.getName()).getSequenceEnd();
-        indexCheckpointManager.advanceValidComponentSequence(componentSequence);
+        indexCheckpointManager.advanceValidComponent(componentSequence, lastComponentId);
     }
 
     private void ensureComponentLsnFlushed(INcApplicationContext appCtx)

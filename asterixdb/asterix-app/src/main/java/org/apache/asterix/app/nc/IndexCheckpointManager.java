@@ -169,11 +169,12 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
-    public synchronized void advanceValidComponentSequence(long componentSequence) throws HyracksDataException {
+    public synchronized void advanceValidComponent(long componentSequence, long componentId)
+            throws HyracksDataException {
         final IndexCheckpoint latest = getLatest();
         if (componentSequence > latest.getValidComponentSequence()) {
-            final IndexCheckpoint next = IndexCheckpoint.next(latest, latest.getLowWatermark(), componentSequence,
-                    latest.getLastComponentId(), null);
+            final IndexCheckpoint next =
+                    IndexCheckpoint.next(latest, latest.getLowWatermark(), componentSequence, componentId, null);
             persist(next);
         }
     }

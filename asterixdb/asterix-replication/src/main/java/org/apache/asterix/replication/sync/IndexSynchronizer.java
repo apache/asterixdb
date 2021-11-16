@@ -141,11 +141,12 @@ public class IndexSynchronizer {
 
     private long getReplicatedComponentId() throws HyracksDataException {
         final ILSMIndexReplicationJob indexReplJob = (ILSMIndexReplicationJob) job;
-        if (indexReplJob.getLSMOpType() != LSMOperationType.FLUSH) {
+        if (indexReplJob.getLSMOpType() != LSMOperationType.FLUSH
+                && indexReplJob.getLSMOpType() != LSMOperationType.LOAD) {
             return -1L;
         }
         final ILSMIndexOperationContext ctx = indexReplJob.getLSMIndexOperationContext();
         LSMComponentId id = (LSMComponentId) ctx.getComponentsToBeReplicated().get(0).getId();
-        return id.getMinId();
+        return id.getMaxId();
     }
 }
