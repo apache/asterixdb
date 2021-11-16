@@ -61,7 +61,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -144,7 +143,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 if (isJoinLeftBranch) {
                     fillVarFieldTypeForOptFuncExprs(subTree, amCtx, context);
                 }
-                fillAllIndexExprs(subTree, amCtx, context);
+                fillAllIndexExprs(subTree, amCtx, context, entry.getKey());
             }
         }
     }
@@ -665,15 +664,19 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      */
     protected boolean fillIndexExprs(List<Index> datasetIndexes, List<String> fieldName, IAType fieldType,
             IOptimizableFuncExpr optFuncExpr, int matchedFuncExprIndex, int varIdx,
-            OptimizableOperatorSubTree matchedSubTree, AccessMethodAnalysisContext analysisCtx, int fieldSource)
-            throws AlgebricksException {
+            OptimizableOperatorSubTree matchedSubTree, AccessMethodAnalysisContext analysisCtx, int fieldSource,
+            IAccessMethod accessMethod) throws AlgebricksException {
         List<Index> indexCandidates = new ArrayList<>();
         // Add an index to the candidates if one of the indexed fields is fieldName
         for (Index index : datasetIndexes) {
+            if (!accessMethod.matchIndexType(index.getIndexType())) {
+                continue;
+            }
             List<List<String>> keyFieldNames;
             List<IAType> keyFieldTypes;
             List<Integer> keySources;
             boolean isOverridingKeyFieldTypes;
+            boolean hasCastDefaultNull = false;
             switch (Index.IndexCategory.of(index.getIndexType())) {
                 case ARRAY:
                     Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) index.getIndexDetails();
@@ -696,6 +699,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     keyFieldTypes = valueIndexDetails.getKeyFieldTypes();
                     keySources = valueIndexDetails.getKeyFieldSourceIndicators();
                     isOverridingKeyFieldTypes = valueIndexDetails.isOverridingKeyFieldTypes();
+                    hasCastDefaultNull = valueIndexDetails.getCastDefaultNull().getOrElse(false);
                     break;
                 case TEXT:
                     Index.TextIndexDetails textIndexDetails = (Index.TextIndexDetails) index.getIndexDetails();
@@ -712,18 +716,31 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             int keyIdx = keyFieldNames.indexOf(fieldName);
             if (keyIdx >= 0 && keySourceMatches(keySources, keyIdx, fieldSource)
                     && index.getPendingOp() == MetadataUtil.PENDING_NO_OP) {
-                indexCandidates.add(index);
-                boolean isFieldTypeUnknown = fieldType == BuiltinType.AMISSING || fieldType == BuiltinType.ANY;
-                if (isFieldTypeUnknown && (!isOverridingKeyFieldTypes || index.isEnforced())) {
-                    IAType indexedType = keyFieldTypes.get(keyIdx);
-                    optFuncExpr.setFieldType(varIdx, indexedType);
+                IAType indexedType = keyFieldTypes.get(keyIdx);
+                List<AbstractFunctionCallExpression> stepExprs = optFuncExpr.getStepsExprs(varIdx);
+                if (acceptSteps(accessMethod, stepExprs, indexedType, hasCastDefaultNull)) {
+                    indexCandidates.add(index);
+                    boolean isFieldTypeUnknown = fieldType == BuiltinType.AMISSING || fieldType == BuiltinType.ANY;
+                    if (isFieldTypeUnknown && (!isOverridingKeyFieldTypes || index.isEnforced())) {
+                        optFuncExpr.setFieldType(varIdx, indexedType);
+                    }
+                    analysisCtx.addIndexExpr(matchedSubTree.getDataset(), index, matchedFuncExprIndex, varIdx);
                 }
-                analysisCtx.addIndexExpr(matchedSubTree.getDataset(), index, matchedFuncExprIndex, varIdx);
             }
         }
         // No index candidates for fieldName.
         if (indexCandidates.isEmpty()) {
             return false;
+        }
+        return true;
+    }
+
+    private boolean acceptSteps(IAccessMethod accessMethod, List<AbstractFunctionCallExpression> stepExprs,
+            IAType indexedType, boolean indexHasCastDefaultNull) throws AlgebricksException {
+        for (int i = stepExprs.size() - 1; i >= 0; i--) {
+            if (!accessMethod.acceptsFunction(stepExprs.get(i), indexedType, indexHasCastDefaultNull, i == 0)) {
+                return false;
+            }
         }
         return true;
     }
@@ -734,7 +751,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     }
 
     protected void fillAllIndexExprs(OptimizableOperatorSubTree subTree, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context) throws AlgebricksException {
+            IOptimizationContext context, IAccessMethod accessMethod) throws AlgebricksException {
         int optFuncExprIndex = 0;
         List<Index> datasetIndexes = new ArrayList<>();
         LogicalVariable datasetMetaVar = null;
@@ -754,10 +771,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 AbstractLogicalOperator op = subTree.getAssignsAndUnnests().get(assignOrUnnestIndex);
                 if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
                     analyzeAssignOp((AssignOperator) op, optFuncExpr, subTree, assignOrUnnestIndex, datasetMetaVar,
-                            context, datasetIndexes, optFuncExprIndex, analysisCtx);
+                            context, datasetIndexes, optFuncExprIndex, analysisCtx, accessMethod);
                 } else {
                     analyzeUnnestOp((UnnestOperator) op, optFuncExpr, subTree, assignOrUnnestIndex, datasetMetaVar,
-                            context, datasetIndexes, optFuncExprIndex, analysisCtx);
+                            context, datasetIndexes, optFuncExprIndex, analysisCtx, accessMethod);
                 }
             }
 
@@ -766,7 +783,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             List<LogicalVariable> dsVarList = subTree.getDataSourceVariables();
 
             matchVarsFromOptFuncExprToDataSourceScan(optFuncExpr, optFuncExprIndex, datasetIndexes, dsVarList, subTree,
-                    analysisCtx, context, false);
+                    analysisCtx, context, false, accessMethod);
 
             // If there is one more datasource in the subtree, we need to scan that datasource, too.
             List<LogicalVariable> additionalDsVarList = null;
@@ -778,7 +795,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 }
 
                 matchVarsFromOptFuncExprToDataSourceScan(optFuncExpr, optFuncExprIndex, datasetIndexes,
-                        additionalDsVarList, subTree, analysisCtx, context, true);
+                        additionalDsVarList, subTree, analysisCtx, context, true, accessMethod);
 
             }
 
@@ -789,7 +806,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     private void analyzeUnnestOp(UnnestOperator unnestOp, IOptimizableFuncExpr optFuncExpr,
             OptimizableOperatorSubTree subTree, int assignOrUnnestIndex, LogicalVariable datasetMetaVar,
             IOptimizationContext context, List<Index> datasetIndexes, int optFuncExprIndex,
-            AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
+            AccessMethodAnalysisContext analysisCtx, IAccessMethod accessMethod) throws AlgebricksException {
         LogicalVariable var = unnestOp.getVariable();
         int funcVarIndex = optFuncExpr.findLogicalVar(var);
         // No matching var in optFuncExpr.
@@ -803,17 +820,18 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         List<String> fieldName = null;
         MutableInt fieldSource = new MutableInt(0);
         if (subTree.getDataSourceType() == DataSourceType.COLLECTION_SCAN) {
-            VariableReferenceExpression varRef = new VariableReferenceExpression(var);
-            varRef.setSourceLocation(unnestOp.getSourceLocation());
-            optFuncExpr.setLogicalExpr(funcVarIndex, varRef);
+            ILogicalExpression expr = optFuncExpr.getArgument(funcVarIndex).getValue();
+            if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                optFuncExpr.addStepExpr(funcVarIndex, ((AbstractFunctionCallExpression) expr));
+            }
+            optFuncExpr.setLogicalExpr(funcVarIndex, expr);
         } else {
             if (subTree.getDataSourceType() == DataSourceType.DATASOURCE_SCAN) {
                 subTree.setLastMatchedDataSourceVars(0, funcVarIndex);
             }
-            fieldName = AccessMethodUtils.getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0,
-                    subTree.getRecordType(), funcVarIndex,
-                    optFuncExpr.getFuncExpr().getArguments().get(funcVarIndex).getValue(), subTree.getMetaRecordType(),
-                    datasetMetaVar, fieldSource, false);
+            fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0,
+                    subTree.getRecordType(), funcVarIndex, optFuncExpr.getArgument(funcVarIndex).getValue(),
+                    subTree.getMetaRecordType(), datasetMetaVar, fieldSource, false);
             if (fieldName.isEmpty()) {
                 return;
             }
@@ -828,14 +846,14 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         setTypeTag(context, subTree, optFuncExpr, funcVarIndex);
         if (subTree.hasDataSource()) {
             fillIndexExprs(datasetIndexes, fieldName, fieldType, optFuncExpr, optFuncExprIndex, funcVarIndex, subTree,
-                    analysisCtx, fieldSource.intValue());
+                    analysisCtx, fieldSource.intValue(), accessMethod);
         }
     }
 
     private void analyzeAssignOp(AssignOperator assignOp, IOptimizableFuncExpr optFuncExpr,
             OptimizableOperatorSubTree subTree, int assignOrUnnestIndex, LogicalVariable datasetMetaVar,
             IOptimizationContext context, List<Index> datasetIndexes, int optFuncExprIndex,
-            AccessMethodAnalysisContext analysisCtx) throws AlgebricksException {
+            AccessMethodAnalysisContext analysisCtx, IAccessMethod accessMethod) throws AlgebricksException {
         boolean doesArrayIndexQualify = context.getPhysicalOptimizationConfig().isArrayIndexEnabled()
                 && datasetIndexes.stream().anyMatch(i -> i.getIndexType() == IndexType.ARRAY);
         List<LogicalVariable> varList = assignOp.getVariables();
@@ -850,7 +868,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                             .analyzeVarForArrayIndexes(datasetIndexes, optFuncExpr, subTree, context, var, analysisCtx);
                     if (fieldTriplet != null && subTree.hasDataSource()) {
                         fillIndexExprs(datasetIndexes, fieldTriplet.second, fieldTriplet.third, optFuncExpr,
-                                optFuncExprIndex, fieldTriplet.first, subTree, analysisCtx, fieldSource.intValue());
+                                optFuncExprIndex, fieldTriplet.first, subTree, analysisCtx, fieldSource.intValue(),
+                                accessMethod);
                     }
                 }
                 continue;
@@ -864,10 +883,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             }
 
             fieldSource.setValue(0);
-            List<String> fieldName = AccessMethodUtils.getFieldNameFromSubTree(optFuncExpr, subTree,
+            List<String> fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(optFuncExpr, subTree,
                     assignOrUnnestIndex, varIndex, subTree.getRecordType(), optVarIndex,
-                    optFuncExpr.getFuncExpr().getArguments().get(optVarIndex).getValue(), subTree.getMetaRecordType(),
-                    datasetMetaVar, fieldSource, false);
+                    optFuncExpr.getArgument(optVarIndex).getValue(), subTree.getMetaRecordType(), datasetMetaVar,
+                    fieldSource, false);
 
             IAType fieldType = (IAType) context.getOutputTypeEnvironment(assignOp).getVarType(var);
             // Set the fieldName in the corresponding matched
@@ -878,15 +897,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             setTypeTag(context, subTree, optFuncExpr, optVarIndex);
             if (subTree.hasDataSource()) {
                 fillIndexExprs(datasetIndexes, fieldName, fieldType, optFuncExpr, optFuncExprIndex, optVarIndex,
-                        subTree, analysisCtx, fieldSource.intValue());
+                        subTree, analysisCtx, fieldSource.intValue(), accessMethod);
             }
         }
     }
 
     private void matchVarsFromOptFuncExprToDataSourceScan(IOptimizableFuncExpr optFuncExpr, int optFuncExprIndex,
             List<Index> datasetIndexes, List<LogicalVariable> dsVarList, OptimizableOperatorSubTree subTree,
-            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean fromAdditionalDataSource)
-            throws AlgebricksException {
+            AccessMethodAnalysisContext analysisCtx, IOptimizationContext context, boolean fromAdditionalDataSource,
+            IAccessMethod accessMethod) throws AlgebricksException {
         MutableInt mutableFieldSource = new MutableInt(0);
         for (int varIndex = 0; varIndex < dsVarList.size(); varIndex++) {
             LogicalVariable var = dsVarList.get(varIndex);
@@ -943,13 +962,15 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             optFuncExpr.setFieldName(funcVarIndex, fieldName, fieldSource);
             optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
             optFuncExpr.setSourceVar(funcVarIndex, var);
-            VariableReferenceExpression varRef = new VariableReferenceExpression(var);
-            varRef.setSourceLocation(subTree.getDataSourceRef().getValue().getSourceLocation());
-            optFuncExpr.setLogicalExpr(funcVarIndex, varRef);
+            ILogicalExpression expr = optFuncExpr.getArgument(funcVarIndex).getValue();
+            if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                optFuncExpr.addStepExpr(funcVarIndex, ((AbstractFunctionCallExpression) expr));
+            }
+            optFuncExpr.setLogicalExpr(funcVarIndex, expr);
             setTypeTag(context, subTree, optFuncExpr, funcVarIndex);
             if (subTree.hasDataSourceScan()) {
                 fillIndexExprs(datasetIndexes, fieldName, fieldType, optFuncExpr, optFuncExprIndex, funcVarIndex,
-                        subTree, analysisCtx, fieldSource);
+                        subTree, analysisCtx, fieldSource, accessMethod);
             }
         }
     }
@@ -986,7 +1007,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
                     fieldSource.setValue(0);
-                    List<String> fieldName = AccessMethodUtils.getFieldNameFromSubTree(null, subTree,
+                    List<String> fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(null, subTree,
                             assignOrUnnestIndex, varIndex, subTree.getRecordType(), -1, null,
                             subTree.getMetaRecordType(), datasetMetaVar, fieldSource, false);
                     if (fieldName != null && !fieldName.isEmpty()) {
@@ -1001,7 +1022,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
                     fieldSource.setValue(0);
-                    fieldName = AccessMethodUtils.getFieldNameFromSubTree(null, subTree, assignOrUnnestIndex, 0,
+                    fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(null, subTree, assignOrUnnestIndex, 0,
                             subTree.getRecordType(), -1, null, subTree.getMetaRecordType(), datasetMetaVar, fieldSource,
                             false);
                     if (fieldName != null && !fieldName.isEmpty()) {
@@ -1029,7 +1050,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
                     fieldSource.setValue(0);
-                    List<String> fieldName = AccessMethodUtils.getFieldNameFromSubTree(null, subTree,
+                    List<String> fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(null, subTree,
                             assignOrUnnestIndex, varIndex, subTree.getRecordType(), -1, null,
                             subTree.getMetaRecordType(), datasetMetaVar, fieldSource, false);
                     if (fieldName != null && !fieldName.isEmpty()) {

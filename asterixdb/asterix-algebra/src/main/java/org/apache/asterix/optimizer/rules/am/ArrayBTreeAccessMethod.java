@@ -250,8 +250,21 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
     }
 
     @Override
+    public boolean acceptsFunction(AbstractFunctionCallExpression functionExpr, IAType indexedFieldType,
+            boolean defaultNull, boolean finalStep) throws CompilationException {
+        if (defaultNull) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, "CAST modifier not allowed");
+        }
+        return AccessMethodUtils.isFieldAccess(functionExpr.getFunctionIdentifier());
+    }
+
+    @Override
     public int compareTo(IAccessMethod o) {
         return this.getName().compareTo(o.getName());
     }
 
+    @Override
+    protected boolean allowFunctionExpressionArg() {
+        return false;
+    }
 }

@@ -149,7 +149,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 || funcExpr.getFunctionIdentifier() == BuiltinFunctions.FULLTEXT_CONTAINS
                 || funcExpr.getFunctionIdentifier() == BuiltinFunctions.FULLTEXT_CONTAINS_WO_OPTION) {
             boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVarAndUpdateAnalysisCtx(funcExpr,
-                    analysisCtx, context, typeEnvironment);
+                    analysisCtx, context, typeEnvironment, false);
             if (!matches) {
                 matches = AccessMethodUtils.analyzeFuncExprArgsForTwoVarsAndUpdateAnalysisCtx(funcExpr, analysisCtx);
             }
@@ -279,9 +279,10 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         if (fieldVarExpr2 == null) {
             return false;
         }
-        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr,
-                new LogicalVariable[] { fieldVarExpr1, fieldVarExpr2 }, new ILogicalExpression[] { arg3 },
-                new IAType[] { (IAType) ExpressionTypeComputer.INSTANCE.getType(arg3, null, null) });
+        OptimizableFuncExpr newOptFuncExpr =
+                new OptimizableFuncExpr(funcExpr, new LogicalVariable[] { fieldVarExpr1, fieldVarExpr2 },
+                        new int[] { 0, 1 }, new ILogicalExpression[] { arg3 },
+                        new IAType[] { (IAType) ExpressionTypeComputer.INSTANCE.getType(arg3, null, null) });
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.getMatchedFuncExprs()) {
             //avoid additional optFuncExpressions in case of a join
             if (optFuncExpr.getFuncExpr().equals(funcExpr)) {
@@ -306,6 +307,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // Determine whether one arg is constant, and the other is non-constant.
         ILogicalExpression constArg;
         ILogicalExpression nonConstArg;
+        int nonConstArgIdx;
         if (arg1.getExpressionTag() == LogicalExpressionTag.CONSTANT
                 && arg2.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
             // The arguments of edit-distance-contains() function are asymmetrical, we can only use index if it is on
@@ -315,10 +317,12 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             }
             constArg = arg1;
             nonConstArg = arg2;
+            nonConstArgIdx = 1;
         } else if (arg2.getExpressionTag() == LogicalExpressionTag.CONSTANT
                 && arg1.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
             constArg = arg2;
             nonConstArg = arg1;
+            nonConstArgIdx = 0;
         } else {
             return false;
         }
@@ -329,7 +333,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
 
         OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, new LogicalVariable[] { fieldVarExpr },
-                new ILogicalExpression[] { constArg, arg3 },
+                new int[] { nonConstArgIdx }, new ILogicalExpression[] { constArg, arg3 },
                 new IAType[] { (IAType) ExpressionTypeComputer.INSTANCE.getType(constArg, null, null),
                         (IAType) ExpressionTypeComputer.INSTANCE.getType(arg3, null, null) });
         for (IOptimizableFuncExpr optFuncExpr : analysisCtx.getMatchedFuncExprs()) {
@@ -1088,7 +1092,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             if (targetVar == null) {
                 continue;
             }
-            return isJaccardFuncCompatible(optFuncExpr.getFuncExpr().getArguments().get(i).getValue(),
+            return isJaccardFuncCompatible(optFuncExpr.getArgument(i).getValue(),
                     optFuncExpr.getFieldType(i).getTypeTag(), index.getIndexType());
         }
 
@@ -1343,6 +1347,18 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     @Override
     public String getName() {
         return "INVERTED_INDEX_ACCESS_METHOD";
+    }
+
+    @Override
+    public boolean acceptsFunction(AbstractFunctionCallExpression functionExpr, IAType indexedFieldType,
+            boolean defaultNull, boolean finalStep) throws CompilationException {
+        if (defaultNull) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, "CAST modifier not allowed");
+        }
+        FunctionIdentifier funId = functionExpr.getFunctionIdentifier();
+        return AccessMethodUtils.isFieldAccess(funId) || funId.equals(BuiltinFunctions.GRAM_TOKENS)
+                || funId.equals(BuiltinFunctions.WORD_TOKENS) || funId.equals(BuiltinFunctions.SUBSTRING)
+                || funId.equals(BuiltinFunctions.SUBSTRING_BEFORE) || funId.equals(BuiltinFunctions.SUBSTRING_AFTER);
     }
 
     @Override

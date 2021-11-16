@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -35,7 +36,9 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     protected final AbstractFunctionCallExpression funcExpr;
     protected final LogicalVariable[] logicalVars;
     protected final LogicalVariable[] sourceVars;
+    protected final int[] logicalVarsExprsIndexes;
     protected final ILogicalExpression[] logicalExprs;
+    protected final List<List<AbstractFunctionCallExpression>> stepsExprs; // all the transformations of a logical var
     protected final List<List<String>> fieldNames;
     protected final int[] fieldSources;
     protected final IAType[] fieldTypes;
@@ -45,17 +48,22 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     protected boolean partialField;
 
     public OptimizableFuncExpr(AbstractFunctionCallExpression funcExpr, LogicalVariable[] logicalVars,
-            ILogicalExpression[] constantExpressions, IAType[] constantExpressionTypes) {
+            int[] logicalVarsExprsIndexes, ILogicalExpression[] constantExpressions, IAType[] constantExpressionTypes) {
         this.funcExpr = funcExpr;
         this.logicalVars = logicalVars;
+        this.logicalVarsExprsIndexes = logicalVarsExprsIndexes;
         this.sourceVars = new LogicalVariable[logicalVars.length];
         this.logicalExprs = new ILogicalExpression[logicalVars.length];
         this.constantExpressionTypes = constantExpressionTypes;
         this.constantExpressions = constantExpressions;
         this.fieldSources = new int[logicalVars.length];
-        this.fieldNames = new ArrayList<List<String>>();
+        this.fieldNames = new ArrayList<>();
         for (int i = 0; i < logicalVars.length; i++) {
-            fieldNames.add(new ArrayList<String>());
+            fieldNames.add(new ArrayList<>());
+        }
+        this.stepsExprs = new ArrayList<>();
+        for (int i = 0; i < logicalVars.length; i++) {
+            stepsExprs.add(new ArrayList<>());
         }
         this.fieldTypes = new IAType[logicalVars.length];
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
@@ -69,7 +77,7 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
 
     // Special, more convenient c'tor for simple binary functions.
     public OptimizableFuncExpr(AbstractFunctionCallExpression funcExpr, LogicalVariable logicalVar,
-            ILogicalExpression constantExpression, IAType constantExpressionType) {
+            ILogicalExpression constantExpression, IAType constantExpressionType, int varIndexInOptFunExpr) {
         this.funcExpr = funcExpr;
         this.logicalVars = new LogicalVariable[] { logicalVar };
         this.sourceVars = new LogicalVariable[1];
@@ -77,10 +85,15 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
         this.constantExpressions = new ILogicalExpression[] { constantExpression };
         this.constantExpressionTypes = new IAType[] { constantExpressionType };
         this.fieldSources = new int[logicalVars.length];
-        this.fieldNames = new ArrayList<List<String>>();
+        this.fieldNames = new ArrayList<>();
         for (int i = 0; i < logicalVars.length; i++) {
-            fieldNames.add(new ArrayList<String>());
+            fieldNames.add(new ArrayList<>());
         }
+        this.stepsExprs = new ArrayList<>();
+        for (int i = 0; i < logicalVars.length; i++) {
+            stepsExprs.add(new ArrayList<>());
+        }
+        this.logicalVarsExprsIndexes = new int[] { varIndexInOptFunExpr };
         this.fieldTypes = new IAType[logicalVars.length];
         this.subTrees = new OptimizableOperatorSubTree[logicalVars.length];
         if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE_CONTAINS) {
@@ -154,6 +167,21 @@ public class OptimizableFuncExpr implements IOptimizableFuncExpr {
     @Override
     public ILogicalExpression[] getConstantExpressions() {
         return constantExpressions;
+    }
+
+    @Override
+    public void addStepExpr(int index, AbstractFunctionCallExpression funcExpr) {
+        stepsExprs.get(index).add(funcExpr);
+    }
+
+    @Override
+    public List<AbstractFunctionCallExpression> getStepsExprs(int index) {
+        return stepsExprs.get(index);
+    }
+
+    @Override
+    public Mutable<ILogicalExpression> getArgument(int index) {
+        return funcExpr.getArguments().get(logicalVarsExprsIndexes[index]);
     }
 
     @Override

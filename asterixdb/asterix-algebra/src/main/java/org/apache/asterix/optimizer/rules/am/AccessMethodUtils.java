@@ -19,6 +19,10 @@
 
 package org.apache.asterix.optimizer.rules.am;
 
+import static org.apache.asterix.om.functions.BuiltinFunctions.FIELD_ACCESS_BY_INDEX;
+import static org.apache.asterix.om.functions.BuiltinFunctions.FIELD_ACCESS_BY_NAME;
+import static org.apache.asterix.om.functions.BuiltinFunctions.FIELD_ACCESS_NESTED;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -127,14 +131,19 @@ public class AccessMethodUtils {
         CONDITIONAL_SPLIT_VAR
     }
 
-    // Function Identifier sets that retain the original field variable through each function's arguments
-    private final static ImmutableSet<FunctionIdentifier> funcIDSetThatRetainFieldName =
-            ImmutableSet.of(BuiltinFunctions.WORD_TOKENS, BuiltinFunctions.GRAM_TOKENS, BuiltinFunctions.SUBSTRING,
-                    BuiltinFunctions.SUBSTRING_BEFORE, BuiltinFunctions.SUBSTRING_AFTER,
-                    BuiltinFunctions.CREATE_POLYGON, BuiltinFunctions.CREATE_MBR, BuiltinFunctions.CREATE_RECTANGLE,
-                    BuiltinFunctions.CREATE_CIRCLE, BuiltinFunctions.CREATE_LINE, BuiltinFunctions.CREATE_POINT,
-                    BuiltinFunctions.NUMERIC_ADD, BuiltinFunctions.NUMERIC_SUBTRACT, BuiltinFunctions.NUMERIC_MULTIPLY,
-                    BuiltinFunctions.NUMERIC_DIVIDE, BuiltinFunctions.NUMERIC_DIV, BuiltinFunctions.NUMERIC_MOD);
+    public final static ImmutableSet<FunctionIdentifier> CAST_NULL_TYPE_CONSTRUCTORS = ImmutableSet.of(
+            BuiltinFunctions.BOOLEAN_DEFAULT_NULL_CONSTRUCTOR, BuiltinFunctions.INT8_DEFAULT_NULL_CONSTRUCTOR,
+            BuiltinFunctions.INT16_DEFAULT_NULL_CONSTRUCTOR, BuiltinFunctions.INT32_DEFAULT_NULL_CONSTRUCTOR,
+            BuiltinFunctions.INT64_DEFAULT_NULL_CONSTRUCTOR, BuiltinFunctions.FLOAT_DEFAULT_NULL_CONSTRUCTOR,
+            BuiltinFunctions.DOUBLE_DEFAULT_NULL_CONSTRUCTOR, BuiltinFunctions.STRING_DEFAULT_NULL_CONSTRUCTOR,
+            BuiltinFunctions.DATE_DEFAULT_NULL_CONSTRUCTOR, BuiltinFunctions.DATE_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT,
+            BuiltinFunctions.TIME_DEFAULT_NULL_CONSTRUCTOR, BuiltinFunctions.TIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT,
+            BuiltinFunctions.DATETIME_DEFAULT_NULL_CONSTRUCTOR,
+            BuiltinFunctions.DATETIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT,
+            BuiltinFunctions.DURATION_DEFAULT_NULL_CONSTRUCTOR,
+            BuiltinFunctions.DAY_TIME_DURATION_DEFAULT_NULL_CONSTRUCTOR,
+            BuiltinFunctions.YEAR_MONTH_DURATION_DEFAULT_NULL_CONSTRUCTOR,
+            BuiltinFunctions.UUID_DEFAULT_NULL_CONSTRUCTOR, BuiltinFunctions.BINARY_BASE64_DEFAULT_NULL_CONSTRUCTOR);
 
     public static void appendPrimaryIndexTypes(Dataset dataset, IAType itemType, IAType metaItemType,
             List<Object> target) throws AlgebricksException {
@@ -179,10 +188,12 @@ public class AccessMethodUtils {
 
     public static boolean analyzeFuncExprArgsForOneConstAndVarAndUpdateAnalysisCtx(
             AbstractFunctionCallExpression funcExpr, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
+            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment, boolean allowFunctionExprArg)
+            throws AlgebricksException {
         ILogicalExpression constExpression = null;
         IAType constantExpressionType = null;
         LogicalVariable fieldVar = null;
+        int varIndex;
         ILogicalExpression arg1 = funcExpr.getArguments().get(0).getValue();
         ILogicalExpression arg2 = funcExpr.getArguments().get(1).getValue();
         // One of the args must be a runtime constant, and the other arg must be a variable.
@@ -206,6 +217,7 @@ public class AccessMethodUtils {
             constExpression = arg1;
             VariableReferenceExpression varExpr = (VariableReferenceExpression) arg2;
             fieldVar = varExpr.getVariableReference();
+            varIndex = 1;
         } else if (arg1.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
             IAType expressionType = constantRuntimeResultType(arg2, context, typeEnvironment);
             if (expressionType == null) {
@@ -225,27 +237,96 @@ public class AccessMethodUtils {
 
             VariableReferenceExpression varExpr = (VariableReferenceExpression) arg1;
             fieldVar = varExpr.getVariableReference();
+            varIndex = 0;
         } else {
-            return false;
+            if (!allowFunctionExprArg) {
+                return false;
+            }
+            // extract the variable argument.
+            if (acceptExpressionArg(arg1, context, typeEnvironment)) {
+                // arg1 = expr, arg2 should be a constant
+                Pair<LogicalVariable, IAType> varConstType =
+                        getVarAndConstExprType(arg1, arg2, context, typeEnvironment);
+                if (varConstType == null) {
+                    return false;
+                }
+                fieldVar = varConstType.first;
+                constantExpressionType = varConstType.second;
+                constExpression = arg2;
+                varIndex = 0;
+            } else if (acceptExpressionArg(arg2, context, typeEnvironment)) {
+                // arg2 = expr, arg1 should be a constant
+                Pair<LogicalVariable, IAType> varConstType =
+                        getVarAndConstExprType(arg2, arg1, context, typeEnvironment);
+                if (varConstType == null) {
+                    return false;
+                }
+                fieldVar = varConstType.first;
+                constantExpressionType = varConstType.second;
+                constExpression = arg1;
+                varIndex = 1;
+            } else {
+                return false;
+            }
         }
 
         // Updates the given Analysis Context by adding a new optimizable function expression.
         constructNewOptFuncExprAndAddToAnalysisCtx(funcExpr, fieldVar, constExpression, constantExpressionType,
-                analysisCtx);
+                analysisCtx, varIndex);
         return true;
+    }
+
+    private static boolean acceptExpressionArg(ILogicalExpression expr, IOptimizationContext context,
+            IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        AbstractFunctionCallExpression funExpr = (AbstractFunctionCallExpression) expr;
+        List<Mutable<ILogicalExpression>> funArgs = funExpr.getArguments();
+        if (funArgs.size() <= 0) {
+            return false;
+        }
+        // first arg must be a variable and the rest are constants
+        if (funArgs.get(0).getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+            return false;
+        }
+        for (int i = 1; i < funArgs.size(); i++) {
+            IAType constExprType = constantRuntimeResultType(funArgs.get(i).getValue(), context, typeEnvironment);
+            if (constExprType == null) {
+                // not constant at runtime
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static Pair<LogicalVariable, IAType> getVarAndConstExprType(ILogicalExpression exprWithVar,
+            ILogicalExpression constExpr, IOptimizationContext context, IVariableTypeEnvironment typeEnvironment)
+            throws AlgebricksException {
+        IAType constExprType = constantRuntimeResultType(constExpr, context, typeEnvironment);
+        if (constExprType == null) {
+            // not constant at runtime
+            return null;
+        }
+        AbstractFunctionCallExpression funExpr = (AbstractFunctionCallExpression) exprWithVar;
+        LogicalVariable varFromExpr =
+                ((VariableReferenceExpression) funExpr.getArguments().get(0).getValue()).getVariableReference();
+        return new Pair<>(varFromExpr, constExprType);
     }
 
     private static void constructNewOptFuncExprAndAddToAnalysisCtx(AbstractFunctionCallExpression funcExpr,
             LogicalVariable fieldVar, ILogicalExpression expression, IAType expressionType,
-            AccessMethodAnalysisContext analysisCtx) {
-        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, fieldVar, expression, expressionType);
+            AccessMethodAnalysisContext analysisCtx, int varIndex) {
+        OptimizableFuncExpr newOptFuncExpr =
+                new OptimizableFuncExpr(funcExpr, fieldVar, expression, expressionType, varIndex);
         addNewOptFuncExprToAnalysisCtx(funcExpr, newOptFuncExpr, analysisCtx);
     }
 
     private static void constructNewOptFuncExprAndAddToAnalysisCtx(AbstractFunctionCallExpression funcExpr,
-            LogicalVariable[] fieldVars, ILogicalExpression[] expressions, IAType[] expressionTypes,
-            AccessMethodAnalysisContext analysisCtx) {
-        OptimizableFuncExpr newOptFuncExpr = new OptimizableFuncExpr(funcExpr, fieldVars, expressions, expressionTypes);
+            LogicalVariable[] fieldVars, int[] fieldVarsIdxes, ILogicalExpression[] expressions,
+            IAType[] expressionTypes, AccessMethodAnalysisContext analysisCtx) {
+        OptimizableFuncExpr newOptFuncExpr =
+                new OptimizableFuncExpr(funcExpr, fieldVars, fieldVarsIdxes, expressions, expressionTypes);
         addNewOptFuncExprToAnalysisCtx(funcExpr, newOptFuncExpr, analysisCtx);
 
     }
@@ -332,7 +413,7 @@ public class AccessMethodUtils {
 
         // Updates the given Analysis Context by adding a new optimizable function expression.
         constructNewOptFuncExprAndAddToAnalysisCtx(funcExpr, new LogicalVariable[] { fieldVar1, fieldVar2 },
-                new ILogicalExpression[0], new IAType[0], analysisCtx);
+                new int[] { 0, 1 }, new ILogicalExpression[0], new IAType[0], analysisCtx);
         return true;
     }
 
@@ -2781,6 +2862,19 @@ public class AccessMethodUtils {
         return ann == null ? null : ann.getIndexNames();
     }
 
+    public static List<String> getFieldNameSetStepsFromSubTree(IOptimizableFuncExpr optFuncExpr,
+            OptimizableOperatorSubTree subTree, int opIndex, int assignVarIndex, ARecordType recordType,
+            int funcVarIndex, ILogicalExpression parentFuncExpr, ARecordType metaType, LogicalVariable metaVar,
+            MutableInt fieldSource, boolean isUnnestOverVarAllowed) throws AlgebricksException {
+        if (optFuncExpr != null) {
+            if (parentFuncExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                optFuncExpr.addStepExpr(funcVarIndex, ((AbstractFunctionCallExpression) parentFuncExpr));
+            }
+        }
+        return getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, opIndex, assignVarIndex, recordType, funcVarIndex,
+                parentFuncExpr, metaType, metaVar, fieldSource, isUnnestOverVarAllowed);
+    }
+
     /**
      * Returns the field name corresponding to the assigned variable at
      * varIndex. Returns Collections.emptyList() if the expr at varIndex does not yield to a field
@@ -2788,7 +2882,7 @@ public class AccessMethodUtils {
      *
      * @throws AlgebricksException
      */
-    public static List<String> getFieldNameFromSubTree(IOptimizableFuncExpr optFuncExpr,
+    private static List<String> getFieldNameAndStepsFromSubTree(IOptimizableFuncExpr optFuncExpr,
             OptimizableOperatorSubTree subTree, int opIndex, int assignVarIndex, ARecordType recordType,
             int funcVarIndex, ILogicalExpression parentFuncExpr, ARecordType metaType, LogicalVariable metaVar,
             MutableInt fieldSource, boolean isUnnestOverVarAllowed) throws AlgebricksException {
@@ -2800,7 +2894,7 @@ public class AccessMethodUtils {
             AssignOperator assignOp = (AssignOperator) op;
             expr = (AbstractLogicalExpression) assignOp.getExpressions().get(assignVarIndex).getValue();
             // Can't get a field name from a constant expression. So, return null.
-            if (expr.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
                 return Collections.emptyList();
             }
             childFuncExpr = (AbstractFunctionCallExpression) expr;
@@ -2866,6 +2960,7 @@ public class AccessMethodUtils {
             }
             if (optFuncExpr != null) {
                 optFuncExpr.setLogicalExpr(funcVarIndex, parentFuncExpr);
+                optFuncExpr.addStepExpr(funcVarIndex, funcExpr);
             }
             int[] assignAndExpressionIndexes = null;
 
@@ -2888,7 +2983,7 @@ public class AccessMethodUtils {
                 for (int varIndex = 0; varIndex < varList.size(); varIndex++) {
                     LogicalVariable var = varList.get(varIndex);
                     ArrayList<LogicalVariable> parentVars = new ArrayList<>();
-                    expr.getUsedVariables(parentVars);
+                    funcExpr.getUsedVariables(parentVars);
 
                     if (parentVars.contains(var)) {
                         //Found the variable we are looking for.
@@ -2902,7 +2997,7 @@ public class AccessMethodUtils {
                 //We found the nested assign
 
                 //Recursive call on nested assign
-                List<String> parentFieldNames = getFieldNameFromSubTree(optFuncExpr, subTree,
+                List<String> parentFieldNames = getFieldNameAndStepsFromSubTree(optFuncExpr, subTree,
                         assignAndExpressionIndexes[0], assignAndExpressionIndexes[1], recordType, funcVarIndex,
                         parentFuncExpr, metaType, metaVar, fieldSource, isUnnestOverVarAllowed);
 
@@ -2963,19 +3058,28 @@ public class AccessMethodUtils {
 
         }
 
-        if (!funcIDSetThatRetainFieldName.contains(funcIdent)) {
-            return Collections.emptyList();
-        }
         // We use a part of the field in edit distance computation
         if (optFuncExpr != null
                 && optFuncExpr.getFuncExpr().getFunctionIdentifier() == BuiltinFunctions.EDIT_DISTANCE_CHECK) {
             optFuncExpr.setPartialField(true);
         }
+        List<Mutable<ILogicalExpression>> funcArgs = funcExpr.getArguments();
+        if (funcArgs.isEmpty()) {
+            return Collections.emptyList();
+        }
         // We expect the function's argument to be a variable, otherwise we
         // cannot apply an index.
-        ILogicalExpression argExpr = funcExpr.getArguments().get(0).getValue();
+        ILogicalExpression argExpr = funcArgs.get(0).getValue();
         if (argExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
             return Collections.emptyList();
+        }
+        for (int i = 1; i < funcArgs.size(); i++) {
+            if (funcArgs.get(i).getValue().getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                return Collections.emptyList();
+            }
+        }
+        if (optFuncExpr != null) {
+            optFuncExpr.addStepExpr(funcVarIndex, funcExpr);
         }
         LogicalVariable curVar = ((VariableReferenceExpression) argExpr).getVariableReference();
         // We look for the assign or unnest operator that produces curVar below
@@ -2990,16 +3094,17 @@ public class AccessMethodUtils {
                     LogicalVariable var = varList.get(varIndex);
                     if (var.equals(curVar) && optFuncExpr != null) {
                         optFuncExpr.setSourceVar(funcVarIndex, var);
-                        return getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, varIndex, recordType,
-                                funcVarIndex, childFuncExpr, metaType, metaVar, fieldSource, isUnnestOverVarAllowed);
+                        return getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, varIndex,
+                                recordType, funcVarIndex, childFuncExpr, metaType, metaVar, fieldSource,
+                                isUnnestOverVarAllowed);
                     }
                 }
             } else {
                 UnnestOperator unnestOp = (UnnestOperator) curOp;
                 LogicalVariable var = unnestOp.getVariable();
                 if (var.equals(curVar)) {
-                    getFieldNameFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0, recordType, funcVarIndex,
-                            childFuncExpr, metaType, metaVar, fieldSource, isUnnestOverVarAllowed);
+                    getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0, recordType,
+                            funcVarIndex, childFuncExpr, metaType, metaVar, fieldSource, isUnnestOverVarAllowed);
                 }
             }
         }
@@ -3014,8 +3119,10 @@ public class AccessMethodUtils {
         if (lastMatchedDataSourceVar < 0) {
             return null;
         }
-        final ILogicalExpression optVarExpr =
-                optFuncExpr.getFuncExpr().getArguments().get(lastMatchedDataSourceVar).getValue();
+        final ILogicalExpression optVarExpr = optFuncExpr.getArgument(lastMatchedDataSourceVar).getValue();
+        if (optVarExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            optFuncExpr.addStepExpr(lastMatchedDataSourceVar, ((AbstractFunctionCallExpression) optVarExpr));
+        }
         optFuncExpr.setLogicalExpr(lastMatchedDataSourceVar, optVarExpr);
 
         for (Index index : datasetIndexes) {
@@ -3065,5 +3172,10 @@ public class AccessMethodUtils {
             }
         }
         return null;
+    }
+
+    public static boolean isFieldAccess(FunctionIdentifier funId) {
+        return funId.equals(FIELD_ACCESS_BY_NAME) || funId.equals(FIELD_ACCESS_BY_INDEX)
+                || funId.equals(FIELD_ACCESS_NESTED);
     }
 }

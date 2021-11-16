@@ -21,6 +21,7 @@ package org.apache.asterix.optimizer.rules.am;
 import java.util.List;
 
 import org.apache.asterix.om.types.IAType;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -80,4 +81,17 @@ public interface IOptimizableFuncExpr {
     void setConstantExpr(int index, ILogicalExpression expr);
 
     ILogicalExpression[] getConstantExpressions();
+
+    void addStepExpr(int index, AbstractFunctionCallExpression funcExpr);
+
+    List<AbstractFunctionCallExpression> getStepsExprs(int index);
+
+    /**
+     * Returns the argument expression from which the logical variable is originating in the optimizable function.
+     *
+     * @param index the index of the logical variable for which to return the expression argument
+     *
+     * @return the argument expression
+     */
+    Mutable<ILogicalExpression> getArgument(int index);
 }

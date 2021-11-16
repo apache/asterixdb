@@ -6529,6 +6529,11 @@
         <output-dir compare="Text">word-jaccard-inline</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="cast-default-null">
+        <output-dir compare="Text">cast-default-null</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="inverted-index-join-noeqjoin">
     <test-case FilePath="inverted-index-join-noeqjoin">

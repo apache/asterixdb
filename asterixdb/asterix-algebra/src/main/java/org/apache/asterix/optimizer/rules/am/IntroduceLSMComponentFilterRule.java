@@ -497,7 +497,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                 || funcIdent == AlgebricksBuiltinFunctions.LT || funcIdent == AlgebricksBuiltinFunctions.GT
                 || funcIdent == AlgebricksBuiltinFunctions.EQ) {
             AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVarAndUpdateAnalysisCtx(funcExpr, analysisCtx, context,
-                    typeEnvironment);
+                    typeEnvironment, false);
         }
     }
 

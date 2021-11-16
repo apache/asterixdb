@@ -19,6 +19,8 @@
 
 package org.apache.asterix.optimizer.rules.am;
 
+import static org.apache.asterix.optimizer.rules.am.AccessMethodUtils.CAST_NULL_TYPE_CONSTRUCTORS;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -39,6 +41,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
@@ -117,11 +120,15 @@ public class BTreeAccessMethod implements IAccessMethod {
             List<AbstractLogicalOperator> assignsAndUnnests, AccessMethodAnalysisContext analysisCtx,
             IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
         boolean matches = AccessMethodUtils.analyzeFuncExprArgsForOneConstAndVarAndUpdateAnalysisCtx(funcExpr,
-                analysisCtx, context, typeEnvironment);
+                analysisCtx, context, typeEnvironment, allowFunctionExpressionArg());
         if (!matches) {
             matches = AccessMethodUtils.analyzeFuncExprArgsForTwoVarsAndUpdateAnalysisCtx(funcExpr, analysisCtx);
         }
         return matches;
+    }
+
+    protected boolean allowFunctionExpressionArg() {
+        return true;
     }
 
     @Override
@@ -961,7 +968,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                 return optFuncExpr.getLogicalExpr(0) == null;
             }
             // We are optimizing a selection query. Search key is a constant. Return true if constant is on lhs.
-            return optFuncExpr.getFuncExpr().getArguments().get(0) == optFuncExpr.getConstantExpr(0);
+            return optFuncExpr.getArgument(0) == optFuncExpr.getConstantExpr(0);
         } else {
             // We are optimizing a join query. Determine whether the feeding variable is on the lhs.
             return (optFuncExpr.getOperatorSubTree(0) == null || optFuncExpr.getOperatorSubTree(0) == probeSubTree);
@@ -1030,6 +1037,25 @@ public class BTreeAccessMethod implements IAccessMethod {
     @Override
     public String getName() {
         return "BTREE_ACCESS_METHOD";
+    }
+
+    @Override
+    public boolean acceptsFunction(AbstractFunctionCallExpression functionExpr, IAType indexedFieldType,
+            boolean defaultNull, boolean finalStep) throws CompilationException {
+        FunctionIdentifier funId = functionExpr.getFunctionIdentifier();
+        if (!finalStep) {
+            return AccessMethodUtils.isFieldAccess(funId);
+        }
+        if (AccessMethodUtils.isFieldAccess(funId)) {
+            return !defaultNull;
+        } else if (defaultNull && CAST_NULL_TYPE_CONSTRUCTORS.contains(funId)) {
+            IAType nonNullableType = Index.getNonNullableType(indexedFieldType).first;
+            FunctionIdentifier indexedFieldConstructor = TypeUtil.getTypeConstructorDefaultNull(nonNullableType);
+            // index should have CAST (DEFAULT NULL) and the applied function should be the same as the indexed field
+            return funId.equals(indexedFieldConstructor);
+        } else {
+            return false;
+        }
     }
 
     @Override

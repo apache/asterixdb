@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.om.types.IAType;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -130,4 +131,16 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
 
     public String getName();
 
+    /**
+     * Checks whether the function applied to an indexed field is acceptable by the access method.
+     *
+     * @param functionExpr applied function
+     * @param indexedFieldType the type of the indexed field in the index definition
+     * @param defaultNull true if the candidate index has CAST (DEFAULT NULL) modifier
+     * @param finalStep true if the functionExpr is the final function applied
+     *
+     * @return true if the access method accepts the argument function. False, otherwise.
+     */
+    public boolean acceptsFunction(AbstractFunctionCallExpression functionExpr, IAType indexedFieldType,
+            boolean defaultNull, boolean finalStep) throws AlgebricksException;
 }
