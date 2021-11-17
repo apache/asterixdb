@@ -18,7 +18,7 @@
  */
 
 /*
- * Creating an external dataset should not fail when non-s3-region is used (some-new-region)
+ * Creating an external dataset should fail when non-s3-region is used (some-new-region)
  */
 
 drop dataverse test if exists;

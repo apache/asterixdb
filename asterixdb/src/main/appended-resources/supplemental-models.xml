@@ -593,6 +593,17 @@
     </project>
   </supplement>
 
+  <supplement>
+    <project>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>third-party-jackson-core</artifactId>
+      <properties>
+        <license.onMultipleEmbeddedLicense>2.17.79:concat</license.onMultipleEmbeddedLicense>
+        <license.onMultipleEmbeddedNotice>2.17.79:concat</license.onMultipleEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
   <!-- software.amazon.eventstream is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
   <!-- license override not needed, ALv2 is specified in its pom.xml -->
   <!-- see https://github.com/aws/aws-sdk-java -->
@@ -618,9 +629,9 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-core</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>1.12.1</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>1.12.109</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.109</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>1.12.109</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -630,9 +641,9 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>jmespath-java</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>1.12.1</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>1.12.109</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.109</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>1.12.109</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -642,9 +653,9 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-s3</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>1.12.1</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>1.12.109</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.109</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>1.12.109</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -654,9 +665,9 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-kms</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>1.12.1</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>1.12.109</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.109</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>1.12.109</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -666,9 +677,9 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-dynamodb</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>1.12.1</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>1.12.109</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.109</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>1.12.109</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -697,8 +708,8 @@
       <groupId>com.typesafe.netty</groupId>
       <artifactId>netty-reactive-streams</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.0.4</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.0.4</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.0.4,2.0.5</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.0.4,2.0.5</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -708,8 +719,8 @@
       <groupId>com.typesafe.netty</groupId>
       <artifactId>netty-reactive-streams-http</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.0.4</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.0.4</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.0.4,2.0.5</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.0.4,2.0.5</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -721,10 +732,10 @@
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.0.2</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.0.2</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.0.2</license.ignoreLicenseOverride>
-        <license.ignoreNoticeOverride>1.0.2</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>1.0.2,1.0.3</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.0.2,1.0.3</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.0.2,1.0.3</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>1.0.2,1.0.3</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>

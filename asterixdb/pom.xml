@@ -87,9 +87,9 @@
     <hadoop.version>3.3.1</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.14.1</log4j.version>
-    <awsjavasdk.version>2.10.83</awsjavasdk.version>
+    <awsjavasdk.version>2.17.79</awsjavasdk.version>
     <parquet.version>1.12.0</parquet.version>
-    <hadoop-awsjavasdk.version>1.12.1</hadoop-awsjavasdk.version>
+    <hadoop-awsjavasdk.version>1.12.109</hadoop-awsjavasdk.version>
     <azureblobjavasdk.version>12.12.0</azureblobjavasdk.version>
     <azuredatalakejavasdk.version>12.7.0</azuredatalakejavasdk.version>
     <gcsjavasdk.version>1.114.0</gcsjavasdk.version>

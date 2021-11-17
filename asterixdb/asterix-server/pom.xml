@@ -204,6 +204,11 @@
               <url>https://raw.githubusercontent.com/reactive-streams/reactive-streams-jvm/v1.0.2/LICENSE.txt</url>
             </override>
             <override>
+              <gav>org.reactivestreams:reactive-streams:1.0.3</gav>
+              <noticeUrl>https://raw.githubusercontent.com/reactive-streams/reactive-streams-jvm/v1.0.3/COPYING.txt</noticeUrl>
+              <url>https://raw.githubusercontent.com/reactive-streams/reactive-streams-jvm/v1.0.3/LICENSE.txt</url>
+            </override>
+            <override>
               <gavs>
                 <gav>software.amazon.awssdk:sdk-core:2.10.83</gav>
                 <gav>software.amazon.awssdk:aws-core:2.10.83</gav>
@@ -226,13 +231,13 @@
             <!-- Hadoop AWS SDK -->
             <override>
               <gavs>
-                <gav>com.amazonaws:aws-java-sdk-core:1.12.1</gav>
-                <gav>com.amazonaws:jmespath-java:1.12.1</gav>
-                <gav>com.amazonaws:aws-java-sdk-s3:1.12.1</gav>
-                <gav>com.amazonaws:aws-java-sdk-kms:1.12.1</gav>
-                <gav>com.amazonaws:aws-java-sdk-dynamodb:1.12.1</gav>
+                <gav>com.amazonaws:aws-java-sdk-core:1.12.109</gav>
+                <gav>com.amazonaws:jmespath-java:1.12.109</gav>
+                <gav>com.amazonaws:aws-java-sdk-s3:1.12.109</gav>
+                <gav>com.amazonaws:aws-java-sdk-kms:1.12.109</gav>
+                <gav>com.amazonaws:aws-java-sdk-dynamodb:1.12.109</gav>
               </gavs>
-              <noticeUrl>https://raw.githubusercontent.com/aws/aws-sdk-java/1.12.1/NOTICE.txt</noticeUrl>
+              <noticeUrl>https://raw.githubusercontent.com/aws/aws-sdk-java/1.12.109/NOTICE.txt</noticeUrl>
             </override>
             <override>
               <gav>software.amazon.eventstream:eventstream:1.0.1</gav>

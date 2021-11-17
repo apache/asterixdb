@@ -26,6 +26,7 @@ import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_REQUIRED
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_OR_PARAM_IF_PARAM_IS_PRESENT;
+import static org.apache.asterix.common.exceptions.ErrorCode.S3_REGION_NOT_SUPPORTED;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ACCESS_KEY_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.ERROR_METHOD_NOT_IMPLEMENTED;
 import static org.apache.asterix.external.util.ExternalDataConstants.AwsS3.HADOOP_ACCESS_KEY_ID;
@@ -919,7 +920,16 @@ public class ExternalDataUtils {
             }
 
             builder.credentialsProvider(credentialsProvider);
-            builder.region(Region.of(regionId));
+
+            // Validate the region
+            List<Region> regions = S3Client.serviceMetadata().regions();
+            Optional<Region> selectedRegion =
+                    regions.stream().filter(region -> region.id().equals(regionId)).findFirst();
+
+            if (selectedRegion.isEmpty()) {
+                throw new CompilationException(S3_REGION_NOT_SUPPORTED, regionId);
+            }
+            builder.region(selectedRegion.get());
 
             // Validate the service endpoint if present
             if (serviceEndpoint != null) {

@@ -214,7 +214,7 @@
       <compilation-unit name="common/bucket-does-not-exist">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">common/bucket-does-not-exist</output-dir>
-        <expected-error>External source error. software.amazon.awssdk.services.s3.model.NoSuchBucketException: The specified bucket does not exist (Service: S3, Status Code: 404, Request ID: null)</expected-error>
+        <expected-error>External source error. software.amazon.awssdk.services.s3.model.NoSuchBucketException: The specified bucket does not exist (Service: S3, Status Code: 404</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset" check-warnings="true">
@@ -243,6 +243,7 @@
     <test-case FilePath="external-dataset/s3">
       <compilation-unit name="non-s3-region">
         <output-dir compare="Text">non-s3-region</output-dir>
+        <expected-error>Provided S3 region is not supported: 'some-new-region'</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/s3">
