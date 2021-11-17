@@ -18,11 +18,15 @@
  */
 package org.apache.hyracks.maven.license;
 
+import static org.apache.hyracks.maven.license.GenerateFileMojo.EmbeddedArtifact.LICENSE;
+import static org.apache.hyracks.maven.license.GenerateFileMojo.EmbeddedArtifact.NOTICE;
 import static org.apache.hyracks.maven.license.ProjectFlag.ALTERNATE_LICENSE_FILE;
 import static org.apache.hyracks.maven.license.ProjectFlag.ALTERNATE_NOTICE_FILE;
 import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_MISSING_EMBEDDED_LICENSE;
 import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_MISSING_EMBEDDED_NOTICE;
 import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_NOTICE_OVERRIDE;
+import static org.apache.hyracks.maven.license.ProjectFlag.ON_MULTIPLE_EMBEDDED_LICENSE;
+import static org.apache.hyracks.maven.license.ProjectFlag.ON_MULTIPLE_EMBEDDED_NOTICE;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -334,26 +338,55 @@ public class GenerateFileMojo extends LicenseMojo {
         }
     }
 
+    enum EmbeddedArtifact {
+        NOTICE,
+        LICENSE
+    }
+
     private void resolveNoticeFiles() throws MojoExecutionException, IOException {
-        // TODO(mblow): this will match *any* NOTICE[.(txt|md)] file located within the artifact-
-        // this seems way too liberal
-        resolveArtifactFiles("NOTICE", IGNORE_MISSING_EMBEDDED_NOTICE, ALTERNATE_NOTICE_FILE,
-                entry -> entry.getName().matches("(.*/|^)" + "NOTICE" + "(.(txt|md))?"), Project::setNoticeText,
-                text -> stripFoundationAssertionFromNotices ? FOUNDATION_PATTERN.matcher(text).replaceAll("") : text);
+        resolveArtifactFiles(NOTICE);
     }
 
     private void resolveLicenseFiles() throws MojoExecutionException, IOException {
-        // TODO(mblow): this will match *any* LICENSE[.(txt|md)] file located within the artifact-
-        // this seems way too liberal
-        resolveArtifactFiles("LICENSE", IGNORE_MISSING_EMBEDDED_LICENSE, ALTERNATE_LICENSE_FILE,
-                entry -> entry.getName().matches("(.*/|^)" + "LICENSE" + "(.(txt|md))?"), Project::setLicenseText,
-                UnaryOperator.identity());
+        resolveArtifactFiles(LICENSE);
     }
 
-    private void resolveArtifactFiles(final String name, final ProjectFlag ignoreFlag,
-            final ProjectFlag alternateFilenameFlag, final Predicate<JarEntry> filter,
-            final BiConsumer<Project, String> consumer, final UnaryOperator<String> contentTransformer)
-            throws MojoExecutionException, IOException {
+    private void resolveArtifactFiles(final EmbeddedArtifact artifact) throws MojoExecutionException, IOException {
+        final String name;
+        final ProjectFlag ignoreFlag;
+        final ProjectFlag alternateFilenameFlag;
+        final ProjectFlag onMultipleFlag;
+        final Predicate<JarEntry> filter;
+        final BiConsumer<Project, String> consumer;
+        final UnaryOperator<String> contentTransformer;
+
+        switch (artifact) {
+            case NOTICE:
+                name = "NOTICE";
+                ignoreFlag = IGNORE_MISSING_EMBEDDED_NOTICE;
+                alternateFilenameFlag = ALTERNATE_NOTICE_FILE;
+                onMultipleFlag = ON_MULTIPLE_EMBEDDED_NOTICE;
+                // TODO(mblow): this will match *any* NOTICE[.(txt|md)] file located within the artifact-
+                // this seems way too liberal
+                filter = entry -> entry.getName().matches("(.*/|^)" + "NOTICE" + "(.(txt|md))?");
+                consumer = Project::setNoticeText;
+                contentTransformer = UnaryOperator.identity();
+                break;
+            case LICENSE:
+                name = "LICENSE";
+                ignoreFlag = IGNORE_MISSING_EMBEDDED_LICENSE;
+                alternateFilenameFlag = ALTERNATE_LICENSE_FILE;
+                onMultipleFlag = ON_MULTIPLE_EMBEDDED_LICENSE;
+                // TODO(mblow): this will match *any* LICENSE[.(txt|md)] file located within the artifact-
+                // this seems way too liberal
+                filter = entry -> entry.getName().matches("(.*/|^)" + "LICENSE" + "(.(txt|md))?");
+                consumer = Project::setLicenseText;
+                contentTransformer = stripFoundationAssertionFromNotices
+                        ? text -> FOUNDATION_PATTERN.matcher(text).replaceAll("") : UnaryOperator.identity();
+                break;
+            default:
+                throw new IllegalStateException("NYI: " + artifact);
+        }
         for (Project p : getProjects()) {
             File artifactFile = new File(p.getArtifactPath());
             if (!artifactFile.exists()) {
@@ -371,12 +404,45 @@ public class GenerateFileMojo extends LicenseMojo {
                     warnUnlessFlag(p, ignoreFlag, "No " + name + " file found for " + p.gav());
                 } else {
                     if (matches.size() > 1) {
-                        getLog().warn("Multiple " + name + " files found for " + p.gav() + ": " + matches.keySet()
-                                + "; taking first");
+                        // TODO(mblow): duplicate elimination on matches content
+                        warnUnlessFlag(p, onMultipleFlag,
+                                "Multiple " + name + " files found for " + p.gav() + ": " + matches.keySet() + "!");
+                        String onMultiple = (String) getProjectFlag(p.gav(), onMultipleFlag);
+                        if (onMultiple == null) {
+                            onMultiple = "concat";
+                        }
+                        switch (onMultiple.toLowerCase()) {
+                            case "concat":
+                                getLog().info("...concatenating all " + matches.size() + " matches");
+                                StringBuilder content = new StringBuilder();
+                                for (Map.Entry<String, JarEntry> match : matches.entrySet()) {
+                                    resolveContent(p, jarFile, match.getValue(), contentTransformer, (p1, text) -> {
+                                        content.append("------------ BEGIN <").append(match.getKey())
+                                                .append("> ------------\n");
+                                        content.append(text);
+                                        if (content.charAt(content.length() - 1) != '\n') {
+                                            content.append('\n');
+                                        }
+                                        content.append("------------ END <").append(match.getKey())
+                                                .append("> ------------\n");
+                                    }, name);
+                                }
+                                consumer.accept(p, content.toString());
+                                break;
+                            case "first":
+                                Map.Entry<String, JarEntry> first = matches.entrySet().iterator().next();
+                                getLog().info("...taking first match: " + first.getKey());
+                                resolveContent(p, jarFile, first.getValue(), contentTransformer, consumer, name);
+                                break;
+                            default:
+                                throw new IllegalArgumentException("unknown value for " + onMultipleFlag.propName()
+                                        + ": " + onMultiple.toLowerCase());
+                        }
                     } else {
-                        getLog().info(p.gav() + " has " + name + " file: " + matches.keySet());
+                        Map.Entry<String, JarEntry> match = matches.entrySet().iterator().next();
+                        getLog().info(p.gav() + " has " + name + " file: " + match.getKey());
+                        resolveContent(p, jarFile, match.getValue(), contentTransformer, consumer, name);
                     }
-                    resolveContent(p, jarFile, matches.values().iterator().next(), contentTransformer, consumer, name);
                 }
             }
         }

@@ -33,6 +33,8 @@ enum ProjectFlag {
     IGNORE_MISSING_EMBEDDED_NOTICE,
     IGNORE_LICENSE_OVERRIDE,
     IGNORE_NOTICE_OVERRIDE,
+    ON_MULTIPLE_EMBEDDED_LICENSE,
+    ON_MULTIPLE_EMBEDDED_NOTICE,
     ALTERNATE_LICENSE_FILE,
     ALTERNATE_NOTICE_FILE;
 
@@ -59,6 +61,8 @@ enum ProjectFlag {
                 break;
             case ALTERNATE_LICENSE_FILE:
             case ALTERNATE_NOTICE_FILE:
+            case ON_MULTIPLE_EMBEDDED_NOTICE:
+            case ON_MULTIPLE_EMBEDDED_LICENSE:
                 for (String spec : StringUtils.split(value, ",")) {
                     String[] specSplit = StringUtils.split(spec, ":");
                     if (specSplit.length != 2) {
