@@ -19,14 +19,13 @@
 
 /*
  * SQL-compat mode.
- * Test no subquery coercion if the subquery is in the IN clause
- * of a quantified expression
+ * Test no subquery coercion if the subquery is in the EXISTS clause
  */
 
 // requesttype=application/json
 // param sql-compat:json=true
 
-select r2.r1
+select r2.r1, (select value { "a": r4, "b": r4 + 1 } from range(2, r2.r1) r4) x
 from (select r1 from range(1, 3) r1) r2
-where some r3 in (select r4 from range(0, 2) r4) satisfies r3.r4 = r2.r1
+where exists (select r4 a, r4 + 1 b from range(2, r2.r1) r4) -- 0, 1, or 2 tuples
 order by r2.r1;

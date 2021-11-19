@@ -10222,6 +10222,11 @@
         <output-dir compare="Text">subquery_coercion_07_from</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="subquery_coercion_08_misc">
+        <output-dir compare="Text">subquery_coercion_08_misc</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="statement-params">
     <test-case FilePath="statement-params">

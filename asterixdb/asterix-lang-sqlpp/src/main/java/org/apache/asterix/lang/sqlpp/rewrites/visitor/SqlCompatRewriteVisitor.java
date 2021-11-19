@@ -36,6 +36,7 @@ import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
+import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.IntegerLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
@@ -72,7 +73,8 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  * <ol>
  * <li> FROM/JOIN/UNNEST (subquery) --> no subquery coercion
  * <li> WITH/LET v = (subquery) --> no subquery coercion
- * <li> SOME v IN (subquery) --> no subquery coercion
+ * <li> SOME/EVERY v IN (subquery) --> no subquery coercion
+ * <li> [NOT] EXISTS (subquery) --> no subquery coercion
  * <li> WHERE (x,y) = (subquery) --> coerce the subquery into a single array
  * <li> WHERE x IN (subquery) --> coerce the subquery into a collection of values
  * <li> WHERE (x,y) IN (subquery) --> coerce the subquery into a collection of arrays
@@ -182,6 +184,20 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
             }
         }
         return super.visit(opExpr, arg);
+    }
+
+    @Override
+    public Expression visit(UnaryExpr u, ILangExpression arg) throws CompilationException {
+        switch (u.getExprType()) {
+            case EXISTS:
+            case NOT_EXISTS:
+                Expression expr = u.getExpr();
+                if (expr.getKind() == Expression.Kind.SELECT_EXPRESSION) {
+                    annotateSubqueryNoCoercion((SelectExpression) expr);
+                }
+                break;
+        }
+        return super.visit(u, arg);
     }
 
     @Override
