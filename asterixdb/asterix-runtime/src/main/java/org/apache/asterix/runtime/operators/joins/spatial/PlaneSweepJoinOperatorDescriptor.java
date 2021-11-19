@@ -98,8 +98,8 @@ public class PlaneSweepJoinOperatorDescriptor extends AbstractOperatorDescriptor
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
-            final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(nljAid, 0);
-            final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
+            final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(nljAid, 0);
+            final RecordDescriptor buildRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
 
             return new AbstractUnaryInputSinkOperatorNodePushable() {
                 private JoinCacheTaskState state;
@@ -111,7 +111,7 @@ public class PlaneSweepJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                     ISpatialJoinUtil imjc = imjcf.createSpatialJoinUtil(buildKeys, probeKeys, ctx, nPartitions);
 
-                    state.joiner = new SpatialJoiner(ctx, memoryForJoin, imjc, buildKeys, probeKeys, rd0, rd1);
+                    state.joiner = new SpatialJoiner(ctx, memoryForJoin, imjc, buildKeys, probeKeys, buildRd, probeRd);
                 }
 
                 @Override

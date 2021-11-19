@@ -10150,6 +10150,11 @@
         <output-dir compare="Text">spatial_left_outer_join_st_intersects</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="spatial">
+      <compilation-unit name="spatial_join_projection_check">
+        <output-dir compare="Text">spatial_join_projection_check</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="sql-compat">
     <test-case FilePath="sql-compat">

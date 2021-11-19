@@ -99,8 +99,8 @@ public class IntervalMergeJoinOperatorDescriptor extends AbstractOperatorDescrip
         @Override
         public IOperatorNodePushable createPushRuntime(final IHyracksTaskContext ctx,
                 IRecordDescriptorProvider recordDescProvider, final int partition, int nPartitions) {
-            final RecordDescriptor rd0 = recordDescProvider.getInputRecordDescriptor(nljAid, 0);
-            final RecordDescriptor rd1 = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
+            final RecordDescriptor probeRd = recordDescProvider.getInputRecordDescriptor(nljAid, 0);
+            final RecordDescriptor buildRd = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
 
             return new AbstractUnaryInputSinkOperatorNodePushable() {
                 private JoinCacheTaskState state;
@@ -112,7 +112,8 @@ public class IntervalMergeJoinOperatorDescriptor extends AbstractOperatorDescrip
 
                     IIntervalJoinUtil imjc = imjcf.createIntervalMergeJoinUtil(buildKey, probeKey, ctx, nPartitions);
 
-                    state.joiner = new IntervalMergeJoiner(ctx, memoryForJoin, imjc, buildKey, probeKey, rd0, rd1);
+                    state.joiner =
+                            new IntervalMergeJoiner(ctx, memoryForJoin, imjc, buildKey, probeKey, buildRd, probeRd);
                 }
 
                 @Override

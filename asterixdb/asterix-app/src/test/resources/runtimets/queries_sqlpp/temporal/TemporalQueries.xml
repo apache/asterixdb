@@ -249,6 +249,11 @@
         <output-dir compare="Text">interval_starts</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="temporal/interval_joins">
+      <compilation-unit name="interval_join_projection_check">
+        <output-dir compare="Text">interval_join_projection_check</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="temporal/interval_joins_spilling">
       <compilation-unit name="interval_after">
         <output-dir compare="Text">interval_after</output-dir>
