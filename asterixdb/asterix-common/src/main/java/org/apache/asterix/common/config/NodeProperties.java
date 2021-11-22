@@ -96,7 +96,7 @@ public class NodeProperties extends AbstractProperties {
 
         @Override
         public boolean hidden() {
-            return this == INITIAL_RUN || this == STARTING_PARTITION_ID || this == ACTIVE_PARTITIONS;
+            return this == INITIAL_RUN;
         }
 
     }
