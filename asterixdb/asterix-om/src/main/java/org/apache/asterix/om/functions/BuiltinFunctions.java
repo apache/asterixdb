@@ -500,6 +500,8 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "repeat", 2);
     public static final FunctionIdentifier STRING_SPLIT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "split", 2);
+    public static final FunctionIdentifier STRING_PARSE_JSON =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "parse-json", 1);
 
     public static final FunctionIdentifier DATASET =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dataset", FunctionIdentifier.VARARGS); // 1 or 2
@@ -1923,6 +1925,7 @@ public class BuiltinFunctions {
         addFunction(STRING_JOIN, StringJoinTypeComputer.INSTANCE, true);
         addFunction(STRING_REPEAT, AStringTypeComputer.INSTANCE_NULLABLE, true);
         addFunction(STRING_SPLIT, UniformInputTypeComputer.STRING_STRING_LIST_INSTANCE, true);
+        addFunction(STRING_PARSE_JSON, AnyTypeComputer.INSTANCE, true);
 
         addPrivateFunction(ORDERED_LIST_CONSTRUCTOR, OrderedListConstructorTypeComputer.INSTANCE, true);
         addFunction(POINT_CONSTRUCTOR, APointTypeComputer.INSTANCE, true);

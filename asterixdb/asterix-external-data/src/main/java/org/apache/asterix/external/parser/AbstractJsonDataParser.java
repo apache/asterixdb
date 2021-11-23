@@ -73,10 +73,8 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
     /**
      * Initialize JSONDataParser with GeometryCoParser
      *
-     * @param recordType
-     *            defined type.
-     * @param jsonFactory
-     *            Jackson JSON parser factory.
+     * @param recordType  defined type.
+     * @param jsonFactory Jackson JSON parser factory.
      */
     public AbstractJsonDataParser(ARecordType recordType, JsonFactory jsonFactory) {
         // recordType currently cannot be null, however this is to guarantee for any future changes.
@@ -101,7 +99,7 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
             parseValue(BuiltinType.ANY, out);
             return true;
         } catch (IOException e) {
-            throw new RuntimeDataException(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM, e);
+            throw createException(e);
         }
     }
 
@@ -238,8 +236,7 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
     /**
      * Geometry in GeoJSON is an object
      *
-     * @param typeTag
-     *            geometry typeTag
+     * @param typeTag geometry typeTag
      * @param out
      * @throws IOException
      */

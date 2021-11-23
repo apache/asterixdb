@@ -1,0 +1,1 @@
+{ "nullVal": null, "intVal": 1, "stringVal": "stringVal", "doubleVal": 3.75, "objectVal": { "id": 7, "name": "Jerry", "comment": "😢😢💉💉 = 𩸽 😢😢💉💉. Coffee ☕‼️😃. حسنا" }, "arrayVal": [ 1, 2, 3 ], "nullArgVal": null, "unexpectedType": null, "emptyString": null }

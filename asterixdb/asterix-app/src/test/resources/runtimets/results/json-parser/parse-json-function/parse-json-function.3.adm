@@ -1,0 +1,6 @@
+{ "malformedVal": null }
+{ "malformedVal": [ 1, 2 ] }
+{ "malformedVal": { "c": "test" } }
+{ "malformedVal": null }
+{ "malformedVal": [ "a", "b" ] }
+{ "malformedVal": { "c": { "d": 1 } } }

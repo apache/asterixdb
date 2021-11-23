@@ -1,0 +1,7 @@
+{ "multipleValues": null }
+{ "multipleValues": { "a": 1 } }
+{ "multipleValues": [ 1, 2 ] }
+{ "multipleValues": { "c": "test" } }
+{ "multipleValues": { "a": 3.57 } }
+{ "multipleValues": [ "a", "b" ] }
+{ "multipleValues": { "c": { "d": 1 } } }

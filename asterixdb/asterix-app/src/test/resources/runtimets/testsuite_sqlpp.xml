@@ -15113,6 +15113,14 @@
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="json-parser" check-warnings="true">
+      <compilation-unit name="parse-json-function">
+        <output-dir compare="Text">parse-json-function</output-dir>
+        <source-location>false</source-location>
+        <expected-warn>Type mismatch: function parse-json expects its 1st input parameter to be of type string, but the actual input type is bigint</expected-warn>
+        <expected-warn>Malformed input stream</expected-warn>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="composite-key">
     <test-case FilePath="composite-key">
