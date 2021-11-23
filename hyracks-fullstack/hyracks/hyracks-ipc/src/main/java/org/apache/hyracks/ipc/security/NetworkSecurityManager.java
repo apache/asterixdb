@@ -43,7 +43,7 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
         this.config = config;
         if (config.isSslEnabled()) {
             System.setProperty("javax.net.ssl.trustStore", config.getTrustStoreFile().getAbsolutePath());
-            System.setProperty("javax.net.ssl.trustStorePassword", config.getKeyStorePassword());
+            config.getTrustStorePassword().ifPresent(pw -> System.setProperty("javax.net.ssl.trustStorePassword", pw));
         }
         sslSocketFactory = new SslSocketChannelFactory(this);
     }
@@ -60,7 +60,11 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(defaultAlgorithm);
             TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(defaultAlgorithm);
             keyManagerFactory.init(engineKeyStore, password);
-            final KeyStore trustStore = loadTrustStoreFromFile(password);
+            KeyStore trustStore = config.getTrustStore();
+            if (trustStore == null) {
+                trustStore =
+                        loadTrustStoreFromFile(config.getTrustStorePassword().map(String::toCharArray).orElse(null));
+            }
             trustManagerFactory.init(trustStore);
             SSLContext ctx = SSLContext.getInstance(TSL_VERSION);
             ctx.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());

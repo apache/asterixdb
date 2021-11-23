@@ -20,6 +20,7 @@ package org.apache.hyracks.api.network;
 
 import java.io.File;
 import java.security.KeyStore;
+import java.util.Optional;
 
 public interface INetworkSecurityConfig {
 
@@ -52,9 +53,23 @@ public interface INetworkSecurityConfig {
     String getKeyStorePassword();
 
     /**
-     * Gets a trust store file to be used for validating certificates of secured connections.
+     * Gets the trust store to be used for validating certificates of secured connections
+     *
+     * @return the trust store to be used
+     */
+    KeyStore getTrustStore();
+
+    /**
+     * Gets a trust store file to be used if {@link INetworkSecurityConfig#getTrustStore()} returns null.
      *
      * @return the trust store file
      */
     File getTrustStoreFile();
+
+    /**
+     * Gets the password for the trust store file, if configured
+     *
+     * @return the password to the trust store file, if configured
+     */
+    Optional<String> getTrustStorePassword();
 }

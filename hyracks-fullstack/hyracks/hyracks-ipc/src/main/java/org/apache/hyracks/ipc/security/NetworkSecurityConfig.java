@@ -20,6 +20,7 @@ package org.apache.hyracks.ipc.security;
 
 import java.io.File;
 import java.security.KeyStore;
+import java.util.Optional;
 
 import org.apache.hyracks.api.network.INetworkSecurityConfig;
 
@@ -29,44 +30,52 @@ public class NetworkSecurityConfig implements INetworkSecurityConfig {
     private final File keyStoreFile;
     private final File trustStoreFile;
     private final String keyStorePassword;
-    private final KeyStore keyStore;
 
     private NetworkSecurityConfig(boolean sslEnabled, String keyStoreFile, String keyStorePassword,
-            String trustStoreFile, KeyStore keyStore) {
+            String trustStoreFile) {
         this.sslEnabled = sslEnabled;
         this.keyStoreFile = keyStoreFile != null ? new File(keyStoreFile) : null;
         this.keyStorePassword = keyStorePassword;
         this.trustStoreFile = trustStoreFile != null ? new File(trustStoreFile) : null;
-        this.keyStore = keyStore;
     }
 
     public static NetworkSecurityConfig of(boolean sslEnabled, String keyStoreFile, String keyStorePassword,
             String trustStoreFile) {
-        return new NetworkSecurityConfig(sslEnabled, keyStoreFile, keyStorePassword, trustStoreFile, null);
+        return new NetworkSecurityConfig(sslEnabled, keyStoreFile, keyStorePassword, trustStoreFile);
     }
 
-    public static NetworkSecurityConfig of(boolean sslEnabled, KeyStore keyStore, String keyStorePassword,
-            String trustStoreFile) {
-        return new NetworkSecurityConfig(sslEnabled, null, keyStorePassword, trustStoreFile, keyStore);
-    }
-
+    @Override
     public boolean isSslEnabled() {
         return sslEnabled;
     }
 
+    @Override
     public File getKeyStoreFile() {
         return keyStoreFile;
     }
 
+    @Override
     public String getKeyStorePassword() {
         return keyStorePassword;
     }
 
+    @Override
     public KeyStore getKeyStore() {
-        return keyStore;
+        return null;
     }
 
+    @Override
+    public KeyStore getTrustStore() {
+        return null;
+    }
+
+    @Override
     public File getTrustStoreFile() {
         return trustStoreFile;
+    }
+
+    @Override
+    public Optional<String> getTrustStorePassword() {
+        return Optional.empty();
     }
 }
