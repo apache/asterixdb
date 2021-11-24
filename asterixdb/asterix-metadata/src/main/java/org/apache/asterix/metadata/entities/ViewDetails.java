@@ -19,6 +19,7 @@
 
 package org.apache.asterix.metadata.entities;
 
+import static org.apache.asterix.metadata.entitytupletranslators.AbstractTupleTranslator.writeDateTimeFormats;
 import static org.apache.asterix.om.types.AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
 
 import java.io.DataOutput;
@@ -286,28 +287,8 @@ public class ViewDetails implements IDatasetDetails {
         }
 
         // write field 'Format'
-        if (datetimeFormat != null || dateFormat != null || timeFormat != null) {
-            fieldName.reset();
-            aString.setValue(MetadataRecordTypes.FIELD_NAME_DATA_FORMAT);
-            stringSerde.serialize(aString, fieldName.getDataOutput());
-
-            OrderedListBuilder formatListBuilder = new OrderedListBuilder();
-            formatListBuilder.reset(FULL_OPEN_ORDEREDLIST_TYPE);
-            for (String format : new String[] { datetimeFormat, dateFormat, timeFormat }) {
-                itemValue.reset();
-                if (format == null) {
-                    nullSerde.serialize(ANull.NULL, itemValue.getDataOutput());
-                } else {
-                    aString.setValue(format);
-                    stringSerde.serialize(aString, itemValue.getDataOutput());
-                }
-                formatListBuilder.addItem(itemValue);
-            }
-            fieldValue.reset();
-            formatListBuilder.write(fieldValue.getDataOutput(), true);
-            viewRecordBuilder.addField(fieldName, fieldValue);
-        }
-
+        writeDateTimeFormats(datetimeFormat, dateFormat, timeFormat, viewRecordBuilder, aString, nullSerde, stringSerde,
+                fieldName, fieldValue, itemValue);
         viewRecordBuilder.write(out, true);
     }
 

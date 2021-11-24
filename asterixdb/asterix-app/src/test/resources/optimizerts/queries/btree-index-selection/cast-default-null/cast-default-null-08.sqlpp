@@ -30,7 +30,7 @@ CREATE VIEW view1(id int, x int, y int) DEFAULT NULL AS SELECT id, x, y FROM ds1
 CREATE VIEW view4(id int, x int, y int) DEFAULT NULL AS SELECT id, x, y FROM ds4;
 
 USE test;
-// test that idx1 is not used even though v4.x is int, v1.x is int because idx1 does not have CAST modifier.
+// test that idx1 is not used because idx1 does not have CAST modifier (idx1 is just int and v1.x uses int-default-null).
 SELECT v4.x AS v4x, v1.x AS v1x
 FROM view4 AS v4, view1 AS v1
 WHERE v4.x /*+ indexnl */ = v1.x ORDER BY v4x, v1x;

@@ -718,7 +718,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     && index.getPendingOp() == MetadataUtil.PENDING_NO_OP) {
                 IAType indexedType = keyFieldTypes.get(keyIdx);
                 List<AbstractFunctionCallExpression> stepExprs = optFuncExpr.getStepsExprs(varIdx);
-                if (acceptSteps(accessMethod, stepExprs, indexedType, hasCastDefaultNull)) {
+                if (acceptSteps(index, accessMethod, stepExprs, indexedType, hasCastDefaultNull)) {
                     indexCandidates.add(index);
                     boolean isFieldTypeUnknown = fieldType == BuiltinType.AMISSING || fieldType == BuiltinType.ANY;
                     if (isFieldTypeUnknown && (!isOverridingKeyFieldTypes || index.isEnforced())) {
@@ -735,10 +735,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         return true;
     }
 
-    private boolean acceptSteps(IAccessMethod accessMethod, List<AbstractFunctionCallExpression> stepExprs,
+    private boolean acceptSteps(Index index, IAccessMethod accessMethod, List<AbstractFunctionCallExpression> stepExprs,
             IAType indexedType, boolean indexHasCastDefaultNull) throws AlgebricksException {
         for (int i = stepExprs.size() - 1; i >= 0; i--) {
-            if (!accessMethod.acceptsFunction(stepExprs.get(i), indexedType, indexHasCastDefaultNull, i == 0)) {
+            if (!accessMethod.acceptsFunction(stepExprs.get(i), index, indexedType, indexHasCastDefaultNull, i == 0)) {
                 return false;
             }
         }

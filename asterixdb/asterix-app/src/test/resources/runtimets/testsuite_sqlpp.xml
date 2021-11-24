@@ -4322,6 +4322,7 @@
         <expected-error>Cast Default Null cannot be specified together with ENFORCED</expected-error>
         <expected-error>CAST is not allowed since field "[typed_f1]" is typed</expected-error>
         <expected-error>CAST is not allowed since field "[typed_f2]" is typed</expected-error>
+        <expected-error>Parameter invalid_date cannot be set</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

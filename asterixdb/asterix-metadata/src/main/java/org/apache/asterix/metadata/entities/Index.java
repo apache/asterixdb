@@ -84,9 +84,9 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes,
             boolean overrideKeyFieldTypes, boolean isEnforced, boolean isPrimaryIndex, int pendingOp,
             OptionalBoolean excludeUnknownKey) {
-        this(dataverseName, datasetName, indexName, indexType,
-                createSimpleIndexDetails(indexType, keyFieldNames, keyFieldSourceIndicators, keyFieldTypes,
-                        overrideKeyFieldTypes, excludeUnknownKey, OptionalBoolean.empty()),
+        this(dataverseName, datasetName,
+                indexName, indexType, createSimpleIndexDetails(indexType, keyFieldNames, keyFieldSourceIndicators,
+                        keyFieldTypes, overrideKeyFieldTypes, excludeUnknownKey),
                 isEnforced, isPrimaryIndex, pendingOp);
     }
 
@@ -95,7 +95,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             int pendingOp) {
         return new Index(dataverseName, datasetName,
                 datasetName, IndexType.BTREE, new ValueIndexDetails(keyFieldNames, keyFieldSourceIndicators,
-                        keyFieldTypes, false, OptionalBoolean.empty(), OptionalBoolean.empty()),
+                        keyFieldTypes, false, OptionalBoolean.empty(), OptionalBoolean.empty(), null, null, null),
                 false, true, pendingOp);
     }
 
@@ -337,15 +337,25 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
         private final Boolean castDefaultNull;
 
+        private final String castDatetimeFormat;
+
+        private final String castDateFormat;
+
+        private final String castTimeFormat;
+
         public ValueIndexDetails(List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators,
                 List<IAType> keyFieldTypes, boolean overrideKeyFieldTypes, OptionalBoolean excludeUnknownKey,
-                OptionalBoolean castDefaultNull) {
+                OptionalBoolean castDefaultNull, String castDatetimeFormat, String castDateFormat,
+                String castTimeFormat) {
             this.keyFieldNames = keyFieldNames;
             this.keyFieldSourceIndicators = keyFieldSourceIndicators;
             this.keyFieldTypes = keyFieldTypes;
             this.overrideKeyFieldTypes = overrideKeyFieldTypes;
             this.excludeUnknownKey = excludeUnknownKey.isEmpty() ? null : excludeUnknownKey.get();
             this.castDefaultNull = castDefaultNull.isEmpty() ? null : castDefaultNull.get();
+            this.castDatetimeFormat = castDatetimeFormat;
+            this.castDateFormat = castDateFormat;
+            this.castTimeFormat = castTimeFormat;
         }
 
         @Override
@@ -371,6 +381,18 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
         public OptionalBoolean getCastDefaultNull() {
             return OptionalBoolean.ofNullable(castDefaultNull);
+        }
+
+        public String getCastDatetimeFormat() {
+            return castDatetimeFormat;
+        }
+
+        public String getCastDateFormat() {
+            return castDateFormat;
+        }
+
+        public String getCastTimeFormat() {
+            return castTimeFormat;
         }
 
         @Override
@@ -508,14 +530,14 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     @Deprecated
     private static Index.IIndexDetails createSimpleIndexDetails(IndexType indexType, List<List<String>> keyFieldNames,
             List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes, boolean overrideKeyFieldTypes,
-            OptionalBoolean excludeUnknownKey, OptionalBoolean castDefaultNull) {
+            OptionalBoolean excludeUnknownKey) {
         if (indexType == null) {
             return null;
         }
         switch (Index.IndexCategory.of(indexType)) {
             case VALUE:
                 return new ValueIndexDetails(keyFieldNames, keyFieldSourceIndicators, keyFieldTypes,
-                        overrideKeyFieldTypes, excludeUnknownKey, castDefaultNull);
+                        overrideKeyFieldTypes, excludeUnknownKey, OptionalBoolean.empty(), null, null, null);
             case TEXT:
                 if (excludeUnknownKey.isPresent()) {
                     throw new IllegalArgumentException("excludeUnknownKey");

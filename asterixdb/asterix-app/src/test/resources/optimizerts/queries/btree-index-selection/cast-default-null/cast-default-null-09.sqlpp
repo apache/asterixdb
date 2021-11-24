@@ -29,7 +29,7 @@ CREATE INDEX idx2 ON ds2(x: int) CAST (DEFAULT NULL);
 CREATE VIEW view4(id int, x int, y int) DEFAULT NULL AS SELECT id, x, y FROM ds4;
 
 USE test;
-// test that idx2 is not used because v4.x is int-default-null and ds2.x is int.
+// test that idx2 is not used because idx2 uses int-default-null and ds2.x is just int.
 SELECT v4.x AS v4x, ds2.x AS ds2x
 FROM view4 AS v4, ds2 AS ds2
 WHERE v4.x /*+ indexnl */ = ds2.x ORDER BY v4x, ds2x;

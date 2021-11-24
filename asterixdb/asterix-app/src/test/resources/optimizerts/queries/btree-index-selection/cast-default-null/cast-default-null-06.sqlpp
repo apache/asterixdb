@@ -30,7 +30,7 @@ CREATE VIEW view3(id int, x string, y int) DEFAULT NULL AS SELECT id, x, y FROM 
 CREATE VIEW view4(id int, x int, y int) DEFAULT NULL AS SELECT id, x, y FROM ds4;
 
 USE test;
-// test that idx3 on view3(x) is not used since v4.x is int, v3.x is string
+// test that idx3 on view3(x) is not used because v3.x uses string-default-null and idx3 uses int-default-null
 SELECT v4.x AS v4x, v3.x AS v3x
 FROM view4 AS v4, view3 AS v3
 WHERE v4.x /*+ indexnl */ = v3.x ORDER BY v4x, v3x;

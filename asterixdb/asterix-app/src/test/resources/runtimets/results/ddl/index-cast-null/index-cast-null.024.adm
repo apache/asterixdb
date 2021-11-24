@@ -1,0 +1,6 @@
+{ "values": [ null, 3 ] }
+{ "values": [ null, 5 ] }
+{ "values": [ null, 6 ] }
+{ "values": [ "time: { 01:40:41.001 }", 1 ] }
+{ "values": [ "time: { 14:40:41.001 }", 4 ] }
+{ "values": [ "time: { 22:12:51.999 }", 2 ] }

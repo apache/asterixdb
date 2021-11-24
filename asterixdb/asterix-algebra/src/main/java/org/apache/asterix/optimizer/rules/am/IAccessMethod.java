@@ -135,12 +135,13 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
      * Checks whether the function applied to an indexed field is acceptable by the access method.
      *
      * @param functionExpr applied function
+     * @param index the index definition
      * @param indexedFieldType the type of the indexed field in the index definition
      * @param defaultNull true if the candidate index has CAST (DEFAULT NULL) modifier
      * @param finalStep true if the functionExpr is the final function applied
      *
      * @return true if the access method accepts the argument function. False, otherwise.
      */
-    public boolean acceptsFunction(AbstractFunctionCallExpression functionExpr, IAType indexedFieldType,
+    public boolean acceptsFunction(AbstractFunctionCallExpression functionExpr, Index index, IAType indexedFieldType,
             boolean defaultNull, boolean finalStep) throws AlgebricksException;
 }

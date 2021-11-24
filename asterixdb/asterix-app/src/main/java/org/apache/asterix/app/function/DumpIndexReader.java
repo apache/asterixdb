@@ -38,6 +38,7 @@ import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.util.JSONUtil;
 
 public class DumpIndexReader extends FunctionReader {
 
@@ -101,13 +102,29 @@ public class DumpIndexReader extends FunctionReader {
         for (int j = 0; j < tuple.getFieldCount(); ++j) {
             bbis.setByteBuffer(ByteBuffer.wrap(tuple.getFieldData(j)), tuple.getFieldStart(j));
             IAObject field = (IAObject) secondaryRecDesc.getFields()[j].deserialize(dis);
-            if (field.getType().getTypeTag() == ATypeTag.MISSING) {
+            ATypeTag tag = field.getType().getTypeTag();
+            if (tag == ATypeTag.MISSING) {
                 continue;
             }
-            recordBuilder.append(field);
+            if (isTemporal(tag)) {
+                JSONUtil.quoteAndEscape(recordBuilder, field.toString());
+            } else {
+                recordBuilder.append(field);
+            }
             recordBuilder.append(",");
         }
         recordBuilder.deleteCharAt(recordBuilder.length() - 1);
         recordBuilder.append("]}");
+    }
+
+    private static boolean isTemporal(ATypeTag typeTag) {
+        switch (typeTag) {
+            case DATE:
+            case TIME:
+            case DATETIME:
+                return true;
+            default:
+                return false;
+        }
     }
 }

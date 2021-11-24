@@ -1198,7 +1198,9 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
   String fullTextConfigName = null;
   Token startElementToken = null;
   Boolean excludeUnknown = null;
+  Pair<Map<String, String>, Boolean> castConfigDefaultNull;
   Boolean castDefaultNull = null;
+  Map<String, String> castConfig = null;
 }
 {
   (
@@ -1229,7 +1231,12 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
     } <UNKNOWN> <KEY>
     )?
 
-    ( <CAST><LEFTPAREN><IDENTIFIER> { expectToken(DEFAULT); } <NULL><RIGHTPAREN> { castDefaultNull = true; })?
+    ( <CAST><LEFTPAREN> castConfigDefaultNull = CastDefaultNull() <RIGHTPAREN>
+      {
+        castConfig = castConfigDefaultNull.first;
+        castDefaultNull = castConfigDefaultNull.second;
+      }
+    )?
   )
   {
     IndexType indexType;
@@ -1245,7 +1252,7 @@ CreateIndexStatement IndexSpecification(Token startStmtToken) throws ParseExcept
     }
     CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
       new Identifier(indexName), indexType, indexedElementList, enforced, gramLength, fullTextConfigName, ifNotExists,
-      excludeUnknown, castDefaultNull);
+      excludeUnknown, castDefaultNull, castConfig);
     return addSourceLocation(stmt, startStmtToken);
   }
 }
@@ -1374,7 +1381,8 @@ CreateIndexStatement PrimaryIndexSpecification(Token startStmtToken) throws Pars
       indexName = "primary_idx_" + nameComponents.second;
     }
     CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
-      new Identifier(indexName), IndexType.BTREE, Collections.emptyList(), false, -1, null, ifNotExists, null, null);
+      new Identifier(indexName), IndexType.BTREE, Collections.emptyList(), false, -1, null, ifNotExists, null, null,
+      Collections.emptyMap());
     return addSourceLocation(stmt, startStmtToken);
   }
 }
@@ -1504,9 +1512,9 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
   boolean ifNotExists = false;
   Token beginPos = null, endPos = null;
   Expression viewBodyExpr = null;
+  Pair<Map<String, String>, Boolean> viewConfigDefaultNull;
   Boolean defaultNull = null;
   Map<String, String> viewConfig = null;
-  String propertyName = null, propertyValue = null;
   Pair<List<Integer>, List<List<String>>> primaryKeyFields = null;
   Pair<List<Integer>, List<List<String>>> foreignKeyFields = null;
   Pair<DataverseName, Identifier> refNameComponents = null;
@@ -1519,16 +1527,11 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
       (
         typeExpr = DatasetTypeSpecification()
         ifNotExists = IfNotExists()
-        <IDENTIFIER> { expectToken(DEFAULT); } <NULL> { defaultNull = true; }
-        (
-          LOOKAHEAD(2) <IDENTIFIER> { propertyName = token.image.toLowerCase(); } propertyValue = StringLiteral()
-          {
-            if (viewConfig == null) {
-              viewConfig = new HashMap<String, String>();
-            }
-            viewConfig.put(propertyName, propertyValue);
-          }
-        )*
+        viewConfigDefaultNull = CastDefaultNull()
+        {
+          viewConfig = viewConfigDefaultNull.first;
+          defaultNull = viewConfigDefaultNull.second;
+        }
         (
           <PRIMARY> <KEY> <LEFTPAREN> primaryKeyFields = PrimaryKeyFields() <RIGHTPAREN>
           <NOT> <ENFORCED>
@@ -1592,6 +1595,28 @@ Expression ViewBody() throws ParseException:
   )
   {
     return viewBodyExpr;
+  }
+}
+
+Pair<Map<String, String>, Boolean> CastDefaultNull() throws ParseException:
+{
+  Map<String, String> castConfig = null;
+  Boolean defaultNull = null;
+  String propertyName = null, propertyValue = null;
+}
+{
+  <IDENTIFIER> { expectToken(DEFAULT); } <NULL> { defaultNull = true; }
+    (
+      LOOKAHEAD(2) <IDENTIFIER> { propertyName = token.image.toLowerCase(); } propertyValue = StringLiteral()
+      {
+        if (castConfig == null) {
+          castConfig = new HashMap<String, String>();
+        }
+        castConfig.put(propertyName, propertyValue);
+      }
+    )*
+  {
+    return new Pair<Map<String, String>, Boolean>(castConfig, defaultNull);
   }
 }
 

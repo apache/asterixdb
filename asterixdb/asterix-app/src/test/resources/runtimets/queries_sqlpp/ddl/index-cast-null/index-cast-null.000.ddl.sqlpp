@@ -24,8 +24,10 @@ DROP DATAVERSE test IF EXISTS;
 CREATE DATAVERSE test;
 USE test;
 CREATE TYPE t1 AS { id: int, s_f: string, d_f: double, i_f: int, b_f: boolean };
-CREATE DATASET ds1(t1) primary key id;
-CREATE DATASET ds2(t1) primary key id;
+CREATE DATASET ds1(t1) PRIMARY KEY id;
+CREATE DATASET ds2(t1) PRIMARY KEY id;
+CREATE DATASET ds3(id int not unknown) OPEN TYPE PRIMARY KEY id;
+CREATE DATASET ds4(id int not unknown) OPEN TYPE PRIMARY KEY id;
 
 //CREATE INDEX ds2_idx1 ON ds2(s_f: int) CAST (DEFAULT NULL);
 
@@ -38,3 +40,15 @@ CREATE INDEX ds2_o_idx4 ON ds2(a.s_f: int) CAST (DEFAULT NULL);
 CREATE INDEX ds2_o_idx5 ON ds2(a.any_f: int) CAST (DEFAULT NULL);
 CREATE INDEX ds2_o_idx6 ON ds2(a.any_f: string) CAST (DEFAULT NULL);
 CREATE INDEX ds2_o_idx7 ON ds2(a.any_f: double) CAST (DEFAULT NULL);
+
+// temporal
+CREATE INDEX ds3_o_idx_f_dt ON ds3(f_dt: datetime) CAST (DEFAULT NULL);
+CREATE INDEX ds3_o_idx_f_d ON ds3(f_d: date) CAST (DEFAULT NULL);
+CREATE INDEX ds3_o_idx_f_t ON ds3(f_t: time) CAST (DEFAULT NULL);
+
+// temporal with format
+CREATE INDEX ds3_o_idx_f_dt_fmt ON ds3(f_dt_fmt: datetime) CAST (DEFAULT NULL datetime 'MM/DD/YYYY hh:mm:ss.nnna');
+CREATE INDEX ds3_o_idx_f_d_fmt ON ds3(f_d_fmt: date) CAST (DEFAULT NULL date 'MM/DD/YYYY');
+CREATE INDEX ds3_o_idx_f_t_fmt ON ds3(f_t_fmt: time) CAST (DEFAULT NULL time 'hh:mm:ss.nnna');
+
+CREATE INDEX ds3_o_idx_invalid_fmt ON ds3(f_d_fmt: date) CAST (DEFAULT NULL date 'invalid_format');

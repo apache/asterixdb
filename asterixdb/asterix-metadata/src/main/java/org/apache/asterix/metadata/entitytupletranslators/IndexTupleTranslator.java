@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.entitytupletranslators;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_CAST;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DEFAULT;
+import static org.apache.asterix.om.types.AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -390,6 +391,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
                 OptionalBoolean excludeUnknownKey = OptionalBoolean.empty();
                 OptionalBoolean castDefaultNull = OptionalBoolean.empty();
+                String datetimeFormat = null, dateFormat = null, timeFormat = null;
                 boolean isBtreeIdx = indexType == IndexType.BTREE && !isPrimaryIndex && !keyFieldNames.isEmpty();
                 if (isBtreeIdx) {
                     // exclude unknown key value; default to always include unknowns for normal b-trees
@@ -412,13 +414,20 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                                 IAObject defaultVal = castRec.getValueByPos(defaultFieldPos);
                                 if (defaultVal.getType().getTypeTag() == ATypeTag.NULL) {
                                     castDefaultNull = OptionalBoolean.TRUE();
+
+                                    // Format fields
+                                    Triple<String, String, String> dateTimeFormats = getDateTimeFormats(castRec);
+                                    datetimeFormat = dateTimeFormats.first;
+                                    dateFormat = dateTimeFormats.second;
+                                    timeFormat = dateTimeFormats.third;
                                 }
                             }
                         }
                     }
                 }
                 indexDetails = new Index.ValueIndexDetails(keyFieldNames, keyFieldSourceIndicator, keyFieldTypes,
-                        isOverridingKeyTypes, excludeUnknownKey, castDefaultNull);
+                        isOverridingKeyTypes, excludeUnknownKey, castDefaultNull, datetimeFormat, dateFormat,
+                        timeFormat);
                 break;
             case TEXT:
                 keyFieldNames =
@@ -587,7 +596,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         writeEnforced(index);
         writeSearchKeySourceIndicator(index);
         writeExcludeUnknownKey(index);
-        writeCastDefaultNull(index);
+        writeCast(index);
     }
 
     private void writeComplexSearchKeys(Index.ArrayIndexDetails indexDetails) throws HyracksDataException {
@@ -816,12 +825,13 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
     }
 
-    private void writeCastDefaultNull(Index index) throws HyracksDataException {
+    private void writeCast(Index index) throws HyracksDataException {
         if (index.getIndexType() == IndexType.BTREE && !index.isPrimaryIndex() && !index.isPrimaryKeyIndex()) {
-            boolean defaultNull =
-                    ((Index.ValueIndexDetails) index.getIndexDetails()).getCastDefaultNull().getOrElse(false);
-            // "Default" field
+            Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+            boolean defaultNull = indexDetails.getCastDefaultNull().getOrElse(false);
+            // write record field 'Cast'
             if (defaultNull) {
+                // write field 'Default'
                 castRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
                 fieldValue.reset();
                 nameValue.reset();
@@ -829,6 +839,13 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 stringSerde.serialize(aString, nameValue.getDataOutput());
                 nullSerde.serialize(ANull.NULL, fieldValue.getDataOutput());
                 castRecordBuilder.addField(nameValue, fieldValue);
+
+                // write field 'Format'
+                String datetimeFormat = indexDetails.getCastDatetimeFormat();
+                String dateFormat = indexDetails.getCastDateFormat();
+                String timeFormat = indexDetails.getCastTimeFormat();
+                writeDateTimeFormats(datetimeFormat, dateFormat, timeFormat, castRecordBuilder, aString, nullSerde,
+                        stringSerde, nameValue, fieldValue, itemValue);
 
                 nameValue.reset();
                 fieldValue.reset();

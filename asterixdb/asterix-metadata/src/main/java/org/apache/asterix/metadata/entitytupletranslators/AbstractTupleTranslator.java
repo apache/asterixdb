@@ -19,17 +19,21 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
+import static org.apache.asterix.om.types.AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.util.Collection;
 
 import org.apache.asterix.builders.IARecordBuilder;
+import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.api.IMetadataEntityTupleTranslator;
 import org.apache.asterix.metadata.api.IMetadataIndex;
+import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
@@ -38,7 +42,10 @@ import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IACursor;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -142,5 +149,54 @@ public abstract class AbstractTupleTranslator<T> implements IMetadataEntityTuple
             }
         }
         return new Triple<>(dataverseName, second, third);
+    }
+
+    protected static String getStringValue(IAObject obj) {
+        return obj.getType().getTypeTag() == ATypeTag.STRING ? ((AString) obj).getStringValue() : null;
+    }
+
+    protected static Triple<String, String, String> getDateTimeFormats(ARecord record) {
+        Triple<String, String, String> formats = new Triple<>(null, null, null);
+        int formatFieldPos = record.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_DATA_FORMAT);
+        if (formatFieldPos >= 0) {
+            IACursor formatCursor = ((AOrderedList) record.getValueByPos(formatFieldPos)).getCursor();
+            if (formatCursor.next()) {
+                formats.first = getStringValue(formatCursor.get());
+                if (formatCursor.next()) {
+                    formats.second = getStringValue(formatCursor.get());
+                    if (formatCursor.next()) {
+                        formats.third = getStringValue(formatCursor.get());
+                    }
+                }
+            }
+        }
+        return formats;
+    }
+
+    public static void writeDateTimeFormats(String datetimeFormat, String dateFormat, String timeFormat,
+            IARecordBuilder recordBuilder, AMutableString aString, ISerializerDeserializer<ANull> nullSerde,
+            ISerializerDeserializer<AString> stringSerde, ArrayBackedValueStorage nameValue,
+            ArrayBackedValueStorage fieldValue, ArrayBackedValueStorage itemValue) throws HyracksDataException {
+        if (datetimeFormat != null || dateFormat != null || timeFormat != null) {
+            nameValue.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_DATA_FORMAT);
+            stringSerde.serialize(aString, nameValue.getDataOutput());
+
+            OrderedListBuilder formatListBuilder = new OrderedListBuilder();
+            formatListBuilder.reset(FULL_OPEN_ORDEREDLIST_TYPE);
+            for (String format : new String[] { datetimeFormat, dateFormat, timeFormat }) {
+                itemValue.reset();
+                if (format == null) {
+                    nullSerde.serialize(ANull.NULL, itemValue.getDataOutput());
+                } else {
+                    aString.setValue(format);
+                    stringSerde.serialize(aString, itemValue.getDataOutput());
+                }
+                formatListBuilder.addItem(itemValue);
+            }
+            fieldValue.reset();
+            formatListBuilder.write(fieldValue.getDataOutput(), true);
+            recordBuilder.addField(nameValue, fieldValue);
+        }
     }
 }

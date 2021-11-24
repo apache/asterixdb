@@ -397,7 +397,7 @@ public class RTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean acceptsFunction(AbstractFunctionCallExpression functionExpr, IAType indexedFieldType,
+    public boolean acceptsFunction(AbstractFunctionCallExpression functionExpr, Index index, IAType indexedFieldType,
             boolean defaultNull, boolean finalStep) throws CompilationException {
         if (defaultNull) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, "CAST modifier not allowed");

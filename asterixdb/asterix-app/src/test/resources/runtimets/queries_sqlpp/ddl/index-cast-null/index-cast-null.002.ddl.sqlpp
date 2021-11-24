@@ -33,3 +33,15 @@ CREATE INDEX ds1_o_idx4 ON ds1(a.s_f: int) CAST(DEFAULT NULL);
 CREATE INDEX ds1_o_idx5 ON ds1(a.any_f: int) CAST(DEFAULT NULL);
 CREATE INDEX ds1_o_idx6 ON ds1(a.any_f: string) CAST(DEFAULT NULL);
 CREATE INDEX ds1_o_idx7 ON ds1(a.any_f: double) CAST(DEFAULT NULL);
+
+// temporal
+CREATE INDEX ds4_o_idx_f_dt ON ds4(f_dt: datetime) CAST (DEFAULT NULL);
+CREATE INDEX ds4_o_idx_f_d ON ds4(f_d: date) CAST (DEFAULT NULL);
+CREATE INDEX ds4_o_idx_f_t ON ds4(f_t: time) CAST (DEFAULT NULL);
+
+// temporal with format
+CREATE INDEX ds4_o_idx_f_dt_fmt ON ds4(f_dt_fmt: datetime) CAST (DEFAULT NULL datetime 'MM/DD/YYYY hh:mm:ss.nnna');
+CREATE INDEX ds4_o_idx_f_d_fmt ON ds4(f_d_fmt: date) CAST (DEFAULT NULL date 'MM/DD/YYYY');
+CREATE INDEX ds4_o_idx_f_t_fmt ON ds4(f_t_fmt: time) CAST (DEFAULT NULL time 'hh:mm:ss.nnna');
+
+CREATE INDEX ds4_o_idx_invalid_fmt ON ds4(f_d_fmt: date) CAST (DEFAULT NULL date 'invalid_format');

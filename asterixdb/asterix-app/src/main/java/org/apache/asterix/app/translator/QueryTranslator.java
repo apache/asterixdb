@@ -1339,9 +1339,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 switch (Index.IndexCategory.of(indexType)) {
                     case VALUE:
+                        Map<String, String> castConfig = TypeUtil.validateConfiguration(stmtCreateIndex.getCastConfig(),
+                                stmtCreateIndex.getSourceLocation());
+                        String datetimeFormat = TypeUtil.getDatetimeFormat(castConfig);
+                        String dateFormat = TypeUtil.getDateFormat(castConfig);
+                        String timeFormat = TypeUtil.getTimeFormat(castConfig);
                         indexDetails = new Index.ValueIndexDetails(keyFieldNames, keyFieldSourceIndicators,
                                 keyFieldTypes, overridesFieldTypes, stmtCreateIndex.getExcludeUnknownKey(),
-                                stmtCreateIndex.getCastDefaultNull());
+                                stmtCreateIndex.getCastDefaultNull(), datetimeFormat, dateFormat, timeFormat);
                         break;
                     case TEXT:
                         indexDetails = new Index.TextIndexDetails(keyFieldNames, keyFieldSourceIndicators,
@@ -1549,20 +1554,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     // Get snapshot from External File System
                     externalFilesSnapshot = ExternalIndexingOperations.getSnapshotFromExternalFileSystem(ds);
                     // Add an entry for the files index
-                    Index.IndexCategory indexCategory = Index.IndexCategory.of(index.getIndexType());
-                    OptionalBoolean excludeUnknownKey = OptionalBoolean.empty();
-                    if (indexCategory == Index.IndexCategory.VALUE) {
-                        excludeUnknownKey = ((Index.ValueIndexDetails) index.getIndexDetails()).getExcludeUnknownKey();
-                    }
-                    OptionalBoolean castDefaultNull = OptionalBoolean.empty();
-                    if (indexCategory == Index.IndexCategory.VALUE) {
-                        castDefaultNull = ((Index.ValueIndexDetails) index.getIndexDetails()).getCastDefaultNull();
-                    }
+                    OptionalBoolean excludeUnknownKey =
+                            ((Index.ValueIndexDetails) index.getIndexDetails()).getExcludeUnknownKey();
+                    OptionalBoolean castDefaultNull =
+                            ((Index.ValueIndexDetails) index.getIndexDetails()).getCastDefaultNull();
+                    String datetimeFormat = ((Index.ValueIndexDetails) index.getIndexDetails()).getCastDatetimeFormat();
+                    String dateFormat = ((Index.ValueIndexDetails) index.getIndexDetails()).getCastDateFormat();
+                    String timeFormat = ((Index.ValueIndexDetails) index.getIndexDetails()).getCastTimeFormat();
+
                     filesIndex = new Index(index.getDataverseName(), index.getDatasetName(),
                             IndexingConstants.getFilesIndexName(index.getDatasetName()), IndexType.BTREE,
                             new Index.ValueIndexDetails(ExternalIndexingOperations.FILE_INDEX_FIELD_NAMES, null,
                                     ExternalIndexingOperations.FILE_INDEX_FIELD_TYPES, false, excludeUnknownKey,
-                                    castDefaultNull),
+                                    castDefaultNull, datetimeFormat, dateFormat, timeFormat),
                             false, false, MetadataUtil.PENDING_ADD_OP);
                     MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), filesIndex);
                     // Add files to the external files index
@@ -2630,10 +2634,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
 
                 Map<String, String> viewConfig =
-                        ViewUtil.validateViewConfiguration(cvs.getViewConfiguration(), cvs.getSourceLocation());
-                datetimeFormat = ViewUtil.getDatetimeFormat(viewConfig);
-                dateFormat = ViewUtil.getDateFormat(viewConfig);
-                timeFormat = ViewUtil.getTimeFormat(viewConfig);
+                        TypeUtil.validateConfiguration(cvs.getViewConfiguration(), cvs.getSourceLocation());
+                datetimeFormat = TypeUtil.getDatetimeFormat(viewConfig);
+                dateFormat = TypeUtil.getDateFormat(viewConfig);
+                timeFormat = TypeUtil.getTimeFormat(viewConfig);
 
             } else {
                 if (primaryKeyDecl != null) {

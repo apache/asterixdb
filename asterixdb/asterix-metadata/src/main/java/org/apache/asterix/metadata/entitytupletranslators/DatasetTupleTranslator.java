@@ -343,23 +343,10 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                 }
 
                 // Format fields
-                String datetimeFormat = null, dateFormat = null, timeFormat = null;
-                int formatFieldPos =
-                        datasetDetailsRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_DATA_FORMAT);
-                if (formatFieldPos >= 0) {
-                    IACursor formatCursor =
-                            ((AOrderedList) datasetDetailsRecord.getValueByPos(formatFieldPos)).getCursor();
-                    if (formatCursor.next()) {
-                        datetimeFormat = getStringValue(formatCursor.get());
-                        if (formatCursor.next()) {
-                            dateFormat = getStringValue(formatCursor.get());
-                            if (formatCursor.next()) {
-                                timeFormat = getStringValue(formatCursor.get());
-                            }
-                        }
-                    }
-                }
-
+                Triple<String, String, String> dateTimeFormats = getDateTimeFormats(datasetDetailsRecord);
+                String datetimeFormat = dateTimeFormats.first;
+                String dateFormat = dateTimeFormats.second;
+                String timeFormat = dateTimeFormats.third;
                 datasetDetails = new ViewDetails(definition, dependencies, defaultNull, primaryKeyFields, foreignKeys,
                         datetimeFormat, dateFormat, timeFormat);
                 break;
@@ -432,10 +419,6 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             return ((AString) compressionRecord.getValueByPos(schemeIndex)).getStringValue();
         }
         return CompressionManager.NONE;
-    }
-
-    private static String getStringValue(IAObject obj) {
-        return obj.getType().getTypeTag() == ATypeTag.STRING ? ((AString) obj).getStringValue() : null;
     }
 
     @Override

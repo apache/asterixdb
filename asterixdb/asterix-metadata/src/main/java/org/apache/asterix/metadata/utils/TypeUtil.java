@@ -39,14 +39,20 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * Provider utility methods for data types
@@ -59,15 +65,22 @@ public class TypeUtil {
 
     private static final String FUNCTION_INLINE_TYPE_PREFIX = "$f$t$";
 
+    private static final String DATETIME_PARAMETER_NAME = BuiltinType.ADATETIME.getTypeName();
+
+    private static final String DATE_PARAMETER_NAME = BuiltinType.ADATE.getTypeName();
+
+    private static final String TIME_PARAMETER_NAME = BuiltinType.ATIME.getTypeName();
+
     private TypeUtil() {
     }
 
     /**
      * @param type type
+     * @param withFormat true when needing a constructor with format
      *
      * @return a type constructor that produces NULL for MISSING input
      */
-    public static FunctionIdentifier getTypeConstructorDefaultNull(IAType type) {
+    public static FunctionIdentifier getTypeConstructorDefaultNull(IAType type, boolean withFormat) {
         switch (type.getTypeTag()) {
             case TINYINT:
                 return BuiltinFunctions.INT8_DEFAULT_NULL_CONSTRUCTOR;
@@ -86,11 +99,14 @@ public class TypeUtil {
             case STRING:
                 return BuiltinFunctions.STRING_DEFAULT_NULL_CONSTRUCTOR;
             case DATE:
-                return BuiltinFunctions.DATE_DEFAULT_NULL_CONSTRUCTOR;
+                return withFormat ? BuiltinFunctions.DATE_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT
+                        : BuiltinFunctions.DATE_DEFAULT_NULL_CONSTRUCTOR;
             case TIME:
-                return BuiltinFunctions.TIME_DEFAULT_NULL_CONSTRUCTOR;
+                return withFormat ? BuiltinFunctions.TIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT
+                        : BuiltinFunctions.TIME_DEFAULT_NULL_CONSTRUCTOR;
             case DATETIME:
-                return BuiltinFunctions.DATETIME_DEFAULT_NULL_CONSTRUCTOR;
+                return withFormat ? BuiltinFunctions.DATETIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT
+                        : BuiltinFunctions.DATETIME_DEFAULT_NULL_CONSTRUCTOR;
             case YEARMONTHDURATION:
                 return BuiltinFunctions.YEAR_MONTH_DURATION_DEFAULT_NULL_CONSTRUCTOR;
             case DAYTIMEDURATION:
@@ -106,22 +122,62 @@ public class TypeUtil {
         }
     }
 
-    /**
-     * @param type type
-     *
-     * @return a type constructor that produces NULL for MISSING input
-     */
-    public static FunctionIdentifier getTypeConstructorWithFormatDefaultNull(IAType type) {
-        switch (type.getTypeTag()) {
-            case DATE:
-                return BuiltinFunctions.DATE_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT;
-            case TIME:
-                return BuiltinFunctions.TIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT;
+    public static Map<String, String> validateConfiguration(Map<String, String> config, SourceLocation sourceLoc)
+            throws CompilationException {
+        if (config == null) {
+            return Collections.emptyMap();
+        }
+        for (Map.Entry<String, String> me : config.entrySet()) {
+            String name = me.getKey();
+            String value = me.getValue();
+            if (DATETIME_PARAMETER_NAME.equals(name) || DATE_PARAMETER_NAME.equals(name)
+                    || TIME_PARAMETER_NAME.equals(name)) {
+                if (value == null) {
+                    throw new CompilationException(ErrorCode.INVALID_REQ_PARAM_VAL, sourceLoc, name, "null");
+                }
+            } else {
+                throw new CompilationException(ErrorCode.ILLEGAL_SET_PARAMETER, sourceLoc, name);
+            }
+        }
+        return config;
+    }
+
+    public static String getDatetimeFormat(Map<String, String> config) {
+        return config.get(DATETIME_PARAMETER_NAME);
+    }
+
+    public static String getDateFormat(Map<String, String> config) {
+        return config.get(DATE_PARAMETER_NAME);
+    }
+
+    public static String getTimeFormat(Map<String, String> config) {
+        return config.get(TIME_PARAMETER_NAME);
+    }
+
+    public static String getTemporalFormat(IAType targetType, Triple<String, String, String> temporalFormatByType) {
+        switch (targetType.getTypeTag()) {
             case DATETIME:
-                return BuiltinFunctions.DATETIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT;
+                return temporalFormatByType.first;
+            case DATE:
+                return temporalFormatByType.second;
+            case TIME:
+                return temporalFormatByType.third;
             default:
                 return null;
         }
+    }
+
+    public static String getTemporalFormatArg(AbstractFunctionCallExpression funExpr) {
+        FunctionIdentifier funId = funExpr.getFunctionIdentifier();
+        if (BuiltinFunctions.DATE_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT.equals(funId)
+                || BuiltinFunctions.TIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT.equals(funId)
+                || BuiltinFunctions.DATETIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT.equals(funId)) {
+            List<Mutable<ILogicalExpression>> arguments = funExpr.getArguments();
+            if (arguments.size() > 1) {
+                return ConstantExpressionUtil.getStringConstant(arguments.get(1).getValue());
+            }
+        }
+        return null;
     }
 
     private static class EnforcedTypeBuilder {

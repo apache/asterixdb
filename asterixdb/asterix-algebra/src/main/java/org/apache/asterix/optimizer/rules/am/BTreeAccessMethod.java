@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.asterix.common.annotations.AbstractExpressionAnnotationWithIndexNames;
@@ -41,6 +42,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
@@ -1040,7 +1042,7 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean acceptsFunction(AbstractFunctionCallExpression functionExpr, IAType indexedFieldType,
+    public boolean acceptsFunction(AbstractFunctionCallExpression functionExpr, Index index, IAType indexedFieldType,
             boolean defaultNull, boolean finalStep) throws CompilationException {
         FunctionIdentifier funId = functionExpr.getFunctionIdentifier();
         if (!finalStep) {
@@ -1051,9 +1053,13 @@ public class BTreeAccessMethod implements IAccessMethod {
                 return false;
             }
             IAType nonNullableType = Index.getNonNullableType(indexedFieldType).first;
-            FunctionIdentifier indexedFieldConstructor = TypeUtil.getTypeConstructorDefaultNull(nonNullableType);
+            Pair<FunctionIdentifier, String> constructorWithFmt =
+                    IndexUtil.getTypeConstructorDefaultNull(index, nonNullableType, functionExpr.getSourceLocation());
+            FunctionIdentifier indexedFieldConstructorFun = constructorWithFmt.first;
+            String formatInIndex = constructorWithFmt.second;
+            String formatInFunction = TypeUtil.getTemporalFormatArg(functionExpr);
             // index has CAST (DEFAULT NULL); the applied function should be the same as the indexed field function
-            return funId.equals(indexedFieldConstructor);
+            return funId.equals(indexedFieldConstructorFun) && Objects.equals(formatInIndex, formatInFunction);
         } else {
             return AccessMethodUtils.isFieldAccess(funId);
         }

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,7 +43,6 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.utils.ArrayIndexUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
-import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
@@ -320,8 +320,12 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             ILogicalOperator replicateOutput;
             if (!index.getIndexType().equals(IndexType.ARRAY)) {
                 for (int i = 0; i < secondaryKeyFields.size(); i++) {
-                    IndexFieldId indexFieldId = new IndexFieldId(secondaryKeySources.get(i), secondaryKeyFields.get(i),
-                            secondaryKeyTypes.get(i).getTypeTag());
+                    IAType skType = secondaryKeyTypes.get(i);
+                    Integer skSrc = secondaryKeySources.get(i);
+                    List<String> skName = secondaryKeyFields.get(i);
+                    ARecordType sourceType = dataset.hasMetaPart()
+                            ? skSrc.intValue() == Index.RECORD_INDICATOR ? recType : metaType : recType;
+                    IndexFieldId indexFieldId = createIndexFieldId(index, skName, skType, skSrc, sourceType, sourceLoc);
                     LogicalVariable skVar = fieldVarsForNewRecord.get(indexFieldId);
                     secondaryKeyVars.add(skVar);
                     VariableReferenceExpression skVarRef = new VariableReferenceExpression(skVar);
@@ -818,22 +822,27 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                             String.valueOf(index.getIndexType()));
             }
             for (int i = 0; i < skNames.size(); i++) {
-                IndexFieldId indexFieldId =
-                        new IndexFieldId(indicators.get(i), skNames.get(i), skTypes.get(i).getTypeTag());
+                List<String> skName = skNames.get(i);
+                Integer skSrc = indicators.get(i);
+                IAType skType = skTypes.get(i);
+
+                ARecordType sourceType = dataset.hasMetaPart()
+                        ? skSrc.intValue() == Index.RECORD_INDICATOR ? recType : metaType : recType;
+                LogicalVariable sourceVar = dataset.hasMetaPart()
+                        ? skSrc.intValue() == Index.RECORD_INDICATOR ? recordVar : metaVar : recordVar;
+
+                IAType fieldType = sourceType.getSubFieldType(skName);
+                IndexFieldId indexFieldId = createIndexFieldId(index, skName, skType, skSrc, sourceType, sourceLoc);
                 if (fieldAccessVars.containsKey(indexFieldId)) {
                     // already handled in a different index
                     continue;
                 }
-                ARecordType sourceType = dataset.hasMetaPart()
-                        ? indicators.get(i).intValue() == Index.RECORD_INDICATOR ? recType : metaType : recType;
-                LogicalVariable sourceVar = dataset.hasMetaPart()
-                        ? indicators.get(i).intValue() == Index.RECORD_INDICATOR ? recordVar : metaVar : recordVar;
-                LogicalVariable fieldVar = context.newVar();
                 // create record variable ref
                 VariableReferenceExpression varRef = new VariableReferenceExpression(sourceVar);
                 varRef.setSourceLocation(sourceLoc);
-                IAType fieldType = sourceType.getSubFieldType(indexFieldId.fieldName);
+
                 AbstractFunctionCallExpression theFieldAccessFunc;
+                LogicalVariable fieldVar = context.newVar();
                 if (fieldType == null) {
                     // Open field. must prevent inlining to maintain the cast before the primaryOp and
                     // make handling of records with incorrect value type for this field easier and cleaner
@@ -842,7 +851,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     AbstractFunctionCallExpression fieldAccessFunc =
                             getFieldAccessFunction(new MutableObject<>(varRef), -1, indexFieldId.fieldName);
                     // create cast
-                    theFieldAccessFunc = createCastExpression(index, skTypes.get(i), fieldAccessFunc, sourceLoc);
+                    theFieldAccessFunc = createCastExpression(index, skType, fieldAccessFunc, sourceLoc,
+                            indexFieldId.funId, indexFieldId.extraArg);
                 } else {
                     // Get the desired field position
                     int pos = indexFieldId.fieldName.size() > 1 ? -1
@@ -865,15 +875,38 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         return currentTop;
     }
 
+    private static IndexFieldId createIndexFieldId(Index index, List<String> skName, IAType skType, Integer skSrc,
+            ARecordType sourceType, SourceLocation srcLoc) throws AlgebricksException {
+        IAType fieldType = sourceType.getSubFieldType(skName);
+        FunctionIdentifier skFun = null;
+        String fmtArg = null;
+        if (fieldType == null) {
+            Pair<FunctionIdentifier, String> castExpr = getCastExpression(index, skType, srcLoc);
+            skFun = castExpr.first;
+            fmtArg = castExpr.second;
+        }
+        return new IndexFieldId(skSrc, skName, skType.getTypeTag(), skFun, fmtArg);
+    }
+
+    private static Pair<FunctionIdentifier, String> getCastExpression(Index index, IAType skType, SourceLocation srcLoc)
+            throws AlgebricksException {
+        if (IndexUtil.castDefaultNull(index)) {
+            return IndexUtil.getTypeConstructorDefaultNull(index, skType, srcLoc);
+        } else if (index.isEnforced()) {
+            return new Pair<>(BuiltinFunctions.CAST_TYPE, null);
+        } else {
+            return new Pair<>(BuiltinFunctions.CAST_TYPE_LAX, null);
+        }
+    }
+
     private AbstractFunctionCallExpression createCastExpression(Index index, IAType targetType,
-            AbstractFunctionCallExpression inputExpr, SourceLocation sourceLoc) throws CompilationException {
+            AbstractFunctionCallExpression inputExpr, SourceLocation sourceLoc, FunctionIdentifier castFun,
+            String fmtArg) throws CompilationException {
         ScalarFunctionCallExpression castExpr;
         if (IndexUtil.castDefaultNull(index)) {
-            castExpr = constructorFunction(targetType, inputExpr, sourceLoc);
-        } else if (index.isEnforced()) {
-            castExpr = castFunction(BuiltinFunctions.CAST_TYPE, targetType, inputExpr, sourceLoc);
+            castExpr = castConstructorFunction(castFun, fmtArg, inputExpr, sourceLoc);
         } else {
-            castExpr = castFunction(BuiltinFunctions.CAST_TYPE_LAX, targetType, inputExpr, sourceLoc);
+            castExpr = castFunction(castFun, targetType, inputExpr, sourceLoc);
         }
         return castExpr;
     }
@@ -888,17 +921,18 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         return castExpr;
     }
 
-    private ScalarFunctionCallExpression constructorFunction(IAType requiredType,
-            AbstractFunctionCallExpression inputExpr, SourceLocation sourceLoc) throws CompilationException {
-        FunctionIdentifier typeConstructorFun = TypeUtil.getTypeConstructorDefaultNull(requiredType);
-        if (typeConstructorFun == null) {
-            throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, "index",
-                    requiredType.getTypeName());
-        }
+    private ScalarFunctionCallExpression castConstructorFunction(FunctionIdentifier typeConstructorFun, String fmt,
+            AbstractFunctionCallExpression inputExpr, SourceLocation srcLoc) {
         BuiltinFunctionInfo typeConstructorInfo = BuiltinFunctions.getBuiltinFunctionInfo(typeConstructorFun);
         ScalarFunctionCallExpression constructorExpr = new ScalarFunctionCallExpression(typeConstructorInfo);
         constructorExpr.getArguments().add(new MutableObject<>(inputExpr));
-        constructorExpr.setSourceLocation(sourceLoc);
+        // add the format argument if specified
+        if (fmt != null) {
+            ConstantExpression fmtExpr = new ConstantExpression(new AsterixConstantValue(new AString(fmt)));
+            fmtExpr.setSourceLocation(srcLoc);
+            constructorExpr.getArguments().add(new MutableObject<>(fmtExpr));
+        }
+        constructorExpr.setSourceLocation(srcLoc);
         return constructorExpr;
     }
 
@@ -1157,15 +1191,20 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
     }
 
-    private final class IndexFieldId {
+    private static class IndexFieldId {
         private final int indicator;
         private final List<String> fieldName;
         private final ATypeTag fieldType;
+        private final FunctionIdentifier funId;
+        private final String extraArg; // currently, only for datetime constructor functions with the format arg
 
-        private IndexFieldId(int indicator, List<String> fieldName, ATypeTag fieldType) {
+        private IndexFieldId(int indicator, List<String> fieldName, ATypeTag fieldType, FunctionIdentifier funId,
+                String extraArg) {
             this.indicator = indicator;
             this.fieldName = fieldName;
             this.fieldType = fieldType;
+            this.funId = funId;
+            this.extraArg = extraArg;
         }
 
         @Override
@@ -1173,6 +1212,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             int result = indicator;
             result = 31 * result + fieldName.hashCode();
             result = 31 * result + fieldType.hashCode();
+            result = 31 * result + Objects.hashCode(funId);
+            result = 31 * result + Objects.hashCode(extraArg);
             return result;
         }
 
@@ -1185,13 +1226,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 return false;
             }
             IndexFieldId that = (IndexFieldId) o;
-            if (indicator != that.indicator) {
-                return false;
-            }
-            if (!fieldName.equals(that.fieldName)) {
-                return false;
-            }
-            return fieldType == that.fieldType;
+            return indicator == that.indicator && Objects.equals(fieldName, that.fieldName)
+                    && fieldType == that.fieldType && Objects.equals(funId, that.funId)
+                    && Objects.equals(extraArg, that.extraArg);
         }
     }
 }

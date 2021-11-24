@@ -33,8 +33,12 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
@@ -182,5 +186,32 @@ public class IndexUtil {
     public static boolean castDefaultNull(Index index) {
         return Index.IndexCategory.of(index.getIndexType()) == Index.IndexCategory.VALUE
                 && ((Index.ValueIndexDetails) index.getIndexDetails()).getCastDefaultNull().getOrElse(false);
+    }
+
+    public static Pair<FunctionIdentifier, String> getTypeConstructorDefaultNull(Index index, IAType type,
+            SourceLocation srcLoc) throws CompilationException {
+        Triple<String, String, String> temporalFormats = getTemporalFormats(index);
+        String format = temporalFormats != null ? TypeUtil.getTemporalFormat(type, temporalFormats) : null;
+        boolean withFormat = format != null;
+        FunctionIdentifier typeConstructorFun = TypeUtil.getTypeConstructorDefaultNull(type, withFormat);
+        if (typeConstructorFun == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, srcLoc, "index", type.getTypeName());
+        }
+        return new Pair<>(typeConstructorFun, format);
+    }
+
+    private static Triple<String, String, String> getTemporalFormats(Index index) {
+        if (Index.IndexCategory.of(index.getIndexType()) != Index.IndexCategory.VALUE) {
+            return null;
+        }
+        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+        String datetimeFormat = indexDetails.getCastDatetimeFormat();
+        String dateFormat = indexDetails.getCastDateFormat();
+        String timeFormat = indexDetails.getCastTimeFormat();
+        if (datetimeFormat != null || dateFormat != null || timeFormat != null) {
+            return new Triple<>(datetimeFormat, dateFormat, timeFormat);
+        } else {
+            return null;
+        }
     }
 }

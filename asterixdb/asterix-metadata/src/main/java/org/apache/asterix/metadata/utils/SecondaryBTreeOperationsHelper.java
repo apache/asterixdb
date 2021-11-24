@@ -21,8 +21,6 @@ package org.apache.asterix.metadata.utils;
 import java.util.List;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
@@ -31,6 +29,8 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
@@ -313,7 +313,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
 
         IScalarEvaluatorFactory castFieldEvalFactory;
         if (IndexUtil.castDefaultNull(index)) {
-            castFieldEvalFactory = createConstructorFunction(funManger, fieldEvalFactory, fieldType);
+            castFieldEvalFactory = createConstructorFunction(funManger, dataFormat, fieldEvalFactory, fieldType);
         } else if (index.isEnforced()) {
             IScalarEvaluatorFactory[] castArg = new IScalarEvaluatorFactory[] { fieldEvalFactory };
             castFieldEvalFactory =
@@ -326,17 +326,24 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
         return castFieldEvalFactory;
     }
 
-    private IScalarEvaluatorFactory createConstructorFunction(IFunctionManager funManager,
+    private IScalarEvaluatorFactory createConstructorFunction(IFunctionManager funManager, IDataFormat dataFormat,
             IScalarEvaluatorFactory fieldEvalFactory, IAType fieldType) throws AlgebricksException {
-        FunctionIdentifier typeConstructorFun =
-                TypeUtil.getTypeConstructorDefaultNull(TypeComputeUtils.getActualType(fieldType));
-        if (typeConstructorFun == null) {
-            throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, "index",
-                    fieldType.getTypeName());
-        }
+        IAType targetType = TypeComputeUtils.getActualType(fieldType);
+        Pair<FunctionIdentifier, String> constructorWithFmt =
+                IndexUtil.getTypeConstructorDefaultNull(index, targetType, sourceLoc);
+        FunctionIdentifier typeConstructorFun = constructorWithFmt.first;
         IFunctionDescriptor typeConstructor = funManager.lookupFunction(typeConstructorFun, sourceLoc);
+        IScalarEvaluatorFactory[] args;
+        // add the format argument if specified
+        if (constructorWithFmt.second != null) {
+            IScalarEvaluatorFactory fmtEvalFactory =
+                    dataFormat.getConstantEvalFactory(new AsterixConstantValue(new AString(constructorWithFmt.second)));
+            args = new IScalarEvaluatorFactory[] { fieldEvalFactory, fmtEvalFactory };
+        } else {
+            args = new IScalarEvaluatorFactory[] { fieldEvalFactory };
+        }
         typeConstructor.setSourceLocation(sourceLoc);
-        return typeConstructor.createEvaluatorFactory(new IScalarEvaluatorFactory[] { fieldEvalFactory });
+        return typeConstructor.createEvaluatorFactory(args);
     }
 
     private int[] createFieldPermutationForBulkLoadOp(int numSecondaryKeyFields) {

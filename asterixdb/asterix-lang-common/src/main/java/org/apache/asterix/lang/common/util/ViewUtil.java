@@ -19,11 +19,12 @@
 
 package org.apache.asterix.lang.common.util;
 
+import static org.apache.asterix.metadata.utils.TypeUtil.getTemporalFormat;
+
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -38,7 +39,6 @@ import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.common.literal.NullLiteral;
 import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -49,7 +49,6 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -57,10 +56,6 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public final class ViewUtil {
-
-    public static final String DATETIME_PARAMETER_NAME = BuiltinType.ADATETIME.getTypeName();
-    public static final String DATE_PARAMETER_NAME = BuiltinType.ADATE.getTypeName();
-    public static final String TIME_PARAMETER_NAME = BuiltinType.ATIME.getTypeName();
 
     private ViewUtil() {
     }
@@ -144,31 +139,11 @@ public final class ViewUtil {
             } else {
                 primeType = fieldType;
             }
-            if (TypeUtil.getTypeConstructorDefaultNull(primeType) == null) {
+            if (TypeUtil.getTypeConstructorDefaultNull(primeType, false) == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, "view",
                         primeType.getTypeName());
             }
         }
-    }
-
-    public static Map<String, String> validateViewConfiguration(Map<String, String> viewConfig,
-            SourceLocation sourceLoc) throws CompilationException {
-        if (viewConfig == null) {
-            return Collections.emptyMap();
-        }
-        for (Map.Entry<String, String> me : viewConfig.entrySet()) {
-            String name = me.getKey();
-            String value = me.getValue();
-            if (DATETIME_PARAMETER_NAME.equals(name) || DATE_PARAMETER_NAME.equals(name)
-                    || TIME_PARAMETER_NAME.equals(name)) {
-                if (value == null) {
-                    throw new CompilationException(ErrorCode.INVALID_REQ_PARAM_VAL, sourceLoc, name, value);
-                }
-            } else {
-                throw new CompilationException(ErrorCode.ILLEGAL_SET_PARAMETER, sourceLoc, name);
-            }
-        }
-        return viewConfig;
     }
 
     public static Expression createTypeConvertExpression(Expression inExpr, IAType targetType,
@@ -176,8 +151,7 @@ public final class ViewUtil {
             SourceLocation sourceLoc) throws CompilationException {
         String format = temporalDataFormat != null ? getTemporalFormat(targetType, temporalDataFormat) : null;
         boolean withFormat = format != null;
-        FunctionIdentifier constrFid = withFormat ? TypeUtil.getTypeConstructorWithFormatDefaultNull(targetType)
-                : TypeUtil.getTypeConstructorDefaultNull(targetType);
+        FunctionIdentifier constrFid = TypeUtil.getTypeConstructorDefaultNull(targetType, withFormat);
         if (constrFid == null) {
             throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, sourceLoc, viewName.toString(),
                     targetType.getTypeName());
@@ -192,15 +166,6 @@ public final class ViewUtil {
         CallExpr convertExpr = new CallExpr(new FunctionSignature(constrFid), convertArgList);
         convertExpr.setSourceLocation(inExpr.getSourceLocation());
         return convertExpr;
-    }
-
-    public static Expression createMissingToNullExpression(Expression inExpr, SourceLocation sourceLoc) {
-        List<Expression> missing2NullArgs = new ArrayList<>(2);
-        missing2NullArgs.add(inExpr);
-        missing2NullArgs.add(new LiteralExpr(NullLiteral.INSTANCE));
-        CallExpr missing2NullExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.IF_MISSING), missing2NullArgs);
-        missing2NullExpr.setSourceLocation(sourceLoc);
-        return missing2NullExpr;
     }
 
     public static Expression createNotIsNullExpression(Expression inExpr, SourceLocation sourceLoc) {
@@ -224,28 +189,4 @@ public final class ViewUtil {
         return fa;
     }
 
-    public static String getTemporalFormat(IAType targetType, Triple<String, String, String> temporalFormatByType) {
-        switch (targetType.getTypeTag()) {
-            case DATETIME:
-                return temporalFormatByType.first;
-            case DATE:
-                return temporalFormatByType.second;
-            case TIME:
-                return temporalFormatByType.third;
-            default:
-                return null;
-        }
-    }
-
-    public static String getDatetimeFormat(Map<String, String> viewConfig) {
-        return viewConfig.get(DATETIME_PARAMETER_NAME);
-    }
-
-    public static String getDateFormat(Map<String, String> viewConfig) {
-        return viewConfig.get(DATE_PARAMETER_NAME);
-    }
-
-    public static String getTimeFormat(Map<String, String> viewConfig) {
-        return viewConfig.get(TIME_PARAMETER_NAME);
-    }
 }

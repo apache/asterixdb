@@ -31,7 +31,7 @@ CREATE VIEW view4(id int, x int, y int) DEFAULT NULL AS SELECT id, x, y FROM ds4
 
 
 USE test;
-// test that idx2 on view2(x) is used. both v4.x and v2.x are int and idx2 is on x as int.
+// test that idx2 on view2(x) is used. both v4.x and v2.x are int and both v2.x and idx2 use int-default-null.
 SELECT v4.x AS v4x, v2.x AS v2x
 FROM view4 AS v4, view2 AS v2
 WHERE v4.x /*+ indexnl */ = v2.x ORDER BY v4x, v2x;
