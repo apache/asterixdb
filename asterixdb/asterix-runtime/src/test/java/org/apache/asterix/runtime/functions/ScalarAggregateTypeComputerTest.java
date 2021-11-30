@@ -221,7 +221,8 @@ public class ScalarAggregateTypeComputerTest {
         }
 
         @Override
-        public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariables,
+        public Object getVarType(LogicalVariable var, List<LogicalVariable> nonMissableVariables,
+                List<List<LogicalVariable>> correlatedMissableVariableLists, List<LogicalVariable> nonNullableVariables,
                 List<List<LogicalVariable>> correlatedNullableVariableLists) {
             throw new IllegalStateException();
         }

@@ -27,24 +27,40 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.properties.LeftOuterTypePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.properties.TypePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypeEnvPointer;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.typing.OpRefTypeEnvPointer;
 import org.apache.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 
 public class LeftOuterJoinOperator extends AbstractBinaryJoinOperator {
 
-    public LeftOuterJoinOperator(Mutable<ILogicalExpression> condition) {
+    private IAlgebricksConstantValue missingValue;
+
+    public LeftOuterJoinOperator(Mutable<ILogicalExpression> condition, IAlgebricksConstantValue missingValue) {
         super(JoinKind.LEFT_OUTER, condition);
+        setMissingValue(missingValue);
     }
 
     public LeftOuterJoinOperator(Mutable<ILogicalExpression> condition, Mutable<ILogicalOperator> input1,
-            Mutable<ILogicalOperator> input2) {
+            Mutable<ILogicalOperator> input2, IAlgebricksConstantValue missingValue) {
         super(JoinKind.LEFT_OUTER, condition, input1, input2);
+        setMissingValue(missingValue);
+    }
+
+    public IAlgebricksConstantValue getMissingValue() {
+        return missingValue;
+    }
+
+    public void setMissingValue(IAlgebricksConstantValue value) {
+        this.missingValue = validateMissingValue(value);
     }
 
     @Override
@@ -64,13 +80,40 @@ public class LeftOuterJoinOperator extends AbstractBinaryJoinOperator {
         for (int i = 0; i < n; i++) {
             envPointers[i] = new OpRefTypeEnvPointer(inputs.get(i), ctx);
         }
-        PropagatingTypeEnvironment env =
-                new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMissableTypeComputer(),
-                        ctx.getMetadataProvider(), TypePropagationPolicy.LEFT_OUTER, envPointers);
+
+        TypePropagationPolicy typePropagationPolicy;
+        if (missingValue.isMissing()) {
+            typePropagationPolicy = LeftOuterTypePropagationPolicy.MISSABLE;
+        } else if (missingValue.isNull()) {
+            typePropagationPolicy = LeftOuterTypePropagationPolicy.NULLABLE;
+        } else {
+            throw new AlgebricksException(ErrorCode.ILLEGAL_STATE, String.valueOf(missingValue));
+        }
+        PropagatingTypeEnvironment env = new PropagatingTypeEnvironment(ctx.getExpressionTypeComputer(),
+                ctx.getMissableTypeComputer(), ctx.getMetadataProvider(), typePropagationPolicy, envPointers);
+
+        // live variables from right branch can be MISSING (or NULL) together
         List<LogicalVariable> liveVars = new ArrayList<>();
-        VariableUtilities.getLiveVariables(inputs.get(1).getValue(), liveVars); // live variables from right branch can be MISSING together
-        env.getCorrelatedMissableVariableLists().add(liveVars);
+        VariableUtilities.getLiveVariables(inputs.get(1).getValue(), liveVars);
+        if (missingValue.isMissing()) {
+            env.getCorrelatedMissableVariableLists().add(liveVars);
+        } else if (missingValue.isNull()) {
+            env.getCorrelatedNullableVariableLists().add(liveVars);
+        } else {
+            throw new AlgebricksException(ErrorCode.ILLEGAL_STATE, String.valueOf(missingValue));
+        }
         return env;
     }
 
+    private static IAlgebricksConstantValue validateMissingValue(IAlgebricksConstantValue value) {
+        if (value == null) {
+            throw new NullPointerException();
+        } else if (value.isMissing()) {
+            return ConstantExpression.MISSING.getValue();
+        } else if (value.isNull()) {
+            return ConstantExpression.NULL.getValue();
+        } else {
+            throw new IllegalArgumentException(String.valueOf(value));
+        }
+    }
 }

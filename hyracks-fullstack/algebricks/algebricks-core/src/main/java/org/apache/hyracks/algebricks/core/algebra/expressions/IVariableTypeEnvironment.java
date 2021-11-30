@@ -27,7 +27,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 public interface IVariableTypeEnvironment {
     public Object getVarType(LogicalVariable var) throws AlgebricksException;
 
-    public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariables,
+    public Object getVarType(LogicalVariable var, List<LogicalVariable> nonMissableVariables,
+            List<List<LogicalVariable>> correlatedMissableVariableLists, List<LogicalVariable> nonNullableVariables,
             List<List<LogicalVariable>> correlatedNullableVariableLists) throws AlgebricksException;
 
     public void setVarType(LogicalVariable var, Object type);

@@ -89,10 +89,10 @@ public class LSMBTreePrimaryIndexSearchOperatorTest extends BTreePrimaryIndexSea
         int[] lowKeyFields = { 0 };
         int[] highKeyFields = { 1 };
 
-        BTreeSearchOperatorDescriptor primaryBtreeSearchOp =
-                new BTreeSearchOperatorDescriptor(spec, DataSetConstants.primaryAndFilterRecDesc, lowKeyFields,
-                        highKeyFields, true, true, primaryHelperFactory, false, false,
-                        NoopMissingWriterFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, null, null, true);
+        BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
+                DataSetConstants.primaryAndFilterRecDesc, lowKeyFields, highKeyFields, true, true, primaryHelperFactory,
+                false, false, NoopMissingWriterFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, null, null,
+                true, NoopMissingWriterFactory.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
@@ -147,7 +147,7 @@ public class LSMBTreePrimaryIndexSearchOperatorTest extends BTreePrimaryIndexSea
         BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
                 DataSetConstants.primaryAndFilterRecDesc, lowKeyFields, highKeyFields, true, true, primaryHelperFactory,
                 false, false, NoopMissingWriterFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, minFilterFields,
-                maxFilterFields, true);
+                maxFilterFields, true, NoopMissingWriterFactory.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });

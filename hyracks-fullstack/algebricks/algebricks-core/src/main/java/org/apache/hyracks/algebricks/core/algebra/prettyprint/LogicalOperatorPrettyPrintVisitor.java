@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
@@ -180,8 +181,9 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("left outer join (").append(op.getCondition().getValue().accept(exprVisitor, indent))
-                .append(")");
+        addIndent(indent).append("left outer join ").append("(")
+                .append(op.getCondition().getValue().accept(exprVisitor, indent)).append(")")
+                .append(printLeftOuterMissingValue(op.getMissingValue()));
         return null;
     }
 
@@ -244,8 +246,11 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitSelectOperator(SelectOperator op, Integer indent) throws AlgebricksException {
+        String retainMissing = op.getMissingPlaceholderVariable() != null
+                ? " retain-untrue (" + op.getMissingPlaceholderVariable() + " <- " + op.getRetainMissingAsValue() + ")"
+                : "";
         addIndent(indent).append("select (").append(op.getCondition().getValue().accept(exprVisitor, indent))
-                .append(")");
+                .append(")").append(retainMissing);
         return null;
     }
 
@@ -306,17 +311,18 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("outer-unnest " + op.getVariable());
+        addIndent(indent).append("outer-unnest ").append(String.valueOf(op.getVariable()));
         if (op.getPositionalVariable() != null) {
             buffer.append(" at " + op.getPositionalVariable());
         }
         buffer.append(" <- " + op.getExpressionRef().getValue().accept(exprVisitor, indent));
+        buffer.append(printLeftOuterMissingValue(op.getMissingValue()));
         return null;
     }
 
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Integer indent) throws AlgebricksException {
-        AlgebricksStringBuilderWriter plan = printAbstractUnnestMapOperator(op, indent, "unnest-map");
+        AlgebricksStringBuilderWriter plan = printAbstractUnnestMapOperator(op, indent, "unnest-map", null);
         appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
         appendLimitInformation(plan, op.getOutputLimit());
         return null;
@@ -325,14 +331,16 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     @Override
     public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Integer indent)
             throws AlgebricksException {
-        printAbstractUnnestMapOperator(op, indent, "left-outer-unnest-map");
+        printAbstractUnnestMapOperator(op, indent, "left-outer-unnest-map", op.getMissingValue());
         return null;
     }
 
     private AlgebricksStringBuilderWriter printAbstractUnnestMapOperator(AbstractUnnestMapOperator op, Integer indent,
-            String opSignature) throws AlgebricksException {
-        AlgebricksStringBuilderWriter plan = addIndent(indent).append(opSignature + " " + op.getVariables() + " <- "
-                + op.getExpressionRef().getValue().accept(exprVisitor, indent));
+            String opSignature, IAlgebricksConstantValue leftOuterMissingValue) throws AlgebricksException {
+        AlgebricksStringBuilderWriter plan =
+                addIndent(indent).append(opSignature).append(' ').append(String.valueOf(op.getVariables()))
+                        .append(" <- ").append(op.getExpressionRef().getValue().accept(exprVisitor, indent)).append(
+                                leftOuterMissingValue != null ? printLeftOuterMissingValue(leftOuterMissingValue) : "");
         appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars());
         return plan;
     }
@@ -664,5 +672,9 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
                 buffer.append(' ');
             }
         }
+    }
+
+    private static String printLeftOuterMissingValue(IAlgebricksConstantValue leftOuterMissingValue) {
+        return leftOuterMissingValue.isNull() ? " (or <- " + leftOuterMissingValue + ")" : "";
     }
 }

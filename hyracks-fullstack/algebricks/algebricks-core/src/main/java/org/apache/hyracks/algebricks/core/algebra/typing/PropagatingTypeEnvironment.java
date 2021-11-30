@@ -27,6 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeCom
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.properties.TypePropagationPolicy;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 public class PropagatingTypeEnvironment extends AbstractTypeEnvironment {
 
@@ -40,6 +41,10 @@ public class PropagatingTypeEnvironment extends AbstractTypeEnvironment {
 
     private final List<List<LogicalVariable>> correlatedMissableVariableLists = new ArrayList<>();
 
+    private final List<LogicalVariable> nonNullableVariables = new ArrayList<>();
+
+    private final List<List<LogicalVariable>> correlatedNullableVariableLists = new ArrayList<>();
+
     public PropagatingTypeEnvironment(IExpressionTypeComputer expressionTypeComputer,
             IMissableTypeComputer missableTypeComputer, IMetadataProvider<?, ?> metadataProvider,
             TypePropagationPolicy policy, ITypeEnvPointer[] envPointers) {
@@ -51,7 +56,7 @@ public class PropagatingTypeEnvironment extends AbstractTypeEnvironment {
 
     @Override
     public Object getVarType(LogicalVariable var) throws AlgebricksException {
-        return getVarTypeFullList(var, nonMissableVariables, correlatedMissableVariableLists);
+        return getVarTypeFullList(var, null, null, null, null);
     }
 
     public List<LogicalVariable> getNonMissableVariables() {
@@ -62,31 +67,42 @@ public class PropagatingTypeEnvironment extends AbstractTypeEnvironment {
         return correlatedMissableVariableLists;
     }
 
-    @Override
-    public Object getVarType(LogicalVariable var, List<LogicalVariable> nonMissableVariableList,
-            List<List<LogicalVariable>> correlatedMissableVariableLists) throws AlgebricksException {
-        for (LogicalVariable v : nonMissableVariables) {
-            if (!nonMissableVariableList.contains(v)) {
-                nonMissableVariableList.add(v);
-            }
-        }
-        Object t = getVarTypeFullList(var, nonMissableVariableList, correlatedMissableVariableLists);
-        for (List<LogicalVariable> list : correlatedMissableVariableLists) {
-            if (!correlatedMissableVariableLists.contains(list)) {
-                correlatedMissableVariableLists.add(list);
-            }
-        }
-        return t;
+    public List<LogicalVariable> getNonNullableVariables() {
+        return nonNullableVariables;
     }
 
-    private Object getVarTypeFullList(LogicalVariable var, List<LogicalVariable> nonMissableVariableList,
-            List<List<LogicalVariable>> correlatedMissableVariableLists) throws AlgebricksException {
+    public List<List<LogicalVariable>> getCorrelatedNullableVariableLists() {
+        return correlatedNullableVariableLists;
+    }
+
+    @Override
+    public Object getVarType(LogicalVariable var, List<LogicalVariable> nonMissableVariables,
+            List<List<LogicalVariable>> correlatedMissableVariableLists, List<LogicalVariable> nonNullableVariables,
+            List<List<LogicalVariable>> correlatedNullableVariableLists) throws AlgebricksException {
+        return getVarTypeFullList(var, nonMissableVariables, correlatedMissableVariableLists, nonNullableVariables,
+                correlatedNullableVariableLists);
+    }
+
+    private Object getVarTypeFullList(LogicalVariable var, List<LogicalVariable> nonMissableVariableListExtra,
+            List<List<LogicalVariable>> correlatedMissableVariableListsExtra,
+            List<LogicalVariable> nonNullableVariableListExtra,
+            List<List<LogicalVariable>> correlatedNullableVariableListsExtra) throws AlgebricksException {
         Object t = varTypeMap.get(var);
         if (t != null) {
             return t;
         }
-        return policy.getVarType(var, missableTypeComputer, nonMissableVariableList, correlatedMissableVariableLists,
-                envPointers);
+
+        List<LogicalVariable> nonMissable =
+                OperatorPropertiesUtil.unionAll(nonMissableVariables, nonMissableVariableListExtra);
+        List<LogicalVariable> nonNullable =
+                OperatorPropertiesUtil.unionAll(nonNullableVariables, nonNullableVariableListExtra);
+        List<List<LogicalVariable>> correlatedMissable =
+                OperatorPropertiesUtil.unionAll(correlatedMissableVariableLists, correlatedMissableVariableListsExtra);
+        List<List<LogicalVariable>> correlatedNullable =
+                OperatorPropertiesUtil.unionAll(correlatedNullableVariableLists, correlatedNullableVariableListsExtra);
+
+        return policy.getVarType(var, missableTypeComputer, nonMissable, correlatedMissable, nonNullable,
+                correlatedNullable, envPointers);
     }
 
     @Override
@@ -98,6 +114,14 @@ public class PropagatingTypeEnvironment extends AbstractTypeEnvironment {
         for (List<LogicalVariable> missableVarList : correlatedMissableVariableLists) {
             if (missableVarList.remove(v1)) {
                 missableVarList.add(v2);
+            }
+        }
+        if (nonNullableVariables.remove(v1)) {
+            nonNullableVariables.add(v2);
+        }
+        for (List<LogicalVariable> nullableVarList : correlatedNullableVariableLists) {
+            if (nullableVarList.remove(v1)) {
+                nullableVarList.add(v2);
             }
         }
         return result;

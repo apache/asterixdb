@@ -40,7 +40,7 @@ public class ExternalBTreeSearchOperatorDescriptor extends BTreeSearchOperatorDe
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, int version) {
         super(spec, outRecDesc, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory,
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, minFilterFieldIndexes,
-                maxFilterFieldIndexes, false);
+                maxFilterFieldIndexes, false, null);
         this.version = version;
     }
 

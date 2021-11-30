@@ -22,6 +22,7 @@ package org.apache.asterix.optimizer.rules;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -38,7 +39,9 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
@@ -46,6 +49,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 /**
@@ -55,7 +59,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  * left-outer-unnest $x <- scan-collection($y)
  *   group-by($k){
  *     aggregate $y <- listify($z1)
- *       select not(is-missing($z2))
+ *       select not(is-missing/null($z2))
  *         NTS
  *   }
  *     left outer join ($a=$b)
@@ -89,7 +93,7 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
 
         // Checks whether the left outer unnest and the group-by operator are qualified for rewriting.
         Triple<Boolean, ILogicalExpression, ILogicalExpression> checkGbyResult =
-                checkUnnestAndGby(outerUnnest, gbyOperator);
+                checkUnnestAndGby(outerUnnest, gbyOperator, lojOperator);
         // The argument for listify and not(is-missing(...)) check should be variables.
         if (!checkGbyResult.first || checkGbyResult.second == null || !isVariableReference(checkGbyResult.second)
                 || checkGbyResult.third == null || !isVariableReference(checkGbyResult.third)) {
@@ -127,7 +131,7 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
 
     // Checks left outer unnest and gby.
     private Triple<Boolean, ILogicalExpression, ILogicalExpression> checkUnnestAndGby(
-            LeftOuterUnnestOperator outerUnnest, GroupByOperator gbyOperator) {
+            LeftOuterUnnestOperator outerUnnest, GroupByOperator gbyOperator, LeftOuterJoinOperator lojOperator) {
         // Checks left outer unnest.
         Pair<Boolean, LogicalVariable> checkUnnestResult = checkUnnest(outerUnnest);
         if (!checkUnnestResult.first) {
@@ -136,7 +140,8 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
 
         // Checks group-by.
         LogicalVariable varToUnnest = checkUnnestResult.second;
-        Triple<Boolean, ILogicalExpression, ILogicalExpression> checkGbyResult = checkGroupBy(gbyOperator, varToUnnest);
+        Triple<Boolean, ILogicalExpression, ILogicalExpression> checkGbyResult =
+                checkGroupBy(gbyOperator, varToUnnest, lojOperator.getMissingValue());
         if (!checkGbyResult.first) {
             return new Triple<>(false, null, null);
         }
@@ -159,7 +164,7 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
 
     // Checks the group-by operator on top of the left outer join operator.
     private Triple<Boolean, ILogicalExpression, ILogicalExpression> checkGroupBy(GroupByOperator gbyOperator,
-            LogicalVariable varToUnnest) {
+            LogicalVariable varToUnnest, IAlgebricksConstantValue leftOuterMissingValue) {
         Pair<Boolean, ILogicalOperator> checkNestedPlanResult = checkNestedPlan(gbyOperator);
         if (!checkNestedPlanResult.first) {
             return new Triple<>(false, null, null);
@@ -182,7 +187,7 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
             return new Triple<>(false, null, null);
         }
         SelectOperator select = (SelectOperator) rootInputOp;
-        Pair<Boolean, ILogicalExpression> conditionArgPair = checkSelect(select);
+        Pair<Boolean, ILogicalExpression> conditionArgPair = checkSelect(select, leftOuterMissingValue);
         return new Triple<>(true, listifyArgPair.second, conditionArgPair.second);
     }
 
@@ -222,7 +227,8 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
     }
 
     // Checks the expression for the nested select operator inside the group-by operator.
-    private Pair<Boolean, ILogicalExpression> checkSelect(SelectOperator select) {
+    private Pair<Boolean, ILogicalExpression> checkSelect(SelectOperator select,
+            IAlgebricksConstantValue leftOuterMissingValue) {
         ILogicalExpression condition = select.getCondition().getValue();
         if (condition.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return new Pair<>(false, null);
@@ -236,7 +242,9 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
             return new Pair<>(false, null);
         }
         conditionFunc = (AbstractFunctionCallExpression) condition;
-        if (!conditionFunc.getFunctionIdentifier().equals(BuiltinFunctions.IS_MISSING)) {
+        FunctionIdentifier isMissingNullFuncId =
+                Objects.requireNonNull(OperatorPropertiesUtil.getIsMissingNullFunction(leftOuterMissingValue));
+        if (!conditionFunc.getFunctionIdentifier().equals(isMissingNullFuncId)) {
             return new Pair<>(false, null);
         }
         ILogicalExpression conditionArg = conditionFunc.getArguments().get(0).getValue();
@@ -265,7 +273,7 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
         lhs.add(outerUnnest.getVariable());
         VariableReferenceExpression listifyVarRef = new VariableReferenceExpression(listifyVar);
         listifyVarRef.setSourceLocation(gbyOperator.getSourceLocation());
-        rhs.add(new MutableObject<ILogicalExpression>(listifyVarRef));
+        rhs.add(new MutableObject<>(listifyVarRef));
         List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> gbyList = gbyOperator.getGroupByList();
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> gbyPair : gbyList) {
             lhs.add(gbyPair.first);
@@ -273,7 +281,9 @@ public class RemoveLeftOuterUnnestForLeftOuterJoinRule implements IAlgebraicRewr
         }
         AssignOperator assignOp = new AssignOperator(lhs, rhs);
         assignOp.setSourceLocation(outerUnnest.getSourceLocation());
-        assignOp.getInputs().add(new MutableObject<ILogicalOperator>(lojOperator));
+        assignOp.getInputs().add(new MutableObject<>(lojOperator));
+        lojOperator.setMissingValue(outerUnnest.getMissingValue());
+        context.computeAndSetTypeEnvironmentForOperator(lojOperator);
         context.computeAndSetTypeEnvironmentForOperator(assignOp);
         opRef.setValue(assignOp);
     }

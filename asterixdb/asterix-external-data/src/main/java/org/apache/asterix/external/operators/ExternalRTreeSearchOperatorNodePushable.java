@@ -46,7 +46,7 @@ public class ExternalRTreeSearchOperatorNodePushable extends RTreeSearchOperator
             IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
             int version) throws HyracksDataException {
         super(ctx, partition, inputRecDesc, keyFields, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
-                retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, false);
+                retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, false, null);
         this.version = version;
     }
 

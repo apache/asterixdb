@@ -89,6 +89,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected PermutingFrameTupleReference maxFilterKey;
     protected final boolean appendIndexFilter;
     protected ArrayTupleBuilder nonFilterTupleBuild;
+    protected IMissingWriter nonFilterWriter;
     protected final ISearchOperationCallbackFactory searchCallbackFactory;
     protected boolean failed = false;
     protected IOperatorStats stats;
@@ -110,28 +111,31 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     // no filter and limit pushdown
     public IndexSearchOperatorNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc, int partition,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, IIndexDataflowHelperFactory indexHelperFactory,
-            boolean retainInput, boolean retainMissing, IMissingWriterFactory missingWriterFactory,
-            ISearchOperationCallbackFactory searchCallbackFactory, boolean appendIndexFilter)
-            throws HyracksDataException {
+            boolean retainInput, boolean retainMissing, IMissingWriterFactory nonMatchWriterFactory,
+            ISearchOperationCallbackFactory searchCallbackFactory, boolean appendIndexFilter,
+            IMissingWriterFactory nonFilterWriterFactory) throws HyracksDataException {
         this(ctx, inputRecDesc, partition, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
-                retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, appendIndexFilter, null, -1,
-                false, null, null);
+                retainInput, retainMissing, nonMatchWriterFactory, searchCallbackFactory, appendIndexFilter,
+                nonFilterWriterFactory, null, -1, false, null, null);
     }
 
     public IndexSearchOperatorNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc, int partition,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, IIndexDataflowHelperFactory indexHelperFactory,
-            boolean retainInput, boolean retainMissing, IMissingWriterFactory missingWriterFactory,
+            boolean retainInput, boolean retainMissing, IMissingWriterFactory nonMatchWriterFactory,
             ISearchOperationCallbackFactory searchCallbackFactory, boolean appendIndexFilter,
-            ITupleFilterFactory tupleFactoryFactory, long outputLimit, boolean appendSearchCallbackProceedResult,
-            byte[] searchCallbackProceedResultFalseValue, byte[] searchCallbackProceedResultTrueValue)
-            throws HyracksDataException {
+            IMissingWriterFactory nonFilterWriterFactory, ITupleFilterFactory tupleFactoryFactory, long outputLimit,
+            boolean appendSearchCallbackProceedResult, byte[] searchCallbackProceedResultFalseValue,
+            byte[] searchCallbackProceedResultTrueValue) throws HyracksDataException {
         this.ctx = ctx;
         this.indexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
         this.retainInput = retainInput;
         this.retainMissing = retainMissing;
         this.appendIndexFilter = appendIndexFilter;
-        if (this.retainMissing || this.appendIndexFilter) {
-            this.nonMatchWriter = missingWriterFactory.createMissingWriter();
+        if (this.retainMissing) {
+            this.nonMatchWriter = nonMatchWriterFactory.createMissingWriter();
+        }
+        if (this.appendIndexFilter) {
+            this.nonFilterWriter = nonFilterWriterFactory.createMissingWriter();
         }
         this.inputRecDesc = inputRecDesc;
         this.searchCallbackFactory = searchCallbackFactory;
@@ -197,7 +201,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         if (appendIndexFilter) {
             int numIndexFilterFields = index.getNumOfFilterFields();
             nonFilterTupleBuild = new ArrayTupleBuilder(numIndexFilterFields);
-            buildMissingTuple(numIndexFilterFields, nonFilterTupleBuild, nonMatchWriter);
+            buildMissingTuple(numIndexFilterFields, nonFilterTupleBuild, nonFilterWriter);
         }
 
         if (tupleFilterFactory != null) {

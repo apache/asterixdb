@@ -18,12 +18,18 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.expressions;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-
 public interface IMissableTypeComputer {
-    public Object makeMissableType(Object type) throws AlgebricksException;
+    Object makeMissableType(Object type);
 
-    public boolean canBeMissing(Object type);
+    boolean canBeMissing(Object type);
 
-    public Object getNonOptionalType(Object type);
+    Object makeNullableType(Object type);
+
+    boolean canBeNull(Object type);
+
+    Object getNonOptionalType(Object type);
+
+    Object getNonMissableType(Object type);
+
+    Object getNonNullableType(Object type);
 }

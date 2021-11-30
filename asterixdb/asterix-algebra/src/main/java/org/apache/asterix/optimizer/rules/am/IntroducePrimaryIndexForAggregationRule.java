@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
@@ -235,7 +236,8 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             AbstractUnnestMapOperator primaryIndexUnnestOperator =
                     (AbstractUnnestMapOperator) AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
                             metaRecordType, primaryIndex, scanOperator.getInputs().get(0).getValue(),
-                            newBTreeParameters, context, retainInput, false, false);
+                            newBTreeParameters, context, retainInput, false, false,
+                            ConstantExpression.MISSING.getValue());
 
             // re-use the PK variables of the original scan operator
             primaryIndexUnnestOperator.getVariables().clear();

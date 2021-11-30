@@ -397,7 +397,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                                 }
 
                                 @Override
-                                public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariables,
+                                public Object getVarType(LogicalVariable var,
+                                        List<LogicalVariable> nonMissableVariables,
+                                        List<List<LogicalVariable>> correlatedMissableVariableLists,
+                                        List<LogicalVariable> nonNullableVariables,
                                         List<List<LogicalVariable>> correlatedNullableVariableLists)
                                         throws AlgebricksException {
                                     if (var.equals(optFuncExpr.getSourceVar(exprAndVarIdx.second))) {

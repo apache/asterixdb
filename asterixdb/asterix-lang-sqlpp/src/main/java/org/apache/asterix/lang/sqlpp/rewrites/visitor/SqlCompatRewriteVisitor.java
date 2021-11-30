@@ -28,6 +28,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
@@ -114,6 +115,17 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
         if (expr.getKind() == Expression.Kind.SELECT_EXPRESSION) {
             annotateSubqueryNoCoercion((SelectExpression) expr);
         }
+        switch (joinClause.getJoinType()) {
+            case LEFTOUTER:
+            case RIGHTOUTER:
+                joinClause.setOuterJoinMissingValueType(Literal.Type.NULL);
+                break;
+            case INNER:
+                break;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, joinClause.getSourceLocation(),
+                        String.valueOf(joinClause.getJoinType()));
+        }
         return super.visit(joinClause, arg);
     }
 
@@ -122,6 +134,17 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
         Expression expr = unnestClause.getRightExpression();
         if (expr.getKind() == Expression.Kind.SELECT_EXPRESSION) {
             annotateSubqueryNoCoercion((SelectExpression) expr);
+        }
+        // keep UNNEST clause aligned with JOIN clause when it comes to producing NULL values
+        switch (unnestClause.getUnnestType()) {
+            case LEFTOUTER:
+                unnestClause.setOuterUnnestMissingValueType(Literal.Type.NULL);
+                break;
+            case INNER:
+                break;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, unnestClause.getSourceLocation(),
+                        String.valueOf(unnestClause.getUnnestType()));
         }
         return super.visit(unnestClause, arg);
     }

@@ -105,9 +105,9 @@ public class BreakSelectIntoConjunctsRule implements IAlgebraicRewriteRule {
                 firstExpression = expression;
             } else {
                 // New select operator
-                SelectOperator newSelectOperator =
-                        new SelectOperator(new MutableObject<>(expression), originalSelectOperator.getRetainMissing(),
-                                originalSelectOperator.getMissingPlaceholderVariable());
+                SelectOperator newSelectOperator = new SelectOperator(new MutableObject<>(expression),
+                        originalSelectOperator.getRetainMissingAsValue(),
+                        originalSelectOperator.getMissingPlaceholderVariable());
                 newSelectOperator.setSourceLocation(sourceLoc);
 
                 // Put the new operator at the bottom (child of current operator)

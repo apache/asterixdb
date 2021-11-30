@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.btree.dataflow;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -38,9 +39,10 @@ public class BTreeUpdateSearchOperatorDescriptor extends BTreeSearchOperatorDesc
             int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
             IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput,
             ISearchOperationCallbackFactory searchOpCallbackProvider, ITupleUpdaterFactory tupleUpdaterFactory,
-            boolean appendIndexFilter) {
+            boolean appendIndexFilter, IMissingWriterFactory nonFilterWriterFactory) {
         super(spec, outRecDesc, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive, dataflowHelperFactory,
-                retainInput, false, null, searchOpCallbackProvider, null, null, appendIndexFilter);
+                retainInput, false, null, searchOpCallbackProvider, null, null, appendIndexFilter,
+                nonFilterWriterFactory);
         this.tupleUpdaterFactory = tupleUpdaterFactory;
     }
 
@@ -50,6 +52,7 @@ public class BTreeUpdateSearchOperatorDescriptor extends BTreeSearchOperatorDesc
         return new BTreeUpdateSearchOperatorNodePushable(ctx, partition,
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), lowKeyFields, highKeyFields,
                 lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing, missingWriterFactory,
-                searchCallbackFactory, tupleUpdaterFactory.createTupleUpdater(), appendIndexFilter);
+                searchCallbackFactory, tupleUpdaterFactory.createTupleUpdater(), appendIndexFilter,
+                nonFilterWriterFactory);
     }
 }

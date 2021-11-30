@@ -320,6 +320,7 @@ public class APIFramework {
         builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
         builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
         builder.setMissingWriterFactory(format.getMissingWriterFactory());
+        builder.setNullWriterFactory(format.getNullWriterFactory());
         builder.setUnnestingPositionWriterFactory(format.getUnnestingPositionWriterFactory());
         builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
         builder.setPrinterProvider(getPrinterFactoryProvider(format, conf.fmt()));

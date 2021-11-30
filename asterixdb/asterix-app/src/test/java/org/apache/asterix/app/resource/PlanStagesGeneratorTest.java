@@ -210,7 +210,8 @@ public class PlanStagesGeneratorTest {
         exchangeOperator2.setPhysicalOperator(new HashPartitionExchangePOperator(Collections.emptyList(), null));
         exchangeOperator2.getInputs().add(new MutableObject<>(groupByOperator));
 
-        LeftOuterJoinOperator secondJoin = new LeftOuterJoinOperator(new MutableObject<>(ConstantExpression.TRUE));
+        LeftOuterJoinOperator secondJoin = new LeftOuterJoinOperator(new MutableObject<>(ConstantExpression.TRUE),
+                ConstantExpression.MISSING.getValue());
         secondJoin.setExecutionMode(PARTITIONED);
         secondJoin.setPhysicalOperator(new NestedLoopJoinPOperator(secondJoin.getJoinKind(),
                 AbstractJoinPOperator.JoinPartitioningType.BROADCAST));
@@ -270,7 +271,8 @@ public class PlanStagesGeneratorTest {
         order2.setPhysicalOperator(new StableSortPOperator());
         order2.getInputs().add(new MutableObject<>(replicateOperator));
 
-        LeftOuterJoinOperator secondJoin = new LeftOuterJoinOperator(new MutableObject<>(ConstantExpression.TRUE));
+        LeftOuterJoinOperator secondJoin = new LeftOuterJoinOperator(new MutableObject<>(ConstantExpression.TRUE),
+                ConstantExpression.MISSING.getValue());
         secondJoin.setExecutionMode(PARTITIONED);
         secondJoin.setPhysicalOperator(new NestedLoopJoinPOperator(secondJoin.getJoinKind(),
                 AbstractJoinPOperator.JoinPartitioningType.BROADCAST));

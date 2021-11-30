@@ -21,6 +21,8 @@ package org.apache.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DataSourceIndex;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -37,7 +39,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -46,6 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
@@ -61,6 +63,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertie
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 
 /**
@@ -116,31 +119,45 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         int[] lowKeyIndexes = getKeyIndexes(jobGenParams.getLowKeyVarList(), inputSchemas);
         int[] highKeyIndexes = getKeyIndexes(jobGenParams.getHighKeyVarList(), inputSchemas);
 
+        boolean propagateFilter = unnestMap.propagateIndexFilter();
+        IMissingWriterFactory nonFilterWriterFactory = getNonFilterWriterFactory(propagateFilter, context);
         int[] minFilterFieldIndexes = getKeyIndexes(unnestMap.getMinFilterVars(), inputSchemas);
         int[] maxFilterFieldIndexes = getKeyIndexes(unnestMap.getMaxFilterVars(), inputSchemas);
-        boolean propagateFilter = unnestMap.propagateIndexFilter();
 
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         Dataset dataset = metadataProvider.findDataset(jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);
         ITupleFilterFactory tupleFilterFactory = null;
         long outputLimit = -1;
-        if (unnestMap.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
-            UnnestMapOperator unnestMapOp = (UnnestMapOperator) unnestMap;
-            outputLimit = unnestMapOp.getOutputLimit();
-            if (unnestMapOp.getSelectCondition() != null) {
-                tupleFilterFactory = metadataProvider.createTupleFilterFactory(new IOperatorSchema[] { opSchema },
-                        typeEnv, unnestMapOp.getSelectCondition().getValue(), context);
-            }
+        boolean retainMissing = false;
+        IMissingWriterFactory nonMatchWriterFactory = null;
+        switch (unnestMap.getOperatorTag()) {
+            case UNNEST_MAP:
+                UnnestMapOperator unnestMapOp = (UnnestMapOperator) unnestMap;
+                outputLimit = unnestMapOp.getOutputLimit();
+                if (unnestMapOp.getSelectCondition() != null) {
+                    tupleFilterFactory = metadataProvider.createTupleFilterFactory(new IOperatorSchema[] { opSchema },
+                            typeEnv, unnestMapOp.getSelectCondition().getValue(), context);
+                }
+                break;
+            case LEFT_OUTER_UNNEST_MAP:
+                // By nature, LEFT_OUTER_UNNEST_MAP should generate missing (or null) values for non-matching tuples.
+                retainMissing = true;
+                nonMatchWriterFactory =
+                        getNonMatchWriterFactory(((LeftOuterUnnestMapOperator) unnestMap).getMissingValue(), context,
+                                unnestMap.getSourceLocation());
+                break;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, unnestMap.getSourceLocation(),
+                        String.valueOf(unnestMap.getOperatorTag()));
         }
-        // By nature, LEFT_OUTER_UNNEST_MAP should generate null values for non-matching tuples.
-        boolean retainMissing = op.getOperatorTag() == LogicalOperatorTag.LEFT_OUTER_UNNEST_MAP;
+
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> btreeSearch = metadataProvider.buildBtreeRuntime(
-                builder.getJobSpec(), opSchema, typeEnv, context, jobGenParams.getRetainInput(), retainMissing, dataset,
-                jobGenParams.getIndexName(), lowKeyIndexes, highKeyIndexes, jobGenParams.isLowKeyInclusive(),
-                jobGenParams.isHighKeyInclusive(), propagateFilter, minFilterFieldIndexes, maxFilterFieldIndexes,
-                tupleFilterFactory, outputLimit, unnestMap.getGenerateCallBackProceedResultVar(),
-                isPrimaryIndexPointSearch(op));
+                builder.getJobSpec(), opSchema, typeEnv, context, jobGenParams.getRetainInput(), retainMissing,
+                nonMatchWriterFactory, dataset, jobGenParams.getIndexName(), lowKeyIndexes, highKeyIndexes,
+                jobGenParams.isLowKeyInclusive(), jobGenParams.isHighKeyInclusive(), propagateFilter,
+                nonFilterWriterFactory, minFilterFieldIndexes, maxFilterFieldIndexes, tupleFilterFactory, outputLimit,
+                unnestMap.getGenerateCallBackProceedResultVar(), isPrimaryIndexPointSearch(op));
         IOperatorDescriptor opDesc = btreeSearch.first;
         opDesc.setSourceLocation(unnestMap.getSourceLocation());
 

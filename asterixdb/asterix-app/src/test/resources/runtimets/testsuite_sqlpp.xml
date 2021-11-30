@@ -10164,6 +10164,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="sql-compat">
+      <compilation-unit name="outer_join_01">
+        <output-dir compare="Text">outer_join_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="outer_unnest_01">
+        <output-dir compare="Text">outer_unnest_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sql-compat">
       <compilation-unit name="select_star_01">
         <output-dir compare="Text">select_star_01</output-dir>
       </compilation-unit>

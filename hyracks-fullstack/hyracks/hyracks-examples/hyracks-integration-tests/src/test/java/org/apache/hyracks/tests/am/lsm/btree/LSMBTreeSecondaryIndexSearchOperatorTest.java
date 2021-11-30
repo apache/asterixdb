@@ -90,10 +90,10 @@ public class LSMBTreeSecondaryIndexSearchOperatorTest extends BTreeSecondaryInde
         int[] secondaryHighKeyFields = { 1 };
 
         // search secondary index
-        BTreeSearchOperatorDescriptor secondaryBtreeSearchOp =
-                new BTreeSearchOperatorDescriptor(spec, DataSetConstants.secondaryWithFilterRecDesc,
-                        secondaryLowKeyFields, secondaryHighKeyFields, true, true, secondaryHelperFactory, false, false,
-                        NoopMissingWriterFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, null, null, true);
+        BTreeSearchOperatorDescriptor secondaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
+                DataSetConstants.secondaryWithFilterRecDesc, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
+                secondaryHelperFactory, false, false, NoopMissingWriterFactory.INSTANCE,
+                NoOpOperationCallbackFactory.INSTANCE, null, null, true, NoopMissingWriterFactory.INSTANCE);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeSearchOp, NC1_ID);
 
@@ -103,10 +103,11 @@ public class LSMBTreeSecondaryIndexSearchOperatorTest extends BTreeSecondaryInde
         int[] maxFilterFields = { 3 };
 
         // search primary index
-        BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
-                DataSetConstants.primaryRecDesc, primaryLowKeyFields, primaryHighKeyFields, true, true,
-                primaryHelperFactory, false, false, NoopMissingWriterFactory.INSTANCE,
-                NoOpOperationCallbackFactory.INSTANCE, minFilterFields, maxFilterFields, false);
+        BTreeSearchOperatorDescriptor primaryBtreeSearchOp =
+                new BTreeSearchOperatorDescriptor(spec, DataSetConstants.primaryRecDesc, primaryLowKeyFields,
+                        primaryHighKeyFields, true, true, primaryHelperFactory, false, false,
+                        NoopMissingWriterFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, minFilterFields,
+                        maxFilterFields, false, NoopMissingWriterFactory.INSTANCE);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");

@@ -151,7 +151,6 @@ import org.apache.hyracks.algebricks.rewriter.rules.subplan.EliminateSubplanRule
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.EliminateSubplanWithInputCardinalityOneRule;
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.NestedSubplanToJoinRule;
 import org.apache.hyracks.algebricks.rewriter.rules.subplan.PushSubplanIntoGroupByRule;
-import org.apache.hyracks.algebricks.rewriter.rules.subplan.SubplanOutOfGroupRule;
 
 public final class RuleCollections {
 
@@ -241,7 +240,6 @@ public final class RuleCollections {
         condPushDownAndJoinInference.add(new PushSubplanWithAggregateDownThroughProductRule());
         condPushDownAndJoinInference
                 .add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.ASSIGN, LogicalOperatorTag.SELECT));
-        condPushDownAndJoinInference.add(new SubplanOutOfGroupRule());
 
         condPushDownAndJoinInference.add(new AsterixExtractFunctionsFromJoinConditionRule());
 

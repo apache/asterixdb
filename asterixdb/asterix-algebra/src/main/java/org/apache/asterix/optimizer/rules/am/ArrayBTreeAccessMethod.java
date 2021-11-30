@@ -43,6 +43,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
@@ -85,8 +87,8 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
     public boolean applyJoinPlanTransformation(List<Mutable<ILogicalOperator>> afterJoinRefs,
             Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree leftSubTree,
             OptimizableOperatorSubTree rightSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy)
-            throws AlgebricksException {
+            IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy,
+            IAlgebricksConstantValue leftOuterMissingValue) throws AlgebricksException {
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
         Mutable<ILogicalExpression> conditionRef = joinOp.getCondition();
         Dataset dataset = analysisCtx.getIndexDatasetMap().get(chosenIndex);
@@ -159,7 +161,8 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
                 if (workingOp.getOperatorTag() == LogicalOperatorTag.UNNEST) {
                     UnnestOperator oldUnnest = (UnnestOperator) workingOp;
                     LeftOuterUnnestOperator newUnnest = new LeftOuterUnnestOperator(oldUnnest.getVariable(),
-                            new MutableObject<>(oldUnnest.getExpressionRef().getValue()));
+                            new MutableObject<>(oldUnnest.getExpressionRef().getValue()),
+                            ConstantExpression.MISSING.getValue());
                     newUnnest.setSourceLocation(oldUnnest.getSourceLocation());
                     newUnnest.getInputs().addAll(oldUnnest.getInputs());
                     newUnnest.setExecutionMode(oldUnnest.getExecutionMode());
@@ -185,14 +188,14 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
 
         ILogicalOperator indexSearchOp = createIndexSearchPlan(afterJoinRefs, joinRef, conditionRef,
                 indexSubTree.getAssignsAndUnnestsRefs(), indexSubTree, probeSubTree, chosenIndex, analysisCtx, true,
-                isLeftOuterJoin, true, context, newNullPlaceHolderVar);
+                isLeftOuterJoin, true, context, newNullPlaceHolderVar, leftOuterMissingValue);
         if (indexSearchOp == null) {
             return false;
         }
 
         return AccessMethodUtils.finalizeJoinPlanTransformation(afterJoinRefs, joinRef, indexSubTree, probeSubTree,
-                analysisCtx, context, isLeftOuterJoin, isLeftOuterJoinWithSpecialGroupBy, indexSearchOp,
-                newNullPlaceHolderVar, conditionRef, dataset, chosenIndex);
+                analysisCtx, context, isLeftOuterJoin, isLeftOuterJoinWithSpecialGroupBy, leftOuterMissingValue,
+                indexSearchOp, newNullPlaceHolderVar, conditionRef, dataset, chosenIndex);
     }
 
     @Override
@@ -201,7 +204,8 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
             List<Mutable<ILogicalOperator>> assignBeforeTheOpRefs, OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainMissing, boolean requiresBroadcast, IOptimizationContext context,
-            LogicalVariable newMissingPlaceHolderForLOJ) throws AlgebricksException {
+            LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue)
+            throws AlgebricksException {
 
         Index.ArrayIndexDetails chosenIndexDetails = (Index.ArrayIndexDetails) chosenIndex.getIndexDetails();
         List<List<String>> chosenIndexKeyFieldNames = new ArrayList<>();
@@ -218,8 +222,8 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
 
         return createBTreeIndexSearchPlan(afterTopOpRefs, topOpRef, conditionRef, assignBeforeTheOpRefs, indexSubTree,
                 probeSubTree, chosenIndex, analysisCtx, retainInput, retainMissing, requiresBroadcast, context,
-                newMissingPlaceHolderForLOJ, chosenIndexKeyFieldNames, chosenIndexKeyFieldTypes,
-                chosenIndexKeyFieldSourceIndicators);
+                newMissingNullPlaceHolderForLOJ, leftOuterMissingValue, chosenIndexKeyFieldNames,
+                chosenIndexKeyFieldTypes, chosenIndexKeyFieldSourceIndicators);
     }
 
     @Override

@@ -37,7 +37,7 @@ public class LSMBTreeDiskComponentScanOperatorNodePushable extends IndexSearchOp
             RecordDescriptor inputRecDesc, IIndexDataflowHelperFactory indexHelperFactory,
             ISearchOperationCallbackFactory searchCallbackFactory) throws HyracksDataException {
         super(ctx, inputRecDesc, partition, null, null, indexHelperFactory, false, false, null, searchCallbackFactory,
-                false);
+                false, null);
     }
 
     @Override

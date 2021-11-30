@@ -58,7 +58,7 @@ public class AsterixIntroduceGroupByCombinerRule extends AbstractIntroduceGroupB
             ScalarFunctionCallExpression nonSystemNullTest =
                     new ScalarFunctionCallExpression(finfoNot, new MutableObject<>(isSystemNullTest));
             nonSystemNullTest.setSourceLocation(sourceLoc);
-            selectNonSystemNull = new SelectOperator(new MutableObject<>(nonSystemNullTest), false, null);
+            selectNonSystemNull = new SelectOperator(new MutableObject<>(nonSystemNullTest));
             selectNonSystemNull.setSourceLocation(sourceLoc);
         } else {
             List<Mutable<ILogicalExpression>> isSystemNullTestList = new ArrayList<>();
@@ -76,7 +76,7 @@ public class AsterixIntroduceGroupByCombinerRule extends AbstractIntroduceGroupB
             }
             IFunctionInfo finfoAnd = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.AND);
             selectNonSystemNull = new SelectOperator(
-                    new MutableObject<>(new ScalarFunctionCallExpression(finfoAnd, isSystemNullTestList)), false, null);
+                    new MutableObject<>(new ScalarFunctionCallExpression(finfoAnd, isSystemNullTestList)));
             selectNonSystemNull.setSourceLocation(sourceLoc);
         }
 

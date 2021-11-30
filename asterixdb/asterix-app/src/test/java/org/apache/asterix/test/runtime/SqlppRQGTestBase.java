@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,6 +55,7 @@ import org.apache.asterix.test.common.ResultExtractor;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -141,8 +143,8 @@ public abstract class SqlppRQGTestBase {
         return result;
     }
 
-    protected void runTestCase(int testcaseId, String testcaseDescription, String sqlQuery, String sqlppQuery)
-            throws Exception {
+    protected void runTestCase(int testcaseId, String testcaseDescription, String sqlQuery, String sqlppQuery,
+            List<TestCase.CompilationUnit.Parameter> params) throws Exception {
         LOGGER.info(String.format("Starting testcase #%d: %s", testcaseId, testcaseDescription));
 
         LOGGER.info("Running SQL");
@@ -156,8 +158,9 @@ public abstract class SqlppRQGTestBase {
         LOGGER.info("Running SQL++");
         LOGGER.info(sqlppQuery);
         ArrayNode sqlppResult;
-        try (InputStream resultStream = testExecutor.executeQueryService(sqlppQuery,
-                testExecutor.getEndpoint(Servlets.QUERY_SERVICE), TestCaseContext.OutputFormat.ADM)) {
+        URI endpoint = testExecutor.getEndpoint(Servlets.QUERY_SERVICE);
+        try (InputStream resultStream = testExecutor.executeQueryService(sqlppQuery, TestCaseContext.OutputFormat.ADM,
+                endpoint, params == null ? Collections.emptyList() : params, false, StandardCharsets.UTF_8)) {
             sqlppResult = asJson(
                     ResultExtractor.extract(resultStream, StandardCharsets.UTF_8, TestCaseContext.OutputFormat.ADM));
         }

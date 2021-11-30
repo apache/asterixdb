@@ -19,8 +19,11 @@
 
 package org.apache.asterix.lang.sqlpp.clause;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.optype.UnnestType;
@@ -30,9 +33,21 @@ public class UnnestClause extends AbstractBinaryCorrelateClause {
 
     private final UnnestType unnestType;
 
-    public UnnestClause(UnnestType unnestType, Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar) {
+    private Literal.Type outerUnnestMissingValueType;
+
+    public UnnestClause(UnnestType unnestType, Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar,
+            Literal.Type outerUnnestMissingValueType) {
         super(rightExpr, rightVar, rightPosVar);
         this.unnestType = unnestType;
+        setOuterUnnestMissingValueType(outerUnnestMissingValueType);
+    }
+
+    public Literal.Type getOuterUnnestMissingValueType() {
+        return outerUnnestMissingValueType;
+    }
+
+    public void setOuterUnnestMissingValueType(Literal.Type outerUnnestMissingValueType) {
+        this.outerUnnestMissingValueType = validateMissingValueType(unnestType, outerUnnestMissingValueType);
     }
 
     @Override
@@ -51,7 +66,8 @@ public class UnnestClause extends AbstractBinaryCorrelateClause {
 
     @Override
     public int hashCode() {
-        return 31 * super.hashCode() + unnestType.hashCode();
+        return 31 * super.hashCode() + 31 * unnestType.hashCode()
+                + +(outerUnnestMissingValueType != null ? outerUnnestMissingValueType.hashCode() : 0);
     }
 
     @Override
@@ -63,6 +79,27 @@ public class UnnestClause extends AbstractBinaryCorrelateClause {
             return false;
         }
         UnnestClause target = (UnnestClause) object;
-        return super.equals(target) && unnestType.equals(target.getUnnestType());
+        return super.equals(target) && unnestType.equals(target.getUnnestType())
+                && Objects.equals(outerUnnestMissingValueType, target.outerUnnestMissingValueType);
+    }
+
+    private static Literal.Type validateMissingValueType(UnnestType unnestType, Literal.Type missingValueType) {
+        switch (unnestType) {
+            case INNER:
+                if (missingValueType != null) {
+                    throw new IllegalArgumentException(String.valueOf(missingValueType));
+                }
+                return null;
+            case LEFTOUTER:
+                switch (Objects.requireNonNull(missingValueType)) {
+                    case MISSING:
+                    case NULL:
+                        return missingValueType;
+                    default:
+                        throw new IllegalArgumentException(String.valueOf(missingValueType));
+                }
+            default:
+                throw new IllegalStateException(String.valueOf(unnestType));
+        }
     }
 }

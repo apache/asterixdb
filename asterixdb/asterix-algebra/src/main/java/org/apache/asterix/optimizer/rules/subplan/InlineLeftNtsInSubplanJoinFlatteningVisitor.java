@@ -21,6 +21,7 @@ package org.apache.asterix.optimizer.rules.subplan;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -33,6 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
@@ -89,6 +91,7 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
 
     // The target Nts operator.
     private final ILogicalOperator targetNts;
+    private final IAlgebricksConstantValue leftOuterMissingValue;
 
     // The live variables in <code>subplanInputOperator</code> to enforce.
     private final Set<LogicalVariable> liveVarsFromSubplanInput = new HashSet<>();
@@ -112,13 +115,16 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
      *            the input operator to the target SubplanOperator
      * @param nts
      *            the NestedTupleSourceOperator to be replaced by <code>subplanInputOperator</code>
+     * @param leftOuterMissingValue
      * @throws AlgebricksException
      */
     public InlineLeftNtsInSubplanJoinFlatteningVisitor(IOptimizationContext context,
-            ILogicalOperator subplanInputOperator, ILogicalOperator nts) throws AlgebricksException {
+            ILogicalOperator subplanInputOperator, ILogicalOperator nts, IAlgebricksConstantValue leftOuterMissingValue)
+            throws AlgebricksException {
         this.context = context;
         this.subplanInputOperator = subplanInputOperator;
         this.targetNts = nts;
+        this.leftOuterMissingValue = Objects.requireNonNull(leftOuterMissingValue);
         VariableUtilities.getSubplanLocalLiveVariables(subplanInputOperator, liveVarsFromSubplanInput);
     }
 
@@ -192,7 +198,7 @@ class InlineLeftNtsInSubplanJoinFlatteningVisitor implements IQueryOperatorVisit
         AbstractBinaryJoinOperator returnOp = op;
         // After rewriting, the original inner join should become an left outer join.
         if (rewritten) {
-            returnOp = new LeftOuterJoinOperator(op.getCondition());
+            returnOp = new LeftOuterJoinOperator(op.getCondition(), leftOuterMissingValue);
             returnOp.setSourceLocation(op.getSourceLocation());
             returnOp.getInputs().addAll(op.getInputs());
             injectNullCheckVars(returnOp);

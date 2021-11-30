@@ -51,7 +51,8 @@ public class LSMBTreeBatchPointSearchOperatorNodePushable extends BTreeSearchOpe
             ITupleFilterFactory tupleFilterFactory, long outputLimit) throws HyracksDataException {
         super(ctx, partition, inputRecDesc, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive,
                 minFilterKeyFields, maxFilterKeyFields, indexHelperFactory, retainInput, retainMissing,
-                missingWriterFactory, searchCallbackFactory, false, tupleFilterFactory, outputLimit, false, null, null);
+                missingWriterFactory, searchCallbackFactory, false, null, tupleFilterFactory, outputLimit, false, null,
+                null);
         this.keyFields = lowKeyFields;
     }
 

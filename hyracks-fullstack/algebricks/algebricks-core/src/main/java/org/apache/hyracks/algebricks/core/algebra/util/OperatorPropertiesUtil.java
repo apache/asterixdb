@@ -18,8 +18,11 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -32,13 +35,13 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.CardinalityInferenceVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
@@ -221,33 +224,6 @@ public class OperatorPropertiesUtil {
         }
     }
 
-    public static boolean isMissingTest(AbstractLogicalOperator op) {
-        if (op.getOperatorTag() != LogicalOperatorTag.SELECT) {
-            return false;
-        }
-        AbstractLogicalOperator doubleUnder = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-        if (doubleUnder.getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
-            return false;
-        }
-        ILogicalExpression eu = ((SelectOperator) op).getCondition().getValue();
-        if (eu.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return false;
-        }
-        AbstractFunctionCallExpression f1 = (AbstractFunctionCallExpression) eu;
-        if (!f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
-            return false;
-        }
-        ILogicalExpression a1 = f1.getArguments().get(0).getValue();
-        if (!a1.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
-            return false;
-        }
-        AbstractFunctionCallExpression f2 = (AbstractFunctionCallExpression) a1;
-        if (!f2.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_MISSING)) {
-            return false;
-        }
-        return true;
-    }
-
     public static void typePlan(ILogicalPlan p, IOptimizationContext context) throws AlgebricksException {
         for (Mutable<ILogicalOperator> r : p.getRoots()) {
             typeOpRec(r, context);
@@ -354,5 +330,23 @@ public class OperatorPropertiesUtil {
     public static boolean isMultiOutputOperator(ILogicalOperator op) {
         LogicalOperatorTag opTag = op.getOperatorTag();
         return opTag == LogicalOperatorTag.REPLICATE || opTag == LogicalOperatorTag.SPLIT;
+    }
+
+    public static <T> List<T> unionAll(List<T> list1, List<T> list2) {
+        if (list2 == null || list2.isEmpty()) {
+            return list1 == null ? Collections.emptyList() : list1;
+        } else if (list1 == null || list1.isEmpty()) {
+            return list2;
+        } else {
+            List<T> result = new ArrayList<>(list1.size() + list2.size());
+            result.addAll(list1);
+            result.addAll(list2);
+            return result;
+        }
+    }
+
+    public static FunctionIdentifier getIsMissingNullFunction(IAlgebricksConstantValue value) {
+        return value.isMissing() ? AlgebricksBuiltinFunctions.IS_MISSING
+                : value.isNull() ? AlgebricksBuiltinFunctions.IS_NULL : null;
     }
 }

@@ -41,10 +41,11 @@ public class BTreeUpdateSearchOperatorNodePushable extends BTreeSearchOperatorNo
             int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
             IIndexDataflowHelperFactory indexHelperFactory, boolean retainInput, boolean retainMissing,
             IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
-            ITupleUpdater tupleUpdater, boolean appendIndexFilter) throws HyracksDataException {
+            ITupleUpdater tupleUpdater, boolean appendIndexFilter, IMissingWriterFactory nonFilterWriterFactory)
+            throws HyracksDataException {
         super(ctx, partition, inputRecDesc, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive, null, null,
                 indexHelperFactory, retainInput, retainMissing, missingWriterFactory, searchCallbackFactory,
-                appendIndexFilter);
+                appendIndexFilter, nonFilterWriterFactory);
         this.tupleUpdater = tupleUpdater;
     }
 

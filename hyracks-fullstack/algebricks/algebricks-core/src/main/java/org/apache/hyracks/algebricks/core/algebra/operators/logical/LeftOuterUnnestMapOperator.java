@@ -25,10 +25,13 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 
 /**
  * Left-outer-unnest-map is similar to the unnest-map operator. The only
@@ -38,11 +41,21 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
  */
 public class LeftOuterUnnestMapOperator extends AbstractUnnestMapOperator {
 
+    private IAlgebricksConstantValue missingValue;
+
     public LeftOuterUnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
-            List<Object> variableTypes, boolean propagateInput) {
-        super(variables, expression, variableTypes, propagateInput);
+            List<Object> variableTypes, IAlgebricksConstantValue missingValue) {
         // propagateInput is always set to true for this operator.
-        this.propagateInput = true;
+        super(variables, expression, variableTypes, true);
+        setMissingValue(missingValue);
+    }
+
+    public IAlgebricksConstantValue getMissingValue() {
+        return missingValue;
+    }
+
+    public void setMissingValue(IAlgebricksConstantValue missingValue) {
+        this.missingValue = validateMissingValue(missingValue);
     }
 
     @Override
@@ -60,12 +73,32 @@ public class LeftOuterUnnestMapOperator extends AbstractUnnestMapOperator {
         // Propagates all input variables that come from the outer branch.
         PropagatingTypeEnvironment env = createPropagatingAllInputsTypeEnvironment(ctx);
 
-        // The produced variables of the this operator are missable because of the left outer semantics.
+        // The produced variables of the this operator are missable (or nullable) because of the left outer semantics.
         for (int i = 0; i < variables.size(); i++) {
-            env.setVarType(variables.get(i), ctx.getMissableTypeComputer().makeMissableType(variableTypes.get(i)));
+            Object varType = variableTypes.get(i);
+            Object outVarType;
+            if (missingValue.isMissing()) {
+                outVarType = ctx.getMissableTypeComputer().makeMissableType(varType);
+            } else if (missingValue.isNull()) {
+                outVarType = ctx.getMissableTypeComputer().makeNullableType(varType);
+            } else {
+                throw new AlgebricksException(ErrorCode.ILLEGAL_STATE, getSourceLocation(), "");
+            }
+            env.setVarType(variables.get(i), outVarType);
         }
 
         return env;
     }
 
+    private static IAlgebricksConstantValue validateMissingValue(IAlgebricksConstantValue value) {
+        if (value == null) {
+            throw new NullPointerException();
+        } else if (value.isMissing()) {
+            return ConstantExpression.MISSING.getValue();
+        } else if (value.isNull()) {
+            return ConstantExpression.NULL.getValue();
+        } else {
+            throw new IllegalArgumentException(String.valueOf(value));
+        }
+    }
 }

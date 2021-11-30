@@ -166,7 +166,9 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     @Override
     public String visitLeftOuterJoinOperator(LeftOuterJoinOperator op, Boolean showDetails) throws AlgebricksException {
         stringBuilder.setLength(0);
-        stringBuilder.append("left outer join (").append(op.getCondition().getValue().toString()).append(")");
+        stringBuilder.append("left outer join ").append("(").append(op.getCondition().getValue().toString())
+                .append(")");
+        stringBuilder.append(op.getMissingValue().isNull() ? " (or null) " : "");
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);
         appendPhysicalOperatorInfo(op, showDetails);
@@ -351,6 +353,7 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         if (op.getPositionalVariable() != null) {
             stringBuilder.append(" at ").append(op.getPositionalVariable());
         }
+        stringBuilder.append(op.getMissingValue().isNull() ? " (or null) " : "");
         stringBuilder.append(" <- ").append(op.getExpressionRef().getValue().toString());
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);

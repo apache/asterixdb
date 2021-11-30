@@ -143,8 +143,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         // The condition can refer to the newRightVar and newRightPosVar.
         Expression conditionExpr = (Expression) joinClause.getConditionExpression().accept(this, currentEnv).first;
 
-        JoinClause newJoinClause =
-                new JoinClause(joinClause.getJoinType(), newRightExpr, newRightVar, newRightPosVar, conditionExpr);
+        JoinClause newJoinClause = new JoinClause(joinClause.getJoinType(), newRightExpr, newRightVar, newRightPosVar,
+                conditionExpr, joinClause.getOuterJoinMissingValueType());
         newJoinClause.setSourceLocation(joinClause.getSourceLocation());
         return new Pair<>(newJoinClause, currentEnv);
     }
@@ -193,8 +193,8 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
             currentEnv.removeSubstitution(newRightPosVar);
         }
         // The condition can refer to the newRightVar and newRightPosVar.
-        UnnestClause newUnnestClause =
-                new UnnestClause(unnestClause.getUnnestType(), rightExpr, newRightVar, newRightPosVar);
+        UnnestClause newUnnestClause = new UnnestClause(unnestClause.getUnnestType(), rightExpr, newRightVar,
+                newRightPosVar, unnestClause.getOuterUnnestMissingValueType());
         newUnnestClause.setSourceLocation(unnestClause.getSourceLocation());
         return new Pair<>(newUnnestClause, currentEnv);
     }

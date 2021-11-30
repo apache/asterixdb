@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -27,9 +28,12 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.properties.TypePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypeEnvPointer;
@@ -41,13 +45,28 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public class SelectOperator extends AbstractLogicalOperator {
     private final Mutable<ILogicalExpression> condition;
-    private final boolean retainMissing;
+    private final IAlgebricksConstantValue retainMissingAsValue;
     private final LogicalVariable nullPlaceholderVar;
 
-    public SelectOperator(Mutable<ILogicalExpression> condition, boolean retainMissing,
+    public SelectOperator(Mutable<ILogicalExpression> condition) {
+        this(condition, null, null);
+    }
+
+    public SelectOperator(Mutable<ILogicalExpression> condition, IAlgebricksConstantValue retainMissingAsValue,
             LogicalVariable nullPlaceholderVar) {
         this.condition = condition;
-        this.retainMissing = retainMissing;
+        if (retainMissingAsValue == null) {
+            this.retainMissingAsValue = null;
+            if (nullPlaceholderVar != null) {
+                throw new IllegalArgumentException(nullPlaceholderVar.toString());
+            }
+        } else if (retainMissingAsValue.isMissing()) {
+            this.retainMissingAsValue = ConstantExpression.MISSING.getValue();
+        } else if (retainMissingAsValue.isNull()) {
+            this.retainMissingAsValue = ConstantExpression.NULL.getValue();
+        } else {
+            throw new IllegalArgumentException(retainMissingAsValue.toString());
+        }
         this.nullPlaceholderVar = nullPlaceholderVar;
     }
 
@@ -60,11 +79,11 @@ public class SelectOperator extends AbstractLogicalOperator {
         return condition;
     }
 
-    public boolean getRetainMissing() {
-        return retainMissing;
+    public IAlgebricksConstantValue getRetainMissingAsValue() {
+        return retainMissingAsValue;
     }
 
-    public LogicalVariable getMissingPlaceholderVariable() throws AlgebricksException {
+    public LogicalVariable getMissingPlaceholderVariable() {
         return nullPlaceholderVar;
     }
 
@@ -109,12 +128,11 @@ public class SelectOperator extends AbstractLogicalOperator {
         ILogicalExpression a1 = f1.getArguments().get(0).getValue();
         if (a1.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             AbstractFunctionCallExpression f2 = (AbstractFunctionCallExpression) a1;
-            if (f2.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_MISSING)) {
-                ILogicalExpression a2 = f2.getArguments().get(0).getValue();
-                if (a2.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                    LogicalVariable var = ((VariableReferenceExpression) a2).getVariableReference();
-                    env.getNonMissableVariables().add(var);
-                }
+            FunctionIdentifier f2id = f2.getFunctionIdentifier();
+            if (f2id.equals(AlgebricksBuiltinFunctions.IS_MISSING)) {
+                extractFunctionArgVarInto(f2, env.getNonMissableVariables());
+            } else if (f2id.equals(AlgebricksBuiltinFunctions.IS_NULL)) {
+                extractFunctionArgVarInto(f2, env.getNonNullableVariables());
             }
         }
         return env;
@@ -123,5 +141,14 @@ public class SelectOperator extends AbstractLogicalOperator {
     @Override
     public boolean requiresVariableReferenceExpressions() {
         return false;
+    }
+
+    private static void extractFunctionArgVarInto(AbstractFunctionCallExpression callExpr,
+            List<? super LogicalVariable> outList) {
+        ILogicalExpression arg = callExpr.getArguments().get(0).getValue();
+        if (arg.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            LogicalVariable var = ((VariableReferenceExpression) arg).getVariableReference();
+            outList.add(var);
+        }
     }
 }

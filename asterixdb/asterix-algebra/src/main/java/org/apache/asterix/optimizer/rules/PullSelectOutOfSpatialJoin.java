@@ -106,7 +106,7 @@ public class PullSelectOutOfSpatialJoin implements IAlgebraicRewriteRule {
         }
         // pull up
         ILogicalExpression pulledCond = makeCondition(otherPredicates, context, op);
-        SelectOperator select = new SelectOperator(new MutableObject<ILogicalExpression>(pulledCond), false, null);
+        SelectOperator select = new SelectOperator(new MutableObject<ILogicalExpression>(pulledCond));
         select.setSourceLocation(op.getSourceLocation());
         ILogicalExpression newJoinCond = makeCondition(spatialVarVarComps, context, op);
         join.getCondition().setValue(newJoinCond);

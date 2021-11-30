@@ -19,10 +19,11 @@
 package org.apache.asterix.dataflow.data.common;
 
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeHelper;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 
 public class MissableTypeComputer implements IMissableTypeComputer {
@@ -33,9 +34,10 @@ public class MissableTypeComputer implements IMissableTypeComputer {
     }
 
     @Override
-    public IAType makeMissableType(Object type) throws AlgebricksException {
+    public IAType makeMissableType(Object type) {
         IAType t = (IAType) type;
-        return AUnionType.createMissableType(t);
+        return TypeHelper.canBeMissing(t) ? t
+                : t.getTypeTag() == ATypeTag.NULL ? BuiltinType.ANY : AUnionType.createMissableType(t);
     }
 
     @Override
@@ -45,8 +47,45 @@ public class MissableTypeComputer implements IMissableTypeComputer {
     }
 
     @Override
+    public Object makeNullableType(Object type) {
+        IAType t = (IAType) type;
+        return TypeHelper.canBeNull(t) ? t
+                : t.getTypeTag() == ATypeTag.MISSING ? BuiltinType.ANY : AUnionType.createNullableType(t);
+    }
+
+    @Override
+    public boolean canBeNull(Object type) {
+        IAType t = (IAType) type;
+        return TypeHelper.canBeNull(t);
+    }
+
+    @Override
     public Object getNonOptionalType(Object type) {
         IAType t = (IAType) type;
         return TypeComputeUtils.getActualType(t);
+    }
+
+    @Override
+    public Object getNonMissableType(Object type) {
+        IAType t = (IAType) type;
+        if (t.getTypeTag() == ATypeTag.UNION) {
+            AUnionType ut = ((AUnionType) t);
+            IAType primeType = ut.getActualType();
+            return ut.isNullableType() ? AUnionType.createNullableType(primeType) : primeType;
+        } else {
+            return t;
+        }
+    }
+
+    @Override
+    public Object getNonNullableType(Object type) {
+        IAType t = (IAType) type;
+        if (t.getTypeTag() == ATypeTag.UNION) {
+            AUnionType ut = ((AUnionType) t);
+            IAType primeType = ut.getActualType();
+            return ut.isMissableType() ? AUnionType.createMissableType(primeType) : primeType;
+        } else {
+            return t;
+        }
     }
 }

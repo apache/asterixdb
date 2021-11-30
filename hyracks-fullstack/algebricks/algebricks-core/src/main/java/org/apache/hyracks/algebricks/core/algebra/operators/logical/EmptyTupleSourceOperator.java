@@ -84,7 +84,9 @@ public class EmptyTupleSourceOperator extends AbstractLogicalOperator {
             }
 
             @Override
-            public Object getVarType(LogicalVariable var, List<LogicalVariable> nonNullVariables,
+            public Object getVarType(LogicalVariable var, List<LogicalVariable> nonMissableVariables,
+                    List<List<LogicalVariable>> correlatedMissableVariableLists,
+                    List<LogicalVariable> nonNullableVariables,
                     List<List<LogicalVariable>> correlatedNullableVariableLists) throws AlgebricksException {
                 return null;
             }

@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.algebricks.runtime.operators.std;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -38,6 +36,7 @@ import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
+import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
@@ -83,14 +82,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
     @Override
     public AbstractOneInputOneOutputOneFramePushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws HyracksDataException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        DataOutput output = new DataOutputStream(bos);
-        if (missingWriterFactory != null) {
-            IMissingWriter missingWriter = missingWriterFactory.createMissingWriter();
-            missingWriter.writeMissing(output);
-        }
-        byte[] missingBytes = bos.toByteArray();
-        int missingBytesLen = bos.size();
+        ByteArrayAccessibleOutputStream missingBytes = leftOuter ? writeMissingBytes() : null;
         IEvaluatorContext evalCtx = new EvaluatorContext(ctx);
         return new AbstractOneInputOneOutputOneFramePushRuntime() {
             private IPointable p = VoidPointable.FACTORY.createPointable();
@@ -154,7 +146,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                 }
                 if (unnestColIsProjected) {
                     if (missing) {
-                        tupleBuilder.addField(missingBytes, 0, missingBytesLen);
+                        tupleBuilder.addField(missingBytes.getByteArray(), 0, missingBytes.size());
                     } else {
                         tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
                     }
@@ -166,7 +158,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                 if (positionWriter != null) {
                     // Write the positional variable
                     if (missing) {
-                        tupleBuilder.addField(missingBytes, 0, missingBytesLen);
+                        tupleBuilder.addField(missingBytes.getByteArray(), 0, missingBytes.size());
                     } else {
                         positionWriter.write(tupleBuilder.getDataOutput(), positionIndex);
                         tupleBuilder.addFieldEndOffset();
@@ -180,5 +172,12 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                 appender.flush(writer);
             }
         };
+    }
+
+    private ByteArrayAccessibleOutputStream writeMissingBytes() throws HyracksDataException {
+        ByteArrayAccessibleOutputStream baos = new ByteArrayAccessibleOutputStream();
+        IMissingWriter missingWriter = missingWriterFactory.createMissingWriter();
+        missingWriter.writeMissing(new DataOutputStream(baos));
+        return baos;
     }
 }

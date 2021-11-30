@@ -112,7 +112,7 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
                 : (VariableExpr) joinClause.getPositionalVariable().accept(this, arg);
         Expression conditionExpresion = (Expression) joinClause.getConditionExpression().accept(this, arg);
         JoinClause copy = new JoinClause(joinClause.getJoinType(), rightExpression, rightVar, rightPositionVar,
-                conditionExpresion);
+                conditionExpresion, joinClause.getOuterJoinMissingValueType());
         copy.setSourceLocation(joinClause.getSourceLocation());
         return copy;
     }
@@ -136,7 +136,8 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         VariableExpr rightVar = (VariableExpr) unnestClause.getRightVariable().accept(this, arg);
         VariableExpr rightPositionVar = unnestClause.getPositionalVariable() == null ? null
                 : (VariableExpr) unnestClause.getPositionalVariable().accept(this, arg);
-        UnnestClause copy = new UnnestClause(unnestClause.getUnnestType(), rightExpression, rightVar, rightPositionVar);
+        UnnestClause copy = new UnnestClause(unnestClause.getUnnestType(), rightExpression, rightVar, rightPositionVar,
+                unnestClause.getOuterUnnestMissingValueType());
         copy.setSourceLocation(unnestClause.getSourceLocation());
         return copy;
     }

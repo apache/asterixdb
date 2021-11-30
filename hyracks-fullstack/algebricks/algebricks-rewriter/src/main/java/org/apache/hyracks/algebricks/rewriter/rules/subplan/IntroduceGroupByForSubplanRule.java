@@ -65,6 +65,8 @@ import org.apache.hyracks.algebricks.rewriter.util.PhysicalOptimizationsUtil;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
+ * NOTE: This rule is currently not used
+ *
  * The rule searches for SUBPLAN operator with a optional PROJECT operator and
  * an AGGREGATE followed by a join operator.
  *
@@ -258,8 +260,7 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
         ScalarFunctionCallExpression nonNullTest =
                 new ScalarFunctionCallExpression(finfoNot, new MutableObject<ILogicalExpression>(isNullTest));
         nonNullTest.setSourceLocation(sourceLoc);
-        SelectOperator selectNonNull =
-                new SelectOperator(new MutableObject<ILogicalExpression>(nonNullTest), false, null);
+        SelectOperator selectNonNull = new SelectOperator(new MutableObject<ILogicalExpression>(nonNullTest));
         selectNonNull.setSourceLocation(sourceLoc);
         GroupByOperator g = new GroupByOperator();
         g.setSourceLocation(sourceLoc);

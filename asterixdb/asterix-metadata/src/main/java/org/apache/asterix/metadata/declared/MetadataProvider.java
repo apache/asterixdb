@@ -540,8 +540,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildBtreeRuntime(JobSpecification jobSpec,
             IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context, boolean retainInput,
-            boolean retainMissing, Dataset dataset, String indexName, int[] lowKeyFields, int[] highKeyFields,
-            boolean lowKeyInclusive, boolean highKeyInclusive, boolean propagateFilter, int[] minFilterFieldIndexes,
+            boolean retainMissing, IMissingWriterFactory nonMatchWriterFactory, Dataset dataset, String indexName,
+            int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
+            boolean propagateFilter, IMissingWriterFactory nonFilterWriterFactory, int[] minFilterFieldIndexes,
             int[] maxFilterFieldIndexes, ITupleFilterFactory tupleFilterFactory, long outputLimit,
             boolean isIndexOnlyPlan, boolean isPrimaryIndexPointSearch) throws AlgebricksException {
         boolean isSecondary = true;
@@ -601,27 +602,28 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             btreeSearchOp = !isSecondary && isPrimaryIndexPointSearch
                     ? new LSMBTreeBatchPointSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields,
                             highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput,
-                            retainMissing, context.getMissingWriterFactory(), searchCallbackFactory,
-                            minFilterFieldIndexes, maxFilterFieldIndexes, tupleFilterFactory, outputLimit)
+                            retainMissing, nonMatchWriterFactory, searchCallbackFactory, minFilterFieldIndexes,
+                            maxFilterFieldIndexes, tupleFilterFactory, outputLimit)
                     : new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields, highKeyFields,
                             lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing,
-                            context.getMissingWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
-                            maxFilterFieldIndexes, propagateFilter, tupleFilterFactory, outputLimit,
+                            nonMatchWriterFactory, searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes,
+                            propagateFilter, nonFilterWriterFactory, tupleFilterFactory, outputLimit,
                             proceedIndexOnlyPlan, failValueForIndexOnlyPlan, successValueForIndexOnlyPlan);
         } else {
             btreeSearchOp = new ExternalBTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields,
                     highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing,
-                    context.getMissingWriterFactory(), searchCallbackFactory, minFilterFieldIndexes,
-                    maxFilterFieldIndexes, ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, this));
+                    nonMatchWriterFactory, searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes,
+                    ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, this));
         }
         return new Pair<>(btreeSearchOp, spPc.second);
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildRtreeRuntime(JobSpecification jobSpec,
             List<LogicalVariable> outputVars, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv,
-            JobGenContext context, boolean retainInput, boolean retainMissing, Dataset dataset, String indexName,
-            int[] keyFields, boolean propagateFilter, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
-            boolean isIndexOnlyPlan) throws AlgebricksException {
+            JobGenContext context, boolean retainInput, boolean retainMissing,
+            IMissingWriterFactory nonMatchWriterFactory, Dataset dataset, String indexName, int[] keyFields,
+            boolean propagateFilter, IMissingWriterFactory nonFilterWriterFactory, int[] minFilterFieldIndexes,
+            int[] maxFilterFieldIndexes, boolean isIndexOnlyPlan) throws AlgebricksException {
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
         Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
                 dataset.getDatasetName(), indexName);
@@ -667,13 +669,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), spPc.first);
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, keyFields, true, true,
-                    indexDataflowHelperFactory, retainInput, retainMissing, context.getMissingWriterFactory(),
+                    indexDataflowHelperFactory, retainInput, retainMissing, nonMatchWriterFactory,
                     searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes, propagateFilter,
-                    isIndexOnlyPlan, failValueForIndexOnlyPlan, successValueForIndexOnlyPlan);
+                    nonFilterWriterFactory, isIndexOnlyPlan, failValueForIndexOnlyPlan, successValueForIndexOnlyPlan);
         } else {
             // Create the operator
             rtreeSearchOp = new ExternalRTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, keyFields, true, true,
-                    indexDataflowHelperFactory, retainInput, retainMissing, context.getMissingWriterFactory(),
+                    indexDataflowHelperFactory, retainInput, retainMissing, nonMatchWriterFactory,
                     searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes,
                     ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, this));
         }

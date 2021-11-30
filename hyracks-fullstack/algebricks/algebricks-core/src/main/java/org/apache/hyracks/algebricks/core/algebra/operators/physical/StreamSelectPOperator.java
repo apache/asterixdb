@@ -23,6 +23,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
@@ -32,6 +33,7 @@ import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.StreamSelectRuntimeFactory;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 
 public class StreamSelectPOperator extends AbstractPhysicalOperator {
@@ -66,10 +68,13 @@ public class StreamSelectPOperator extends AbstractPhysicalOperator {
         IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
         IScalarEvaluatorFactory cond = expressionRuntimeProvider.createEvaluatorFactory(
                 select.getCondition().getValue(), context.getTypeEnvironment(op), inputSchemas, context);
+        IAlgebricksConstantValue retainMissingAsValue = select.getRetainMissingAsValue();
+        boolean retainMissing = retainMissingAsValue != null;
+        IMissingWriterFactory missingWriterFactory =
+                retainMissing ? JobGenHelper.getMissingWriterFactory(context, retainMissingAsValue) : null;
         StreamSelectRuntimeFactory runtime =
-                new StreamSelectRuntimeFactory(cond, null, context.getBinaryBooleanInspectorFactory(),
-                        select.getRetainMissing(), inputSchemas[0].findVariable(select.getMissingPlaceholderVariable()),
-                        context.getMissingWriterFactory());
+                new StreamSelectRuntimeFactory(cond, null, context.getBinaryBooleanInspectorFactory(), retainMissing,
+                        inputSchemas[0].findVariable(select.getMissingPlaceholderVariable()), missingWriterFactory);
         runtime.setSourceLocation(select.getSourceLocation());
         // contribute one Asterix framewriter
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);

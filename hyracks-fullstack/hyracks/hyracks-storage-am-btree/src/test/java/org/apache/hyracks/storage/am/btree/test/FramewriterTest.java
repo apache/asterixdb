@@ -295,7 +295,7 @@ public class FramewriterTest {
                             recordDescProvider.getInputRecordDescriptor(new ActivityId(new OperatorDescriptorId(0), 0),
                                     0),
                             keys, keys, lowKeyInclusive, highKeyInclusive, keys, keys, pair.getLeft(), false, false,
-                            null, pair.getRight(), false);
+                            null, pair.getRight(), false, null);
                     writers.add(writer);
                 }
             }

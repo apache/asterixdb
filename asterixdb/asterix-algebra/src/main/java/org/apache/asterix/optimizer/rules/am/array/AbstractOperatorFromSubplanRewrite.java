@@ -136,7 +136,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
 
         // Create a copy of this SELECT, and set this to our rewrite root.
         SelectOperator rewriteRootSelect = new SelectOperator(new MutableObject<>(normalizedSelectCondition),
-                optimizableSelect.getRetainMissing(), optimizableSelect.getMissingPlaceholderVariable());
+                optimizableSelect.getRetainMissingAsValue(), optimizableSelect.getMissingPlaceholderVariable());
         rewriteRootSelect.setSourceLocation(sourceLocation);
         rewriteRootSelect.setExecutionMode(optimizableSelect.getExecutionMode());
 
@@ -178,7 +178,8 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
                     // include this condition.
                     updatedSelectCond = coalesceConditions(rewriteRootSelect, workingOriginalOperator);
                     updatedSelectOperator = new SelectOperator(new MutableObject<>(updatedSelectCond),
-                            rewriteRootSelect.getRetainMissing(), rewriteRootSelect.getMissingPlaceholderVariable());
+                            rewriteRootSelect.getRetainMissingAsValue(),
+                            rewriteRootSelect.getMissingPlaceholderVariable());
                     updatedSelectOperator.setSourceLocation(sourceLocation);
                     updatedSelectOperator.getInputs().addAll(rewriteRootSelect.getInputs());
                     rewriteRootSelect = updatedSelectOperator;
@@ -194,7 +195,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
                     if (traversalOutput != null) {
                         updatedSelectCond = coalesceConditions(rewriteRootSelect, traversalOutput.first);
                         updatedSelectOperator = new SelectOperator(new MutableObject<>(updatedSelectCond),
-                                rewriteRootSelect.getRetainMissing(),
+                                rewriteRootSelect.getRetainMissingAsValue(),
                                 rewriteRootSelect.getMissingPlaceholderVariable());
                         updatedSelectOperator.setSourceLocation(sourceLocation);
                         updatedSelectOperator.getInputs().addAll(rewriteRootSelect.getInputs());
@@ -317,7 +318,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
 
         // First, try to create a SELECT from the aggregate itself (i.e. handle the SOME AND EVERY case).
         if (isNonEmptyStream && aggregateCondition != null) {
-            SelectOperator selectFromAgg = new SelectOperator(new MutableObject<>(aggregateCondition), false, null);
+            SelectOperator selectFromAgg = new SelectOperator(new MutableObject<>(aggregateCondition));
             selectFromAgg.getInputs().addAll(subplanRoot.getInputs());
             selectFromAgg.setSourceLocation(sourceLocation);
             return selectFromAgg;

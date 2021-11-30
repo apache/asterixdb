@@ -1132,7 +1132,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         }
 
         public void applyFilteringExpression(Mutable<ILogicalExpression> filterExpression) throws AlgebricksException {
-            SelectOperator selectOperator = new SelectOperator(filterExpression, false, null);
+            SelectOperator selectOperator = new SelectOperator(filterExpression);
             selectOperator.setSourceLocation(sourceLoc);
             this.currentTop = introduceNewOp(currentTop, selectOperator, true);
         }

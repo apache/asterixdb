@@ -65,6 +65,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
@@ -400,7 +401,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             List<Mutable<ILogicalOperator>> assignBeforeTopOpRefs, OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context,
-            LogicalVariable newNullPlaceHolderForLOJ) throws AlgebricksException {
+            LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue)
+            throws AlgebricksException {
         // TODO: we currently do not support the index-only plan for the inverted index searches since
         // there can be many <SK, PK> pairs for the same PK and we may see two different records with the same PK
         // (e.g., the record is deleted and inserted with the same PK). The reason is that there are
@@ -453,13 +455,13 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // since it doesn't contain a field value, only part of it.
         ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
                 metaRecordType, chosenIndex, inputOp, jobGenParams, context, retainInput, retainNull,
-                generateInstantTrylockResultFromIndexSearch);
+                generateInstantTrylockResultFromIndexSearch, leftOuterMissingValue);
 
         // Generates the rest of the upstream plan which feeds the search results into the primary index.
         ILogicalOperator primaryIndexUnnestOp = AccessMethodUtils.createRestOfIndexSearchPlan(afterTopOpRefs, topOpRef,
                 conditionRef, assignBeforeTopOpRefs, dataSourceScan, dataset, recordType, metaRecordType,
                 secondaryIndexUnnestOp, context, true, retainInput, retainNull, false, chosenIndex, analysisCtx,
-                indexSubTree, null, newNullPlaceHolderForLOJ);
+                indexSubTree, null, newMissingNullPlaceHolderForLOJ, leftOuterMissingValue);
 
         return primaryIndexUnnestOp;
     }
@@ -487,10 +489,10 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         SelectOperator selectOp = (SelectOperator) selectRef.getValue();
         ILogicalOperator indexPlanRootOp =
                 createIndexSearchPlan(afterSelectRefs, selectRef, selectOp.getCondition(),
-                        subTree.getAssignsAndUnnestsRefs(),
-                        subTree, null, chosenIndex, analysisCtx, false, false, subTree.getDataSourceRef().getValue()
-                                .getInputs().get(0).getValue().getExecutionMode() == ExecutionMode.UNPARTITIONED,
-                        context, null);
+                        subTree.getAssignsAndUnnestsRefs(), subTree,
+                        null, chosenIndex, analysisCtx, false, false, subTree.getDataSourceRef().getValue().getInputs()
+                                .get(0).getValue().getExecutionMode() == ExecutionMode.UNPARTITIONED,
+                        context, null, null);
 
         // Replace the datasource scan with the new plan rooted at primaryIndexUnnestMap.
         subTree.getDataSourceRef().setValue(indexPlanRootOp);
@@ -501,8 +503,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     public boolean applyJoinPlanTransformation(List<Mutable<ILogicalOperator>> afterJoinRefs,
             Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree leftSubTree,
             OptimizableOperatorSubTree rightSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy)
-            throws AlgebricksException {
+            IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy,
+            IAlgebricksConstantValue leftOuterMissingValue) throws AlgebricksException {
         Dataset dataset = analysisCtx.getDatasetFromIndexDatasetMap(chosenIndex);
         OptimizableOperatorSubTree indexSubTree;
         OptimizableOperatorSubTree probeSubTree;
@@ -528,16 +530,17 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
 
         //if LOJ, reset null place holder variable
-        LogicalVariable newNullPlaceHolderVar = null;
+        LogicalVariable newMissingNullPlaceHolderVar = null;
         if (isLeftOuterJoin) {
             //get a new null place holder variable that is the first field variable of the primary key
             //from the indexSubTree's datasourceScanOp
             // We need this for all left outer joins, even those that do not have a special GroupBy
-            newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
+            newMissingNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
 
             if (isLeftOuterJoinWithSpecialGroupBy) {
                 //reset the null place holder variable
-                AccessMethodUtils.resetLOJMissingPlaceholderVarInGroupByOp(analysisCtx, newNullPlaceHolderVar, context);
+                AccessMethodUtils.resetLOJMissingNullPlaceholderVarInGroupByOp(analysisCtx,
+                        newMissingNullPlaceHolderVar, context);
             }
         }
 
@@ -573,14 +576,16 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             probeSubTree.setRoot(newProbeRootRef.getValue());
         }
         // Create regular indexed-nested loop join path.
-        ILogicalOperator indexPlanRootOp = createIndexSearchPlan(afterJoinRefs, joinRef,
-                new MutableObject<ILogicalExpression>(joinCond), indexSubTree.getAssignsAndUnnestsRefs(), indexSubTree,
-                probeSubTree, chosenIndex, analysisCtx, true, isLeftOuterJoin, true, context, newNullPlaceHolderVar);
+        ILogicalOperator indexPlanRootOp =
+                createIndexSearchPlan(afterJoinRefs, joinRef, new MutableObject<ILogicalExpression>(joinCond),
+                        indexSubTree.getAssignsAndUnnestsRefs(), indexSubTree, probeSubTree, chosenIndex, analysisCtx,
+                        true, isLeftOuterJoin, true, context, newMissingNullPlaceHolderVar, leftOuterMissingValue);
         indexSubTree.getDataSourceRef().setValue(indexPlanRootOp);
 
         // Change join into a select with the same condition.
-        SelectOperator topSelect = new SelectOperator(new MutableObject<ILogicalExpression>(joinCond), isLeftOuterJoin,
-                newNullPlaceHolderVar);
+        SelectOperator topSelect = isLeftOuterJoin
+                ? new SelectOperator(new MutableObject<>(joinCond), leftOuterMissingValue, newMissingNullPlaceHolderVar)
+                : new SelectOperator(new MutableObject<>(joinCond));
         topSelect.setSourceLocation(indexPlanRootOp.getSourceLocation());
         topSelect.getInputs().add(indexSubTree.getRootRef());
         topSelect.setExecutionMode(ExecutionMode.LOCAL);
@@ -832,7 +837,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         }
 
         SelectOperator isFilterableSelectOp =
-                new SelectOperator(new MutableObject<ILogicalExpression>(isFilterableExpr), false, null);
+                new SelectOperator(new MutableObject<ILogicalExpression>(isFilterableExpr));
         isFilterableSelectOp.setSourceLocation(sourceLoc);
         isFilterableSelectOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
         isFilterableSelectOp.setExecutionMode(ExecutionMode.LOCAL);
@@ -845,7 +850,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
                 FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), isNotFilterableArgs);
         isNotFilterableExpr.setSourceLocation(sourceLoc);
         SelectOperator isNotFilterableSelectOp =
-                new SelectOperator(new MutableObject<ILogicalExpression>(isNotFilterableExpr), false, null);
+                new SelectOperator(new MutableObject<ILogicalExpression>(isNotFilterableExpr));
         isNotFilterableSelectOp.setSourceLocation(sourceLoc);
         isNotFilterableSelectOp.getInputs().add(new MutableObject<ILogicalOperator>(inputOp));
         isNotFilterableSelectOp.setExecutionMode(ExecutionMode.LOCAL);

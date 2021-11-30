@@ -57,6 +57,16 @@ public final class ConstantExpression extends AbstractLogicalExpression {
         public String toString() {
             return "TRUE";
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            return (obj instanceof IAlgebricksConstantValue) && ((IAlgebricksConstantValue) obj).isTrue();
+        }
+
+        @Override
+        public int hashCode() {
+            return Boolean.TRUE.hashCode();
+        }
     });
     public static final ConstantExpression FALSE = new ConstantExpression(new IAlgebricksConstantValue() {
 
@@ -83,6 +93,16 @@ public final class ConstantExpression extends AbstractLogicalExpression {
         @Override
         public String toString() {
             return "FALSE";
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return (obj instanceof IAlgebricksConstantValue) && ((IAlgebricksConstantValue) obj).isFalse();
+        }
+
+        @Override
+        public int hashCode() {
+            return Boolean.FALSE.hashCode();
         }
     });
     public static final ConstantExpression NULL = new ConstantExpression(new IAlgebricksConstantValue() {
@@ -111,6 +131,16 @@ public final class ConstantExpression extends AbstractLogicalExpression {
         public String toString() {
             return "NULL";
         }
+
+        @Override
+        public boolean equals(Object obj) {
+            return (obj instanceof IAlgebricksConstantValue) && ((IAlgebricksConstantValue) obj).isNull();
+        }
+
+        @Override
+        public int hashCode() {
+            return 0;
+        }
     });
     public static final ConstantExpression MISSING = new ConstantExpression(new IAlgebricksConstantValue() {
 
@@ -137,6 +167,16 @@ public final class ConstantExpression extends AbstractLogicalExpression {
         @Override
         public String toString() {
             return "MISSING";
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return (obj instanceof IAlgebricksConstantValue) && ((IAlgebricksConstantValue) obj).isMissing();
+        }
+
+        @Override
+        public int hashCode() {
+            return 0;
         }
     });
 

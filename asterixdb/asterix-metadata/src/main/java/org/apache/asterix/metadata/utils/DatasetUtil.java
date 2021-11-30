@@ -19,7 +19,6 @@
 package org.apache.asterix.metadata.utils;
 
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
-import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 
 import java.io.DataOutput;
 import java.util.ArrayList;
@@ -417,7 +416,7 @@ public class DatasetUtil {
                 metadataProvider.getStorageComponentProvider().getStorageManager(), primaryFileSplitProvider);
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec,
                 dataset.getPrimaryRecordDescriptor(metadataProvider), lowKeyFields, highKeyFields, true, true,
-                indexHelperFactory, false, false, null, searchCallbackFactory, null, null, false);
+                indexHelperFactory, false, false, null, searchCallbackFactory, null, null, false, null);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primaryPartitionConstraint);
         return primarySearchOp;

@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -59,6 +60,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -300,16 +302,19 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             return changedAndVarMap;
         }
 
-        /**
+        IAlgebricksConstantValue leftOuterMissingValue = ConstantExpression.MISSING.getValue();
+
+        /*
          * Apply the special join-based rewriting.
          */
-        Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> result = applySpecialFlattening(opRef, context);
+        Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> result =
+                applySpecialFlattening(opRef, context, leftOuterMissingValue);
         if (!result.first) {
-            /**
+            /*
              * If the special join-based rewriting does not apply, apply the general
              * rewriting which blindly inlines all NTSs.
              */
-            result = applyGeneralFlattening(opRef, context);
+            result = applyGeneralFlattening(opRef, context, leftOuterMissingValue);
         }
         LinkedHashMap<LogicalVariable, LogicalVariable> returnedMap = new LinkedHashMap<>();
         // Adds variable mappings from input operators.
@@ -359,7 +364,8 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
     }
 
     private Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> applyGeneralFlattening(
-            Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+            Mutable<ILogicalOperator> opRef, IOptimizationContext context,
+            IAlgebricksConstantValue leftOuterMissingValue) throws AlgebricksException {
         SubplanOperator subplanOp = (SubplanOperator) opRef.getValue();
         if (!SubplanFlatteningUtil.containsOperators(subplanOp, EnumSet.of(LogicalOperatorTag.DATASOURCESCAN,
                 LogicalOperatorTag.INNERJOIN, LogicalOperatorTag.LEFTOUTERJOIN))) {
@@ -437,8 +443,8 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         } else {
             joinExpr = joinPredicates.size() > 0 ? joinPredicates.get(0).getValue() : ConstantExpression.TRUE;
         }
-        LeftOuterJoinOperator leftOuterJoinOp =
-                new LeftOuterJoinOperator(new MutableObject<>(joinExpr), inputOpRef, rightInputOpRef);
+        LeftOuterJoinOperator leftOuterJoinOp = new LeftOuterJoinOperator(new MutableObject<>(joinExpr), inputOpRef,
+                rightInputOpRef, leftOuterMissingValue);
         leftOuterJoinOp.setSourceLocation(sourceLoc);
         OperatorManipulationUtil.computeTypeEnvironmentBottomUp(rightInputOp, context);
         context.computeAndSetTypeEnvironmentForOperator(leftOuterJoinOp);
@@ -481,7 +487,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             lowestAggregateRefInSubplan.getValue().getInputs().add(currentOpRef);
         }
 
-        // Adds a select operator into the nested plan for group-by to remove tuples with NULL on {@code assignVar},
+        // Adds a select operator into the nested plan for group-by to remove tuples with MISSING on {@code assignVar},
         // i.e., subplan input tuples that are filtered out within a subplan.
         VariableReferenceExpression assignVarRef = new VariableReferenceExpression(assignVar);
         assignVarRef.setSourceLocation(sourceLoc);
@@ -489,14 +495,15 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         List<Mutable<ILogicalExpression>> args = new ArrayList<>();
         args.add(filterVarExpr);
         List<Mutable<ILogicalExpression>> argsForNotFunction = new ArrayList<>();
-        ScalarFunctionCallExpression isMissingExpr =
-                new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_MISSING), args);
+        ScalarFunctionCallExpression isMissingExpr = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(OperatorPropertiesUtil.getIsMissingNullFunction(leftOuterMissingValue)),
+                args);
         isMissingExpr.setSourceLocation(sourceLoc);
         argsForNotFunction.add(new MutableObject<>(isMissingExpr));
         ScalarFunctionCallExpression notExpr = new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(BuiltinFunctions.NOT), argsForNotFunction);
         notExpr.setSourceLocation(sourceLoc);
-        SelectOperator selectOp = new SelectOperator(new MutableObject<>(notExpr), false, null);
+        SelectOperator selectOp = new SelectOperator(new MutableObject<>(notExpr));
         selectOp.setSourceLocation(sourceLoc);
         currentOpRef.getValue().getInputs().add(new MutableObject<>(selectOp));
 
@@ -524,7 +531,8 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
     }
 
     private Pair<Boolean, LinkedHashMap<LogicalVariable, LogicalVariable>> applySpecialFlattening(
-            Mutable<ILogicalOperator> opRef, IOptimizationContext context) throws AlgebricksException {
+            Mutable<ILogicalOperator> opRef, IOptimizationContext context,
+            IAlgebricksConstantValue leftOuterMissingValue) throws AlgebricksException {
         SubplanOperator subplanOp = (SubplanOperator) opRef.getValue();
         SourceLocation sourceLoc = subplanOp.getSourceLocation();
         Mutable<ILogicalOperator> inputOpRef = subplanOp.getInputs().get(0);
@@ -554,8 +562,8 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         Set<LogicalVariable> liveVars = new HashSet<>();
         VariableUtilities.getLiveVariables(inputOp, liveVars);
 
-        Pair<Set<LogicalVariable>, Mutable<ILogicalOperator>> notNullVarsAndTopJoinRef =
-                SubplanFlatteningUtil.inlineLeftNtsInSubplanJoin(subplanOp, context, newPrimaryKeyFd);
+        Pair<Set<LogicalVariable>, Mutable<ILogicalOperator>> notNullVarsAndTopJoinRef = SubplanFlatteningUtil
+                .inlineLeftNtsInSubplanJoin(subplanOp, context, newPrimaryKeyFd, leftOuterMissingValue);
         if (notNullVarsAndTopJoinRef.first == null) {
             inputOpRef.setValue(inputOpBackup);
             return new Pair<>(false, replacedVarMap);
@@ -588,7 +596,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
         groupbyOp.getInputs().add(new MutableObject<>(topJoinRef.getValue()));
 
         if (!notNullVars.isEmpty()) {
-            // Adds a select operator into the nested plan for group-by to remove tuples with NULL on {@code assignVar},
+            // Adds a select operator into the nested plan for group-by to remove tuples with MISSING on {@code assignVar},
             // i.e., subplan input tuples that are filtered out within a subplan.
             List<Mutable<ILogicalExpression>> nullCheckExprRefs = new ArrayList<>();
             for (LogicalVariable notNullVar : notNullVars) {
@@ -598,8 +606,8 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
                 List<Mutable<ILogicalExpression>> args = new ArrayList<>();
                 args.add(filterVarExpr);
                 List<Mutable<ILogicalExpression>> argsForNotFunction = new ArrayList<>();
-                ScalarFunctionCallExpression isMissingExpr = new ScalarFunctionCallExpression(
-                        FunctionUtil.getFunctionInfo(BuiltinFunctions.IS_MISSING), args);
+                ScalarFunctionCallExpression isMissingExpr = new ScalarFunctionCallExpression(FunctionUtil
+                        .getFunctionInfo(OperatorPropertiesUtil.getIsMissingNullFunction(leftOuterMissingValue)), args);
                 isMissingExpr.setSourceLocation(sourceLoc);
                 argsForNotFunction.add(new MutableObject<>(isMissingExpr));
                 ScalarFunctionCallExpression notExpr = new ScalarFunctionCallExpression(
@@ -616,7 +624,7 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             } else {
                 selectExprRef = nullCheckExprRefs.get(0);
             }
-            SelectOperator selectOp = new SelectOperator(selectExprRef, false, null);
+            SelectOperator selectOp = new SelectOperator(selectExprRef);
             selectOp.setSourceLocation(sourceLoc);
             topJoinRef.setValue(selectOp);
             NestedTupleSourceOperator ntsOp = new NestedTupleSourceOperator(new MutableObject<>(groupbyOp));

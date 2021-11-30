@@ -1,0 +1,13 @@
+{ "id": 1, "pi": 1, "ai": 1 }
+{ "id": 2, "pi": 1, "ai": 1 }
+{ "id": 2, "pi": 2, "ai": 2 }
+{ "id": 3, "pi": null, "ai": null }
+{ "id": 4, "pi": null, "ai": null }
+{ "id": 5, "pi": null, "ai": null }
+{ "id": 6, "pi": 1, "ai": 1 }
+{ "id": 6, "pi": 2, "ai": 2 }
+{ "id": 6, "pi": 3, "ai": 3 }
+{ "id": 7, "pi": 2 }
+{ "id": 7, "pi": 3, "ai": null }
+{ "id": 7, "pi": 1, "ai": 1 }
+{ "id": 7, "pi": 4, "ai": 4 }

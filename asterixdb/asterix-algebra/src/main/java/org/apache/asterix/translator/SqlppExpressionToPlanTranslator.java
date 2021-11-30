@@ -112,6 +112,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
@@ -347,7 +348,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         if (joinClause.getJoinType() == JoinType.INNER) {
             Mutable<ILogicalOperator> rightInputRef = uncorrelatedRightBranchStack.peek();
             Pair<ILogicalOperator, LogicalVariable> rightBranch =
-                    generateUnnestForBinaryCorrelateRightBranch(joinClause, rightInputRef, true);
+                    generateUnnestForBinaryCorrelateRightBranch(joinClause, rightInputRef, false, null);
             // A join operator with condition TRUE.
             AbstractBinaryJoinOperator joinOperator = new InnerJoinOperator(
                     new MutableObject<>(ConstantExpression.TRUE), leftInputRef, new MutableObject<>(rightBranch.first));
@@ -357,7 +358,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             // Add an additional filter operator.
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair =
                     langExprToAlgExpression(joinClause.getConditionExpression(), joinOpRef);
-            SelectOperator filter = new SelectOperator(new MutableObject<>(conditionExprOpPair.first), false, null);
+            SelectOperator filter = new SelectOperator(new MutableObject<>(conditionExprOpPair.first));
             filter.getInputs().add(conditionExprOpPair.second);
             filter.setSourceLocation(conditionExprOpPair.first.getSourceLocation());
             return new Pair<>(filter, rightBranch.second);
@@ -375,13 +376,13 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
 
             // Adds an unnest operator to unnest to right expression.
             Pair<ILogicalOperator, LogicalVariable> rightBranch =
-                    generateUnnestForBinaryCorrelateRightBranch(joinClause, ntsRef, true);
+                    generateUnnestForBinaryCorrelateRightBranch(joinClause, ntsRef, false, null);
             AbstractUnnestNonMapOperator rightUnnestOp = (AbstractUnnestNonMapOperator) rightBranch.first;
 
             // Adds an additional filter operator for the join condition.
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> conditionExprOpPair =
                     langExprToAlgExpression(joinClause.getConditionExpression(), new MutableObject<>(rightUnnestOp));
-            SelectOperator filter = new SelectOperator(new MutableObject<>(conditionExprOpPair.first), false, null);
+            SelectOperator filter = new SelectOperator(new MutableObject<>(conditionExprOpPair.first));
             filter.getInputs().add(conditionExprOpPair.second);
             filter.setSourceLocation(conditionExprOpPair.first.getSourceLocation());
 
@@ -448,7 +449,8 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> pUnnestExpr =
                     makeUnnestExpression(aggVarRefExpr, new MutableObject<>(subplanOp));
             LeftOuterUnnestOperator outerUnnestOp =
-                    new LeftOuterUnnestOperator(outerUnnestVar, new MutableObject<>(pUnnestExpr.first));
+                    new LeftOuterUnnestOperator(outerUnnestVar, new MutableObject<>(pUnnestExpr.first),
+                            translateLeftOuterMissingValue(joinClause.getOuterJoinMissingValueType()));
             outerUnnestOp.getInputs().add(pUnnestExpr.second);
             outerUnnestOp.setSourceLocation(aggOp.getSourceLocation());
             currentTopOp = outerUnnestOp;
@@ -506,6 +508,18 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         }
     }
 
+    private static IAlgebricksConstantValue translateLeftOuterMissingValue(Literal.Type type)
+            throws CompilationException {
+        switch (type) {
+            case MISSING:
+                return ConstantExpression.MISSING.getValue();
+            case NULL:
+                return ConstantExpression.NULL.getValue();
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, String.valueOf(type));
+        }
+    }
+
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(NestClause nestClause, Mutable<ILogicalOperator> arg)
             throws CompilationException {
@@ -516,8 +530,9 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     @Override
     public Pair<ILogicalOperator, LogicalVariable> visit(UnnestClause unnestClause,
             Mutable<ILogicalOperator> inputOpRef) throws CompilationException {
-        return generateUnnestForBinaryCorrelateRightBranch(unnestClause, inputOpRef,
-                unnestClause.getUnnestType() == UnnestType.INNER);
+        boolean outerUnnest = unnestClause.getUnnestType() == UnnestType.LEFTOUTER;
+        return generateUnnestForBinaryCorrelateRightBranch(unnestClause, inputOpRef, outerUnnest,
+                outerUnnest ? translateLeftOuterMissingValue(unnestClause.getOuterUnnestMissingValueType()) : null);
     }
 
     @Override
@@ -525,14 +540,14 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             throws CompilationException {
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p =
                 langExprToAlgExpression(havingClause.getFilterExpression(), tupSource);
-        SelectOperator s = new SelectOperator(new MutableObject<>(p.first), false, null);
+        SelectOperator s = new SelectOperator(new MutableObject<>(p.first));
         s.getInputs().add(p.second);
         return new Pair<>(s, null);
     }
 
     private Pair<ILogicalOperator, LogicalVariable> generateUnnestForBinaryCorrelateRightBranch(
-            AbstractBinaryCorrelateClause binaryCorrelate, Mutable<ILogicalOperator> inputOpRef, boolean innerUnnest)
-            throws CompilationException {
+            AbstractBinaryCorrelateClause binaryCorrelate, Mutable<ILogicalOperator> inputOpRef, boolean outerUnnest,
+            IAlgebricksConstantValue outerUnnestMissingValue) throws CompilationException {
         LogicalVariable rightVar = context.newVarFromExpression(binaryCorrelate.getRightVariable());
         Expression rightExpr = binaryCorrelate.getRightExpression();
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> eo = langExprToAlgExpression(rightExpr, inputOpRef);
@@ -541,13 +556,15 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         if (binaryCorrelate.hasPositionalVariable()) {
             LogicalVariable pVar = context.newVarFromExpression(binaryCorrelate.getPositionalVariable());
             // We set the positional variable type as BIGINT type.
-            unnestOp = innerUnnest
-                    ? new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first), pVar, BuiltinType.AINT64)
-                    : new LeftOuterUnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first), pVar,
-                            BuiltinType.AINT64);
+            unnestOp = outerUnnest
+                    ? new LeftOuterUnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first), pVar,
+                            BuiltinType.AINT64, outerUnnestMissingValue)
+                    : new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first), pVar, BuiltinType.AINT64);
         } else {
-            unnestOp = innerUnnest ? new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first))
-                    : new LeftOuterUnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first));
+            unnestOp = outerUnnest
+                    ? new LeftOuterUnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first),
+                            outerUnnestMissingValue)
+                    : new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first));
         }
         unnestOp.getInputs().add(pUnnestExpr.second);
         unnestOp.setSourceLocation(binaryCorrelate.getRightVariable().getSourceLocation());

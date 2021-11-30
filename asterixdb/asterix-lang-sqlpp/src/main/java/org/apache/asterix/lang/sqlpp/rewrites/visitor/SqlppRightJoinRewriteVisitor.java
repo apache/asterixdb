@@ -32,6 +32,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
@@ -161,9 +162,10 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
                 VariableExpr rightVar = joinClause.getRightVariable();
                 VariableExpr rightPosVar = joinClause.getPositionalVariable();
                 Expression condExpr = joinClause.getConditionExpression();
+                Literal.Type outerMissingValueType = joinClause.getOuterJoinMissingValueType();
                 if (i == 0) {
-                    JoinClause newJoinClause =
-                            new JoinClause(JoinType.LEFTOUTER, fromExpr, fromVar, fromPosVar, condExpr);
+                    JoinClause newJoinClause = new JoinClause(JoinType.LEFTOUTER, fromExpr, fromVar, fromPosVar,
+                            condExpr, outerMissingValueType);
                     newJoinClause.setSourceLocation(joinClauseSourceLoc);
 
                     fromExpr = rightExpr;
@@ -249,7 +251,7 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
                                                 ? newVariableExpr(newPrecedingClauseRightPosVar,
                                                         precedingClauseRightPosVarSourceLoc)
                                                 : null,
-                                        newCondExpr);
+                                        newCondExpr, joinPrecedingClause.getOuterJoinMissingValueType());
                                 newPrecedingClause.setSourceLocation(precedingClauseSourceLoc);
                                 break;
                             case UNNEST_CLAUSE:
@@ -260,10 +262,10 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
                                 newPrecedingClause = new UnnestClause(unnestPrecedingClause.getUnnestType(),
                                         newRightExpr,
                                         newVariableExpr(newPrecedingClauseRightVar, precedingClauseRightVarSourceLoc),
-                                        newPrecedingClauseRightPosVar != null
-                                                ? newVariableExpr(newPrecedingClauseRightPosVar,
-                                                        precedingClauseRightPosVarSourceLoc)
-                                                : null);
+                                        newPrecedingClauseRightPosVar != null ? newVariableExpr(
+                                                newPrecedingClauseRightPosVar, precedingClauseRightPosVarSourceLoc)
+                                                : null,
+                                        unnestPrecedingClause.getOuterUnnestMissingValueType());
                                 newPrecedingClause.setSourceLocation(precedingClauseSourceLoc);
                                 break;
                             default:
@@ -291,8 +293,8 @@ public final class SqlppRightJoinRewriteVisitor extends AbstractSqlppSimpleExpre
                     Expression newCondExpr = SqlppRewriteUtil.substituteExpression(
                             (Expression) SqlppRewriteUtil.deepCopy(condExpr), substMapOuterFinal, context);
 
-                    JoinClause newJoinClause =
-                            new JoinClause(JoinType.LEFTOUTER, newRightExpr, newRightVarExpr, null, newCondExpr);
+                    JoinClause newJoinClause = new JoinClause(JoinType.LEFTOUTER, newRightExpr, newRightVarExpr, null,
+                            newCondExpr, outerMissingValueType);
                     newJoinClause.setSourceLocation(joinClauseSourceLoc);
 
                     fromExpr = rightExpr;

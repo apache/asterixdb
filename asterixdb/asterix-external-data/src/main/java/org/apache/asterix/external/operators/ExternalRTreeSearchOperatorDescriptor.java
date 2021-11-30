@@ -41,7 +41,7 @@ public class ExternalRTreeSearchOperatorDescriptor extends RTreeSearchOperatorDe
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, int version) {
         super(spec, outRecDesc, keyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput,
                 retainMissing, missingWriterFactory, searchCallbackFactory, minFilterFieldIndexes,
-                maxFilterFieldIndexes, false);
+                maxFilterFieldIndexes, false, null);
         this.version = version;
     }
 

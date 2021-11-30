@@ -389,7 +389,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         LeftOuterJoinOperator opCopy =
                 new LeftOuterJoinOperator(exprDeepCopyVisitor.deepCopyExpressionReference(op.getCondition()),
                         deepCopyOperatorReference(op.getInputs().get(0), arg),
-                        deepCopyOperatorReference(op.getInputs().get(1), arg));
+                        deepCopyOperatorReference(op.getInputs().get(1), arg), op.getMissingValue());
         copyAnnotations(op, opCopy);
         copySourceLocation(op, opCopy);
         opCopy.setExecutionMode(op.getExecutionMode());
@@ -474,7 +474,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     @Override
     public ILogicalOperator visitSelectOperator(SelectOperator op, ILogicalOperator arg) throws AlgebricksException {
         SelectOperator opCopy = new SelectOperator(exprDeepCopyVisitor.deepCopyExpressionReference(op.getCondition()),
-                op.getRetainMissing(), deepCopyVariable(op.getMissingPlaceholderVariable()));
+                op.getRetainMissingAsValue(), deepCopyVariable(op.getMissingPlaceholderVariable()));
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
@@ -544,7 +544,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         LeftOuterUnnestMapOperator opCopy = new LeftOuterUnnestMapOperator(deepCopyVariableList(op.getVariables()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()), op.getVariableTypes(),
-                op.propagatesInput());
+                op.getMissingValue());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
@@ -590,7 +590,7 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         LeftOuterUnnestOperator opCopy = new LeftOuterUnnestOperator(deepCopyVariable(op.getVariable()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()),
-                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType());
+                deepCopyVariable(op.getPositionalVariable()), op.getPositionalVariableType(), op.getMissingValue());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

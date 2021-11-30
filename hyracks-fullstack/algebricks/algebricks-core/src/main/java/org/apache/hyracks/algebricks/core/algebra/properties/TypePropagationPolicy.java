@@ -32,7 +32,9 @@ public abstract class TypePropagationPolicy {
         @Override
         public Object getVarType(LogicalVariable var, IMissableTypeComputer ntc,
                 List<LogicalVariable> nonMissableVariableList,
-                List<List<LogicalVariable>> correlatedMissableVariableLists, ITypeEnvPointer... typeEnvs)
+                List<List<LogicalVariable>> correlatedMissableVariableLists,
+                List<LogicalVariable> nonNullableVariableList,
+                List<List<LogicalVariable>> correlatedNullableVariableLists, ITypeEnvPointer... typeEnvs)
                 throws AlgebricksException {
             for (ITypeEnvPointer p : typeEnvs) {
                 IVariableTypeEnvironment env = p.getTypeEnv();
@@ -40,67 +42,22 @@ public abstract class TypePropagationPolicy {
                     throw new AlgebricksException(
                             "Null environment for pointer " + p + " in getVarType for var=" + var);
                 }
-                Object t = env.getVarType(var, nonMissableVariableList, correlatedMissableVariableLists);
+                Object t = env.getVarType(var, nonMissableVariableList, correlatedMissableVariableLists,
+                        nonNullableVariableList, correlatedNullableVariableLists);
                 if (t != null) {
-                    if (ntc != null && ntc.canBeMissing(t)) {
-                        for (List<LogicalVariable> list : correlatedMissableVariableLists) {
-                            if (list.contains(var)) {
-                                for (LogicalVariable v : list) {
-                                    if (nonMissableVariableList.contains(v)) {
-                                        return ntc.getNonOptionalType(t);
-                                    }
-                                }
-                            }
-                        }
+                    boolean makeNonMissable = !nonMissableVariableList.isEmpty() && ntc.canBeMissing(t)
+                            && nonMissableVariableList.contains(var);
+                    boolean makeNonNullable = !nonNullableVariableList.isEmpty() && ntc.canBeNull(t)
+                            && nonNullableVariableList.contains(var);
+                    if (makeNonMissable && makeNonNullable) {
+                        return ntc.getNonOptionalType(t);
+                    } else if (makeNonMissable) {
+                        return ntc.getNonMissableType(t);
+                    } else if (makeNonNullable) {
+                        return ntc.getNonNullableType(t);
+                    } else {
+                        return t;
                     }
-                    return t;
-                }
-            }
-            return null;
-        }
-    };
-
-    public static final TypePropagationPolicy LEFT_OUTER = new TypePropagationPolicy() {
-
-        @Override
-        public Object getVarType(LogicalVariable var, IMissableTypeComputer ntc,
-                List<LogicalVariable> nonMissableVariableList,
-                List<List<LogicalVariable>> correlatedMissableVariableLists, ITypeEnvPointer... typeEnvs)
-                throws AlgebricksException {
-            int n = typeEnvs.length;
-            // Searches from the inner branch to the outer branch.
-            // TODO(buyingyi): A split operator could lead to the case that the type for a variable could be
-            // found in both inner and outer branches. Fix computeOutputTypeEnvironment() in ProjectOperator
-            // and investigate why many test queries fail if only live variables' types are propagated.
-            for (int i = n - 1; i >= 0; i--) {
-                Object t = typeEnvs[i].getTypeEnv().getVarType(var, nonMissableVariableList,
-                        correlatedMissableVariableLists);
-                if (t == null) {
-                    continue;
-                }
-                if (i == 0) { // outer branch
-                    return t;
-                }
-
-                // inner branch
-                boolean nonMissingVarIsProduced = false;
-                for (LogicalVariable v : nonMissableVariableList) {
-                    boolean toBreak = false;
-                    if (v == var) {
-                        nonMissingVarIsProduced = true;
-                        toBreak = true;
-                    } else if (typeEnvs[i].getTypeEnv().getVarType(v) != null) {
-                        nonMissingVarIsProduced = true;
-                        toBreak = true;
-                    }
-                    if (toBreak) {
-                        break;
-                    }
-                }
-                if (nonMissingVarIsProduced) {
-                    return t;
-                } else {
-                    return ntc.makeMissableType(t);
                 }
             }
             return null;
@@ -109,5 +66,6 @@ public abstract class TypePropagationPolicy {
 
     public abstract Object getVarType(LogicalVariable var, IMissableTypeComputer ntc,
             List<LogicalVariable> nonMissableVariableList, List<List<LogicalVariable>> correlatedMissableVariableLists,
+            List<LogicalVariable> nonNullableVariableList, List<List<LogicalVariable>> correlatedNullableVariableLists,
             ITypeEnvPointer... typeEnvs) throws AlgebricksException;
 }

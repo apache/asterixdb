@@ -22,17 +22,26 @@ import java.util.Iterator;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
-import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
+/**
+ * NOTE: This rule is currently not used
+ *
+ */
 public class IntroduceLeftOuterJoinForSubplanRule implements IAlgebraicRewriteRule {
 
     @Override
@@ -65,7 +74,7 @@ public class IntroduceLeftOuterJoinForSubplanRule implements IAlgebraicRewriteRu
         AbstractLogicalOperator op1 = (AbstractLogicalOperator) subplanRoot.getValue();
         Mutable<ILogicalOperator> opUnder = subplan.getInputs().get(0);
 
-        if (OperatorPropertiesUtil.isMissingTest((AbstractLogicalOperator) opUnder.getValue())) {
+        if (isMissingTest((AbstractLogicalOperator) opUnder.getValue())) {
             return false;
         }
 
@@ -87,7 +96,8 @@ public class IntroduceLeftOuterJoinForSubplanRule implements IAlgebraicRewriteRu
                     }
                 }
                 ntsRef.setValue(opUnder.getValue());
-                LeftOuterJoinOperator loj = new LeftOuterJoinOperator(join.getCondition());
+                LeftOuterJoinOperator loj =
+                        new LeftOuterJoinOperator(join.getCondition(), ConstantExpression.MISSING.getValue());
                 loj.setSourceLocation(join.getSourceLocation());
                 loj.getInputs().add(leftRef);
                 loj.getInputs().add(rightRef);
@@ -124,4 +134,30 @@ public class IntroduceLeftOuterJoinForSubplanRule implements IAlgebraicRewriteRu
         return getNtsAtEndOfPipeline(op.getInputs().get(0));
     }
 
+    public static boolean isMissingTest(AbstractLogicalOperator op) {
+        if (op.getOperatorTag() != LogicalOperatorTag.SELECT) {
+            return false;
+        }
+        AbstractLogicalOperator doubleUnder = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+        if (doubleUnder.getOperatorTag() != LogicalOperatorTag.NESTEDTUPLESOURCE) {
+            return false;
+        }
+        ILogicalExpression eu = ((SelectOperator) op).getCondition().getValue();
+        if (eu.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        AbstractFunctionCallExpression f1 = (AbstractFunctionCallExpression) eu;
+        if (!f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
+            return false;
+        }
+        ILogicalExpression a1 = f1.getArguments().get(0).getValue();
+        if (!a1.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
+            return false;
+        }
+        AbstractFunctionCallExpression f2 = (AbstractFunctionCallExpression) a1;
+        if (!f2.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.IS_MISSING)) {
+            return false;
+        }
+        return true;
+    }
 }

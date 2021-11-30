@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.runningaggregates.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.runningaggregates.base.AbstractRunningAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
@@ -60,7 +61,7 @@ public final class WinMarkFirstMissingRunningAggregateDescriptor
                 for (int i = 0; i < args.length; i++) {
                     evals[i] = args[i].createScalarEvaluator(ctx);
                 }
-                return new WinMarkFirstMissingRunningAggregateEvaluator(evals);
+                return new WinMarkFirstUnknownRunningAggregateEvaluator(ATypeTag.MISSING, evals);
             }
         };
     }

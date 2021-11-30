@@ -82,9 +82,10 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
         int[] secondaryHighKeyFields = { 1 };
 
         // search secondary index
-        BTreeSearchOperatorDescriptor secondaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
-                DataSetConstants.secondaryRecDesc, secondaryLowKeyFields, secondaryHighKeyFields, true, true,
-                secondaryHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null, false);
+        BTreeSearchOperatorDescriptor secondaryBtreeSearchOp =
+                new BTreeSearchOperatorDescriptor(spec, DataSetConstants.secondaryRecDesc, secondaryLowKeyFields,
+                        secondaryHighKeyFields, true, true, secondaryHelperFactory, false, false, null,
+                        NoOpOperationCallbackFactory.INSTANCE, null, null, false, null);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeSearchOp, NC1_ID);
 
@@ -94,9 +95,10 @@ public class BTreeSecondaryIndexUpsertOperatorTest extends AbstractBTreeOperator
         int[] primaryHighKeyFields = { 1 };
 
         // search primary index
-        BTreeSearchOperatorDescriptor primaryBtreeSearchOp = new BTreeSearchOperatorDescriptor(spec,
-                DataSetConstants.primaryRecDesc, primaryLowKeyFields, primaryHighKeyFields, true, true,
-                primaryHelperFactory, false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null, false);
+        BTreeSearchOperatorDescriptor primaryBtreeSearchOp =
+                new BTreeSearchOperatorDescriptor(spec, DataSetConstants.primaryRecDesc, primaryLowKeyFields,
+                        primaryHighKeyFields, true, true, primaryHelperFactory, false, false, null,
+                        NoOpOperationCallbackFactory.INSTANCE, null, null, false, null);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeSearchOp, NC1_ID);
 
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });

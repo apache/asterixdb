@@ -69,6 +69,8 @@ public interface IDataFormat {
 
     public IMissingWriterFactory getMissingWriterFactory();
 
+    public IMissingWriterFactory getNullWriterFactory();
+
     public IUnnestingPositionWriterFactory getUnnestingPositionWriterFactory();
 
     public Triple<IScalarEvaluatorFactory, ScalarFunctionCallExpression, IAType> partitioningEvaluatorFactory(

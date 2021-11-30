@@ -60,6 +60,7 @@ public class JobGenContext {
     private final ITypeTraitProvider typeTraitProvider;
     private final IMetadataProvider<?, ?> metadataProvider;
     private final IMissingWriterFactory missingWriterFactory;
+    private final IMissingWriterFactory nullWriterFactory;
     private final IUnnestingPositionWriterFactory unnestingPositionWriterFactory;
     private final INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider;
     private final Object appContext;
@@ -85,7 +86,8 @@ public class JobGenContext {
             IBinaryComparatorFactoryProvider comparatorFactoryProvider, ITypeTraitProvider typeTraitProvider,
             IBinaryBooleanInspectorFactory booleanInspectorFactory,
             IBinaryIntegerInspectorFactory integerInspectorFactory, IPrinterFactoryProvider printerFactoryProvider,
-            IMissingWriterFactory missingWriterFactory, IUnnestingPositionWriterFactory unnestingPositionWriterFactory,
+            IMissingWriterFactory missingWriterFactory, IMissingWriterFactory nullWriterFactory,
+            IUnnestingPositionWriterFactory unnestingPositionWriterFactory,
             INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider,
             IExpressionRuntimeProvider expressionRuntimeProvider, IExpressionTypeComputer expressionTypeComputer,
             ITypingContext typingContext, IExpressionEvalSizeComputer expressionEvalSizeComputer,
@@ -107,6 +109,7 @@ public class JobGenContext {
         this.clusterLocations = clusterLocations;
         this.normalizedKeyComputerFactoryProvider = normalizedKeyComputerFactoryProvider;
         this.missingWriterFactory = missingWriterFactory;
+        this.nullWriterFactory = nullWriterFactory;
         this.unnestingPositionWriterFactory = unnestingPositionWriterFactory;
         this.expressionRuntimeProvider = expressionRuntimeProvider;
         this.expressionTypeComputer = expressionTypeComputer;
@@ -197,6 +200,10 @@ public class JobGenContext {
 
     public IMissingWriterFactory getMissingWriterFactory() {
         return missingWriterFactory;
+    }
+
+    public IMissingWriterFactory getNullWriterFactory() {
+        return nullWriterFactory;
     }
 
     public IUnnestingPositionWriterFactory getUnnestingPositionWriterFactory() {

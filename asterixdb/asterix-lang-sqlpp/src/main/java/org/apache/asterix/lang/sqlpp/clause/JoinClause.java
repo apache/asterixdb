@@ -19,8 +19,11 @@
 
 package org.apache.asterix.lang.sqlpp.clause;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.lang.sqlpp.optype.JoinType;
@@ -30,10 +33,21 @@ public class JoinClause extends AbstractBinaryCorrelateWithConditionClause {
 
     private final JoinType joinType;
 
+    private Literal.Type outerJoinMissingValueType;
+
     public JoinClause(JoinType joinType, Expression rightExpr, VariableExpr rightVar, VariableExpr rightPosVar,
-            Expression conditionExpr) {
+            Expression conditionExpr, Literal.Type outerJoinMissingValueType) {
         super(rightExpr, rightVar, rightPosVar, conditionExpr);
         this.joinType = joinType;
+        setOuterJoinMissingValueType(outerJoinMissingValueType);
+    }
+
+    public Literal.Type getOuterJoinMissingValueType() {
+        return outerJoinMissingValueType;
+    }
+
+    public void setOuterJoinMissingValueType(Literal.Type outerJoinMissingValueType) {
+        this.outerJoinMissingValueType = validateMissingValueType(joinType, outerJoinMissingValueType);
     }
 
     @Override
@@ -52,7 +66,8 @@ public class JoinClause extends AbstractBinaryCorrelateWithConditionClause {
 
     @Override
     public int hashCode() {
-        return 31 * super.hashCode() + joinType.hashCode();
+        return 31 * super.hashCode() + 31 * joinType.hashCode()
+                + (outerJoinMissingValueType != null ? outerJoinMissingValueType.hashCode() : 0);
     }
 
     @Override
@@ -64,6 +79,28 @@ public class JoinClause extends AbstractBinaryCorrelateWithConditionClause {
             return false;
         }
         JoinClause target = (JoinClause) object;
-        return super.equals(target) && joinType.equals(target.getJoinType());
+        return super.equals(target) && joinType.equals(target.getJoinType())
+                && Objects.equals(outerJoinMissingValueType, target.outerJoinMissingValueType);
+    }
+
+    private static Literal.Type validateMissingValueType(JoinType joinType, Literal.Type missingValueType) {
+        switch (joinType) {
+            case INNER:
+                if (missingValueType != null) {
+                    throw new IllegalArgumentException(String.valueOf(missingValueType));
+                }
+                return null;
+            case LEFTOUTER:
+            case RIGHTOUTER:
+                switch (Objects.requireNonNull(missingValueType)) {
+                    case MISSING:
+                    case NULL:
+                        return missingValueType;
+                    default:
+                        throw new IllegalArgumentException(String.valueOf(missingValueType));
+                }
+            default:
+                throw new IllegalStateException(String.valueOf(joinType));
+        }
     }
 }

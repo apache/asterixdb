@@ -439,7 +439,7 @@ public class TestNodeController {
                 storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
         BTreeSearchOperatorDescriptor searchOpDesc = new BTreeSearchOperatorDescriptor(spec, primaryIndexInfo.rDesc,
                 null, null, true, true, indexDataflowHelperFactory, false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE, filterFields, filterFields, false);
+                NoOpOperationCallbackFactory.INSTANCE, filterFields, filterFields, false, null);
         BTreeSearchOperatorNodePushable searchOp =
                 searchOpDesc.createPushRuntime(ctx, primaryIndexInfo.getSearchRecordDescriptorProvider(),
                         ctx.getTaskAttemptId().getTaskId().getPartition(), 1);

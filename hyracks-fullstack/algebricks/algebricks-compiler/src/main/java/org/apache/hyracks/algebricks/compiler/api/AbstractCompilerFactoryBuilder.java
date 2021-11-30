@@ -66,6 +66,7 @@ public abstract class AbstractCompilerFactoryBuilder {
     protected IConflictingTypeResolver conflictingTypeResolver;
     protected IExpressionEvalSizeComputer expressionEvalSizeComputer;
     protected IMissingWriterFactory missingWriterFactory;
+    protected IMissingWriterFactory nullWriterFactory;
     protected IUnnestingPositionWriterFactory unnestingPositionWriterFactory;
     protected INormalizedKeyComputerFactoryProvider normalizedKeyComputerFactoryProvider;
     protected IPartialAggregationTypeComputer partialAggregationTypeComputer;
@@ -187,6 +188,14 @@ public abstract class AbstractCompilerFactoryBuilder {
 
     public IMissingWriterFactory getMissingWriterFactory() {
         return missingWriterFactory;
+    }
+
+    public void setNullWriterFactory(IMissingWriterFactory nullWriterFactory) {
+        this.nullWriterFactory = nullWriterFactory;
+    }
+
+    public IMissingWriterFactory getNullWriterFactory() {
+        return nullWriterFactory;
     }
 
     public void setUnnestingPositionWriterFactory(IUnnestingPositionWriterFactory unnestingPositionWriterFactory) {

@@ -34,13 +34,15 @@ import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public final class WinMarkFirstMissingRunningAggregateEvaluator implements IWindowAggregateEvaluator {
+public final class WinMarkFirstUnknownRunningAggregateEvaluator implements IWindowAggregateEvaluator {
 
     @SuppressWarnings({ "rawtypes" })
     private final ISerializerDeserializer boolSerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     private final IScalarEvaluator[] argEvals;
+
+    private final byte unknownTypeTag;
 
     private final TaggedValuePointable argValue;
 
@@ -50,10 +52,11 @@ public final class WinMarkFirstMissingRunningAggregateEvaluator implements IWind
 
     private boolean first;
 
-    private boolean firstAllMissing;
+    private boolean firstAllUnknown;
 
-    WinMarkFirstMissingRunningAggregateEvaluator(IScalarEvaluator[] argEvals) {
+    WinMarkFirstUnknownRunningAggregateEvaluator(ATypeTag unknownTypeTag, IScalarEvaluator[] argEvals) {
         this.argEvals = argEvals;
+        this.unknownTypeTag = unknownTypeTag.serialize();
         argValue = TaggedValuePointable.FACTORY.createPointable();
     }
 
@@ -76,19 +79,19 @@ public final class WinMarkFirstMissingRunningAggregateEvaluator implements IWind
 
     private boolean compute(IFrameTupleReference tuple) throws HyracksDataException {
         if (first) {
-            firstAllMissing = everyArgIsMissing(tuple);
+            firstAllUnknown = everyArgIsUnknown(tuple);
             first = false;
             return true;
         } else {
-            boolean thisAllMissing = firstAllMissing || everyArgIsMissing(tuple);
+            boolean thisAllMissing = firstAllUnknown || everyArgIsUnknown(tuple);
             return !thisAllMissing;
         }
     }
 
-    private boolean everyArgIsMissing(IFrameTupleReference tuple) throws HyracksDataException {
+    private boolean everyArgIsUnknown(IFrameTupleReference tuple) throws HyracksDataException {
         for (IScalarEvaluator argEval : argEvals) {
             argEval.evaluate(tuple, argValue);
-            if (argValue.getTag() != ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
+            if (argValue.getTag() != unknownTypeTag) {
                 return false;
             }
         }

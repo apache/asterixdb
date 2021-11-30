@@ -225,6 +225,9 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         LeftOuterJoinOperator joinOpArg = (LeftOuterJoinOperator) copyAndSubstituteVar(op, arg);
+        if (!op.getMissingValue().equals(joinOpArg.getMissingValue())) {
+            return Boolean.FALSE;
+        }
         boolean isomorphic = op.getCondition().getValue().equals(joinOpArg.getCondition().getValue());
         return isomorphic;
     }
@@ -448,6 +451,10 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         }
         LeftOuterUnnestMapOperator loUnnestOpArg = (LeftOuterUnnestMapOperator) copyAndSubstituteVar(op, arg);
         boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getVariables(), loUnnestOpArg.getVariables());
+        if (!isomorphic) {
+            return Boolean.FALSE;
+        }
+        isomorphic = op.getMissingValue().equals(loUnnestOpArg.getMissingValue());
         if (!isomorphic) {
             return Boolean.FALSE;
         }
@@ -815,6 +822,10 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         LeftOuterUnnestOperator unnestOpArg = (LeftOuterUnnestOperator) copyAndSubstituteVar(op, arg);
         boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getVariables(), unnestOpArg.getVariables())
                 && variableEqual(op.getPositionalVariable(), unnestOpArg.getPositionalVariable());
+        if (!isomorphic) {
+            return Boolean.FALSE;
+        }
+        isomorphic = op.getMissingValue().equals(unnestOpArg.getMissingValue());
         if (!isomorphic) {
             return Boolean.FALSE;
         }

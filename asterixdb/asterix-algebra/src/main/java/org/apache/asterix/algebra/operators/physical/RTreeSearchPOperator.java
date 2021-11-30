@@ -42,10 +42,12 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 
 /**
  * Contributes the runtime operator for an unnest-map representing a RTree
@@ -82,6 +84,7 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
         int[] keyIndexes = getKeyIndexes(jobGenParams.getKeyVarList(), inputSchemas);
 
         boolean propagateIndexFilter = unnestMap.propagateIndexFilter();
+        IMissingWriterFactory nonFilterWriterFactory = getNonFilterWriterFactory(propagateIndexFilter, context);
         int[] minFilterFieldIndexes = getKeyIndexes(unnestMap.getMinFilterVars(), inputSchemas);
         int[] maxFilterFieldIndexes = getKeyIndexes(unnestMap.getMaxFilterVars(), inputSchemas);
 
@@ -93,15 +96,20 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
             outputVars = new ArrayList<LogicalVariable>();
             VariableUtilities.getLiveVariables(unnestMap, outputVars);
         }
-        boolean retainNull = false;
+        boolean retainMissing = false;
+        IMissingWriterFactory nonMatchWriterFactory = null;
         if (op.getOperatorTag() == LogicalOperatorTag.LEFT_OUTER_UNNEST_MAP) {
             // By nature, LEFT_OUTER_UNNEST_MAP should generate null values for non-matching tuples.
-            retainNull = true;
+            retainMissing = true;
+            nonMatchWriterFactory = getNonMatchWriterFactory(((LeftOuterUnnestMapOperator) unnestMap).getMissingValue(),
+                    context, unnestMap.getSourceLocation());
         }
-        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> rtreeSearch = mp.buildRtreeRuntime(
-                builder.getJobSpec(), outputVars, opSchema, typeEnv, context, jobGenParams.getRetainInput(), retainNull,
-                dataset, jobGenParams.getIndexName(), keyIndexes, propagateIndexFilter, minFilterFieldIndexes,
-                maxFilterFieldIndexes, unnestMap.getGenerateCallBackProceedResultVar());
+
+        Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> rtreeSearch =
+                mp.buildRtreeRuntime(builder.getJobSpec(), outputVars, opSchema, typeEnv, context,
+                        jobGenParams.getRetainInput(), retainMissing, nonMatchWriterFactory, dataset,
+                        jobGenParams.getIndexName(), keyIndexes, propagateIndexFilter, nonFilterWriterFactory,
+                        minFilterFieldIndexes, maxFilterFieldIndexes, unnestMap.getGenerateCallBackProceedResultVar());
         IOperatorDescriptor opDesc = rtreeSearch.first;
         opDesc.setSourceLocation(unnestMap.getSourceLocation());
 

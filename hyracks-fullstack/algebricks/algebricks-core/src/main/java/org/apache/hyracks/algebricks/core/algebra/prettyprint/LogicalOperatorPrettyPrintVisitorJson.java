@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
@@ -94,6 +95,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     private static final String EXPRESSIONS_FIELD = "expressions";
     private static final String EXPRESSION_FIELD = "expression";
     private static final String CONDITION_FIELD = "condition";
+    private static final String MISSING_VALUE_FIELD = "missing-value";
 
     private final Map<AbstractLogicalOperator, String> operatorIdentity = new HashMap<>();
     private final IdCounter idCounter = new IdCounter();
@@ -301,6 +303,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         try {
             jsonGenerator.writeStringField(OPERATOR_FIELD, "left-outer-join");
             writeStringFieldExpression(CONDITION_FIELD, op.getCondition(), indent);
+            if (op.getMissingValue().isNull()) {
+                writeNullField(MISSING_VALUE_FIELD);
+            }
             return null;
         } catch (IOException e) {
             throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
@@ -467,14 +472,21 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     @Override
     public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Void indent) throws AlgebricksException {
-        writeUnnestNonMapOperator(op, "outer-unnest", indent);
-        return null;
+        try {
+            writeUnnestNonMapOperator(op, "outer-unnest", indent);
+            if (op.getMissingValue().isNull()) {
+                writeNullField(MISSING_VALUE_FIELD);
+            }
+            return null;
+        } catch (IOException e) {
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
+        }
     }
 
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, Void indent) throws AlgebricksException {
         try {
-            writeUnnestMapOperator(op, indent, "unnest-map");
+            writeUnnestMapOperator(op, indent, "unnest-map", null);
             writeSelectLimitInformation(op.getSelectCondition(), op.getOutputLimit(), indent);
             return null;
         } catch (IOException e) {
@@ -484,7 +496,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     @Override
     public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void indent) throws AlgebricksException {
-        writeUnnestMapOperator(op, indent, "left-outer-unnest-map");
+        writeUnnestMapOperator(op, indent, "left-outer-unnest-map", op.getMissingValue());
         return null;
     }
 
@@ -782,8 +794,8 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         }
     }
 
-    private void writeUnnestMapOperator(AbstractUnnestMapOperator op, Void indent, String opName)
-            throws AlgebricksException {
+    private void writeUnnestMapOperator(AbstractUnnestMapOperator op, Void indent, String opName,
+            IAlgebricksConstantValue leftOuterMissingValue) throws AlgebricksException {
         try {
             jsonGenerator.writeStringField(OPERATOR_FIELD, opName);
             List<LogicalVariable> variables = op.getVariables();
@@ -792,6 +804,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             writeArrayFieldOfExpression(EXPRESSIONS_FIELD, op.getExpressionRef(), indent);
             writeFilterInformation(op.getMinFilterVars(), op.getMaxFilterVars());
+            if (leftOuterMissingValue != null && leftOuterMissingValue.isNull()) {
+                writeNullField(MISSING_VALUE_FIELD);
+            }
         } catch (IOException e) {
             throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
@@ -961,6 +976,13 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         jsonGenerator.writeObjectFieldStart(fieldName);
         writeArrayFieldOfExpressions(EXPRESSIONS_FIELD, exprs, indent);
         jsonGenerator.writeEndObject();
+    }
+
+    /////////////// other fields ///////////////
+
+    /** Writes "fieldName": null */
+    private void writeNullField(String fieldName) throws IOException {
+        jsonGenerator.writeNullField(fieldName);
     }
 
     private void flushContentToWriter() throws AlgebricksException {

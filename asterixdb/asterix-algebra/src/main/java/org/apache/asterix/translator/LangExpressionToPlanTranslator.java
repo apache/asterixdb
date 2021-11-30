@@ -1372,7 +1372,7 @@ abstract class LangExpressionToPlanTranslator
 
         switch (qe.getQuantifier()) {
             case SOME:
-                SelectOperator s = new SelectOperator(new MutableObject<>(eo2.first), false, null);
+                SelectOperator s = new SelectOperator(new MutableObject<>(eo2.first));
                 s.getInputs().add(eo2.second);
                 s.setSourceLocation(sourceLoc);
                 AggregateFunctionCallExpression fAgg = BuiltinFunctions
@@ -1400,7 +1400,7 @@ abstract class LangExpressionToPlanTranslator
                 ScalarFunctionCallExpression notExpr = new ScalarFunctionCallExpression(
                         BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.NOT), notArgs);
                 notExpr.setSourceLocation(sourceLoc);
-                s = new SelectOperator(new MutableObject<>(notExpr), false, null);
+                s = new SelectOperator(new MutableObject<>(notExpr));
                 s.getInputs().add(eo2.second);
                 s.setSourceLocation(sourceLoc);
                 fAgg = BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.EMPTY_STREAM,
@@ -1570,7 +1570,7 @@ abstract class LangExpressionToPlanTranslator
     public Pair<ILogicalOperator, LogicalVariable> visit(WhereClause w, Mutable<ILogicalOperator> tupSource)
             throws CompilationException {
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> p = langExprToAlgExpression(w.getWhereExpr(), tupSource);
-        SelectOperator s = new SelectOperator(new MutableObject<>(p.first), false, null);
+        SelectOperator s = new SelectOperator(new MutableObject<>(p.first));
         s.getInputs().add(p.second);
         s.setSourceLocation(w.getSourceLocation());
         return new Pair<>(s, null);
@@ -2024,7 +2024,7 @@ abstract class LangExpressionToPlanTranslator
         subplanOp.setSourceLocation(sourceLoc);
         NestedTupleSourceOperator ntsOp = new NestedTupleSourceOperator(new MutableObject<>(subplanOp));
         ntsOp.setSourceLocation(sourceLoc);
-        SelectOperator select = new SelectOperator(selectExpr, false, null);
+        SelectOperator select = new SelectOperator(selectExpr);
         // The select operator cannot be moved up and down, otherwise it will cause
         // typing issues (ASTERIXDB-1203).
         OperatorPropertiesUtil.markMovable(select, false);

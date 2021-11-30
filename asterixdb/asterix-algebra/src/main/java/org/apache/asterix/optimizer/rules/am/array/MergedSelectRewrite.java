@@ -84,7 +84,7 @@ public class MergedSelectRewrite implements IIntroduceAccessMethodRuleLocalRewri
 
             // Return a new plan that removes all SELECTs that were pushed up.
             SelectOperator newSelectOperator = new SelectOperator(new MutableObject<>(andCond),
-                    originalOperator.getRetainMissing(), originalOperator.getMissingPlaceholderVariable());
+                    originalOperator.getRetainMissingAsValue(), originalOperator.getMissingPlaceholderVariable());
             newSelectOperator.setSourceLocation(originalOperator.getSourceLocation());
             ILogicalPlan newSelectInputPlan = OperatorManipulationUtil
                     .deepCopy(new ALogicalPlanImpl(originalOperator.getInputs().get(0)), context);

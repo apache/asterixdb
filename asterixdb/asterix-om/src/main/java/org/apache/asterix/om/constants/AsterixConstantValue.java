@@ -22,6 +22,7 @@ import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 
 public class AsterixConstantValue implements IAlgebricksConstantValue {
@@ -63,15 +64,27 @@ public class AsterixConstantValue implements IAlgebricksConstantValue {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AsterixConstantValue)) {
+        if (o instanceof AsterixConstantValue) {
+            AsterixConstantValue v2 = (AsterixConstantValue) o;
+            return object.deepEqual(v2.getObject());
+        } else if (o instanceof IAlgebricksConstantValue) {
+            return o.equals(this);
+        } else {
             return false;
         }
-        AsterixConstantValue v2 = (AsterixConstantValue) o;
-        return object.deepEqual(v2.getObject());
     }
 
     @Override
     public int hashCode() {
-        return object.hash();
+        switch (object.getType().getTypeTag()) {
+            case MISSING:
+                return ConstantExpression.MISSING.hashCode();
+            case NULL:
+                return ConstantExpression.NULL.hashCode();
+            case BOOLEAN:
+                return (isTrue() ? ConstantExpression.TRUE : ConstantExpression.FALSE).hashCode();
+            default:
+                return object.hash();
+        }
     }
 }

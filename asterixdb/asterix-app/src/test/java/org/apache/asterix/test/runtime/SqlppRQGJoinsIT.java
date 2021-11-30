@@ -21,9 +21,13 @@ package org.apache.asterix.test.runtime;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.IntUnaryOperator;
 
+import org.apache.asterix.api.http.server.QueryServiceRequestParameters;
+import org.apache.asterix.testframework.xml.ParameterTypeEnum;
+import org.apache.asterix.testframework.xml.TestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -39,7 +43,9 @@ public class SqlppRQGJoinsIT extends SqlppRQGTestBase {
 
     private final String sqlppQuery;
 
-    private final String desc;
+    private final boolean sqlCompatMode;
+
+    private final String description;
 
     static final String PROJECT_FIELD = "unique1";
 
@@ -49,31 +55,34 @@ public class SqlppRQGJoinsIT extends SqlppRQGTestBase {
 
     static final char[] SHAPES = new char[] { 'c', 's', 'q' };
 
-    @Parameterized.Parameters(name = "SqlppRQGJoinsIT {index}: {3}")
+    @Parameterized.Parameters(name = "SqlppRQGJoinsIT {index}: {1}")
     public static Collection<Object[]> tests() {
         List<Object[]> testCases = new ArrayList<>();
 
         IntUnaryOperator filterComputer = i -> 2 * (i + 1);
 
+        boolean[] allSqlCompatModes = new boolean[] { false, true };
         String[] allJoinKinds = new String[] { "INNER", "LEFT", "RIGHT" };
         String[] queryJoinKinds = new String[3];
         int id = 0;
 
-        for (String jk0 : allJoinKinds) {
-            queryJoinKinds[0] = jk0;
-            TestQuery q1 = generateQuery(queryJoinKinds, 1, filterComputer, SHAPES[0]);
-            testCases.add(new Object[] { id++, q1.sqlQuery, q1.sqlppQuery, q1.summary });
+        for (boolean sqlCompatMode : allSqlCompatModes) {
+            for (String jk0 : allJoinKinds) {
+                queryJoinKinds[0] = jk0;
+                TestQuery q1 = generateQuery(queryJoinKinds, 1, filterComputer, SHAPES[0], sqlCompatMode);
+                addTestCase(testCases, id++, q1);
 
-            for (char s : SHAPES) {
-                for (String jk1 : allJoinKinds) {
-                    queryJoinKinds[1] = jk1;
-                    TestQuery q2 = generateQuery(queryJoinKinds, 2, filterComputer, s);
-                    testCases.add(new Object[] { id++, q2.sqlQuery, q2.sqlppQuery, q2.summary });
+                for (char s : SHAPES) {
+                    for (String jk1 : allJoinKinds) {
+                        queryJoinKinds[1] = jk1;
+                        TestQuery q2 = generateQuery(queryJoinKinds, 2, filterComputer, s, sqlCompatMode);
+                        addTestCase(testCases, id++, q2);
 
-                    for (String jk2 : allJoinKinds) {
-                        queryJoinKinds[2] = jk2;
-                        TestQuery q3 = generateQuery(queryJoinKinds, 3, filterComputer, s);
-                        testCases.add(new Object[] { id++, q3.sqlQuery, q3.sqlppQuery, q3.summary });
+                        for (String jk2 : allJoinKinds) {
+                            queryJoinKinds[2] = jk2;
+                            TestQuery q3 = generateQuery(queryJoinKinds, 3, filterComputer, s, sqlCompatMode);
+                            addTestCase(testCases, id++, q3);
+                        }
                     }
                 }
             }
@@ -83,7 +92,7 @@ public class SqlppRQGJoinsIT extends SqlppRQGTestBase {
     }
 
     private static TestQuery generateQuery(String[] joinKinds, int joinKindsSize, IntUnaryOperator filterComputer,
-            char shape) {
+            char shape, boolean sqlCompatMode) {
         int tCount = joinKindsSize + 1;
         List<String> tDefs = new ArrayList<>(tCount);
         for (int i = 0; i < tCount; i++) {
@@ -175,7 +184,7 @@ public class SqlppRQGJoinsIT extends SqlppRQGTestBase {
                 summary.append(joinKinds[i - 1]);
             }
             String projectFieldExprSql = String.format(fieldExprFormat, tThis, PROJECT_FIELD);
-            String projectFieldExprSqlpp = missing2Null(projectFieldExprSql);
+            String projectFieldExprSqlpp = sqlCompatMode ? projectFieldExprSql : missing2Null(projectFieldExprSql);
             String projectFieldAlias = String.format("%s_%s", tThis, PROJECT_FIELD);
             String projectFormat = "%s AS %s";
             selectClauseSql.append(String.format(projectFormat, projectFieldExprSql, projectFieldAlias));
@@ -188,22 +197,32 @@ public class SqlppRQGJoinsIT extends SqlppRQGTestBase {
             summary.append(';').append(shape);
         }
 
+        if (sqlCompatMode) {
+            summary.append(";sql-compat");
+        }
+
         String queryFormat = "SELECT %s %sORDER BY %s";
         String sqlQuery = String.format(queryFormat, selectClauseSql, fromClauseSql, orderbyClauseSql);
         String sqlppQuery = String.format(queryFormat, selectClauseSqlpp, fromClauseSqlpp, orderbyClauseSqlpp);
 
-        return new TestQuery(sqlQuery, sqlppQuery, summary.toString());
+        return new TestQuery(sqlQuery, sqlppQuery, sqlCompatMode, summary.toString());
     }
 
     private static String missing2Null(String expr) {
         return String.format("if_missing(%s, null)", expr);
     }
 
-    public SqlppRQGJoinsIT(int testcaseId, String sqlQuery, String sqlppQuery, String desc) {
+    private static void addTestCase(List<Object[]> testCases, int id, TestQuery q) {
+        testCases.add(new Object[] { id, q.summary, q.sqlQuery, q.sqlppQuery, q.sqlCompatMode });
+    }
+
+    public SqlppRQGJoinsIT(int testcaseId, String description, String sqlQuery, String sqlppQuery,
+            boolean sqlCompatMode) {
         this.testcaseId = testcaseId;
+        this.description = description;
         this.sqlQuery = sqlQuery;
         this.sqlppQuery = sqlppQuery;
-        this.desc = desc;
+        this.sqlCompatMode = sqlCompatMode;
     }
 
     @BeforeClass
@@ -218,17 +237,27 @@ public class SqlppRQGJoinsIT extends SqlppRQGTestBase {
 
     @Test
     public void test() throws Exception {
-        runTestCase(testcaseId, desc, sqlQuery, sqlppQuery);
+        List<TestCase.CompilationUnit.Parameter> params = null;
+        if (sqlCompatMode) {
+            TestCase.CompilationUnit.Parameter sqlCompatModeParam = new TestCase.CompilationUnit.Parameter();
+            sqlCompatModeParam.setName(QueryServiceRequestParameters.Parameter.SQL_COMPAT.str());
+            sqlCompatModeParam.setType(ParameterTypeEnum.JSON);
+            sqlCompatModeParam.setValue(String.valueOf(sqlCompatMode));
+            params = Collections.singletonList(sqlCompatModeParam);
+        }
+        runTestCase(testcaseId, description, sqlQuery, sqlppQuery, params);
     }
 
     private static class TestQuery {
         final String sqlQuery;
         final String sqlppQuery;
         final String summary;
+        boolean sqlCompatMode;
 
-        TestQuery(String sqlQuery, String sqlppQuery, String summary) {
+        TestQuery(String sqlQuery, String sqlppQuery, boolean sqlCompatMode, String summary) {
             this.sqlQuery = sqlQuery;
             this.sqlppQuery = sqlppQuery;
+            this.sqlCompatMode = sqlCompatMode;
             this.summary = summary;
         }
     }

@@ -28,6 +28,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.Literal;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
@@ -109,6 +110,7 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
             out.print(" AT ");
             joinClause.getPositionalVariable().accept(this, 0);
         }
+        out.print(Literal.Type.NULL.equals(joinClause.getOuterJoinMissingValueType()) ? "(OR NULL) " : "");
         out.println(skip(step + 1) + "ON");
         joinClause.getConditionExpression().accept(this, step + 1);
         return null;

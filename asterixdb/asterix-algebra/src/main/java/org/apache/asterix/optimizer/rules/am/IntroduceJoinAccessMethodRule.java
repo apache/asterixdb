@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -38,6 +39,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -389,6 +391,9 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                     // Applies the plan transformation using chosen index.
                     AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndex.first);
 
+                    IAlgebricksConstantValue leftOuterMissingValue =
+                            isLeftOuterJoin ? ((LeftOuterJoinOperator) joinOp).getMissingValue() : null;
+
                     // For a left outer join with a special GroupBy, prepare objects to reset LOJ's
                     // nullPlaceHolderVariable in that GroupBy's nested plan.
                     // See AccessMethodUtils#removeUnjoinedDuplicatesInLOJ() for a definition of a special GroupBy
@@ -396,14 +401,16 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                     boolean isLeftOuterJoinWithSpecialGroupBy;
                     if (isLeftOuterJoin && op.getOperatorTag() == LogicalOperatorTag.GROUP) {
                         GroupByOperator groupByOp = (GroupByOperator) opRef.getValue();
-                        ScalarFunctionCallExpression isNullFuncExpr =
-                                AccessMethodUtils.findLOJIsMissingFuncInGroupBy(groupByOp, rightSubTree);
+                        FunctionIdentifier isMissingNullFuncId = Objects
+                                .requireNonNull(OperatorPropertiesUtil.getIsMissingNullFunction(leftOuterMissingValue));
+                        ScalarFunctionCallExpression isMissingNullFuncExpr = AccessMethodUtils
+                                .findLOJIsMissingNullFuncInGroupBy(groupByOp, rightSubTree, isMissingNullFuncId);
                         // TODO:(dmitry) do we need additional checks to ensure that this is a special GroupBy,
                         // i.e. that this GroupBy will eliminate unjoined duplicates?
-                        isLeftOuterJoinWithSpecialGroupBy = isNullFuncExpr != null;
+                        isLeftOuterJoinWithSpecialGroupBy = isMissingNullFuncExpr != null;
                         if (isLeftOuterJoinWithSpecialGroupBy) {
                             analysisCtx.setLOJSpecialGroupByOpRef(opRef);
-                            analysisCtx.setLOJIsMissingFuncInSpecialGroupBy(isNullFuncExpr);
+                            analysisCtx.setLOJIsMissingNullFuncInSpecialGroupBy(isMissingNullFuncExpr);
                         }
                     } else {
                         isLeftOuterJoinWithSpecialGroupBy = false;
@@ -422,7 +429,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                     // Finally, tries to apply plan transformation using the chosen index.
                     boolean res = chosenIndex.first.applyJoinPlanTransformation(afterJoinRefs, joinRef, leftSubTree,
                             rightSubTree, chosenIndex.second, analysisCtx, context, isLeftOuterJoin,
-                            isLeftOuterJoinWithSpecialGroupBy);
+                            isLeftOuterJoinWithSpecialGroupBy, leftOuterMissingValue);
 
                     // If the plan transformation is successful, we don't need to traverse the plan
                     // any more, since if there are more JOIN operators, the next trigger on this plan

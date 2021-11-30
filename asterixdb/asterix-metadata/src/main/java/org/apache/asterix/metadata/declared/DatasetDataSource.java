@@ -132,10 +132,10 @@ public class DatasetDataSource extends DataSource {
 
                 int[] minFilterFieldIndexes = createFilterIndexes(minFilterVars, opSchema);
                 int[] maxFilterFieldIndexes = createFilterIndexes(maxFilterVars, opSchema);
-                return metadataProvider.buildBtreeRuntime(jobSpec, opSchema, typeEnv, context, true, false,
+                return metadataProvider.buildBtreeRuntime(jobSpec, opSchema, typeEnv, context, true, false, null,
                         ((DatasetDataSource) dataSource).getDataset(), primaryIndex.getIndexName(), null, null, true,
-                        true, false, minFilterFieldIndexes, maxFilterFieldIndexes, tupleFilterFactory, outputLimit,
-                        false, false);
+                        true, false, null, minFilterFieldIndexes, maxFilterFieldIndexes, tupleFilterFactory,
+                        outputLimit, false, false);
             default:
                 throw new AlgebricksException("Unknown datasource type");
         }

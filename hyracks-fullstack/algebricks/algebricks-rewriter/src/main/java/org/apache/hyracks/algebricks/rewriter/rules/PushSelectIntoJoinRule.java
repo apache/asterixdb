@@ -38,9 +38,11 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
@@ -98,10 +100,10 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
             ILogicalOperator joinBranchRight = joinBranchRightRef.getValue();
             VariableUtilities.getLiveVariables(joinBranchLeft, joinLiveVarsLeft);
             VariableUtilities.getLiveVariables(joinBranchRight, joinLiveVarsRight);
-            Mutable<ILogicalOperator> opIterRef = opRef2;
+            Mutable<ILogicalOperator> opIterRef;
             ILogicalOperator opIter = op2;
             while (opIter != join) {
-                LogicalOperatorTag tag = ((AbstractLogicalOperator) opIter).getOperatorTag();
+                LogicalOperatorTag tag = opIter.getOperatorTag();
                 if (tag == LogicalOperatorTag.PROJECT) {
                     notPushedStack.addFirst(opIter);
                 } else {
@@ -129,11 +131,11 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
 
         boolean intersectsAllBranches = true;
         boolean[] intersectsBranch = new boolean[join.getInputs().size()];
-        LinkedList<LogicalVariable> selectVars = new LinkedList<LogicalVariable>();
+        LinkedList<LogicalVariable> selectVars = new LinkedList<>();
         select.getCondition().getValue().getUsedVariables(selectVars);
         int i = 0;
         for (Mutable<ILogicalOperator> branch : join.getInputs()) {
-            LinkedList<LogicalVariable> branchVars = new LinkedList<LogicalVariable>();
+            LinkedList<LogicalVariable> branchVars = new LinkedList<>();
             VariableUtilities.getLiveVariables(branch.getValue(), branchVars);
             if (i == 0) {
                 branchVars.addAll(liveInOpsToPushLeft);
@@ -181,7 +183,9 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
                 if (j > 0 && isLoj) {
                     // if a LOJ and the select condition is not-missing filtering,
                     // we rewrite LOJ to IJ for this case.
-                    if (containsNotMissingFiltering(selectCondition)) {
+                    FunctionIdentifier isMissingNullFunction = OperatorPropertiesUtil
+                            .getIsMissingNullFunction(((LeftOuterJoinOperator) join).getMissingValue());
+                    if (containsNotMissingFiltering(selectCondition, isMissingNullFunction)) {
                         lojToInner = true;
                     }
                     // Do not push conditions into the right branch of a LOJ;
@@ -247,7 +251,7 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
             ILogicalOperator op = iter.previous();
             List<Mutable<ILogicalOperator>> opInpList = op.getInputs();
             opInpList.clear();
-            opInpList.add(new MutableObject<ILogicalOperator>(topOp));
+            opInpList.add(new MutableObject<>(topOp));
             topOp = op;
             context.computeAndSetTypeEnvironmentForOperator(op);
         }
@@ -276,7 +280,7 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
             if (!bAddedToConj) {
                 AbstractFunctionCallExpression newCond = new ScalarFunctionCallExpression(
                         context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.AND),
-                        select.getCondition(), new MutableObject<ILogicalExpression>(join.getCondition().getValue()));
+                        select.getCondition(), new MutableObject<>(join.getCondition().getValue()));
                 join.getCondition().setValue(newCond);
             }
         }
@@ -284,9 +288,9 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
 
     private static void copySelectToBranch(SelectOperator select, Mutable<ILogicalOperator> branch,
             IOptimizationContext context) throws AlgebricksException {
-        ILogicalOperator newSelect = new SelectOperator(select.getCondition(), select.getRetainMissing(),
+        ILogicalOperator newSelect = new SelectOperator(select.getCondition(), select.getRetainMissingAsValue(),
                 select.getMissingPlaceholderVariable());
-        Mutable<ILogicalOperator> newRef = new MutableObject<ILogicalOperator>(branch.getValue());
+        Mutable<ILogicalOperator> newRef = new MutableObject<>(branch.getValue());
         newSelect.getInputs().add(newRef);
         branch.setValue(newSelect);
         context.computeAndSetTypeEnvironmentForOperator(newSelect);
@@ -296,16 +300,17 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
      * Whether the expression contains a not-missing filtering
      *
      * @param expr
+     * @param isMissingNullFunId
      * @return true if the expression contains a not-missing filtering function call; false otherwise.
      */
-    private boolean containsNotMissingFiltering(ILogicalExpression expr) {
+    private boolean containsNotMissingFiltering(ILogicalExpression expr, FunctionIdentifier isMissingNullFunId) {
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
         ScalarFunctionCallExpression func = (ScalarFunctionCallExpression) expr;
         if (func.getFunctionIdentifier() == AlgebricksBuiltinFunctions.AND) {
             for (Mutable<ILogicalExpression> argumentRef : func.getArguments()) {
-                if (containsNotMissingFiltering(argumentRef.getValue())) {
+                if (containsNotMissingFiltering(argumentRef.getValue(), isMissingNullFunId)) {
                     return true;
                 }
             }
@@ -319,34 +324,6 @@ public class PushSelectIntoJoinRule implements IAlgebraicRewriteRule {
             return false;
         }
         ScalarFunctionCallExpression func2 = (ScalarFunctionCallExpression) arg;
-        if (func2.getFunctionIdentifier() != AlgebricksBuiltinFunctions.IS_MISSING) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Whether the expression contains a missing filtering
-     *
-     * @param expr
-     * @return true if the expression contains a missing filtering function call; false otherwise.
-     */
-    private boolean containsMissingFiltering(ILogicalExpression expr) {
-        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return false;
-        }
-        ScalarFunctionCallExpression func = (ScalarFunctionCallExpression) expr;
-        if (func.getFunctionIdentifier() == AlgebricksBuiltinFunctions.AND) {
-            for (Mutable<ILogicalExpression> argumentRef : func.getArguments()) {
-                if (containsMissingFiltering(argumentRef.getValue())) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        if (func.getFunctionIdentifier() != AlgebricksBuiltinFunctions.IS_MISSING) {
-            return false;
-        }
-        return true;
+        return func2.getFunctionIdentifier().equals(isMissingNullFunId);
     }
 }

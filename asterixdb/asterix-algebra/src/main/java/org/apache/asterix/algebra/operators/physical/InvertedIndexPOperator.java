@@ -49,11 +49,13 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
@@ -117,13 +119,18 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         Dataset dataset = metadataProvider.findDataset(jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
         int[] keyIndexes = getKeyIndexes(jobGenParams.getKeyVarList(), inputSchemas);
 
+        boolean propagateIndexFilter = unnestMapOp.propagateIndexFilter();
+        IMissingWriterFactory nonFilterWriterFactory = getNonFilterWriterFactory(propagateIndexFilter, context);
         int[] minFilterFieldIndexes = getKeyIndexes(unnestMapOp.getMinFilterVars(), inputSchemas);
         int[] maxFilterFieldIndexes = getKeyIndexes(unnestMapOp.getMaxFilterVars(), inputSchemas);
-        boolean retainNull = false;
+        boolean retainMissing = false;
+        IMissingWriterFactory nonMatchWriterFactory = null;
         if (op.getOperatorTag() == LogicalOperatorTag.LEFT_OUTER_UNNEST_MAP) {
-            // By nature, LEFT_OUTER_UNNEST_MAP should generate null values for non-matching
-            // tuples.
-            retainNull = true;
+            // By nature, LEFT_OUTER_UNNEST_MAP should generate null values for non-matching tuples
+            retainMissing = true;
+            nonMatchWriterFactory =
+                    getNonMatchWriterFactory(((LeftOuterUnnestMapOperator) unnestMapOp).getMissingValue(), context,
+                            unnestMapOp.getSourceLocation());
         }
         // In-memory budget (frame limit) for inverted-index search operations
         int frameLimit = localMemoryRequirements.getMemoryBudgetInFrames();
@@ -131,9 +138,10 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         // Build runtime.
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> invIndexSearch =
                 buildInvertedIndexRuntime(metadataProvider, context, builder.getJobSpec(), unnestMapOp, opSchema,
-                        jobGenParams.getRetainInput(), retainNull, jobGenParams.getDatasetName(), dataset,
-                        jobGenParams.getIndexName(), jobGenParams.getSearchKeyType(), keyIndexes,
-                        jobGenParams.getSearchModifierType(), jobGenParams.getSimilarityThreshold(),
+                        jobGenParams.getRetainInput(), retainMissing, nonMatchWriterFactory,
+                        jobGenParams.getDatasetName(), dataset, jobGenParams.getIndexName(),
+                        jobGenParams.getSearchKeyType(), keyIndexes, jobGenParams.getSearchModifierType(),
+                        jobGenParams.getSimilarityThreshold(), propagateIndexFilter, nonFilterWriterFactory,
                         minFilterFieldIndexes, maxFilterFieldIndexes, jobGenParams.getIsFullTextSearch(), frameLimit);
         IOperatorDescriptor opDesc = invIndexSearch.first;
         opDesc.setSourceLocation(unnestMapOp.getSourceLocation());
@@ -148,11 +156,11 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildInvertedIndexRuntime(
             MetadataProvider metadataProvider, JobGenContext context, JobSpecification jobSpec,
             AbstractUnnestMapOperator unnestMap, IOperatorSchema opSchema, boolean retainInput, boolean retainMissing,
-            String datasetName, Dataset dataset, String indexName, ATypeTag searchKeyType, int[] keyFields,
-            SearchModifierType searchModifierType, IAlgebricksConstantValue similarityThreshold,
-            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, boolean isFullTextSearchQuery, int frameLimit)
-            throws AlgebricksException {
-        boolean propagateIndexFilter = unnestMap.propagateIndexFilter();
+            IMissingWriterFactory nonMatchWriterFactory, String datasetName, Dataset dataset, String indexName,
+            ATypeTag searchKeyType, int[] keyFields, SearchModifierType searchModifierType,
+            IAlgebricksConstantValue similarityThreshold, boolean propagateIndexFilter,
+            IMissingWriterFactory nonFilterWriterFactory, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
+            boolean isFullTextSearchQuery, int frameLimit) throws AlgebricksException {
         IAObject simThresh = ((AsterixConstantValue) similarityThreshold).getObject();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
         Index secondaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
@@ -178,14 +186,14 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), secondarySplitsAndConstraint.first);
 
-        LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp =
-                new LSMInvertedIndexSearchOperatorDescriptor(jobSpec, outputRecDesc, queryField, dataflowHelperFactory,
-                        queryTokenizerFactory, fullTextConfigEvaluatorFactory, searchModifierFactory, retainInput,
-                        retainMissing, context.getMissingWriterFactory(),
-                        dataset.getSearchCallbackFactory(metadataProvider.getStorageComponentProvider(), secondaryIndex,
-                                IndexOperation.SEARCH, null),
-                        minFilterFieldIndexes, maxFilterFieldIndexes, isFullTextSearchQuery, numPrimaryKeys,
-                        propagateIndexFilter, frameLimit);
+        LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(
+                jobSpec, outputRecDesc, queryField, dataflowHelperFactory, queryTokenizerFactory,
+                fullTextConfigEvaluatorFactory, searchModifierFactory, retainInput, retainMissing,
+                nonMatchWriterFactory,
+                dataset.getSearchCallbackFactory(metadataProvider.getStorageComponentProvider(), secondaryIndex,
+                        IndexOperation.SEARCH, null),
+                minFilterFieldIndexes, maxFilterFieldIndexes, isFullTextSearchQuery, numPrimaryKeys,
+                propagateIndexFilter, nonFilterWriterFactory, frameLimit);
         return new Pair<>(invIndexSearchOp, secondarySplitsAndConstraint.second);
     }
 }

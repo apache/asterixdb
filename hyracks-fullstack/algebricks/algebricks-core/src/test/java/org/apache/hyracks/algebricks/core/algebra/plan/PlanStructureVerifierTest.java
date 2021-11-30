@@ -283,14 +283,14 @@ public final class PlanStructureVerifierTest extends PlanVerifierTestBase implem
         computeAndSetTypeEnvironmentForOperator(ets);
         ets.recomputeSchema();
 
-        SelectOperator op1 = new SelectOperator(newMutable(ConstantExpression.TRUE), false, null);
+        SelectOperator op1 = new SelectOperator(newMutable(ConstantExpression.TRUE));
         op1.getInputs().add(newMutable(ets));
         computeAndSetTypeEnvironmentForOperator(op1);
         op1.recomputeSchema();
 
         op1.getInputs().clear();
 
-        SelectOperator op2 = new SelectOperator(newMutable(ConstantExpression.FALSE), false, null);
+        SelectOperator op2 = new SelectOperator(newMutable(ConstantExpression.FALSE));
         op2.getInputs().add(newMutable(ets));
         op2.recomputeSchema();
         // no type env

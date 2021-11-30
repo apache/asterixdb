@@ -52,6 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -190,11 +191,12 @@ public class RTreeAccessMethod implements IAccessMethod {
 
         analysisCtx.setIndexOnlyPlanInfo(indexOnlyPlanInfo);
 
-        ILogicalOperator primaryIndexUnnestOp = createIndexSearchPlan(afterSelectRefs, selectRef,
-                selectOp.getCondition(), subTree.getAssignsAndUnnestsRefs(), subTree, null, chosenIndex, analysisCtx,
-                AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(), subTree.getDataSourceRef().getValue(),
-                        afterSelectRefs),
-                false, false, context, null);
+        ILogicalOperator primaryIndexUnnestOp =
+                createIndexSearchPlan(afterSelectRefs, selectRef, selectOp.getCondition(),
+                        subTree.getAssignsAndUnnestsRefs(), subTree, null, chosenIndex, analysisCtx,
+                        AccessMethodUtils.retainInputs(subTree.getDataSourceVariables(),
+                                subTree.getDataSourceRef().getValue(), afterSelectRefs),
+                        false, false, context, null, null);
 
         if (primaryIndexUnnestOp == null) {
             return false;
@@ -220,7 +222,8 @@ public class RTreeAccessMethod implements IAccessMethod {
             List<Mutable<ILogicalOperator>> assignBeforeTopRefs, OptimizableOperatorSubTree indexSubTree,
             OptimizableOperatorSubTree probeSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
             boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context,
-            LogicalVariable newNullPlaceHolderForLOJ) throws AlgebricksException {
+            LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue)
+            throws AlgebricksException {
         // TODO: We can probably do something smarter here based on selectivity or MBR area.
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
 
@@ -302,7 +305,7 @@ public class RTreeAccessMethod implements IAccessMethod {
 
         ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
                 metaRecordType, chosenIndex, assignSearchKeys, jobGenParams, context, retainInput, retainNull,
-                generateInstantTrylockResultFromIndexSearch);
+                generateInstantTrylockResultFromIndexSearch, leftOuterMissingValue);
 
         // Generates the rest of the upstream plan which feeds the search results into the primary index.
         return dataset.getDatasetType() == DatasetType.EXTERNAL
@@ -311,15 +314,15 @@ public class RTreeAccessMethod implements IAccessMethod {
                 : AccessMethodUtils.createRestOfIndexSearchPlan(afterTopRefs, topRef, conditionRef, assignBeforeTopRefs,
                         dataSourceOp, dataset, recordType, metaRecordType, secondaryIndexUnnestOp, context, true,
                         retainInput, retainNull, false, chosenIndex, analysisCtx, indexSubTree, null,
-                        newNullPlaceHolderForLOJ);
+                        newMissingNullPlaceHolderForLOJ, leftOuterMissingValue);
     }
 
     @Override
     public boolean applyJoinPlanTransformation(List<Mutable<ILogicalOperator>> afterJoinRefs,
             Mutable<ILogicalOperator> joinRef, OptimizableOperatorSubTree leftSubTree,
             OptimizableOperatorSubTree rightSubTree, Index chosenIndex, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy)
-            throws AlgebricksException {
+            IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy,
+            IAlgebricksConstantValue leftOuterMissingValue) throws AlgebricksException {
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinRef.getValue();
         Mutable<ILogicalExpression> conditionRef = joinOp.getCondition();
 
@@ -344,12 +347,12 @@ public class RTreeAccessMethod implements IAccessMethod {
             return false;
         }
 
-        LogicalVariable newNullPlaceHolderVar = null;
+        LogicalVariable newMissingNullPlaceHolderVar = null;
         if (isLeftOuterJoin) {
-            // Gets a new null place holder variable that is the first field variable of the primary key
+            // Gets a new missing (or null) place holder variable that is the first field variable of the primary key
             // from the indexSubTree's datasourceScanOp.
             // We need this for all left outer joins, even those that do not have a special GroupBy
-            newNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
+            newMissingNullPlaceHolderVar = indexSubTree.getDataSourceVariables().get(0);
         }
 
         boolean canContinue = AccessMethodUtils.setIndexOnlyPlanInfo(afterJoinRefs, joinRef, probeSubTree, indexSubTree,
@@ -360,15 +363,15 @@ public class RTreeAccessMethod implements IAccessMethod {
 
         ILogicalOperator indexSearchOp = createIndexSearchPlan(afterJoinRefs, joinRef, conditionRef,
                 indexSubTree.getAssignsAndUnnestsRefs(), indexSubTree, probeSubTree, chosenIndex, analysisCtx, true,
-                isLeftOuterJoin, true, context, newNullPlaceHolderVar);
+                isLeftOuterJoin, true, context, newMissingNullPlaceHolderVar, leftOuterMissingValue);
 
         if (indexSearchOp == null) {
             return false;
         }
 
         return AccessMethodUtils.finalizeJoinPlanTransformation(afterJoinRefs, joinRef, indexSubTree, probeSubTree,
-                analysisCtx, context, isLeftOuterJoin, isLeftOuterJoinWithSpecialGroupBy, indexSearchOp,
-                newNullPlaceHolderVar, conditionRef, dataset, chosenIndex);
+                analysisCtx, context, isLeftOuterJoin, isLeftOuterJoinWithSpecialGroupBy, leftOuterMissingValue,
+                indexSearchOp, newMissingNullPlaceHolderVar, conditionRef, dataset, chosenIndex);
     }
 
     @Override

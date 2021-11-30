@@ -20,10 +20,13 @@ package org.apache.asterix.algebra.operators.physical;
 
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
@@ -36,6 +39,9 @@ import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequir
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
+import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
  * Class that embodies the commonalities between access method physical operators.
@@ -101,5 +107,22 @@ public abstract class IndexSearchPOperator extends AbstractScanPOperator {
             ss += " (" + idx.getDataSource().getId() + '.' + idx.getId() + ')';
         }
         return ss;
+    }
+
+    protected static IMissingWriterFactory getNonMatchWriterFactory(IAlgebricksConstantValue missingValue,
+            JobGenContext context, SourceLocation sourceLoc) throws CompilationException {
+        IMissingWriterFactory nonMatchWriterFactory;
+        if (missingValue.isMissing()) {
+            nonMatchWriterFactory = context.getMissingWriterFactory();
+        } else if (missingValue.isNull()) {
+            nonMatchWriterFactory = context.getNullWriterFactory();
+        } else {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, missingValue.toString());
+        }
+        return nonMatchWriterFactory;
+    }
+
+    protected static IMissingWriterFactory getNonFilterWriterFactory(boolean propagateFilter, JobGenContext context) {
+        return propagateFilter ? context.getMissingWriterFactory() : null;
     }
 }

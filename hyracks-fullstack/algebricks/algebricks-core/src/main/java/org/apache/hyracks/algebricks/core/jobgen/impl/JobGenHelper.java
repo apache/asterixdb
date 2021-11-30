@@ -18,11 +18,13 @@
  */
 package org.apache.hyracks.algebricks.core.jobgen.impl;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
@@ -38,10 +40,12 @@ import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
+import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -212,5 +216,26 @@ public final class JobGenHelper {
             projectionList[k++] = opSchema.findVariable(v);
         }
         return projectionList;
+    }
+
+    public static IMissingWriterFactory[] createMissingWriterFactories(JobGenContext context,
+            IAlgebricksConstantValue missingOrNullValue, int size) throws AlgebricksException {
+        IMissingWriterFactory missingWriterFactory = getMissingWriterFactory(context, missingOrNullValue);
+        IMissingWriterFactory[] nonMatchWriterFactories = new IMissingWriterFactory[size];
+        Arrays.fill(nonMatchWriterFactories, missingWriterFactory);
+        return nonMatchWriterFactories;
+    }
+
+    public static IMissingWriterFactory getMissingWriterFactory(JobGenContext context,
+            IAlgebricksConstantValue missingOrNullValue) throws AlgebricksException {
+        IMissingWriterFactory missingWriterFactory;
+        if (missingOrNullValue.isMissing()) {
+            missingWriterFactory = context.getMissingWriterFactory();
+        } else if (missingOrNullValue.isNull()) {
+            missingWriterFactory = context.getNullWriterFactory();
+        } else {
+            throw new AlgebricksException(ErrorCode.ILLEGAL_STATE);
+        }
+        return missingWriterFactory;
     }
 }

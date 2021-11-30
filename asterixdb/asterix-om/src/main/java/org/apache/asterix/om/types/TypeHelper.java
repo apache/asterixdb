@@ -29,9 +29,22 @@ public class TypeHelper {
     public static boolean canBeMissing(IAType t) {
         switch (t.getTypeTag()) {
             case MISSING:
+            case ANY:
                 return true;
             case UNION:
                 return ((AUnionType) t).isMissableType();
+            default:
+                return false;
+        }
+    }
+
+    public static boolean canBeNull(IAType t) {
+        switch (t.getTypeTag()) {
+            case NULL:
+            case ANY:
+                return true;
+            case UNION:
+                return ((AUnionType) t).isNullableType();
             default:
                 return false;
         }

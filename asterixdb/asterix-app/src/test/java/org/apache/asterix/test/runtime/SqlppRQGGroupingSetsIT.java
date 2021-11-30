@@ -102,7 +102,7 @@ public final class SqlppRQGGroupingSetsIT extends SqlppRQGTestBase {
 
     @Test
     public void test() throws Exception {
-        runTestCase(testcaseId, groupByClause, sqlQuery, sqlppQuery);
+        runTestCase(testcaseId, groupByClause, sqlQuery, sqlppQuery, null);
     }
 
     private static TestQuery generateQuery(int testcaseId, Random random) {

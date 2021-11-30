@@ -46,7 +46,8 @@ public class ExternalBTreeSearchOperatorNodePushable extends BTreeSearchOperator
             boolean retainMissing, IMissingWriterFactory missingWriterFactory,
             ISearchOperationCallbackFactory searchCallbackFactory, int version) throws HyracksDataException {
         super(ctx, partition, intputRecDesc, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive, null, null,
-                indexHelperFactory, retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, false);
+                indexHelperFactory, retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, false,
+                null);
         this.version = version;
     }
 

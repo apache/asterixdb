@@ -4841,7 +4841,7 @@ JoinClause JoinClause(JoinType joinType) throws ParseException :
   <JOIN> { startToken = token; } rightInput = JoinClauseRightInput() <ON> conditionExpr = Expression()
   {
     JoinClause joinClause = new JoinClause(joinType, rightInput.first, rightInput.second, rightInput.third,
-      conditionExpr);
+      conditionExpr, joinType == JoinType.INNER ? null : Literal.Type.MISSING);
     return addSourceLocation(joinClause, startToken);
   }
 }
@@ -4856,7 +4856,7 @@ JoinClause CrossJoinClause() throws ParseException :
   <JOIN> { startToken = token; } rightInput = JoinClauseRightInput()
   {
     JoinClause joinClause = new JoinClause(JoinType.INNER, rightInput.first, rightInput.second, rightInput.third,
-      new LiteralExpr(TrueLiteral.INSTANCE));
+      new LiteralExpr(TrueLiteral.INSTANCE), null);
     return addSourceLocation(joinClause, startToken);
   }
 }
@@ -4890,7 +4890,8 @@ UnnestClause UnnestClause(UnnestType unnestType) throws ParseException :
     if (rightVar == null) {
       rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);
     }
-    UnnestClause unnestClause = new UnnestClause(unnestType, rightExpr, rightVar, posVar);
+    UnnestClause unnestClause = new UnnestClause(unnestType, rightExpr, rightVar, posVar,
+      unnestType == UnnestType.INNER ? null : Literal.Type.MISSING);
     return addSourceLocation(unnestClause, startToken);
   }
 }

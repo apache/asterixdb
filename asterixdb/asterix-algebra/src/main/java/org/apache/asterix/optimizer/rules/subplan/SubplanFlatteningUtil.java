@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -101,13 +102,14 @@ class SubplanFlatteningUtil {
      *            the optimization context
      * @param extraPrimaryKeyFd
      *            extra primary key dependency that needs to be added to the context before performing the rewrite
+     * @param leftOuterMissingValue
      * @return A set of variables used for further null-checks, i.e., variables indicating
      *         whether a tuple produced by a transformed left outer join is a non-match;
      *         a reference to the top join operator in the nested subplan.
      */
     public static Pair<Set<LogicalVariable>, Mutable<ILogicalOperator>> inlineLeftNtsInSubplanJoin(
-            SubplanOperator subplanOp, IOptimizationContext context, FunctionalDependency extraPrimaryKeyFd)
-            throws AlgebricksException {
+            SubplanOperator subplanOp, IOptimizationContext context, FunctionalDependency extraPrimaryKeyFd,
+            IAlgebricksConstantValue leftOuterMissingValue) throws AlgebricksException {
         Pair<Boolean, ILogicalOperator> applicableAndNtsToRewrite =
                 SubplanFlatteningUtil.isQualifiedForSpecialFlattening(subplanOp);
         if (!applicableAndNtsToRewrite.first) {
@@ -120,8 +122,8 @@ class SubplanFlatteningUtil {
 
         ILogicalOperator qualifiedNts = applicableAndNtsToRewrite.second;
         ILogicalOperator subplanInputOp = subplanOp.getInputs().get(0).getValue();
-        InlineLeftNtsInSubplanJoinFlatteningVisitor specialVisitor =
-                new InlineLeftNtsInSubplanJoinFlatteningVisitor(context, subplanInputOp, qualifiedNts);
+        InlineLeftNtsInSubplanJoinFlatteningVisitor specialVisitor = new InlineLeftNtsInSubplanJoinFlatteningVisitor(
+                context, subplanInputOp, qualifiedNts, leftOuterMissingValue);
 
         // Rewrites the query plan.
         Mutable<ILogicalOperator> topRef = subplanOp.getNestedPlans().get(0).getRoots().get(0);

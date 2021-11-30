@@ -42,6 +42,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActi
     private final int[] minFilterFieldIndexes;
     private final int[] maxFilterFieldIndexes;
     private final boolean appendIndexFilter;
+    private final IMissingWriterFactory nonFilterWriterFactory;
     private final boolean isFullTextSearchQuery;
     private final IIndexDataflowHelperFactory indexHelperFactory;
     private final IBinaryTokenizerFactory queryTokenizerFactory;
@@ -61,7 +62,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActi
             IInvertedIndexSearchModifierFactory searchModifierFactory, boolean retainInput, boolean retainMissing,
             IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, boolean isFullTextSearchQuery, int numOfFields,
-            boolean appendIndexFilter, int frameLimit) {
+            boolean appendIndexFilter, IMissingWriterFactory nonFilterWriterFactory, int frameLimit) {
         super(spec, 1, 1);
         this.indexHelperFactory = indexHelperFactory;
         this.queryTokenizerFactory = queryTokenizerFactory;
@@ -76,6 +77,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActi
         this.maxFilterFieldIndexes = maxFilterFieldIndexes;
         this.isFullTextSearchQuery = isFullTextSearchQuery;
         this.appendIndexFilter = appendIndexFilter;
+        this.nonFilterWriterFactory = nonFilterWriterFactory;
         this.numOfFields = numOfFields;
         this.outRecDescs[0] = outRecDesc;
         this.frameLimit = frameLimit;
@@ -89,6 +91,6 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActi
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), partition, minFilterFieldIndexes,
                 maxFilterFieldIndexes, indexHelperFactory, retainInput, retainMissing, missingWriterFactory,
                 searchCallbackFactory, searchModifier, queryTokenizerFactory, fullTextConfigEvaluatorFactory,
-                queryField, isFullTextSearchQuery, numOfFields, appendIndexFilter, frameLimit);
+                queryField, isFullTextSearchQuery, numOfFields, appendIndexFilter, nonFilterWriterFactory, frameLimit);
     }
 }
