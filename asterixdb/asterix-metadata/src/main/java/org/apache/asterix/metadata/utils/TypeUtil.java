@@ -33,6 +33,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.AOrderedListType;
@@ -65,11 +66,11 @@ public class TypeUtil {
 
     private static final String FUNCTION_INLINE_TYPE_PREFIX = "$f$t$";
 
-    private static final String DATETIME_PARAMETER_NAME = BuiltinType.ADATETIME.getTypeName();
+    public static final String DATETIME_PARAMETER_NAME = BuiltinType.ADATETIME.getTypeName();
 
-    private static final String DATE_PARAMETER_NAME = BuiltinType.ADATE.getTypeName();
+    public static final String DATE_PARAMETER_NAME = BuiltinType.ADATE.getTypeName();
 
-    private static final String TIME_PARAMETER_NAME = BuiltinType.ATIME.getTypeName();
+    public static final String TIME_PARAMETER_NAME = BuiltinType.ATIME.getTypeName();
 
     private TypeUtil() {
     }
@@ -167,14 +168,14 @@ public class TypeUtil {
         }
     }
 
-    public static String getTemporalFormatArg(AbstractFunctionCallExpression funExpr) {
+    public static IAObject getTemporalFormatArg(AbstractFunctionCallExpression funExpr) {
         FunctionIdentifier funId = funExpr.getFunctionIdentifier();
         if (BuiltinFunctions.DATE_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT.equals(funId)
                 || BuiltinFunctions.TIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT.equals(funId)
                 || BuiltinFunctions.DATETIME_DEFAULT_NULL_CONSTRUCTOR_WITH_FORMAT.equals(funId)) {
             List<Mutable<ILogicalExpression>> arguments = funExpr.getArguments();
             if (arguments.size() > 1) {
-                return ConstantExpressionUtil.getStringConstant(arguments.get(1).getValue());
+                return ConstantExpressionUtil.getConstantIaObject(arguments.get(1).getValue(), null);
             }
         }
         return null;

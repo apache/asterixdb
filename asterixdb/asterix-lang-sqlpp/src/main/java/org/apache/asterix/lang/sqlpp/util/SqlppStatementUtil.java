@@ -21,6 +21,7 @@ package org.apache.asterix.lang.sqlpp.util;
 import java.util.List;
 
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.hyracks.util.OptionalBoolean;
 
 public class SqlppStatementUtil {
@@ -35,6 +36,7 @@ public class SqlppStatementUtil {
     public static final String DROP_INDEX = "DROP INDEX ";
     public static final String INCLUDE_UNKNOWN_KEY = " INCLUDE UNKNOWN KEY ";
     public static final String EXCLUDE_UNKNOWN_KEY = " EXCLUDE UNKNOWN KEY ";
+    public static final String CAST_DEFAULT_NULL = " CAST (DEFAULT NULL ";
     public static final String ON = " ON ";
     public static final String WHERE = " WHERE ";
     public static final String AND = " AND ";
@@ -72,7 +74,8 @@ public class SqlppStatementUtil {
 
     @SuppressWarnings("squid:S1172") // unused variable
     public static StringBuilder getCreateIndexStatement(StringBuilder stringBuilder, DataverseName dataverseName,
-            String datasetName, String indexName, String fields, OptionalBoolean excludeUnknown, int version) {
+            String datasetName, String indexName, String fields, OptionalBoolean excludeUnknown,
+            boolean castDefaultNull, String dateTimeFmt, String dateFmt, String timeFmt, int version) {
         stringBuilder.append(CREATE_INDEX);
         enclose(stringBuilder, indexName).append(ON);
         StringBuilder appender = enclose(stringBuilder, dataverseName, datasetName).append(fields);
@@ -82,6 +85,22 @@ public class SqlppStatementUtil {
             } else {
                 appender.append(INCLUDE_UNKNOWN_KEY);
             }
+        }
+        if (castDefaultNull) {
+            appender.append(CAST_DEFAULT_NULL);
+            if (dateTimeFmt != null) {
+                appender.append(TypeUtil.DATETIME_PARAMETER_NAME).append(' ');
+                quote(appender, dateTimeFmt).append(' ');
+            }
+            if (dateFmt != null) {
+                appender.append(TypeUtil.DATE_PARAMETER_NAME).append(' ');
+                quote(appender, dateFmt).append(' ');
+            }
+            if (timeFmt != null) {
+                appender.append(TypeUtil.TIME_PARAMETER_NAME).append(' ');
+                quote(appender, timeFmt).append(' ');
+            }
+            appender.append(R_PARENTHESIS);
         }
         return appender.append(SEMI_COLON);
     }

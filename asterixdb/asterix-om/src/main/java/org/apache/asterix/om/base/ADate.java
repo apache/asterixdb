@@ -73,7 +73,7 @@ public class ADate implements IAObject {
     @Override
     public String toString() {
         StringBuilder sbder = new StringBuilder();
-        sbder.append("\"date\": { ");
+        sbder.append("date: { ");
         try {
             GregorianCalendarSystem.getInstance().getExtendStringRepUntilField(chrononTimeInDay * CHRONON_OF_DAY, sbder,
                     GregorianCalendarSystem.Fields.YEAR, GregorianCalendarSystem.Fields.DAY);

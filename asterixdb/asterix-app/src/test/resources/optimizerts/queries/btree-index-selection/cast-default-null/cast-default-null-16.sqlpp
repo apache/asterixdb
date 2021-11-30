@@ -31,5 +31,5 @@ datetime 'MM-DD-YYYY hh:mm:ss.nnna' date 'MM/DD/YYYY' time 'hh:mm:ss.nnna' AS SE
 // testing that the index idx5_dt_fmt is not selected because its datetime format is not the same as view view5_dt_fmt
 SELECT VALUE v
 FROM view5_dt_fmt AS v
-WHERE v.f_dt_fmt < datetime('2020-12-20T00:00:00Z')
+WHERE v.f_dt_fmt < datetime('2020-12-20T00:00:00')
 ORDER BY v.id;

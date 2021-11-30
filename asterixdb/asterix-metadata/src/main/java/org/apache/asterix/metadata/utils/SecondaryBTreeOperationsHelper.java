@@ -29,7 +29,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
-import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionManager;
@@ -329,7 +329,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
     private IScalarEvaluatorFactory createConstructorFunction(IFunctionManager funManager, IDataFormat dataFormat,
             IScalarEvaluatorFactory fieldEvalFactory, IAType fieldType) throws AlgebricksException {
         IAType targetType = TypeComputeUtils.getActualType(fieldType);
-        Pair<FunctionIdentifier, String> constructorWithFmt =
+        Pair<FunctionIdentifier, IAObject> constructorWithFmt =
                 IndexUtil.getTypeConstructorDefaultNull(index, targetType, sourceLoc);
         FunctionIdentifier typeConstructorFun = constructorWithFmt.first;
         IFunctionDescriptor typeConstructor = funManager.lookupFunction(typeConstructorFun, sourceLoc);
@@ -337,7 +337,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
         // add the format argument if specified
         if (constructorWithFmt.second != null) {
             IScalarEvaluatorFactory fmtEvalFactory =
-                    dataFormat.getConstantEvalFactory(new AsterixConstantValue(new AString(constructorWithFmt.second)));
+                    dataFormat.getConstantEvalFactory(new AsterixConstantValue(constructorWithFmt.second));
             args = new IScalarEvaluatorFactory[] { fieldEvalFactory, fmtEvalFactory };
         } else {
             args = new IScalarEvaluatorFactory[] { fieldEvalFactory };

@@ -879,17 +879,17 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             ARecordType sourceType, SourceLocation srcLoc) throws AlgebricksException {
         IAType fieldType = sourceType.getSubFieldType(skName);
         FunctionIdentifier skFun = null;
-        String fmtArg = null;
+        IAObject fmtArg = null;
         if (fieldType == null) {
-            Pair<FunctionIdentifier, String> castExpr = getCastExpression(index, skType, srcLoc);
+            Pair<FunctionIdentifier, IAObject> castExpr = getCastExpression(index, skType, srcLoc);
             skFun = castExpr.first;
             fmtArg = castExpr.second;
         }
         return new IndexFieldId(skSrc, skName, skType.getTypeTag(), skFun, fmtArg);
     }
 
-    private static Pair<FunctionIdentifier, String> getCastExpression(Index index, IAType skType, SourceLocation srcLoc)
-            throws AlgebricksException {
+    private static Pair<FunctionIdentifier, IAObject> getCastExpression(Index index, IAType skType,
+            SourceLocation srcLoc) throws AlgebricksException {
         if (IndexUtil.castDefaultNull(index)) {
             return IndexUtil.getTypeConstructorDefaultNull(index, skType, srcLoc);
         } else if (index.isEnforced()) {
@@ -901,7 +901,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
     private AbstractFunctionCallExpression createCastExpression(Index index, IAType targetType,
             AbstractFunctionCallExpression inputExpr, SourceLocation sourceLoc, FunctionIdentifier castFun,
-            String fmtArg) throws CompilationException {
+            IAObject fmtArg) throws CompilationException {
         ScalarFunctionCallExpression castExpr;
         if (IndexUtil.castDefaultNull(index)) {
             castExpr = castConstructorFunction(castFun, fmtArg, inputExpr, sourceLoc);
@@ -921,14 +921,14 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         return castExpr;
     }
 
-    private ScalarFunctionCallExpression castConstructorFunction(FunctionIdentifier typeConstructorFun, String fmt,
+    private ScalarFunctionCallExpression castConstructorFunction(FunctionIdentifier typeConstructorFun, IAObject fmt,
             AbstractFunctionCallExpression inputExpr, SourceLocation srcLoc) {
         BuiltinFunctionInfo typeConstructorInfo = BuiltinFunctions.getBuiltinFunctionInfo(typeConstructorFun);
         ScalarFunctionCallExpression constructorExpr = new ScalarFunctionCallExpression(typeConstructorInfo);
         constructorExpr.getArguments().add(new MutableObject<>(inputExpr));
         // add the format argument if specified
         if (fmt != null) {
-            ConstantExpression fmtExpr = new ConstantExpression(new AsterixConstantValue(new AString(fmt)));
+            ConstantExpression fmtExpr = new ConstantExpression(new AsterixConstantValue(fmt));
             fmtExpr.setSourceLocation(srcLoc);
             constructorExpr.getArguments().add(new MutableObject<>(fmtExpr));
         }
@@ -1196,10 +1196,10 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         private final List<String> fieldName;
         private final ATypeTag fieldType;
         private final FunctionIdentifier funId;
-        private final String extraArg; // currently, only for datetime constructor functions with the format arg
+        private final IAObject extraArg; // currently, only for datetime constructor functions with the format arg
 
         private IndexFieldId(int indicator, List<String> fieldName, ATypeTag fieldType, FunctionIdentifier funId,
-                String extraArg) {
+                IAObject extraArg) {
             this.indicator = indicator;
             this.fieldName = fieldName;
             this.fieldType = fieldType;

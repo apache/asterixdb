@@ -33,6 +33,8 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -188,7 +190,7 @@ public class IndexUtil {
                 && ((Index.ValueIndexDetails) index.getIndexDetails()).getCastDefaultNull().getOrElse(false);
     }
 
-    public static Pair<FunctionIdentifier, String> getTypeConstructorDefaultNull(Index index, IAType type,
+    public static Pair<FunctionIdentifier, IAObject> getTypeConstructorDefaultNull(Index index, IAType type,
             SourceLocation srcLoc) throws CompilationException {
         Triple<String, String, String> temporalFormats = getTemporalFormats(index);
         String format = temporalFormats != null ? TypeUtil.getTemporalFormat(type, temporalFormats) : null;
@@ -197,7 +199,7 @@ public class IndexUtil {
         if (typeConstructorFun == null) {
             throw new CompilationException(ErrorCode.COMPILATION_TYPE_UNSUPPORTED, srcLoc, "index", type.getTypeName());
         }
-        return new Pair<>(typeConstructorFun, format);
+        return new Pair<>(typeConstructorFun, withFormat ? new AString(format) : null);
     }
 
     private static Triple<String, String, String> getTemporalFormats(Index index) {

@@ -44,6 +44,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
@@ -1053,11 +1054,11 @@ public class BTreeAccessMethod implements IAccessMethod {
                 return false;
             }
             IAType nonNullableType = Index.getNonNullableType(indexedFieldType).first;
-            Pair<FunctionIdentifier, String> constructorWithFmt =
+            Pair<FunctionIdentifier, IAObject> constructorWithFmt =
                     IndexUtil.getTypeConstructorDefaultNull(index, nonNullableType, functionExpr.getSourceLocation());
             FunctionIdentifier indexedFieldConstructorFun = constructorWithFmt.first;
-            String formatInIndex = constructorWithFmt.second;
-            String formatInFunction = TypeUtil.getTemporalFormatArg(functionExpr);
+            IAObject formatInIndex = constructorWithFmt.second;
+            IAObject formatInFunction = TypeUtil.getTemporalFormatArg(functionExpr);
             // index has CAST (DEFAULT NULL); the applied function should be the same as the indexed field function
             return funId.equals(indexedFieldConstructorFun) && Objects.equals(formatInIndex, formatInFunction);
         } else {
