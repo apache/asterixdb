@@ -8,6 +8,22 @@
 { "g": 0, "i": 7, "actual": 2 }
 { "g": 0, "i": 8, "actual": 0 }
 { "g": 0, "i": 9, "actual": 1 }
+{ "g": 0, "i": 10, "actual": 80 }
+{ "g": 0, "i": 11, "actual": 80 }
+{ "g": 0, "i": 12, "actual": 80 }
+{ "g": 0, "i": 13, "actual": -81 }
+{ "g": 0, "i": 14, "actual": -81 }
+{ "g": 0, "i": 15, "actual": -81 }
+{ "g": 0, "i": 16, "actual": 81 }
+{ "g": 0, "i": 17, "actual": -82 }
+{ "g": 0, "i": 18, "actual": 127 }
+{ "g": 0, "i": 19, "actual": 127 }
+{ "g": 0, "i": 20, "actual": 127 }
+{ "g": 0, "i": 21, "actual": 127 }
+{ "g": 0, "i": 22, "actual": 127 }
+{ "g": 0, "i": 23, "actual": 127 }
+{ "g": 0, "i": 24, "actual": -128 }
+{ "g": 0, "i": 25, "actual": 0 }
 { "g": 1, "i": 0, "expected": null, "actual": null }
 { "g": 1, "i": 1, "expected": null, "actual": null }
 { "g": 1, "i": 2, "expected": null, "actual": null }

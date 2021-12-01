@@ -25,6 +25,7 @@ import org.apache.asterix.om.base.AMutableInt16;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.util.StringUtil;
 
@@ -99,17 +100,22 @@ public final class NumberUtils {
      * Parses string as bigint
      * @param textPtr input string
      * @param result placeholder for the result
+     * @param maybeNumeric if parsing was unsuccessful indicates whether the input string might
+     *                     contain a non-integer numeric value
      * @return {@code true} if parsing was successful, {@code false} otherwise
      */
-    public static boolean parseInt64(UTF8StringPointable textPtr, AMutableInt64 result) {
+    public static boolean parseInt64(UTF8StringPointable textPtr, AMutableInt64 result, MutableBoolean maybeNumeric) {
         byte[] bytes = textPtr.getByteArray();
         int offset = textPtr.getCharStartOffset();
         int end = textPtr.getStartOffset() + textPtr.getLength();
-        return parseInt64(bytes, offset, end, StringUtil.getByteArrayAsCharAccessor(), result);
+        return parseInt64(bytes, offset, end, StringUtil.getByteArrayAsCharAccessor(), result, maybeNumeric);
     }
 
     public static <T> boolean parseInt64(T input, int begin, int end, StringUtil.ICharAccessor<T> charAccessor,
-            AMutableInt64 result) {
+            AMutableInt64 result, MutableBoolean maybeNumeric) {
+        if (maybeNumeric != null) {
+            maybeNumeric.setFalse();
+        }
         int offset = begin;
         //accumulating value in negative domain
         //otherwise Long.MIN_VALUE = -(Long.MAX_VALUE + 1) would have caused overflow
@@ -134,6 +140,9 @@ public final class NumberUtils {
                     && charAccessor.charAt(input, offset + 2) == '4' && offset + 3 == end) {
                 break;
             } else {
+                if (maybeNumeric != null) {
+                    maybeNumeric.setValue(isNumericNonDigitOrSignChar(c));
+                }
                 return false;
             }
             if (value < limit + digit) {
@@ -155,9 +164,14 @@ public final class NumberUtils {
      * Parses string as integer
      * @param textPtr input string
      * @param result placeholder for the result
+     * @param maybeNumeric if parsing was unsuccessful indicates whether the input string might
+     *                     contain a non-integer numeric value
      * @return {@code true} if parsing was successful, {@code false} otherwise
      */
-    public static boolean parseInt32(UTF8StringPointable textPtr, AMutableInt32 result) {
+    public static boolean parseInt32(UTF8StringPointable textPtr, AMutableInt32 result, MutableBoolean maybeNumeric) {
+        if (maybeNumeric != null) {
+            maybeNumeric.setFalse();
+        }
         byte[] bytes = textPtr.getByteArray();
         int offset = textPtr.getCharStartOffset();
         //accumulating value in negative domain
@@ -182,6 +196,9 @@ public final class NumberUtils {
                     && offset + 3 == end) {
                 break;
             } else {
+                if (maybeNumeric != null) {
+                    maybeNumeric.setValue(isNumericNonDigitOrSignChar(bytes[offset]));
+                }
                 return false;
             }
             if (value < limit + digit) {
@@ -203,9 +220,14 @@ public final class NumberUtils {
      * Parses string as smallint
      * @param textPtr input string
      * @param result placeholder for the result
+     * @param maybeNumeric if parsing was unsuccessful indicates whether the input string might
+     *                     contain a non-integer numeric value
      * @return {@code true} if parsing was successful, {@code false} otherwise
      */
-    public static boolean parseInt16(UTF8StringPointable textPtr, AMutableInt16 result) {
+    public static boolean parseInt16(UTF8StringPointable textPtr, AMutableInt16 result, MutableBoolean maybeNumeric) {
+        if (maybeNumeric != null) {
+            maybeNumeric.setFalse();
+        }
         byte[] bytes = textPtr.getByteArray();
         int offset = textPtr.getCharStartOffset();
         //accumulating value in negative domain
@@ -230,6 +252,9 @@ public final class NumberUtils {
                     && offset + 3 == end) {
                 break;
             } else {
+                if (maybeNumeric != null) {
+                    maybeNumeric.setValue(isNumericNonDigitOrSignChar(bytes[offset]));
+                }
                 return false;
             }
             if (value < limit + digit) {
@@ -251,9 +276,14 @@ public final class NumberUtils {
      * Parses string as tinyint
      * @param textPtr input string
      * @param result placeholder for the result
+     * @param maybeNumeric if parsing was unsuccessful indicates whether the input string might
+     *                     contain a non-integer numeric value
      * @return {@code true} if parsing was successful, {@code false} otherwise
      */
-    public static boolean parseInt8(UTF8StringPointable textPtr, AMutableInt8 result) {
+    public static boolean parseInt8(UTF8StringPointable textPtr, AMutableInt8 result, MutableBoolean maybeNumeric) {
+        if (maybeNumeric != null) {
+            maybeNumeric.setFalse();
+        }
         byte[] bytes = textPtr.getByteArray();
         int offset = textPtr.getCharStartOffset();
         //accumulating value in negative domain
@@ -277,6 +307,9 @@ public final class NumberUtils {
             } else if (bytes[offset] == 'i' && bytes[offset + 1] == '8' && offset + 2 == end) {
                 break;
             } else {
+                if (maybeNumeric != null) {
+                    maybeNumeric.setValue(isNumericNonDigitOrSignChar(bytes[offset]));
+                }
                 return false;
             }
             if (value < limit + digit) {
@@ -340,5 +373,22 @@ public final class NumberUtils {
         } catch (NumberFormatException ignored) {
             return false;
         }
+    }
+
+    private static boolean isNumericNonDigitOrSignChar(char v) {
+        switch (v) {
+            case '.':
+            case 'E':
+            case 'e':
+            case 'I': // INF
+            case 'N': // NaN
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static boolean isNumericNonDigitOrSignChar(byte v) {
+        return isNumericNonDigitOrSignChar((char) v);
     }
 }

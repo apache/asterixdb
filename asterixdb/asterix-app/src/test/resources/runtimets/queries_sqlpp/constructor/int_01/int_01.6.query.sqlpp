@@ -29,7 +29,21 @@ test = [
   float(1.25),
   double(2.25),
   false,
-  true
+  true,
+  '640.25',
+  '640.5',
+  '640.75',
+  '-640.25',
+  '-640.5',
+  '-640.75',
+  '64.125e1',
+  '-6412.5e-1',
+  /* out of range */
+  float('1e100'),
+  double('1e100'),
+  'INF',
+  '-INF',
+  'NaN'
 ],
 testNull = [
   null,

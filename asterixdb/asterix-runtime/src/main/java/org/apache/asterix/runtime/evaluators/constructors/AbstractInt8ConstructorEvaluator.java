@@ -19,17 +19,17 @@
 
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import java.io.IOException;
-
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.AFloat;
 import org.apache.asterix.om.base.AInt8;
+import org.apache.asterix.om.base.AMutableFloat;
 import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -38,13 +38,21 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
-public abstract class AbstractInt8ConstructorEvaluator extends AbstractConstructorEvaluator {
+public abstract class AbstractInt8ConstructorEvaluator extends AbstractIntConstructorEvaluator {
 
     private final AMutableInt8 aInt8 = new AMutableInt8((byte) 0);
     @SuppressWarnings("unchecked")
     private final ISerializerDeserializer<AInt8> int8Serde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
+
+    private final AMutableFloat aFloat = new AMutableFloat(0);
+    @SuppressWarnings("unchecked")
+    private final ISerializerDeserializer<AFloat> floatSerdeNonTagged =
+            SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(BuiltinType.AFLOAT);
+
     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
+
+    private final MutableBoolean maybeNumeric = new MutableBoolean();
 
     protected AbstractInt8ConstructorEvaluator(IEvaluatorContext ctx, IScalarEvaluator inputEval,
             SourceLocation sourceLoc) {
@@ -66,14 +74,7 @@ public abstract class AbstractInt8ConstructorEvaluator extends AbstractConstruct
             case BIGINT:
             case FLOAT:
             case DOUBLE:
-                resultStorage.reset();
-                try {
-                    ATypeHierarchy.getTypeDemoteComputer(inputType, ATypeTag.TINYINT, false).convertType(bytes,
-                            startOffset + 1, len - 1, out);
-                } catch (IOException e) {
-                    throw HyracksDataException.create(e);
-                }
-                result.set(resultStorage);
+                demoteNumeric(inputType, bytes, startOffset + 1, len - 1, result);
                 break;
             case BOOLEAN:
                 boolean b = ABooleanSerializerDeserializer.getBoolean(bytes, startOffset + 1);
@@ -84,10 +85,16 @@ public abstract class AbstractInt8ConstructorEvaluator extends AbstractConstruct
                 break;
             case STRING:
                 utf8Ptr.set(bytes, startOffset + 1, len - 1);
-                if (NumberUtils.parseInt8(utf8Ptr, aInt8)) {
+                if (NumberUtils.parseInt8(utf8Ptr, aInt8, maybeNumeric)) {
                     resultStorage.reset();
                     int8Serde.serialize(aInt8, out);
                     result.set(resultStorage);
+                } else if (maybeNumeric.booleanValue() && NumberUtils.parseFloat(utf8Ptr, aFloat)) {
+                    tmpStorage.reset();
+                    floatSerdeNonTagged.serialize(aFloat, tmpOut);
+                    demoteNumeric(ATypeTag.FLOAT, tmpStorage.getByteArray(), tmpStorage.getStartOffset(),
+                            tmpStorage.getLength(), result);
+                    break;
                 } else {
                     handleParseError(utf8Ptr, result);
                 }

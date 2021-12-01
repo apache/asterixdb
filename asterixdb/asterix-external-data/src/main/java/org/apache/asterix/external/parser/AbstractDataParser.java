@@ -408,7 +408,7 @@ public abstract class AbstractDataParser implements IDataParser {
     }
 
     protected void parseInt64(char[] buffer, int begin, int len, AMutableInt64 result) throws ParseException {
-        if (!NumberUtils.parseInt64(buffer, begin, begin + len, StringUtil.getCharArrayAccessor(), result)) {
+        if (!NumberUtils.parseInt64(buffer, begin, begin + len, StringUtil.getCharArrayAccessor(), result, null)) {
             throw new ParseException(ErrorCode.PARSER_ADM_DATA_PARSER_WRONG_INSTANCE, new String(buffer, begin, len),
                     BuiltinType.AINT64.getTypeName());
         }

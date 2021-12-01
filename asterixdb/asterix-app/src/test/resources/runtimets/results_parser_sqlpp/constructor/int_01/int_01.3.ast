@@ -24,6 +24,32 @@ Let Variable [ Name=$test ]
     ]
     LiteralExpr [FALSE]
     LiteralExpr [TRUE]
+    LiteralExpr [STRING] [80.25]
+    LiteralExpr [STRING] [80.5]
+    LiteralExpr [STRING] [80.75]
+    LiteralExpr [STRING] [-80.25]
+    LiteralExpr [STRING] [-80.5]
+    LiteralExpr [STRING] [-80.75]
+    LiteralExpr [STRING] [8.125e1]
+    LiteralExpr [STRING] [-812.5e-1]
+    FunctionCall asterix.int16@1[
+      LiteralExpr [LONG] [999]
+    ]
+    FunctionCall asterix.int32@1[
+      LiteralExpr [LONG] [999]
+    ]
+    FunctionCall asterix.int64@1[
+      LiteralExpr [LONG] [999]
+    ]
+    FunctionCall asterix.float@1[
+      LiteralExpr [LONG] [999]
+    ]
+    FunctionCall asterix.double@1[
+      LiteralExpr [LONG] [999]
+    ]
+    LiteralExpr [STRING] [INF]
+    LiteralExpr [STRING] [-INF]
+    LiteralExpr [STRING] [NaN]
   ]
 Let Variable [ Name=$testNull ]
   :=

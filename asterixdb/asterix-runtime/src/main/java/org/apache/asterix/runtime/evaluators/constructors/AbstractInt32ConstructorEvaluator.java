@@ -19,17 +19,17 @@
 
 package org.apache.asterix.runtime.evaluators.constructors;
 
-import java.io.IOException;
-
 import org.apache.asterix.dataflow.data.nontagged.serde.ABooleanSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AMutableDouble;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
-import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -38,13 +38,21 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 
-public abstract class AbstractInt32ConstructorEvaluator extends AbstractConstructorEvaluator {
+public abstract class AbstractInt32ConstructorEvaluator extends AbstractIntConstructorEvaluator {
 
     private final AMutableInt32 aInt32 = new AMutableInt32(0);
     @SuppressWarnings("unchecked")
     private final ISerializerDeserializer<AInt32> int32Serde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
+
+    private final AMutableDouble aDouble = new AMutableDouble(0);
+    @SuppressWarnings("unchecked")
+    private final ISerializerDeserializer<ADouble> doubleSerdeNonTagged =
+            SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(BuiltinType.ADOUBLE);
+
     private final UTF8StringPointable utf8Ptr = new UTF8StringPointable();
+
+    private final MutableBoolean maybeNumeric = new MutableBoolean();
 
     protected AbstractInt32ConstructorEvaluator(IEvaluatorContext ctx, IScalarEvaluator inputEval,
             SourceLocation sourceLoc) {
@@ -63,26 +71,12 @@ public abstract class AbstractInt32ConstructorEvaluator extends AbstractConstruc
                 break;
             case TINYINT:
             case SMALLINT:
-                resultStorage.reset();
-                try {
-                    ATypeHierarchy.getTypePromoteComputer(inputType, ATypeTag.INTEGER).convertType(bytes,
-                            startOffset + 1, len - 1, out);
-                } catch (IOException e) {
-                    throw HyracksDataException.create(e);
-                }
-                result.set(resultStorage);
+                promoteNumeric(inputType, bytes, startOffset + 1, len - 1, result);
                 break;
             case BIGINT:
             case FLOAT:
             case DOUBLE:
-                resultStorage.reset();
-                try {
-                    ATypeHierarchy.getTypeDemoteComputer(inputType, ATypeTag.INTEGER, false).convertType(bytes,
-                            startOffset + 1, len - 1, out);
-                } catch (IOException e) {
-                    throw HyracksDataException.create(e);
-                }
-                result.set(resultStorage);
+                demoteNumeric(inputType, bytes, startOffset + 1, len - 1, result);
                 break;
             case BOOLEAN:
                 boolean b = ABooleanSerializerDeserializer.getBoolean(bytes, startOffset + 1);
@@ -93,10 +87,15 @@ public abstract class AbstractInt32ConstructorEvaluator extends AbstractConstruc
                 break;
             case STRING:
                 utf8Ptr.set(bytes, startOffset + 1, len - 1);
-                if (NumberUtils.parseInt32(utf8Ptr, aInt32)) {
+                if (NumberUtils.parseInt32(utf8Ptr, aInt32, maybeNumeric)) {
                     resultStorage.reset();
                     int32Serde.serialize(aInt32, out);
                     result.set(resultStorage);
+                } else if (maybeNumeric.booleanValue() && NumberUtils.parseDouble(utf8Ptr, aDouble)) {
+                    tmpStorage.reset();
+                    doubleSerdeNonTagged.serialize(aDouble, tmpOut);
+                    demoteNumeric(ATypeTag.DOUBLE, tmpStorage.getByteArray(), tmpStorage.getStartOffset(),
+                            tmpStorage.getLength(), result);
                 } else {
                     handleParseError(utf8Ptr, result);
                 }
