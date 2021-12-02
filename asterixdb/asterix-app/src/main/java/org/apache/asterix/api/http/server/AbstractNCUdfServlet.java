@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.api.http.server;
 
-import static org.apache.asterix.api.http.server.ServletConstants.HYRACKS_CONNECTION_ATTR;
 import static org.apache.asterix.common.functions.ExternalFunctionLanguage.JAVA;
 import static org.apache.asterix.common.functions.ExternalFunctionLanguage.PYTHON;
 
@@ -41,8 +40,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.application.INCServiceContext;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.IFormattedException;
+import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -134,17 +133,9 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
     }
 
     URI createDownloadURI(Path file) throws Exception {
+        String host = appCtx.getServiceContext().getAppConfig().getString(NCConfig.Option.PUBLIC_ADDRESS);
         String path = paths[0].substring(0, servletPathLengths[0]) + GET_UDF_DIST_ENDPOINT + '/' + file.getFileName();
-        String host = getHyracksClientConnection().getHost();
         return new URI(httpServerProtocol.toString(), null, host, httpServerPort, path, null, null);
-    }
-
-    IHyracksClientConnection getHyracksClientConnection() throws Exception { // NOSONAR
-        IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
-        if (hcc == null) {
-            throw new RuntimeDataException(ErrorCode.PROPERTY_NOT_SET, HYRACKS_CONNECTION_ATTR);
-        }
-        return hcc;
     }
 
     private boolean isNotAttribute(InterfaceHttpData field) {

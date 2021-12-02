@@ -80,8 +80,7 @@ public abstract class AbstractInternalRequestMessage implements ICcAddressedMess
         final RuntimeDataException rejectionReason =
                 ExecuteStatementRequestMessage.getRejectionReason(ccSrv, nodeRequestId);
         if (rejectionReason != null) {
-            ExecuteStatementRequestMessage.sendRejection(rejectionReason, messageBroker, requestMessageId,
-                    nodeRequestId);
+            sendRejection(rejectionReason, messageBroker, requestMessageId, nodeRequestId);
             return;
         }
         CCExtensionManager ccExtMgr = (CCExtensionManager) ccAppCtx.getExtensionManager();
@@ -120,4 +119,14 @@ public abstract class AbstractInternalRequestMessage implements ICcAddressedMess
 
     protected abstract Statement produceStatement();
 
+    private void sendRejection(Exception reason, CCMessageBroker messageBroker, long requestMessageId,
+            String requestNodeId) {
+        InternalRequestResponse msg = new InternalRequestResponse(requestMessageId);
+        msg.setError(reason);
+        try {
+            messageBroker.sendApplicationMessageToNC(msg, requestNodeId);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARN, e.toString(), e);
+        }
+    }
 }
