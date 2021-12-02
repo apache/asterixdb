@@ -21,6 +21,7 @@ package org.apache.asterix.external.util;
 import static com.google.cloud.storage.Storage.BlobListOption;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
+import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_PARAM_VAL;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_REQUIRED;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
@@ -58,6 +59,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMIT
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_FORMAT;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
@@ -1675,6 +1677,12 @@ public class ExternalDataUtils {
                 throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
             }
 
+            // parquet is not supported for azure datalake
+            if (isParquetFormat(configuration)) {
+                throw new CompilationException(INVALID_REQ_PARAM_VAL, srcLoc, KEY_FORMAT,
+                        configuration.get(KEY_FORMAT));
+            }
+
             validateIncludeExclude(configuration);
 
             // Check if the bucket is present
@@ -1784,6 +1792,12 @@ public class ExternalDataUtils {
             // check if the format property is present
             if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
                 throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
+            }
+
+            // parquet is not supported for google cloud storage
+            if (isParquetFormat(configuration)) {
+                throw new CompilationException(INVALID_REQ_PARAM_VAL, srcLoc, KEY_FORMAT,
+                        configuration.get(KEY_FORMAT));
             }
 
             validateIncludeExclude(configuration);
