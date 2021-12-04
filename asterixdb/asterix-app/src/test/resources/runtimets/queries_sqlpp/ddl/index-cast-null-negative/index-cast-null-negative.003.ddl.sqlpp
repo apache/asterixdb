@@ -17,5 +17,5 @@
  * under the License.
  */
 USE test;
-// cannot use CAST with a typed field
+// the target type of the CAST is not specified
 CREATE INDEX idx ON ds1(typed_f1) CAST (DEFAULT NULL);

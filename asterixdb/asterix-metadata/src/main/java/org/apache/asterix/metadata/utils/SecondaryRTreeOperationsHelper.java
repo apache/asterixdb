@@ -89,7 +89,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
             throw new AsterixException("Cannot use " + numSecondaryKeys + " fields as a key for the R-tree index. "
                     + "There can be only one field as a key for the R-tree index.");
         }
-        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(
+        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(index,
                 indexDetails.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), itemType);
         IAType spatialType = spatialTypePair.first;
         anySecondaryKeyIsNullable = spatialTypePair.second;

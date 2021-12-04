@@ -161,7 +161,7 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
             secondaryFieldAccessEvalFactories[i] = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
                     metadataProvider.getFunctionManager(), isOverridingKeyTypes ? enforcedItemType : sourceType,
                     indexDetails.getKeyFieldNames().get(i), sourceColumn, sourceLoc);
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index,
                     indexDetails.getKeyFieldTypes().get(i), indexDetails.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;
             anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;

@@ -21,12 +21,15 @@ DROP DATAVERSE test IF EXISTS;
 CREATE DATAVERSE test;
 USE test;
 
+CREATE TYPE t1 AS { id: int, s_f1: string, s_f2: string?, i_f: int? };
+
 CREATE DATASET ds1(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id;
 CREATE DATASET ds2(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id;
 CREATE DATASET ds3(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id;
 CREATE DATASET ds4(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id;
 CREATE DATASET ds5(id int not unknown) OPEN TYPE PRIMARY KEY id;
 CREATE DATASET ds6(id int not unknown) OPEN TYPE PRIMARY KEY id;
+CREATE DATASET ds7(t1) PRIMARY KEY id;
 
 CREATE INDEX idx1 ON ds1(x: int);
 CREATE INDEX idx2 ON ds2(x: int) CAST (DEFAULT NULL);
@@ -39,6 +42,10 @@ CREATE INDEX idx5_t_fmt ON ds5(f_t_fmt: time) CAST (DEFAULT NULL time 'hh:mm:ss.
 CREATE INDEX idx6_dt ON ds6(f_dt: datetime) CAST (DEFAULT NULL);
 CREATE INDEX idx6_d ON ds6(f_d: date) CAST (DEFAULT NULL);
 CREATE INDEX idx6_t ON ds6(f_t: time) CAST (DEFAULT NULL);
+
+CREATE INDEX idx1 ON ds7(s_f2);
+CREATE INDEX idx2 ON ds7(s_f2: string) CAST (DEFAULT NULL);
+CREATE INDEX idx3 ON ds7(s_f2: int) CAST (DEFAULT NULL);
 
 CREATE VIEW view1(id int, x int, y int) DEFAULT NULL AS SELECT id, x, y FROM ds1;
 CREATE VIEW view2(id int, x int, y int) DEFAULT NULL AS SELECT id, x, y FROM ds2;
@@ -57,3 +64,6 @@ datetime 'MM/DD/YYYY hh:mm:ss.nnna' date 'MM/DD/YYYY' time 'hh:mm:ss.nnna' AS SE
 CREATE VIEW view6_dt(id int, f_dt datetime) DEFAULT NULL AS SELECT id, f_dt FROM ds6;
 CREATE VIEW view6_d(id int, f_d date) DEFAULT NULL AS SELECT id, f_d FROM ds6;
 CREATE VIEW view6_t(id int, f_t time) DEFAULT NULL AS SELECT id, f_t FROM ds6;
+
+CREATE VIEW view7_1(id int, s_f2 string, i_f int) DEFAULT NULL AS SELECT id, s_f2, i_f FROM ds7;
+CREATE VIEW view7_2(id int, s_f2 int, i_f int) DEFAULT NULL AS SELECT id, s_f2, i_f FROM ds7;

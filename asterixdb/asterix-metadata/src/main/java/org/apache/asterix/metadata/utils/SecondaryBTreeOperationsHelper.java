@@ -242,12 +242,11 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             }
             secondaryFieldAccessEvalFactories[i] = createFieldAccessors(i, isOverridingKeyFieldTypes, enforcedType,
                     sourceType, sourceColumn, indexDetails, indexDetails.getKeyFieldTypes().get(i));
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index,
                     indexDetails.getKeyFieldTypes().get(i), indexDetails.getKeyFieldNames().get(i), sourceType);
             IAType keyType = keyTypePair.first;
             anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
-            ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(keyType);
-            secondaryRecFields[i] = keySerde;
+            secondaryRecFields[i] = serdeProvider.getSerializerDeserializer(keyType);
             secondaryComparatorFactories[i] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
             secondaryTypeTraits[i] = typeTraitProvider.getTypeTrait(keyType);
             secondaryBloomFilterKeyFields[i] = i;
@@ -306,7 +305,11 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
         IDataFormat dataFormat = metadataProvider.getDataFormat();
         IScalarEvaluatorFactory fieldEvalFactory = dataFormat.getFieldAccessEvaluatorFactory(funManger, recordType,
                 indexDetails.getKeyFieldNames().get(field), recordColumn, sourceLoc);
-        boolean castIndexedField = isOverridingKeyFieldTypes && !enforcedRecordType.equals(recordType);
+        // check IndexUtil.castDefaultNull(index), too, because we always want to cast even if the overriding type is
+        // the same as the overridden type (this is for the case where overriding the type of closed field is allowed)
+        // e.g. field "a" is a string in the dataset ds; CREATE INDEX .. ON ds(a:string) CAST (DEFAULT NULL)
+        boolean castIndexedField = isOverridingKeyFieldTypes
+                && (!enforcedRecordType.equals(recordType) || IndexUtil.castDefaultNull(index));
         if (!castIndexedField) {
             return fieldEvalFactory;
         }

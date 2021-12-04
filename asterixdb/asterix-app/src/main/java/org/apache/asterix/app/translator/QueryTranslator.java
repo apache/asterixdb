@@ -1214,17 +1214,20 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
 
                     boolean isFieldFromSchema = projectTypePrime != null;
-                    if (isFieldFromSchema && stmtCreateIndex.hasCastDefaultNull()) {
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, indexedElement.getSourceLocation(),
-                                "CAST is not allowed since field \"" + projectPath + "\" is typed");
-                    }
                     IAType fieldTypePrime;
                     boolean fieldTypeNullable, fieldTypeMissable;
                     if (projectTypeExpr == null) {
+                        // the type of the indexed field is NOT specified in the DDL
+                        if (stmtCreateIndex.hasCastDefaultNull()) {
+                            throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                                    stmtCreateIndex.getSourceLocation(),
+                                    "CAST modifier is used without specifying " + "the type of the indexed field");
+                        }
                         fieldTypePrime = projectTypePrime;
                         fieldTypeNullable = projectTypeNullable;
                         fieldTypeMissable = projectTypeMissable;
                     } else {
+                        // the type of the indexed field is explicitly specified in the DDL
                         if (stmtCreateIndex.isEnforced()) {
                             if (!projectTypeExpr.isUnknownable()) {
                                 throw new CompilationException(ErrorCode.INDEX_ILLEGAL_ENFORCED_NON_OPTIONAL,
@@ -1242,9 +1245,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                         indexedElement.getSourceLocation(), indexType);
                             }
                             if (isFieldFromSchema) {
-                                throw new CompilationException(ErrorCode.COMPILATION_ERROR,
-                                        indexedElement.getSourceLocation(), "Typed index on \"" + projectPath
-                                                + "\" field could be created only for open datatype");
+                                // allow overriding the type of the closed-field only if CAST modifier is used
+                                if (!stmtCreateIndex.hasCastDefaultNull()) {
+                                    throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                                            indexedElement.getSourceLocation(), "Typed index on \"" + projectPath
+                                                    + "\" field could be created only for open datatype");
+                                }
                             }
                         }
 
@@ -1286,12 +1292,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             boolean castDefaultNullAllowed = indexType == IndexType.BTREE && !isSecondaryPrimary;
             if (stmtCreateIndex.hasCastDefaultNull() && !castDefaultNullAllowed) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "Cast Default Null is only allowed for B-Tree indexes");
+                        "CAST modifier is only allowed for B-Tree indexes");
             }
             if (stmtCreateIndex.getCastDefaultNull().getOrElse(false)) {
                 if (stmtCreateIndex.isEnforced()) {
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "Cast Default Null cannot be specified together with ENFORCED");
+                            "CAST modifier cannot be specified together with ENFORCED");
                 }
             }
             Index.IIndexDetails indexDetails;

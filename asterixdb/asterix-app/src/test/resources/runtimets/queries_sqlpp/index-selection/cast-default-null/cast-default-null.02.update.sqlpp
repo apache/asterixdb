@@ -74,3 +74,12 @@ INSERT INTO ds6 [
 {"id": 5, 'f_dt':null, 'f_d':null, 'f_t':null},
 {"id": 6}
 ];
+
+INSERT INTO ds7 [
+{"id": 1, "s_f1": "s",   "s_f2": "s",   "i_f": 1 },
+{"id": 2, "s_f1": "2",   "s_f2": "2",   "i_f": 2 },
+{"id": 3, "s_f1": "3.5", "s_f2": "3.5", "i_f": 3 },
+{"id": 4, "s_f1": "4",   "s_f2": "4",   "i_f": 4 },
+{"id": 5, "s_f1": "5",   "s_f2": null,   "i_f": null },
+{"id": 6, "s_f1": "" }
+];

@@ -185,8 +185,8 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         } else {
             sourceType = metaType;
         }
-        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(indexDetails.getKeyFieldTypes().get(0),
-                indexDetails.getKeyFieldNames().get(0), sourceType);
+        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index,
+                indexDetails.getKeyFieldTypes().get(0), indexDetails.getKeyFieldNames().get(0), sourceType);
         IAType secondaryKeyType = keyTypePair.first;
         int numTokenFields = (!isPartitioned) ? numSecondaryKeys : numSecondaryKeys + 1;
         ITypeTraits[] tokenTypeTraits = new ITypeTraits[numTokenFields];
@@ -222,8 +222,8 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         } else {
             sourceType = metaType;
         }
-        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(indexDetails.getKeyFieldTypes().get(0),
-                indexDetails.getKeyFieldNames().get(0), sourceType);
+        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index,
+                indexDetails.getKeyFieldTypes().get(0), indexDetails.getKeyFieldNames().get(0), sourceType);
         IAType secondaryKeyType = keyTypePair.first;
         // Comparators and type traits for tokens.
         int numTokenFields = (!isPartitioned) ? numSecondaryKeys : numSecondaryKeys + 1;
@@ -258,8 +258,8 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
         } else {
             sourceType = metaType;
         }
-        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(indexDetails.getKeyFieldTypes().get(0),
-                indexDetails.getKeyFieldNames().get(0), sourceType);
+        Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index,
+                indexDetails.getKeyFieldTypes().get(0), indexDetails.getKeyFieldNames().get(0), sourceType);
         IAType secondaryKeyType = keyTypePair.first;
         // Set tokenizer factory.
         // TODO: We might want to expose the hashing option at the AQL level,

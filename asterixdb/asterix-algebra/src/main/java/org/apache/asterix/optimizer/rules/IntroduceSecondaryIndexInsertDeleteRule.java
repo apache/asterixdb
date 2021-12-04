@@ -383,8 +383,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
                     // Check the field type of the secondary key.
                     IAType secondaryKeyType;
-                    Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0),
-                            secondaryKeyFields.get(0), recType);
+                    Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index,
+                            secondaryKeyTypes.get(0), secondaryKeyFields.get(0), recType);
                     secondaryKeyType = keyPairType.first;
 
                     List<Object> varTypes = new ArrayList<>();
@@ -526,8 +526,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                 }
             } else {
                 // Get type, dimensions and number of keys
-                Pair<IAType, Boolean> keyPairType =
-                        Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyFields.get(0), recType);
+                Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index, secondaryKeyTypes.get(0),
+                        secondaryKeyFields.get(0), recType);
                 IAType spatialType = keyPairType.first;
                 boolean isPointMBR =
                         spatialType.getTypeTag() == ATypeTag.POINT || spatialType.getTypeTag() == ATypeTag.POINT3D;
@@ -724,7 +724,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                         workingElement.getUnnestList(), workingElement.getProjectList().get(0));
                 List<Boolean> firstUnnestFlags = ArrayIndexUtil.getUnnestFlags(workingElement.getUnnestList(),
                         workingElement.getProjectList().get(0));
-                ArrayIndexUtil.walkArrayPath(recordType, flatFirstFieldName, firstUnnestFlags, branchCreator);
+                ArrayIndexUtil.walkArrayPath(index, recordType, flatFirstFieldName, firstUnnestFlags, branchCreator);
                 secondaryKeyVars.add(branchCreator.lastFieldVars.get(0));
 
                 // For all other elements in the PROJECT list, add an assign.
@@ -860,6 +860,14 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     // Field not found --> This is either an open field or a nested field. it can't be accessed by index
                     theFieldAccessFunc =
                             getFieldAccessFunction(new MutableObject<>(varRef), pos, indexFieldId.fieldName);
+                    // check IndexUtil.castDefaultNull(index), too, because we always want to cast even if
+                    // the overriding type is the same as the overridden type (this is for the case where overriding
+                    // the type of closed field is allowed)
+                    // e.g. field "a" is a string in the dataset ds; CREATE INDEX .. ON ds(a:string) CAST (DEFAULT NULL)
+                    if (IndexUtil.castDefaultNull(index)) {
+                        theFieldAccessFunc = castConstructorFunction(indexFieldId.funId, indexFieldId.extraArg,
+                                theFieldAccessFunc, sourceLoc);
+                    }
                 }
                 vars.add(fieldVar);
                 exprs.add(new MutableObject<>(theFieldAccessFunc));
@@ -880,10 +888,19 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         IAType fieldType = sourceType.getSubFieldType(skName);
         FunctionIdentifier skFun = null;
         IAObject fmtArg = null;
+        Pair<FunctionIdentifier, IAObject> castExpr;
         if (fieldType == null) {
-            Pair<FunctionIdentifier, IAObject> castExpr = getCastExpression(index, skType, srcLoc);
+            // open field
+            castExpr = getCastExpression(index, skType, srcLoc);
             skFun = castExpr.first;
             fmtArg = castExpr.second;
+        } else {
+            // closed field
+            if (IndexUtil.castDefaultNull(index)) {
+                castExpr = IndexUtil.getTypeConstructorDefaultNull(index, skType, srcLoc);
+                skFun = castExpr.first;
+                fmtArg = castExpr.second;
+            }
         }
         return new IndexFieldId(skSrc, skName, skType.getTypeTag(), skFun, fmtArg);
     }

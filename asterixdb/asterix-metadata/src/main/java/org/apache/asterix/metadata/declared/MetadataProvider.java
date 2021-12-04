@@ -68,7 +68,6 @@ import org.apache.asterix.external.operators.FeedIntakeOperatorDescriptor;
 import org.apache.asterix.external.provider.AdapterFactoryProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.formats.base.IDataFormat;
-import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.BinaryIntegerInspector;
 import org.apache.asterix.formats.nontagged.LinearizeComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
@@ -140,7 +139,6 @@ import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.SinkWriterRuntimeFactory;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IResultSerializerFactory;
@@ -647,8 +645,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             ARecordType recType = (ARecordType) findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
             List<List<String>> secondaryKeyFields = secondaryIndexDetails.getKeyFieldNames();
             List<IAType> secondaryKeyTypes = secondaryIndexDetails.getKeyFieldTypes();
-            Pair<IAType, Boolean> keyTypePair =
-                    Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyFields.get(0), recType);
+            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(secondaryIndex,
+                    secondaryKeyTypes.get(0), secondaryKeyFields.get(0), recType);
             IAType keyType = keyTypePair.first;
             int numDimensions = NonTaggedFormatUtil.getNumDimensions(keyType.getTypeTag());
             int numNestedSecondaryKeyFields = numDimensions * 2;
@@ -1066,53 +1064,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return new Pair<>(dataScanner, constraint);
     }
 
-    private Pair<IBinaryComparatorFactory[], ITypeTraits[]> getComparatorFactoriesAndTypeTraitsOfSecondaryBTreeIndex(
-            List<List<String>> sidxKeyFieldNames, List<IAType> sidxKeyFieldTypes, List<List<String>> pidxKeyFieldNames,
-            ARecordType recType, DatasetType dsType, boolean hasMeta, List<Integer> primaryIndexKeyIndicators,
-            List<Integer> secondaryIndexIndicators, ARecordType metaType) throws AlgebricksException {
-
-        IBinaryComparatorFactory[] comparatorFactories;
-        ITypeTraits[] typeTraits;
-        int sidxKeyFieldCount = sidxKeyFieldNames.size();
-        int pidxKeyFieldCount = pidxKeyFieldNames.size();
-        typeTraits = new ITypeTraits[sidxKeyFieldCount + pidxKeyFieldCount];
-        comparatorFactories = new IBinaryComparatorFactory[sidxKeyFieldCount + pidxKeyFieldCount];
-
-        int i = 0;
-        for (; i < sidxKeyFieldCount; ++i) {
-            Pair<IAType, Boolean> keyPairType =
-                    Index.getNonNullableOpenFieldType(sidxKeyFieldTypes.get(i), sidxKeyFieldNames.get(i),
-                            (hasMeta && secondaryIndexIndicators.get(i).intValue() == 1) ? metaType : recType);
-            IAType keyType = keyPairType.first;
-            comparatorFactories[i] = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType, true);
-            typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
-        }
-
-        for (int j = 0; j < pidxKeyFieldCount; ++j, ++i) {
-            IAType keyType = null;
-            try {
-                switch (dsType) {
-                    case INTERNAL:
-                        keyType = (hasMeta && primaryIndexKeyIndicators.get(j).intValue() == 1)
-                                ? metaType.getSubFieldType(pidxKeyFieldNames.get(j))
-                                : recType.getSubFieldType(pidxKeyFieldNames.get(j));
-                        break;
-                    case EXTERNAL:
-                        keyType = IndexingConstants.getFieldType(j);
-                        break;
-                    default:
-                        throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_DATASET_TYPE, dsType.toString());
-                }
-            } catch (AsterixException e) {
-                throw new AlgebricksException(e);
-            }
-            comparatorFactories[i] = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(keyType, true);
-            typeTraits[i] = TypeTraitProvider.INSTANCE.getTypeTrait(keyType);
-        }
-
-        return new Pair<>(comparatorFactories, typeTraits);
-    }
-
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertOrDeleteRuntime(IndexOperation indexOp,
             IDataSource<DataSourceId> dataSource, IOperatorSchema propagatedSchema, List<LogicalVariable> keys,
             LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields, RecordDescriptor inputRecordDesc,
@@ -1447,8 +1398,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         Index.ValueIndexDetails secondaryIndexDetails = (Index.ValueIndexDetails) secondaryIndex.getIndexDetails();
         List<List<String>> secondaryKeyExprs = secondaryIndexDetails.getKeyFieldNames();
         List<IAType> secondaryKeyTypes = secondaryIndexDetails.getKeyFieldTypes();
-        Pair<IAType, Boolean> keyPairType =
-                Index.getNonNullableOpenFieldType(secondaryKeyTypes.get(0), secondaryKeyExprs.get(0), recType);
+        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryIndex, secondaryKeyTypes.get(0),
+                secondaryKeyExprs.get(0), recType);
         IAType spatialType = keyPairType.first;
         int dimension = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numSecondaryKeys = dimension * 2;
@@ -1759,8 +1710,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             // return the derived type.
             // e.g. UNORDERED LIST -> return UNORDERED LIST type
             IAType secondaryKeyType;
-            Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryKeyTypeEntries.get(0),
-                    secondaryKeyExprs.get(0), recType);
+            Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryIndex,
+                    secondaryKeyTypeEntries.get(0), secondaryKeyExprs.get(0), recType);
             secondaryKeyType = keyPairType.first;
             List<List<String>> partitioningKeys = dataset.getPrimaryKeys();
             i = 0;

@@ -83,7 +83,7 @@ public class SecondaryCorrelatedRTreeOperationsHelper extends SecondaryCorrelate
             throw AsterixException.create(ErrorCode.INDEX_RTREE_MULTIPLE_FIELDS_NOT_ALLOWED, sourceLoc,
                     numSecondaryKeys);
         }
-        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(
+        Pair<IAType, Boolean> spatialTypePair = Index.getNonNullableOpenFieldType(index,
                 indexDetails.getKeyFieldTypes().get(0), secondaryKeyFields.get(0), itemType);
         IAType spatialType = spatialTypePair.first;
         anySecondaryKeyIsNullable = spatialTypePair.second;

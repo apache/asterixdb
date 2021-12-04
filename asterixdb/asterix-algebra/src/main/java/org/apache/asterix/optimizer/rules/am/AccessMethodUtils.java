@@ -1223,8 +1223,8 @@ public class AccessMethodUtils {
         if (idxType == IndexType.RTREE && (skFieldUsedAfterTopOp || requireVerificationAfterSIdxSearch)) {
             IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(secondaryIndex, analysisCtx);
             int optFieldIdx = AccessMethodUtils.chooseFirstOptFuncVar(secondaryIndex, analysisCtx);
-            Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(optFuncExpr.getFieldType(optFieldIdx),
-                    optFuncExpr.getFieldName(optFieldIdx), recordType);
+            Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(secondaryIndex,
+                    optFuncExpr.getFieldType(optFieldIdx), optFuncExpr.getFieldName(optFieldIdx), recordType);
             if (keyPairType == null) {
                 return null;
             }
@@ -2509,8 +2509,8 @@ public class AccessMethodUtils {
         }
 
         int optFieldIdx = AccessMethodUtils.chooseFirstOptFuncVar(chosenIndex, analysisCtx);
-        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(optFuncExpr.getFieldType(optFieldIdx),
-                optFuncExpr.getFieldName(optFieldIdx), recordType);
+        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(chosenIndex,
+                optFuncExpr.getFieldType(optFieldIdx), optFuncExpr.getFieldName(optFieldIdx), recordType);
         if (keyPairType == null) {
             return false;
         }
@@ -3156,7 +3156,7 @@ public class AccessMethodUtils {
                     List<String> flatName = ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project);
                     List<Boolean> unnestFlags = ArrayIndexUtil.getUnnestFlags(e.getUnnestList(), project);
                     analysisCtx.getArrayIndexStructureMatcher().reset(assignVar, subTree);
-                    ArrayIndexUtil.walkArrayPath(subTree.getRecordType(), flatName, unnestFlags,
+                    ArrayIndexUtil.walkArrayPath(index, subTree.getRecordType(), flatName, unnestFlags,
                             analysisCtx.getArrayIndexStructureMatcher());
 
                     LogicalVariable varAfterWalk = analysisCtx.getArrayIndexStructureMatcher().getEndVar();

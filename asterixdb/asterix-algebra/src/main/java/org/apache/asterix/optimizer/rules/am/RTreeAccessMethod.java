@@ -130,8 +130,8 @@ public class RTreeAccessMethod implements IAccessMethod {
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
 
         int optFieldIdx = AccessMethodUtils.chooseFirstOptFuncVar(chosenIndex, analysisCtx);
-        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(optFuncExpr.getFieldType(optFieldIdx),
-                optFuncExpr.getFieldName(optFieldIdx), recordType);
+        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(chosenIndex,
+                optFuncExpr.getFieldType(optFieldIdx), optFuncExpr.getFieldName(optFieldIdx), recordType);
         if (keyPairType == null) {
             return false;
         }
@@ -234,7 +234,8 @@ public class RTreeAccessMethod implements IAccessMethod {
         int optFieldIdx = AccessMethodUtils.chooseFirstOptFuncVar(chosenIndex, analysisCtx);
         IAType optFieldType = optFuncExpr.getFieldType(optFieldIdx);
         List<String> optFieldName = optFuncExpr.getFieldName(optFieldIdx);
-        Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(optFieldType, optFieldName, recordType);
+        Pair<IAType, Boolean> keyPairType =
+                Index.getNonNullableOpenFieldType(chosenIndex, optFieldType, optFieldName, recordType);
         if (keyPairType == null) {
             return null;
         }

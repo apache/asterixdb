@@ -22,11 +22,8 @@
 
 USE test;
 
-//CREATE INDEX ds1_idx1 ON ds1(s_f: int) CAST(DEFAULT NULL);
-
 CREATE INDEX ds1_o_idx1 ON ds1(o_s_f: int, o_i_f: string) INCLUDE UNKNOWN KEY CAST(DEFAULT NULL);
 CREATE INDEX ds1_o_idx2 ON ds1(o_s_f: double, o_d_f: string) CAST(DEFAULT NULL);
-//CREATE INDEX ds1_o_idx3 ON ds1(o_s_f: boolean, o_b_f: string) CAST(DEFAULT NULL);
 
 CREATE INDEX ds1_o_idx4 ON ds1(a.s_f: int) CAST(DEFAULT NULL);
 
@@ -45,3 +42,17 @@ CREATE INDEX ds4_o_idx_f_d_fmt ON ds4(f_d_fmt: date) CAST (DEFAULT NULL date 'MM
 CREATE INDEX ds4_o_idx_f_t_fmt ON ds4(f_t_fmt: time) CAST (DEFAULT NULL time 'hh:mm:ss.nnna');
 
 CREATE INDEX ds4_o_idx_invalid_fmt ON ds4(f_d_fmt: date) CAST (DEFAULT NULL date 'invalid_format');
+
+// on closed fields
+CREATE INDEX idx9 ON ds5(s_f1);
+CREATE INDEX idx10 ON ds5(s_f1: string) CAST (DEFAULT NULL);
+CREATE INDEX idx11 ON ds5(s_f1: int) CAST (DEFAULT NULL);
+
+CREATE INDEX idx12 ON ds5(s_f2);
+CREATE INDEX idx13 ON ds5(s_f2: string) CAST (DEFAULT NULL);
+CREATE INDEX idx14 ON ds5(s_f2: int) CAST (DEFAULT NULL);
+
+CREATE INDEX idx15 ON ds5(i_f: int) CAST (DEFAULT NULL);
+CREATE INDEX idx16 ON ds5(i_f: string) CAST (DEFAULT NULL);
+
+CREATE INDEX idx_exc2 ON ds5(s_f2: int) EXCLUDE UNKNOWN KEY CAST (DEFAULT NULL);

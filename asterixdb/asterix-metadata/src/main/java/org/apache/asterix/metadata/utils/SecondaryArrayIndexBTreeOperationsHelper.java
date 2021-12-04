@@ -245,7 +245,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
         } else {
             EvalFactoryAndRecDescInvoker commandExecutor =
                     new EvalFactoryAndRecDescInvoker(!evalFactoryAndRecDescStackBuilder.isUnnestEvalPopulated());
-            ArrayIndexUtil.walkArrayPath(recordType, flattenedFieldName, workingUnnestFlags, commandExecutor);
+            ArrayIndexUtil.walkArrayPath(index, recordType, flattenedFieldName, workingUnnestFlags, commandExecutor);
         }
     }
 
@@ -515,7 +515,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
     }
 
     private void addAtomicFieldToBuilder(ARecordType recordType, int indexPos) throws AlgebricksException {
-        IAType workingType = Index.getNonNullableOpenFieldType(flattenedKeyTypes.get(indexPos),
+        IAType workingType = Index.getNonNullableOpenFieldType(index, flattenedKeyTypes.get(indexPos),
                 flattenedFieldNames.get(indexPos), recordType).first;
         IScalarEvaluatorFactory sef =
                 metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(metadataProvider.getFunctionManager(),

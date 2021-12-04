@@ -240,7 +240,7 @@ public class ArrayIndexUtil {
      * Traverse each distinct record path and invoke the appropriate commands for each scenario. Here, we keep track
      * of the record/list type at each step and give this to each command.
      */
-    public static void walkArrayPath(ARecordType baseRecordType, List<String> flattenedFieldName,
+    public static void walkArrayPath(Index index, ARecordType baseRecordType, List<String> flattenedFieldName,
             List<Boolean> unnestFlags, TypeTrackerCommandExecutor commandExecutor) throws AlgebricksException {
         ArrayPath arrayPath = new ArrayPath(flattenedFieldName, unnestFlags).invoke();
         List<List<String>> fieldNamesPerArray = arrayPath.fieldNamesPerArray;
@@ -266,8 +266,9 @@ public class ArrayIndexUtil {
                     // Determine whether we have an open field or not. Extract the type appropriately.
                     isTrackingType = isTrackingType && intermediateRecordType.doesFieldExist(fieldPart);
                     if (isTrackingType) {
-                        workingType = Index.getNonNullableOpenFieldType(intermediateRecordType.getFieldType(fieldPart),
-                                Collections.singletonList(fieldPart), intermediateRecordType).first;
+                        workingType =
+                                Index.getNonNullableOpenFieldType(index, intermediateRecordType.getFieldType(fieldPart),
+                                        Collections.singletonList(fieldPart), intermediateRecordType).first;
                         if (workingType instanceof ARecordType) {
                             // We have an intermediate step, set our record step for the next loop iteration.
                             intermediateRecordType = (ARecordType) workingType;

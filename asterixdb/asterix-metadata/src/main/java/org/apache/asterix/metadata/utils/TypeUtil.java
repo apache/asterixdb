@@ -192,13 +192,15 @@ public class TypeUtil {
         private String bridgeNameFoundFromOpenTypeBuild;
         private IAType endOfOpenTypeBuild;
         private int indexOfOpenPart;
+        private boolean castDefaultNull;
 
         public void reset(ARecordType baseRecordType, List<String> keyFieldNames, List<Boolean> keyUnnestFlags,
-                IAType keyFieldType) {
+                IAType keyFieldType, boolean castDefaultNull) {
             this.baseRecordType = baseRecordType;
             this.keyFieldNames = keyFieldNames;
             this.keyUnnestFlags = keyUnnestFlags;
             this.keyFieldType = keyFieldType;
+            this.castDefaultNull = castDefaultNull;
         }
 
         public ARecordType build() throws AlgebricksException {
@@ -301,12 +303,16 @@ public class TypeUtil {
                     && ((AUnionType) enforcedFieldType).isUnknownableType()) {
                 enforcedFieldType = ((AUnionType) enforcedFieldType).getActualType();
             }
-            if (enforcedFieldType != null
-                    && !ATypeHierarchy.canPromote(enforcedFieldType.getTypeTag(), this.keyFieldType.getTypeTag())) {
-                throw new AsterixException(ErrorCode.COMPILATION_ERROR, "Cannot enforce field \""
-                        + String.join(".", this.keyFieldNames) + "\" to have type " + this.keyFieldType);
-            }
-            if (enforcedFieldType == null) {
+            if (enforcedFieldType != null) {
+                // choose the type specified in the DDL over the type in the dataset schema if CAST is used
+                if (castDefaultNull) {
+                    recordNameTypesMap.put(keyFieldNames.get(keyFieldNames.size() - 1),
+                            nestArrayType(keyFieldType, isKeyTypeWithUnnest));
+                } else if (!ATypeHierarchy.canPromote(enforcedFieldType.getTypeTag(), this.keyFieldType.getTypeTag())) {
+                    throw new AsterixException(ErrorCode.COMPILATION_ERROR, "Cannot enforce field \""
+                            + String.join(".", this.keyFieldNames) + "\" to have type " + this.keyFieldType);
+                }
+            } else {
                 recordNameTypesMap.put(keyFieldNames.get(keyFieldNames.size() - 1),
                         AUnionType.createUnknownableType(nestArrayType(keyFieldType, isKeyTypeWithUnnest)));
             }
@@ -425,7 +431,8 @@ public class TypeUtil {
                         "Indexing an open field is only supported on the record part");
             }
             enforcedTypeBuilder.reset(enforcedRecordType, keyFieldNames.get(i),
-                    Collections.nCopies(keyFieldNames.get(i).size(), false), keyFieldTypes.get(i));
+                    Collections.nCopies(keyFieldNames.get(i).size(), false), keyFieldTypes.get(i),
+                    valueIndexDetails.getCastDefaultNull().getOrElse(false));
             validateRecord(enforcedRecordType);
             enforcedRecordType = enforcedTypeBuilder.build();
         }
@@ -445,7 +452,7 @@ public class TypeUtil {
                         "Indexing an open field is only supported on the record part");
             }
             enforcedTypeBuilder.reset(enforcedRecordType, keyFieldNames.get(i),
-                    Collections.nCopies(keyFieldNames.get(i).size(), false), keyFieldTypes.get(i));
+                    Collections.nCopies(keyFieldNames.get(i).size(), false), keyFieldTypes.get(i), false);
             validateRecord(enforcedRecordType);
             enforcedRecordType = enforcedTypeBuilder.build();
         }
@@ -468,7 +475,7 @@ public class TypeUtil {
                 List<String> project = projectList.get(i);
                 enforcedTypeBuilder.reset(enforcedRecordType,
                         ArrayIndexUtil.getFlattenedKeyFieldNames(unnestList, project),
-                        ArrayIndexUtil.getUnnestFlags(unnestList, project), typeList.get(i));
+                        ArrayIndexUtil.getUnnestFlags(unnestList, project), typeList.get(i), false);
                 validateRecord(enforcedRecordType);
                 enforcedRecordType = enforcedTypeBuilder.build();
             }

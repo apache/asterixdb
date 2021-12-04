@@ -4318,10 +4318,10 @@
     <test-case FilePath="ddl">
       <compilation-unit name="index-cast-null-negative">
         <output-dir compare="Text">index-cast-null-negative</output-dir>
-        <expected-error>Cast Default Null is only allowed for B-Tree indexes</expected-error>
-        <expected-error>Cast Default Null cannot be specified together with ENFORCED</expected-error>
-        <expected-error>CAST is not allowed since field "[typed_f1]" is typed</expected-error>
-        <expected-error>CAST is not allowed since field "[typed_f2]" is typed</expected-error>
+        <expected-error>CAST modifier is only allowed for B-Tree indexes</expected-error>
+        <expected-error>CAST modifier cannot be specified together with ENFORCED</expected-error>
+        <expected-error>CAST modifier is used without specifying the type of the indexed field</expected-error>
+        <expected-error>Typed index on "[typed_f2]" field could be created only for open datatype</expected-error>
         <expected-error>Parameter invalid_date cannot be set</expected-error>
       </compilation-unit>
     </test-case>

@@ -32,6 +32,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
@@ -154,8 +155,13 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         return new Pair<>(actualKeyType, nullable);
     }
 
-    public static Pair<IAType, Boolean> getNonNullableOpenFieldType(IAType fieldType, List<String> fieldName,
-            ARecordType recType) throws AlgebricksException {
+    public static Pair<IAType, Boolean> getNonNullableOpenFieldType(Index index, IAType fieldType,
+            List<String> fieldName, ARecordType recType) throws AlgebricksException {
+        if (IndexUtil.castDefaultNull(index)) {
+            Pair<IAType, Boolean> nonNullableType = getNonNullableType(fieldType);
+            nonNullableType.second = true;
+            return nonNullableType;
+        }
         Pair<IAType, Boolean> keyPairType = null;
         IAType subType = recType;
         boolean nullable = false;
