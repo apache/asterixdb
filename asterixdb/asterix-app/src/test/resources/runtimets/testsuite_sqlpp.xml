@@ -10166,6 +10166,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="string">
+      <compilation-unit name="substr-ASTERIXDB-2949">
+        <output-dir compare="Text">substr-ASTERIXDB-2949</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="string">
       <compilation-unit name="substring-after-1">
         <output-dir compare="Text">substring-after-1</output-dir>
       </compilation-unit>

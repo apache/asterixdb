@@ -53,7 +53,14 @@ public interface INetworkSecurityConfig extends Serializable {
     String getKeyStorePassword();
 
     /**
-     * Gets a trust store file to be used for validating certificates of secured connections.
+     * Gets the trust store to be used for validating certificates of secured connections
+     *
+     * @return the trust store to be used
+     */
+    KeyStore getTrustStore();
+
+    /**
+     * Gets a trust store file to be used if {@link INetworkSecurityConfig#getTrustStore()} returns null.
      *
      * @return the trust store file
      */

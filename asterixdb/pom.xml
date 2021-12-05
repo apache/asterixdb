@@ -950,12 +950,12 @@
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-plugin-api</artifactId>
-        <version>3.6.3</version>
+        <version>3.8.3</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-model</artifactId>
-        <version>3.6.3</version>
+        <version>3.8.3</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -1389,7 +1389,7 @@
       <dependency>
         <groupId>it.unimi.dsi</groupId>
         <artifactId>fastutil</artifactId>
-        <version>8.5.4</version>
+        <version>8.5.6</version>
       </dependency>
       <dependency>
         <groupId>com.sun.xml.bind</groupId>
@@ -1414,12 +1414,12 @@
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-core</artifactId>
-        <version>3.6.3</version>
+        <version>3.8.3</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-compat</artifactId>
-        <version>3.6.3</version>
+        <version>3.8.3</version>
       </dependency>
       <dependency>
         <groupId>com.esri.geometry</groupId>
