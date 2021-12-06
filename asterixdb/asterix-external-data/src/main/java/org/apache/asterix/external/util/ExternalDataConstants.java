@@ -387,6 +387,7 @@ public class ExternalDataConstants {
         //Used when a connectionString is provided
         public static final String HADOOP_AZURE_FS_SAS = "fs.azure.sas";
         public static final String HADOOP_AZURE_BLOB_PROTOCOL = "wasbs";
+        public static final String HADOOP_AZURE_DATALAKE_PROTOCOL = "abfss";
     }
 
     public static class GCS {

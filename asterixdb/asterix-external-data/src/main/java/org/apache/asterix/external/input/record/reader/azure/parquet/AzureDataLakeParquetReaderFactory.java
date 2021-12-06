@@ -34,24 +34,27 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
-import com.azure.storage.blob.BlobServiceClient;
-import com.azure.storage.blob.models.BlobItem;
+import com.azure.storage.file.datalake.DataLakeServiceClient;
+import com.azure.storage.file.datalake.models.PathItem;
 
-public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
+public class AzureDataLakeParquetReaderFactory extends HDFSDataSourceFactory {
     private static final long serialVersionUID = -6140824803254158253L;
     private static final List<String> recordReaderNames =
-            Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB);
+            Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE);
 
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
             IWarningCollector warningCollector) throws AlgebricksException, HyracksDataException {
-        BlobServiceClient blobServiceClient = ExternalDataUtils.Azure.buildAzureBlobClient(configuration);
+        DataLakeServiceClient dataLakeServiceClient = ExternalDataUtils.Azure.buildAzureDatalakeClient(configuration);
+
         //Get endpoint
-        String endPoint = extractEndPoint(blobServiceClient.getAccountUrl());
+        String endPoint = extractEndPoint(dataLakeServiceClient.getAccountUrl());
+
         //Get path
-        String path = buildPathURIs(configuration, warningCollector, blobServiceClient, endPoint);
+        String path = buildPathURIs(configuration, warningCollector, dataLakeServiceClient, endPoint);
+
         //Put Azure configurations to AsterixDB's Hadoop configuration
-        putAzureBlobConfToHadoopConf(configuration, path);
+        putAzureDataLakeConfToHadoopConf(configuration, path);
 
         //Configure Hadoop Azure input splits
         JobConf conf = createHdfsConf(serviceCtx, configuration);
@@ -74,25 +77,25 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
      *
      * @param path Comma-delimited paths
      */
-    private static void putAzureBlobConfToHadoopConf(Map<String, String> configuration, String path) {
+    private static void putAzureDataLakeConfToHadoopConf(Map<String, String> configuration, String path) {
         configuration.put(ExternalDataConstants.KEY_PATH, path);
         configuration.put(ExternalDataConstants.KEY_INPUT_FORMAT, ExternalDataConstants.INPUT_FORMAT_PARQUET);
         configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_NOOP);
     }
 
     /**
-     * Build Azure Blob Storage path-style for the requested files
+     * Build Azure Datalake Storage path-style for the requested files
      *
      * @param configuration    properties
      * @param warningCollector warning collector
-     * @return Comma-delimited paths (e.g., "wasbs://container@accountName.blob.core.windows.net/file1.parquet,
-     * wasbs://container@accountName.blob.core.windows.net/file2.parquet")
+     * @return Comma-delimited paths (e.g., "abfss://<container-name>@<accountName>.dfs.core.windows.net/file1.parquet,
+     * abfss://<container-name>@<accountName>.dfs.core.windows.net//file2.parquet")
      * @throws CompilationException Compilation exception
      */
     private static String buildPathURIs(Map<String, String> configuration, IWarningCollector warningCollector,
-            BlobServiceClient blobServiceClient, String endPoint) throws CompilationException {
+            DataLakeServiceClient dataLakeServiceClient, String endPoint) throws CompilationException {
         IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
-        List<BlobItem> filesOnly = ExternalDataUtils.Azure.listBlobItems(blobServiceClient, configuration,
+        List<PathItem> filesOnly = ExternalDataUtils.Azure.listDatalakePathItems(dataLakeServiceClient, configuration,
                 includeExcludeMatcher, warningCollector);
 
         StringBuilder builder = new StringBuilder();
@@ -110,13 +113,13 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
     }
 
     private static String extractEndPoint(String uri) {
-        //The URI is in the form http(s)://<accountName>.blob.core.windows.net
+        //The URI is in the form http(s)://<accountName>.dfs.core.windows.net
         //We need to Remove the protocol (i.e., http(s)://) from the URI
         return uri.substring(uri.indexOf("//") + "//".length());
     }
 
-    private static void appendFileURI(StringBuilder builder, String container, String endPoint, BlobItem file) {
-        builder.append(ExternalDataConstants.Azure.HADOOP_AZURE_BLOB_PROTOCOL);
+    private static void appendFileURI(StringBuilder builder, String container, String endPoint, PathItem file) {
+        builder.append(ExternalDataConstants.Azure.HADOOP_AZURE_DATALAKE_PROTOCOL);
         builder.append("://");
         builder.append(container);
         builder.append('@');

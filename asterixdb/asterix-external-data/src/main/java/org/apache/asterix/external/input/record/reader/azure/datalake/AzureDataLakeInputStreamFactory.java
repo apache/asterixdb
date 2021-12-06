@@ -18,34 +18,21 @@
  */
 package org.apache.asterix.external.input.record.reader.azure.datalake;
 
-import static org.apache.asterix.external.util.ExternalDataConstants.Azure.RECURSIVE_FIELD_NAME;
-import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
-
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.function.BiPredicate;
-import java.util.regex.Matcher;
 
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.Warning;
 
-import com.azure.core.http.rest.PagedIterable;
-import com.azure.storage.file.datalake.DataLakeFileSystemClient;
 import com.azure.storage.file.datalake.DataLakeServiceClient;
-import com.azure.storage.file.datalake.models.ListPathsOptions;
 import com.azure.storage.file.datalake.models.PathItem;
 
 public class AzureDataLakeInputStreamFactory extends AbstractExternalInputStreamFactory {
@@ -62,66 +49,15 @@ public class AzureDataLakeInputStreamFactory extends AbstractExternalInputStream
             throws AlgebricksException {
         super.configure(ctx, configuration, warningCollector);
 
-        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-
-        List<PathItem> filesOnly = new ArrayList<>();
-
         // Ensure the validity of include/exclude
         ExternalDataUtils.validateIncludeExclude(configuration);
-
+        IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
         DataLakeServiceClient client = ExternalDataUtils.Azure.buildAzureDatalakeClient(configuration);
-        DataLakeFileSystemClient fileSystemClient;
-        try {
-            fileSystemClient = client.getFileSystemClient(container);
+        List<PathItem> filesOnly = ExternalDataUtils.Azure.listDatalakePathItems(client, configuration,
+                includeExcludeMatcher, warningCollector);
 
-            // Get all objects in a container and extract the paths to files
-            ListPathsOptions listOptions = new ListPathsOptions();
-            boolean recursive = Boolean.parseBoolean(configuration.get(RECURSIVE_FIELD_NAME));
-            listOptions.setRecursive(recursive);
-            listOptions.setPath(ExternalDataUtils.getPrefix(configuration, false));
-            PagedIterable<PathItem> pathItems = fileSystemClient.listPaths(listOptions, null);
-
-            // Collect the paths to files only
-            IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
-            collectAndFilterFiles(pathItems, includeExcludeMatcher.getPredicate(),
-                    includeExcludeMatcher.getMatchersList(), filesOnly);
-
-            // Warn if no files are returned
-            if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
-                Warning warning = Warning.of(null, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
-                warningCollector.warn(warning);
-            }
-
-            // Distribute work load amongst the partitions
-            distributeWorkLoad(filesOnly, getPartitionsCount());
-        } catch (Exception ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
-        }
-    }
-
-    /**
-     * Collects and filters the files only, and excludes any folders
-     *
-     * @param items     storage items
-     * @param predicate predicate to test with for file filtration
-     * @param matchers  include/exclude matchers to test against
-     * @param filesOnly List containing the files only (excluding folders)
-     */
-    private void collectAndFilterFiles(Iterable<PathItem> items, BiPredicate<List<Matcher>, String> predicate,
-            List<Matcher> matchers, List<PathItem> filesOnly) {
-        for (PathItem item : items) {
-            String uri = item.getName();
-
-            // skip folders
-            if (uri.endsWith("/")) {
-                continue;
-            }
-
-            // No filter, add file
-            if (predicate.test(matchers, uri)) {
-                filesOnly.add(item);
-            }
-        }
+        // Distribute work load amongst the partitions
+        distributeWorkLoad(filesOnly, getPartitionsCount());
     }
 
     /**

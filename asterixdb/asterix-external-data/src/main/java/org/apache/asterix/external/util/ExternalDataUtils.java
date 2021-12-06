@@ -51,6 +51,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.Azure.HADOO
 import static org.apache.asterix.external.util.ExternalDataConstants.Azure.HADOOP_AZURE_FS_ACCOUNT_KEY;
 import static org.apache.asterix.external.util.ExternalDataConstants.Azure.HADOOP_AZURE_FS_SAS;
 import static org.apache.asterix.external.util.ExternalDataConstants.Azure.MANAGED_IDENTITY_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.Azure.RECURSIVE_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.Azure.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.Azure.TENANT_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.GCS.JSON_CREDENTIALS_FIELD_NAME;
@@ -127,6 +128,7 @@ import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import org.apache.hyracks.util.StorageUtil;
 
 import com.azure.core.credential.AzureSasCredential;
+import com.azure.core.http.rest.PagedIterable;
 import com.azure.identity.ClientCertificateCredentialBuilder;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.azure.identity.ManagedIdentityCredentialBuilder;
@@ -1564,7 +1566,7 @@ public class ExternalDataUtils {
             }
         }
 
-        public static List<BlobItem> listBlobItem(BlobServiceClient blobServiceClient,
+        public static List<BlobItem> listBlobItems(BlobServiceClient blobServiceClient,
                 Map<String, String> configuration, IncludeExcludeMatcher includeExcludeMatcher,
                 IWarningCollector warningCollector) throws CompilationException {
             String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
@@ -1584,7 +1586,7 @@ public class ExternalDataUtils {
                 Iterable<BlobItem> blobItems = blobContainer.listBlobs(listBlobsOptions, null);
 
                 // Collect the paths to files only
-                collectAndFilterFiles(blobItems, includeExcludeMatcher.getPredicate(),
+                collectAndFilterBlobFiles(blobItems, includeExcludeMatcher.getPredicate(),
                         includeExcludeMatcher.getMatchersList(), filesOnly);
 
                 // Warn if no files are returned
@@ -1607,9 +1609,71 @@ public class ExternalDataUtils {
          * @param matchers  include/exclude matchers to test against
          * @param filesOnly List containing the files only (excluding folders)
          */
-        private static void collectAndFilterFiles(Iterable<BlobItem> items,
+        private static void collectAndFilterBlobFiles(Iterable<BlobItem> items,
                 BiPredicate<List<Matcher>, String> predicate, List<Matcher> matchers, List<BlobItem> filesOnly) {
             for (BlobItem item : items) {
+                String uri = item.getName();
+
+                // skip folders
+                if (uri.endsWith("/")) {
+                    continue;
+                }
+
+                // No filter, add file
+                if (predicate.test(matchers, uri)) {
+                    filesOnly.add(item);
+                }
+            }
+        }
+
+        public static List<PathItem> listDatalakePathItems(DataLakeServiceClient client,
+                Map<String, String> configuration, IncludeExcludeMatcher includeExcludeMatcher,
+                IWarningCollector warningCollector) throws CompilationException {
+            String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+
+            List<PathItem> filesOnly = new ArrayList<>();
+
+            // Ensure the validity of include/exclude
+            ExternalDataUtils.validateIncludeExclude(configuration);
+
+            DataLakeFileSystemClient fileSystemClient;
+            try {
+                fileSystemClient = client.getFileSystemClient(container);
+
+                // Get all objects in a container and extract the paths to files
+                ListPathsOptions listOptions = new ListPathsOptions();
+                boolean recursive = Boolean.parseBoolean(configuration.get(RECURSIVE_FIELD_NAME));
+                listOptions.setRecursive(recursive);
+                listOptions.setPath(ExternalDataUtils.getPrefix(configuration, false));
+                PagedIterable<PathItem> pathItems = fileSystemClient.listPaths(listOptions, null);
+
+                // Collect the paths to files only
+                collectAndFilterDatalakeFiles(pathItems, includeExcludeMatcher.getPredicate(),
+                        includeExcludeMatcher.getMatchersList(), filesOnly);
+
+                // Warn if no files are returned
+                if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
+                    Warning warning = Warning.of(null, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
+                    warningCollector.warn(warning);
+                }
+            } catch (Exception ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            }
+
+            return filesOnly;
+        }
+
+        /**
+         * Collects and filters the files only, and excludes any folders
+         *
+         * @param items     storage items
+         * @param predicate predicate to test with for file filtration
+         * @param matchers  include/exclude matchers to test against
+         * @param filesOnly List containing the files only (excluding folders)
+         */
+        private static void collectAndFilterDatalakeFiles(Iterable<PathItem> items,
+                BiPredicate<List<Matcher>, String> predicate, List<Matcher> matchers, List<PathItem> filesOnly) {
+            for (PathItem item : items) {
                 String uri = item.getName();
 
                 // skip folders
@@ -1675,12 +1739,6 @@ public class ExternalDataUtils {
             // check if the format property is present
             if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
                 throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
-            }
-
-            // parquet is not supported for azure datalake
-            if (isParquetFormat(configuration)) {
-                throw new CompilationException(INVALID_REQ_PARAM_VAL, srcLoc, KEY_FORMAT,
-                        configuration.get(KEY_FORMAT));
             }
 
             validateIncludeExclude(configuration);
