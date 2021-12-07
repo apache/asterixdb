@@ -617,6 +617,13 @@
           <groupId>org.jvnet.jaxb2.maven2</groupId>
           <artifactId>maven-jaxb2-plugin</artifactId>
           <version>0.14.0</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.glassfish.jaxb</groupId>
+              <artifactId>jaxb-runtime</artifactId>
+              <version>2.3.5</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <groupId>pl.project13.maven</groupId>
