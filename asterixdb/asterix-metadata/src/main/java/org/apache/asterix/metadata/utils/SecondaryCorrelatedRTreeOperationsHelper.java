@@ -207,7 +207,7 @@ public class SecondaryCorrelatedRTreeOperationsHelper extends SecondaryCorrelate
 
         // Generate compensate tuples for upsert
         IOperatorDescriptor processorOp = createTupleProcessorOp(spec, secondaryRecDescConsideringPointMBR,
-                numNestedSecondaryKeFieldsConsideringPointMBR, numPrimaryKeys, false);
+                numNestedSecondaryKeFieldsConsideringPointMBR, numPrimaryKeys, false, true, true);
 
         ExternalSortOperatorDescriptor sortOp = createSortOp(spec,
                 getTaggedSecondaryComparatorFactories(new IBinaryComparatorFactory[] {

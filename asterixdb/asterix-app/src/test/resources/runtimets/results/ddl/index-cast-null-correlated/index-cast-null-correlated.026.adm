@@ -1,0 +1,6 @@
+{ "values": [ null, 3 ] }
+{ "values": [ null, 5 ] }
+{ "values": [ null, 6 ] }
+{ "values": [ "date: { 2019-01-20 }", 4 ] }
+{ "values": [ "date: { 2020-02-20 }", 1 ] }
+{ "values": [ "date: { 2021-11-25 }", 2 ] }

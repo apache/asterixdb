@@ -1,0 +1,1 @@
+{ "DataverseName": "test", "DatasetName": "ds2", "IndexName": "ds2_o_idx2", "IndexStructure": "BTREE", "SearchKey": [ [ "o_s_f" ], [ "o_d_f" ] ], "IsPrimary": false, "Timestamp": "Sun Oct 31 17:55:11 PDT 2021", "PendingOp": 0, "SearchKeyType": [ "double", "string" ], "ExcludeUnknownKey": false, "Cast": { "Default": null } }

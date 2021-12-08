@@ -1,0 +1,58 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Description  : tests the bulk load path of CREATE INDEX
+ */
+
+USE test;
+
+CREATE INDEX ds1_o_idx1 ON ds1(o_s_f: int, o_i_f: string) INCLUDE UNKNOWN KEY CAST(DEFAULT NULL);
+CREATE INDEX ds1_o_idx2 ON ds1(o_s_f: double, o_d_f: string) CAST(DEFAULT NULL);
+
+CREATE INDEX ds1_o_idx4 ON ds1(a.s_f: int) CAST(DEFAULT NULL);
+
+CREATE INDEX ds1_o_idx5 ON ds1(a.any_f: int) CAST(DEFAULT NULL);
+CREATE INDEX ds1_o_idx6 ON ds1(a.any_f: string) CAST(DEFAULT NULL);
+CREATE INDEX ds1_o_idx7 ON ds1(a.any_f: double) CAST(DEFAULT NULL);
+
+// temporal
+CREATE INDEX ds4_o_idx_f_dt ON ds4(f_dt: datetime) CAST (DEFAULT NULL);
+CREATE INDEX ds4_o_idx_f_d ON ds4(f_d: date) CAST (DEFAULT NULL);
+CREATE INDEX ds4_o_idx_f_t ON ds4(f_t: time) CAST (DEFAULT NULL);
+
+// temporal with format
+CREATE INDEX ds4_o_idx_f_dt_fmt ON ds4(f_dt_fmt: datetime) CAST (DEFAULT NULL datetime 'MM/DD/YYYY hh:mm:ss.nnna');
+CREATE INDEX ds4_o_idx_f_d_fmt ON ds4(f_d_fmt: date) CAST (DEFAULT NULL date 'MM/DD/YYYY');
+CREATE INDEX ds4_o_idx_f_t_fmt ON ds4(f_t_fmt: time) CAST (DEFAULT NULL time 'hh:mm:ss.nnna');
+
+CREATE INDEX ds4_o_idx_invalid_fmt ON ds4(f_d_fmt: date) CAST (DEFAULT NULL date 'invalid_format');
+
+// on closed fields
+CREATE INDEX idx9 ON ds5(s_f1);
+CREATE INDEX idx10 ON ds5(s_f1: string) CAST (DEFAULT NULL);
+CREATE INDEX idx11 ON ds5(s_f1: int) CAST (DEFAULT NULL);
+
+CREATE INDEX idx12 ON ds5(s_f2);
+CREATE INDEX idx13 ON ds5(s_f2: string) CAST (DEFAULT NULL);
+CREATE INDEX idx14 ON ds5(s_f2: int) CAST (DEFAULT NULL);
+
+CREATE INDEX idx15 ON ds5(i_f: int) CAST (DEFAULT NULL);
+CREATE INDEX idx16 ON ds5(i_f: string) CAST (DEFAULT NULL);
+
+CREATE INDEX idx_exc2 ON ds5(s_f2: int) EXCLUDE UNKNOWN KEY CAST (DEFAULT NULL);

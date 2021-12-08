@@ -35,6 +35,7 @@ import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalIndexBulkLoadOperatorDescriptor;
 import org.apache.asterix.external.operators.ExternalIndexBulkModifyOperatorDescriptor;
 import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
+import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -44,10 +45,15 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
+import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AbstractFunctionDescriptor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
+import org.apache.asterix.om.functions.IFunctionManager;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.IsUnknownDescriptor;
@@ -59,6 +65,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConst
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -282,6 +289,63 @@ public abstract class SecondaryIndexOperationsHelper {
         primaryRecDesc = new RecordDescriptor(primaryRecFields, primaryTypeTraits);
     }
 
+    protected IScalarEvaluatorFactory createFieldAccessor(ARecordType recordType, int recordColumn,
+            List<String> fieldName) throws AlgebricksException {
+        IFunctionManager funManger = metadataProvider.getFunctionManager();
+        IDataFormat dataFormat = metadataProvider.getDataFormat();
+        return dataFormat.getFieldAccessEvaluatorFactory(funManger, recordType, fieldName, recordColumn, sourceLoc);
+    }
+
+    protected IScalarEvaluatorFactory createFieldCast(IScalarEvaluatorFactory fieldEvalFactory,
+            boolean isOverridingKeyFieldTypes, IAType enforcedRecordType, ARecordType recordType, IAType targetType)
+            throws AlgebricksException {
+        IFunctionManager funManger = metadataProvider.getFunctionManager();
+        IDataFormat dataFormat = metadataProvider.getDataFormat();
+
+        // check IndexUtil.castDefaultNull(index), too, because we always want to cast even if the overriding type is
+        // the same as the overridden type (this is for the case where overriding the type of closed field is allowed)
+        // e.g. field "a" is a string in the dataset ds; CREATE INDEX .. ON ds(a:string) CAST (DEFAULT NULL)
+        boolean castIndexedField = isOverridingKeyFieldTypes
+                && (!enforcedRecordType.equals(recordType) || IndexUtil.castDefaultNull(index));
+        if (!castIndexedField) {
+            return fieldEvalFactory;
+        }
+
+        IScalarEvaluatorFactory castFieldEvalFactory;
+        if (IndexUtil.castDefaultNull(index)) {
+            castFieldEvalFactory = createConstructorFunction(funManger, dataFormat, fieldEvalFactory, targetType);
+        } else if (index.isEnforced()) {
+            IScalarEvaluatorFactory[] castArg = new IScalarEvaluatorFactory[] { fieldEvalFactory };
+            castFieldEvalFactory =
+                    createCastFunction(targetType, BuiltinType.ANY, true, sourceLoc).createEvaluatorFactory(castArg);
+        } else {
+            IScalarEvaluatorFactory[] castArg = new IScalarEvaluatorFactory[] { fieldEvalFactory };
+            castFieldEvalFactory =
+                    createCastFunction(targetType, BuiltinType.ANY, false, sourceLoc).createEvaluatorFactory(castArg);
+        }
+        return castFieldEvalFactory;
+    }
+
+    protected IScalarEvaluatorFactory createConstructorFunction(IFunctionManager funManager, IDataFormat dataFormat,
+            IScalarEvaluatorFactory fieldEvalFactory, IAType fieldType) throws AlgebricksException {
+        IAType targetType = TypeComputeUtils.getActualType(fieldType);
+        Pair<FunctionIdentifier, IAObject> constructorWithFmt =
+                IndexUtil.getTypeConstructorDefaultNull(index, targetType, sourceLoc);
+        FunctionIdentifier typeConstructorFun = constructorWithFmt.first;
+        IFunctionDescriptor typeConstructor = funManager.lookupFunction(typeConstructorFun, sourceLoc);
+        IScalarEvaluatorFactory[] args;
+        // add the format argument if specified
+        if (constructorWithFmt.second != null) {
+            IScalarEvaluatorFactory fmtEvalFactory =
+                    dataFormat.getConstantEvalFactory(new AsterixConstantValue(constructorWithFmt.second));
+            args = new IScalarEvaluatorFactory[] { fieldEvalFactory, fmtEvalFactory };
+        } else {
+            args = new IScalarEvaluatorFactory[] { fieldEvalFactory };
+        }
+        typeConstructor.setSourceLocation(sourceLoc);
+        return typeConstructor.createEvaluatorFactory(args);
+    }
+
     protected AlgebricksMetaOperatorDescriptor createAssignOp(JobSpecification spec, int numSecondaryKeyFields,
             RecordDescriptor secondaryRecDesc) throws AlgebricksException {
         int[] outColumns = new int[numSecondaryKeyFields + numFilterFields];
@@ -343,11 +407,12 @@ public abstract class SecondaryIndexOperationsHelper {
                 new RecordDescriptor[] { enforcedRecDesc });
     }
 
-    IFunctionDescriptor createCastFunction(boolean strictCast, SourceLocation sourceLoc) throws AlgebricksException {
+    protected IFunctionDescriptor createCastFunction(boolean strictCast, SourceLocation sourceLoc)
+            throws AlgebricksException {
         return createCastFunction(enforcedItemType, itemType, strictCast, sourceLoc);
     }
 
-    IFunctionDescriptor createCastFunction(IAType targetType, IAType inputType, boolean strictCast,
+    protected IFunctionDescriptor createCastFunction(IAType targetType, IAType inputType, boolean strictCast,
             SourceLocation sourceLoc) throws AlgebricksException {
         IFunctionDescriptor castFuncDesc = metadataProvider.getFunctionManager()
                 .lookupFunction(strictCast ? BuiltinFunctions.CAST_TYPE : BuiltinFunctions.CAST_TYPE_LAX, sourceLoc);
@@ -367,6 +432,15 @@ public abstract class SecondaryIndexOperationsHelper {
         sortOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, sortOp, primaryPartitionConstraint);
         return sortOp;
+    }
+
+    protected static boolean excludeUnknownKeys(Index index, Index.ValueIndexDetails details,
+            boolean anySecKeyIsNullable) {
+        return excludeUnknowns(index, details) && (anySecKeyIsNullable || details.isOverridingKeyFieldTypes());
+    }
+
+    private static boolean excludeUnknowns(Index index, Index.ValueIndexDetails details) {
+        return index.isPrimaryKeyIndex() || details.getExcludeUnknownKey().getOrElse(false);
     }
 
     protected LSMIndexBulkLoadOperatorDescriptor createTreeIndexBulkLoadOp(JobSpecification spec,

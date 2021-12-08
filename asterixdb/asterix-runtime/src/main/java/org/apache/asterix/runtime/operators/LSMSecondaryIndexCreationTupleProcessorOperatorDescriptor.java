@@ -31,7 +31,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
 public class LSMSecondaryIndexCreationTupleProcessorOperatorDescriptor
         extends AbstractSingleActivityOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final IMissingWriterFactory missingWriterFactory;
 
@@ -40,10 +40,13 @@ public class LSMSecondaryIndexCreationTupleProcessorOperatorDescriptor
     private final int numPrimaryKeys;
 
     private final boolean hasBuddyBTree;
+    private final boolean excludeUnknownKeys;
+    private final boolean forAnyUnknownKey;
 
     public LSMSecondaryIndexCreationTupleProcessorOperatorDescriptor(IOperatorDescriptorRegistry spec,
             RecordDescriptor outRecDesc, IMissingWriterFactory missingWriterFactory, int numTagFields,
-            int numSecondaryKeys, int numPrimaryKeys, boolean hasBuddyBTree) {
+            int numSecondaryKeys, int numPrimaryKeys, boolean hasBuddyBTree, boolean excludeUnknownKeys,
+            boolean forAnyUnknownKey) {
         super(spec, 1, 1);
         this.outRecDescs[0] = outRecDesc;
         this.missingWriterFactory = missingWriterFactory;
@@ -51,6 +54,8 @@ public class LSMSecondaryIndexCreationTupleProcessorOperatorDescriptor
         this.numSecondaryKeys = numSecondaryKeys;
         this.numPrimaryKeys = numPrimaryKeys;
         this.hasBuddyBTree = hasBuddyBTree;
+        this.excludeUnknownKeys = excludeUnknownKeys;
+        this.forAnyUnknownKey = forAnyUnknownKey;
     }
 
     @Override
@@ -58,6 +63,6 @@ public class LSMSecondaryIndexCreationTupleProcessorOperatorDescriptor
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new LSMSecondaryIndexCreationTupleProcessorNodePushable(ctx, partition,
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), missingWriterFactory, numTagFields,
-                numSecondaryKeys, numPrimaryKeys, hasBuddyBTree);
+                numSecondaryKeys, numPrimaryKeys, hasBuddyBTree, excludeUnknownKeys, forAnyUnknownKey);
     }
 }

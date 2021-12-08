@@ -1,0 +1,6 @@
+{ "values": [ null, 3 ] }
+{ "values": [ null, 5 ] }
+{ "values": [ null, 6 ] }
+{ "values": [ "datetime: { 2019-01-20T14:40:41.001 }", 4 ] }
+{ "values": [ "datetime: { 2020-02-20T01:40:41.001 }", 1 ] }
+{ "values": [ "datetime: { 2021-11-25T22:12:51.999 }", 2 ] }

@@ -307,7 +307,7 @@ public class TypeUtil {
                 // choose the type specified in the DDL over the type in the dataset schema if CAST is used
                 if (castDefaultNull) {
                     recordNameTypesMap.put(keyFieldNames.get(keyFieldNames.size() - 1),
-                            nestArrayType(keyFieldType, isKeyTypeWithUnnest));
+                            AUnionType.createNullableType(nestArrayType(keyFieldType, isKeyTypeWithUnnest)));
                 } else if (!ATypeHierarchy.canPromote(enforcedFieldType.getTypeTag(), this.keyFieldType.getTypeTag())) {
                     throw new AsterixException(ErrorCode.COMPILATION_ERROR, "Cannot enforce field \""
                             + String.join(".", this.keyFieldNames) + "\" to have type " + this.keyFieldType);

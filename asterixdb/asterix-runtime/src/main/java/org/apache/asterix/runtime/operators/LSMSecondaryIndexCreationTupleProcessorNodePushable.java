@@ -82,6 +82,8 @@ public class LSMSecondaryIndexCreationTupleProcessorNodePushable extends Abstrac
     private DataOutput dos;
     private final IMissingWriter missingWriter;
     private DeletedTupleCounter deletedTupleCounter;
+    private final boolean excludeUnknownKeys;
+    private final boolean forAnyUnknownKey;
 
     public static class DeletedTupleCounter extends AbstractStateObject {
         private final Map<Integer, Integer> map = new HashMap<>();
@@ -102,12 +104,14 @@ public class LSMSecondaryIndexCreationTupleProcessorNodePushable extends Abstrac
 
     public LSMSecondaryIndexCreationTupleProcessorNodePushable(IHyracksTaskContext ctx, int partition,
             RecordDescriptor inputRecDesc, IMissingWriterFactory missingWriterFactory, int numTagFields,
-            int numSecondaryKeys, int numPrimaryKeys, boolean hasBuddyBTree) throws HyracksDataException {
+            int numSecondaryKeys, int numPrimaryKeys, boolean hasBuddyBTree, boolean excludeUnknownKeys,
+            boolean forAnyUnknownKey) throws HyracksDataException {
 
         super(ctx, partition, inputRecDesc, numTagFields, numSecondaryKeys, numPrimaryKeys, hasBuddyBTree);
 
         this.prevMatterTupleBuilder = new ArrayTupleBuilder(inputRecDesc.getFieldCount());
-
+        this.excludeUnknownKeys = excludeUnknownKeys;
+        this.forAnyUnknownKey = forAnyUnknownKey;
         if (this.hasBuddyBTree) {
             missingWriter = missingWriterFactory.createMissingWriter();
         } else {
@@ -192,16 +196,16 @@ public class LSMSecondaryIndexCreationTupleProcessorNodePushable extends Abstrac
 
     private void processMatterTuple(ITupleReference tuple) throws HyracksDataException {
 
-        boolean isNewValueMissing = isSecondaryKeyMissing(tuple);
-        boolean isOldValueMissing = !hasPrevMatterTuple || !equalPrimaryKeys(tuple, prevMatterTuple)
-                || isSecondaryKeyMissing(prevMatterTuple);
+        boolean skipNewValue = skipTuple(tuple);
+        boolean skipOldValue =
+                !hasPrevMatterTuple || !equalPrimaryKeys(tuple, prevMatterTuple) || skipTuple(prevMatterTuple);
 
-        if (isNewValueMissing && isOldValueMissing) {
+        if (skipNewValue && skipOldValue) {
             // if both values are missing, then do nothing
             return;
         }
         // At least one is not null
-        if (!isOldValueMissing && equalSecondaryKeys(prevMatterTuple, tuple)) {
+        if (!skipOldValue && equalSecondaryKeys(prevMatterTuple, tuple)) {
             if (hasBuddyBTree) {
                 // if the index has buddy btree, then we have to delete the index entry
                 // from the older disk components
@@ -211,11 +215,11 @@ public class LSMSecondaryIndexCreationTupleProcessorNodePushable extends Abstrac
             writeMatterTuple(tuple);
             return;
         }
-        if (!isOldValueMissing) {
+        if (!skipOldValue) {
             // we need to delete the previous entry
             writeAntiMatterTuple(prevMatterTuple, getComponentPos(tuple));
         }
-        if (!isNewValueMissing) {
+        if (!skipNewValue) {
             // we need to insert the new entry
             writeMatterTuple(tuple);
         }
@@ -223,10 +227,10 @@ public class LSMSecondaryIndexCreationTupleProcessorNodePushable extends Abstrac
     }
 
     private void processAntiMatterTuple(ITupleReference tuple) throws HyracksDataException {
-        boolean isNewValueMissing = isSecondaryKeyMissing(tuple);
+        boolean skipNewValue = skipTuple(tuple);
         // if the secondary value is missing (which means the secondary value of the previous matter tuple
         // is also missing), we then simply ignore this tuple since there is nothing to delete
-        if (!isNewValueMissing) {
+        if (!skipNewValue) {
             writeAntiMatterTuple(tuple, getComponentPos(tuple));
         }
     }
@@ -264,7 +268,12 @@ public class LSMSecondaryIndexCreationTupleProcessorNodePushable extends Abstrac
         FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
     }
 
-    private boolean isSecondaryKeyMissing(ITupleReference tuple) {
+    private boolean skipTuple(ITupleReference tuple) {
+        return excludeUnknownKeys
+                && (forAnyUnknownKey ? isAnySecondaryKeyMissing(tuple) : isAllSecondaryKeysMissing(tuple));
+    }
+
+    private boolean isAnySecondaryKeyMissing(ITupleReference tuple) {
         for (int i = numTagFields; i < numTagFields + numSecondaryKeys; i++) {
             if (TypeTagUtil.isType(tuple, i, ATypeTag.SERIALIZED_MISSING_TYPE_TAG)
                     || TypeTagUtil.isType(tuple, i, ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
@@ -272,6 +281,16 @@ public class LSMSecondaryIndexCreationTupleProcessorNodePushable extends Abstrac
             }
         }
         return false;
+    }
+
+    private boolean isAllSecondaryKeysMissing(ITupleReference tuple) {
+        for (int i = numTagFields; i < numTagFields + numSecondaryKeys; i++) {
+            if (!TypeTagUtil.isType(tuple, i, ATypeTag.SERIALIZED_MISSING_TYPE_TAG)
+                    && !TypeTagUtil.isType(tuple, i, ATypeTag.SERIALIZED_NULL_TYPE_TAG)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean equalPrimaryKeys(ITupleReference tuple1, ITupleReference tuple2) {

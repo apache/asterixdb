@@ -239,8 +239,8 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
                 createAssignOp(spec, numSecondaryKeys, taggedSecondaryRecDesc);
 
         // Generate compensate tuples for upsert
-        IOperatorDescriptor processorOp =
-                createTupleProcessorOp(spec, taggedSecondaryRecDesc, numSecondaryKeys, numPrimaryKeys, true);
+        IOperatorDescriptor processorOp = createTupleProcessorOp(spec, taggedSecondaryRecDesc, numSecondaryKeys,
+                numPrimaryKeys, true, true, true);
 
         // Create a tokenizer op.
         AbstractOperatorDescriptor tokenizerOp = createTokenizerOp(spec);

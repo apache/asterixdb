@@ -247,10 +247,11 @@ public abstract class SecondaryCorrelatedTreeIndexOperationsHelper extends Secon
     }
 
     protected IOperatorDescriptor createTupleProcessorOp(JobSpecification spec, RecordDescriptor taggedSecondaryRecDesc,
-            int numSecondaryKeyFields, int numPrimaryKeyFields, boolean hasBuddyBTree) {
+            int numSecondaryKeyFields, int numPrimaryKeyFields, boolean hasBuddyBTree, boolean excludeUnknownKeys,
+            boolean forAnyUnknownKey) {
         IOperatorDescriptor op = new LSMSecondaryIndexCreationTupleProcessorOperatorDescriptor(spec,
                 taggedSecondaryRecDesc, MissingWriterFactory.INSTANCE, NUM_TAG_FIELDS, numSecondaryKeyFields,
-                numPrimaryKeyFields, hasBuddyBTree);
+                numPrimaryKeyFields, hasBuddyBTree, excludeUnknownKeys, forAnyUnknownKey);
         op.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, op, primaryPartitionConstraint);
         return op;

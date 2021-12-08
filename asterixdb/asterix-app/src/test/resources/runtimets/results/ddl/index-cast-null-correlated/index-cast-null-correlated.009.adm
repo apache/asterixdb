@@ -1,0 +1,9 @@
+{ "values": [ null, null, 9 ] }
+{ "values": [ null, "1", 1 ] }
+{ "values": [ null, "4", 4 ] }
+{ "values": [ null, "5", 5 ] }
+{ "values": [ null, "8", 8 ] }
+{ "values": [ 2, "2", 2 ] }
+{ "values": [ 3, "3", 3 ] }
+{ "values": [ 6, "6", 6 ] }
+{ "values": [ 7, "7", 7 ] }

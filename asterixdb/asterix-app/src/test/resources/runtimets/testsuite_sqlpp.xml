@@ -4316,6 +4316,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
+      <compilation-unit name="index-cast-null-correlated">
+        <output-dir compare="Text">index-cast-null-correlated</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
       <compilation-unit name="index-cast-null-negative">
         <output-dir compare="Text">index-cast-null-negative</output-dir>
         <expected-error>CAST modifier is only allowed for B-Tree indexes</expected-error>
@@ -6533,6 +6538,11 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="cast-default-null">
         <output-dir compare="Text">cast-default-null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="cast-default-null-correlated">
+        <output-dir compare="Text">cast-default-null-correlated</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

@@ -24,23 +24,15 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
-import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
-import org.apache.asterix.om.base.IAObject;
-import org.apache.asterix.om.constants.AsterixConstantValue;
-import org.apache.asterix.om.functions.IFunctionDescriptor;
-import org.apache.asterix.om.functions.IFunctionManager;
-import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
@@ -73,12 +65,10 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
-        boolean isOverridingKeyFieldTypes = indexDetails.isOverridingKeyFieldTypes();
         int[] fieldPermutation = createFieldPermutationForBulkLoadOp(indexDetails.getKeyFieldNames().size());
         IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
-        boolean excludeUnknown =
-                excludeUnknowns(index, indexDetails) && (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes);
+        boolean excludeUnknown = excludeUnknownKeys(index, indexDetails, anySecondaryKeyIsNullable);
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             /*
              * In case of external data,
@@ -133,7 +123,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             return spec;
         } else {
             // job spec:
-            // key provider -> primary idx -> (cast assign)? -> assign -> (select)? -> (sort)? -> bulk load -> sink
+            // key provider -> primary idx scan -> cast assign -> (select)? -> (sort)? -> bulk load -> sink
             IndexUtil.bindJobEventListener(spec, metadataProvider);
 
             // dummy key provider ----> primary index scan
@@ -142,7 +132,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
             sourceOp = targetOp;
-            // primary index ----> cast assign op
+            // primary index ----> cast assign op (produces the secondary index entry)
             targetOp = createAssignOp(spec, indexDetails.getKeyFieldNames().size(), secondaryRecDesc);
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
@@ -157,14 +147,13 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             }
             // no need to sort if the index is secondary primary index
             if (!indexDetails.getKeyFieldNames().isEmpty()) {
-                // sort by secondary keys.
-                // assign op OR select op ----> sort op
+                // sort by <SKs,PKs>. cast assign op OR select op ----> sort op
                 targetOp = createSortOp(spec, secondaryComparatorFactories, secondaryRecDesc);
                 spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
                 sourceOp = targetOp;
             }
 
-            // assign op OR select op OR sort op ----> bulk load op
+            // cast assign op OR select op OR sort op ----> bulk load op
             targetOp = createTreeIndexBulkLoadOp(spec, fieldPermutation, dataflowHelperFactory,
                     StorageConstants.DEFAULT_TREE_FILL_FACTOR);
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
@@ -208,12 +197,12 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
     @Override
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {
         Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
-        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
+        int numSecondaryKeys = getNumSecondaryKeys();
         secondaryFieldAccessEvalFactories = new IScalarEvaluatorFactory[numSecondaryKeys + numFilterFields];
         secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];
         secondaryBloomFilterKeyFields = new int[numSecondaryKeys];
         ISerializerDeserializer[] secondaryRecFields =
-                new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys + numFilterFields];
+                new ISerializerDeserializer[numSecondaryKeys + numPrimaryKeys + numFilterFields];
         ISerializerDeserializer[] enforcedRecFields =
                 new ISerializerDeserializer[1 + numPrimaryKeys + (dataset.hasMetaPart() ? 1 : 0) + numFilterFields];
         ITypeTraits[] enforcedTypeTraits =
@@ -240,11 +229,14 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
                 sourceColumn = recordColumn + 1;
                 enforcedType = enforcedMetaType;
             }
-            secondaryFieldAccessEvalFactories[i] = createFieldAccessors(i, isOverridingKeyFieldTypes, enforcedType,
-                    sourceType, sourceColumn, indexDetails, indexDetails.getKeyFieldTypes().get(i));
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index,
-                    indexDetails.getKeyFieldTypes().get(i), indexDetails.getKeyFieldNames().get(i), sourceType);
+            List<String> secFieldName = indexDetails.getKeyFieldNames().get(i);
+            IAType secFieldType = indexDetails.getKeyFieldTypes().get(i);
+            Pair<IAType, Boolean> keyTypePair =
+                    Index.getNonNullableOpenFieldType(index, secFieldType, secFieldName, sourceType);
             IAType keyType = keyTypePair.first;
+            IScalarEvaluatorFactory secFieldAccessor = createFieldAccessor(sourceType, sourceColumn, secFieldName);
+            secondaryFieldAccessEvalFactories[i] =
+                    createFieldCast(secFieldAccessor, isOverridingKeyFieldTypes, enforcedType, sourceType, keyType);
             anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
             secondaryRecFields[i] = serdeProvider.getSerializerDeserializer(keyType);
             secondaryComparatorFactories[i] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
@@ -278,75 +270,33 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
         }
 
         if (numFilterFields > 0) {
-            ARecordType filterItemType =
-                    ((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterSourceIndicator() == 0 ? itemType
-                            : metaType;
-            secondaryFieldAccessEvalFactories[numSecondaryKeys] = metadataProvider.getDataFormat()
-                    .getFieldAccessEvaluatorFactory(metadataProvider.getFunctionManager(), filterItemType,
-                            filterFieldName, numPrimaryKeys, sourceLoc);
-            Pair<IAType, Boolean> keyTypePair;
-            keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, filterItemType);
-            IAType type = keyTypePair.first;
-            ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);
+            Integer filterSourceIndicator =
+                    ((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterSourceIndicator();
+            ARecordType sourceType;
+            ARecordType enforcedType;
+            int sourceColumn;
+            if (filterSourceIndicator == null || filterSourceIndicator == 0) {
+                sourceType = itemType;
+                sourceColumn = recordColumn;
+                enforcedType = enforcedItemType;
+            } else {
+                sourceType = metaType;
+                sourceColumn = recordColumn + 1;
+                enforcedType = enforcedMetaType;
+            }
+            IAType filterType = Index.getNonNullableKeyFieldType(filterFieldName, sourceType).first;
+            IScalarEvaluatorFactory filterAccessor = createFieldAccessor(sourceType, sourceColumn, filterFieldName);
+            secondaryFieldAccessEvalFactories[numSecondaryKeys] =
+                    createFieldCast(filterAccessor, isOverridingKeyFieldTypes, enforcedType, sourceType, filterType);
+            ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(filterType);
             secondaryRecFields[numPrimaryKeys + numSecondaryKeys] = serde;
             enforcedRecFields[numPrimaryKeys + 1 + (dataset.hasMetaPart() ? 1 : 0)] = serde;
             enforcedTypeTraits[numPrimaryKeys + 1 + (dataset.hasMetaPart() ? 1 : 0)] =
-                    typeTraitProvider.getTypeTrait(type);
+                    typeTraitProvider.getTypeTrait(filterType);
         }
         secondaryRecDesc = new RecordDescriptor(secondaryRecFields, secondaryTypeTraits);
         enforcedRecDesc = new RecordDescriptor(enforcedRecFields, enforcedTypeTraits);
 
-    }
-
-    private IScalarEvaluatorFactory createFieldAccessors(int field, boolean isOverridingKeyFieldTypes,
-            IAType enforcedRecordType, ARecordType recordType, int recordColumn, Index.ValueIndexDetails indexDetails,
-            IAType fieldType) throws AlgebricksException {
-        IFunctionManager funManger = metadataProvider.getFunctionManager();
-        IDataFormat dataFormat = metadataProvider.getDataFormat();
-        IScalarEvaluatorFactory fieldEvalFactory = dataFormat.getFieldAccessEvaluatorFactory(funManger, recordType,
-                indexDetails.getKeyFieldNames().get(field), recordColumn, sourceLoc);
-        // check IndexUtil.castDefaultNull(index), too, because we always want to cast even if the overriding type is
-        // the same as the overridden type (this is for the case where overriding the type of closed field is allowed)
-        // e.g. field "a" is a string in the dataset ds; CREATE INDEX .. ON ds(a:string) CAST (DEFAULT NULL)
-        boolean castIndexedField = isOverridingKeyFieldTypes
-                && (!enforcedRecordType.equals(recordType) || IndexUtil.castDefaultNull(index));
-        if (!castIndexedField) {
-            return fieldEvalFactory;
-        }
-
-        IScalarEvaluatorFactory castFieldEvalFactory;
-        if (IndexUtil.castDefaultNull(index)) {
-            castFieldEvalFactory = createConstructorFunction(funManger, dataFormat, fieldEvalFactory, fieldType);
-        } else if (index.isEnforced()) {
-            IScalarEvaluatorFactory[] castArg = new IScalarEvaluatorFactory[] { fieldEvalFactory };
-            castFieldEvalFactory =
-                    createCastFunction(fieldType, BuiltinType.ANY, true, sourceLoc).createEvaluatorFactory(castArg);
-        } else {
-            IScalarEvaluatorFactory[] castArg = new IScalarEvaluatorFactory[] { fieldEvalFactory };
-            castFieldEvalFactory =
-                    createCastFunction(fieldType, BuiltinType.ANY, false, sourceLoc).createEvaluatorFactory(castArg);
-        }
-        return castFieldEvalFactory;
-    }
-
-    private IScalarEvaluatorFactory createConstructorFunction(IFunctionManager funManager, IDataFormat dataFormat,
-            IScalarEvaluatorFactory fieldEvalFactory, IAType fieldType) throws AlgebricksException {
-        IAType targetType = TypeComputeUtils.getActualType(fieldType);
-        Pair<FunctionIdentifier, IAObject> constructorWithFmt =
-                IndexUtil.getTypeConstructorDefaultNull(index, targetType, sourceLoc);
-        FunctionIdentifier typeConstructorFun = constructorWithFmt.first;
-        IFunctionDescriptor typeConstructor = funManager.lookupFunction(typeConstructorFun, sourceLoc);
-        IScalarEvaluatorFactory[] args;
-        // add the format argument if specified
-        if (constructorWithFmt.second != null) {
-            IScalarEvaluatorFactory fmtEvalFactory =
-                    dataFormat.getConstantEvalFactory(new AsterixConstantValue(constructorWithFmt.second));
-            args = new IScalarEvaluatorFactory[] { fieldEvalFactory, fmtEvalFactory };
-        } else {
-            args = new IScalarEvaluatorFactory[] { fieldEvalFactory };
-        }
-        typeConstructor.setSourceLocation(sourceLoc);
-        return typeConstructor.createEvaluatorFactory(args);
     }
 
     private int[] createFieldPermutationForBulkLoadOp(int numSecondaryKeyFields) {
@@ -355,9 +305,5 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             fieldPermutation[i] = i;
         }
         return fieldPermutation;
-    }
-
-    private static boolean excludeUnknowns(Index index, Index.ValueIndexDetails details) {
-        return index.isPrimaryKeyIndex() || details.getExcludeUnknownKey().getOrElse(false);
     }
 }

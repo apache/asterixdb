@@ -67,8 +67,7 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
 
         Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
-        boolean isOverridingKeyFieldTypes = indexDetails.isOverridingKeyFieldTypes();
-
+        boolean excludeUnknown = excludeUnknownKeys(index, indexDetails, anySecondaryKeyIsNullable);
         assert dataset.getDatasetType() == DatasetType.INTERNAL;
 
         // only handle internal datasets
@@ -83,18 +82,13 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
                 getTaggedRecordDescriptor(dataset.getPrimaryRecordDescriptor(metadataProvider)));
 
         // Assign op.
-        IOperatorDescriptor sourceOp = primaryScanOp;
-        if (isOverridingKeyFieldTypes && !enforcedItemType.equals(itemType)) {
-            sourceOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
-            spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
-        }
         RecordDescriptor taggedSecondaryRecDesc = getTaggedRecordDescriptor(secondaryRecDesc);
         AlgebricksMetaOperatorDescriptor asterixAssignOp =
                 createAssignOp(spec, indexDetails.getKeyFieldNames().size(), taggedSecondaryRecDesc);
 
         // Generate compensate tuples for upsert
-        IOperatorDescriptor processorOp =
-                createTupleProcessorOp(spec, taggedSecondaryRecDesc, getNumSecondaryKeys(), numPrimaryKeys, false);
+        IOperatorDescriptor processorOp = createTupleProcessorOp(spec, taggedSecondaryRecDesc, getNumSecondaryKeys(),
+                numPrimaryKeys, false, excludeUnknown, false);
 
         ExternalSortOperatorDescriptor sortOp = createSortOp(spec,
                 getTaggedSecondaryComparatorFactories(secondaryComparatorFactories), taggedSecondaryRecDesc);
@@ -111,7 +105,7 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
         metaOp.setSourceLocation(sourceLoc);
         // Connect the operators.
         spec.connect(new OneToOneConnectorDescriptor(spec), keyProviderOp, 0, primaryScanOp, 0);
-        spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
+        spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, asterixAssignOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, processorOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), processorOp, 0, sortOp, 0);
         spec.connect(new OneToOneConnectorDescriptor(spec), sortOp, 0, secondaryBulkLoadOp, 0);
@@ -129,12 +123,12 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
     @Override
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {
         Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
-        int numSecondaryKeys = indexDetails.getKeyFieldNames().size();
+        int numSecondaryKeys = getNumSecondaryKeys();
         secondaryFieldAccessEvalFactories = new IScalarEvaluatorFactory[numSecondaryKeys + numFilterFields];
         secondaryComparatorFactories = new IBinaryComparatorFactory[numSecondaryKeys + numPrimaryKeys];
         secondaryBloomFilterKeyFields = new int[numSecondaryKeys];
         ISerializerDeserializer[] secondaryRecFields =
-                new ISerializerDeserializer[numPrimaryKeys + numSecondaryKeys + numFilterFields];
+                new ISerializerDeserializer[numSecondaryKeys + numPrimaryKeys + numFilterFields];
         ISerializerDeserializer[] enforcedRecFields =
                 new ISerializerDeserializer[1 + numPrimaryKeys + (dataset.hasMetaPart() ? 1 : 0) + numFilterFields];
         ITypeTraits[] enforcedTypeTraits =
@@ -144,29 +138,32 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
         ITypeTraitProvider typeTraitProvider = metadataProvider.getDataFormat().getTypeTraitProvider();
         IBinaryComparatorFactoryProvider comparatorFactoryProvider =
                 metadataProvider.getDataFormat().getBinaryComparatorFactoryProvider();
-        // Record column is 0 for external datasets, numPrimaryKeys for internal ones
         int recordColumn = NUM_TAG_FIELDS + numPrimaryKeys;
         boolean isOverridingKeyTypes = indexDetails.isOverridingKeyFieldTypes();
         for (int i = 0; i < numSecondaryKeys; i++) {
             ARecordType sourceType;
+            ARecordType enforcedType;
             int sourceColumn;
             List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
             if (keySourceIndicators == null || keySourceIndicators.get(i) == 0) {
                 sourceType = itemType;
                 sourceColumn = recordColumn;
+                enforcedType = enforcedItemType;
             } else {
                 sourceType = metaType;
                 sourceColumn = recordColumn + 1;
+                enforcedType = enforcedMetaType;
             }
-            secondaryFieldAccessEvalFactories[i] = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
-                    metadataProvider.getFunctionManager(), isOverridingKeyTypes ? enforcedItemType : sourceType,
-                    indexDetails.getKeyFieldNames().get(i), sourceColumn, sourceLoc);
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(index,
-                    indexDetails.getKeyFieldTypes().get(i), indexDetails.getKeyFieldNames().get(i), sourceType);
+            List<String> secFieldName = indexDetails.getKeyFieldNames().get(i);
+            IAType secFieldType = indexDetails.getKeyFieldTypes().get(i);
+            Pair<IAType, Boolean> keyTypePair =
+                    Index.getNonNullableOpenFieldType(index, secFieldType, secFieldName, sourceType);
             IAType keyType = keyTypePair.first;
+            IScalarEvaluatorFactory secFieldAccessor = createFieldAccessor(sourceType, sourceColumn, secFieldName);
+            secondaryFieldAccessEvalFactories[i] =
+                    createFieldCast(secFieldAccessor, isOverridingKeyTypes, enforcedType, sourceType, keyType);
             anySecondaryKeyIsNullable = anySecondaryKeyIsNullable || keyTypePair.second;
-            ISerializerDeserializer keySerde = serdeProvider.getSerializerDeserializer(keyType);
-            secondaryRecFields[i] = keySerde;
+            secondaryRecFields[i] = serdeProvider.getSerializerDeserializer(keyType);
             secondaryComparatorFactories[i] = comparatorFactoryProvider.getBinaryComparatorFactory(keyType, true);
             secondaryTypeTraits[i] = typeTraitProvider.getTypeTrait(keyType);
             secondaryBloomFilterKeyFields[i] = i;
@@ -188,20 +185,29 @@ public class SecondaryCorrelatedBTreeOperationsHelper extends SecondaryCorrelate
         }
 
         if (numFilterFields > 0) {
-            ARecordType filterItemType =
-                    ((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterSourceIndicator() == 0 ? itemType
-                            : metaType;
-            secondaryFieldAccessEvalFactories[numSecondaryKeys] = metadataProvider.getDataFormat()
-                    .getFieldAccessEvaluatorFactory(metadataProvider.getFunctionManager(), filterItemType,
-                            filterFieldName, recordColumn, sourceLoc);
-            Pair<IAType, Boolean> keyTypePair;
-            keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, filterItemType);
-            IAType type = keyTypePair.first;
-            ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);
+            Integer filterSourceIndicator =
+                    ((InternalDatasetDetails) dataset.getDatasetDetails()).getFilterSourceIndicator();
+            ARecordType sourceType;
+            ARecordType enforcedType;
+            int sourceColumn;
+            if (filterSourceIndicator == null || filterSourceIndicator == 0) {
+                sourceType = itemType;
+                sourceColumn = recordColumn;
+                enforcedType = enforcedItemType;
+            } else {
+                sourceType = metaType;
+                sourceColumn = recordColumn + 1;
+                enforcedType = enforcedMetaType;
+            }
+            IAType filterType = Index.getNonNullableKeyFieldType(filterFieldName, sourceType).first;
+            IScalarEvaluatorFactory filterAccessor = createFieldAccessor(sourceType, sourceColumn, filterFieldName);
+            secondaryFieldAccessEvalFactories[numSecondaryKeys] =
+                    createFieldCast(filterAccessor, isOverridingKeyTypes, enforcedType, sourceType, filterType);
+            ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(filterType);
             secondaryRecFields[numPrimaryKeys + numSecondaryKeys] = serde;
             enforcedRecFields[numPrimaryKeys + 1 + (dataset.hasMetaPart() ? 1 : 0)] = serde;
             enforcedTypeTraits[numPrimaryKeys + 1 + (dataset.hasMetaPart() ? 1 : 0)] =
-                    typeTraitProvider.getTypeTrait(type);
+                    typeTraitProvider.getTypeTrait(filterType);
         }
         secondaryRecDesc = new RecordDescriptor(secondaryRecFields, secondaryTypeTraits);
         enforcedRecDesc = new RecordDescriptor(enforcedRecFields, enforcedTypeTraits);

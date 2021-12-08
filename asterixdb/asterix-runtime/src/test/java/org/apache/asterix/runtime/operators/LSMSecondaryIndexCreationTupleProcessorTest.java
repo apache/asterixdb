@@ -273,7 +273,7 @@ public class LSMSecondaryIndexCreationTupleProcessorTest {
 
         LSMSecondaryIndexCreationTupleProcessorNodePushable op =
                 new LSMSecondaryIndexCreationTupleProcessorNodePushable(ctx, 0, recDesc, MissingWriterFactory.INSTANCE,
-                        numTagFields, numSecondaryKeys, numPrimaryKeys, hasBuddyBTree);
+                        numTagFields, numSecondaryKeys, numPrimaryKeys, hasBuddyBTree, true, true);
         op.setOutputFrameWriter(0, resultWriter, recDesc);
 
         op.open();
