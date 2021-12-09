@@ -46,18 +46,20 @@ public class RecordConcatDescriptor extends AbstractScalarFunctionDynamicDescrip
         }
     };
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private ARecordType[] argTypes;
+    private ARecordType listItemRecordType;
 
     @Override
     public void setImmutableStates(Object... states) {
-        argTypes = (ARecordType[]) states;
+        argTypes = (ARecordType[]) states[0];
+        listItemRecordType = (ARecordType) states[1];
     }
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
-        return new RecordConcatEvalFactory(args, argTypes, false, sourceLoc);
+        return new RecordConcatEvalFactory(args, argTypes, listItemRecordType, false, sourceLoc);
     }
 
     @Override

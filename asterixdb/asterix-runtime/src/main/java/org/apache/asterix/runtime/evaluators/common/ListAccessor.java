@@ -98,6 +98,10 @@ public class ListAccessor {
         }
     }
 
+    public ATypeTag getItemTypeAt(int itemIndex) throws HyracksDataException {
+        return getItemType(getItemOffset(itemIndex));
+    }
+
     public void writeItem(int itemIndex, DataOutput dos) throws IOException {
         int itemOffset = getItemOffset(itemIndex);
         int itemLength = getItemLength(itemOffset);

@@ -36,6 +36,7 @@ import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.om.utils.RecordUtil;
@@ -315,14 +316,34 @@ public final class FunctionTypeInferers {
             List<Mutable<ILogicalExpression>> args = f.getArguments();
             int n = args.size();
             ARecordType[] argRecordTypes = new ARecordType[n];
-            for (int i = 0; i < n; i++) {
-                IAType argType = (IAType) context.getType(args.get(i).getValue());
-                IAType t = TypeComputeUtils.getActualType(argType);
-                if (t.getTypeTag() == ATypeTag.OBJECT) {
-                    argRecordTypes[i] = (ARecordType) t;
+            ARecordType listItemRecordType = null;
+            if (n == 1) {
+                // check and handle if it's the single argument list case
+                IAType t = getExprActualType(args.get(0).getValue(), context);
+                if (t.getTypeTag().isListType()) {
+                    listItemRecordType = getListItemRecordType(t);
+                } else if (t.getTypeTag() == ATypeTag.OBJECT) {
+                    argRecordTypes[0] = (ARecordType) t;
+                }
+            } else {
+                for (int i = 0; i < n; i++) {
+                    IAType t = getExprActualType(args.get(i).getValue(), context);
+                    if (t.getTypeTag() == ATypeTag.OBJECT) {
+                        argRecordTypes[i] = (ARecordType) t;
+                    }
                 }
             }
-            fd.setImmutableStates((Object[]) argRecordTypes);
+            fd.setImmutableStates(argRecordTypes, listItemRecordType);
+        }
+
+        private static IAType getExprActualType(ILogicalExpression expr, IVariableTypeEnvironment ctx)
+                throws AlgebricksException {
+            return TypeComputeUtils.getActualType((IAType) ctx.getType(expr));
+        }
+
+        private static ARecordType getListItemRecordType(IAType listType) {
+            IAType itemType = ((AbstractCollectionType) listType).getItemType();
+            return itemType.getTypeTag() == ATypeTag.OBJECT ? (ARecordType) itemType : null;
         }
     }
 

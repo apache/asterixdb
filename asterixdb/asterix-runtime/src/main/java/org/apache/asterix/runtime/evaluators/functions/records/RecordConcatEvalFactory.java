@@ -33,6 +33,7 @@ import org.apache.asterix.om.pointables.cast.ACastVisitor;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -49,20 +50,23 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final IScalarEvaluatorFactory[] args;
 
     private final ARecordType[] argTypes;
 
+    private final ARecordType listItemRecordType;
+
     private final boolean failOnArgTypeMismatch;
 
     private final SourceLocation sourceLoc;
 
-    RecordConcatEvalFactory(IScalarEvaluatorFactory[] args, ARecordType[] argTypes, boolean failOnArgTypeMismatch,
-            SourceLocation sourceLoc) {
+    RecordConcatEvalFactory(IScalarEvaluatorFactory[] args, ARecordType[] argTypes, ARecordType listItemRecordType,
+            boolean failOnArgTypeMismatch, SourceLocation sourceLoc) {
         this.args = args;
         this.argTypes = argTypes;
+        this.listItemRecordType = listItemRecordType;
         this.failOnArgTypeMismatch = failOnArgTypeMismatch;
         this.sourceLoc = sourceLoc;
     }
@@ -81,9 +85,16 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
         private static final int TABLE_FRAME_SIZE = 32768;
         private static final int TABLE_SIZE = 100;
 
+        private ListAccessor listAccessor;
+        private ARecordVisitablePointable itemRecordPointable;
+        private final ArrayBackedValueStorage itemRecordStorage;
+        private boolean itemRecordCastRequired;
+
+        private ArgKind argKind;
+        private final IPointable firstArg;
         private final IScalarEvaluator[] argEvals;
-        private final IPointable[] argPointables;
-        private final ARecordVisitablePointable[] argRecordPointables;
+        private IPointable[] argPointables;
+        private ARecordVisitablePointable[] argRecordPointables;
         private final ARecordVisitablePointable openRecordPointable;
 
         private final BitSet castRequired;
@@ -98,11 +109,12 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
         private final BinaryEntry keyEntry;
         private final BinaryEntry valEntry;
 
+        private int numRecords;
+
         private RecordConcatEvaluator(IScalarEvaluator[] argEvals) {
             this.argEvals = argEvals;
 
-            argPointables = new IPointable[args.length];
-            argRecordPointables = new ARecordVisitablePointable[args.length];
+            firstArg = new VoidPointable();
             openRecordPointable = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
 
             resultStorage = new ArrayBackedValueStorage();
@@ -117,45 +129,101 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
             valEntry.set(new byte[0], 0, 0);
 
             castRequired = new BitSet();
-            for (int i = 0; i < args.length; i++) {
-                argPointables[i] = new VoidPointable();
-                ARecordType argType = argTypes[i];
-                if (argType != null) {
-                    argRecordPointables[i] = new ARecordVisitablePointable(argType);
-                    if (hasDerivedType(argType.getFieldTypes())) {
-                        castRequired.set(i);
-                        if (castVisitor == null) {
-                            castVisitor = new ACastVisitor();
-                            castVisitorArg = new Triple<>(openRecordPointable, openRecordPointable.getInputRecordType(),
-                                    Boolean.FALSE);
+            itemRecordStorage = new ArrayBackedValueStorage();
+            if (listItemRecordType != null) {
+                // init if we know we will always get one list of records whose type is known at compile-time
+                itemRecordPointable = new ARecordVisitablePointable(listItemRecordType);
+                if (hasDerivedType(listItemRecordType.getFieldTypes())) {
+                    itemRecordCastRequired = true;
+                    initCastVisitor();
+                }
+            } else {
+                // otherwise, any kind of arguments are possible (and possibly a single open list of records)
+                argPointables = new IPointable[args.length];
+                argRecordPointables = new ARecordVisitablePointable[args.length];
+                for (int i = 0; i < args.length; i++) {
+                    argPointables[i] = new VoidPointable();
+                    ARecordType argType = argTypes[i];
+                    if (argType != null) {
+                        argRecordPointables[i] = new ARecordVisitablePointable(argType);
+                        if (hasDerivedType(argType.getFieldTypes())) {
+                            castRequired.set(i);
+                            initCastVisitor();
                         }
                     }
                 }
             }
         }
 
+        private void initCastVisitor() {
+            if (castVisitor == null) {
+                castVisitor = new ACastVisitor();
+                castVisitorArg =
+                        new Triple<>(openRecordPointable, openRecordPointable.getInputRecordType(), Boolean.FALSE);
+            }
+        }
+
         @Override
         public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
             resultStorage.reset();
-            if (validateArgs(tuple)) {
-                processArgs();
+            if (args.length == 0) {
+                writeTypeTag(ATypeTag.SERIALIZED_NULL_TYPE_TAG, result);
+                return;
             }
+            if (!validateArgs(tuple, result)) {
+                return;
+            }
+            processArgs();
             result.set(resultStorage);
         }
 
-        private boolean validateArgs(IFrameTupleReference tuple) throws HyracksDataException {
-            if (args.length == 0) {
-                writeTypeTag(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
-                return false;
+        private boolean validateArgs(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+            if (argEvals.length == 1) {
+                // either 1 list arg or 1 presumably record arg
+                argEvals[0].evaluate(tuple, firstArg);
+                byte[] data = firstArg.getByteArray();
+                int offset = firstArg.getStartOffset();
+                ATypeTag typeTag = ATypeTag.VALUE_TYPE_MAPPING[data[offset]];
+                if (typeTag.isListType()) {
+                    if (listAccessor == null) {
+                        listAccessor = new ListAccessor();
+                    }
+                    listAccessor.reset(data, offset);
+                    argKind = ArgKind.SINGLE_ARG_LIST;
+                    numRecords = listAccessor.size();
+                    if (numRecords == 0) {
+                        writeTypeTag(ATypeTag.SERIALIZED_NULL_TYPE_TAG, result);
+                        return false;
+                    }
+                } else {
+                    argKind = ArgKind.SINGLE_ARG;
+                    numRecords = 1;
+                }
+            } else {
+                // fixed number of args (presumably records)
+                argKind = ArgKind.MULTIPLE_ARGS;
+                numRecords = argEvals.length;
             }
-            boolean returnMissing = false, returnNull = false;
-            for (int i = 0; i < argEvals.length; i++) {
-                IPointable argPtr = argPointables[i];
-                argEvals[i].evaluate(tuple, argPtr);
+            return validateRecords(tuple, result, argKind);
+        }
 
-                byte[] data = argPtr.getByteArray();
-                int offset = argPtr.getStartOffset();
-                byte typeTag = data[offset];
+        private boolean validateRecords(IFrameTupleReference tuple, IPointable result, ArgKind argKind)
+                throws HyracksDataException {
+            boolean returnMissing = false, returnNull = false;
+            for (int i = 0; i < numRecords; i++) {
+                byte typeTag;
+                if (argKind == ArgKind.SINGLE_ARG_LIST) {
+                    typeTag = listAccessor.getItemTypeAt(i).serialize();
+                } else if (argKind == ArgKind.SINGLE_ARG) {
+                    // first arg has already been evaluated before
+                    IPointable argPtr = argPointables[i];
+                    argPtr.set(firstArg);
+                    typeTag = argPtr.getByteArray()[argPtr.getStartOffset()];
+                } else {
+                    IPointable argPtr = argPointables[i];
+                    argEvals[i].evaluate(tuple, argPtr);
+                    typeTag = argPtr.getByteArray()[argPtr.getStartOffset()];
+                }
 
                 if (typeTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
                     returnMissing = true;
@@ -174,11 +242,11 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
                 }
             }
             if (returnMissing) {
-                writeTypeTag(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
+                writeTypeTag(ATypeTag.SERIALIZED_MISSING_TYPE_TAG, result);
                 return false;
             }
             if (returnNull) {
-                writeTypeTag(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
+                writeTypeTag(ATypeTag.SERIALIZED_NULL_TYPE_TAG, result);
                 return false;
             }
             return true;
@@ -187,14 +255,34 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
         private void processArgs() throws HyracksDataException {
             outRecordBuilder.init();
             fieldMap.clear();
-            for (int i = argEvals.length - 1; i >= 0; i--) {
+            if (argKind == ArgKind.SINGLE_ARG_LIST) {
+                processListRecords();
+            } else {
+                processArgsRecords();
+            }
+            outRecordBuilder.write(resultOutput, true);
+        }
+
+        private void processListRecords() throws HyracksDataException {
+            for (int i = numRecords - 1; i >= 0; i--) {
+                try {
+                    itemRecordStorage.reset();
+                    listAccessor.writeItem(i, itemRecordStorage.getDataOutput());
+                    appendRecord(itemRecordStorage, itemRecordPointable, itemRecordCastRequired);
+                } catch (IOException e) {
+                    throw HyracksDataException.create(e);
+                }
+            }
+        }
+
+        private void processArgsRecords() throws HyracksDataException {
+            for (int i = numRecords - 1; i >= 0; i--) {
                 try {
                     appendRecord(argPointables[i], argRecordPointables[i], castRequired.get(i));
                 } catch (IOException e) {
                     throw HyracksDataException.create(e);
                 }
             }
-            outRecordBuilder.write(resultOutput, true);
         }
 
         private void appendRecord(IPointable recordPtr, ARecordVisitablePointable argVisitablePointable,
@@ -239,12 +327,19 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
             return false;
         }
 
-        private void writeTypeTag(byte typeTag) throws HyracksDataException {
+        private void writeTypeTag(byte typeTag, IPointable result) throws HyracksDataException {
             try {
                 resultOutput.writeByte(typeTag);
+                result.set(resultStorage);
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             }
         }
+    }
+
+    private enum ArgKind {
+        SINGLE_ARG_LIST,
+        SINGLE_ARG,
+        MULTIPLE_ARGS
     }
 }
