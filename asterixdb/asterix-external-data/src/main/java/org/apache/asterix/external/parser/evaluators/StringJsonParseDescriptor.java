@@ -23,8 +23,6 @@ import static org.apache.asterix.om.functions.BuiltinFunctions.STRING_PARSE_JSON
 import java.io.IOException;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
-import org.apache.asterix.external.parser.JSONDataParser;
-import org.apache.asterix.external.parser.factory.JSONDataParserFactory;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -32,7 +30,6 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -72,15 +69,10 @@ public class StringJsonParseDescriptor extends AbstractScalarFunctionDynamicDesc
         @Override
         public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
             try {
-                return new StringJsonParseEval(ctx, stringEvalFactory.createScalarEvaluator(ctx),
-                        createParser(ctx.getTaskContext()), sourceLocation);
+                return new StringJsonParseEval(ctx, stringEvalFactory.createScalarEvaluator(ctx), sourceLocation);
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             }
-        }
-
-        private JSONDataParser createParser(IHyracksTaskContext ctx) throws HyracksDataException {
-            return (JSONDataParser) new JSONDataParserFactory().createInputStreamParser(ctx, 0);
         }
     }
 }
