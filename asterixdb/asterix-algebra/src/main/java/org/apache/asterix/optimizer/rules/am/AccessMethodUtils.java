@@ -47,6 +47,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.ArrayIndexUtil;
+import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
@@ -2103,7 +2104,8 @@ public class AccessMethodUtils {
         // an inverted index contains a part of a field value, not all of it.
         if (noIndexOnlyPlanOption || dataset.getDatasetType() == DatasetType.EXTERNAL || chosenIndex.isPrimaryIndex()
                 || chosenIndex.getIndexDetails().isOverridingKeyFieldTypes() || chosenIndex.isEnforced()
-                || isInvertedIndex(chosenIndex) || chosenIndex.getIndexType() == IndexType.ARRAY) {
+                || isInvertedIndex(chosenIndex) || chosenIndex.getIndexType() == IndexType.ARRAY
+                || IndexUtil.includesUnknowns(chosenIndex)) {
             indexOnlyPlanInfo.setFirst(false);
             return;
         }

@@ -45,6 +45,7 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.util.OptionalBoolean;
 
 public class IndexUtil {
 
@@ -215,5 +216,28 @@ public class IndexUtil {
         } else {
             return null;
         }
+    }
+
+    public static boolean includesUnknowns(Index index) {
+        return !index.isPrimaryKeyIndex() && secondaryIndexIncludesUnknowns(index);
+    }
+
+    private static boolean secondaryIndexIncludesUnknowns(Index index) {
+        if (Index.IndexCategory.of(index.getIndexType()) != Index.IndexCategory.VALUE) {
+            // other types of indexes do not include unknowns
+            return false;
+        }
+        OptionalBoolean excludeUnknownKey = ((Index.ValueIndexDetails) index.getIndexDetails()).getExcludeUnknownKey();
+        if (index.getIndexType() == DatasetConfig.IndexType.BTREE) {
+            // by default, Btree includes unknowns
+            return excludeUnknownKey.isEmpty() || !excludeUnknownKey.get();
+        } else {
+            // by default, others exclude unknowns
+            return !excludeUnknownKey.isEmpty() && !excludeUnknownKey.get();
+        }
+    }
+
+    public static boolean excludesUnknowns(Index index) {
+        return !includesUnknowns(index);
     }
 }

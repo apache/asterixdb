@@ -436,11 +436,7 @@ public abstract class SecondaryIndexOperationsHelper {
 
     protected static boolean excludeUnknownKeys(Index index, Index.ValueIndexDetails details,
             boolean anySecKeyIsNullable) {
-        return excludeUnknowns(index, details) && (anySecKeyIsNullable || details.isOverridingKeyFieldTypes());
-    }
-
-    private static boolean excludeUnknowns(Index index, Index.ValueIndexDetails details) {
-        return index.isPrimaryKeyIndex() || details.getExcludeUnknownKey().getOrElse(false);
+        return IndexUtil.excludesUnknowns(index) && (anySecKeyIsNullable || details.isOverridingKeyFieldTypes());
     }
 
     protected LSMIndexBulkLoadOperatorDescriptor createTreeIndexBulkLoadOp(JobSpecification spec,
