@@ -72,7 +72,7 @@
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <hadoop.version>2.8.5</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
-    <log4j.version>2.14.1</log4j.version>
+    <log4j.version>2.15.0</log4j.version>
 
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
