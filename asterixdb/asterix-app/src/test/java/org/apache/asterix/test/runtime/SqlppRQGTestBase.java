@@ -70,9 +70,6 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-// Prerequisite:
-// setenv TESTCONTAINERS_RYUK_DISABLED true
-
 public abstract class SqlppRQGTestBase {
 
     private static final Logger LOGGER = LogManager.getLogger(SqlppRQGTestBase.class);
@@ -167,8 +164,8 @@ public abstract class SqlppRQGTestBase {
 
         boolean eq = TestHelper.equalJson(sqlResult, sqlppResult, false, false, false, null);
 
-        File sqlResultFile = writeResult(sqlResult, testcaseId, "sql", testcaseDescription);
-        File sqlppResultFile = writeResult(sqlppResult, testcaseId, "sqlpp", testcaseDescription);
+        File sqlResultFile = writeResult(outputDir, sqlResult, testcaseId, "sql", testcaseDescription);
+        File sqlppResultFile = writeResult(outputDir, sqlppResult, testcaseId, "sqlpp", testcaseDescription);
 
         if (!eq) {
             /*
@@ -329,7 +326,13 @@ public abstract class SqlppRQGTestBase {
         }
     }
 
-    protected File writeResult(ArrayNode result, int testcaseId, String resultKind, String comment) throws IOException {
+    static File writeResult(Path outputDir, ArrayNode result, int testcaseId, String resultKind, String comment)
+            throws IOException {
+        return writeResult(outputDir, result, testcaseId, resultKind, comment, SqlppRQGTestBase::prettyPrint);
+    }
+
+    static File writeResult(Path outputDir, ArrayNode result, int testcaseId, String resultKind, String comment,
+            JsonNodePrinter printer) throws IOException {
         File outDir = outputDir.toFile();
         String outFileName = String.format("%d.%s.txt", testcaseId, resultKind);
         FileUtils.forceMkdir(outDir);
@@ -338,10 +341,18 @@ public abstract class SqlppRQGTestBase {
             pw.print("---");
             pw.println(comment);
             for (int i = 0, ln = result.size(); i < ln; i++) {
-                pw.println(ResultExtractor.prettyPrint(result.get(i)));
+                printer.print(pw, result.get(i));
             }
         }
         return outFile;
+    }
+
+    public interface JsonNodePrinter {
+        void print(PrintWriter out, JsonNode node) throws IOException;
+    }
+
+    private static void prettyPrint(PrintWriter out, JsonNode node) throws JsonProcessingException {
+        out.println(ResultExtractor.prettyPrint(node));
     }
 
     protected static <T> List<T> randomize(Collection<T> input, Random random) {

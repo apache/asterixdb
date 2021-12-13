@@ -85,8 +85,7 @@ public class DoubleToInt16TypeConvertComputer implements ITypeConvertComputer {
             }
         }
 
-        // Math.floor to truncate decimal portion
-        return (short) Math.floor(sourceValue);
+        return (short) sourceValue;
     }
 
     private void raiseBoundaryCheckException(double sourceValue) throws HyracksDataException {

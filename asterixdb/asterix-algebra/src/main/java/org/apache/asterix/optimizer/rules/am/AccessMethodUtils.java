@@ -568,6 +568,25 @@ public class AccessMethodUtils {
         return primaryKeyVars;
     }
 
+    public static class SearchKeyRoundingFunctionProvider {
+        public TypeCastingMathFunctionType getRoundingFunction(ComparisonKind cKind, Index chosenIndex,
+                IAType indexedFieldType, IAObject constantValue, boolean realTypeConvertedToIntegerType)
+                throws CompilationException {
+            switch (cKind) {
+                case LT:
+                case GE:
+                    // round-up
+                    return TypeCastingMathFunctionType.CEIL;
+                case LE:
+                case GT:
+                    // round-down
+                    return TypeCastingMathFunctionType.FLOOR;
+                default:
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, cKind.toString());
+            }
+        }
+    }
+
     /**
      * Returns the search key expression which feeds a secondary-index search. If we are optimizing a selection query
      * then this method returns the a ConstantExpression from the first constant value in the optimizable function
@@ -578,8 +597,8 @@ public class AccessMethodUtils {
      * @throws AlgebricksException
      */
     public static Triple<ILogicalExpression, ILogicalExpression, Boolean> createSearchKeyExpr(Index index,
-            IOptimizableFuncExpr optFuncExpr, IAType indexedFieldType, OptimizableOperatorSubTree probeSubTree)
-            throws AlgebricksException {
+            IOptimizableFuncExpr optFuncExpr, IAType indexedFieldType, OptimizableOperatorSubTree probeSubTree,
+            SearchKeyRoundingFunctionProvider roundingFunctionProvider) throws AlgebricksException {
         SourceLocation sourceLoc = optFuncExpr.getFuncExpr().getSourceLocation();
         if (probeSubTree == null) {
             // We are optimizing a selection query. Search key is a constant.
@@ -655,18 +674,15 @@ public class AccessMethodUtils {
 
                     switch (cKind) {
                         case LT:
-                        case GE:
-                            // round-up
-                            replacedConstantValue = getReplacedConstantValue(constantValue.getObject(),
-                                    constantValueTag, indexedFieldTypeTag, index.isEnforced(),
-                                    TypeCastingMathFunctionType.CEIL, sourceLoc);
-                            break;
                         case LE:
                         case GT:
-                            // round-down
-                            replacedConstantValue = getReplacedConstantValue(constantValue.getObject(),
-                                    constantValueTag, indexedFieldTypeTag, index.isEnforced(),
-                                    TypeCastingMathFunctionType.FLOOR, sourceLoc);
+                        case GE:
+                            TypeCastingMathFunctionType roundingFunction =
+                                    roundingFunctionProvider.getRoundingFunction(cKind, index, indexedFieldType,
+                                            constantValue.getObject(), realTypeConvertedToIntegerType);
+                            replacedConstantValue =
+                                    getReplacedConstantValue(constantValue.getObject(), constantValueTag,
+                                            indexedFieldTypeTag, index.isEnforced(), roundingFunction, sourceLoc);
                             break;
                         case EQ:
                             // equality case - both CEIL and FLOOR need to be applied.
@@ -1162,7 +1178,8 @@ public class AccessMethodUtils {
             AccessMethodAnalysisContext analysisCtx, OptimizableOperatorSubTree subTree,
             LogicalVariable newMissingPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue,
             List<LogicalVariable> pkVarsFromSIdxUnnestMapOp, List<LogicalVariable> primaryIndexUnnestVars,
-            List<Object> primaryIndexOutputTypes) throws AlgebricksException {
+            List<Object> primaryIndexOutputTypes, boolean anyRealTypeConvertedToIntegerType)
+            throws AlgebricksException {
         SourceLocation sourceLoc = inputOp.getSourceLocation();
         Quadruple<Boolean, Boolean, Boolean, Boolean> indexOnlyPlanInfo = analysisCtx.getIndexOnlyPlanInfo();
         // From now on, we deal with the index-only plan.
@@ -1611,7 +1628,8 @@ public class AccessMethodUtils {
         // other than joining fields, then those conditions need to be applied to filter out
         // false positive results in the right path.
         // (e.g., where $a.authors /*+ indexnl */ = $b.authors and $a.id = $b.id   <- authors:SK, id:PK)
-        if ((idxType == IndexType.RTREE || uniqueUsedVarsInTopOp.size() > 1) && requireVerificationAfterSIdxSearch) {
+        if (((idxType == IndexType.RTREE || uniqueUsedVarsInTopOp.size() > 1) && requireVerificationAfterSIdxSearch)
+                || anyRealTypeConvertedToIntegerType) {
             // Creates a new SELECT operator by deep-copying the SELECT operator in the left path
             // since we need to change the variable reference in the SELECT operator.
             // For the index-nested-loop join case, we copy the condition of the join operator.
@@ -1734,8 +1752,8 @@ public class AccessMethodUtils {
             IOptimizationContext context, boolean sortPrimaryKeys, boolean retainInput, boolean retainMissing,
             boolean requiresBroadcast, Index secondaryIndex, AccessMethodAnalysisContext analysisCtx,
             OptimizableOperatorSubTree indexSubTree, OptimizableOperatorSubTree probeSubTree,
-            LogicalVariable newMissingPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue)
-            throws AlgebricksException {
+            LogicalVariable newMissingPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue,
+            boolean anyRealTypeConvertedToIntegerType) throws AlgebricksException {
         // Common part for the non-index-only plan and index-only plan
         // Variables and types for the primary-index search.
         List<LogicalVariable> primaryIndexUnnestVars = new ArrayList<>();
@@ -1788,7 +1806,8 @@ public class AccessMethodUtils {
             return createFinalIndexOnlySearchPlan(afterTopOpRefs, topOpRef, conditionRef, assignsBeforeTopOpRef,
                     dataset, recordType, metaRecordType, inputOp, context, retainInput, retainMissing,
                     requiresBroadcast, secondaryIndex, analysisCtx, indexSubTree, newMissingPlaceHolderForLOJ,
-                    leftOuterMissingValue, pkVarsFromSIdxUnnestMapOp, primaryIndexUnnestVars, primaryIndexOutputTypes);
+                    leftOuterMissingValue, pkVarsFromSIdxUnnestMapOp, primaryIndexUnnestVars, primaryIndexOutputTypes,
+                    anyRealTypeConvertedToIntegerType);
         } else {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, inputOp.getSourceLocation(),
                     "Cannot use index-only plan with array indexes.");

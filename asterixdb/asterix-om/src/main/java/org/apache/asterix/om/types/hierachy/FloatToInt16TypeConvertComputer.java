@@ -85,8 +85,7 @@ public class FloatToInt16TypeConvertComputer implements ITypeConvertComputer {
             }
         }
 
-        // Math.floor to truncate decimal portion
-        return (short) Math.floor(sourceValue);
+        return (short) sourceValue;
     }
 
     private void raiseBoundaryException(float sourceValue) throws HyracksDataException {

@@ -44,6 +44,7 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -216,6 +217,9 @@ public class RTreeAccessMethod implements IAccessMethod {
         return true;
     }
 
+    private static final AccessMethodUtils.SearchKeyRoundingFunctionProvider SEARCH_KEY_ROUNDING_FUNCTION_PROVIDER =
+            new AccessMethodUtils.SearchKeyRoundingFunctionProvider();
+
     @Override
     public ILogicalOperator createIndexSearchPlan(List<Mutable<ILogicalOperator>> afterTopRefs,
             Mutable<ILogicalOperator> topRef, Mutable<ILogicalExpression> conditionRef,
@@ -263,8 +267,9 @@ public class RTreeAccessMethod implements IAccessMethod {
         ArrayList<LogicalVariable> keyVarList = new ArrayList<>();
         // List of expressions for the assign.
         ArrayList<Mutable<ILogicalExpression>> keyExprList = new ArrayList<>();
-        ILogicalExpression returnedSearchKeyExpr =
-                AccessMethodUtils.createSearchKeyExpr(chosenIndex, optFuncExpr, optFieldType, probeSubTree).first;
+        Triple<ILogicalExpression, ILogicalExpression, Boolean> returnedSearchKeyExpr =
+                AccessMethodUtils.createSearchKeyExpr(chosenIndex, optFuncExpr, optFieldType, probeSubTree,
+                        SEARCH_KEY_ROUNDING_FUNCTION_PROVIDER);
 
         for (int i = 0; i < numSecondaryKeys; i++) {
             // The create MBR function "extracts" one field of an MBR around the given spatial object.
@@ -272,7 +277,7 @@ public class RTreeAccessMethod implements IAccessMethod {
                     new ScalarFunctionCallExpression(FunctionUtil.getFunctionInfo(BuiltinFunctions.CREATE_MBR));
             createMBR.setSourceLocation(optFuncExpr.getFuncExpr().getSourceLocation());
             // Spatial object is the constant from the func expr we are optimizing.
-            createMBR.getArguments().add(new MutableObject<>(returnedSearchKeyExpr.cloneExpression()));
+            createMBR.getArguments().add(new MutableObject<>(returnedSearchKeyExpr.first.cloneExpression()));
             // The number of dimensions
             createMBR.getArguments().add(new MutableObject<ILogicalExpression>(
                     new ConstantExpression(new AsterixConstantValue(new AInt32(numDimensions)))));
@@ -315,7 +320,7 @@ public class RTreeAccessMethod implements IAccessMethod {
                 : AccessMethodUtils.createRestOfIndexSearchPlan(afterTopRefs, topRef, conditionRef, assignBeforeTopRefs,
                         dataSourceOp, dataset, recordType, metaRecordType, secondaryIndexUnnestOp, context, true,
                         retainInput, retainNull, false, chosenIndex, analysisCtx, indexSubTree, null,
-                        newMissingNullPlaceHolderForLOJ, leftOuterMissingValue);
+                        newMissingNullPlaceHolderForLOJ, leftOuterMissingValue, returnedSearchKeyExpr.third);
     }
 
     @Override

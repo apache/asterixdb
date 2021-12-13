@@ -227,23 +227,6 @@ public class ArrayBTreeAccessMethod extends BTreeAccessMethod {
     }
 
     @Override
-    protected IAType getIndexedKeyType(Index.IIndexDetails chosenIndexDetails, int keyPos) throws CompilationException {
-        Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) chosenIndexDetails;
-        int elementPos = 0;
-        for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
-            for (int i = 0; i < e.getProjectList().size(); i++) {
-                if (elementPos == keyPos) {
-                    return e.getTypeList().get(i);
-                }
-                elementPos++;
-            }
-        }
-
-        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
-                "No array index element found, but using " + "an array access method.");
-    }
-
-    @Override
     public boolean matchIndexType(IndexType indexType) {
         return indexType == IndexType.ARRAY;
     }
