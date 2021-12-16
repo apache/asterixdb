@@ -139,14 +139,16 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Sets up parameters.
         setup(context, topStatement, externalVars, allowNonStoredUdfCalls, inlineUdfsAndViews);
 
-        // Initial SQL-compat mode rewrites
-        rewriteSqlCompat();
-
         // Resolves function calls
         resolveFunctionCalls();
 
         // Generates column names.
         generateColumnNames();
+
+        // SQL-compat mode rewrites
+        // Must run after generateColumnNames() because it might need to generate new column names
+        // for the new projections that it introduces
+        rewriteSqlCompat();
 
         // Substitutes group-by key expressions.
         substituteGroupbyKeyExpression();
