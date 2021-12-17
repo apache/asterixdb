@@ -35,10 +35,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.LogRedactionUtil;
 
 import com.azure.storage.blob.models.BlobErrorCode;
+import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.file.datalake.DataLakeFileClient;
 import com.azure.storage.file.datalake.DataLakeFileSystemClient;
 import com.azure.storage.file.datalake.DataLakeServiceClient;
-import com.azure.storage.file.datalake.models.DataLakeStorageException;
 
 public class AzureDataLakeInputStream extends AbstractExternalInputStream {
 
@@ -67,8 +67,7 @@ public class AzureDataLakeInputStream extends AbstractExternalInputStream {
             if (lowerCaseFileName.endsWith(".gz") || lowerCaseFileName.endsWith(".gzip")) {
                 in = new GZIPInputStream(in, ExternalDataConstants.DEFAULT_BUFFER_SIZE);
             }
-        } catch (DataLakeStorageException ex) {
-            // TODO(htowaileb): need to find the right error for Azure Data Lake
+        } catch (BlobStorageException ex) {
             if (ex.getErrorCode().equals(BlobErrorCode.BLOB_NOT_FOUND)) {
                 LOGGER.debug(() -> "Key " + LogRedactionUtil.userData(filePaths.get(nextFileIndex)) + " was not "
                         + "found in container " + container);
