@@ -38,7 +38,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.BaseRequest;
@@ -250,6 +252,23 @@ public class HttpUtil {
     public static HttpScheme getScheme(HttpServer server, FullHttpRequest request) {
         return server.getScheme() == HttpScheme.HTTPS || "https".equals(request.headers().get(X_FORWARDED_PROTO))
                 ? HttpScheme.HTTPS : HttpScheme.HTTP;
+    }
+
+    /**
+     * @return the first parameter value of the supplied parameter name, or {@link Optional#empty()}
+     */
+    public static Optional<String> extractQueryParameter(String uri, String parameterName) {
+        return extractQueryParameters(uri, parameterName).map(values -> values[0]);
+    }
+
+    /**
+     * @return all parameter values of the supplied parameter name, or {@link Optional#empty()}
+     */
+    public static Optional<String[]> extractQueryParameters(String uri, String parameterName) {
+        String[] values = URLEncodedUtils.parse(uri, StandardCharsets.UTF_8, '?', '&').stream()
+                .filter(pair -> pair.getName().equals(parameterName)).map(NameValuePair::getValue)
+                .toArray(String[]::new);
+        return values.length == 0 ? Optional.empty() : Optional.of(values);
     }
 
     public static class ContentType {
