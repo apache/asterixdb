@@ -25,11 +25,11 @@ CREATE DATAVERSE test;
 USE test;
 CREATE TYPE t1 AS { id: int, s_f: string, d_f: double, i_f: int, b_f: boolean };
 CREATE TYPE t2 AS { id: int, s_f1: string, s_f2: string?, i_f: int? };
-CREATE DATASET ds1(t1) PRIMARY KEY id;
-CREATE DATASET ds2(t1) PRIMARY KEY id;
-CREATE DATASET ds3(id int not unknown) OPEN TYPE PRIMARY KEY id;
-CREATE DATASET ds4(id int not unknown) OPEN TYPE PRIMARY KEY id;
-CREATE DATASET ds5(t2) PRIMARY KEY id;
+CREATE DATASET ds1(t1) PRIMARY KEY id %with%;
+CREATE DATASET ds2(t1) PRIMARY KEY id %with%;
+CREATE DATASET ds3(id int not unknown) OPEN TYPE PRIMARY KEY id %with%;
+CREATE DATASET ds4(id int not unknown) OPEN TYPE PRIMARY KEY id %with%;
+CREATE DATASET ds5(t2) PRIMARY KEY id %with%;
 
 CREATE INDEX ds2_o_idx1 ON ds2(o_s_f: int, o_i_f: string) INCLUDE UNKNOWN KEY CAST (DEFAULT NULL);
 CREATE INDEX ds2_o_idx2 ON ds2(o_s_f: double, o_d_f: string) CAST (DEFAULT NULL);

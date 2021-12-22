@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
+// repeat_exec: %with% = ["", "WITH {'merge-policy': {'name': 'correlated-prefix','parameters': { 'max-mergable-component-size': 16384, 'max-tolerance-component-count': 3 }}}" ]
 DROP DATAVERSE test IF EXISTS;
 CREATE DATAVERSE test;
 USE test;
 
 CREATE TYPE t1 AS { id: int, s_f1: string, s_f2: string?, i_f: int? };
-CREATE DATASET ds7(t1) PRIMARY KEY id;
+CREATE DATASET ds7(t1) PRIMARY KEY id %with%;
 
 CREATE INDEX idx1 ON ds7(s_f2);
 CREATE INDEX idx2 ON ds7(s_f2: string) CAST (DEFAULT NULL);

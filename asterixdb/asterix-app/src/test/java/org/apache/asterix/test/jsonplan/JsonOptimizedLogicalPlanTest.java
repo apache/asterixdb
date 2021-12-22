@@ -20,16 +20,27 @@
 package org.apache.asterix.test.jsonplan;
 
 import java.io.File;
+import java.util.Collection;
 
+import org.apache.asterix.test.optimizer.AbstractOptimizerTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class JsonOptimizedLogicalPlanTest extends JsonLogicalPlanTest {
 
-    public JsonOptimizedLogicalPlanTest(File queryFile, File actualFile) {
-        super(queryFile, actualFile);
+    static {
+        EXTENSION_RESULT = "plan.json";
         optimized = true;
         PATH_ACTUAL = "target" + File.separator + "joptplantest" + SEPARATOR;
+    }
+
+    public JsonOptimizedLogicalPlanTest(File queryFile, File expectedFile, File actualFile) {
+        super(queryFile, expectedFile, actualFile);
+    }
+
+    @Parameterized.Parameters(name = "JsonOptimizedLogicalPlanTest {index}: {0}")
+    public static Collection<Object[]> tests() {
+        return AbstractOptimizerTest.tests();
     }
 }

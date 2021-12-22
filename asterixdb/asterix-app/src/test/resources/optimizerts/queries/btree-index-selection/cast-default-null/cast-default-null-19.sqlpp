@@ -16,19 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
+// repeat_exec: %with% = ["", "WITH {'merge-policy': {'name': 'correlated-prefix','parameters': { 'max-mergable-component-size': 16384, 'max-tolerance-component-count': 3 }}}" ]
 DROP DATAVERSE test IF EXISTS;
 CREATE DATAVERSE test;
 USE test;
 
-CREATE DATASET ds5(id int not unknown) OPEN TYPE PRIMARY KEY id;
+CREATE DATASET ds5(id int not unknown) OPEN TYPE PRIMARY KEY id %with%;
 
 CREATE INDEX idx5_dt_fmt ON ds5(f_dt_fmt: datetime) CAST (DEFAULT NULL datetime 'MM/DD/YYYY hh:mm:ss.nnna' date 'MM/DD/YYYY');
 
 CREATE VIEW view5_dt_fmt(id int, f_dt_fmt datetime) DEFAULT NULL
 datetime 'MM/DD/YYYY hh:mm:ss.nnna' date 'MM/DD/YYYY' time 'hh:mm:ss.nnna' AS SELECT id, f_dt_fmt FROM ds5;
 
-CREATE DATASET ds6(id int not unknown) OPEN TYPE PRIMARY KEY id;
+CREATE DATASET ds6(id int not unknown) OPEN TYPE PRIMARY KEY id %with%;
 
 CREATE INDEX idx6_dt ON ds6(f_dt: datetime) CAST (DEFAULT NULL);
 

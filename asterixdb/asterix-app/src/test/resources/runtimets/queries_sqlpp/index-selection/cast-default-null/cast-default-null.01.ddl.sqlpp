@@ -23,13 +23,13 @@ USE test;
 
 CREATE TYPE t1 AS { id: int, s_f1: string, s_f2: string?, i_f: int? };
 
-CREATE DATASET ds1(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id;
-CREATE DATASET ds2(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id;
-CREATE DATASET ds3(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id;
-CREATE DATASET ds4(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id;
-CREATE DATASET ds5(id int not unknown) OPEN TYPE PRIMARY KEY id;
-CREATE DATASET ds6(id int not unknown) OPEN TYPE PRIMARY KEY id;
-CREATE DATASET ds7(t1) PRIMARY KEY id;
+CREATE DATASET ds1(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id %with%;
+CREATE DATASET ds2(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id %with%;
+CREATE DATASET ds3(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id %with%;
+CREATE DATASET ds4(id int not unknown, a string, b int) OPEN TYPE PRIMARY KEY id %with%;
+CREATE DATASET ds5(id int not unknown) OPEN TYPE PRIMARY KEY id %with%;
+CREATE DATASET ds6(id int not unknown) OPEN TYPE PRIMARY KEY id %with%;
+CREATE DATASET ds7(t1) PRIMARY KEY id %with%;
 
 CREATE INDEX idx1 ON ds1(x: int);
 CREATE INDEX idx2 ON ds2(x: int) CAST (DEFAULT NULL);
