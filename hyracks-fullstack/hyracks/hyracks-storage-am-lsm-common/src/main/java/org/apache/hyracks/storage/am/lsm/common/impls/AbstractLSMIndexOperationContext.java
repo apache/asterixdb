@@ -171,7 +171,7 @@ public abstract class AbstractLSMIndexOperationContext implements ILSMIndexOpera
     public void logPerformanceCounters(int tupleCount) {
         if (isTracingEnabled()) {
             tracer.instant("store-counters", traceCategory, Scope.t,
-                    "{\"count\":" + tupleCount + ",\"enter-exit-duration-ns\":" + enterExitTime + "}");
+                    () -> "{\"count\":" + tupleCount + ",\"enter-exit-duration-ns\":" + enterExitTime + "}");
             resetCounters();
         }
     }

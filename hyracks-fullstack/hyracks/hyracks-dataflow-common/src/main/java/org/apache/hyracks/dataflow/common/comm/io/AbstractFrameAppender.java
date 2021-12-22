@@ -116,7 +116,7 @@ public class AbstractFrameAppender implements IFrameAppender {
         try {
             flush(writer);
         } finally {
-            tracer.durationE(tid, traceCategory, args);
+            tracer.durationE(traceCategory, tid, args);
         }
     }
 

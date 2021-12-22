@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.util.trace;
 
+import java.util.function.Supplier;
+
 public interface ITracer {
 
     enum Phase {
@@ -83,12 +85,47 @@ public interface ITracer {
         }
 
         @Override
-        public void durationE(long tid, long cat, String args) {
+        public void durationE(long cat, long tid, String args) {
+            // nothing to do here
+        }
+
+        @Override
+        public void instant(String name, long cat, Scope scope) {
             // nothing to do here
         }
 
         @Override
         public void instant(String name, long cat, Scope scope, String args) {
+            // nothing to do here
+        }
+
+        @Override
+        public long durationB(String name, long cat) {
+            return -1;
+        }
+
+        @Override
+        public long durationB(String name, long cat, Supplier<String> args) {
+            return -1;
+        }
+
+        @Override
+        public void durationE(long cat, long tid) {
+            // nothing to do here
+        }
+
+        @Override
+        public void durationE(long cat, long tid, Supplier<String> args) {
+            // nothing to do here
+        }
+
+        @Override
+        public void durationE(String name, long cat, long tid, Supplier<String> args) {
+            // nothing to do here
+        }
+
+        @Override
+        public void instant(String name, long cat, Scope scope, Supplier<String> args) {
             // nothing to do here
         }
     };
@@ -101,13 +138,27 @@ public interface ITracer {
 
     boolean isEnabled(long cat);
 
+    long durationB(String name, long cat);
+
     long durationB(String name, long cat, String args);
 
-    void durationE(long tid, long cat, String args);
+    long durationB(String name, long cat, Supplier<String> args);
+
+    void durationE(long cat, long tid);
+
+    void durationE(long cat, long tid, String args);
+
+    void durationE(long cat, long tid, Supplier<String> args);
 
     void durationE(String name, long cat, long tid, String args);
 
+    void durationE(String name, long cat, long tid, Supplier<String> args);
+
+    void instant(String name, long cat, Scope scope);
+
     void instant(String name, long cat, Scope scope, String args);
+
+    void instant(String name, long cat, Scope scope, Supplier<String> args);
 
     @Override
     String toString();

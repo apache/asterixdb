@@ -45,6 +45,10 @@ public class MaintainedThreadNameExecutorService extends ThreadPoolExecutor {
     @Override
     protected void afterExecute(Runnable r, Throwable t) {
         super.afterExecute(r, t);
-        Thread.currentThread().setName(savedName.get());
+        try {
+            Thread.currentThread().setName(savedName.get());
+        } finally {
+            savedName.remove();
+        }
     }
 }

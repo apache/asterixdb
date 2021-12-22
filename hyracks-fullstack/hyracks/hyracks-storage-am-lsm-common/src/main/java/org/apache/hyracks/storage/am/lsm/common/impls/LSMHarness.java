@@ -262,7 +262,7 @@ public class LSMHarness implements ILSMHarness {
             }
             if (inactiveMemoryComponentsToBeCleanedUp != null) {
                 for (ILSMMemoryComponent c : inactiveMemoryComponentsToBeCleanedUp) {
-                    tracer.instant(c.toString(), traceCategory, Scope.p, lsmIndex.toString());
+                    tracer.instant(c.toString(), traceCategory, Scope.p, lsmIndex::toString);
                     c.cleanup();
                     synchronized (opTracker) {
                         c.reset();

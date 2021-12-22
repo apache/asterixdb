@@ -23,6 +23,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.function.Supplier;
 
 import org.apache.hyracks.util.PidHelper;
 import org.apache.logging.log4j.Level;
@@ -44,7 +45,7 @@ public class Tracer implements ITracer {
     private long categories;
     private final TraceCategoryRegistry registry;
 
-    private static final long pid = PidHelper.getPid();
+    private static final long PID = PidHelper.getPid();
 
     public Tracer(String name, long categories, TraceCategoryRegistry registry) {
         final String traceLoggerName = Tracer.class.getName() + ".Traces." + name;
@@ -53,7 +54,7 @@ public class Tracer implements ITracer {
         this.categories = categories;
         this.registry = registry;
         final long traceCategory = getRegistry().get(TraceUtils.TRACER);
-        instant("Trace-Start", traceCategory, Scope.p, dateTimeStamp());
+        instant("Trace-Start", traceCategory, Scope.p, Tracer::dateTimeStamp);
     }
 
     public Tracer(String name, String[] categories, TraceCategoryRegistry registry) {
@@ -100,11 +101,25 @@ public class Tracer implements ITracer {
     }
 
     @Override
+    public long durationB(String name, long cat) {
+        if (isEnabled(cat)) {
+            return emitDurationB(name, cat, null);
+        }
+        return -1;
+    }
+
+    @Override
     public long durationB(String name, long cat, String args) {
         if (isEnabled(cat)) {
-            Event e = Event.create(name, cat, Phase.B, pid, Thread.currentThread().getId(), null, args, getRegistry());
-            traceLog.log(TRACE_LOG_LEVEL, e.toJson());
-            return e.tid;
+            return emitDurationB(name, cat, args);
+        }
+        return -1;
+    }
+
+    @Override
+    public long durationB(String name, long cat, Supplier<String> args) {
+        if (isEnabled(cat)) {
+            return emitDurationB(name, cat, args.get());
         }
         return -1;
     }
@@ -112,24 +127,67 @@ public class Tracer implements ITracer {
     @Override
     public void durationE(String name, long cat, long tid, String args) {
         if (isEnabled(cat)) {
-            Event e = Event.create(name, cat, Phase.E, pid, tid, null, args, getRegistry());
-            traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+            emit(name, cat, null, Phase.E, tid, args);
         }
     }
 
     @Override
-    public void durationE(long tid, long cat, String args) {
+    public void durationE(String name, long cat, long tid, Supplier<String> args) {
         if (isEnabled(cat)) {
-            Event e = Event.create(null, 0L, Phase.E, pid, tid, null, args, getRegistry());
-            traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+            emit(name, cat, null, Phase.E, tid, args.get());
+        }
+    }
+
+    @Override
+    public void durationE(long cat, long tid) {
+        if (isEnabled(cat)) {
+            emit(null, 0L, null, Phase.E, tid, null);
+        }
+    }
+
+    @Override
+    public void durationE(long cat, long tid, String args) {
+        if (isEnabled(cat)) {
+            emit(null, 0L, null, Phase.E, tid, args);
+        }
+    }
+
+    @Override
+    public void durationE(long cat, long tid, Supplier<String> args) {
+        if (isEnabled(cat)) {
+            emit(null, 0L, null, Phase.E, tid, args.get());
+        }
+    }
+
+    @Override
+    public void instant(String name, long cat, Scope scope) {
+        if (isEnabled(cat)) {
+            emit(name, cat, scope, Phase.i, Thread.currentThread().getId(), null);
         }
     }
 
     @Override
     public void instant(String name, long cat, Scope scope, String args) {
         if (isEnabled(cat)) {
-            Event e = Event.create(name, cat, Phase.i, pid, Thread.currentThread().getId(), scope, args, getRegistry());
-            traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+            emit(name, cat, scope, Phase.i, Thread.currentThread().getId(), args);
         }
+    }
+
+    @Override
+    public void instant(String name, long cat, Scope scope, Supplier<String> args) {
+        if (isEnabled(cat)) {
+            emit(name, cat, scope, Phase.i, Thread.currentThread().getId(), args.get());
+        }
+    }
+
+    private long emitDurationB(String name, long cat, String args) {
+        Event e = Event.create(name, cat, Phase.B, PID, Thread.currentThread().getId(), null, args, getRegistry());
+        traceLog.log(TRACE_LOG_LEVEL, e.toJson());
+        return e.tid;
+    }
+
+    private void emit(String name, long cat, Scope scope, Phase i, long tid, String args) {
+        Event e = Event.create(name, cat, i, PID, tid, scope, args, getRegistry());
+        traceLog.log(TRACE_LOG_LEVEL, e.toJson());
     }
 }

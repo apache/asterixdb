@@ -157,7 +157,7 @@ public class FrameUtils {
             flushedBytes = frameTupleAppender.getBuffer().capacity();
             long tid = tracer.durationB(name, cat, args);
             frameTupleAppender.write(writer, true);
-            tracer.durationE(tid, cat, args);
+            tracer.durationE(cat, tid, args);
             if (!frameTupleAppender.append(tupleAccessor, tIndex)) {
                 throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME,
                         tupleAccessor.getTupleLength(tIndex));

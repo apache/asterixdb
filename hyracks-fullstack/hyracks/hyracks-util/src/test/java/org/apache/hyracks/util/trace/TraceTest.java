@@ -61,9 +61,9 @@ public class TraceTest {
 
         ITracer tracer = new Tracer(name, new String[] { "CAT1", "CAT2" }, registry);
         Log4j2Monitor.start();
-        tracer.instant("test1", cat1, ITracer.Scope.p, null);
-        tracer.instant("test2", cat2, ITracer.Scope.p, null);
-        tracer.instant("test3", cat3, ITracer.Scope.p, null);
+        tracer.instant("test1", cat1, ITracer.Scope.p);
+        tracer.instant("test2", cat2, ITracer.Scope.p);
+        tracer.instant("test3", cat3, ITracer.Scope.p);
 
         List<String> lines = Log4j2Monitor.getLogs();
         for (String line : lines) {
@@ -76,9 +76,9 @@ public class TraceTest {
         tracer.setCategories("CAT1", "CAT3");
         Log4j2Monitor.reset();
 
-        tracer.instant("test1", cat1, ITracer.Scope.p, null);
-        tracer.instant("test2", cat2, ITracer.Scope.p, null);
-        tracer.instant("test3", cat3, ITracer.Scope.p, null);
+        tracer.instant("test1", cat1, ITracer.Scope.p);
+        tracer.instant("test2", cat2, ITracer.Scope.p);
+        tracer.instant("test3", cat3, ITracer.Scope.p);
 
         lines = Log4j2Monitor.getLogs();
         for (String line : lines) {

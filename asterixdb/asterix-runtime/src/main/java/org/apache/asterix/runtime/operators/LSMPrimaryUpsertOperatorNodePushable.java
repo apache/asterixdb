@@ -459,7 +459,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             if (tracer.isEnabled(traceCategory) && lastRecordInTimeStamp > 0 && indexHelper != null
                     && indexHelper.getIndexInstance() != null) {
                 tracer.instant("UpsertClose", traceCategory, Scope.t,
-                        "{\"last-record-in\":\"" + DATE_FORMAT.get().format(new Date(lastRecordInTimeStamp))
+                        () -> "{\"last-record-in\":\"" + DATE_FORMAT.get().format(new Date(lastRecordInTimeStamp))
                                 + "\", \"index\":" + indexHelper.getIndexInstance().toString() + "}");
             }
         } catch (Throwable traceFailure) {

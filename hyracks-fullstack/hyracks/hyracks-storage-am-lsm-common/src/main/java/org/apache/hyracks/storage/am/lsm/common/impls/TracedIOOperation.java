@@ -58,7 +58,7 @@ class TracedIOOperation implements ILSMIOOperation {
         final long traceCategory = tracer.getRegistry().get(TraceUtils.INDEX_IO_OPERATIONS);
         if (tracer.isEnabled(traceCategory)) {
             tracer.instant("schedule-" + ioOpName, traceCategory, Scope.p,
-                    "{\"path\": \"" + ioOp.getTarget().getRelativePath() + "\"}");
+                    () -> "{\"path\": \"" + ioOp.getTarget().getRelativePath() + "\"}");
             return new TracedIOOperation(ioOp, tracer, traceCategory);
         }
         return ioOp;
@@ -91,11 +91,11 @@ class TracedIOOperation implements ILSMIOOperation {
     @Override
     public LSMIOOperationStatus call() throws HyracksDataException {
         final String name = getTarget().getRelativePath();
-        final long tid = tracer.durationB(name, traceCategory, null);
+        final long tid = tracer.durationB(name, traceCategory);
         try {
             return ioOp.call();
         } finally {
-            tracer.durationE(ioOp.getIOOpertionType().name().toLowerCase(), traceCategory, tid, "{\"size\":"
+            tracer.durationE(ioOp.getIOOpertionType().name().toLowerCase(), traceCategory, tid, () -> "{\"size\":"
                     + getTarget().getFile().length() + ", \"path\": \"" + ioOp.getTarget().getRelativePath() + "\"}");
         }
     }

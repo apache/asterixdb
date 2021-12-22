@@ -162,7 +162,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-        long tid = tracer.durationB("Ingestion-Store", traceCategory, null);
+        long tid = tracer.durationB("Ingestion-Store", traceCategory);
         try {
             if (hasMessage) {
                 FeedUtils.processFeedMessage(buffer, message, fta);
@@ -172,7 +172,7 @@ public class FeedMetaStoreNodePushable extends AbstractUnaryInputUnaryOutputOper
             LOGGER.log(Level.WARN, "Failure Processing a frame at store side", e);
             throw HyracksDataException.create(e);
         } finally {
-            tracer.durationE(tid, traceCategory, null);
+            tracer.durationE(traceCategory, tid);
         }
     }
 

@@ -710,7 +710,7 @@ public class NodeControllerService implements IControllerService {
         @Override
         public void run() {
             try {
-                tracer.instant("CurrentTime", traceCategory, Tracer.Scope.p, Tracer.dateTimeStamp());
+                tracer.instant("CurrentTime", traceCategory, ITracer.Scope.p, Tracer::dateTimeStamp);
             } catch (Exception e) {
                 LOGGER.log(Level.WARN, "Exception tracing current time", e);
             }
