@@ -459,7 +459,9 @@ public class GrammarExtensionMojo extends AbstractMojo {
                         prevCharEscape = chars[bufferPosn] == ExternalDataConstants.ESCAPE;
                     }
                 } else {
-                    if (chars[bufferPosn] == ExternalDataConstants.QUOTE) {
+                    if (chars[bufferPosn] == ExternalDataConstants.QUOTE && chars[bufferPosn] != start
+                            && chars[bufferPosn - 1] != '\'') {
+                        // If we see a quote that is not preceded by an apostrophe, then we are inside a string.
                         inString = true;
                     } else if (chars[bufferPosn] == start) {
                         depth += 1;
