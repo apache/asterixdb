@@ -10257,6 +10257,21 @@
         <output-dir compare="Text">subquery_coercion_08_misc</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="union_all_01">
+        <output-dir compare="Text">union_all_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="sql-compat">
+      <compilation-unit name="union_all_02_negative">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1171: Unable to process UNION clause. Both SELECT and SELECT VALUE are present (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1171: Unable to process UNION clause. Unequal number of input fields (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1171: Unable to process UNION clause. Unsupported projection kind (in line 29, at column 8)</expected-error>
+        <expected-error>ASX1171: Unable to process UNION clause. Unsupported projection kind (in line 30, at column 8)</expected-error>
+        <expected-error>ASX1171: Unable to process UNION clause. Unsupported projection kind (in line 31, at column 8)</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="statement-params">
     <test-case FilePath="statement-params">

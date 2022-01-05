@@ -1,0 +1,36 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+insert into ds1 ({"id": 1, "a": 1, "b": 1 });
+insert into ds1 ({"id": 2, "a": 1, "b": 2 });
+insert into ds1 ({"id": 3, "a": 2, "b": 3 });
+insert into ds1 ({"id": 4, "a": 2, "b": 4 });
+insert into ds1 ({"id": 5, "a": 3, "b": 5 });
+insert into ds1 ({"id": 6, "a": 3, "b": 6 });
+insert into ds1 ({"id": 7, "a": 4, "b": 7 });
+
+insert into ds2 ({"id": 100, "c": 2, "d": 100 });
+insert into ds2 ({"id": 101, "c": 2, "d": 101 });
+insert into ds2 ({"id": 102, "c": 3, "d": 102 });
+
+insert into ds3 ({"id": 200, "e": 3, "f": 200 });
+insert into ds3 ({"id": 201, "e": 3, "f": 201 });
+insert into ds3 ({"id": 202, "e": 4, "f": 202 });

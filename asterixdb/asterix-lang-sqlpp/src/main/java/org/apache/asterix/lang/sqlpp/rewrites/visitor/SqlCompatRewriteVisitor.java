@@ -36,14 +36,17 @@ import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
+import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.IndexAccessor;
 import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OperatorExpr;
 import org.apache.asterix.lang.common.expression.QuantifiedExpression;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.IntegerLiteral;
+import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
@@ -56,9 +59,11 @@ import org.apache.asterix.lang.sqlpp.clause.Projection;
 import org.apache.asterix.lang.sqlpp.clause.SelectBlock;
 import org.apache.asterix.lang.sqlpp.clause.SelectClause;
 import org.apache.asterix.lang.sqlpp.clause.SelectElement;
+import org.apache.asterix.lang.sqlpp.clause.SelectRegular;
 import org.apache.asterix.lang.sqlpp.clause.SelectSetOperation;
 import org.apache.asterix.lang.sqlpp.clause.UnnestClause;
 import org.apache.asterix.lang.sqlpp.expression.SelectExpression;
+import org.apache.asterix.lang.sqlpp.optype.SetOpType;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationInput;
 import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
@@ -300,7 +305,7 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
     private SqlCompatSelectExpressionCoercionAnnotation annotateSubquery(SelectExpression subqueryExpr,
             SqlCompatSelectCoercionKind cardinalityCoercion, SqlCompatSelectCoercionKind typeCoercion)
             throws CompilationException {
-        selectExprAnalyzer.analyze(subqueryExpr);
+        selectExprAnalyzer.analyze(subqueryExpr.getSelectSetOperation(), true);
         if (selectExprAnalyzer.subqueryExists) {
             throw new CompilationException(ErrorCode.COMPILATION_SUBQUERY_COERCION_ERROR,
                     subqueryExpr.getSourceLocation(), "");
@@ -321,6 +326,120 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
         }
     }
 
+    @Override
+    public Expression visit(SelectSetOperation setOp, ILangExpression arg) throws CompilationException {
+        // let subquery coercion rewriting run first
+        super.visit(setOp, arg);
+
+        if (setOp.hasRightInputs()) {
+            // SetOp (UNION ALL) rewriting
+            selectExprAnalyzer.analyze(setOp, false);
+            if (selectExprAnalyzer.subqueryExists) {
+                throw new CompilationException(ErrorCode.COMPILATION_SET_OPERATION_ERROR, setOp.getSourceLocation(),
+                        setOp.getRightInputs().get(0).getSetOpType().toString(), "");
+            }
+            if (selectExprAnalyzer.selectRegularExists) {
+                if (selectExprAnalyzer.selectElementExists) {
+                    throw new CompilationException(ErrorCode.COMPILATION_SET_OPERATION_ERROR, setOp.getSourceLocation(),
+                            setOp.getRightInputs().get(0).getSetOpType().toString(),
+                            "Both SELECT and SELECT VALUE are present");
+                }
+                rewriteSelectSetOp(setOp);
+            }
+        }
+
+        return null;
+    }
+
+    private void rewriteSelectSetOp(SelectSetOperation setOp) throws CompilationException {
+        /*
+         * SELECT a, b, c FROM ...
+         * UNION ALL
+         * SELECT d, e, f FROM ....
+         * -->
+         * SELECT a, b, c
+         * UNION ALL
+         * SELECT v.d AS a, v.e AS b, v.f AS c FROM ( SELECT d, e, f FROM ... )
+         */
+        SelectBlock leftSelectBlock = setOp.getLeftInput().getSelectBlock();
+        boolean ok = leftSelectBlock != null && setOp.hasRightInputs();
+        if (!ok) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, setOp.getSourceLocation(), "");
+        }
+        // collect all field names from the left input
+        List<String> leftFieldNames = collectFieldNames(leftSelectBlock, setOp.getRightInputs().get(0).getSetOpType());
+        for (SetOperationRight rightInput : setOp.getRightInputs()) {
+            // rewrite right inputs
+            rewriteSelectSetOpRightInput(rightInput, leftFieldNames, setOp.getSourceLocation());
+        }
+    }
+
+    private void rewriteSelectSetOpRightInput(SetOperationRight setOpRight, List<String> outputFieldNames,
+            SourceLocation sourceLoc) throws CompilationException {
+        SetOperationInput setOpRightInput = setOpRight.getSetOperationRightInput();
+        SelectBlock rightSelectBlock = setOpRightInput.getSelectBlock();
+        if (rightSelectBlock == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, "");
+        }
+        List<String> inputFieldNames = collectFieldNames(rightSelectBlock, setOpRight.getSetOpType());
+        int nFields = inputFieldNames.size();
+        if (nFields != outputFieldNames.size()) {
+            throw new CompilationException(ErrorCode.COMPILATION_SET_OPERATION_ERROR, sourceLoc,
+                    setOpRight.getSetOpType().toString(), "Unequal number of input fields");
+        }
+
+        SelectSetOperation setOp1 = new SelectSetOperation(new SetOperationInput(rightSelectBlock, null), null);
+        setOp1.setSourceLocation(sourceLoc);
+        SelectExpression selectExpr1 = new SelectExpression(null, setOp1, null, null, true);
+        selectExpr1.setSourceLocation(sourceLoc);
+
+        VarIdentifier v1 = context.newVariable();
+        VariableExpr v1Expr1 = new VariableExpr(v1);
+        v1Expr1.setSourceLocation(sourceLoc);
+
+        FromTerm fromTerm1 = new FromTerm(selectExpr1, v1Expr1, null, null);
+        fromTerm1.setSourceLocation(sourceLoc);
+        List<FromTerm> fromTermList1 = new ArrayList<>(1);
+        fromTermList1.add(fromTerm1);
+        FromClause fromClause1 = new FromClause(fromTermList1);
+        fromClause1.setSourceLocation(sourceLoc);
+
+        List<FieldBinding> fb1List = new ArrayList<>(nFields);
+        for (int i = 0; i < nFields; i++) {
+            VariableExpr v1Expr2 = new VariableExpr(v1);
+            v1Expr2.setSourceLocation(sourceLoc);
+            FieldAccessor fa1 = new FieldAccessor(v1Expr2, new Identifier(inputFieldNames.get(i)));
+            fa1.setSourceLocation(sourceLoc);
+            LiteralExpr lit1 = new LiteralExpr(new StringLiteral(outputFieldNames.get(i)));
+            lit1.setSourceLocation(sourceLoc);
+            fb1List.add(new FieldBinding(lit1, fa1));
+        }
+        RecordConstructor rc1 = new RecordConstructor(fb1List);
+        rc1.setSourceLocation(sourceLoc);
+        SelectClause selectClause1 = new SelectClause(new SelectElement(rc1), null, false);
+        selectClause1.setSourceLocation(sourceLoc);
+        SelectBlock newRightSelectBlock = new SelectBlock(selectClause1, fromClause1, null, null, null);
+        newRightSelectBlock.setSourceLocation(sourceLoc);
+        setOpRightInput.setSelectBlock(newRightSelectBlock);
+    }
+
+    private List<String> collectFieldNames(SelectBlock selectBlock, SetOpType setOpType) throws CompilationException {
+        SelectRegular selectRegular = selectBlock.getSelectClause().getSelectRegular();
+        if (selectRegular == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, selectBlock.getSourceLocation(), "");
+        }
+        List<Projection> projectionList = selectRegular.getProjections();
+        List<String> fieldNames = new ArrayList<>(projectionList.size());
+        for (Projection projection : projectionList) {
+            if (projection.getKind() != Projection.Kind.NAMED_EXPR) {
+                throw new CompilationException(ErrorCode.COMPILATION_SET_OPERATION_ERROR,
+                        projection.getSourceLocation(), setOpType.toString(), "Unsupported projection kind");
+            }
+            fieldNames.add(projection.getName());
+        }
+        return fieldNames;
+    }
+
     private static CallExpr createCallExpr(FunctionIdentifier fid, Expression inExpr, SourceLocation sourceLoc) {
         List<Expression> argList = new ArrayList<>(1);
         argList.add(inExpr);
@@ -334,18 +453,20 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
         private boolean subqueryExists;
         private boolean selectRegularExists;
         private boolean selectElementExists;
+        private boolean computeSelectRegularAllFields;
         private final Set<String> selectRegularAllFields = new HashSet<>();
 
-        private void reset() {
+        private void reset(boolean computeSelectRegularAllFields) {
             subqueryExists = false;
             selectRegularExists = false;
             selectElementExists = false;
             selectRegularAllFields.clear();
+            this.computeSelectRegularAllFields = computeSelectRegularAllFields;
         }
 
-        private void analyze(SelectExpression selectExpr) throws CompilationException {
-            reset();
-            SelectSetOperation setOp = selectExpr.getSelectSetOperation();
+        private void analyze(SelectSetOperation setOp, boolean computeSelectRegularAllFields)
+                throws CompilationException {
+            reset(computeSelectRegularAllFields);
             analyzeSelectSetOpInput(setOp.getLeftInput());
             if (setOp.hasRightInputs()) {
                 for (SetOperationRight rhs : setOp.getRightInputs()) {
@@ -360,9 +481,11 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
                 SelectClause selectClause = selectBlock.getSelectClause();
                 if (selectClause.selectRegular()) {
                     selectRegularExists = true;
-                    for (Projection projection : selectClause.getSelectRegular().getProjections()) {
-                        if (projection.getKind() == Projection.Kind.NAMED_EXPR) {
-                            selectRegularAllFields.add(projection.getName());
+                    if (computeSelectRegularAllFields) {
+                        for (Projection projection : selectClause.getSelectRegular().getProjections()) {
+                            if (projection.getKind() == Projection.Kind.NAMED_EXPR) {
+                                selectRegularAllFields.add(projection.getName());
+                            }
                         }
                     }
                 } else if (selectClause.selectElement()) {
@@ -508,7 +631,7 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
             /*
              * inExpr = SELECT ..., type_coercion_expr AS $new_unique_field
              * -->
-             * inExpr = SELECT VALUE v1.$new_unique_field FROM (SELECT ..., type_coercion_expr AS #x) v1
+             * inExpr = SELECT VALUE v1.$new_unique_field FROM (SELECT ..., type_coercion_expr AS $new_unique_field) v1
              */
             VarIdentifier v1 = context.newVariable();
             VariableExpr v1Ref1 = new VariableExpr(v1);
