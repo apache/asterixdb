@@ -230,7 +230,6 @@ public class ValidateUtil {
                     case DATE:
                     case TIME:
                     case DATETIME:
-                    case UNION:
                     case UUID:
                     case YEARMONTHDURATION:
                     case DAYTIMEDURATION:
@@ -249,7 +248,6 @@ public class ValidateUtil {
                     case CIRCLE:
                     case POLYGON:
                     case GEOMETRY:
-                    case UNION:
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -258,14 +256,10 @@ public class ValidateUtil {
                 }
                 break;
             case LENGTH_PARTITIONED_NGRAM_INVIX:
-                switch (fieldType.getTypeTag()) {
-                    case STRING:
-                    case UNION:
-                        break;
-                    default:
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The field \"" + displayFieldName + "\" which is of type " + fieldType.getTypeTag()
-                                        + " cannot be indexed using the Length Partitioned N-Gram index.");
+                if (fieldType.getTypeTag() != ATypeTag.STRING) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                            "The field \"" + displayFieldName + "\" which is of type " + fieldType.getTypeTag()
+                                    + " cannot be indexed using the Length Partitioned N-Gram index.");
                 }
                 break;
             case LENGTH_PARTITIONED_WORD_INVIX:
@@ -273,7 +267,6 @@ public class ValidateUtil {
                     case STRING:
                     case MULTISET:
                     case ARRAY:
-                    case UNION:
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -282,14 +275,10 @@ public class ValidateUtil {
                 }
                 break;
             case SINGLE_PARTITION_NGRAM_INVIX:
-                switch (fieldType.getTypeTag()) {
-                    case STRING:
-                    case UNION:
-                        break;
-                    default:
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The field \"" + displayFieldName + "\" which is of type " + fieldType.getTypeTag()
-                                        + " cannot be indexed using the N-Gram index.");
+                if (fieldType.getTypeTag() != ATypeTag.STRING) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                            "The field \"" + displayFieldName + "\" which is of type " + fieldType.getTypeTag()
+                                    + " cannot be indexed using the N-Gram index.");
                 }
                 break;
             case SINGLE_PARTITION_WORD_INVIX:
@@ -297,7 +286,6 @@ public class ValidateUtil {
                     case STRING:
                     case MULTISET:
                     case ARRAY:
-                    case UNION:
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
