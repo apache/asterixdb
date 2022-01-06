@@ -431,6 +431,7 @@ public class OptimizableOperatorSubTree {
                 }
                 break;
             case EXTERNAL_SCAN:
+            case COLLECTION_SCAN:
                 break;
             case NO_DATASOURCE:
             default:
