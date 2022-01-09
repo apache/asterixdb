@@ -43,7 +43,7 @@ import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.util.trace.ITracer;
 
-public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
+public class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
 
     /*
      * Finals
@@ -74,9 +74,9 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
             IBinaryComparatorFactory[] filterCmpFactories, ITracer tracer) {
         super(index, btreeFields, filterFields, filterCmpFactories, searchCallback, modificationCallback, tracer);
         LSMBTreeMemoryComponent c = (LSMBTreeMemoryComponent) mutableComponents.get(0);
-        IBinaryComparatorFactory cmpFactories[] = c.getIndex().getComparatorFactories();
+        IBinaryComparatorFactory[] cmpFactories = c.getIndex().getComparatorFactories();
         if (cmpFactories[0] != null) {
-            this.cmp = MultiComparator.create(c.getIndex().getComparatorFactories());
+            this.cmp = createMultiComparator(c.getIndex().getComparatorFactories());
         } else {
             this.cmp = null;
         }
@@ -110,6 +110,10 @@ public final class LSMBTreeOpContext extends AbstractLSMIndexOperationContext {
         searchInitialState = new LSMBTreeCursorInitialState(insertLeafFrameFactory, getCmp(), bloomFilterCmp,
                 lsmHarness, null, searchCallback, null);
         insertSearchCursor = new LSMBTreePointSearchCursor(this);
+    }
+
+    protected MultiComparator createMultiComparator(IBinaryComparatorFactory[] cmpFactories) {
+        return MultiComparator.create(cmpFactories);
     }
 
     @Override

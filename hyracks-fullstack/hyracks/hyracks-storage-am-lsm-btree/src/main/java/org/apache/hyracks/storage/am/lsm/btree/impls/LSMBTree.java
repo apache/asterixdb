@@ -341,7 +341,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 try {
                     List<ILSMComponent> mergedComponents = mergeOp.getMergingComponents();
                     long numElements = getNumberOfElements(mergedComponents);
-                    mergedComponent = createDiskComponent(componentFactory, mergeOp.getTarget(), null,
+                    mergedComponent = createDiskComponent(getMergeComponentFactory(), mergeOp.getTarget(), null,
                             mergeOp.getBloomFilterTarget(), true);
                     IPageWriteCallback pageWriteCallback = pageWriteCallbackFactory.createPageWriteCallback();
                     componentBulkLoader = mergedComponent.createBulkLoader(operation, 1.0f, false, numElements, false,
@@ -418,7 +418,7 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
     }
 
     public ILSMIndexAccessor createAccessor(AbstractLSMIndexOperationContext opCtx) {
-        return new LSMTreeIndexAccessor(getHarness(), opCtx, cursorFactory);
+        return new LSMTreeIndexAccessor(getHarness(), opCtx, getCursorFactory());
     }
 
     @Override
@@ -483,8 +483,24 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             returnDeletedTuples = true;
         }
         IIndexCursorStats stats = new IndexCursorStats();
-        LSMBTreeRangeSearchCursor cursor = new LSMBTreeRangeSearchCursor(opCtx, returnDeletedTuples, stats);
+        LSMBTreeRangeSearchCursor cursor = createCursor(opCtx, returnDeletedTuples, stats);
         return new LSMBTreeMergeOperation(accessor, cursor, stats, mergeFileRefs.getInsertIndexFileReference(),
                 mergeFileRefs.getBloomFilterFileReference(), callback, getIndexIdentifier());
+    }
+
+    protected LSMBTreeRangeSearchCursor createCursor(AbstractLSMIndexOperationContext opCtx,
+            boolean returnDeletedTuples, IIndexCursorStats stats) {
+        return new LSMBTreeRangeSearchCursor(opCtx, returnDeletedTuples, stats);
+    }
+
+    /**
+     * @return Merge component factory (could be different from {@link #componentFactory}
+     */
+    protected ILSMDiskComponentFactory getMergeComponentFactory() {
+        return componentFactory;
+    }
+
+    protected ICursorFactory getCursorFactory() {
+        return cursorFactory;
     }
 }

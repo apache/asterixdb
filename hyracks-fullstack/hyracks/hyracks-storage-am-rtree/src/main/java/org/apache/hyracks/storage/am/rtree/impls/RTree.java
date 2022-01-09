@@ -41,6 +41,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.frames.AbstractSlotManager;
 import org.apache.hyracks.storage.am.common.frames.FrameOpSpaceStatus;
 import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndex;
+import org.apache.hyracks.storage.am.common.impls.AbstractTreeIndexBulkLoader;
 import org.apache.hyracks.storage.am.common.impls.NodeFrontier;
 import org.apache.hyracks.storage.am.common.impls.TreeIndexDiskOrderScanCursor;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -902,7 +903,7 @@ public class RTree extends AbstractTreeIndex {
         return new RTreeBulkLoader(fillFactor, callback);
     }
 
-    public class RTreeBulkLoader extends AbstractTreeIndex.AbstractTreeIndexBulkLoader {
+    public class RTreeBulkLoader extends AbstractTreeIndexBulkLoader {
         ITreeIndexFrame lowerFrame, prevInteriorFrame;
         RTreeTypeAwareTupleWriter interiorFrameTupleWriter =
                 ((RTreeTypeAwareTupleWriter) interiorFrame.getTupleWriter());
@@ -911,7 +912,7 @@ public class RTree extends AbstractTreeIndex {
         List<Integer> prevNodeFrontierPages = new ArrayList<>();
 
         public RTreeBulkLoader(float fillFactor, IPageWriteCallback callback) throws HyracksDataException {
-            super(fillFactor, callback);
+            super(fillFactor, callback, RTree.this);
             prevInteriorFrame = interiorFrameFactory.createFrame();
         }
 

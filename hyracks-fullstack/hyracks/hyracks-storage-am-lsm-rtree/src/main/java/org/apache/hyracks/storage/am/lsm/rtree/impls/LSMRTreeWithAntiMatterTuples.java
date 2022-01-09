@@ -142,7 +142,8 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
                 bTreeTupleSorter = new TreeTupleSorter(flushingComponent.getBuddyIndex().getFileId(), linearizerArray,
                         btreeLeafFrameFactory.createFrame(), btreeLeafFrameFactory.createFrame(),
                         flushingComponent.getBuddyIndex().getBufferCache(), comparatorFields);
-                BTreeRangeSearchCursor btreeScanCursor = memBTreeAccessor.createSearchCursor(false);
+                BTreeRangeSearchCursor btreeScanCursor =
+                        (BTreeRangeSearchCursor) memBTreeAccessor.createSearchCursor(false);
                 try {
                     isEmpty = true;
                     memBTreeAccessor.search(btreeScanCursor, btreeNullPredicate);
