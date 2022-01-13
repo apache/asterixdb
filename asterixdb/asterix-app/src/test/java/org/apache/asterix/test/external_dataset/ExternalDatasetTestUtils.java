@@ -19,6 +19,7 @@
 package org.apache.asterix.test.external_dataset;
 
 import static org.apache.asterix.test.external_dataset.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
+import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.BOM_FILE_CONTAINER;
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.FIXED_DATA_CONTAINER;
 
 import java.io.BufferedWriter;
@@ -62,6 +63,7 @@ public class ExternalDatasetTestUtils {
     private static Uploader playgroundDataLoader;
     private static Uploader fixedDataLoader;
     private static Uploader mixedDataLoader;
+    private static Uploader bomFileLoader;
 
     protected TestCaseContext tcCtx;
 
@@ -95,10 +97,12 @@ public class ExternalDatasetTestUtils {
         TSV_DATA_PATH = tsvDataPath;
     }
 
-    public static void setUploaders(Uploader playgroundDataLoader, Uploader fixedDataLoader, Uploader mixedDataLoader) {
+    public static void setUploaders(Uploader playgroundDataLoader, Uploader fixedDataLoader, Uploader mixedDataLoader,
+            Uploader bomFileLoader) {
         ExternalDatasetTestUtils.playgroundDataLoader = playgroundDataLoader;
         ExternalDatasetTestUtils.fixedDataLoader = fixedDataLoader;
         ExternalDatasetTestUtils.mixedDataLoader = mixedDataLoader;
+        ExternalDatasetTestUtils.bomFileLoader = bomFileLoader;
     }
 
     /**
@@ -146,6 +150,30 @@ public class ExternalDatasetTestUtils {
         fixedDataLoader.upload("lvl1/3.json", path, true, false);
         fixedDataLoader.upload("lvl1/34.json", path, true, false);
         fixedDataLoader.upload("lvl1/lvl2/5.json", path, true, false);
+    }
+
+    /**
+     * This bucket contains files that start with byte order mark (BOM): U+FEFF
+     */
+    public static void prepareBomFileContainer() {
+        LOGGER.info("Loading bom files data to " + BOM_FILE_CONTAINER);
+
+        // Files data
+        bomFileLoader.upload("1.json", "\uFEFF{\"id\": 1, \"age\": 1}", false, false);
+        bomFileLoader.upload("2.json", "\uFEFF{\"id\": 2, \"age\": 2}", false, false);
+        bomFileLoader.upload("3.json", "\uFEFF{\"id\": 3, \"age\": 3}", false, false);
+        bomFileLoader.upload("4.json", "\uFEFF{\"id\": 4, \"age\": 4}", false, false);
+        bomFileLoader.upload("5.json", "\uFEFF{\"id\": 5, \"age\": 5}", false, false);
+        bomFileLoader.upload("1.csv", "\uFEFF1,1", false, false);
+        bomFileLoader.upload("2.csv", "\uFEFF2,2", false, false);
+        bomFileLoader.upload("3.csv", "\uFEFF3,3", false, false);
+        bomFileLoader.upload("4.csv", "\uFEFF4,4", false, false);
+        bomFileLoader.upload("5.csv", "\uFEFF5,5", false, false);
+        bomFileLoader.upload("1.tsv", "\uFEFF1\t1", false, false);
+        bomFileLoader.upload("2.tsv", "\uFEFF2\t2", false, false);
+        bomFileLoader.upload("3.tsv", "\uFEFF3\t3", false, false);
+        bomFileLoader.upload("4.tsv", "\uFEFF4\t4", false, false);
+        bomFileLoader.upload("5.tsv", "\uFEFF5\t5", false, false);
     }
 
     public static void loadJsonFiles() {

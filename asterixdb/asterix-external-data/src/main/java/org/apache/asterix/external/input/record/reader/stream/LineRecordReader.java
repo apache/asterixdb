@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.BYTE_ORDER_MARK;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -121,6 +123,10 @@ public class LineRecordReader extends StreamRecordReader {
                     }
                 }
                 for (; bufferPosn < bufferLength; ++bufferPosn) { //search for newline
+                    if (inputBuffer[bufferPosn] == BYTE_ORDER_MARK) {
+                        startPosn++;
+                        continue;
+                    }
                     if (inputBuffer[bufferPosn] == ExternalDataConstants.LF) {
                         newlineLength = (prevCharCR) ? 2 : 1;
                         ++bufferPosn; // at next invocation proceed from following byte

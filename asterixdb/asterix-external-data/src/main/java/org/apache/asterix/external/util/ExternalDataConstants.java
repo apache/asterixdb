@@ -255,6 +255,7 @@ public class ExternalDataConstants {
     public static final char OPEN_BRACKET = '[';
     public static final char CLOSING_BRACKET = ']';
     public static final char COMMA = ',';
+    public static final char BYTE_ORDER_MARK = '\uFEFF';
 
     /**
      * Constant byte characters

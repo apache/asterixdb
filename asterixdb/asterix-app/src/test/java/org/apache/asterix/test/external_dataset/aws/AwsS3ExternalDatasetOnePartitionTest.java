@@ -46,6 +46,7 @@ public class AwsS3ExternalDatasetOnePartitionTest extends AwsS3ExternalDatasetTe
         PREPARE_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareS3Bucket;
         PREPARE_FIXED_DATA_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareFixedDataBucket;
         PREPARE_MIXED_DATA_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareMixedDataBucket;
+        PREPARE_BOM_FILE_BUCKET = AwsS3ExternalDatasetOnePartitionTest::prepareBomDataBucket;
         return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
@@ -56,5 +57,8 @@ public class AwsS3ExternalDatasetOnePartitionTest extends AwsS3ExternalDatasetTe
     }
 
     private static void prepareMixedDataBucket() {
+    }
+
+    private static void prepareBomDataBucket() {
     }
 }

@@ -89,6 +89,7 @@ public class AwsS3ExternalDatasetTest {
     static Runnable PREPARE_BUCKET;
     static Runnable PREPARE_FIXED_DATA_BUCKET;
     static Runnable PREPARE_MIXED_DATA_BUCKET;
+    static Runnable PREPARE_BOM_FILE_BUCKET;
 
     // Base directory paths for data files
     private static final String JSON_DATA_PATH = joinPath("data", "json");
@@ -115,12 +116,15 @@ public class AwsS3ExternalDatasetTest {
     public static final String PLAYGROUND_CONTAINER = "playground";
     public static final String FIXED_DATA_CONTAINER = "fixed-data"; // Do not use, has fixed data
     public static final String INCLUDE_EXCLUDE_CONTAINER = "include-exclude";
+    public static final String BOM_FILE_CONTAINER = "bom-file-container";
     public static final PutObjectRequest.Builder playgroundBuilder =
             PutObjectRequest.builder().bucket(PLAYGROUND_CONTAINER);
     public static final PutObjectRequest.Builder fixedDataBuilder =
             PutObjectRequest.builder().bucket(FIXED_DATA_CONTAINER);
     public static final PutObjectRequest.Builder includeExcludeBuilder =
             PutObjectRequest.builder().bucket(INCLUDE_EXCLUDE_CONTAINER);
+    public static final PutObjectRequest.Builder bomFileContainerBuilder =
+            PutObjectRequest.builder().bucket(BOM_FILE_CONTAINER);
 
     public AwsS3ExternalDatasetTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
@@ -158,6 +162,8 @@ public class AwsS3ExternalDatasetTest {
         PREPARE_BUCKET = ExternalDatasetTestUtils::preparePlaygroundContainer;
         PREPARE_FIXED_DATA_BUCKET = ExternalDatasetTestUtils::prepareFixedDataContainer;
         PREPARE_MIXED_DATA_BUCKET = ExternalDatasetTestUtils::prepareMixedDataContainer;
+        PREPARE_BOM_FILE_BUCKET = ExternalDatasetTestUtils::prepareBomFileContainer;
+
         return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
@@ -199,15 +205,17 @@ public class AwsS3ExternalDatasetTest {
         client.createBucket(CreateBucketRequest.builder().bucket(PLAYGROUND_CONTAINER).build());
         client.createBucket(CreateBucketRequest.builder().bucket(FIXED_DATA_CONTAINER).build());
         client.createBucket(CreateBucketRequest.builder().bucket(INCLUDE_EXCLUDE_CONTAINER).build());
+        client.createBucket(CreateBucketRequest.builder().bucket(BOM_FILE_CONTAINER).build());
         LOGGER.info("Client created successfully");
 
         // Create the bucket and upload some json files
         setDataPaths(JSON_DATA_PATH, CSV_DATA_PATH, TSV_DATA_PATH);
         setUploaders(AwsS3ExternalDatasetTest::loadPlaygroundData, AwsS3ExternalDatasetTest::loadFixedData,
-                AwsS3ExternalDatasetTest::loadMixedData);
+                AwsS3ExternalDatasetTest::loadMixedData, AwsS3ExternalDatasetTest::loadBomData);
         PREPARE_BUCKET.run();
         PREPARE_FIXED_DATA_BUCKET.run();
         PREPARE_MIXED_DATA_BUCKET.run();
+        PREPARE_BOM_FILE_BUCKET.run();
     }
 
     private static void loadPlaygroundData(String key, String content, boolean fromFile, boolean gzipped) {
@@ -220,6 +228,10 @@ public class AwsS3ExternalDatasetTest {
 
     private static void loadMixedData(String key, String content, boolean fromFile, boolean gzipped) {
         client.putObject(includeExcludeBuilder.key(key).build(), getRequestBody(content, fromFile, gzipped));
+    }
+
+    private static void loadBomData(String key, String content, boolean fromFile, boolean gzipped) {
+        client.putObject(bomFileContainerBuilder.key(key).build(), getRequestBody(content, fromFile, gzipped));
     }
 
     private static RequestBody getRequestBody(String content, boolean fromFile, boolean gzipped) {
