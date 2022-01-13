@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.BYTE_ORDER_MARK;
 import static org.apache.asterix.external.util.ExternalDataConstants.CLOSING_BRACKET;
 import static org.apache.asterix.external.util.ExternalDataConstants.COMMA;
 import static org.apache.asterix.external.util.ExternalDataConstants.CR;
@@ -134,7 +135,7 @@ public class SemiStructuredRecordReader extends StreamRecordReader {
                         lineNumber++;
                     }
                     isLastCharCR = c == CR;
-                    if (c == SPACE || c == TAB || c == LF || c == CR) {
+                    if (c == SPACE || c == TAB || c == LF || c == CR || c == BYTE_ORDER_MARK) {
                         continue;
                     }
                     if (c == recordStart && state != State.NESTED_OBJECT) {
