@@ -381,7 +381,7 @@ public abstract class SqlppRQGTestBase {
 
     protected static void startAsterix() throws Exception {
         testExecutor = new TestExecutor();
-        LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, testExecutor);
+        LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, testExecutor, false);
         loadAsterixData();
     }
 

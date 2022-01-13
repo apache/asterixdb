@@ -127,7 +127,7 @@ public class SqlppNumericIndexRQGTest {
     @BeforeClass
     public static void setUp() throws Exception {
         testExecutor = new TestExecutor();
-        LangExecutionUtil.setUp(SqlppRQGTestBase.TEST_CONFIG_FILE_NAME, testExecutor);
+        LangExecutionUtil.setUp(SqlppRQGTestBase.TEST_CONFIG_FILE_NAME, testExecutor, false);
 
         StringBuilder sb = new StringBuilder(2048);
         addDropDataverse(sb, DATAVERSE_NAME);
@@ -293,7 +293,7 @@ public class SqlppNumericIndexRQGTest {
             }
         }
         sb.append(") ");
-        sb.append("OPEN TYPE PRIMARY KEY id;\n");
+        sb.append("OPEN TYPE PRIMARY KEY ").append(ID_COLUMN_NAME).append(";\n");
     }
 
     private static void addLoadDataset(StringBuilder sb, String dataverseName, String datasetName) {

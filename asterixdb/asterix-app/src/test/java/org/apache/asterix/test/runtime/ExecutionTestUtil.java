@@ -73,11 +73,10 @@ public class ExecutionTestUtil {
         }
         integrationUtil.init(cleanup, configFile);
 
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("initializing HDFS");
-        }
-
         if (startHdfs) {
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("initializing HDFS");
+            }
             HDFSCluster.getInstance().setup();
         }
 

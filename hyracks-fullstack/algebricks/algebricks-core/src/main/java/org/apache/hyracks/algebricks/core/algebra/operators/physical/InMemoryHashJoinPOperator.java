@@ -44,8 +44,6 @@ import org.apache.hyracks.algebricks.runtime.evaluators.TuplePairEvaluatorFactor
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
-import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
-import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -93,11 +91,6 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
         IBinaryHashFunctionFactory[] rightHashFunFactories =
                 JobGenHelper.variablesToBinaryHashFunctionFactories(keysRightBranch, env, context);
 
-        IPredicateEvaluatorFactoryProvider predEvaluatorFactoryProvider =
-                context.getPredicateEvaluatorFactoryProvider();
-        IPredicateEvaluatorFactory predEvaluatorFactory = predEvaluatorFactoryProvider == null ? null
-                : predEvaluatorFactoryProvider.getPredicateEvaluatorFactory(keysLeft, keysRight);
-
         RecordDescriptor recDescriptor =
                 JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
         IOperatorSchema[] conditionInputSchemas = new IOperatorSchema[1];
@@ -116,15 +109,14 @@ public class InMemoryHashJoinPOperator extends AbstractHashJoinPOperator {
         switch (kind) {
             case INNER:
                 opDesc = new InMemoryHashJoinOperatorDescriptor(spec, keysLeft, keysRight, leftHashFunFactories,
-                        rightHashFunFactories, comparatorFactory, recDescriptor, tableSize, predEvaluatorFactory,
-                        memSizeInFrames);
+                        rightHashFunFactories, comparatorFactory, recDescriptor, tableSize, memSizeInFrames);
                 break;
             case LEFT_OUTER:
                 IMissingWriterFactory[] nonMatchWriterFactories = JobGenHelper.createMissingWriterFactories(context,
                         ((LeftOuterJoinOperator) joinOp).getMissingValue(), inputSchemas[1].getSize());
                 opDesc = new InMemoryHashJoinOperatorDescriptor(spec, keysLeft, keysRight, leftHashFunFactories,
-                        rightHashFunFactories, comparatorFactory, predEvaluatorFactory, recDescriptor, true,
-                        nonMatchWriterFactories, tableSize, memSizeInFrames);
+                        rightHashFunFactories, comparatorFactory, recDescriptor, true, nonMatchWriterFactories,
+                        tableSize, memSizeInFrames);
                 break;
             default:
                 throw new NotImplementedException();

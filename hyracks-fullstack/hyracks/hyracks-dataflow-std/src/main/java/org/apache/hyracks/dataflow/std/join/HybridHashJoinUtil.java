@@ -28,16 +28,21 @@ public class HybridHashJoinUtil {
     private HybridHashJoinUtil() {
     }
 
+    public enum SIDE {
+        BUILD,
+        PROBE
+    }
+
     /**
      * Prints out the detailed information for partitions: in-memory and spilled partitions.
      * This method exists for a debug purpose.
      */
-    public String printPartitionInfo(BitSet spilledStatus, OptimizedHybridHashJoin.SIDE whichSide, int numOfPartitions,
-            int[] probePSizeInTups, int[] buildPSizeInTups, RunFileWriter[] probeRFWriters,
-            RunFileWriter[] buildRFWriters, IPartitionedTupleBufferManager bufferManager) {
+    public String printPartitionInfo(BitSet spilledStatus, SIDE whichSide, int numOfPartitions, int[] probePSizeInTups,
+            int[] buildPSizeInTups, RunFileWriter[] probeRFWriters, RunFileWriter[] buildRFWriters,
+            IPartitionedTupleBufferManager bufferManager) {
         StringBuilder buf = new StringBuilder();
         buf.append(">>> " + this + " " + Thread.currentThread().getId() + " printInfo():" + "\n");
-        if (whichSide == OptimizedHybridHashJoin.SIDE.BUILD) {
+        if (whichSide == SIDE.BUILD) {
             buf.append("BUILD side" + "\n");
         } else {
             buf.append("PROBE side" + "\n");
@@ -49,7 +54,7 @@ public class HybridHashJoinUtil {
         int spilledPartByteSize = 0;
         for (int pid = spilledStatus.nextSetBit(0); pid >= 0 && pid < numOfPartitions; pid =
                 spilledStatus.nextSetBit(pid + 1)) {
-            if (whichSide == OptimizedHybridHashJoin.SIDE.BUILD) {
+            if (whichSide == SIDE.BUILD) {
                 spilledTupleCount += buildPSizeInTups[pid];
                 spilledPartByteSize += buildRFWriters[pid].getFileSize();
                 buf.append("part:\t" + pid + "\t#tuple:\t" + buildPSizeInTups[pid] + "\tsize(MB):\t"
@@ -70,7 +75,7 @@ public class HybridHashJoinUtil {
         int inMemoryPartByteSize = 0;
         for (int pid = spilledStatus.nextClearBit(0); pid >= 0 && pid < numOfPartitions; pid =
                 spilledStatus.nextClearBit(pid + 1)) {
-            if (whichSide == OptimizedHybridHashJoin.SIDE.BUILD) {
+            if (whichSide == SIDE.BUILD) {
                 inMemoryTupleCount += buildPSizeInTups[pid];
                 inMemoryPartByteSize += bufferManager.getPhysicalSize(pid);
             } else {

@@ -27,7 +27,6 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
-import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -63,22 +62,20 @@ public class NestedLoopJoin {
     private final RunFileWriter runFileWriter;
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder missingTupleBuilder;
-    private final IPredicateEvaluator predEvaluator;
-    // Added for handling correct calling for predicate-evaluator upon recursive calls
+    // Added for handling correct calling of recursive calls
     // (in OptimizedHybridHashJoin) that cause role-reversal
     private final boolean isReversed;
     private final BufferInfo tempInfo = new BufferInfo(null, -1, -1);
     private final BitSet outerMatchLOJ;
 
     public NestedLoopJoin(IHyracksJobletContext jobletContext, FrameTupleAccessor accessorOuter,
-            FrameTupleAccessor accessorInner, int memBudgetInFrames, IPredicateEvaluator predEval, boolean isLeftOuter,
+            FrameTupleAccessor accessorInner, int memBudgetInFrames, boolean isLeftOuter,
             IMissingWriter[] missingWriters) throws HyracksDataException {
-        this(jobletContext, accessorOuter, accessorInner, memBudgetInFrames, predEval, isLeftOuter, missingWriters,
-                false);
+        this(jobletContext, accessorOuter, accessorInner, memBudgetInFrames, isLeftOuter, missingWriters, false);
     }
 
     public NestedLoopJoin(IHyracksJobletContext jobletContext, FrameTupleAccessor accessorOuter,
-            FrameTupleAccessor accessorInner, int memBudgetInFrames, IPredicateEvaluator predEval, boolean isLeftOuter,
+            FrameTupleAccessor accessorInner, int memBudgetInFrames, boolean isLeftOuter,
             IMissingWriter[] missingWriters, boolean isReversed) throws HyracksDataException {
         this.accessorInner = accessorInner;
         this.accessorOuter = accessorOuter;
@@ -97,7 +94,6 @@ public class NestedLoopJoin {
                 new VariableFramePool(jobletContext, outerBufferMngrMemBudgetInBytes), FrameFreeSlotPolicyFactory
                         .createFreeSlotPolicy(EnumFreeSlotPolicy.LAST_FIT, outerBufferMngrMemBudgetInFrames));
 
-        this.predEvaluator = predEval;
         this.isLeftOuter = isLeftOuter;
         if (isLeftOuter) {
             if (isReversed) {
@@ -202,8 +198,7 @@ public class NestedLoopJoin {
             boolean matchFound = false;
             for (int j = 0; j < innerTupleCount; ++j) {
                 int c = tpComparator.compare(accessorOuter, i, accessorInner, j);
-                boolean prdEval = evaluatePredicate(i, j);
-                if (c == 0 && prdEval) {
+                if (c == 0) {
                     matchFound = true;
                     appendToResults(i, j, writer);
                 }
@@ -211,14 +206,6 @@ public class NestedLoopJoin {
             if (isLeftOuter && matchFound) {
                 outerMatchLOJ.set(outerTupleStartPos + i);
             }
-        }
-    }
-
-    private boolean evaluatePredicate(int tIx1, int tIx2) {
-        if (isReversed) { //Role Reversal Optimization is triggered
-            return ((predEvaluator == null) || predEvaluator.evaluate(accessorInner, tIx2, accessorOuter, tIx1));
-        } else {
-            return ((predEvaluator == null) || predEvaluator.evaluate(accessorOuter, tIx1, accessorInner, tIx2));
         }
     }
 
