@@ -17,10 +17,21 @@
  * under the License.
  */
 
-package org.apache.hyracks.api.dataflow.value;
+/*
+ * Test hash join when values on both side are MISSING
+ */
 
-import org.apache.hyracks.api.comm.IFrameTupleAccessor;
+with
+R as (
+  from range(1, 50000) r
+  select (case when get_year(current_date()) > 0 then missing else r end) as r
+),
 
-public interface IPredicateEvaluator {
-    boolean evaluate(IFrameTupleAccessor fta, int tupId);
-}
+S as (
+  from range(1, 50000) s
+  select (case when get_year(current_date()) > 0 then missing else s end) as s
+)
+
+select count(*) cnt
+from R, S
+where R.r = S.s;

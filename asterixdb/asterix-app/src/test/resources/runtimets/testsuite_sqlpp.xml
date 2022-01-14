@@ -6630,6 +6630,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="join">
+      <compilation-unit name="hash_join_missing">
+        <output-dir compare="Text">hash_join_missing</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
       <compilation-unit name="hash_join_record">
         <output-dir compare="Text">hash_join_record</output-dir>
       </compilation-unit>

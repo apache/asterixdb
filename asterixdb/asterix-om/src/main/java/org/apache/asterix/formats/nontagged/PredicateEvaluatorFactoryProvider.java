@@ -26,31 +26,24 @@ import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactory;
 import org.apache.hyracks.api.dataflow.value.IPredicateEvaluatorFactoryProvider;
 
-/*
-Provides PredicateEvaluator for equi-join cases to properly take care of NULL fields, being compared with each other.
-If any of the join keys, from either side, is NULL, record should not pass equi-join condition.
-*/
+/**
+ * Provides PredicateEvaluator for equi-join cases to disqualify tuples having NULL/MISSING fields
+ * If any of the join keys, from either side, is NULL/MISSING, the tuple will not pass equi-join condition.
+ */
 public class PredicateEvaluatorFactoryProvider implements IPredicateEvaluatorFactoryProvider {
 
     private static final long serialVersionUID = 1L;
     public static final PredicateEvaluatorFactoryProvider INSTANCE = new PredicateEvaluatorFactoryProvider();
 
     @Override
-    public IPredicateEvaluatorFactory getPredicateEvaluatorFactory(final int[] keys0, final int[] keys1) {
+    public IPredicateEvaluatorFactory getPredicateEvaluatorFactory(final int[] keys) {
 
         return new IPredicateEvaluatorFactory() {
             private static final long serialVersionUID = 1L;
 
             @Override
             public IPredicateEvaluator createPredicateEvaluator() {
-                return new IPredicateEvaluator() {
-
-                    @Override
-                    public boolean evaluate(IFrameTupleAccessor fta0, int tupId0, IFrameTupleAccessor fta1,
-                            int tupId1) {
-                        return noNullOrMissingInKeys(fta0, tupId0, keys0) && noNullOrMissingInKeys(fta1, tupId1, keys1);
-                    }
-                };
+                return (fta, tupId) -> noNullOrMissingInKeys(fta, tupId, keys);
             }
         };
     }

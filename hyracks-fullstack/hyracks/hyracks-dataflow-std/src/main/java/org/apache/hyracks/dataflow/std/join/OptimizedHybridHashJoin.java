@@ -59,11 +59,6 @@ public class OptimizedHybridHashJoin {
     // Used for special probe BigObject which can not be held into the Join memory
     private FrameTupleAppender bigFrameAppender;
 
-    public enum SIDE {
-        BUILD,
-        PROBE
-    }
-
     private final IHyracksJobletContext jobletCtx;
 
     private final String buildRelName;
@@ -74,7 +69,8 @@ public class OptimizedHybridHashJoin {
     private final RecordDescriptor probeRd;
     private final RunFileWriter[] buildRFWriters; //writing spilled build partitions
     private final RunFileWriter[] probeRFWriters; //writing spilled probe partitions
-    private final IPredicateEvaluator predEvaluator;
+    private final IPredicateEvaluator buildPredEval;
+    private final IPredicateEvaluator probePredEval;
     private final boolean isLeftOuter;
     private final IMissingWriter[] nonMatchWriters;
     private final BitSet spilledStatus; //0=resident, 1=spilled
@@ -98,8 +94,8 @@ public class OptimizedHybridHashJoin {
 
     public OptimizedHybridHashJoin(IHyracksJobletContext jobletCtx, int memSizeInFrames, int numOfPartitions,
             String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
-            ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator predEval,
-            boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1) {
+            ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator probePredEval,
+            IPredicateEvaluator buildPredEval, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1) {
         this.jobletCtx = jobletCtx;
         this.memSizeInFrames = memSizeInFrames;
         this.buildRd = buildRd;
@@ -113,8 +109,12 @@ public class OptimizedHybridHashJoin {
         this.probeRFWriters = new RunFileWriter[numOfPartitions];
         this.accessorBuild = new FrameTupleAccessor(buildRd);
         this.accessorProbe = new FrameTupleAccessor(probeRd);
-        this.predEvaluator = predEval;
         this.isLeftOuter = isLeftOuter;
+        if (isLeftOuter && probePredEval != null) {
+            throw new IllegalStateException();
+        }
+        this.buildPredEval = buildPredEval;
+        this.probePredEval = probePredEval;
         this.isReversed = false;
         this.spilledStatus = new BitSet(numOfPartitions);
         this.nonMatchWriters = isLeftOuter ? new IMissingWriter[nullWriterFactories1.length] : null;
@@ -141,11 +141,12 @@ public class OptimizedHybridHashJoin {
         accessorBuild.reset(buffer);
         int tupleCount = accessorBuild.getTupleCount();
         for (int i = 0; i < tupleCount; ++i) {
-            int pid = buildHpc.partition(accessorBuild, i, numOfPartitions);
-            processTupleBuildPhase(i, pid);
-            buildPSizeInTups[pid]++;
+            if (buildPredEval == null || buildPredEval.evaluate(accessorBuild, i)) {
+                int pid = buildHpc.partition(accessorBuild, i, numOfPartitions);
+                processTupleBuildPhase(i, pid);
+                buildPSizeInTups[pid]++;
+            }
         }
-
     }
 
     private void processTupleBuildPhase(int tid, int pid) throws HyracksDataException {
@@ -217,8 +218,8 @@ public class OptimizedHybridHashJoin {
 
         ISerializableTable table = new SerializableHashTable(inMemTupCount, jobletCtx, bufferManagerForHashTable);
         this.inMemJoiner = new InMemoryHashJoin(jobletCtx, new FrameTupleAccessor(probeRd), probeHpc,
-                new FrameTupleAccessor(buildRd), buildRd, buildHpc, isLeftOuter, nonMatchWriters, table, predEvaluator,
-                isReversed, bufferManagerForHashTable);
+                new FrameTupleAccessor(buildRd), buildRd, buildHpc, isLeftOuter, nonMatchWriters, table, isReversed,
+                bufferManagerForHashTable);
 
         buildHashTable();
     }
@@ -473,22 +474,28 @@ public class OptimizedHybridHashJoin {
     public void probe(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
         accessorProbe.reset(buffer);
         int tupleCount = accessorProbe.getTupleCount();
-
-        if (isBuildRelAllInMemory()) {
-            inMemJoiner.join(buffer, writer);
-            return;
-        }
         inMemJoiner.resetAccessorProbe(accessorProbe);
-        for (int i = 0; i < tupleCount; ++i) {
-            int pid = probeHpc.partition(accessorProbe, i, numOfPartitions);
-
-            if (buildPSizeInTups[pid] > 0 || isLeftOuter) { //Tuple has potential match from previous phase
-                if (spilledStatus.get(pid)) { //pid is Spilled
-                    processTupleProbePhase(i, pid);
-                } else { //pid is Resident
+        if (isBuildRelAllInMemory()) {
+            for (int i = 0; i < tupleCount; ++i) {
+                // NOTE: probePredEval is guaranteed to be 'null' for outer join and in case of role reversal
+                if (probePredEval == null || probePredEval.evaluate(accessorProbe, i)) {
                     inMemJoiner.join(i, writer);
                 }
-                probePSizeInTups[pid]++;
+            }
+        } else {
+            for (int i = 0; i < tupleCount; ++i) {
+                // NOTE: probePredEval is guaranteed to be 'null' for outer join and in case of role reversal
+                if (probePredEval == null || probePredEval.evaluate(accessorProbe, i)) {
+                    int pid = probeHpc.partition(accessorProbe, i, numOfPartitions);
+                    if (buildPSizeInTups[pid] > 0 || isLeftOuter) { //Tuple has potential match from previous phase
+                        if (spilledStatus.get(pid)) { //pid is Spilled
+                            processTupleProbePhase(i, pid);
+                        } else { //pid is Resident
+                            inMemJoiner.join(i, writer);
+                        }
+                        probePSizeInTups[pid]++;
+                    }
+                }
             }
         }
     }
@@ -600,7 +607,10 @@ public class OptimizedHybridHashJoin {
         return bufferManager.getPhysicalSize(pid);
     }
 
-    public void setIsReversed(boolean b) {
-        this.isReversed = b;
+    public void setIsReversed(boolean reversed) {
+        if (reversed && (buildPredEval != null || probePredEval != null)) {
+            throw new IllegalStateException();
+        }
+        this.isReversed = reversed;
     }
 }

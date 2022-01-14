@@ -26,7 +26,6 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFamily;
-import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
@@ -61,7 +60,6 @@ public class OptimizedHybridHashJoinTest {
     static RecordDescriptor buildRd;
     static ITuplePartitionComputer probeHpc;
     static ITuplePartitionComputer buildHpc;
-    static IPredicateEvaluator predEval;
     int memSizeInFrames = -1;
     int numOfPartitions = -1;
     boolean isLeftOuter = false;
@@ -151,7 +149,7 @@ public class OptimizedHybridHashJoinTest {
     private void testJoin(int memSizeInFrames, int numOfPartitions, VSizeFrame frame) throws HyracksDataException {
 
         hhj = new OptimizedHybridHashJoin(ctx, memSizeInFrames, numOfPartitions, probeRelName, buildRelName, probeRd,
-                buildRd, probeHpc, buildHpc, predEval, isLeftOuter, null);
+                buildRd, probeHpc, buildHpc, null, null, isLeftOuter, null);
 
         hhj.initBuild();
 

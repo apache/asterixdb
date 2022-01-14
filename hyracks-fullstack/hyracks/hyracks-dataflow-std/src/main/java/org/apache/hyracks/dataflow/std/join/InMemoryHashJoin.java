@@ -28,7 +28,6 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksFrameMgrContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
-import org.apache.hyracks.api.dataflow.value.IPredicateEvaluator;
 import org.apache.hyracks.api.dataflow.value.ITuplePairComparator;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -59,7 +58,6 @@ public class InMemoryHashJoin {
     private final ISerializableTable table;
     private final TuplePointer storedTuplePointer;
     private final boolean reverseOutputOrder; //Should we reverse the order of tuples, we are writing in output
-    private final IPredicateEvaluator predEvaluator;
     private final TupleInFrameListAccessor tupleAccessor;
     // To release frames
     private final ISimpleFrameBufferManager bufferManager;
@@ -70,17 +68,16 @@ public class InMemoryHashJoin {
     public InMemoryHashJoin(IHyracksFrameMgrContext ctx, FrameTupleAccessor accessorProbe,
             ITuplePartitionComputer tpcProbe, FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild,
             ITuplePartitionComputer tpcBuild, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
-            ISerializableTable table, IPredicateEvaluator predEval, ISimpleFrameBufferManager bufferManager)
-            throws HyracksDataException {
+            ISerializableTable table, ISimpleFrameBufferManager bufferManager) throws HyracksDataException {
         this(ctx, accessorProbe, tpcProbe, accessorBuild, rDBuild, tpcBuild, isLeftOuter, missingWritersBuild, table,
-                predEval, false, bufferManager);
+                false, bufferManager);
     }
 
     public InMemoryHashJoin(IHyracksFrameMgrContext ctx, FrameTupleAccessor accessorProbe,
             ITuplePartitionComputer tpcProbe, FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild,
             ITuplePartitionComputer tpcBuild, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,
-            ISerializableTable table, IPredicateEvaluator predEval, boolean reverse,
-            ISimpleFrameBufferManager bufferManager) throws HyracksDataException {
+            ISerializableTable table, boolean reverse, ISimpleFrameBufferManager bufferManager)
+            throws HyracksDataException {
         this.table = table;
         storedTuplePointer = new TuplePointer();
         buffers = new ArrayList<>();
@@ -89,7 +86,6 @@ public class InMemoryHashJoin {
         this.accessorProbe = accessorProbe;
         this.tpcProbe = tpcProbe;
         appender = new FrameTupleAppender(new VSizeFrame(ctx));
-        predEvaluator = predEval;
         this.isLeftOuter = isLeftOuter;
         if (isLeftOuter) {
             int fieldCountOuter = accessorBuild.getFieldCount();
@@ -178,11 +174,8 @@ public class InMemoryHashJoin {
                 accessorBuild.reset(buffers.get(bIndex));
                 int c = tpComparator.compare(accessorProbe, tid, accessorBuild, tIndex);
                 if (c == 0) {
-                    boolean predEval = evaluatePredicate(tid, tIndex);
-                    if (predEval) {
-                        matchFound = true;
-                        appendToResult(tid, tIndex, writer);
-                    }
+                    matchFound = true;
+                    appendToResult(tid, tIndex, writer);
                 }
             }
         }
@@ -226,14 +219,6 @@ public class InMemoryHashJoin {
 
     public void closeTable() throws HyracksDataException {
         table.close();
-    }
-
-    private boolean evaluatePredicate(int tIx1, int tIx2) {
-        if (reverseOutputOrder) { //Role Reversal Optimization is triggered
-            return (predEvaluator == null) || predEvaluator.evaluate(accessorBuild, tIx2, accessorProbe, tIx1);
-        } else {
-            return (predEvaluator == null) || predEvaluator.evaluate(accessorProbe, tIx1, accessorBuild, tIx2);
-        }
     }
 
     private void appendToResult(int probeSidetIx, int buildSidetIx, IFrameWriter writer) throws HyracksDataException {
