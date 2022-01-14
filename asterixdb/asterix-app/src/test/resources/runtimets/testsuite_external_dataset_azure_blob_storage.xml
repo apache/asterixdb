@@ -364,4 +364,24 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="bom">
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/byte_order_mark/json">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/byte_order_mark/json</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/byte_order_mark/csv">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/byte_order_mark/csv</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/byte_order_mark/tsv">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/byte_order_mark/tsv</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

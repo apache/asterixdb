@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.BYTE_ORDER_MARK;
 import static org.apache.asterix.external.util.ExternalDataConstants.REC_ENDED_AT_EOF;
 
 import java.io.IOException;
@@ -119,6 +120,10 @@ public class QuotedLineRecordReader extends LineRecordReader {
                 boolean maybeInQuote = false;
                 for (; bufferPosn < bufferLength; ++bufferPosn) {
                     char ch = inputBuffer[bufferPosn];
+                    if (ch == BYTE_ORDER_MARK) {
+                        startPosn++;
+                        continue;
+                    }
                     // count lines here since we need to also count the lines inside quotes
                     if (ch == ExternalDataConstants.LF || prevCharCR) {
                         lineNumber++;
