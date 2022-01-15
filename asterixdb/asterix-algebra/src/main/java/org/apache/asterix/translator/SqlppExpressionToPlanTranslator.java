@@ -345,7 +345,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     public Pair<ILogicalOperator, LogicalVariable> visit(JoinClause joinClause, Mutable<ILogicalOperator> leftInputRef)
             throws CompilationException {
         SourceLocation sourceLoc = joinClause.getSourceLocation();
-        if (joinClause.getJoinType() == JoinType.INNER) {
+        if (joinClause.getJoinType() == JoinType.INNER && !context.inSubplan()) {
             Mutable<ILogicalOperator> rightInputRef = uncorrelatedRightBranchStack.peek();
             Pair<ILogicalOperator, LogicalVariable> rightBranch =
                     generateUnnestForBinaryCorrelateRightBranch(joinClause, rightInputRef, false, null);
@@ -362,7 +362,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             filter.getInputs().add(conditionExprOpPair.second);
             filter.setSourceLocation(conditionExprOpPair.first.getSourceLocation());
             return new Pair<>(filter, rightBranch.second);
-        } else if (joinClause.getJoinType() == JoinType.LEFTOUTER) {
+        } else if (joinClause.getJoinType() == JoinType.INNER || joinClause.getJoinType() == JoinType.LEFTOUTER) {
             // Creates a subplan operator.
             SubplanOperator subplanOp = new SubplanOperator();
             subplanOp.getInputs().add(leftInputRef);
@@ -442,21 +442,22 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             ILogicalPlan subplan = new ALogicalPlanImpl(new MutableObject<>(aggOp));
             subplanOp.getNestedPlans().add(subplan);
 
-            // Outer unnest the aggregated var from the subplan.
-            LogicalVariable outerUnnestVar = context.newVar();
+            // Unnest the aggregated var from the subplan.
+            LogicalVariable unnestVar = context.newVar();
             VariableReferenceExpression aggVarRefExpr = new VariableReferenceExpression(aggVar);
             aggVarRefExpr.setSourceLocation(aggOp.getSourceLocation());
             Pair<ILogicalExpression, Mutable<ILogicalOperator>> pUnnestExpr =
                     makeUnnestExpression(aggVarRefExpr, new MutableObject<>(subplanOp));
-            LeftOuterUnnestOperator outerUnnestOp =
-                    new LeftOuterUnnestOperator(outerUnnestVar, new MutableObject<>(pUnnestExpr.first),
+            AbstractUnnestOperator unnestOp = joinClause.getJoinType() == JoinType.INNER
+                    ? new UnnestOperator(unnestVar, new MutableObject<>(pUnnestExpr.first))
+                    : new LeftOuterUnnestOperator(unnestVar, new MutableObject<>(pUnnestExpr.first),
                             translateLeftOuterMissingValue(joinClause.getOuterJoinMissingValueType()));
-            outerUnnestOp.getInputs().add(pUnnestExpr.second);
-            outerUnnestOp.setSourceLocation(aggOp.getSourceLocation());
-            currentTopOp = outerUnnestOp;
+            unnestOp.getInputs().add(pUnnestExpr.second);
+            unnestOp.setSourceLocation(aggOp.getSourceLocation());
+            currentTopOp = unnestOp;
 
             if (hasRightPosVar) {
-                VariableReferenceExpression outerUnnestVarRef1 = new VariableReferenceExpression(outerUnnestVar);
+                VariableReferenceExpression outerUnnestVarRef1 = new VariableReferenceExpression(unnestVar);
                 outerUnnestVarRef1.setSourceLocation(joinClause.getRightVariable().getSourceLocation());
                 ScalarFunctionCallExpression fieldAccessForRightUnnestVar = new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
@@ -464,7 +465,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                         new MutableObject<>(new ConstantExpression(new AsterixConstantValue(new AInt32(0)))));
                 fieldAccessForRightUnnestVar.setSourceLocation(joinClause.getRightVariable().getSourceLocation());
 
-                VariableReferenceExpression outerUnnestVarRef2 = new VariableReferenceExpression(outerUnnestVar);
+                VariableReferenceExpression outerUnnestVarRef2 = new VariableReferenceExpression(unnestVar);
                 outerUnnestVarRef2.setSourceLocation(joinClause.getPositionalVariable().getSourceLocation());
                 ScalarFunctionCallExpression fieldAccessForRightPosVar = new ScalarFunctionCallExpression(
                         FunctionUtil.getFunctionInfo(BuiltinFunctions.FIELD_ACCESS_BY_INDEX),
@@ -496,7 +497,7 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                 assignOp.setSourceLocation(joinClause.getRightVariable().getSourceLocation());
                 currentTopOp = assignOp;
             } else {
-                context.setVar(joinClause.getRightVariable(), outerUnnestVar);
+                context.setVar(joinClause.getRightVariable(), unnestVar);
             }
             return new Pair<>(currentTopOp, null);
         } else if (joinClause.getJoinType() == JoinType.RIGHTOUTER) {

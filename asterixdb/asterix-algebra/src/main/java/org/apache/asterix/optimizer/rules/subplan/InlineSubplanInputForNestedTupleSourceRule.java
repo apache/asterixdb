@@ -638,9 +638,9 @@ public class InlineSubplanInputForNestedTupleSourceRule implements IAlgebraicRew
             topJoinRef.setValue(ntsOp);
         }
         opRef.setValue(groupbyOp);
+        VariableUtilities.substituteVariables(groupbyOp, result.second, context);
         OperatorManipulationUtil.computeTypeEnvironmentBottomUp(groupbyOp, context);
 
-        VariableUtilities.substituteVariables(groupbyOp, result.second, context);
         replacedVarMap.putAll(result.second);
         return new Pair<>(true, replacedVarMap);
     }
