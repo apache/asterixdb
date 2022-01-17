@@ -123,6 +123,13 @@ public final class TranslationContext implements IVariableContext {
         }
     }
 
+    /*
+     * Whether the translation is inside a subplan
+     */
+    public boolean inSubplan() {
+        return !stack.isEmpty();
+    }
+
     /**
      * @return the variables produced by the top operator in a subplan.
      */
