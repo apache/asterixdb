@@ -19,6 +19,7 @@
 package org.apache.asterix.om.typecomputer.impl;
 
 import org.apache.asterix.om.exceptions.TypeMismatchException;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.typecomputer.base.AbstractResultTypeComputer;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -44,7 +45,7 @@ public class NonTaggedGetItemResultType extends AbstractResultTypeComputer {
         ATypeTag actualTypeTag = type.getTypeTag();
         if (argIndex == 0) {
             if (type.getTypeTag() != ATypeTag.MULTISET && type.getTypeTag() != ATypeTag.ARRAY) {
-                throw new TypeMismatchException(sourceLoc, funcId, argIndex, actualTypeTag, ATypeTag.STRING,
+                throw new TypeMismatchException(sourceLoc, funcId, argIndex, actualTypeTag, ATypeTag.MULTISET,
                         ATypeTag.ARRAY);
             }
         } else {
@@ -59,6 +60,10 @@ public class NonTaggedGetItemResultType extends AbstractResultTypeComputer {
         IAType type = strippedInputTypes[0];
         if (type.getTypeTag() == ATypeTag.ANY) {
             return BuiltinType.ANY;
+        }
+        if (!type.getTypeTag().isListType()) {
+            throw new TypeMismatchException(expr.getSourceLocation(), BuiltinFunctions.GET_ITEM, 0, type.getTypeTag(),
+                    ATypeTag.MULTISET, ATypeTag.ARRAY);
         }
         IAType itemType = ((AbstractCollectionType) type).getItemType();
         if (itemType.getTypeTag() == ATypeTag.ANY) {
