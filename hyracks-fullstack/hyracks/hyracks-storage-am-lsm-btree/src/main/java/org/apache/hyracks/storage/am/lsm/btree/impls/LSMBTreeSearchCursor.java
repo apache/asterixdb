@@ -46,6 +46,13 @@ public class LSMBTreeSearchCursor extends EnforcedIndexCursor implements ILSMInd
         scanCursor = new LSMBTreeDiskComponentScanCursor(opCtx);
     }
 
+    protected LSMBTreeSearchCursor(LSMBTreePointSearchCursor pointCursor, LSMBTreeRangeSearchCursor rangeCursor,
+            LSMBTreeDiskComponentScanCursor scanCursor) {
+        this.pointCursor = pointCursor;
+        this.rangeCursor = rangeCursor;
+        this.scanCursor = scanCursor;
+    }
+
     @Override
     public void doOpen(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         LSMBTreeCursorInitialState lsmInitialState = (LSMBTreeCursorInitialState) initialState;

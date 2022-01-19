@@ -488,6 +488,10 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
                 mergeFileRefs.getBloomFilterFileReference(), callback, getIndexIdentifier());
     }
 
+    public LSMBTreeBatchPointSearchCursor createBatchPointSearchCursor(ILSMIndexOperationContext opCtx) {
+        return new LSMBTreeBatchPointSearchCursor(opCtx);
+    }
+
     protected LSMBTreeRangeSearchCursor createCursor(AbstractLSMIndexOperationContext opCtx,
             boolean returnDeletedTuples, IIndexCursorStats stats) {
         return new LSMBTreeRangeSearchCursor(opCtx, returnDeletedTuples, stats);

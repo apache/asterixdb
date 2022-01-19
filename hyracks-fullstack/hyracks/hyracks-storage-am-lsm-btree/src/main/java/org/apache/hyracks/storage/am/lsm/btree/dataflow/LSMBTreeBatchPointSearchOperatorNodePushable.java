@@ -34,6 +34,7 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeBatchPointSearchCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
@@ -59,7 +60,7 @@ public class LSMBTreeBatchPointSearchOperatorNodePushable extends BTreeSearchOpe
     @Override
     protected IIndexCursor createCursor() throws HyracksDataException {
         ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) indexAccessor;
-        return new LSMBTreeBatchPointSearchCursor(lsmAccessor.getOpContext());
+        return ((LSMBTree) index).createBatchPointSearchCursor(lsmAccessor.getOpContext());
     }
 
     @Override

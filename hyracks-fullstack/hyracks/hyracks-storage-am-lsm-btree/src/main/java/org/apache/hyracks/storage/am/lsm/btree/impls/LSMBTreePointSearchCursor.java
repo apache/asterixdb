@@ -199,7 +199,8 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
         for (int i = 0; i < numBTrees; i++) {
             ILSMComponent component = operationalComponents.get(i);
             BTree btree = (BTree) component.getIndex();
-            if (component.getType() == LSMComponentType.MEMORY) {
+            LSMComponentType type = component.getType();
+            if (type == LSMComponentType.MEMORY) {
                 includeMutableComponent = true;
                 if (bloomFilters[i] != null) {
                     destroyAndNullifyCursorAtIndex(i);
@@ -212,8 +213,8 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
             }
 
             if (btreeAccessors[i] == null) {
-                btreeAccessors[i] = btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-                btreeCursors[i] = btreeAccessors[i].createPointCursor(false, false);
+                btreeAccessors[i] = createAccessor(type, btree, i);
+                btreeCursors[i] = createCursor(type, btreeAccessors[i]);
             } else {
                 // re-use
                 btreeAccessors[i].reset(btree, NoOpIndexAccessParameters.INSTANCE);
@@ -223,6 +224,14 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
         nextHasBeenCalled = false;
         foundTuple = false;
         hashComputed = false;
+    }
+
+    protected BTreeAccessor createAccessor(LSMComponentType type, BTree btree, int i) throws HyracksDataException {
+        return btree.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+    }
+
+    protected ITreeIndexCursor createCursor(LSMComponentType type, BTreeAccessor btreeAccessor) {
+        return btreeAccessor.createPointCursor(false, type == LSMComponentType.DISK);
     }
 
     private void destroyAndNullifyCursorAtIndex(int i) throws HyracksDataException {
