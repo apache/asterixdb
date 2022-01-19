@@ -46,6 +46,7 @@ $query-spacing-unit: 5px;
 .options {
     display: flex;
     flex-flow: row;
+    overflow: auto;
 }
 
 .codemirror-container {

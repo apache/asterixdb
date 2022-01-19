@@ -538,7 +538,7 @@
         this.queryString = '';
         this.selected = 'Default';
       } else {
-        this.queryString = 'USE ' + this.selected + '; \n';
+        this.queryString = 'USE ' + this.selected + '; \n' + this.queryString;
       }
       this.editor.getDoc().setValue(this.queryString);
       this.editor.execCommand('goDocEnd')

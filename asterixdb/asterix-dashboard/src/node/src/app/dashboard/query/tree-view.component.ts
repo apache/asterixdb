@@ -60,7 +60,8 @@ export class TreeViewComponent {
     currentRange: any;
     /* see 10 records as initial set */
     pagedefaults: any = { pageIndex: 0, pageSize:10, lenght: 0};
-    pageSizeOptions = [5, 10, 25, 100, 200];
+    pageSize = 10;
+    pageSizeOptions = [5, 10, 25, 100, 200, 300, 400];
     viewMode = 'JSON';
     showGoTop = false;
     showGoBottom = false;
@@ -141,6 +142,9 @@ export class TreeViewComponent {
     }
 
     showResults(range, expanded) {
+        // update pagesize
+        this.pageSize = range.pageSize;
+
         this.currentRange = range;
         this.currentIndex = this.currentRange.pageIndex;
 
