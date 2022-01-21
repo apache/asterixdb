@@ -103,6 +103,7 @@ import java.util.stream.Stream;
 import org.apache.asterix.api.http.server.QueryServiceRequestParameters;
 import org.apache.asterix.app.external.IExternalUDFLibrarian;
 import org.apache.asterix.common.api.Duration;
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.utils.Servlets;
@@ -2570,37 +2571,65 @@ public class TestExecutor {
     public void cleanup(String testCase, List<String> badtestcases) throws Exception {
         try {
             List<DataverseName> toBeDropped = new ArrayList<>();
-            InputStream resultStream = executeQueryService(
-                    "select dv.DataverseName from Metadata.`Dataverse` as dv order by dv.DataverseName;",
-                    getEndpoint(Servlets.QUERY_SERVICE), OutputFormat.CLEAN_JSON);
-            JsonNode result = extractResult(IOUtils.toString(resultStream, UTF_8));
-            for (int i = 0; i < result.size(); i++) {
-                JsonNode json = result.get(i);
-                if (json != null) {
-                    DataverseName dvName = DataverseName.createFromCanonicalForm(json.get("DataverseName").asText());
-                    if (!dvName.equals(MetadataConstants.METADATA_DATAVERSE_NAME)
-                            && !dvName.equals(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME)) {
-                        toBeDropped.add(dvName);
-                    }
-                }
-            }
+            listUserDefinedDataverses(toBeDropped);
             if (!toBeDropped.isEmpty()) {
                 badtestcases.add(testCase);
                 LOGGER.info("Last test left some garbage. Dropping dataverses: " + StringUtils.join(toBeDropped, ','));
-                StringBuilder dropStatement = new StringBuilder();
                 for (DataverseName dv : toBeDropped) {
-                    dropStatement.setLength(0);
-                    dropStatement.append("drop dataverse ");
-                    SqlppStatementUtil.encloseDataverseName(dropStatement, dv);
-                    dropStatement.append(";\n");
-                    resultStream = executeQueryService(dropStatement.toString(), getEndpoint(Servlets.QUERY_SERVICE),
-                            OutputFormat.CLEAN_JSON, UTF_8);
-                    ResultExtractor.extract(resultStream, UTF_8, OutputFormat.CLEAN_JSON);
+                    dropDataverse(dv);
                 }
             }
         } catch (Throwable th) {
             th.printStackTrace();
             throw th;
+        }
+    }
+
+    protected void listUserDefinedDataverses(List<DataverseName> outDataverses) throws Exception {
+        String query = "select dv.DataverseName from Metadata.`Dataverse` as dv order by dv.DataverseName";
+        InputStream resultStream =
+                executeQueryService(query, getEndpoint(Servlets.QUERY_SERVICE), OutputFormat.CLEAN_JSON);
+        JsonNode result = extractResult(IOUtils.toString(resultStream, UTF_8));
+        for (int i = 0; i < result.size(); i++) {
+            JsonNode json = result.get(i);
+            if (json != null) {
+                DataverseName dvName = DataverseName.createFromCanonicalForm(json.get("DataverseName").asText());
+                if (!dvName.equals(MetadataConstants.METADATA_DATAVERSE_NAME)
+                        && !dvName.equals(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME)) {
+                    outDataverses.add(dvName);
+                }
+            }
+        }
+    }
+
+    protected void dropDataverse(DataverseName dv) throws Exception {
+        StringBuilder dropStatement = new StringBuilder();
+        dropStatement.append("drop dataverse ");
+        SqlppStatementUtil.encloseDataverseName(dropStatement, dv);
+        dropStatement.append(";\n");
+        InputStream resultStream = executeQueryService(dropStatement.toString(), getEndpoint(Servlets.QUERY_SERVICE),
+                OutputFormat.CLEAN_JSON, UTF_8);
+        ResultExtractor.extract(resultStream, UTF_8, OutputFormat.CLEAN_JSON);
+    }
+
+    protected void listDatasets(DataverseName dataverseName, List<Pair<String, DatasetConfig.DatasetType>> outDatasets)
+            throws Exception {
+        String query = "select d.DatasetName, d.DatasetType from Metadata.`Dataset` d where d.DataverseName = '"
+                + dataverseName.getCanonicalForm() + "'";
+        InputStream resultStream = executeQueryService(query, getEndpoint(Servlets.QUERY_SERVICE),
+                TestCaseContext.OutputFormat.CLEAN_JSON);
+        JsonNode result = extractResult(IOUtils.toString(resultStream, UTF_8));
+        for (int i = 0; i < result.size(); i++) {
+            JsonNode json = result.get(i);
+            String datasetName = json.get("DatasetName").asText();
+            String datasetTypeText = json.get("DatasetType").asText();
+            DatasetConfig.DatasetType datasetType;
+            try {
+                datasetType = DatasetConfig.DatasetType.valueOf(datasetTypeText);
+            } catch (IllegalArgumentException e) {
+                throw new Exception("Unexpected dataset type: " + datasetTypeText);
+            }
+            outDatasets.add(new Pair<>(datasetName, datasetType));
         }
     }
 
