@@ -308,6 +308,13 @@
               <url>PUBLIC_DOMAIN</url>
               <aliasUrls>Public Domain</aliasUrls>
             </license>
+            <license>
+              <url>https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt</url>
+              <aliasUrls>https://creativecommons.org/publicdomain/zero/1.0/legalcode</aliasUrls>
+              <aliasUrls>https://creativecommons.org/publicdomain/zero/1.0/</aliasUrls>
+              <aliasUrls>http://creativecommons.org/publicdomain/zero/1.0/legalcode</aliasUrls>
+              <aliasUrls>http://creativecommons.org/publicdomain/zero/1.0/</aliasUrls>
+            </license>
           </licenses>
           <templateProperties>
             <packageName>Apache AsterixDB Server Install</packageName>

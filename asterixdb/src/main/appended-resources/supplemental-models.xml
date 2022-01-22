@@ -169,6 +169,30 @@
   <supplement>
     <project>
       <groupId>io.netty</groupId>
+      <artifactId>netty-transport-classes-epoll</artifactId>
+      <properties>
+        <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
+        <license.ignoreMissingEmbeddedLicense>4.1.72.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.72.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.712.Final</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-native-unix-common</artifactId>
+      <properties>
+        <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
+        <license.ignoreMissingEmbeddedLicense>4.1.72.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.72.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.712.Final</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>io.netty</groupId>
       <artifactId>netty-codec</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
@@ -385,172 +409,13 @@
     </project>
   </supplement>
 
-  <!-- AWS SDK begin -->
-  <!-- software.amazon.awssdk is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-  <!-- license override not needed, ALv2 is specified in its pom.xml -->
-  <!-- see https://github.com/aws/aws-sdk-java-v2/blob/master/LICENSE.txt -->
   <supplement>
     <project>
       <groupId>software.amazon.awssdk</groupId>
-      <artifactId>sdk-core</artifactId>
+      <artifactId>third-party-jackson-core</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>aws-core</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>s3</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>auth</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>protocol-core</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>regions</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>arns</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>netty-nio-client</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>aws-xml-protocol</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>annotations</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>apache-client</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>utils</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>http-client-spi</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>aws-query-protocol</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
-      </properties>
-    </project>
-  </supplement>
-  <supplement>
-    <project>
-      <groupId>software.amazon.awssdk</groupId>
-      <artifactId>profiles</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>2.10.83</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.10.83</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>2.10.83</license.ignoreNoticeOverride>
+        <license.alternateNoticeFile>2.17.116:META-INF/NOTICE.txt</license.alternateNoticeFile>
+        <license.alternateLicenseFile>2.17.116:META-INF/LICENSE.txt</license.alternateLicenseFile>
       </properties>
     </project>
   </supplement>
@@ -579,8 +444,8 @@
       <groupId>com.typesafe.netty</groupId>
       <artifactId>netty-reactive-streams</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.0.4</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.0.4</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.0.5</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.0.5</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -590,8 +455,8 @@
       <groupId>com.typesafe.netty</groupId>
       <artifactId>netty-reactive-streams-http</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.0.4</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.0.4</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.0.5</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.0.5</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -603,10 +468,9 @@
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.0.2</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.0.2</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.0.2</license.ignoreLicenseOverride>
-        <license.ignoreNoticeOverride>1.0.2</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>1.0.3</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.0.3</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>1.0.3</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
