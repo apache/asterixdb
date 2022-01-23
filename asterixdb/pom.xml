@@ -86,8 +86,8 @@
     <hyracks.version>0.3.6-SNAPSHOT</hyracks.version>
     <hadoop.version>2.8.5</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
-    <log4j.version>2.14.1</log4j.version>
-    <awsjavasdk.version>2.10.83</awsjavasdk.version>
+    <log4j.version>2.17.1</log4j.version>
+    <awsjavasdk.version>2.17.116</awsjavasdk.version>
     <azurejavasdk.version>12.12.0</azurejavasdk.version>
     <parquet.version>1.8.2</parquet.version>
 
@@ -945,17 +945,17 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-simple</artifactId>
-        <version>1.7.28</version>
+        <version>1.7.33</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-plugin-api</artifactId>
-        <version>3.8.3</version>
+        <version>3.8.4</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-model</artifactId>
-        <version>3.8.3</version>
+        <version>3.8.4</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -1414,12 +1414,12 @@
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-core</artifactId>
-        <version>3.8.3</version>
+        <version>3.8.4</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-compat</artifactId>
-        <version>3.8.3</version>
+        <version>3.8.4</version>
       </dependency>
       <dependency>
         <groupId>com.esri.geometry</groupId>

@@ -171,32 +171,21 @@
               <url>https://raw.githubusercontent.com/mojohaus/appassembler/appassembler-2.0.0/LICENSE.txt</url>
             </override>
             <override>
-              <gav>io.netty:netty-transport:4.1.69.Final</gav>
+              <gavs>
+                <gav>io.netty:netty-buffer:4.1.69.Final</gav>
+                <gav>io.netty:netty-codec:4.1.69.Final</gav>
+                <gav>io.netty:netty-codec-http:4.1.69.Final</gav>
+                <gav>io.netty:netty-common:4.1.69.Final</gav>
+                <gav>io.netty:netty-handler:4.1.69.Final</gav>
+                <gav>io.netty:netty-resolver:4.1.69.Final</gav>
+                <gav>io.netty:netty-transport:4.1.69.Final</gav>
+              </gavs>
               <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.69.Final/NOTICE.txt</noticeUrl>
             </override>
             <override>
-              <gav>io.netty:netty-codec:4.1.69.Final</gav>
-              <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.69.Final/NOTICE.txt</noticeUrl>
-            </override>
-            <override>
-              <gav>io.netty:netty-buffer:4.1.69.Final</gav>
-              <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.69.Final/NOTICE.txt</noticeUrl>
-            </override>
-            <override>
-              <gav>io.netty:netty-resolver:4.1.69.Final</gav>
-              <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.69.Final/NOTICE.txt</noticeUrl>
-            </override>
-            <override>
-              <gav>io.netty:netty-handler:4.1.69.Final</gav>
-              <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.69.Final/NOTICE.txt</noticeUrl>
-            </override>
-            <override>
-              <gav>io.netty:netty-common:4.1.69.Final</gav>
-              <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.69.Final/NOTICE.txt</noticeUrl>
-            </override>
-            <override>
-              <gav>io.netty:netty-codec-http:4.1.69.Final</gav>
-              <noticeUrl>https://raw.githubusercontent.com/netty/netty/netty-4.1.69.Final/NOTICE.txt</noticeUrl>
+              <gav>io.netty:netty-tcnative-classes:2.0.46.Final</gav>
+              <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+              <noticeUrl>https://raw.githubusercontent.com/netty/netty-tcnative/netty-tcnative-parent-2.0.46.Final/NOTICE.txt</noticeUrl>
             </override>
             <override>
               <gav>org.reactivestreams:reactive-streams:1.0.2</gav>
@@ -345,6 +334,13 @@
               <!-- this is special case- handled in ftl template -->
               <url>PUBLIC_DOMAIN</url>
               <aliasUrls>Public Domain</aliasUrls>
+            </license>
+            <license>
+              <url>https://creativecommons.org/publicdomain/zero/1.0/legalcode.txt</url>
+              <aliasUrls>https://creativecommons.org/publicdomain/zero/1.0/legalcode</aliasUrls>
+              <aliasUrls>https://creativecommons.org/publicdomain/zero/1.0/</aliasUrls>
+              <aliasUrls>http://creativecommons.org/publicdomain/zero/1.0/legalcode</aliasUrls>
+              <aliasUrls>http://creativecommons.org/publicdomain/zero/1.0/</aliasUrls>
             </license>
           </licenses>
           <templateProperties>
