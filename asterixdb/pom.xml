@@ -87,7 +87,7 @@
     <hadoop.version>3.3.1</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.17.1</log4j.version>
-    <awsjavasdk.version>2.17.79</awsjavasdk.version>
+    <awsjavasdk.version>2.17.116</awsjavasdk.version>
     <parquet.version>1.12.0</parquet.version>
     <hadoop-awsjavasdk.version>1.12.109</hadoop-awsjavasdk.version>
     <azureblobjavasdk.version>12.14.2</azureblobjavasdk.version>
@@ -955,17 +955,17 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-simple</artifactId>
-        <version>1.7.28</version>
+        <version>1.7.33</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-plugin-api</artifactId>
-        <version>3.8.3</version>
+        <version>3.8.4</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-model</artifactId>
-        <version>3.8.3</version>
+        <version>3.8.4</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -1483,12 +1483,12 @@
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-core</artifactId>
-        <version>3.8.3</version>
+        <version>3.8.4</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
         <artifactId>maven-compat</artifactId>
-        <version>3.8.3</version>
+        <version>3.8.4</version>
       </dependency>
       <dependency>
         <groupId>com.esri.geometry</groupId>
@@ -1663,7 +1663,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-storage-blob</artifactId>
-        <version>${azureblobjavasdk.version}</version>
+        <version>12.14.3</version>
         <exclusions>
           <exclusion>
             <groupId>io.netty</groupId>
@@ -1734,7 +1734,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-storage-common</artifactId>
-        <version>12.14.1</version>
+        <version>12.14.2</version>
         <exclusions>
           <exclusion>
             <groupId>io.netty</groupId>
