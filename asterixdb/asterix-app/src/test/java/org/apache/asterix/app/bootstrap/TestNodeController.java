@@ -52,6 +52,7 @@ import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.formats.FormatUtils;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
@@ -66,6 +67,8 @@ import org.apache.asterix.transaction.management.runtime.CommitRuntime;
 import org.apache.asterix.transaction.management.service.logging.LogReader;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.data.ISerializerDeserializerProvider;
+import org.apache.hyracks.algebricks.data.ITypeTraitProvider;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.operators.base.SinkRuntimeFactory;
@@ -813,10 +816,10 @@ public class TestNodeController {
         RecordDescriptor upsertOutRecDesc = getUpsertOutRecDesc(primaryIndexInfo.rDesc, dataset,
                 filterFields == null ? 0 : filterFields.length, recordType, metaType);
         // fix pk fields
-        int diff = upsertOutRecDesc.getFieldCount() - primaryIndexInfo.rDesc.getFieldCount();
+        int start = 1 + (dataset.hasMetaPart() ? 2 : 1) + (filterFields == null ? 0 : filterFields.length);
         int[] pkFieldsInCommitOp = new int[dataset.getPrimaryKeys().size()];
         for (int i = 0; i < pkFieldsInCommitOp.length; i++) {
-            pkFieldsInCommitOp[i] = diff + i;
+            pkFieldsInCommitOp[i] = start++;
         }
         CommitRuntime commitOp = new CommitRuntime(ctx, getTxnJobId(ctx), dataset.getDatasetId(), pkFieldsInCommitOp,
                 true, ctx.getTaskAttemptId().getTaskId().getPartition(), true);
@@ -827,19 +830,26 @@ public class TestNodeController {
 
     private RecordDescriptor getUpsertOutRecDesc(RecordDescriptor inputRecordDesc, Dataset dataset, int numFilterFields,
             ARecordType itemType, ARecordType metaItemType) throws Exception {
-        ITypeTraits[] outputTypeTraits =
-                new ITypeTraits[inputRecordDesc.getFieldCount() + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
-        ISerializerDeserializer<?>[] outputSerDes = new ISerializerDeserializer[inputRecordDesc.getFieldCount()
-                + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
+        // 1 boolean field at the beginning to indicate whether the operation was upsert or delete
+        int numOutFields = 1 + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields + inputRecordDesc.getFieldCount();
+        ITypeTraits[] outputTypeTraits = new ITypeTraits[numOutFields];
+        ISerializerDeserializer<?>[] outputSerDes = new ISerializerDeserializer[numOutFields];
 
-        // add the previous record first
+        ISerializerDeserializerProvider serdeProvider = FormatUtils.getDefaultFormat().getSerdeProvider();
+        ITypeTraitProvider typeTraitProvider = FormatUtils.getDefaultFormat().getTypeTraitProvider();
         int f = 0;
-        outputSerDes[f] = FormatUtils.getDefaultFormat().getSerdeProvider().getSerializerDeserializer(itemType);
+        // add the upsert indicator boolean field
+        outputSerDes[f] = serdeProvider.getSerializerDeserializer(BuiltinType.AINT8);
+        outputTypeTraits[f] = typeTraitProvider.getTypeTrait(BuiltinType.AINT8);
+        f++;
+        // add the previous record
+        outputSerDes[f] = serdeProvider.getSerializerDeserializer(itemType);
+        outputTypeTraits[f] = typeTraitProvider.getTypeTrait(itemType);
         f++;
         // add the previous meta second
         if (dataset.hasMetaPart()) {
-            outputSerDes[f] = FormatUtils.getDefaultFormat().getSerdeProvider().getSerializerDeserializer(metaItemType);
-            outputTypeTraits[f] = FormatUtils.getDefaultFormat().getTypeTraitProvider().getTypeTrait(metaItemType);
+            outputSerDes[f] = serdeProvider.getSerializerDeserializer(metaItemType);
+            outputTypeTraits[f] = typeTraitProvider.getTypeTrait(metaItemType);
             f++;
         }
         // add the previous filter third
@@ -854,10 +864,8 @@ public class TestNodeController {
                 }
             }
             fieldIdx = i;
-            outputTypeTraits[f] = FormatUtils.getDefaultFormat().getTypeTraitProvider()
-                    .getTypeTrait(itemType.getFieldTypes()[fieldIdx]);
-            outputSerDes[f] = FormatUtils.getDefaultFormat().getSerdeProvider()
-                    .getSerializerDeserializer(itemType.getFieldTypes()[fieldIdx]);
+            outputTypeTraits[f] = typeTraitProvider.getTypeTrait(itemType.getFieldTypes()[fieldIdx]);
+            outputSerDes[f] = serdeProvider.getSerializerDeserializer(itemType.getFieldTypes()[fieldIdx]);
             f++;
         }
         for (int j = 0; j < inputRecordDesc.getFieldCount(); j++) {

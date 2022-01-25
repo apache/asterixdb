@@ -19,7 +19,6 @@
 package org.apache.asterix.test.dataflow;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -45,6 +44,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.operators.LSMPrimaryInsertOperatorNodePushable;
+import org.apache.asterix.runtime.operators.LSMPrimaryUpsertOperatorNodePushable;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.test.dataflow.StorageTestUtils.Searcher;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -53,18 +53,28 @@ import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.dataflow.common.utils.TupleUtils;
+import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
+import org.apache.hyracks.storage.am.btree.util.BTreeUtils;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
+import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
 import org.apache.hyracks.storage.am.lsm.btree.impl.AllowTestOpCallback;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
+import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeSearchCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationStatus;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMIndexSearchCursor;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
+import org.apache.hyracks.storage.common.IIndexCursor;
+import org.apache.hyracks.storage.common.MultiComparator;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -84,7 +94,7 @@ public class SearchCursorComponentSwitchTest {
     private static final boolean[] UNIQUE_META_FIELDS = null;
     private static final int[] KEY_INDEXES = { 0 };
     private static final int[] KEY_INDICATORS = { Index.RECORD_INDICATOR };
-    private static final List<Integer> KEY_INDICATORS_LIST = Arrays.asList(new Integer[] { Index.RECORD_INDICATOR });
+    private static final List<Integer> KEY_INDICATORS_LIST = List.of(Index.RECORD_INDICATOR);
     private static final int TOTAL_NUM_OF_RECORDS = 2000;
     private static final int RECORDS_PER_COMPONENT = 1000;
     private static final int DATASET_ID = 101;
@@ -102,6 +112,7 @@ public class SearchCursorComponentSwitchTest {
     private static IIndexDataflowHelper indexDataflowHelper;
     private static ITransactionContext txnCtx;
     private static LSMPrimaryInsertOperatorNodePushable insertOp;
+    private static LSMPrimaryUpsertOperatorNodePushable upsertOp;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -143,6 +154,8 @@ public class SearchCursorComponentSwitchTest {
                 new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL));
         insertOp = nc.getInsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
                 KEY_INDICATORS_LIST, storageManager, null, null).getLeft();
+        upsertOp = nc.getUpsertPipeline(ctx, dataset, KEY_TYPES, RECORD_TYPE, META_TYPE, null, KEY_INDEXES,
+                KEY_INDICATORS_LIST, storageManager, null, false).getLeft();
     }
 
     @After
@@ -195,6 +208,63 @@ public class SearchCursorComponentSwitchTest {
             Assert.assertTrue(firstSearcher.result());
             // search now and ensure
             searchAndAssertCount(nc, ctx, dataset, storageManager, TOTAL_NUM_OF_RECORDS);
+        } catch (Throwable e) {
+            e.printStackTrace();
+            Assert.fail(e.getMessage());
+        }
+    }
+
+    @Test
+    public void testCursorSwitchSucceedWithNoDuplicates() {
+        try {
+            StorageTestUtils.allowAllOps(lsmBtree);
+            lsmBtree.clearSearchCallbacks();
+            RecordTupleGenerator tupleGenerator = new RecordTupleGenerator(RECORD_TYPE, META_TYPE, KEY_INDEXES,
+                    KEY_INDICATORS, RECORD_GEN_FUNCTION, UNIQUE_RECORD_FIELDS, META_GEN_FUNCTION, UNIQUE_META_FIELDS);
+            VSizeFrame frame = new VSizeFrame(ctx);
+            FrameTupleAppender tupleAppender = new FrameTupleAppender(frame);
+            int totalNumRecords = LSMIndexSearchCursor.SWITCH_COMPONENT_CYCLE + 2;
+            ITupleReference[] upsertTuples = new ITupleReference[totalNumRecords];
+            for (int j = 0; j < totalNumRecords; j++) {
+                ITupleReference tuple = tupleGenerator.next();
+                upsertTuples[j] = TupleUtils.copyTuple(tuple);
+            }
+
+            // upsert and flush the tuples to create a disk component
+            upsert(tupleAppender, totalNumRecords, upsertTuples, true);
+            // upsert but don't flush the tuples to create a memory component
+            upsert(tupleAppender, totalNumRecords, upsertTuples, false);
+
+            // do the search operation
+            ILSMIndexAccessor accessor = new LSMTreeIndexAccessor(lsmBtree.getHarness(),
+                    lsmBtree.createOpContext(NoOpIndexAccessParameters.INSTANCE), LSMBTreeSearchCursor::new);
+            IIndexCursor searchCursor = accessor.createSearchCursor(false);
+            MultiComparator lowKeySearchCmp =
+                    BTreeUtils.getSearchMultiComparator(lsmBtree.getComparatorFactories(), null);
+            MultiComparator highKeySearchCmp =
+                    BTreeUtils.getSearchMultiComparator(lsmBtree.getComparatorFactories(), null);
+            RangePredicate rangePredicate =
+                    new RangePredicate(null, null, true, true, lowKeySearchCmp, highKeySearchCmp, null, null);
+
+            accessor.search(searchCursor, rangePredicate);
+
+            int count = 0;
+            while (searchCursor.hasNext()) {
+                searchCursor.next();
+                count++;
+                // flush the memory component to disk so that we make the switch to it when we hit the switch cycle
+                if (count == 1) {
+                    StorageTestUtils.flush(dsLifecycleMgr, lsmBtree, dataset, false);
+                }
+            }
+
+            Throwable failure = ResourceReleaseUtils.close(searchCursor, null);
+            failure = CleanupUtils.destroy(failure, searchCursor, accessor);
+            Assert.assertEquals("Records count not matching", totalNumRecords, count);
+            if (failure != null) {
+                Assert.fail(failure.getMessage());
+            }
+            nc.getTransactionManager().commitTransaction(txnCtx.getTxnId());
         } catch (Throwable e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
@@ -267,5 +337,18 @@ public class SearchCursorComponentSwitchTest {
         emptyTupleOp.open();
         emptyTupleOp.close();
         Assert.assertEquals(numOfRecords, countOp.getCount());
+    }
+
+    private void upsert(FrameTupleAppender tupleAppender, int totalNumRecords, ITupleReference[] upsertTuples,
+            boolean flush) throws Exception {
+        upsertOp.open();
+        for (int j = 0; j < totalNumRecords; j++) {
+            DataflowUtils.addTupleToFrame(tupleAppender, upsertTuples[j], upsertOp);
+        }
+        tupleAppender.write(upsertOp, true);
+        if (flush) {
+            StorageTestUtils.flush(dsLifecycleMgr, lsmBtree, dataset, false);
+        }
+        upsertOp.close();
     }
 }

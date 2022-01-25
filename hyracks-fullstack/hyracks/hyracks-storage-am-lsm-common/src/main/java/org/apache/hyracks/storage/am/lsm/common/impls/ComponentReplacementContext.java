@@ -193,7 +193,7 @@ public class ComponentReplacementContext implements ILSMIndexOperationContext {
             for (int i = 0; i < count; i++) {
                 ILSMComponent removed = ctx.getComponentHolder().remove(swapIndexes[i]);
                 if (removed.getType() == LSMComponentType.MEMORY) {
-                    LOGGER.info("Removed a memory component from the search operation");
+                    LOGGER.debug("Removed memory component {} from the search operation", removed);
                 } else {
                     throw new IllegalStateException("Disk components can't be removed from the search operation");
                 }
