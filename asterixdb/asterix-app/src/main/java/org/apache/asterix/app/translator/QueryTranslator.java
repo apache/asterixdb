@@ -1331,11 +1331,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 List<List<String>> keyFieldNames = new ArrayList<>(indexedElementsCount);
                 List<IAType> keyFieldTypes = new ArrayList<>(indexedElementsCount);
                 List<Integer> keyFieldSourceIndicators = new ArrayList<>(indexedElementsCount);
-                if (isSecondaryPrimary) {
-                    // BACK-COMPAT: secondary primary index has one source indicator
-                    // which is set to META_RECORD_INDICATOR
-                    keyFieldSourceIndicators.add(Index.META_RECORD_INDICATOR);
-                } else {
+                // secondary primary indexes do not have search keys (no SKs), and thus no equivalent indicators
+                if (!isSecondaryPrimary) {
                     for (int i = 0; i < indexedElementsCount; i++) {
                         CreateIndexStatement.IndexedElement indexedElement = indexedElements.get(i);
                         keyFieldNames.add(indexedElement.getProjectList().get(0).first);
