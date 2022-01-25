@@ -40,7 +40,7 @@ import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.MultiComparator;
 
 public abstract class LSMIndexSearchCursor extends EnforcedIndexCursor implements ILSMIndexCursor {
-    protected static final int SWITCH_COMPONENT_CYCLE = 100;
+    public static final int SWITCH_COMPONENT_CYCLE = 100;
     protected final ILSMIndexOperationContext opCtx;
     protected final boolean returnDeletedTuples;
     protected PriorityQueueElement outputElement;
@@ -119,6 +119,7 @@ public abstract class LSMIndexSearchCursor extends EnforcedIndexCursor implement
         needPushElementIntoQueue = false;
         for (int i = 0; i < switchRequest.length; i++) {
             switchRequest[i] = false;
+            switchedElements[i] = null;
         }
         try {
             if (outputPriorityQueue != null) {
