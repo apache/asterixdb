@@ -124,8 +124,8 @@ public class MetadataProperties extends AbstractProperties {
         return accessor.getClusterPartitions();
     }
 
-    public Set<Integer> getNodeActivePartitions(String nodeId) {
-        return accessor.getActivePartitions(nodeId);
+    public Set<Integer> getNodePartitions(String nodeId) {
+        return accessor.getNodePartitions(nodeId);
     }
 
     public Map<String, String> getTransactionLogDirs() {

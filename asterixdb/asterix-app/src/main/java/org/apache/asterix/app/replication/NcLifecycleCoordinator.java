@@ -168,8 +168,9 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
 
     protected List<INCLifecycleTask> buildNCRegTasks(String nodeId, NodeStatus nodeStatus, SystemState state,
             Set<Integer> activePartitions) {
-        LOGGER.info("Building registration tasks for node {} with status {} and system state: {}", nodeId, nodeStatus,
-                state);
+        LOGGER.info(
+                "Building registration tasks for node {} with status {} and system state: {} and active partitions {}",
+                nodeId, nodeStatus, state, activePartitions);
         final boolean isMetadataNode = nodeId.equals(metadataNodeId);
         switch (nodeStatus) {
             case ACTIVE:

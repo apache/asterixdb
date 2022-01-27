@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.utils.PrintUtil;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.config.IApplicationConfig;
@@ -69,7 +70,7 @@ public class PropertiesAccessor implements IApplicationConfig {
     /**
      * Constructor which wraps an IApplicationConfig.
      */
-    private PropertiesAccessor(IApplicationConfig cfg) throws AsterixException, IOException {
+    private PropertiesAccessor(IApplicationConfig cfg) throws AsterixException {
         this.cfg = cfg;
         nodePartitionsMap = new ConcurrentHashMap<>();
         clusterPartitions = Collections.synchronizedSortedMap(new TreeMap<>());
@@ -80,6 +81,7 @@ public class PropertiesAccessor implements IApplicationConfig {
         for (String ncName : cfg.getNCNames()) {
             configureNc(configManager, ncName, uniquePartitionId);
         }
+        LOGGER.info("configured partitions: {} from config {}", () -> PrintUtil.toString(nodePartitionsMap), () -> cfg);
         for (String section : cfg.getSectionNames()) {
             if (section.startsWith(AsterixProperties.SECTION_PREFIX_EXTENSION)) {
                 String className = AsterixProperties.getSectionId(AsterixProperties.SECTION_PREFIX_EXTENSION, section);
@@ -194,22 +196,16 @@ public class PropertiesAccessor implements IApplicationConfig {
         return clusterPartitions;
     }
 
-    public Set<Integer> getActivePartitions(String nodeId) {
-        // by default, node actives partitions are the partitions assigned to the node
-        String[] activePartitions = cfg.getStringArray(NodeProperties.Option.ACTIVE_PARTITIONS);
-        if (activePartitions == null) {
-            ClusterPartition[] nodeClusterPartitions = nodePartitionsMap.get(nodeId);
-            return Arrays.stream(nodeClusterPartitions).map(ClusterPartition::getPartitionId)
-                    .collect(Collectors.toSet());
-        }
-        return Arrays.stream(activePartitions).map(Integer::parseInt).collect(Collectors.toSet());
+    public Set<Integer> getNodePartitions(String nodeId) {
+        ClusterPartition[] nodeClusterPartitions = nodePartitionsMap.get(nodeId);
+        return Arrays.stream(nodeClusterPartitions).map(ClusterPartition::getPartitionId).collect(Collectors.toSet());
     }
 
     public List<AsterixExtension> getExtensions() {
         return extensions;
     }
 
-    public static PropertiesAccessor getInstance(IApplicationConfig cfg) throws IOException, AsterixException {
+    public static PropertiesAccessor getInstance(IApplicationConfig cfg) throws AsterixException {
         PropertiesAccessor accessor = instances.get(cfg);
         if (accessor == null) {
             accessor = new PropertiesAccessor(cfg);
