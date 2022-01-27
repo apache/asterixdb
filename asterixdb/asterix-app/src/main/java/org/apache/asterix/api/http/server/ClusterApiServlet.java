@@ -83,7 +83,7 @@ public class ClusterApiServlet extends AbstractServlet {
             }
             JSONUtil.writeNode(responseWriter, json);
         } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
-            response.setStatus(HttpResponseStatus.NOT_FOUND);
+            sendError(response, HttpResponseStatus.NOT_FOUND);
         } catch (Exception e) {
             LOGGER.log(Level.INFO, "exception thrown for " + request, e);
             response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);

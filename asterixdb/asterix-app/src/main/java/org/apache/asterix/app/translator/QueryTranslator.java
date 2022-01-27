@@ -1248,8 +1248,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 // allow overriding the type of the closed-field only if CAST modifier is used
                                 if (!stmtCreateIndex.hasCastDefaultNull()) {
                                     throw new CompilationException(ErrorCode.COMPILATION_ERROR,
-                                            indexedElement.getSourceLocation(), "Typed index on \"" + projectPath
-                                                    + "\" field could be created only for open datatype");
+                                            indexedElement.getSourceLocation(), "Typed index on '" + projectPath
+                                                    + "' field could be created only for open datatype");
                                 }
                             }
                         }
@@ -1631,9 +1631,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             && !existingIndexKeyFieldTypes.equals(indexKeyFieldTypes)) {
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                                 "Cannot create index " + index.getIndexName() + " , enforced index "
-                                        + existingIndex.getIndexName() + " on field \""
-                                        + StringUtils.join(indexKeyFieldNames, ',')
-                                        + "\" is already defined with type \"" + existingIndexKeyFieldTypes + "\"");
+                                        + existingIndex.getIndexName() + " on field '"
+                                        + StringUtils.join(indexKeyFieldNames, ',') + "' is already defined with type '"
+                                        + existingIndexKeyFieldTypes + "'");
                     }
                 }
             }

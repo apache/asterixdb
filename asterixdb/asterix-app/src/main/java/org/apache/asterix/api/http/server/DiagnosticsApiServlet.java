@@ -79,10 +79,10 @@ public class DiagnosticsApiServlet extends NodeControllerDetailsApiServlet {
         } catch (RejectedExecutionException e) {
             // we must be shutting down, return 503
             LOGGER.info("RejectedExecutionException while servicing request; returning 503", e);
-            sendError(response, HttpResponseStatus.SERVICE_UNAVAILABLE, null);
+            sendError(response, HttpResponseStatus.SERVICE_UNAVAILABLE);
         } catch (Exception e) {
             LOGGER.warn("exception while servicing request; returning 500", e);
-            sendError(response, HttpResponseStatus.INTERNAL_SERVER_ERROR, e.toString());
+            sendError(response, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
         responseWriter.flush();
     }

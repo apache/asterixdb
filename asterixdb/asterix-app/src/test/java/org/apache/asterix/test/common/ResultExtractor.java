@@ -227,7 +227,7 @@ public class ResultExtractor {
             final String fieldName = fieldNameIter.next();
             final ResultField fieldKind = ResultField.ofFieldName(fieldName.split("-")[0]);
             if (fieldKind == null) {
-                throw new AsterixException("Unanticipated field \"" + fieldName + "\"");
+                throw new AsterixException("Unanticipated field '" + fieldName + "'");
             }
             if (!resultFields.contains(fieldKind)) {
                 continue;

@@ -218,28 +218,28 @@
       <compilation-unit name="common/include-exclude/bad-name-1">
         <placeholder name="adapter" value="AZUREBLOB" />
         <output-dir compare="Text">common/include-exclude/bad-name-1</output-dir>
-        <expected-error>Invalid format for property "exclude1"</expected-error>
+        <expected-error>Invalid format for property 'exclude1'</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/include-exclude/bad-name-2">
         <placeholder name="adapter" value="AZUREBLOB" />
         <output-dir compare="Text">common/include-exclude/bad-name-2</output-dir>
-        <expected-error>Invalid format for property "exclude#"</expected-error>
+        <expected-error>Invalid format for property 'exclude#'</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/include-exclude/bad-name-3">
         <placeholder name="adapter" value="AZUREBLOB" />
         <output-dir compare="Text">common/include-exclude/bad-name-3</output-dir>
-        <expected-error>Invalid format for property "exclude#hello"</expected-error>
+        <expected-error>Invalid format for property 'exclude#hello'</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/include-exclude/both">
         <placeholder name="adapter" value="AZUREBLOB" />
         <output-dir compare="Text">common/include-exclude/both</output-dir>
-        <expected-error>The parameters "include" and "exclude" cannot be provided at the same time</expected-error>
+        <expected-error>The parameters 'include' and 'exclude' cannot be provided at the same time</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">

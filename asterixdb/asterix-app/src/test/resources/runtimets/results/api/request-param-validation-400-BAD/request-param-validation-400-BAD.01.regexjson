@@ -1,6 +1,6 @@
 {
 	"errors": [{ 
-		"code": 1,		"msg": "ASX0047: Invalid value for parameter \"format\": foo"	} 
+		"code": 1,		"msg": "ASX0047: Invalid value for parameter 'format': foo"	}
 	],
 	"status": "fatal",
 	"metrics": {

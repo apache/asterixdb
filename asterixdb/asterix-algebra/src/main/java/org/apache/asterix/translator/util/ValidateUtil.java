@@ -236,7 +236,7 @@ public class ValidateUtil {
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The field \"" + displayFieldName + "\" which is of type " + fieldType.getTypeTag()
+                                "The field '" + displayFieldName + "' which is of type " + fieldType.getTypeTag()
                                         + " cannot be indexed using the BTree index.");
                 }
                 break;
@@ -251,14 +251,14 @@ public class ValidateUtil {
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The field \"" + displayFieldName + "\" which is of type " + fieldType.getTypeTag()
+                                "The field '" + displayFieldName + "' which is of type " + fieldType.getTypeTag()
                                         + " cannot be indexed using the RTree index.");
                 }
                 break;
             case LENGTH_PARTITIONED_NGRAM_INVIX:
                 if (fieldType.getTypeTag() != ATypeTag.STRING) {
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "The field \"" + displayFieldName + "\" which is of type " + fieldType.getTypeTag()
+                            "The field '" + displayFieldName + "' which is of type " + fieldType.getTypeTag()
                                     + " cannot be indexed using the Length Partitioned N-Gram index.");
                 }
                 break;
@@ -270,14 +270,14 @@ public class ValidateUtil {
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The field \"" + displayFieldName + "\" which is of type " + fieldType.getTypeTag()
+                                "The field '" + displayFieldName + "' which is of type " + fieldType.getTypeTag()
                                         + " cannot be indexed using the Length Partitioned Keyword index.");
                 }
                 break;
             case SINGLE_PARTITION_NGRAM_INVIX:
                 if (fieldType.getTypeTag() != ATypeTag.STRING) {
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            "The field \"" + displayFieldName + "\" which is of type " + fieldType.getTypeTag()
+                            "The field '" + displayFieldName + "' which is of type " + fieldType.getTypeTag()
                                     + " cannot be indexed using the N-Gram index.");
                 }
                 break;
@@ -289,7 +289,7 @@ public class ValidateUtil {
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                                "The field \"" + displayFieldName + "\" which is of type " + fieldType.getTypeTag()
+                                "The field '" + displayFieldName + "' which is of type " + fieldType.getTypeTag()
                                         + " cannot be indexed using the Keyword index.");
                 }
                 break;
