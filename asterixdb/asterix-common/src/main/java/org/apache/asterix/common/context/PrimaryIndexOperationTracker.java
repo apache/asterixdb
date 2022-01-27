@@ -51,6 +51,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -132,6 +133,11 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                     throw new IllegalStateException(
                             "Can't request a flush on an index with active operations: " + numActiveOperations.get());
                 }
+                if (indexes.isEmpty()) {
+                    LOGGER.debug("no open indexes on dataset {} and partition {}... skipping flush",
+                            dsInfo.getDatasetID(), partition);
+                    return;
+                }
                 for (ILSMIndex lsmIndex : indexes) {
                     if (lsmIndex.isPrimaryIndex()) {
                         if (lsmIndex.isCurrentMutableComponentEmpty()) {
@@ -145,8 +151,10 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                 }
             }
             if (primaryLsmIndex == null) {
-                throw new IllegalStateException("Primary index not found in dataset " + dsInfo.getDatasetID()
-                        + " and partition " + partition + " open indexes " + indexes);
+                LOGGER.fatal(
+                        "Primary index not found in dataset {} and partition {} open indexes {}; halting to clear memory state",
+                        dsInfo.getDatasetID(), partition, indexes);
+                ExitUtil.halt(ExitUtil.EC_INCONSISTENT_STORAGE_REFERENCES);
             }
             for (ILSMIndex lsmIndex : indexes) {
                 ILSMOperationTracker opTracker = lsmIndex.getOperationTracker();

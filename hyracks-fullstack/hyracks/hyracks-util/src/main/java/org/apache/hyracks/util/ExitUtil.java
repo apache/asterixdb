@@ -56,6 +56,7 @@ public class ExitUtil {
     public static final int EC_ACTIVE_RESUME_FAILURE = 18;
     public static final int EC_NC_FAILED_TO_NOTIFY_TASKS_COMPLETED = 19;
     public static final int EC_FAILED_TO_CANCEL_ACTIVE_START_STOP = 22;
+    public static final int EC_INCONSISTENT_STORAGE_REFERENCES = 23;
     public static final int EC_IMMEDIATE_HALT = 33;
     public static final int EC_HALT_ABNORMAL_RESERVED_44 = 44;
     public static final int EC_IO_SCHEDULER_FAILED = 55;
