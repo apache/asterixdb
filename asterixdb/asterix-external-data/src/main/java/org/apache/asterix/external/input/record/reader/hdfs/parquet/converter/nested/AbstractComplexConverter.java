@@ -16,15 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.hdfs.parquet;
+package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.external.parser.jackson.ParserContext;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.IFieldValue;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.parquet.io.api.Converter;
 import org.apache.parquet.io.api.GroupConverter;
+import org.apache.parquet.io.api.PrimitiveConverter;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.Type;
@@ -35,15 +37,16 @@ public abstract class AbstractComplexConverter extends GroupConverter implements
     private final IValueReference fieldName;
     private final int index;
     private final Converter[] converters;
-    protected final ParserContext context;
+    protected final ParquetConverterContext context;
     protected IMutableValueStorage tempStorage;
 
-    AbstractComplexConverter(AbstractComplexConverter parent, int index, GroupType parquetType, ParserContext context) {
+    AbstractComplexConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
+            ParquetConverterContext context) {
         this(parent, null, index, parquetType, context);
     }
 
     AbstractComplexConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
-            GroupType parquetType, ParserContext context) {
+            GroupType parquetType, ParquetConverterContext context) {
         this.parent = parent;
         this.fieldName = fieldName;
         this.index = index;
@@ -51,14 +54,14 @@ public abstract class AbstractComplexConverter extends GroupConverter implements
         converters = new Converter[parquetType.getFieldCount()];
         for (int i = 0; i < parquetType.getFieldCount(); i++) {
             final Type type = parquetType.getType(i);
-            if (type == AsterixTypeToParquetTypeVisitor.MISSING) {
-                converters[i] = MissingConverter.INSTANCE;
-            } else if (type.isPrimitive()) {
+            if (type.isPrimitive()) {
                 converters[i] = createAtomicConverter(parquetType, i);
             } else if (LogicalTypeAnnotation.listType().equals(type.getLogicalTypeAnnotation())) {
                 converters[i] = createArrayConverter(parquetType, i);
             } else if (type.getRepetition() == Repetition.REPEATED) {
                 converters[i] = createRepeatedConverter(parquetType, i);
+            } else if (type.getLogicalTypeAnnotation() == LogicalTypeAnnotation.mapType()) {
+                converters[i] = createArrayConverter(parquetType, i);
             } else {
                 converters[i] = createObjectConverter(parquetType, i);
             }
@@ -70,13 +73,13 @@ public abstract class AbstractComplexConverter extends GroupConverter implements
      *
      * @param value Child value
      */
-    protected abstract void addValue(IFieldValue value);
+    public abstract void addValue(IFieldValue value);
 
-    protected abstract AtomicConverter createAtomicConverter(GroupType type, int index);
+    protected abstract PrimitiveConverter createAtomicConverter(GroupType type, int index);
 
-    protected abstract ArrayConverter createArrayConverter(GroupType type, int index);
+    protected abstract AbstractComplexConverter createArrayConverter(GroupType type, int index);
 
-    protected abstract ObjectConverter createObjectConverter(GroupType type, int index);
+    protected abstract AbstractComplexConverter createObjectConverter(GroupType type, int index);
 
     /**
      * Parquet file created by (old) Avro writer treat repeated values differently from files created by Spark.
@@ -104,12 +107,22 @@ public abstract class AbstractComplexConverter extends GroupConverter implements
      *    }
      * }
      *
+     * Map type:
+     * required group mapField (MAP) {
+     *    repeated group key_value {
+     *       required int32 key;
+     *       required int32 value;
+     *    }
+     * }
+     *
      * @formatter:on
      */
-    private AbstractComplexConverter createRepeatedConverter(GroupType type, int index) {
+    protected AbstractComplexConverter createRepeatedConverter(GroupType type, int index) {
         GroupType repeatedType = type.getType(index).asGroupType();
-        //The name "array" is used by Avro to represent group element (array of objects)
-        if (repeatedType.getFieldCount() > 1 || "array".equals(repeatedType.getName())) {
+        String name = repeatedType.getName();
+        if (repeatedType.getFieldCount() > 1 || "array".equals(name) || "key_value".equals(name)) {
+            //The name "array" and "key_value" are reserved names to represent array of objects
+            //"key_value" are for MAP type
             return new ObjectConverter(this, index, repeatedType, context);
         }
         return new RepeatedConverter(this, index, repeatedType, context);
@@ -130,7 +143,7 @@ public abstract class AbstractComplexConverter extends GroupConverter implements
         return converters[fieldIndex];
     }
 
-    protected DataOutput getDataOutput() {
+    public DataOutput getDataOutput() {
         tempStorage.reset();
         return tempStorage.getDataOutput();
     }

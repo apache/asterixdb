@@ -16,15 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.hdfs.parquet;
+package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested;
 
 import java.io.DataOutput;
 
-import org.apache.asterix.external.parser.jackson.ParserContext;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.IFieldValue;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve.PrimitiveConverterProvider;
+import org.apache.parquet.io.api.PrimitiveConverter;
 import org.apache.parquet.schema.GroupType;
+import org.apache.parquet.schema.PrimitiveType;
 
 class RepeatedConverter extends AbstractComplexConverter {
-    public RepeatedConverter(AbstractComplexConverter parent, int index, GroupType parquetType, ParserContext context) {
+    public RepeatedConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
+            ParquetConverterContext context) {
         super(parent, index, parquetType, context);
     }
 
@@ -39,13 +44,14 @@ class RepeatedConverter extends AbstractComplexConverter {
     }
 
     @Override
-    protected void addValue(IFieldValue value) {
+    public void addValue(IFieldValue value) {
         parent.addValue(value);
     }
 
     @Override
-    protected AtomicConverter createAtomicConverter(GroupType type, int index) {
-        return new AtomicConverter(this, index, context);
+    protected PrimitiveConverter createAtomicConverter(GroupType type, int index) {
+        PrimitiveType primitiveType = type.getType(index).asPrimitiveType();
+        return PrimitiveConverterProvider.createPrimitiveConverter(primitiveType, this, index, context);
     }
 
     @Override
@@ -60,7 +66,7 @@ class RepeatedConverter extends AbstractComplexConverter {
     }
 
     @Override
-    protected DataOutput getDataOutput() {
+    public DataOutput getDataOutput() {
         return getParentDataOutput();
     }
 }

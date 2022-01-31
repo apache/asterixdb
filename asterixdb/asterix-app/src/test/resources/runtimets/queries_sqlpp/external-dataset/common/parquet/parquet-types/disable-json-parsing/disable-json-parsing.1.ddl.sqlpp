@@ -16,19 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.hdfs.parquet;
 
-import org.apache.hyracks.data.std.api.IValueReference;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
 
-/**
- * This interface is intended to extend {@link org.apache.parquet.io.api.Converter} to get the field name or the
- * index of associated with a value.
- */
-interface IFieldValue {
-    IValueReference getFieldName();
+USE test;
 
-    /**
-     * @return the index of the value as appeared in the schema
-     */
-    int getIndex();
-}
+
+CREATE TYPE ParquetType as {
+};
+
+CREATE EXTERNAL DATASET ParquetDataset(ParquetType) USING %adapter%
+(
+  %template%,
+  ("container"="playground"),
+  ("definition"="parquet-data/reviews"),
+  ("include"="*parquetTypes.parquet"),
+  ("format" = "parquet"),
+  ("parse-json-string" = "false")
+);

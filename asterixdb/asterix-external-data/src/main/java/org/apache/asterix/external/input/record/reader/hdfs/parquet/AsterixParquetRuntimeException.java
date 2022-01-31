@@ -18,29 +18,17 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet;
 
-import java.io.DataOutput;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-import org.apache.asterix.external.parser.jackson.ParserContext;
-import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.parquet.schema.GroupType;
+public class AsterixParquetRuntimeException extends RuntimeException {
+    private static final long serialVersionUID = 6896076874677689992L;
+    private final HyracksDataException hyracksDataException;
 
-class RootConverter extends ObjectConverter {
-    private final ArrayBackedValueStorage rootBuffer;
-
-    public RootConverter(GroupType parquetType) {
-        super(null, -1, parquetType, new ParserContext(true));
-        this.rootBuffer = new ArrayBackedValueStorage();
+    public AsterixParquetRuntimeException(HyracksDataException e) {
+        this.hyracksDataException = e;
     }
 
-    @Override
-    protected DataOutput getParentDataOutput() {
-        rootBuffer.reset();
-        return rootBuffer.getDataOutput();
+    public HyracksDataException getHyracksDataException() {
+        return hyracksDataException;
     }
-
-    protected IValueReference getRecord() {
-        return rootBuffer;
-    }
-
 }

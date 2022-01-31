@@ -18,14 +18,14 @@
  */
 package org.apache.asterix.test.runtime;
 
-import static org.apache.asterix.test.external_dataset.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
-import static org.apache.asterix.test.external_dataset.BinaryFileConverterUtil.DEFAULT_PARQUET_SRC_PATH;
+import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
+import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.DEFAULT_PARQUET_SRC_PATH;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.apache.asterix.external.dataset.adapter.GenericAdapter;
-import org.apache.asterix.test.external_dataset.BinaryFileConverterUtil;
+import org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;

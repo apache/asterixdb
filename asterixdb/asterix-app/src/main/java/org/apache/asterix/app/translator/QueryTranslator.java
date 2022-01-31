@@ -1003,7 +1003,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws AlgebricksException {
         ExternalDetailsDecl externalDetails = (ExternalDetailsDecl) dd.getDatasetDetailsDecl();
         Map<String, String> properties = externalDetails.getProperties();
-        ExternalDataUtils.validateType(properties, (ARecordType) itemType.getDatatype());
+        ExternalDataUtils.validateParquetTypeAndConfiguration(properties, (ARecordType) itemType.getDatatype());
         return properties;
     }
 

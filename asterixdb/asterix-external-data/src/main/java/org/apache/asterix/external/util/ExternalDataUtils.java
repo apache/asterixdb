@@ -104,6 +104,7 @@ import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory.IncludeExcludeMatcher;
 import org.apache.asterix.external.library.JavaLibrary;
+import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -823,15 +824,21 @@ public class ExternalDataUtils {
     }
 
     /**
-     * Validate the dataset type declared with a given type
+     * Validate Parquet dataset's declared type and configuration
      *
      * @param properties        external dataset configuration
      * @param datasetRecordType dataset declared type
      */
-    public static void validateType(Map<String, String> properties, ARecordType datasetRecordType)
-            throws CompilationException {
-        if (isParquetFormat(properties) && datasetRecordType.getFieldTypes().length != 0) {
-            throw new CompilationException(ErrorCode.UNSUPPORTED_TYPE_FOR_PARQUET, datasetRecordType.getTypeName());
+    public static void validateParquetTypeAndConfiguration(Map<String, String> properties,
+            ARecordType datasetRecordType) throws CompilationException {
+        if (isParquetFormat(properties)) {
+            if (datasetRecordType.getFieldTypes().length != 0) {
+                throw new CompilationException(ErrorCode.UNSUPPORTED_TYPE_FOR_PARQUET, datasetRecordType.getTypeName());
+            } else if (properties.containsKey(ParquetOptions.TIMEZONE)
+                    && !ParquetOptions.VALID_TIME_ZONES.contains(properties.get(ParquetOptions.TIMEZONE))) {
+                //Ensure the configured time zone id is correct
+                throw new CompilationException(ErrorCode.INVALID_TIMEZONE, properties.get(ParquetOptions.TIMEZONE));
+            }
         }
     }
 
@@ -1770,7 +1777,8 @@ public class ExternalDataUtils {
          * Builds the Azure Blob storage client using the provided configuration
          *
          * @param configuration properties
-         * @see <a href="https://docs.microsoft.com/en-us/azure/databricks/data/data-sources/azure/azure-storage">Azure Blob storage</a>
+         * @see <a href="https://docs.microsoft.com/en-us/azure/databricks/data/data-sources/azure/azure-storage">Azure
+         * Blob storage</a>
          */
         public static void configureAzureHdfsJobConf(JobConf conf, Map<String, String> configuration, String endPoint) {
             String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);

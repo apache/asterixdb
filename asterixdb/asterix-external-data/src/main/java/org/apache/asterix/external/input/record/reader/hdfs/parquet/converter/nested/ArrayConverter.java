@@ -16,26 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.hdfs.parquet;
+package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested;
 
 import java.io.IOException;
 
 import org.apache.asterix.builders.IAsterixListBuilder;
-import org.apache.asterix.external.parser.jackson.ParserContext;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.IFieldValue;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve.PrimitiveConverterProvider;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.parquet.io.api.PrimitiveConverter;
 import org.apache.parquet.schema.GroupType;
+import org.apache.parquet.schema.PrimitiveType;
 
 class ArrayConverter extends AbstractComplexConverter {
     private IAsterixListBuilder builder;
 
-    public ArrayConverter(AbstractComplexConverter parent, int index, GroupType parquetType, ParserContext context) {
+    public ArrayConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
+            ParquetConverterContext context) {
         super(parent, index, parquetType, context);
     }
 
     public ArrayConverter(AbstractComplexConverter parent, IValueReference fieldName, int index, GroupType parquetType,
-            ParserContext context) {
+            ParquetConverterContext context) {
         super(parent, fieldName, index, parquetType, context);
     }
 
@@ -59,7 +64,7 @@ class ArrayConverter extends AbstractComplexConverter {
     }
 
     @Override
-    protected void addValue(IFieldValue value) {
+    public void addValue(IFieldValue value) {
         try {
             builder.addItem(tempStorage);
         } catch (HyracksDataException e) {
@@ -68,8 +73,9 @@ class ArrayConverter extends AbstractComplexConverter {
     }
 
     @Override
-    protected AtomicConverter createAtomicConverter(GroupType type, int index) {
-        return new AtomicConverter(this, index, context);
+    protected PrimitiveConverter createAtomicConverter(GroupType type, int index) {
+        PrimitiveType primitiveType = type.getType(index).asPrimitiveType();
+        return PrimitiveConverterProvider.createPrimitiveConverter(primitiveType, this, index, context);
     }
 
     @Override

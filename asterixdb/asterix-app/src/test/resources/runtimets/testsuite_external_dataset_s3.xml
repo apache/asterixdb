@@ -172,6 +172,46 @@
         <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/parquet-types/unset-flags">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/parquet-types/unset-flags</output-dir>
+        <source-location>false</source-location>
+        <expected-warn>Parquet file(s) contain unsigned integer that is larger than the 'bigint' range</expected-warn>
+        <expected-warn>Parquet file(s) contain values of the temporal type 'datetime' that are adjusted to UTC. Recreate the external dataset and set the option 'timezone' to get the local-adjusted 'datetime' value</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/parquet-types/decimal">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/parquet-types/decimal</output-dir>
+        <source-location>false</source-location>
+        <expected-error>ASX0054: Parquet type 'required int32 decimal32_field (DECIMAL(5,4))' is not supported by default. To enable type conversion, recreate the external dataset with the option 'decimal-to-double' enabled</expected-error>
+        <expected-warn>Parquet decimal precision loss: precision '22' is greater than the maximum supported precision '20'</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/parquet-types/temporal">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/parquet-types/temporal</output-dir>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/parquet-types/invalid-timezone">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/parquet-types/invalid-timezone</output-dir>
+        <source-location>false</source-location>
+        <expected-error>Provided timezone is invalid: 'invalid-timezone'</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset" check-warnings="true">
+      <compilation-unit name="common/parquet/parquet-types/disable-json-parsing">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/parquet/parquet-types/disable-json-parsing</output-dir>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
     <!-- Parquet Tests End -->
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">
