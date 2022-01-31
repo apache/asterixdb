@@ -33,10 +33,12 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.IsomorphismOperatorVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.IsomorphismUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
@@ -82,7 +84,9 @@ public class ConsolidateWindowOperatorsRule implements IAlgebraicRewriteRule {
 
         Set<LogicalVariable> used1 = new HashSet<>();
         VariableUtilities.getUsedVariables(winOp1, used1);
-        if (!OperatorPropertiesUtil.disjoint(winOp2.getVariables(), used1)) {
+        Set<LogicalVariable> produced2 = new HashSet<>();
+        VariableUtilities.getProducedVariables(winOp2, produced2);
+        if (!OperatorPropertiesUtil.disjoint(produced2, used1)) {
             return false;
         }
 
@@ -130,7 +134,6 @@ public class ConsolidateWindowOperatorsRule implements IAlgebraicRewriteRule {
             aggTo.getExpressions().addAll(aggFrom.getExpressions());
             context.computeAndSetTypeEnvironmentForOperator(aggTo);
         } else {
-            setAll(winOpTo.getNestedPlans(), winOpFrom.getNestedPlans());
             setAll(winOpTo.getFrameValueExpressions(), winOpFrom.getFrameValueExpressions());
             setAll(winOpTo.getFrameStartExpressions(), winOpFrom.getFrameStartExpressions());
             setAll(winOpTo.getFrameStartValidationExpressions(), winOpFrom.getFrameStartValidationExpressions());
@@ -141,6 +144,19 @@ public class ConsolidateWindowOperatorsRule implements IAlgebraicRewriteRule {
             winOpTo.getFrameExcludeUnaryExpression().setValue(winOpFrom.getFrameExcludeUnaryExpression().getValue());
             winOpTo.getFrameOffsetExpression().setValue(winOpFrom.getFrameOffsetExpression().getValue());
             winOpTo.setFrameMaxObjects(winOpFrom.getFrameMaxObjects());
+            // move nested plans
+            for (ILogicalPlan fromNestedPlan : winOpFrom.getNestedPlans()) {
+                for (Mutable<ILogicalOperator> rootRef : fromNestedPlan.getRoots()) {
+                    for (Mutable<ILogicalOperator> leafRef : OperatorManipulationUtil
+                            .findLeafDescendantsOrSelf(rootRef)) {
+                        ILogicalOperator leafOp = leafRef.getValue();
+                        if (leafOp.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE) {
+                            ((NestedTupleSourceOperator) leafOp).getDataSourceReference().setValue(winOpTo);
+                        }
+                    }
+                }
+                winOpTo.getNestedPlans().add(fromNestedPlan);
+            }
         }
         return true;
     }

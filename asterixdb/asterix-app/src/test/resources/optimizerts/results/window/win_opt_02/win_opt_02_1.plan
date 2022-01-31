@@ -1,0 +1,23 @@
+-- DISTRIBUTE_RESULT  |LOCAL|
+  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    -- STREAM_PROJECT  |LOCAL|
+      -- ASSIGN  |LOCAL|
+        -- STREAM_PROJECT  |LOCAL|
+          -- ASSIGN  |LOCAL|
+            -- STREAM_PROJECT  |LOCAL|
+              -- WINDOW  |LOCAL|
+                      {
+                        -- AGGREGATE  |LOCAL|
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                      }
+                -- WINDOW  |LOCAL|
+                        {
+                          -- AGGREGATE  |LOCAL|
+                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        }
+                  -- WINDOW_STREAM  |LOCAL|
+                    -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                      -- STABLE_SORT [$$r(ASC)]  |LOCAL|
+                        -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                          -- UNNEST  |UNPARTITIONED|
+                            -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

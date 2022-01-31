@@ -448,11 +448,11 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         deepCopyVars(newVariables, op.getVariables());
         List<Mutable<ILogicalExpression>> newExpressions = new ArrayList<>();
         deepCopyExpressionRefs(newExpressions, op.getExpressions());
-        List<ILogicalPlan> newNestedPlans = new ArrayList<>();
         WindowOperator newWinOp = new WindowOperator(newPartitionExprs, newOrderExprs, newFrameValueExprs,
                 newFrameStartExprs, newFrameStartValidationExprs, newFrameEndExprs, newFrameEndValidationExprs,
                 newFrameExclusionExprs, op.getFrameExcludeNegationStartIdx(), newFrameExcludeUnaryExpr,
-                newFrameOffsetExpr, op.getFrameMaxObjects(), newVariables, newExpressions, newNestedPlans);
+                newFrameOffsetExpr, op.getFrameMaxObjects(), newVariables, newExpressions, null);
+        List<ILogicalPlan> newNestedPlans = newWinOp.getNestedPlans();
         for (ILogicalPlan nestedPlan : op.getNestedPlans()) {
             newNestedPlans.add(OperatorManipulationUtil.deepCopy(nestedPlan, newWinOp));
         }

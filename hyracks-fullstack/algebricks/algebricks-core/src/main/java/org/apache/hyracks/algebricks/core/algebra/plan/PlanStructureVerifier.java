@@ -46,9 +46,11 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 
@@ -75,6 +77,11 @@ public final class PlanStructureVerifier {
             "produced variables %s that intersect used variables %s on %s in %s";
 
     private static final String ERROR_MESSAGE_TEMPLATE_6 = "undefined used variables %s in %s";
+
+    private static final String ERROR_MESSAGE_TEMPLATE_7 =
+            "unexpected source operator in NestedTupleSourceOperator: %s. Expected source operator %s";
+
+    private static final String ERROR_MESSAGE_TEMPLATE_8 = "unexpected leaf operator in nested plan: %s";
 
     public static final Comparator<LogicalVariable> VARIABLE_CMP = Comparator.comparing(LogicalVariable::toString);
 
@@ -185,7 +192,10 @@ public final class PlanStructureVerifier {
         if (op instanceof AbstractOperatorWithNestedPlans) {
             children = new ArrayList<>(children);
             for (ILogicalPlan nestedPlan : ((AbstractOperatorWithNestedPlans) op).getNestedPlans()) {
-                children.addAll(nestedPlan.getRoots());
+                for (Mutable<ILogicalOperator> nestedRootRef : nestedPlan.getRoots()) {
+                    checkLeafOperatorsInNestedPlan(op, nestedRootRef);
+                    children.add(nestedRootRef);
+                }
             }
         }
         return children;
@@ -259,6 +269,29 @@ public final class PlanStructureVerifier {
             throw new AlgebricksException(String.format(ERROR_MESSAGE_TEMPLATE_5, sorted(producedVars, VARIABLE_CMP),
                     sorted(usedVars, VARIABLE_CMP), sorted(intersection, VARIABLE_CMP),
                     PlanStabilityVerifier.printOperator(op, prettyPrinter)));
+        }
+    }
+
+    private void checkLeafOperatorsInNestedPlan(ILogicalOperator op, Mutable<ILogicalOperator> rootRef)
+            throws AlgebricksException {
+        for (Mutable<ILogicalOperator> leafRef : OperatorManipulationUtil.findLeafDescendantsOrSelf(rootRef)) {
+            ILogicalOperator leafOp = leafRef.getValue();
+            switch (leafOp.getOperatorTag()) {
+                case EMPTYTUPLESOURCE:
+                    break;
+                case NESTEDTUPLESOURCE:
+                    NestedTupleSourceOperator ntsOp = (NestedTupleSourceOperator) leafOp;
+                    ILogicalOperator ntsSrcOp = ntsOp.getDataSourceReference().getValue();
+                    if (ntsSrcOp != op) {
+                        throw new AlgebricksException(String.format(ERROR_MESSAGE_TEMPLATE_7,
+                                PlanStabilityVerifier.printOperator(ntsSrcOp, prettyPrinter),
+                                PlanStabilityVerifier.printOperator(op, prettyPrinter)));
+                    }
+                    break;
+                default:
+                    throw new AlgebricksException(String.format(ERROR_MESSAGE_TEMPLATE_8,
+                            PlanStabilityVerifier.printOperator(leafOp, prettyPrinter)));
+            }
         }
     }
 
