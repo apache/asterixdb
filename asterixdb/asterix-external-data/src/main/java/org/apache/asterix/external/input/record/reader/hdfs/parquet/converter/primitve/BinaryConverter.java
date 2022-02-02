@@ -16,45 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.hdfs.parquet;
+package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve;
 
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.parquet.io.api.Binary;
-import org.apache.parquet.io.api.PrimitiveConverter;
 
-class MissingConverter extends PrimitiveConverter {
-    protected static final MissingConverter INSTANCE = new MissingConverter();
+public class BinaryConverter extends GenericPrimitiveConverter {
 
-    private MissingConverter() {
+    BinaryConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
+            ParquetConverterContext context) {
+        super(parent, fieldName, index, context);
     }
 
     @Override
     public void addBinary(Binary value) {
-        //NoOp
-    }
-
-    @Override
-    public void addBoolean(boolean value) {
-        //NoOp
-    }
-
-    @Override
-    public void addFloat(float value) {
-        //NoOp
-    }
-
-    @Override
-    public void addDouble(double value) {
-        //NoOp
-    }
-
-    @Override
-    public void addInt(int value) {
-        //NoOp
-    }
-
-    @Override
-    public void addLong(long value) {
-        //NoOp
+        context.serializeBinary(value, parent.getDataOutput());
+        parent.addValue(this);
     }
 
 }

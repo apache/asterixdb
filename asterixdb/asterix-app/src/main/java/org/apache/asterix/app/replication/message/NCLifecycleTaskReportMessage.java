@@ -76,4 +76,10 @@ public class NCLifecycleTaskReportMessage implements INCLifecycleMessage, ICcAdd
     public Set<Integer> getActivePartitions() {
         return activePartitions;
     }
+
+    @Override
+    public String toString() {
+        return "NCLifecycleTaskReportMessage{" + "nodeId='" + nodeId + '\'' + ", success=" + success + ", exception="
+                + exception + ", localCounters=" + localCounters + ", activePartitions=" + activePartitions + '}';
+    }
 }

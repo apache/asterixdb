@@ -21,9 +21,11 @@ package org.apache.asterix.external.util;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.util.StorageUtil;
 
 public class ExternalDataConstants {
@@ -295,6 +297,42 @@ public class ExternalDataConstants {
 
     public static final String DEFINITION_FIELD_NAME = "definition";
     public static final String CONTAINER_NAME_FIELD_NAME = "container";
+
+    public static class ParquetOptions {
+        private ParquetOptions() {
+        }
+
+        //Prefix for hadoop configurations
+        private static final String ASTERIX_HADOOP_PREFIX = "org.apache.asterix.";
+
+        /**
+         * Parse Parquet's String JSON type into ADM
+         * Default: false
+         */
+        public static final String PARSE_JSON_STRING = "parse-json-string";
+        public static final String HADOOP_PARSE_JSON_STRING = ASTERIX_HADOOP_PREFIX + PARSE_JSON_STRING;
+
+        /**
+         * Rebase Decimal and parse it as {@link ATypeTag#DOUBLE}
+         * Default: false
+         */
+        public static final String DECIMAL_TO_DOUBLE = "decimal-to-double";
+        public static final String HADOOP_DECIMAL_TO_DOUBLE = ASTERIX_HADOOP_PREFIX + DECIMAL_TO_DOUBLE;
+
+        /**
+         * Time Zone ID to convert UTC time and timestamp {@link ATypeTag#TIME} and {@link ATypeTag#DATETIME}
+         * Default: ""
+         * Note: If a UTC adjusted time and/or timestamp exist in the parquet file, and no time zone id is provided,
+         * then we will return the UTC time and issue a warning about that.
+         */
+        public static final String TIMEZONE = "timezone";
+        public static final String HADOOP_TIMEZONE = ASTERIX_HADOOP_PREFIX + TIMEZONE;
+
+        /**
+         * Valid time zones that are supported by Java
+         */
+        public static final Set<String> VALID_TIME_ZONES = Set.of(TimeZone.getAvailableIDs());
+    }
 
     public static class AwsS3 {
         private AwsS3() {

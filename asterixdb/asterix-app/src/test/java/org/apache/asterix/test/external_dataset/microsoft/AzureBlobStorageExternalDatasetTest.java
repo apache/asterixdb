@@ -22,8 +22,8 @@ import static org.apache.asterix.test.common.TestConstants.Azure.AZURITE_ACCOUNT
 import static org.apache.asterix.test.common.TestConstants.Azure.AZURITE_ACCOUNT_NAME_DEFAULT;
 import static org.apache.asterix.test.common.TestConstants.Azure.BLOB_ENDPOINT_PLACEHOLDER;
 import static org.apache.asterix.test.common.TestConstants.Azure.sasToken;
-import static org.apache.asterix.test.external_dataset.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.PARQUET_DEFINITION;
+import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.io.ByteArrayInputStream;

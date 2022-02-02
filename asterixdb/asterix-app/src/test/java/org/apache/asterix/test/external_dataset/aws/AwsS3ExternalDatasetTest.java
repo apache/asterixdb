@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.test.external_dataset.aws;
 
-import static org.apache.asterix.test.external_dataset.BinaryFileConverterUtil.DEFAULT_PARQUET_SRC_PATH;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createBinaryFiles;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setDataPaths;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setUploaders;
+import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.DEFAULT_PARQUET_SRC_PATH;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.io.ByteArrayOutputStream;

@@ -224,7 +224,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                 new DatasetLifecycleManager(storageProperties, localResourceRepository, txnSubsystem.getLogManager(),
                         virtualBufferCache, indexCheckpointManagerProvider, ioManager.getIODevices().size());
         final String nodeId = getServiceContext().getNodeId();
-        final Set<Integer> nodePartitions = metadataProperties.getNodeActivePartitions(nodeId);
+        final Set<Integer> nodePartitions = metadataProperties.getNodePartitions(nodeId);
         replicaManager = new ReplicaManager(this, nodePartitions);
         isShuttingdown = false;
         activeManager = new ActiveManager(threadExecutor, getServiceContext().getNodeId(),

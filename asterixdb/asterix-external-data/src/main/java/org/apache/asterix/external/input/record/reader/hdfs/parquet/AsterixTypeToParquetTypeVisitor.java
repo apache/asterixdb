@@ -18,10 +18,16 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve.PrimitiveConverterProvider.MISSING;
+
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve.DecimalConverter;
+import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -30,11 +36,19 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.IATypeVisitor;
 import org.apache.asterix.runtime.projection.DataProjectionInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
+import org.apache.parquet.schema.LogicalTypeAnnotation.DateLogicalTypeAnnotation;
+import org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalTypeAnnotation;
+import org.apache.parquet.schema.LogicalTypeAnnotation.IntLogicalTypeAnnotation;
+import org.apache.parquet.schema.LogicalTypeAnnotation.TimeLogicalTypeAnnotation;
+import org.apache.parquet.schema.LogicalTypeAnnotation.TimestampLogicalTypeAnnotation;
+import org.apache.parquet.schema.LogicalTypeAnnotation.UUIDLogicalTypeAnnotation;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
+import org.apache.parquet.schema.PrimitiveType.PrimitiveTypeName;
 import org.apache.parquet.schema.Type;
 import org.apache.parquet.schema.Types;
 
@@ -43,14 +57,12 @@ import org.apache.parquet.schema.Types;
  */
 public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type> {
     public static final MessageType EMPTY_PARQUET_MESSAGE = Types.buildMessage().named("EMPTY");
-    public static final PrimitiveType MISSING =
-            Types.optional(PrimitiveType.PrimitiveTypeName.BOOLEAN).named("MISSING");
 
-    private final List<Warning> warnings;
+    private final ParquetConverterContext context;
     private Map<String, FunctionCallInformation> funcInfo;
 
-    public AsterixTypeToParquetTypeVisitor() {
-        warnings = new ArrayList<>();
+    public AsterixTypeToParquetTypeVisitor(ParquetConverterContext context) {
+        this.context = context;
     }
 
     public MessageType clipType(ARecordType rootType, MessageType fileSchema,
@@ -64,10 +76,6 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
         this.funcInfo = funcInfo;
         clipObjectChildren(builder, rootType, fileSchema);
         return builder.named(fileSchema.getName());
-    }
-
-    public List<Warning> getWarnings() {
-        return warnings;
     }
 
     @Override
@@ -86,8 +94,7 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
 
     /**
      * There are two ways for representing arrays using ProtoBuf schema see the example in
-     * {@link org.apache.asterix.external.input.record.reader.hdfs.parquet.AbstractComplexConverter} for more
-     * information.
+     * {@link AbstractComplexConverter} for more information.
      */
     @Override
     public Type visit(AbstractCollectionType collectionType, Type arg) {
@@ -99,7 +106,7 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
         Type childType = arrayType.getType(0);
         if ("array".equals(childType.getName()) || childType.asGroupType().getFieldCount() > 1) {
             //Handle Avro-like schema
-            return handleHandleAvroArray(collectionType, arrayType);
+            return handleAvroArray(collectionType, arrayType);
         }
         //Handling spark-like schema
         Types.ListBuilder<GroupType> builder = Types.list(arg.getRepetition());
@@ -128,7 +135,7 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
         return numberOfAddedFields;
     }
 
-    private Type handleHandleAvroArray(AbstractCollectionType collectionType, GroupType groupType) {
+    private Type handleAvroArray(AbstractCollectionType collectionType, GroupType groupType) {
         Types.GroupBuilder<GroupType> builder =
                 Types.buildGroup(groupType.getRepetition()).as(groupType.getLogicalTypeAnnotation());
         //There is only one child
@@ -157,47 +164,63 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
         if (type == MISSING) {
             return true;
         }
-        ATypeTag actualType = mapType(type);
+        //typeName is unique
+        FunctionCallInformation info = funcInfo.get(node.getTypeName());
+        ATypeTag actualType = mapType(type, context, info.getSourceLocation());
         ATypeTag expectedType = node.getTypeTag();
 
         boolean isNotExpected = actualType != expectedType;
         if (isNotExpected) {
-            //typeName is unique
-            FunctionCallInformation info = funcInfo.get(node.getTypeName());
             //If no warning is created, then it means it has been reported
-            Warning warning = info.createTypeMismatchWarning(expectedType, actualType);
+            Warning warning = null;
+            if (actualType != ATypeTag.SYSTEM_NULL) {
+                warning = info.createTypeMismatchWarning(expectedType, actualType);
+            }
             if (warning != null) {
                 //New warning that we saw for the first time. We should report it.
-                warnings.add(warning);
+                context.getWarnings().add(warning);
             }
         }
         return isNotExpected;
     }
 
-    private static ATypeTag mapType(Type parquetType) {
+    /* ****************************************
+     * Type checking methods
+     * ****************************************
+     */
+
+    public static ATypeTag mapType(Type parquetType, ParquetConverterContext context, SourceLocation sourceLocation) {
         LogicalTypeAnnotation typeAnnotation = parquetType.getLogicalTypeAnnotation();
-        if (!parquetType.isPrimitive() && typeAnnotation == null) {
-            return ATypeTag.OBJECT;
-        } else if (typeAnnotation == LogicalTypeAnnotation.listType()) {
-            return ATypeTag.ARRAY;
-        } else if (typeAnnotation == LogicalTypeAnnotation.stringType()) {
-            return ATypeTag.STRING;
+        if (!parquetType.isPrimitive()) {
+            if (typeAnnotation == null) {
+                return ATypeTag.OBJECT;
+            } else if (typeAnnotation == LogicalTypeAnnotation.listType()
+                    || typeAnnotation == LogicalTypeAnnotation.mapType()) {
+                return ATypeTag.ARRAY;
+            }
         } else {
             //Check other primitive types
-            PrimitiveType.PrimitiveTypeName primitiveTypeName = parquetType.asPrimitiveType().getPrimitiveTypeName();
-            switch (primitiveTypeName) {
+            PrimitiveType primitiveType = parquetType.asPrimitiveType();
+            switch (primitiveType.getPrimitiveTypeName()) {
                 case BOOLEAN:
                     return ATypeTag.BOOLEAN;
-                case INT32:
-                case INT64:
-                    return ATypeTag.BIGINT;
                 case FLOAT:
                 case DOUBLE:
                     return ATypeTag.DOUBLE;
-                default:
-                    throw new IllegalStateException("Unsupported type " + parquetType);
+                case INT32:
+                case INT64:
+                    return handleInt32Int64(primitiveType, context, sourceLocation);
+                case INT96:
+                    return ATypeTag.DATETIME;
+                case BINARY:
+                case FIXED_LEN_BYTE_ARRAY:
+                    return handleBinary(primitiveType, context, sourceLocation);
             }
         }
+
+        warnUnsupportedType(context, sourceLocation, parquetType);
+        //Use SYSTEM_NULL for unsupported types
+        return ATypeTag.SYSTEM_NULL;
     }
 
     private static Type getType(GroupType groupType, String fieldName) {
@@ -205,5 +228,94 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
             return groupType.getType(fieldName);
         }
         return MISSING;
+    }
+
+    private static ATypeTag handleInt32Int64(PrimitiveType type, ParquetConverterContext context,
+            SourceLocation sourceLocation) {
+        LogicalTypeAnnotation logicalType = type.getLogicalTypeAnnotation();
+        ATypeTag inferredTypeTag = ATypeTag.SYSTEM_NULL;
+        if (logicalType == null || logicalType instanceof IntLogicalTypeAnnotation) {
+            inferredTypeTag = ATypeTag.BIGINT;
+        } else if (logicalType instanceof DateLogicalTypeAnnotation) {
+            inferredTypeTag = ATypeTag.DATE;
+        } else if (logicalType instanceof TimeLogicalTypeAnnotation) {
+            inferredTypeTag = ATypeTag.TIME;
+        } else if (logicalType instanceof TimestampLogicalTypeAnnotation
+                && checkDatetime(type, context, sourceLocation)) {
+            TimestampLogicalTypeAnnotation tsType = (TimestampLogicalTypeAnnotation) logicalType;
+            warnIfUTCAdjustedAndZoneIdIsNotSet(context, sourceLocation, tsType.isAdjustedToUTC());
+            inferredTypeTag = ATypeTag.DATETIME;
+        } else if (logicalType instanceof DecimalLogicalTypeAnnotation) {
+            ensureDecimalToDoubleEnabled(type, context, sourceLocation);
+            inferredTypeTag = ATypeTag.DOUBLE;
+        }
+
+        //Unsupported type
+        return inferredTypeTag;
+    }
+
+    private static ATypeTag handleBinary(PrimitiveType type, ParquetConverterContext context,
+            SourceLocation sourceLocation) {
+        LogicalTypeAnnotation logicalType = type.getLogicalTypeAnnotation();
+        ATypeTag inferredTypeTag = ATypeTag.SYSTEM_NULL;
+        if (logicalType == null || logicalType == LogicalTypeAnnotation.bsonType()) {
+            inferredTypeTag = ATypeTag.BINARY;
+        } else if (logicalType == LogicalTypeAnnotation.stringType()
+                || logicalType == LogicalTypeAnnotation.enumType()) {
+            inferredTypeTag = ATypeTag.STRING;
+        } else if (logicalType == LogicalTypeAnnotation.jsonType()) {
+            //Parsing JSON could be of any type. if parseJson is disabled, return as String
+            inferredTypeTag = context.isParseJsonEnabled() ? ATypeTag.ANY : ATypeTag.STRING;
+        } else if (logicalType instanceof DecimalLogicalTypeAnnotation) {
+            ensureDecimalToDoubleEnabled(type, context, sourceLocation);
+            inferredTypeTag = ATypeTag.DOUBLE;
+        } else if (logicalType instanceof UUIDLogicalTypeAnnotation) {
+            inferredTypeTag = ATypeTag.UUID;
+        }
+
+        //Unsupported type
+        return inferredTypeTag;
+    }
+
+    private static boolean checkDatetime(PrimitiveType type, ParquetConverterContext context,
+            SourceLocation sourceLocation) {
+        if (type.getPrimitiveTypeName() == PrimitiveTypeName.INT32) {
+            //Only INT64 and INT96 are supported per parquet specification
+            warnUnsupportedType(context, sourceLocation, type);
+            return false;
+        }
+        return true;
+    }
+
+    private static void ensureDecimalToDoubleEnabled(PrimitiveType type, ParquetConverterContext context,
+            SourceLocation sourceLocation) {
+        if (!context.isDecimalToDoubleEnabled()) {
+            throw new AsterixParquetRuntimeException(
+                    new RuntimeDataException(ErrorCode.PARQUET_SUPPORTED_TYPE_WITH_OPTION, sourceLocation,
+                            type.toString(), ParquetOptions.DECIMAL_TO_DOUBLE));
+        }
+
+        DecimalLogicalTypeAnnotation decimalLogicalType =
+                (DecimalLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
+        int precision = decimalLogicalType.getPrecision();
+        if (precision > DecimalConverter.LONG_MAX_PRECISION) {
+            context.getWarnings().add(Warning.of(null, ErrorCode.PARQUET_DECIMAL_TO_DOUBLE_PRECISION_LOSS, precision,
+                    DecimalConverter.LONG_MAX_PRECISION));
+        }
+    }
+
+    public static void warnUnsupportedType(ParquetConverterContext context, SourceLocation sourceLocation,
+            Type parquetType) {
+        context.getWarnings()
+                .add(Warning.of(sourceLocation, ErrorCode.UNSUPPORTED_PARQUET_TYPE, parquetType.toString()));
+    }
+
+    private static void warnIfUTCAdjustedAndZoneIdIsNotSet(ParquetConverterContext context,
+            SourceLocation sourceLocation, boolean adjustedToUTC) {
+        if (adjustedToUTC && context.getTimeZoneId().isEmpty()) {
+            Warning warning = Warning.of(sourceLocation, ErrorCode.PARQUET_TIME_ZONE_ID_IS_NOT_SET, ATypeTag.DATETIME,
+                    ParquetOptions.TIMEZONE);
+            context.getWarnings().add(warning);
+        }
     }
 }

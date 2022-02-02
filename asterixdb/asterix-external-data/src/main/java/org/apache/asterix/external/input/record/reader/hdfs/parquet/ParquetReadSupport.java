@@ -19,10 +19,12 @@
 package org.apache.asterix.external.input.record.reader.hdfs.parquet;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.RootConverter;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
@@ -39,25 +41,27 @@ public class ParquetReadSupport extends ReadSupport<IValueReference> {
     @Override
     public ReadContext init(InitContext context) {
         MessageType requestedSchema = getRequestedSchema(context);
-        return new ReadContext(requestedSchema, Collections.emptyMap());
+        return new ReadContext(requestedSchema);
     }
 
     @Override
     public RecordMaterializer<IValueReference> prepareForRead(Configuration configuration,
             Map<String, String> keyValueMetaData, MessageType fileSchema, ReadContext readContext) {
-        return new ADMRecordMaterializer(readContext);
+        return new ADMRecordMaterializer(configuration, readContext);
     }
 
-    private static MessageType getRequestedSchema(InitContext context) {
-        Configuration configuration = context.getConfiguration();
-        MessageType fileSchema = context.getFileSchema();
-        AsterixTypeToParquetTypeVisitor visitor = new AsterixTypeToParquetTypeVisitor();
+    private static MessageType getRequestedSchema(InitContext initContext) {
+        Configuration configuration = initContext.getConfiguration();
+        MessageType fileSchema = initContext.getFileSchema();
+
+        List<Warning> warnings = new ArrayList<>();
+        ParquetConverterContext context = new ParquetConverterContext(configuration, warnings);
+        AsterixTypeToParquetTypeVisitor visitor = new AsterixTypeToParquetTypeVisitor(context);
         try {
             ARecordType expectedType = HDFSUtils.getExpectedType(configuration);
             Map<String, FunctionCallInformation> functionCallInformationMap =
                     HDFSUtils.getFunctionCallInformationMap(configuration);
             MessageType requestedType = visitor.clipType(expectedType, fileSchema, functionCallInformationMap);
-            List<Warning> warnings = visitor.getWarnings();
 
             if (!warnings.isEmpty()) {
                 //New warnings were created, set the warnings in hadoop configuration to be reported
@@ -73,13 +77,26 @@ public class ParquetReadSupport extends ReadSupport<IValueReference> {
 
     private static class ADMRecordMaterializer extends RecordMaterializer<IValueReference> {
         private final RootConverter rootConverter;
+        private final List<Warning> warnings;
+        private final Configuration configuration;
 
-        public ADMRecordMaterializer(ReadContext readContext) {
-            rootConverter = new RootConverter(readContext.getRequestedSchema());
+        public ADMRecordMaterializer(Configuration configuration, ReadContext readContext) {
+            warnings = new ArrayList<>();
+            rootConverter = new RootConverter(readContext.getRequestedSchema(), configuration, warnings);
+            this.configuration = configuration;
         }
 
         @Override
         public IValueReference getCurrentRecord() {
+            try {
+                if (!warnings.isEmpty()) {
+                    //Issue all pending warnings
+                    HDFSUtils.setWarnings(warnings, configuration);
+                    warnings.clear();
+                }
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
             return rootConverter.getRecord();
         }
 

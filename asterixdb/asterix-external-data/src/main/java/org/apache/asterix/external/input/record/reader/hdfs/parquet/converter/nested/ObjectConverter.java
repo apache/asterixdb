@@ -16,26 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.hdfs.parquet;
+package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested;
 
 import java.io.IOException;
 
 import org.apache.asterix.builders.IARecordBuilder;
-import org.apache.asterix.external.parser.jackson.ParserContext;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.IFieldValue;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve.PrimitiveConverterProvider;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.parquet.io.api.PrimitiveConverter;
 import org.apache.parquet.schema.GroupType;
+import org.apache.parquet.schema.PrimitiveType;
 
 class ObjectConverter extends AbstractComplexConverter {
     private IARecordBuilder builder;
 
-    public ObjectConverter(AbstractComplexConverter parent, int index, GroupType parquetType, ParserContext context) {
+    public ObjectConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
+            ParquetConverterContext context) {
         super(parent, index, parquetType, context);
     }
 
     public ObjectConverter(AbstractComplexConverter parent, IValueReference fieldName, int index, GroupType parquetType,
-            ParserContext context) {
+            ParquetConverterContext context) {
         super(parent, fieldName, index, parquetType, context);
     }
 
@@ -59,7 +64,7 @@ class ObjectConverter extends AbstractComplexConverter {
     }
 
     @Override
-    protected void addValue(IFieldValue value) {
+    public void addValue(IFieldValue value) {
         try {
             builder.addField(value.getFieldName(), getValue());
         } catch (HyracksDataException e) {
@@ -68,9 +73,11 @@ class ObjectConverter extends AbstractComplexConverter {
     }
 
     @Override
-    protected AtomicConverter createAtomicConverter(GroupType type, int index) {
+    protected PrimitiveConverter createAtomicConverter(GroupType type, int index) {
         try {
-            return new AtomicConverter(this, context.getSerializedFieldName(type.getFieldName(index)), index, context);
+            PrimitiveType primitiveType = type.getType(index).asPrimitiveType();
+            IValueReference fieldName = context.getSerializedFieldName(type.getFieldName(index));
+            return PrimitiveConverterProvider.createPrimitiveConverter(primitiveType, this, fieldName, index, context);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }

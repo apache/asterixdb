@@ -58,7 +58,11 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
     @SuppressWarnings("unchecked")
     @Override
     protected RecordReader<Void, V> getRecordReader(int splitIndex) throws IOException {
-        reader = (RecordReader<Void, V>) inputFormat.getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
+        try {
+            reader = (RecordReader<Void, V>) inputFormat.getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
+        } catch (AsterixParquetRuntimeException e) {
+            throw e.getHyracksDataException();
+        }
         if (value == null) {
             value = reader.createValue();
         }

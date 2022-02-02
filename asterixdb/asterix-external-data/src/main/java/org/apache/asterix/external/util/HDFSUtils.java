@@ -40,6 +40,7 @@ import org.apache.asterix.external.indexing.RecordId.RecordIdType;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.MapredParquetInputFormat;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.ParquetReadSupport;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
+import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.DataProjectionInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
@@ -224,22 +225,38 @@ public class HDFSUtils {
         }
 
         if (ExternalDataConstants.CLASS_NAME_PARQUET_INPUT_FORMAT.equals(formatClassName)) {
-            //Parquet configurations
-            conf.set(ParquetInputFormat.READ_SUPPORT_CLASS, ParquetReadSupport.class.getName());
-            //Get requested values
-            String requestedValues = configuration.get(ExternalDataConstants.KEY_REQUESTED_FIELDS);
-            if (requestedValues == null) {
-                //No value is requested, return the entire record
-                requestedValues = DataProjectionInfo.ALL_FIELDS_TYPE.getTypeName();
-            } else {
-                //Subset of the values were requested, set the functionCallInformation
-                conf.set(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION,
-                        configuration.get(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION));
-            }
-            conf.set(ExternalDataConstants.KEY_REQUESTED_FIELDS, requestedValues);
+            configureParquet(configuration, conf);
         }
 
         return conf;
+    }
+
+    private static void configureParquet(Map<String, String> configuration, JobConf conf) {
+        //Parquet configurations
+        conf.set(ParquetInputFormat.READ_SUPPORT_CLASS, ParquetReadSupport.class.getName());
+
+        //Get requested values
+        String requestedValues = configuration.get(ExternalDataConstants.KEY_REQUESTED_FIELDS);
+        if (requestedValues == null) {
+            //No value is requested, return the entire record
+            requestedValues = DataProjectionInfo.ALL_FIELDS_TYPE.getTypeName();
+        } else {
+            //Subset of the values were requested, set the functionCallInformation
+            conf.set(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION,
+                    configuration.get(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION));
+        }
+        conf.set(ExternalDataConstants.KEY_REQUESTED_FIELDS, requestedValues);
+
+        //Parse JSON string as ADM?
+        conf.set(ParquetOptions.HADOOP_PARSE_JSON_STRING,
+                configuration.getOrDefault(ParquetOptions.PARSE_JSON_STRING, ExternalDataConstants.TRUE));
+
+        //Rebase and parse decimal as double?
+        conf.set(ParquetOptions.HADOOP_DECIMAL_TO_DOUBLE,
+                configuration.getOrDefault(ParquetOptions.DECIMAL_TO_DOUBLE, ExternalDataConstants.FALSE));
+        //Re-adjust the time zone for UTC-adjusted values
+        conf.set(ParquetOptions.HADOOP_TIMEZONE, configuration.getOrDefault(ParquetOptions.TIMEZONE, ""));
+
     }
 
     public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(IApplicationContext appCtx,

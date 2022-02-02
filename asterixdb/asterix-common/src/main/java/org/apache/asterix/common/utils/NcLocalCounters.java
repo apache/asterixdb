@@ -59,4 +59,10 @@ public class NcLocalCounters implements Serializable {
     public long getMaxJobId() {
         return maxJobId;
     }
+
+    @Override
+    public String toString() {
+        return "NcLocalCounters{" + "maxResourceId=" + maxResourceId + ", maxTxnId=" + maxTxnId + ", maxJobId="
+                + maxJobId + '}';
+    }
 }

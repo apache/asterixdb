@@ -18,9 +18,9 @@
  */
 package org.apache.asterix.test.external_dataset;
 
-import static org.apache.asterix.test.external_dataset.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.BOM_FILE_CONTAINER;
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.FIXED_DATA_CONTAINER;
+import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.LogManager;
@@ -258,18 +259,19 @@ public class ExternalDatasetTestUtils {
     }
 
     private static void loadParquetFiles() {
-        String dataBasePath = BINARY_GEN_BASEDIR;
+        String generatedDataBasePath = BINARY_GEN_BASEDIR;
         String definition = PARQUET_DEFINITION;
 
         // Normal format
         String definitionSegment = "";
-        loadData(dataBasePath, "", "dummy_tweet.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "id_age.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "id_age-string.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "id_name.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "id_name_comment.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "heterogeneous_1.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "heterogeneous_2.parquet", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "dummy_tweet.parquet", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "id_age.parquet", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "id_age-string.parquet", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "id_name.parquet", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "id_name_comment.parquet", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "heterogeneous_1.parquet", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "heterogeneous_2.parquet", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "parquetTypes.parquet", definition, definitionSegment, false, false);
     }
 
     private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,

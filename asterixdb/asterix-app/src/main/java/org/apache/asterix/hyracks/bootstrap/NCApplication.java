@@ -300,12 +300,12 @@ public class NCApplication extends BaseNCApplication {
         final NodeStatus currentStatus = ncs.getNodeStatus();
         final SystemState systemState = isPendingStartupTasks(currentStatus, ncs.getPrimaryCcId(), ccId)
                 ? getCurrentSystemState() : SystemState.HEALTHY;
-        final Map httpSecrets =
+        final Map<String, Object> httpSecrets =
                 apiServer != null ? Collections.singletonMap(SYS_AUTH_HEADER, apiServer.ctx().get(SYS_AUTH_HEADER))
                         : Collections.emptyMap();
         RegistrationTasksRequestMessage.send(ccId, (NodeControllerService) ncServiceCtx.getControllerService(),
                 currentStatus, systemState, httpSecrets,
-                runtimeContext.getMetadataProperties().getNodeActivePartitions(nodeId));
+                runtimeContext.getMetadataProperties().getNodePartitions(nodeId));
     }
 
     @Override

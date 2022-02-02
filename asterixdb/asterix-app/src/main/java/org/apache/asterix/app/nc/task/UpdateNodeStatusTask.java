@@ -36,7 +36,7 @@ public class UpdateNodeStatusTask implements INCLifecycleTask {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 2L;
     private final NodeStatus status;
-    private Set<Integer> activePartitions;
+    private final Set<Integer> activePartitions;
 
     public UpdateNodeStatusTask(NodeStatus status, Set<Integer> activePartitions) {
         this.status = status;
@@ -61,6 +61,6 @@ public class UpdateNodeStatusTask implements INCLifecycleTask {
 
     @Override
     public String toString() {
-        return "{ \"class\" : \"" + getClass().getSimpleName() + "\" }";
+        return "UpdateNodeStatusTask{" + "status=" + status + ", activePartitions=" + activePartitions + '}';
     }
 }

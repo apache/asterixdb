@@ -19,7 +19,6 @@
 package org.apache.asterix.app.nc;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,7 +30,6 @@ import java.util.stream.Stream;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.storage.IReplicaManager;
 import org.apache.asterix.common.storage.ReplicaIdentifier;
@@ -188,11 +186,8 @@ public class ReplicaManager implements IReplicaManager {
     }
 
     private void setNodeOwnedPartitions(INcApplicationContext appCtx) {
-        ClusterPartition[] clusterPartitions =
-                appCtx.getMetadataProperties().getNodePartitions().get(appCtx.getServiceContext().getNodeId());
-        if (clusterPartitions != null) {
-            nodeOwnedPartitions.addAll(Arrays.stream(clusterPartitions).map(ClusterPartition::getPartitionId)
-                    .collect(Collectors.toList()));
-        }
+        Set<Integer> nodePartitions =
+                appCtx.getMetadataProperties().getNodePartitions(appCtx.getServiceContext().getNodeId());
+        nodeOwnedPartitions.addAll(nodePartitions);
     }
 }

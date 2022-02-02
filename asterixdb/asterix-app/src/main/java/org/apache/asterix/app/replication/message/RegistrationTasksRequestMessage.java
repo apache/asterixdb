@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.app.replication.message;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,18 +38,18 @@ public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICc
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 2L;
-    protected final SystemState state;
-    protected final String nodeId;
-    protected final NodeStatus nodeStatus;
-    protected final Map<String, Object> secrets;
-    protected final Set<Integer> activePartitions;
+    private final SystemState state;
+    private final String nodeId;
+    private final NodeStatus nodeStatus;
+    private final Map<String, Object> secrets;
+    private final Set<Integer> activePartitions;
 
     public RegistrationTasksRequestMessage(String nodeId, NodeStatus nodeStatus, SystemState state,
             Map<String, Object> secretsEphemeral, Set<Integer> activePartitions) {
         this.state = state;
         this.nodeId = nodeId;
         this.nodeStatus = nodeStatus;
-        this.secrets = new HashMap<>(secretsEphemeral);
+        this.secrets = secretsEphemeral;
         this.activePartitions = activePartitions;
     }
 
@@ -59,6 +58,7 @@ public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICc
         try {
             RegistrationTasksRequestMessage msg = new RegistrationTasksRequestMessage(cs.getId(), nodeStatus,
                     systemState, secretsEphemeral, activePartitions);
+            LOGGER.info("sending {} to CC", msg);
             ((INCMessageBroker) cs.getContext().getMessageBroker()).sendMessageToCC(ccId, msg);
         } catch (Exception e) {
             LOGGER.log(Level.ERROR, "Unable to send RegistrationTasksRequestMessage to CC", e);
@@ -94,5 +94,11 @@ public class RegistrationTasksRequestMessage implements INCLifecycleMessage, ICc
 
     public Set<Integer> getActivePartitions() {
         return activePartitions;
+    }
+
+    @Override
+    public String toString() {
+        return "RegistrationTasksRequestMessage{" + "state=" + state + ", nodeId='" + nodeId + '\'' + ", nodeStatus="
+                + nodeStatus + ", activePartitions=" + activePartitions + '}';
     }
 }

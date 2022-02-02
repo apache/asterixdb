@@ -92,7 +92,9 @@ public abstract class PlanVerifierTestBase {
     Mutable<ILogicalOperator> createSamplePlan1() {
         AssignOperator op1 = newAssign(newVar(), newMutable(ConstantExpression.TRUE));
 
-        SubplanOperator op2 = new SubplanOperator(newAssign(newVar(), newMutable(ConstantExpression.TRUE)));
+        AssignOperator r1 = newAssign(newVar(), newMutable(ConstantExpression.TRUE));
+        r1.getInputs().add(new MutableObject<>(new EmptyTupleSourceOperator()));
+        SubplanOperator op2 = new SubplanOperator(r1);
         op1.getInputs().add(newMutable(op2));
 
         InnerJoinOperator op3 = new InnerJoinOperator(newMutable(ConstantExpression.TRUE));

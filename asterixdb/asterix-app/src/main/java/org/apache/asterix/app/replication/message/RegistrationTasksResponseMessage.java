@@ -59,13 +59,9 @@ public class RegistrationTasksResponseMessage extends CcIdentifiedMessage
             Throwable exception = null;
             try {
                 for (INCLifecycleTask task : tasks) {
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.log(Level.INFO, "Starting startup task: " + task);
-                    }
+                    LOGGER.log(Level.INFO, "Starting startup task: {}", task);
                     task.perform(getCcId(), cs);
-                    if (LOGGER.isInfoEnabled()) {
-                        LOGGER.log(Level.INFO, "Completed startup task: " + task);
-                    }
+                    LOGGER.log(Level.INFO, "Completed startup task: {}", task);
                 }
             } catch (Throwable e) { //NOSONAR all startup failures should be reported to CC
                 LOGGER.log(Level.ERROR, "Failed during startup task", e);

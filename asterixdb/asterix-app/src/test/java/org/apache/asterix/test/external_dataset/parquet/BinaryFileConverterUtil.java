@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.test.external_dataset;
+package org.apache.asterix.test.external_dataset.parquet;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -64,13 +64,15 @@ public class BinaryFileConverterUtil {
             Path outputPath = new Path(destPath.getAbsolutePath(), fileName);
             writeParquetFile(jsonFile, outputPath);
         }
+        //Write parquet example that contains the specialized types
+        ParquetFileExampleGeneratorUtil.writeExample();
     }
 
     private static void writeParquetFile(File jsonInputPath, Path parquetOutputPath) throws IOException {
-        final FileInputStream schemaInputStream = new FileInputStream(jsonInputPath);
-        final FileInputStream jsonInputStream = new FileInputStream(jsonInputPath);
+        FileInputStream schemaInputStream = new FileInputStream(jsonInputPath);
+        FileInputStream jsonInputStream = new FileInputStream(jsonInputPath);
         //Infer Avro schema
-        final Schema inputSchema = JsonUtil.inferSchema(schemaInputStream, "parquet_schema", NUM_OF_RECORDS_SCHEMA);
+        Schema inputSchema = JsonUtil.inferSchema(schemaInputStream, "parquet_schema", NUM_OF_RECORDS_SCHEMA);
         try (JSONFileReader<Record> reader = new JSONFileReader<>(jsonInputStream, inputSchema, Record.class)) {
             reader.initialize();
             try (AvroParquetWriter<Record> writer = new AvroParquetWriter<>(parquetOutputPath, inputSchema)) {

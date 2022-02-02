@@ -619,11 +619,11 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         List<LogicalVariable> varCopy = deepCopyVariableList(op.getVariables());
         List<Mutable<ILogicalExpression>> exprCopy =
                 exprDeepCopyVisitor.deepCopyExpressionReferenceList(op.getExpressions());
-        List<ILogicalPlan> nestedPlansCopy = new ArrayList<>();
         WindowOperator opCopy = new WindowOperator(partitionExprCopy, orderExprCopy, frameValueExprCopy,
                 frameStartExprCopy, frameStartValidationExprCopy, frameEndExprCopy, frameEndValidationExprCopy,
                 frameExcludeExprCopy, op.getFrameExcludeNegationStartIdx(), frameExcludeUnaryExprCopy,
-                frameOffsetExprCopy, op.getFrameMaxObjects(), varCopy, exprCopy, nestedPlansCopy);
+                frameOffsetExprCopy, op.getFrameMaxObjects(), varCopy, exprCopy, null);
+        List<ILogicalPlan> nestedPlansCopy = opCopy.getNestedPlans();
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         deepCopyPlanList(op.getNestedPlans(), nestedPlansCopy, opCopy);
         return opCopy;
