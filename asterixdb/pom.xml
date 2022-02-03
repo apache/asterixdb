@@ -1819,7 +1819,7 @@
       <dependency>
         <groupId>org.apache.tomcat</groupId>
         <artifactId>tomcat-annotations-api</artifactId>
-        <version>10.0.12</version>
+        <version>10.0.16</version>
       </dependency>
       <!-- Google Cloud Storage end -->
       <!-- Azure Data Lake start -->
