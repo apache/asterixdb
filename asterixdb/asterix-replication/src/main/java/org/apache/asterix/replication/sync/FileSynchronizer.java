@@ -58,7 +58,7 @@ public class FileSynchronizer {
             String masterNode = appCtx.getReplicaManager().isPartitionOwner(replica.getIdentifier().getPartition())
                     ? appCtx.getServiceContext().getNodeId() : null;
             ReplicateFileTask task = new ReplicateFileTask(file, filePath.getFile().length(), metadata, masterNode);
-            LOGGER.info("attempting to replicate {} to replica {}", task, replica);
+            LOGGER.debug("attempting to replicate {} to replica {}", task, replica);
             ReplicationProtocol.sendTo(replica, task);
             // send the file itself
             try (RandomAccessFile fromFile = new RandomAccessFile(filePath.getFile(), "r");
