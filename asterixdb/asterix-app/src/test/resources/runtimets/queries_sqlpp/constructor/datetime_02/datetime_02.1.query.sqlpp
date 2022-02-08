@@ -24,8 +24,7 @@
   "null_0": datetime("@#!"),
   "null_1": datetime(false),
   "null_2": datetime(0),
-  "null_3": datetime(time("01:02:03")),
-  "null_4": datetime([]),
-  "null_5": datetime({}),
-  "null_6": datetime("1951-12-27T12:20:15Z", "INVALID_FORMAT")
+  "null_3": datetime([]),
+  "null_4": datetime({}),
+  "null_5": datetime("1951-12-27T12:20:15Z", "INVALID_FORMAT")
 };

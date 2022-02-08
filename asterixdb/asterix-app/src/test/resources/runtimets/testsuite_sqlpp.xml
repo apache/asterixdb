@@ -3674,10 +3674,9 @@
         <expected-warn>ASX0006: Invalid format for datetime in @#! (in line 24, at column 13)</expected-warn>
         <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type boolean (in line 25, at column 13)</expected-warn>
         <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type bigint (in line 26, at column 13)</expected-warn>
-        <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type time (in line 27, at column 13)</expected-warn>
-        <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type array (in line 28, at column 13)</expected-warn>
-        <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type object (in line 29, at column 13)</expected-warn>
-        <expected-warn>ASX0006: Invalid format for datetime in 1951-12-27T12:20:15Z (in line 30, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type array (in line 27, at column 13)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: datetime() cannot process input type object (in line 28, at column 13)</expected-warn>
+        <expected-warn>ASX0006: Invalid format for datetime in 1951-12-27T12:20:15Z (in line 29, at column 13)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="constructor">

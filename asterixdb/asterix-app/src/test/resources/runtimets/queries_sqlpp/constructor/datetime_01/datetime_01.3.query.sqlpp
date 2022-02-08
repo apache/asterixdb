@@ -34,7 +34,8 @@ test = [
     '-19280329T17493737+0630',
     '-19280301T05493737+0630',
     test.datetime('-19280301T05493737+0630'),
-    date('2020-01-02')
+    date('2020-01-02'),
+    time('01:02:03.456')
 ],
 testNull = [
   null,
@@ -47,7 +48,6 @@ testNull = [
   int64(0),
   float(0),
   double(0),
-  time('01:02:03'),
   duration('PT0H'),
   year_month_duration('P0Y0M'),
   day_time_duration('P0D')
