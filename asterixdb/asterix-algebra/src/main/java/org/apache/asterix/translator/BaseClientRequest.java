@@ -90,7 +90,7 @@ public abstract class BaseClientRequest implements IClientRequest {
 
     @Override
     public String toJson() {
-        return JSONUtil.convertNodeOrThrow(asJson());
+        return JSONUtil.convertNodeUnchecked(asJson());
     }
 
     protected ObjectNode asJson() {

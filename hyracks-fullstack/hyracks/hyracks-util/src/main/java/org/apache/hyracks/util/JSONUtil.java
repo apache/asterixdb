@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 public class JSONUtil {
 
@@ -53,11 +54,11 @@ public class JSONUtil {
         return SORTED_MAPPER.writeValueAsString(SORTED_MAPPER.treeToValue(node, Object.class));
     }
 
-    public static String convertNodeOrThrow(final JsonNode node) {
+    public static String convertNodeUnchecked(final JsonNode node) throws UncheckedExecutionException {
         try {
             return convertNode(node);
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException(e);
+            throw new UncheckedExecutionException(e);
         }
     }
 

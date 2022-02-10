@@ -79,6 +79,6 @@ public class RequestReference implements IRequestReference {
         object.put("time", time);
         object.put("userAgent", userAgent);
         object.put("remoteAddr", remoteAddr);
-        return JSONUtil.convertNodeOrThrow(object);
+        return JSONUtil.convertNodeUnchecked(object);
     }
 }
