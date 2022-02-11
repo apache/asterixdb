@@ -95,7 +95,7 @@ public class ReplicateFileTask implements IReplicaTask {
             }
             //delete mask
             Files.delete(maskPath);
-            LOGGER.info("received file {} from master", localPath);
+            LOGGER.debug("received file {} from master", localPath);
             ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());
         } catch (IOException e) {
             throw new ReplicationException(e);

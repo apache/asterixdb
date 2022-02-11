@@ -26,6 +26,9 @@ import org.apache.asterix.common.api.ICodedMessage;
 import org.apache.asterix.common.api.IResponseFieldPrinter;
 import org.apache.hyracks.util.JSONUtil;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public abstract class AbstractCodedMessagePrinter implements IResponseFieldPrinter {
 
     private enum CodedMessageField {
@@ -67,5 +70,15 @@ public abstract class AbstractCodedMessagePrinter implements IResponseFieldPrint
             }
         }
         pw.print("]");
+    }
+
+    public ObjectNode appendTo(ObjectNode objectNode) {
+        ArrayNode array = objectNode.putArray(getName());
+        messages.forEach(codedMessage -> {
+            ObjectNode error = array.addObject();
+            error.put(CodedMessageField.CODE.str(), codedMessage.getCode());
+            error.put(CodedMessageField.MSG.str(), codedMessage.getMessage());
+        });
+        return objectNode;
     }
 }

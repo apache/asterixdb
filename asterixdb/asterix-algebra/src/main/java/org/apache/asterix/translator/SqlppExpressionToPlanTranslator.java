@@ -18,11 +18,9 @@
  */
 package org.apache.asterix.translator;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -125,6 +123,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnne
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -155,7 +154,6 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     public static final String REWRITE_IN_AS_OR_OPTION = "rewrite_in_as_or";
     private static final boolean REWRITE_IN_AS_OR_OPTION_DEFAULT = true;
 
-    private Deque<Mutable<ILogicalOperator>> uncorrelatedRightBranchStack = new ArrayDeque<>();
     private final Map<VarIdentifier, IAObject> externalVars;
     private final boolean translateInAsOr;
 
@@ -303,12 +301,10 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             throws CompilationException {
         Mutable<ILogicalOperator> inputSrc = arg;
         Pair<ILogicalOperator, LogicalVariable> topUnnest = null;
-        uncorrelatedRightBranchStack.push(inputSrc);
         for (FromTerm fromTerm : fromClause.getFromTerms()) {
             topUnnest = fromTerm.accept(this, inputSrc);
             inputSrc = new MutableObject<>(topUnnest.first);
         }
-        uncorrelatedRightBranchStack.pop();
         return topUnnest;
     }
 
@@ -345,8 +341,10 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     public Pair<ILogicalOperator, LogicalVariable> visit(JoinClause joinClause, Mutable<ILogicalOperator> leftInputRef)
             throws CompilationException {
         SourceLocation sourceLoc = joinClause.getSourceLocation();
-        if (joinClause.getJoinType() == JoinType.INNER && !context.inSubplan()) {
-            Mutable<ILogicalOperator> rightInputRef = uncorrelatedRightBranchStack.peek();
+        if (joinClause.getJoinType() == JoinType.INNER && !hasFreeVariables(joinClause.getRightExpression())) {
+            EmptyTupleSourceOperator ets = new EmptyTupleSourceOperator();
+            ets.setSourceLocation(joinClause.getSourceLocation());
+            Mutable<ILogicalOperator> rightInputRef = new MutableObject<>(ets);
             Pair<ILogicalOperator, LogicalVariable> rightBranch =
                     generateUnnestForBinaryCorrelateRightBranch(joinClause, rightInputRef, false, null);
             // A join operator with condition TRUE.
@@ -507,6 +505,16 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, joinClause.getSourceLocation(),
                     String.valueOf(joinClause.getJoinType().toString()));
         }
+    }
+
+    private boolean hasFreeVariables(Expression expr) throws CompilationException {
+        Set<VariableExpr> freeVars = SqlppRewriteUtil.getFreeVariable(expr);
+        for (VariableExpr varRef : freeVars) {
+            if (!SqlppVariableUtil.isExternalVariableReference(varRef)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static IAlgebricksConstantValue translateLeftOuterMissingValue(Literal.Type type)

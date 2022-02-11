@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentMap;
 
+import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.http.api.IServlet;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
@@ -98,7 +99,7 @@ public abstract class AbstractServlet implements IServlet {
             } else if (HttpMethod.OPTIONS.equals(method)) {
                 options(request, response);
             } else {
-                notAllowed(method, response);
+                methodNotAllowed(method, response);
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARN, "Unhandled exception", e);
@@ -113,21 +114,31 @@ public abstract class AbstractServlet implements IServlet {
     }
 
     protected void sendError(IServletResponse response, HttpResponseStatus status, String message) throws IOException {
+        sendError(response, HttpUtil.ContentType.TEXT_PLAIN, status, message);
+    }
+
+    protected void sendError(IServletResponse response, String contentType, HttpResponseStatus status, String message)
+            throws IOException {
         response.setStatus(status);
-        HttpUtil.setContentType(response, HttpUtil.ContentType.TEXT_PLAIN, StandardCharsets.UTF_8);
+        HttpUtil.setContentType(response, contentType, StandardCharsets.UTF_8);
         if (message != null) {
             response.writer().println(message);
         }
         if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("sendError: status=" + status + ", message=" + message);
+            LOGGER.info("sendError: status={}, message={}", status, message);
         }
     }
 
-    protected void sendError(IServletResponse response, HttpResponseStatus status) throws IOException {
-        sendError(response, status, null);
+    protected void sendError(IServletResponse response, HttpResponseStatus status, IFormattedException ex)
+            throws IOException {
+        sendError(response, status, ex != null ? ex.getMessage() : null);
     }
 
-    protected void notAllowed(HttpMethod method, IServletResponse response) throws IOException {
+    protected void sendError(IServletResponse response, HttpResponseStatus status) throws IOException {
+        sendError(response, status, status.reasonPhrase());
+    }
+
+    protected void methodNotAllowed(HttpMethod method, IServletResponse response) throws IOException {
         sendError(response, HttpResponseStatus.METHOD_NOT_ALLOWED,
                 "Method " + method + " not allowed for the requested resource.");
     }
@@ -135,37 +146,37 @@ public abstract class AbstractServlet implements IServlet {
     @SuppressWarnings("squid:S1172")
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        notAllowed(HttpMethod.GET, response);
+        methodNotAllowed(HttpMethod.GET, response);
     }
 
     @SuppressWarnings("squid:S1172")
     protected void head(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        notAllowed(HttpMethod.HEAD, response);
+        methodNotAllowed(HttpMethod.HEAD, response);
     }
 
     @SuppressWarnings("squid:S1172")
     protected void post(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        notAllowed(HttpMethod.POST, response);
+        methodNotAllowed(HttpMethod.POST, response);
     }
 
     @SuppressWarnings("squid:S1172")
     protected void put(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        notAllowed(HttpMethod.PUT, response);
+        methodNotAllowed(HttpMethod.PUT, response);
     }
 
     @SuppressWarnings("squid:S1172")
     protected void delete(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        notAllowed(HttpMethod.DELETE, response);
+        methodNotAllowed(HttpMethod.DELETE, response);
     }
 
     @SuppressWarnings("squid:S1172")
     protected void options(IServletRequest request, IServletResponse response) throws Exception {
         // designed to be extended but an error in standard case
-        notAllowed(HttpMethod.OPTIONS, response);
+        methodNotAllowed(HttpMethod.OPTIONS, response);
     }
 
     public String host(IServletRequest request) {

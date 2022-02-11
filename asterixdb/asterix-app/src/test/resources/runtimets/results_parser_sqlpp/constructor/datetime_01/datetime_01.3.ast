@@ -22,6 +22,9 @@ Let Variable [ Name=$test ]
     FunctionCall asterix.date@1[
       LiteralExpr [STRING] [2020-01-02]
     ]
+    FunctionCall asterix.time@1[
+      LiteralExpr [STRING] [01:02:03.456]
+    ]
   ]
 Let Variable [ Name=$testNull ]
   :=
@@ -47,9 +50,6 @@ Let Variable [ Name=$testNull ]
     ]
     FunctionCall asterix.double@1[
       LiteralExpr [LONG] [0]
-    ]
-    FunctionCall asterix.time@1[
-      LiteralExpr [STRING] [01:02:03]
     ]
     FunctionCall asterix.duration@1[
       LiteralExpr [STRING] [PT0H]

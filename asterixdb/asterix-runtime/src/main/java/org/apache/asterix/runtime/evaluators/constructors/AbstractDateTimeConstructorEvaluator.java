@@ -20,6 +20,7 @@
 package org.apache.asterix.runtime.evaluators.constructors;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.ADateSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.ATimeSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.AMutableDateTime;
@@ -63,6 +64,13 @@ public abstract class AbstractDateTimeConstructorEvaluator extends AbstractConst
             case DATE:
                 int chrononInDays = ADateSerializerDeserializer.getChronon(bytes, startOffset + 1);
                 aDateTime.setValue(chrononInDays * GregorianCalendarSystem.CHRONON_OF_DAY);
+                resultStorage.reset();
+                datetimeSerde.serialize(aDateTime, out);
+                result.set(resultStorage);
+                break;
+            case TIME:
+                int chronon = ATimeSerializerDeserializer.getChronon(bytes, startOffset + 1);
+                aDateTime.setValue(chronon);
                 resultStorage.reset();
                 datetimeSerde.serialize(aDateTime, out);
                 result.set(resultStorage);
