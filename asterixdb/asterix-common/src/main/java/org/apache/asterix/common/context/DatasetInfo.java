@@ -195,12 +195,14 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     public synchronized void addIndex(long resourceID, IndexInfo indexInfo) {
         indexes.put(resourceID, indexInfo);
         partitionIndexes.computeIfAbsent(indexInfo.getPartition(), partition -> new HashSet<>()).add(indexInfo);
+        LOGGER.debug("registered reference to index {}", indexInfo);
     }
 
     public synchronized void removeIndex(long resourceID) {
         IndexInfo info = indexes.remove(resourceID);
         if (info != null) {
             partitionIndexes.get(info.getPartition()).remove(info);
+            LOGGER.debug("removed reference to index {}", info);
         }
     }
 
