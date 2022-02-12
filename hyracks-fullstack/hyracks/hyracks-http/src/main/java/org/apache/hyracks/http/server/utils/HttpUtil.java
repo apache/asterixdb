@@ -236,7 +236,13 @@ public class HttpUtil {
         try {
             return readFuture.get();
         } catch (InterruptedException ex) { // NOSONAR -- interrupt or rethrow
-            response.close();
+            executor.submit(() -> {
+                try {
+                    response.close();
+                } catch (IOException e) {
+                    LOGGER.debug("{} ignoring exception thrown on stream close due to interrupt", description, e);
+                }
+            });
             try {
                 readFuture.get(1, TimeUnit.SECONDS);
             } catch (TimeoutException te) {
