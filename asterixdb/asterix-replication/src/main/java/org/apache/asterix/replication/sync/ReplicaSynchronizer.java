@@ -73,7 +73,7 @@ public class ReplicaSynchronizer {
     private void checkpointReplicaIndexes() throws IOException {
         final int partition = replica.getIdentifier().getPartition();
         String masterNode =
-                appCtx.getReplicaManager().isPartitionOwner(partition) ? appCtx.getServiceContext().getNodeId() : null;
+                appCtx.getReplicaManager().isPartitionOrigin(partition) ? appCtx.getServiceContext().getNodeId() : null;
         CheckpointPartitionIndexesTask task =
                 new CheckpointPartitionIndexesTask(partition, getPartitionMaxComponentId(partition), masterNode);
         ReplicationProtocol.sendTo(replica, task);

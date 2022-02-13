@@ -104,10 +104,10 @@ public interface IReplicaManager {
     List<IPartitionReplica> getReplicas();
 
     /**
-     * Returns true if {@code partition} is owned by this node, otherwise false.
+     * Returns true if {@code partition} is originated by this node, otherwise false.
      *
      * @param partition
-     * @return true if the partition is owned by this node, otherwise false.
+     * @return true if the partition is originated by this node, otherwise false.
      */
-    boolean isPartitionOwner(int partition);
+    boolean isPartitionOrigin(int partition);
 }

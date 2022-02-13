@@ -57,14 +57,14 @@ public class ReplicaManager implements IReplicaManager {
      * current replicas
      */
     private final Map<ReplicaIdentifier, PartitionReplica> replicas = new HashMap<>();
-    private final Set<Integer> nodeOwnedPartitions = new HashSet<>();
+    private final Set<Integer> nodeOriginatedPartitions = new HashSet<>();
 
     public ReplicaManager(INcApplicationContext appCtx, Set<Integer> partitions) {
         this.appCtx = appCtx;
         for (Integer partition : partitions) {
             this.partitions.put(partition, new Object());
         }
-        setNodeOwnedPartitions(appCtx);
+        setNodeOriginatedPartitions(appCtx);
     }
 
     @Override
@@ -163,8 +163,8 @@ public class ReplicaManager implements IReplicaManager {
     }
 
     @Override
-    public boolean isPartitionOwner(int partition) {
-        return nodeOwnedPartitions.contains(partition);
+    public boolean isPartitionOrigin(int partition) {
+        return nodeOriginatedPartitions.contains(partition);
     }
 
     public void closePartitionResources(int partition) throws HyracksDataException {
@@ -185,9 +185,9 @@ public class ReplicaManager implements IReplicaManager {
         return id.getNodeId().equals(nodeId);
     }
 
-    private void setNodeOwnedPartitions(INcApplicationContext appCtx) {
+    private void setNodeOriginatedPartitions(INcApplicationContext appCtx) {
         Set<Integer> nodePartitions =
                 appCtx.getMetadataProperties().getNodePartitions(appCtx.getServiceContext().getNodeId());
-        nodeOwnedPartitions.addAll(nodePartitions);
+        nodeOriginatedPartitions.addAll(nodePartitions);
     }
 }

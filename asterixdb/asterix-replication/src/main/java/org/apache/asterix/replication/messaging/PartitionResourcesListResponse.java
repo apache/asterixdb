@@ -90,7 +90,7 @@ public class PartitionResourcesListResponse implements IReplicationMessage {
         return new PartitionResourcesListResponse(partition, partitionReplicatedResources, resources, owner);
     }
 
-    public boolean isOwner() {
+    public boolean isOrigin() {
         return owner;
     }
 
