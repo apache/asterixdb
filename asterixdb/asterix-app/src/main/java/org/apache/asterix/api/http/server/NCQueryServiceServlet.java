@@ -45,6 +45,7 @@ import org.apache.asterix.translator.IStatementExecutor;
 import org.apache.asterix.translator.ResultProperties;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.http.api.IChannelClosedHandler;
@@ -76,6 +77,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
             QueryServiceRequestParameters param, RequestExecutionState executionState,
             Map<String, String> optionalParameters, Map<String, byte[]> statementParameters,
             ResponsePrinter responsePrinter, List<Warning> warnings) throws Exception {
+        ensureOptionalParameters(optionalParameters);
         // Running on NC -> send 'execute' message to CC
         INCServiceContext ncCtx = (INCServiceContext) serviceCtx;
         INCMessageBroker ncMb = (INCMessageBroker) ncCtx.getMessageBroker();
@@ -132,6 +134,10 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         }
         warnings.addAll(responseMsg.getWarnings());
         buildResponseResults(responsePrinter, sessionOutput, responseMsg.getExecutionPlans(), warnings);
+    }
+
+    protected void ensureOptionalParameters(Map<String, String> optionalParameters) throws HyracksDataException {
+
     }
 
     protected ExecuteStatementRequestMessage createRequestMessage(IServletRequest request,

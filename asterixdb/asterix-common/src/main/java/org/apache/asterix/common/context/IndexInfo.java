@@ -55,4 +55,10 @@ public class IndexInfo extends Info {
     public LocalResource getLocalResource() {
         return localResource;
     }
+
+    @Override
+    public String toString() {
+        return "IndexInfo{" + "index=" + index + ", datasetId=" + datasetId + ", resourceId=" + resourceId
+                + ", partition=" + partition + ", localResource=" + localResource + '}';
+    }
 }

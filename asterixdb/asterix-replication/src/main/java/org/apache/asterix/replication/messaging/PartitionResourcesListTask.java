@@ -59,7 +59,7 @@ public class PartitionResourcesListTask implements IReplicaTask {
                 localResourceRepository.getPartitionReplicatedFiles(partition, replicationStrategy).stream()
                         .map(StoragePathUtil::getFileRelativePath).collect(Collectors.toList());
         final PartitionResourcesListResponse response = new PartitionResourcesListResponse(partition,
-                partitionReplicatedResources, partitionFiles, appCtx.getReplicaManager().isPartitionOwner(partition));
+                partitionReplicatedResources, partitionFiles, appCtx.getReplicaManager().isPartitionOrigin(partition));
         ReplicationProtocol.sendTo(worker.getChannel(), response, worker.getReusableBuffer());
     }
 

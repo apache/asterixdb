@@ -295,8 +295,7 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
         responseWriter.flush();
     }
 
-    protected boolean isRequestPermittedForWrite(IServletRequest request, IServletResponse response)
-            throws IOException {
+    protected boolean isRequestPermitted(IServletRequest request, IServletResponse response) throws IOException {
         if (!isRequestOnLoopback(request)) {
             rejectForbidden(response);
             return false;
@@ -322,14 +321,14 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
 
     @Override
     protected void post(IServletRequest request, IServletResponse response) throws IOException {
-        if (isRequestPermittedForWrite(request, response)) {
+        if (isRequestPermitted(request, response)) {
             handleModification(request, response, LibraryOperation.UPSERT);
         }
     }
 
     @Override
     protected void delete(IServletRequest request, IServletResponse response) throws IOException {
-        if (isRequestPermittedForWrite(request, response)) {
+        if (isRequestPermitted(request, response)) {
             handleModification(request, response, LibraryOperation.DELETE);
         }
     }

@@ -72,7 +72,7 @@ public class ReplicaFilesSynchronizer {
         }
         PartitionResourcesListResponse replicaResourceResponse = getReplicaFiles(partition);
         Map<ResourceReference, Long> resourceReferenceLongMap = getValidReplicaResources(
-                replicaResourceResponse.getPartitionReplicatedResources(), replicaResourceResponse.isOwner());
+                replicaResourceResponse.getPartitionReplicatedResources(), replicaResourceResponse.isOrigin());
         // clean up files for invalid resources (deleted or recreated while the replica was down)
         Set<String> deletedReplicaFiles =
                 cleanupReplicaInvalidResources(replicaResourceResponse, resourceReferenceLongMap);
@@ -155,7 +155,7 @@ public class ReplicaFilesSynchronizer {
             if (!validReplicaResources.containsKey(replicaRes)) {
                 LOGGER.debug("replica invalid file {} to be deleted", replicaRes.getFileRelativePath());
                 invalidFiles.add(replicaResPath);
-            } else if (replicaResourceResponse.isOwner() && !replicaRes.isMetadataResource()) {
+            } else if (replicaResourceResponse.isOrigin() && !replicaRes.isMetadataResource()) {
                 // find files where the owner generated and failed before replicating
                 Long masterValidSeq = validReplicaResources.get(replicaRes);
                 IndexComponentFileReference componentFileReference =
@@ -184,7 +184,7 @@ public class ReplicaFilesSynchronizer {
     }
 
     private Map<ResourceReference, Long> getValidReplicaResources(Map<String, Long> partitionReplicatedResources,
-            boolean owner) throws HyracksDataException {
+            boolean origin) throws HyracksDataException {
         Map<ResourceReference, Long> resource2ValidSeqMap = new HashMap<>();
         for (Map.Entry<String, Long> resourceEntry : partitionReplicatedResources.entrySet()) {
             ResourceReference rr = ResourceReference.of(resourceEntry.getKey());
@@ -196,7 +196,7 @@ public class ReplicaFilesSynchronizer {
                     LOGGER.info("replica has resource {} but with different resource id; ours {}, theirs {}", rr,
                             localResource.getId(), resourceEntry.getValue());
                 } else {
-                    long resourceMasterValidSeq = owner ? getResourceMasterValidSeq(rr) : Integer.MAX_VALUE;
+                    long resourceMasterValidSeq = origin ? getResourceMasterValidSeq(rr) : Integer.MAX_VALUE;
                     resource2ValidSeqMap.put(rr, resourceMasterValidSeq);
                 }
             }

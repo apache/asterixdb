@@ -94,7 +94,7 @@ public class IndexSynchronizer {
         final FileSynchronizer fileSynchronizer = new FileSynchronizer(appCtx, replica);
         job.getJobFiles().stream().map(StoragePathUtil::getFileRelativePath).forEach(fileSynchronizer::replicate);
         // send mark component valid
-        String masterNode = appCtx.getReplicaManager().isPartitionOwner(replica.getIdentifier().getPartition())
+        String masterNode = appCtx.getReplicaManager().isPartitionOrigin(replica.getIdentifier().getPartition())
                 ? appCtx.getServiceContext().getNodeId() : null;
         MarkComponentValidTask markValidTask = new MarkComponentValidTask(indexFile, getReplicatedComponentLsn(),
                 getReplicatedComponentId(), masterNode);
