@@ -2883,6 +2883,14 @@
         <expected-error>ASX1079: Compilation error: arrayagg is a SQL-92 aggregate function. The SQL++ core aggregate function strict_arrayagg could potentially express the intent.</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="aggregate-sql-sugar" check-warnings="true">
+      <compilation-unit name="avg_mixed">
+        <output-dir compare="Text">avg_mixed</output-dir>
+        <expected-warn>ASX0004: Unsupported type: agg-avg cannot process input type string (in line 26, at column 12)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: agg-avg cannot process input type string (in line 28, at column 19)</expected-warn>
+        <expected-warn>ASX0004: Unsupported type: agg-avg cannot process input type string (in line 29, at column 19)</expected-warn>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="aggregate-sql-sugar">
       <compilation-unit name="distinct_mixed">
         <output-dir compare="Text">distinct_mixed</output-dir>
