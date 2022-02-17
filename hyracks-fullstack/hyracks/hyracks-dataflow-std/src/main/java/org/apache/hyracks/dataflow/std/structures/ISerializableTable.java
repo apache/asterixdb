@@ -54,7 +54,7 @@ public interface ISerializableTable {
      *            required to access the real tuple to calculate the original hash value
      * @param tpc:
      *            hash function
-     * @return the number of frames that are reclaimed.
+     * @return the number of frames that are reclaimed. The value -1 is returned when no compaction was happened.
      * @throws HyracksDataException
      */
     int collectGarbage(ITuplePointerAccessor bufferAccessor, ITuplePartitionComputer tpc) throws HyracksDataException;
