@@ -9,6 +9,7 @@
     "active\.stop\.timeout" : 3600,
     "active\.suspend\.timeout" : 3600,
     "compiler\.arrayindex" : true,
+    "compiler.batch.lookup" : false,
     "compiler\.external\.field\.pushdown" : true,
     "compiler\.framesize" : 32768,
     "compiler\.groupmemory" : 163840,

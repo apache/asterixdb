@@ -21,13 +21,16 @@ package org.apache.hyracks.storage.am.btree.impls;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.api.IBTreeLeafFrame;
+import org.apache.hyracks.storage.am.btree.api.IDiskBTreeStatefulPointSearchCursor;
+import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.ISearchPredicate;
-import org.apache.hyracks.storage.common.buffercache.BufferCache;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 
-public class DiskBTreePointSearchCursor extends DiskBTreeRangeSearchCursor {
+public class DiskBTreePointSearchCursor extends DiskBTreeRangeSearchCursor
+        implements IDiskBTreeStatefulPointSearchCursor {
     /**
      * A stateful cursor keeps the search state (last search page Id + index) across multiple searches
      * until {@link #clearSearchState()} is called explicity
@@ -36,16 +39,14 @@ public class DiskBTreePointSearchCursor extends DiskBTreeRangeSearchCursor {
 
     private boolean nextHasBeenCalled;
 
-    private int lastPageId = BufferCache.INVALID_PAGEID;
+    private int lastPageId;
     private int lastTupleIndex = 0;
 
     public DiskBTreePointSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes, boolean stateful) {
         super(frame, exclusiveLatchNodes);
         this.stateful = stateful;
-    }
-
-    public DiskBTreePointSearchCursor(IBTreeLeafFrame frame, boolean exclusiveLatchNodes) {
-        this(frame, exclusiveLatchNodes, false);
+        lastPageId = IBufferCache.INVALID_PAGEID;
+        lastTupleIndex = 0;
     }
 
     @Override
@@ -56,6 +57,12 @@ public class DiskBTreePointSearchCursor extends DiskBTreeRangeSearchCursor {
     @Override
     public void doNext() throws HyracksDataException {
         nextHasBeenCalled = true;
+    }
+
+    @Override
+    public void doClose() throws HyracksDataException {
+        clearSearchState();
+        super.doClose();
     }
 
     @Override
@@ -71,30 +78,10 @@ public class DiskBTreePointSearchCursor extends DiskBTreeRangeSearchCursor {
         page = initialState.getPage();
         isPageDirty = false;
         frame.setPage(page);
-
-        pred = (RangePredicate) searchPred;
-        lowKeyCmp = pred.getLowKeyComparator();
-        lowKey = pred.getLowKey();
-
-        reusablePredicate.setLowKeyComparator(originalKeyCmp);
-
-        lowKeyFtm = FindTupleMode.EXACT;
-        lowKeyFtp = FindTupleNoExactMatchPolicy.NONE;
-
-        nextHasBeenCalled = false;
-
-        // only get the low key position
-        tupleIndex = getLowKeyIndex();
-        if (stateful) {
-            lastPageId = pageId;
-            if (tupleIndex >= 0) {
-                lastTupleIndex = tupleIndex;
-            } else {
-                lastTupleIndex = -tupleIndex - 1;
-            }
-        }
+        setCursorToNextKey(searchPred);
     }
 
+    @Override
     public int getLastPageId() {
         return lastPageId;
     }
@@ -108,9 +95,38 @@ public class DiskBTreePointSearchCursor extends DiskBTreeRangeSearchCursor {
         }
     }
 
-    public void clearSearchState() {
-        this.lastPageId = BufferCache.INVALID_PAGEID;
+    @Override
+    public void setCursorToNextKey(ISearchPredicate searchPred) throws HyracksDataException {
+        pred = (RangePredicate) searchPred;
+        lowKeyCmp = pred.getLowKeyComparator();
+        lowKey = pred.getLowKey();
+
+        reusablePredicate.setLowKeyComparator(originalKeyCmp);
+
+        lowKeyFtm = FindTupleMode.EXACT;
+        lowKeyFtp = FindTupleNoExactMatchPolicy.NONE;
+
+        nextHasBeenCalled = false;
+
+        // only get the lowKey position
+        tupleIndex = getLowKeyIndex();
+        if (stateful) {
+            lastPageId = pageId;
+            if (tupleIndex >= 0) {
+                lastTupleIndex = tupleIndex;
+            } else {
+                lastTupleIndex = -tupleIndex - 1;
+            }
+        }
+    }
+
+    private void clearSearchState() {
+        this.lastPageId = IBufferCache.INVALID_PAGEID;
         this.lastTupleIndex = 0;
     }
 
+    @Override
+    public ITreeIndexFrame getFrame() {
+        return frame;
+    }
 }

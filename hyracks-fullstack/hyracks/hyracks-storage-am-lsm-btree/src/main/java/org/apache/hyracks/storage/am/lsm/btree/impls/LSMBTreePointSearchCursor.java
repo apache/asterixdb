@@ -231,7 +231,7 @@ public class LSMBTreePointSearchCursor extends EnforcedIndexCursor implements IL
     }
 
     protected ITreeIndexCursor createCursor(LSMComponentType type, BTreeAccessor btreeAccessor) {
-        return btreeAccessor.createPointCursor(false, type == LSMComponentType.DISK);
+        return btreeAccessor.createPointCursor(false, false);
     }
 
     private void destroyAndNullifyCursorAtIndex(int i) throws HyracksDataException {

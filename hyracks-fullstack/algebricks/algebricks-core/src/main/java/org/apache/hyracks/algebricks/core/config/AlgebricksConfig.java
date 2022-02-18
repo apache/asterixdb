@@ -37,4 +37,5 @@ public class AlgebricksConfig {
     public static final boolean ARRAY_INDEX_DEFAULT = true;
     public static final int EXTERNAL_SCAN_BUFFER_SIZE =
             StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.KILOBYTE);
+    public static final boolean BATCH_LOOKUP_DEFAULT = false;
 }
