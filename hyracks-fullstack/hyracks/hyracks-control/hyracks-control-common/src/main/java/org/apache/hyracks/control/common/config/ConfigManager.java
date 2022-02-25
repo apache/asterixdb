@@ -618,7 +618,6 @@ public class ConfigManager implements IConfigManager, Serializable {
         @Override
         public void resolveCollision(CompositeMap<IOption, Object> composite, Map<IOption, Object> existing,
                 Map<IOption, Object> added, Collection<IOption> intersect) {
-            LOGGER.debug("resolveCollision: {}, {}, {}, {}", composite, existing, added, intersect);
             // no-op
         }
     }

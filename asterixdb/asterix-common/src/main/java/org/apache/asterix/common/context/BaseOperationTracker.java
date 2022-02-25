@@ -25,9 +25,12 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class BaseOperationTracker implements ITransactionOperationTracker {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     protected final int datasetID;
     protected final DatasetInfo dsInfo;
 
@@ -67,13 +70,23 @@ public class BaseOperationTracker implements ITransactionOperationTracker {
          * from being evicted/dropped until the transaction completes
          */
         dsInfo.touch();
-        dsInfo.getIndexes().get(resourceId).touch();
+        IndexInfo indexInfo = dsInfo.getIndexes().get(resourceId);
+        if (indexInfo == null) {
+            LOGGER.error("could not find resource id {} in dataset {}; registered indexes {}", resourceId, dsInfo,
+                    dsInfo.getIndexes());
+            throw new IllegalStateException("could not find resource id " + resourceId + " in dataset " + dsInfo);
+        }
+        indexInfo.touch();
     }
 
     @Override
     public void afterTransaction(long resourceId) {
         dsInfo.untouch();
-        dsInfo.getIndexes().get(resourceId).untouch();
+        IndexInfo indexInfo = dsInfo.getIndexes().get(resourceId);
+        if (indexInfo != null) {
+            // only untouch if the touch in beforeTransaction succeeded
+            indexInfo.untouch();
+        }
     }
 
     public DatasetInfo getDatasetInfo() {

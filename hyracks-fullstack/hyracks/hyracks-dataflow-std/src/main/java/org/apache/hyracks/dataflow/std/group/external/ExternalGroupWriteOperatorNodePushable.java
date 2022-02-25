@@ -142,11 +142,15 @@ public class ExternalGroupWriteOperatorNodePushable extends AbstractUnaryOutputS
                         runs[i].getFileSize(), gbyFields, fdFields, groupByComparators, nmkComputer,
                         mergeAggregatorFactory, partialAggRecordDesc, outRecordDesc, frameLimit, level);
                 RunFileWriter[] runFileWriters = new RunFileWriter[partitionTable.getNumPartitions()];
-                int[] sizeInTuplesNextLevel =
-                        buildGroup(runs[i].createDeleteOnCloseReader(), partitionTable, runFileWriters);
-                for (int idFile = 0; idFile < runFileWriters.length; idFile++) {
-                    if (runFileWriters[idFile] != null) {
-                        generatedRuns.add(runFileWriters[idFile]);
+                int[] sizeInTuplesNextLevel;
+                try {
+                    sizeInTuplesNextLevel =
+                            buildGroup(runs[i].createDeleteOnCloseReader(), partitionTable, runFileWriters);
+                } finally {
+                    for (int idFile = 0; idFile < runFileWriters.length; idFile++) {
+                        if (runFileWriters[idFile] != null) {
+                            generatedRuns.add(runFileWriters[idFile]);
+                        }
                     }
                 }
 

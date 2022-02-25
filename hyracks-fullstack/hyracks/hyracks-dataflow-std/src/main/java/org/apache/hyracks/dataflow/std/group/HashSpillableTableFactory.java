@@ -177,16 +177,21 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 }
 
                 // Checks whether the garbage collection is required and conducts a garbage collection if so.
-                if (hashTableForTuplePointer.isGarbageCollectionNeeded()) {
+                collectGarbageInHashTableForTuplePointer(false);
+                bufferManager.clearPartition(partition);
+            }
+
+            private boolean collectGarbageInHashTableForTuplePointer(boolean force) throws HyracksDataException {
+                if (force || hashTableForTuplePointer.isGarbageCollectionNeeded()) {
                     int numberOfFramesReclaimed =
                             hashTableForTuplePointer.collectGarbage(bufferAccessor, tpcIntermediate);
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug("Garbage Collection on Hash table is done. Deallocated frames:"
                                 + numberOfFramesReclaimed);
                     }
+                    return numberOfFramesReclaimed != -1;
                 }
-
-                bufferManager.clearPartition(partition);
+                return false;
             }
 
             private int getPartition(int entryInHashTable) {
@@ -234,11 +239,18 @@ public class HashSpillableTableFactory implements ISpillableTableFactory {
                 }
 
                 // Insertion to the hash table
-                if (!hashTableForTuplePointer.insert(entryInHashTable, pointer)) {
-                    // To preserve the atomicity of this method, we need to undo the effect
-                    // of the above bufferManager.insertTuple() call since the given insertion has failed.
-                    bufferManager.cancelInsertTuple(pid);
-                    return false;
+                boolean inserted = hashTableForTuplePointer.insert(entryInHashTable, pointer);
+                if (!inserted) {
+                    // Force garbage collection on the hash table and attempt to insert again
+                    if (collectGarbageInHashTableForTuplePointer(true)) {
+                        inserted = hashTableForTuplePointer.insert(entryInHashTable, pointer);
+                    }
+                    if (!inserted) {
+                        // To preserve the atomicity of this method, we need to undo the effect
+                        // of the above bufferManager.insertTuple() call since the given insertion has failed.
+                        bufferManager.cancelInsertTuple(pid);
+                        return false;
+                    }
                 }
 
                 return true;

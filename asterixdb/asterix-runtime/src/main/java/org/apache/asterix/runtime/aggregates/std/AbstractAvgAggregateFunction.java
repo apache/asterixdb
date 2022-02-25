@@ -136,12 +136,13 @@ public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunc
         int offset = inputVal.getStartOffset();
 
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
+        ATypeTag aggTypeTag = aggType;
         if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
             processNull();
             return;
-        } else if (aggType == ATypeTag.SYSTEM_NULL) {
-            aggType = typeTag;
-        } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggType)) {
+        } else if (aggTypeTag == ATypeTag.SYSTEM_NULL) {
+            aggTypeTag = typeTag;
+        } else if (typeTag != ATypeTag.SYSTEM_NULL && !ATypeHierarchy.isCompatible(typeTag, aggTypeTag)) {
             // Issue warning only once and treat current tuple as null
             if (!isWarned) {
                 isWarned = true;
@@ -149,8 +150,8 @@ public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunc
             }
             processNull();
             return;
-        } else if (ATypeHierarchy.canPromote(aggType, typeTag)) {
-            aggType = typeTag;
+        } else if (ATypeHierarchy.canPromote(aggTypeTag, typeTag)) {
+            aggTypeTag = typeTag;
         }
 
         switch (typeTag) {
@@ -195,6 +196,7 @@ public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunc
             }
         }
         count++;
+        aggType = aggTypeTag;
     }
 
     protected void finishPartialResults(IPointable result) throws HyracksDataException {

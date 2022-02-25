@@ -43,7 +43,7 @@ public class LSMIndexPageWriteCallback implements IPageWriteCallback {
     }
 
     public void beforeWrite(ICachedPage page) throws HyracksDataException {
-        rateLimiter.request(page.getFrameSizeMultiplier());
+        rateLimiter.request(page.getPageSize() * page.getFrameSizeMultiplier());
     }
 
     @Override

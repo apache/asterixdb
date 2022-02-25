@@ -130,10 +130,16 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.http.Consts;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.AuthState;
+import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
@@ -157,6 +163,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
 import org.apache.http.util.EntityUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -673,8 +680,8 @@ public class TestExecutor {
     protected HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
         // https://issues.apache.org/jira/browse/ASTERIXDB-2315
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        CloseableHttpClient client =
-                HttpClients.custom().setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE).build();
+        CloseableHttpClient client = HttpClients.custom().addInterceptorFirst(new PreemptiveAuthInterceptor())
+                .setRetryHandler(StandardHttpRequestRetryHandler.INSTANCE).build();
         Future<HttpResponse> future = executor.submit(() -> {
             try {
                 return client.execute(method, getHttpContext());
@@ -2901,5 +2908,26 @@ public class TestExecutor {
 
     private static boolean containsPort(String endPoint) {
         return StringUtils.contains(endPoint, ':');
+    }
+
+    // adapted from https://stackoverflow.com/questions/2014700/preemptive-basic-authentication-with-apache-httpclient-4
+    static class PreemptiveAuthInterceptor implements HttpRequestInterceptor {
+
+        public void process(final HttpRequest request, final HttpContext context) throws HttpException, IOException {
+            AuthState authState = (AuthState) context.getAttribute(HttpClientContext.TARGET_AUTH_STATE);
+            // if no auth scheme available yet, try to initialize it preemptively
+            if (authState.getAuthScheme() == null) {
+                CredentialsProvider credsProvider =
+                        (CredentialsProvider) context.getAttribute(HttpClientContext.CREDS_PROVIDER);
+                if (credsProvider != null) {
+                    HttpHost targetHost = (HttpHost) context.getAttribute(HttpCoreContext.HTTP_TARGET_HOST);
+                    Credentials creds =
+                            credsProvider.getCredentials(new AuthScope(targetHost.getHostName(), targetHost.getPort()));
+                    if (creds != null) {
+                        authState.update(new BasicScheme(), creds);
+                    }
+                }
+            }
+        }
     }
 }

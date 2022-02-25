@@ -567,8 +567,6 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
 
     private void rewriteSelectBlock(SelectBlock selectBlock, SqlCompatSelectExpressionCoercionAnnotation ann)
             throws CompilationException {
-        SelectClause selectClause = selectBlock.getSelectClause();
-        List<Projection> projectList = selectClause.getSelectRegular().getProjections();
         SqlCompatSelectCoercionKind typeCoercion = ann.typeCoercion;
         switch (typeCoercion) {
             case SCALAR:
@@ -577,6 +575,8 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
                  * SELECT x, y -> ERROR
                  * SELECT * -> ERROR
                  */
+                SelectClause selectClause = selectBlock.getSelectClause();
+                List<Projection> projectList = selectClause.getSelectRegular().getProjections();
                 if (projectList.size() > 1) {
                     throw new CompilationException(ErrorCode.COMPILATION_SUBQUERY_COERCION_ERROR,
                             projectList.get(1).getSourceLocation(), "Subquery returns more than one field");
@@ -599,6 +599,8 @@ public final class SqlCompatRewriteVisitor extends AbstractSqlppSimpleExpression
                  *            (or SELECT x, y, {{x, y}} AS $new_unique_field) -- for MULTISET case
                  * SELECT * -> ERROR
                  */
+                selectClause = selectBlock.getSelectClause();
+                projectList = selectClause.getSelectRegular().getProjections();
                 List<Expression> exprList = new ArrayList<>(projectList.size());
                 for (Projection p : projectList) {
                     if (p.getKind() != Projection.Kind.NAMED_EXPR) {
