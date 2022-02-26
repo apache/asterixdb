@@ -16,20 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.util;
+package org.apache.hyracks.storage.common.projection;
 
-public class HyracksConstants {
-    public static final String KEY_MESSAGE = "HYX:MSG";
-    public static final String HYRACKS_LOGGER_NAME = "org.apache.hyracks";
-    // A frame manager that manages all inverted index searches
-    public static final String INVERTED_INDEX_SEARCH_FRAME_MANAGER = "INVERTED_INDEX_SEARCH_FRAME_MANAGER";
-    // Hyracks task context
-    public static final String HYRACKS_TASK_CONTEXT = "HYRACKS_TASK_CONTEXT";
+import java.io.DataOutput;
+import java.io.IOException;
 
-    public static final String INDEX_CURSOR_STATS = "INDEX_CURSOR_STATS";
+import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
-    public static final String TUPLE_PROJECTOR = "TUPLE_PROJECTOR";
-
-    private HyracksConstants() {
-    }
+public interface ITupleProjector {
+    void project(ITupleReference tuple, DataOutput dos, ArrayTupleBuilder tb) throws IOException;
 }

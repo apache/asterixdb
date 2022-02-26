@@ -16,20 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.util;
+package org.apache.hyracks.storage.am.common.impls;
 
-public class HyracksConstants {
-    public static final String KEY_MESSAGE = "HYX:MSG";
-    public static final String HYRACKS_LOGGER_NAME = "org.apache.hyracks";
-    // A frame manager that manages all inverted index searches
-    public static final String INVERTED_INDEX_SEARCH_FRAME_MANAGER = "INVERTED_INDEX_SEARCH_FRAME_MANAGER";
-    // Hyracks task context
-    public static final String HYRACKS_TASK_CONTEXT = "HYRACKS_TASK_CONTEXT";
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.common.projection.ITupleProjector;
+import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 
-    public static final String INDEX_CURSOR_STATS = "INDEX_CURSOR_STATS";
+public class DefaultTupleProjectorFactory implements ITupleProjectorFactory {
+    private static final long serialVersionUID = -4525893018744087821L;
+    public static final DefaultTupleProjectorFactory INSTANCE = new DefaultTupleProjectorFactory();
 
-    public static final String TUPLE_PROJECTOR = "TUPLE_PROJECTOR";
+    private DefaultTupleProjectorFactory() {
+    }
 
-    private HyracksConstants() {
+    @Override
+    public ITupleProjector createTupleProjector(IHyracksTaskContext context) throws HyracksDataException {
+        return DefaultTupleProjector.INSTANCE;
     }
 }
