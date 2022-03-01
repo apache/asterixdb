@@ -90,6 +90,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -139,6 +140,7 @@ import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.ListBlobsOptions;
 import com.azure.storage.common.StorageSharedKeyCredential;
+import com.azure.storage.common.policy.RequestRetryOptions;
 import com.azure.storage.file.datalake.DataLakeFileSystemClient;
 import com.azure.storage.file.datalake.DataLakeServiceClient;
 import com.azure.storage.file.datalake.DataLakeServiceClientBuilder;
@@ -597,7 +599,7 @@ public class ExternalDataUtils {
      * @param configuration properties
      */
     public static void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc,
-            IWarningCollector collector) throws CompilationException {
+            IWarningCollector collector, IApplicationContext appCtx) throws CompilationException {
         String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
 
         switch (type) {
@@ -605,10 +607,10 @@ public class ExternalDataUtils {
                 AwsS3.validateProperties(configuration, srcLoc, collector);
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
-                Azure.validateAzureBlobProperties(configuration, srcLoc, collector);
+                Azure.validateAzureBlobProperties(configuration, srcLoc, collector, appCtx);
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE:
-                Azure.validateAzureDataLakeProperties(configuration, srcLoc, collector);
+                Azure.validateAzureDataLakeProperties(configuration, srcLoc, collector, appCtx);
                 break;
             case KEY_ADAPTER_NAME_GCS:
                 GCS.validateProperties(configuration, srcLoc, collector);
@@ -1277,8 +1279,8 @@ public class ExternalDataUtils {
          * @param configuration properties
          * @return client
          */
-        public static BlobServiceClient buildAzureBlobClient(Map<String, String> configuration)
-                throws CompilationException {
+        public static BlobServiceClient buildAzureBlobClient(IApplicationContext appCtx,
+                Map<String, String> configuration) throws CompilationException {
             String managedIdentityId = configuration.get(MANAGED_IDENTITY_ID_FIELD_NAME);
             String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
             String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
@@ -1292,6 +1294,9 @@ public class ExternalDataUtils {
 
             // Client builder
             BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
+            int timeout = appCtx.getExternalProperties().getAzureRequestTimeout();
+            RequestRetryOptions requestRetryOptions = new RequestRetryOptions(null, null, timeout, null, null, null);
+            builder.retryOptions(requestRetryOptions);
 
             // Endpoint is required
             if (endpoint == null) {
@@ -1428,8 +1433,8 @@ public class ExternalDataUtils {
          * @param configuration properties
          * @return client
          */
-        public static DataLakeServiceClient buildAzureDatalakeClient(Map<String, String> configuration)
-                throws CompilationException {
+        public static DataLakeServiceClient buildAzureDatalakeClient(IApplicationContext appCtx,
+                Map<String, String> configuration) throws CompilationException {
             String managedIdentityId = configuration.get(MANAGED_IDENTITY_ID_FIELD_NAME);
             String accountName = configuration.get(ACCOUNT_NAME_FIELD_NAME);
             String accountKey = configuration.get(ACCOUNT_KEY_FIELD_NAME);
@@ -1443,6 +1448,9 @@ public class ExternalDataUtils {
 
             // Client builder
             DataLakeServiceClientBuilder builder = new DataLakeServiceClientBuilder();
+            int timeout = appCtx.getExternalProperties().getAzureRequestTimeout();
+            RequestRetryOptions requestRetryOptions = new RequestRetryOptions(null, null, timeout, null, null, null);
+            builder.retryOptions(requestRetryOptions);
 
             // Endpoint is required
             if (endpoint == null) {
@@ -1702,7 +1710,7 @@ public class ExternalDataUtils {
          * @throws CompilationException Compilation exception
          */
         public static void validateAzureBlobProperties(Map<String, String> configuration, SourceLocation srcLoc,
-                IWarningCollector collector) throws CompilationException {
+                IWarningCollector collector, IApplicationContext appCtx) throws CompilationException {
 
             // check if the format property is present
             if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
@@ -1715,7 +1723,7 @@ public class ExternalDataUtils {
             BlobServiceClient blobServiceClient;
             try {
                 String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-                blobServiceClient = buildAzureBlobClient(configuration);
+                blobServiceClient = buildAzureBlobClient(appCtx, configuration);
                 BlobContainerClient blobContainer = blobServiceClient.getBlobContainerClient(container);
 
                 // Get all objects in a container and extract the paths to files
@@ -1741,7 +1749,7 @@ public class ExternalDataUtils {
          * @throws CompilationException Compilation exception
          */
         public static void validateAzureDataLakeProperties(Map<String, String> configuration, SourceLocation srcLoc,
-                IWarningCollector collector) throws CompilationException {
+                IWarningCollector collector, IApplicationContext appCtx) throws CompilationException {
 
             // check if the format property is present
             if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
@@ -1754,7 +1762,7 @@ public class ExternalDataUtils {
             DataLakeServiceClient dataLakeServiceClient;
             try {
                 String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-                dataLakeServiceClient = buildAzureDatalakeClient(configuration);
+                dataLakeServiceClient = buildAzureDatalakeClient(appCtx, configuration);
                 DataLakeFileSystemClient fileSystemClient = dataLakeServiceClient.getFileSystemClient(container);
 
                 // Get all objects in a container and extract the paths to files

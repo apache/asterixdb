@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -45,9 +46,10 @@ public class AzureBlobInputStream extends AbstractExternalInputStream {
     private final BlobServiceClient client;
     private final String container;
 
-    public AzureBlobInputStream(Map<String, String> configuration, List<String> filePaths) throws HyracksDataException {
+    public AzureBlobInputStream(IApplicationContext appCtx, Map<String, String> configuration, List<String> filePaths)
+            throws HyracksDataException {
         super(configuration, filePaths);
-        this.client = buildAzureClient(configuration);
+        this.client = buildAzureClient(appCtx, configuration);
         this.container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
     }
 
@@ -81,9 +83,10 @@ public class AzureBlobInputStream extends AbstractExternalInputStream {
         return true;
     }
 
-    private BlobServiceClient buildAzureClient(Map<String, String> configuration) throws HyracksDataException {
+    private BlobServiceClient buildAzureClient(IApplicationContext appCtx, Map<String, String> configuration)
+            throws HyracksDataException {
         try {
-            return ExternalDataUtils.Azure.buildAzureBlobClient(configuration);
+            return ExternalDataUtils.Azure.buildAzureBlobClient(appCtx, configuration);
         } catch (CompilationException ex) {
             throw HyracksDataException.create(ex);
         }

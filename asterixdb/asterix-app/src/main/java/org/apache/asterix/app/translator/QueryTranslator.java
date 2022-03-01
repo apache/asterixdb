@@ -65,6 +65,7 @@ import org.apache.asterix.app.result.fields.ErrorsPrinter;
 import org.apache.asterix.app.result.fields.ResultHandlePrinter;
 import org.apache.asterix.app.result.fields.ResultsPrinter;
 import org.apache.asterix.app.result.fields.StatusPrinter;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.api.IRequestTracker;
@@ -829,7 +830,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             metadataProvider, mdTxnCtx);
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
-                    validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx);
+                    validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx,
+                            appCtx);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
                             TransactionState.COMMIT);
                     break;
@@ -4773,13 +4775,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void validateExternalDatasetProperties(ExternalDetailsDecl externalDetails,
-            Map<String, String> properties, SourceLocation srcLoc, MetadataTransactionContext mdTxnCtx)
-            throws AlgebricksException, HyracksDataException {
+            Map<String, String> properties, SourceLocation srcLoc, MetadataTransactionContext mdTxnCtx,
+            IApplicationContext appCtx) throws AlgebricksException, HyracksDataException {
         // Validate adapter specific properties
         String adapter = externalDetails.getAdapter();
         Map<String, String> details = new HashMap<>(properties);
         details.put(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapter);
-        validateAdapterSpecificProperties(details, srcLoc);
+        validateAdapterSpecificProperties(details, srcLoc, appCtx);
     }
 
     /**
@@ -4787,9 +4789,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
      *
      * @param configuration external source properties
      */
-    protected void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc)
-            throws CompilationException {
-        ExternalDataUtils.validateAdapterSpecificProperties(configuration, srcLoc, warningCollector);
+    protected void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc,
+            IApplicationContext appCtx) throws CompilationException {
+        ExternalDataUtils.validateAdapterSpecificProperties(configuration, srcLoc, warningCollector, appCtx);
     }
 
     protected enum CreateResult {
