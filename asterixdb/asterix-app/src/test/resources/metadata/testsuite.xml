@@ -530,37 +530,37 @@
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_1">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1079: Compilation error: The field '[loc]' which is of type point cannot be indexed using the BTree index. (in line 37, at column 33)</expected-error>
+        <expected-error>ASX1079: Compilation error: The field 'loc' which is of type point cannot be indexed using the BTree index. (in line 37, at column 33)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_2">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1079: Compilation error: The field '[age]' which is of type integer cannot be indexed using the RTree index. (in line 37, at column 33)</expected-error>
+        <expected-error>ASX1079: Compilation error: The field 'age' which is of type integer cannot be indexed using the RTree index. (in line 37, at column 33)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_3">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1079: Compilation error: The field '[loc]' which is of type point cannot be indexed using the Length Partitioned Keyword index. (in line 37, at column 33)</expected-error>
+        <expected-error>ASX1079: Compilation error: The field 'loc' which is of type point cannot be indexed using the Length Partitioned Keyword index. (in line 37, at column 33)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_4">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1079: Compilation error: The field '[loc]' which is of type point cannot be indexed using the Length Partitioned Keyword index. (in line 37, at column 33)</expected-error>
+        <expected-error>ASX1079: Compilation error: The field 'loc' which is of type point cannot be indexed using the Length Partitioned Keyword index. (in line 37, at column 33)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_5">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1079: Compilation error: The field '[loc]' which is of type point cannot be indexed using the Length Partitioned N-Gram index. (in line 37, at column 33)</expected-error>
+        <expected-error>ASX1079: Compilation error: The field 'loc' which is of type point cannot be indexed using the Length Partitioned N-Gram index. (in line 37, at column 33)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="exception">
       <compilation-unit name="issue_384_create_index_error_6">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1079: Compilation error: The field '[loc]' which is of type point cannot be indexed using the Length Partitioned N-Gram index. (in line 37, at column 33)</expected-error>
+        <expected-error>ASX1079: Compilation error: The field 'loc' which is of type point cannot be indexed using the Length Partitioned N-Gram index. (in line 37, at column 33)</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

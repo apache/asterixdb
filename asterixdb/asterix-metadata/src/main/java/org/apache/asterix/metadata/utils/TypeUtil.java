@@ -54,6 +54,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 /**
  * Provider utility methods for data types
@@ -225,7 +226,8 @@ public class TypeUtil {
                     if (typeIntermediate == null) {
                         String fName = String.join(".", subFieldName);
                         throw new AsterixException(ErrorCode.COMPILATION_ERROR,
-                                "No list item type found. Wrong type given from field " + fName);
+                                "No list item type found. Wrong type given from field "
+                                        + LogRedactionUtil.userData(fName));
                     }
                     subFieldName.add(keyFieldNames.get(i));
                 }
@@ -243,8 +245,8 @@ public class TypeUtil {
                 ATypeTag tt = TypeComputeUtils.getActualType(typeIntermediate).getTypeTag();
                 if (tt != ATypeTag.OBJECT && tt != ATypeTag.ARRAY && tt != ATypeTag.MULTISET) {
                     String fName = String.join(".", subFieldName);
-                    throw new AsterixException(ErrorCode.COMPILATION_ERROR,
-                            "Field accessor is not defined for \"" + fName + "\" of type " + tt);
+                    throw new AsterixException(ErrorCode.COMPILATION_ERROR, "Field accessor is not defined for '"
+                            + LogRedactionUtil.userData(fName) + "' of type " + tt);
                 }
             }
 
@@ -309,8 +311,9 @@ public class TypeUtil {
                     recordNameTypesMap.put(keyFieldNames.get(keyFieldNames.size() - 1),
                             AUnionType.createNullableType(nestArrayType(keyFieldType, isKeyTypeWithUnnest)));
                 } else if (!ATypeHierarchy.canPromote(enforcedFieldType.getTypeTag(), this.keyFieldType.getTypeTag())) {
-                    throw new AsterixException(ErrorCode.COMPILATION_ERROR, "Cannot enforce field \""
-                            + String.join(".", this.keyFieldNames) + "\" to have type " + this.keyFieldType);
+                    throw new AsterixException(ErrorCode.COMPILATION_ERROR,
+                            "Cannot enforce field '" + LogRedactionUtil.userData(String.join(".", this.keyFieldNames))
+                                    + "' to have type " + this.keyFieldType);
                 }
             } else {
                 recordNameTypesMap.put(keyFieldNames.get(keyFieldNames.size() - 1),
@@ -533,8 +536,8 @@ public class TypeUtil {
         IAType actualType = TypeComputeUtils.getActualType(nestedRecordType);
         if (actualType.getTypeTag() != ATypeTag.OBJECT) {
             String fName = String.join(".", fieldName);
-            throw new AsterixException(ErrorCode.COMPILATION_ERROR,
-                    "Field accessor is not defined for \"" + fName + "\" of type " + actualType.getTypeTag());
+            throw new AsterixException(ErrorCode.COMPILATION_ERROR, "Field accessor is not defined for '"
+                    + LogRedactionUtil.userData(fName) + "' of type " + actualType.getTypeTag());
         }
     }
 

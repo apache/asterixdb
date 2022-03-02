@@ -203,6 +203,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.runtime.fulltext.AbstractFullTextFilterDescriptor;
 import org.apache.asterix.runtime.fulltext.FullTextConfigDescriptor;
 import org.apache.asterix.runtime.fulltext.IFullTextFilterDescriptor;
@@ -259,6 +260,7 @@ import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.TokenizerCategory;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.OptionalBoolean;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -1223,7 +1225,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         if (stmtCreateIndex.hasCastDefaultNull()) {
                             throw new CompilationException(ErrorCode.COMPILATION_ERROR,
                                     stmtCreateIndex.getSourceLocation(),
-                                    "CAST modifier is used without specifying " + "the type of the indexed field");
+                                    "CAST modifier is used without specifying the type of the indexed field");
                         }
                         fieldTypePrime = projectTypePrime;
                         fieldTypeNullable = projectTypeNullable;
@@ -1250,7 +1252,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 // allow overriding the type of the closed-field only if CAST modifier is used
                                 if (!stmtCreateIndex.hasCastDefaultNull()) {
                                     throw new CompilationException(ErrorCode.COMPILATION_ERROR,
-                                            indexedElement.getSourceLocation(), "Typed index on '" + projectPath
+                                            indexedElement.getSourceLocation(),
+                                            "Typed index on '"
+                                                    + LogRedactionUtil
+                                                            .userData(RecordUtil.toFullyQualifiedName(projectPath))
                                                     + "' field could be created only for open datatype");
                                 }
                             }
@@ -1631,11 +1636,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
                     if (existingIndexKeyFieldNames.equals(indexKeyFieldNames)
                             && !existingIndexKeyFieldTypes.equals(indexKeyFieldTypes)) {
+                        String fieldNames = indexKeyFieldNames.stream().map(RecordUtil::toFullyQualifiedName)
+                                .collect(Collectors.joining(","));
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                                 "Cannot create index " + index.getIndexName() + " , enforced index "
-                                        + existingIndex.getIndexName() + " on field '"
-                                        + StringUtils.join(indexKeyFieldNames, ',') + "' is already defined with type '"
-                                        + existingIndexKeyFieldTypes + "'");
+                                        + existingIndex.getIndexName() + " on field(s) '"
+                                        + LogRedactionUtil.userData(fieldNames) + "' is already defined with type(s) '"
+                                        + StringUtils.join(existingIndexKeyFieldTypes, ',') + "'");
                     }
                 }
             }

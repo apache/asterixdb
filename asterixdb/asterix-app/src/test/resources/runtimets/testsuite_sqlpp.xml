@@ -4335,7 +4335,7 @@
         <expected-error>CAST modifier is only allowed for B-Tree indexes</expected-error>
         <expected-error>CAST modifier cannot be specified together with ENFORCED</expected-error>
         <expected-error>CAST modifier is used without specifying the type of the indexed field</expected-error>
-        <expected-error>Typed index on '[typed_f2]' field could be created only for open datatype</expected-error>
+        <expected-error>Typed index on 'typed_f2' field could be created only for open datatype</expected-error>
         <expected-error>Parameter invalid_date cannot be set</expected-error>
       </compilation-unit>
     </test-case>
@@ -7326,13 +7326,13 @@
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="index-type-collision">
           <output-dir compare="Text">index-type-collision</output-dir>
-          <expected-error>Cannot create index testIdx2 , enforced index testIdx1 on field '[value]' is already defined with type '[integer]'</expected-error>
+          <expected-error>Cannot create index testIdx2 , enforced index testIdx1 on field(s) 'value' is already defined with type(s) 'integer'</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="index-type-promotion-collision">
           <output-dir compare="Text">index-type-promotion-collision</output-dir>
-          <expected-error>Cannot create index testIdx2 , enforced index testIdx1 on field '[value]' is already defined with type '[bigint]'</expected-error>
+          <expected-error>Cannot create index testIdx2 , enforced index testIdx1 on field(s) 'value' is already defined with type(s) 'bigint'</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
