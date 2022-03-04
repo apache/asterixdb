@@ -38,6 +38,11 @@ public interface IFunctionInfo extends Serializable {
         return true;
     }
 
+    default boolean isExternal() {
+        // A function is not external by default.
+        return false;
+    }
+
     /**
      * @param args,
      *            the arguments.

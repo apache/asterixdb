@@ -101,4 +101,9 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
     public boolean getNullCall() {
         return nullCall;
     }
+
+    @Override
+    public boolean isExternal() {
+        return true;
+    }
 }

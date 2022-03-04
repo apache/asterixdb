@@ -174,7 +174,7 @@ public class ExternalFunctionCompilerUtil {
         if (fnKind != FunctionKind.SCALAR) {
             return false;
         }
-        if (!(fnInfo instanceof IExternalFunctionInfo)) {
+        if (!fnInfo.isExternal()) {
             return false;
         }
         ExternalFunctionLanguage language = ((IExternalFunctionInfo) fnInfo).getLanguage();

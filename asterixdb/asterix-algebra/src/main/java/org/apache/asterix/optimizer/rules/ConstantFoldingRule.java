@@ -48,7 +48,6 @@ import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -389,7 +388,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
         private boolean canConstantFold(ScalarFunctionCallExpression function) throws AlgebricksException {
             // skip external functions because they're not available at compile time (on CC)
             IFunctionInfo fi = function.getFunctionInfo();
-            if (fi instanceof IExternalFunctionInfo) {
+            if (fi.isExternal()) {
                 return false;
             }
             // skip all functions that would produce records/arrays/multisets (derived types) in their open format
