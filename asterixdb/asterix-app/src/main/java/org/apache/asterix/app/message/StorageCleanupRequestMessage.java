@@ -21,6 +21,7 @@ package org.apache.asterix.app.message;
 import static org.apache.hyracks.util.ExitUtil.EC_NC_FAILED_TO_NOTIFY_TASKS_COMPLETED;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -57,10 +58,12 @@ public class StorageCleanupRequestMessage extends CcIdentifiedMessage implements
         PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appContext.getLocalResourceRepository();
         Map<Long, LocalResource> localResources = localResourceRepository.loadAndGetAllResources();
+        Set<Integer> nodePartitions = appContext.getReplicaManager().getPartitions();
         for (LocalResource resource : localResources.values()) {
             DatasetLocalResource lr = (DatasetLocalResource) resource.getResource();
-            if (MetadataIndexImmutableProperties.isMetadataDataset(lr.getDatasetId())) {
-                // skip metadata indexes
+            if (!nodePartitions.contains(lr.getPartition())
+                    || MetadataIndexImmutableProperties.isMetadataDataset(lr.getDatasetId())) {
+                // skip replica partitions and metadata indexes
                 continue;
             }
             if (!validDatasetIds.contains(lr.getDatasetId())) {

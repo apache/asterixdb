@@ -21,10 +21,13 @@ package org.apache.asterix.external.input.stream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IStreamNotificationHandler;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.ExceptionUtils;
 
 /**
  * Base class for a source stream that is composed of multiple separate input streams. Reading proceeds one stream at
@@ -54,25 +57,30 @@ public abstract class AbstractMultipleInputStream extends AsterixInputStream {
 
     @Override
     public final int read(byte[] b, int off, int len) throws IOException {
-        if (in == null) {
-            if (!advance()) {
-                return -1;
+        try {
+            if (in == null) {
+                if (!advance()) {
+                    return -1;
+                }
             }
+            int result = in.read(b, off, len);
+            if (result < 0 && (lastByte != ExternalDataConstants.BYTE_LF)
+                    && (lastByte != ExternalDataConstants.BYTE_CR)) {
+                // return a new line at the end of every file <--Might create problems for some cases
+                // depending on the parser implementation-->
+                lastByte = ExternalDataConstants.BYTE_LF;
+                b[off] = ExternalDataConstants.BYTE_LF;
+                return 1;
+            }
+            while ((result < 0) && advance()) {
+                result = in.read(b, off, len);
+            }
+            if (result > 0) {
+                lastByte = b[(off + result) - 1];
+            }
+            return result;
+        } catch (Exception e) {
+            throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ExceptionUtils.getMessageOrToString(e));
         }
-        int result = in.read(b, off, len);
-        if (result < 0 && (lastByte != ExternalDataConstants.BYTE_LF) && (lastByte != ExternalDataConstants.BYTE_CR)) {
-            // return a new line at the end of every file <--Might create problems for some cases
-            // depending on the parser implementation-->
-            lastByte = ExternalDataConstants.BYTE_LF;
-            b[off] = ExternalDataConstants.BYTE_LF;
-            return 1;
-        }
-        while ((result < 0) && advance()) {
-            result = in.read(b, off, len);
-        }
-        if (result > 0) {
-            lastByte = b[(off + result) - 1];
-        }
-        return result;
     }
 }

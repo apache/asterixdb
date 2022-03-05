@@ -54,6 +54,7 @@ import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public final class ViewUtil {
 
@@ -133,7 +134,8 @@ public final class ViewUtil {
                 AUnionType unionType = (AUnionType) fieldType;
                 if (!unionType.isNullableType()) {
                     throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                            String.format("Invalid type for field %s. Optional type must allow NULL", fieldNames[i]));
+                            String.format("Invalid type for field %s. Optional type must allow NULL",
+                                    LogRedactionUtil.userData(fieldNames[i])));
                 }
                 primeType = unionType.getActualType();
             } else {

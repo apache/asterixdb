@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -45,10 +46,10 @@ public class AzureDataLakeInputStream extends AbstractExternalInputStream {
     private final DataLakeServiceClient client;
     private final String container;
 
-    public AzureDataLakeInputStream(Map<String, String> configuration, List<String> filePaths)
-            throws HyracksDataException {
+    public AzureDataLakeInputStream(IApplicationContext appCtx, Map<String, String> configuration,
+            List<String> filePaths) throws HyracksDataException {
         super(configuration, filePaths);
-        this.client = buildAzureClient(configuration);
+        this.client = buildAzureClient(appCtx, configuration);
         this.container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
     }
 
@@ -82,9 +83,10 @@ public class AzureDataLakeInputStream extends AbstractExternalInputStream {
         return true;
     }
 
-    private DataLakeServiceClient buildAzureClient(Map<String, String> configuration) throws HyracksDataException {
+    private DataLakeServiceClient buildAzureClient(IApplicationContext appCtx, Map<String, String> configuration)
+            throws HyracksDataException {
         try {
-            return ExternalDataUtils.Azure.buildAzureDatalakeClient(configuration);
+            return ExternalDataUtils.Azure.buildAzureDatalakeClient(appCtx, configuration);
         } catch (CompilationException ex) {
             throw HyracksDataException.create(ex);
         }

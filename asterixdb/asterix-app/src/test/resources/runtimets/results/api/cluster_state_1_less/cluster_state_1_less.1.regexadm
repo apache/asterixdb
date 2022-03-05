@@ -8,6 +8,7 @@
     "active\.memory\.global\.budget" : 67108864,
     "active\.stop\.timeout" : 3600,
     "active\.suspend\.timeout" : 3600,
+    "azure.request.timeout" : 120,
     "compiler\.arrayindex" : true,
     "compiler.batch.lookup" : false,
     "compiler\.external\.field\.pushdown" : true,
