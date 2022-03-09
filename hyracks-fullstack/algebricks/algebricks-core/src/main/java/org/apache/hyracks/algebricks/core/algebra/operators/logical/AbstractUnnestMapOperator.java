@@ -25,10 +25,10 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
+import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 
 public abstract class AbstractUnnestMapOperator extends AbstractUnnestOperator {
 
-    protected final Mutable<ILogicalExpression> expression;
     protected final List<Object> variableTypes;
     protected boolean propagateInput;
     protected List<Mutable<ILogicalExpression>> additionalFilteringExpressions;
@@ -42,7 +42,6 @@ public abstract class AbstractUnnestMapOperator extends AbstractUnnestOperator {
     public AbstractUnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
             List<Object> variableTypes, boolean propagateInput) {
         super(variables, expression);
-        this.expression = expression;
         this.variableTypes = variableTypes;
         this.propagateInput = propagateInput;
         this.propagateIndexFilter = false;
@@ -88,6 +87,18 @@ public abstract class AbstractUnnestMapOperator extends AbstractUnnestOperator {
                 }
             }
         };
+    }
+
+    @Override
+    public boolean acceptExpressionTransform(ILogicalExpressionReferenceTransform visitor) throws AlgebricksException {
+        boolean changed = super.acceptExpressionTransform(visitor);
+
+        if (additionalFilteringExpressions != null) {
+            for (Mutable<ILogicalExpression> filterExpr : additionalFilteringExpressions) {
+                changed |= visitor.transform(filterExpr);
+            }
+        }
+        return changed;
     }
 
     public boolean propagatesInput() {
