@@ -39,6 +39,7 @@ import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.replication.api.IReplicaTask;
 import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.replication.management.NetworkingUtil;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -76,6 +77,8 @@ public class ReplicateFileTask implements IReplicaTask {
             if (indexMetadata) {
                 // ensure clean index directory
                 FileUtils.cleanDirectory(resourceDir.toFile());
+                ((PersistentLocalResourceRepository) appCtx.getLocalResourceRepository())
+                        .invalidateResource(ResourceReference.of(file).getRelativePath().toString());
             }
             // create mask
             final Path maskPath = Paths.get(resourceDir.toString(),

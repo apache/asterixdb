@@ -1098,4 +1098,11 @@
       <artifactId>hyracks-api</artifactId>
     </dependency>
   </dependencies>
+  <!-- apply patch for HADOOP-17225 to workaround CVE-2019-10172 -->
+  <repositories>
+    <repository>
+      <id>atlassian-3rdparty</id>
+      <url>https://packages.atlassian.com/maven-3rdparty/</url>
+    </repository>
+  </repositories>
 </project>
