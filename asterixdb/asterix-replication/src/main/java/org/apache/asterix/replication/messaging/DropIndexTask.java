@@ -26,8 +26,10 @@ import java.io.OutputStream;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
+import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.replication.api.IReplicaTask;
 import org.apache.asterix.replication.api.IReplicationWorker;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.util.IoUtil;
@@ -54,6 +56,8 @@ public class DropIndexTask implements IReplicaTask {
             if (indexFile.exists()) {
                 File indexDir = indexFile.getParentFile();
                 IoUtil.delete(indexDir);
+                ((PersistentLocalResourceRepository) appCtx.getLocalResourceRepository())
+                        .invalidateResource(ResourceReference.of(file).getRelativePath().toString());
                 LOGGER.info(() -> "Deleted index: " + indexFile.getAbsolutePath());
             } else {
                 LOGGER.warn(() -> "Requested to delete a non-existing index: " + indexFile.getAbsolutePath());

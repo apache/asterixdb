@@ -221,7 +221,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                         relativePath);
             }
         } finally {
-            resourceCache.invalidate(relativePath);
+            invalidateResource(relativePath);
         }
     }
 
@@ -294,6 +294,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         final Map<Long, LocalResource> allResources = loadAndGetAllResources();
         final Optional<Long> max = allResources.keySet().stream().max(Long::compare);
         return max.isPresent() ? max.get() : 0;
+    }
+
+    public void invalidateResource(String relativePath) {
+        resourceCache.invalidate(relativePath);
     }
 
     private static String getFileName(String path) {
