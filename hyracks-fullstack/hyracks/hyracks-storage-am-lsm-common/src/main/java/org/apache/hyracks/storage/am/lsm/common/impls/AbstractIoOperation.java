@@ -44,7 +44,7 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     private volatile Throwable failure;
     private LSMIOOperationStatus status = LSMIOOperationStatus.SUCCESS;
     private ILSMDiskComponent newComponent;
-    private boolean completed = false;
+    private volatile boolean completed = false;
     private List<IoOperationCompleteListener> completeListeners;
 
     private final AtomicBoolean isActive = new AtomicBoolean(true);
@@ -203,7 +203,7 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
     }
 
     @Override
-    public synchronized boolean isCompleted() {
+    public boolean isCompleted() {
         return completed;
     }
 
