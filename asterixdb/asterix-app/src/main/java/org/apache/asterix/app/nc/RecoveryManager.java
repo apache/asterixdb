@@ -535,7 +535,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
             }
             replayPartitionsLogs(partitions, logMgr.getLogReader(true), minLSN, false);
             if (flush) {
-                appCtx.getDatasetLifecycleManager().flushAllDatasets();
+                appCtx.getDatasetLifecycleManager().flushAllDatasets(partitions::contains);
             }
             cleanUp(partitions);
         } catch (IOException | ACIDException e) {

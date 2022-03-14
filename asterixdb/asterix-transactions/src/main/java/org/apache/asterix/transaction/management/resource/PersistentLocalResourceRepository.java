@@ -300,6 +300,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         resourceCache.invalidate(relativePath);
     }
 
+    public void clearResourcesCache() {
+        resourceCache.invalidateAll();
+    }
+
     private static String getFileName(String path) {
         return path.endsWith(File.separator) ? (path + StorageConstants.METADATA_FILE_NAME)
                 : (path + File.separator + StorageConstants.METADATA_FILE_NAME);

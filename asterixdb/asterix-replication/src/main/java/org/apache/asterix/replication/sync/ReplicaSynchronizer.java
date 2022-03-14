@@ -65,7 +65,8 @@ public class ReplicaSynchronizer {
         final ReplicaFilesSynchronizer fileSync = new ReplicaFilesSynchronizer(appCtx, replica, deltaRecovery);
         // flush replicated dataset to generate disk component for any remaining in-memory components
         final IReplicationStrategy replStrategy = appCtx.getReplicationManager().getReplicationStrategy();
-        appCtx.getDatasetLifecycleManager().flushDataset(replStrategy);
+        appCtx.getDatasetLifecycleManager().flushDataset(replStrategy,
+                p -> p == replica.getIdentifier().getPartition());
         waitForReplicatedDatasetsIO();
         fileSync.sync();
     }

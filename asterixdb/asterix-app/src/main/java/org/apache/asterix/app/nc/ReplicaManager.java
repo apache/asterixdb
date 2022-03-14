@@ -130,6 +130,7 @@ public class ReplicaManager implements IReplicaManager {
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         localResourceRepository.cleanup(partition);
+        localResourceRepository.clearResourcesCache();
         final IRecoveryManager recoveryManager = appCtx.getTransactionSubsystem().getRecoveryManager();
         recoveryManager.replayReplicaPartitionLogs(Stream.of(partition).collect(Collectors.toSet()), true);
         partitions.put(partition, new Object());
@@ -169,8 +170,7 @@ public class ReplicaManager implements IReplicaManager {
 
     public void closePartitionResources(int partition) throws HyracksDataException {
         final IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
-        //TODO(mhubail) we can flush only datasets of the requested partition
-        datasetLifecycleManager.flushAllDatasets();
+        datasetLifecycleManager.flushAllDatasets(p -> p == partition);
         final PersistentLocalResourceRepository resourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         final Map<Long, LocalResource> partitionResources = resourceRepository.getPartitionResources(partition);
