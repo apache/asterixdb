@@ -207,6 +207,9 @@
               <usedDependency>com.sun.xml.bind:jaxb-impl</usedDependency>
               <usedDependency>com.sun.activation:javax.activation</usedDependency>
               <usedDependency>net.razorvine:serpent</usedDependency>
+              <usedDependency>io.netty:netty-resolver-dns</usedDependency>
+              <usedDependency>io.netty:netty-codec-http2</usedDependency>
+              <usedDependency>io.netty:netty-transport-native-unix-common</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -434,7 +437,11 @@
     </dependency>
     <dependency>
       <groupId>io.netty</groupId>
-      <artifactId>netty-all</artifactId>
+      <artifactId>netty-buffer</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http</artifactId>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -483,6 +490,18 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-1.2-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-resolver-dns</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-codec-http2</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-native-unix-common</artifactId>
     </dependency>
   </dependencies>
 </project>
