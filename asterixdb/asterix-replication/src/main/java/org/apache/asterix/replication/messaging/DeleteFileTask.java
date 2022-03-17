@@ -27,8 +27,10 @@ import java.nio.file.Files;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
+import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.replication.api.IReplicaTask;
 import org.apache.asterix.replication.api.IReplicationWorker;
+import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.logging.log4j.LogManager;
@@ -53,6 +55,11 @@ public class DeleteFileTask implements IReplicaTask {
             final File localFile = ioManager.resolve(file).getFile();
             if (localFile.exists()) {
                 Files.delete(localFile.toPath());
+                ResourceReference replicaRes = ResourceReference.of(localFile.getAbsolutePath());
+                if (replicaRes.isMetadataResource()) {
+                    ((PersistentLocalResourceRepository) appCtx.getLocalResourceRepository())
+                            .invalidateResource(replicaRes.getRelativePath().toString());
+                }
                 LOGGER.info(() -> "Deleted file: " + localFile.getAbsolutePath());
             } else {
                 LOGGER.warn(() -> "Requested to delete a non-existing file: " + localFile.getAbsolutePath());

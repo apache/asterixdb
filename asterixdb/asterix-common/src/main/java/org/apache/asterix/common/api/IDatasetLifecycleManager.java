@@ -20,6 +20,7 @@ package org.apache.asterix.common.api;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 
 import org.apache.asterix.common.context.DatasetInfo;
@@ -59,6 +60,14 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
      * @throws HyracksDataException
      */
     void flushAllDatasets() throws HyracksDataException;
+
+    /**
+     * Flushes all open datasets synchronously for partitions {@code partitions}
+     *
+     * @param partitions
+     * @throws HyracksDataException
+     */
+    void flushAllDatasets(IntPredicate partitions) throws HyracksDataException;
 
     /**
      * Schedules asynchronous flush on indexes matching the predicate {@code indexPredicate}
@@ -143,19 +152,13 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
     List<IndexInfo> getOpenIndexesInfo();
 
     /**
-     * Flushes and closes all user datasets (non-metadata datasets)
-     *
-     * @throws HyracksDataException
-     */
-    void closeUserDatasets() throws HyracksDataException;
-
-    /**
      * Flushes all opened datasets that are matching {@code replicationStrategy}.
      *
      * @param replicationStrategy
+     * @param partitions
      * @throws HyracksDataException
      */
-    void flushDataset(IReplicationStrategy replicationStrategy) throws HyracksDataException;
+    void flushDataset(IReplicationStrategy replicationStrategy, IntPredicate partitions) throws HyracksDataException;
 
     /**
      * Waits for all ongoing IO operations on all open datasets that are matching {@code replicationStrategy}.
