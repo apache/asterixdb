@@ -48,7 +48,7 @@ public class ReplicationProperties extends AbstractProperties {
                 "The size in bytes to replicate in each batch"),
         REPLICATION_TIMEOUT(
                 LONG,
-                TimeUnit.SECONDS.toSeconds(30),
+                TimeUnit.SECONDS.toSeconds(120),
                 "The time in seconds to timeout waiting for master or replica to ack"),
         REPLICATION_ENABLED(BOOLEAN, false, "Whether or not data replication is enabled"),
         REPLICATION_FACTOR(NONNEGATIVE_INTEGER, 2, "Number of replicas (backups) to maintain per master replica"),

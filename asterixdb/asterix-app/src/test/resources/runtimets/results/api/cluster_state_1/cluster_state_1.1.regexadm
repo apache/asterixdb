@@ -43,7 +43,7 @@
     "replication\.log\.buffer\.numpages" : 8,
     "replication\.log\.buffer\.pagesize" : 131072,
     "replication\.strategy" : "none",
-    "replication\.timeout" : 30,
+    "replication\.timeout" : 120,
     "ssl\.enabled" : false,
     "storage.compression.block" : "snappy",
     "storage.global.cleanup.timeout" : 600,
