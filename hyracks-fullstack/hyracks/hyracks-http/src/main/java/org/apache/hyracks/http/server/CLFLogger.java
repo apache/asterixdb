@@ -43,7 +43,7 @@ import io.netty.handler.codec.http.LastHttpContent;
 //Based in part on LoggingHandler from Netty
 public class CLFLogger extends ChannelDuplexHandler {
 
-    private static final Logger accessLogger = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final Level ACCESS_LOG_LEVEL = Level.forName("ACCESS", 550);
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z").withZone(ZoneId.systemDefault());
@@ -66,9 +66,14 @@ public class CLFLogger extends ChannelDuplexHandler {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof HttpRequest) {
             HttpRequest req = (HttpRequest) msg;
-            clientIp = ((NioSocketChannel) ctx.channel()).remoteAddress().getAddress().toString().substring(1);
+            try {
+                clientIp = ((NioSocketChannel) ctx.channel()).remoteAddress().getAddress().toString().substring(1);
+            } catch (Exception e) {
+                LOGGER.debug("ignoring {} obtaining client ip for {}", e, ctx.channel());
+                clientIp = "-";
+            }
             requestTime = Instant.now();
-            reqLine = req.method().toString() + " " + req.getUri() + " " + req.getProtocolVersion().toString();
+            reqLine = req.method().toString() + " " + req.uri() + " " + req.protocolVersion();
             userAgentRef = headerValueOrDash("Referer", req) + " " + headerValueOrDash("User-Agent", req);
             lastChunk = false;
         }
@@ -116,7 +121,7 @@ public class CLFLogger extends ChannelDuplexHandler {
     }
 
     private void printAndPrepare() {
-        if (!accessLogger.isEnabled(ACCESS_LOG_LEVEL)) {
+        if (!LOGGER.isEnabled(ACCESS_LOG_LEVEL)) {
             return;
         }
         logLineBuilder.append(clientIp);
@@ -131,7 +136,7 @@ public class CLFLogger extends ChannelDuplexHandler {
         logLineBuilder.append(" ").append(statusCode);
         logLineBuilder.append(" ").append(respSize);
         logLineBuilder.append(" ").append(userAgentRef);
-        accessLogger.log(ACCESS_LOG_LEVEL, logLineBuilder);
+        LOGGER.log(ACCESS_LOG_LEVEL, logLineBuilder);
         respSize = 0;
         logLineBuilder.setLength(0);
     }
