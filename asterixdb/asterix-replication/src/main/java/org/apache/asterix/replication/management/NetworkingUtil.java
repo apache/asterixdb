@@ -114,6 +114,7 @@ public class NetworkingUtil {
         while (requestBuffer.hasRemaining()) {
             socketChannel.write(requestBuffer);
         }
+        socketChannel.getSocketChannel().socket().getOutputStream().flush();
     }
 
     //unused

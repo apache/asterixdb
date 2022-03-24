@@ -23,9 +23,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.asterix.common.transactions.ILogRecord;
 import org.apache.asterix.replication.management.LogReplicationManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ReplicationLogBuffer {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private final int logBufferSize;
     private final AtomicBoolean full;
     private int appendOffset;
@@ -117,6 +120,7 @@ public class ReplicationLogBuffer {
     private void transferBuffer(ByteBuffer buffer) {
         if (buffer.remaining() <= batchSize) {
             //the current batch can be sent as it is
+            LOGGER.debug("sending txn logs batch size {}", buffer.remaining());
             replicationManager.transferBatch(buffer);
             return;
         }
@@ -142,6 +146,7 @@ public class ReplicationLogBuffer {
                 //return to the beginning of the batch position
                 buffer.reset();
             }
+            LOGGER.debug("sending logs slice size {}", buffer.remaining());
             replicationManager.transferBatch(buffer);
             //return the original limit to check the new remaining size
             buffer.limit(totalTransferLimit);

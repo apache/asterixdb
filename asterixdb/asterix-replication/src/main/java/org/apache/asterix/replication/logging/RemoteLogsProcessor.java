@@ -47,7 +47,8 @@ public class RemoteLogsProcessor implements ILogRequester {
     public void process(ByteBuffer logsBatch, RemoteLogRecord reusableLog, IReplicationWorker worker) {
         while (logsBatch.hasRemaining()) {
             // get rid of log size
-            logsBatch.getInt();
+            int batchSize = logsBatch.getInt();
+            LOGGER.debug("received logs batch size {} from {}", batchSize, worker.getRemoteAddress());
             reusableLog.readRemoteLog(logsBatch);
             reusableLog.setLogSource(LogSource.REMOTE);
             switch (reusableLog.getLogType()) {
@@ -74,6 +75,8 @@ public class RemoteLogsProcessor implements ILogRequester {
                     flushLog.setRequester(this);
                     flushLog.setLogSource(LogSource.REMOTE);
                     flushLog.setMasterLsn(reusableLog.getLSN());
+                    LOGGER.debug("received master LSN {} for partition {}", reusableLog.getLSN(),
+                            reusableLog.getResourcePartition());
                     logManager.log(flushLog);
                     break;
                 default:

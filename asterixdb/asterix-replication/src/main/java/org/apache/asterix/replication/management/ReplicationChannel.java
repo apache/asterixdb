@@ -151,6 +151,15 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
             return outBuffer;
         }
 
+        @Override
+        public String getRemoteAddress() {
+            try {
+                return socketChannel.getSocketChannel().getRemoteAddress().toString();
+            } catch (Exception e) {
+                return "unknown";
+            }
+        }
+
         private void handle(ReplicationRequestType requestType) throws HyracksDataException {
             final IReplicaTask task =
                     (IReplicaTask) ReplicationProtocol.readMessage(requestType, socketChannel, inBuffer);
