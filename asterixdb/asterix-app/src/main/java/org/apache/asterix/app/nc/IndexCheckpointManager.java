@@ -102,7 +102,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     public synchronized void masterFlush(long masterLsn, long localLsn) throws HyracksDataException {
         final IndexCheckpoint latest = getLatest();
         latest.getMasterNodeFlushMap().put(masterLsn, localLsn);
-        LOGGER.debug("index {} master flush {} -> {}", indexPath, masterLsn, localLsn);
+        LOGGER.trace("index {} master flush {} -> {}", indexPath, masterLsn, localLsn);
         final IndexCheckpoint next = IndexCheckpoint.next(latest, latest.getLowWatermark(),
                 latest.getValidComponentSequence(), latest.getLastComponentId(), null);
         persist(next);

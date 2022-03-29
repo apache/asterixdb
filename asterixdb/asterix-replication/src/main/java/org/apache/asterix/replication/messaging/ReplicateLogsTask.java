@@ -64,7 +64,7 @@ public class ReplicateLogsTask implements IReplicaTask {
                 logsBuffer = ReplicationProtocol.readRequest(channel, logsBuffer);
                 // check if it is end of handshake
                 if (logsBuffer.remaining() == END_REPLICATION_LOG_SIZE) {
-                    LOGGER.info("ending log replication with {}", worker.getRemoteAddress());
+                    LOGGER.debug("ending log replication with {}", worker.getRemoteAddress());
                     break;
                 }
                 logsProcessor.process(logsBuffer, reusableLog, worker);

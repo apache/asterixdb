@@ -131,9 +131,6 @@ public class LogReplicationManager {
                 ackTracker.track(logRecord, new HashSet<>(destinations.keySet()));
             }
         }
-        if (logRecord.getLogType() == LogType.FLUSH) {
-            LOGGER.debug("appending flush lsn {} to replication queue", logRecord.getLSN());
-        }
         appendToLogBuffer(logRecord);
     }
 
