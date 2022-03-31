@@ -37,6 +37,7 @@ import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.replication.sync.IndexSynchronizer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
+import org.apache.hyracks.util.ThreadDumpUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -95,6 +96,7 @@ public class MarkComponentValidTask implements IReplicaTask {
                 if (replicationTimeOut <= 0) {
                     LOGGER.warn("{} seconds passed without receiving flush lsn {} from master for component {}",
                             appCtx.getReplicationProperties().getReplicationTimeOut(), masterLsn, file);
+                    LOGGER.debug("thead dump on receiving flush lsn timeout {}", ThreadDumpUtil::takeDumpString);
                     throw new ReplicationException(new TimeoutException("couldn't receive flush lsn from master"));
                 }
                 final long startTime = System.nanoTime();

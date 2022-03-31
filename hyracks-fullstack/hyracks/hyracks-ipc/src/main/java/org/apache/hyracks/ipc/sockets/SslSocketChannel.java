@@ -127,7 +127,7 @@ public class SslSocketChannel implements ISocketChannel {
                     break;
                 case CLOSED:
                     close();
-                    return -1;
+                    return decryptedBytes;
                 default:
                     throw new IllegalStateException("Invalid SSL result status: " + result.getStatus());
             }
