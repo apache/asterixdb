@@ -52,7 +52,7 @@ public class NetworkingUtil {
         while (byteBuffer.remaining() > 0 && socketChannel.read(byteBuffer) > 0);
 
         if (byteBuffer.remaining() > 0) {
-            throw new EOFException();
+            throw new EOFException("could not read all data from source; remaining bytes: " + byteBuffer.remaining());
         }
 
         byteBuffer.flip();

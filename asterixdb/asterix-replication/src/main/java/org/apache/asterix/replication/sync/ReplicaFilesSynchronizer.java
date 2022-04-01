@@ -70,7 +70,9 @@ public class ReplicaFilesSynchronizer {
         if (!deltaRecovery) {
             deletePartitionFromReplica(partition);
         }
+        LOGGER.debug("getting replica files");
         PartitionResourcesListResponse replicaResourceResponse = getReplicaFiles(partition);
+        LOGGER.debug("got replica files");
         Map<ResourceReference, Long> resourceReferenceLongMap = getValidReplicaResources(
                 replicaResourceResponse.getPartitionReplicatedResources(), replicaResourceResponse.isOrigin());
         // clean up files for invalid resources (deleted or recreated while the replica was down)
@@ -79,9 +81,11 @@ public class ReplicaFilesSynchronizer {
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         final IReplicationStrategy replicationStrategy = appCtx.getReplicationManager().getReplicationStrategy();
+        LOGGER.debug("clean up replica invalid files");
         final Set<String> masterFiles =
                 localResourceRepository.getPartitionReplicatedFiles(partition, replicationStrategy).stream()
                         .map(StoragePathUtil::getFileRelativePath).collect(Collectors.toSet());
+        LOGGER.debug("got master partition files");
         // exclude from the replica files the list of invalid deleted files
         final Set<String> replicaFiles = new HashSet<>(replicaResourceResponse.getFiles());
         replicaFiles.removeAll(deletedReplicaFiles);
@@ -127,6 +131,7 @@ public class ReplicaFilesSynchronizer {
     }
 
     private void deleteInvalidFiles(List<String> files) {
+        LOGGER.debug("deleting replica invalid files");
         final FileSynchronizer sync = new FileSynchronizer(appCtx, replica);
         // sort files to ensure index metadata files starting with "." are deleted last
         files.sort(String::compareTo);

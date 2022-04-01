@@ -57,7 +57,8 @@ public class NetworkUtil {
             try {
                 closeable.close();
             } catch (IOException e) {
-                LOGGER.warn("Failed to close", e);
+                // ignore since we are closing quietly
+                LOGGER.trace("failed to close", e);
             }
         }
     }
