@@ -50,7 +50,7 @@ public class ReplicaSynchronizer {
         LOGGER.debug("starting replica sync process for replica {}", replica);
         Object partitionLock = appCtx.getReplicaManager().getPartitionSyncLock(replica.getIdentifier().getPartition());
         synchronized (partitionLock) {
-            LOGGER.debug("acquired partition replica lock");
+            LOGGER.trace("acquired partition replica lock");
             final ICheckpointManager checkpointManager = appCtx.getTransactionSubsystem().getCheckpointManager();
             try {
                 // suspend checkpointing datasets to prevent async IO operations while sync'ing replicas

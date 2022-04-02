@@ -102,7 +102,7 @@ public class SslSocketChannel implements ISocketChannel {
                     inAppData.limit(0);
                 }
             } else if (bytesRead < 0) {
-                LOGGER.debug("received EOF; transferredBytes Bytes: {}", transferredBytes);
+                LOGGER.trace("received EOF; transferred bytes: {}", transferredBytes);
                 handleEndOfStreamQuietly();
                 return -1;
             }
@@ -195,7 +195,7 @@ public class SslSocketChannel implements ISocketChannel {
                 new SslHandshake(this).handshake();
             } catch (Exception e) {
                 // ignore exceptions on best effort graceful close handshake
-                LOGGER.debug("ssl socket close handshake failed", e);
+                LOGGER.trace("ssl socket close handshake failed", e);
             } finally {
                 socketChannel.close();
             }
@@ -243,7 +243,8 @@ public class SslSocketChannel implements ISocketChannel {
                 close();
             }
         } catch (Exception e) {
-            LOGGER.warn("failed to close socket gracefully", e);
+            // ignore close exception since we are closing quietly
+            LOGGER.trace("failed to close socket gracefully", e);
         }
     }
 

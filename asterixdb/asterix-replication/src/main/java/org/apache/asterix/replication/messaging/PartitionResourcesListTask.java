@@ -67,7 +67,6 @@ public class PartitionResourcesListTask implements IReplicaTask {
         LOGGER.debug("got partition {} files ({})", partition, partitionFiles.size());
         final PartitionResourcesListResponse response = new PartitionResourcesListResponse(partition,
                 partitionReplicatedResources, partitionFiles, appCtx.getReplicaManager().isPartitionOrigin(partition));
-        LOGGER.debug("partition {} files list to requester", partition);
         ReplicationProtocol.sendTo(worker.getChannel(), response, worker.getReusableBuffer());
         LOGGER.debug("sent partition {} files list to requester", partition);
     }

@@ -60,7 +60,7 @@ public class DeleteFileTask implements IReplicaTask {
                     ((PersistentLocalResourceRepository) appCtx.getLocalResourceRepository())
                             .invalidateResource(replicaRes.getRelativePath().toString());
                 }
-                LOGGER.info(() -> "Deleted file: " + localFile.getAbsolutePath());
+                LOGGER.debug(() -> "Deleted file: " + localFile.getAbsolutePath());
             } else {
                 LOGGER.warn(() -> "Requested to delete a non-existing file: " + localFile.getAbsolutePath());
             }
@@ -83,6 +83,11 @@ public class DeleteFileTask implements IReplicaTask {
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "DeleteFileTask{" + "file='" + file + '\'' + '}';
     }
 
     public static DeleteFileTask create(DataInput input) throws IOException {

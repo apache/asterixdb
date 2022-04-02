@@ -129,21 +129,21 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
                     + getRemoteAddress() + ")");
             try {
                 if (socketChannel.requiresHandshake() && !socketChannel.handshake()) {
-                    LOGGER.warn("failed to complete handshake");
+                    LOGGER.warn("failed to complete handshake with {}", this::getRemoteAddress);
                     return;
                 }
                 socketChannel.getSocketChannel().configureBlocking(true);
-                LOGGER.debug("reading replication worker initial request");
+                LOGGER.trace("reading replication worker initial request");
                 ReplicationRequestType requestType = ReplicationProtocol.getRequestType(socketChannel, inBuffer);
-                LOGGER.debug("got request type: {}", requestType);
+                LOGGER.trace("got request type: {}", requestType);
                 while (requestType != ReplicationRequestType.GOODBYE) {
                     handle(requestType);
-                    LOGGER.debug("handled request type: {}", requestType);
+                    LOGGER.trace("handled request type: {}", requestType);
                     requestType = ReplicationProtocol.getRequestType(socketChannel, inBuffer);
-                    LOGGER.debug("got request type: {}", requestType);
+                    LOGGER.trace("got request type: {}", requestType);
                 }
             } catch (Exception e) {
-                LOGGER.warn("Unexpected error during replication.", e);
+                LOGGER.warn("unexpected error during replication.", e);
             } finally {
                 NetworkUtil.closeQuietly(socketChannel);
             }
