@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public class KeyFieldTypeUtil {
 
@@ -323,7 +324,7 @@ public class KeyFieldTypeUtil {
                 } else {
                     // closed record type and we couldn't find the field -> error.
                     throw new CompilationException(ErrorCode.COMPILATION_FIELD_NOT_FOUND, sourceLoc,
-                            RecordUtil.toFullyQualifiedName(path));
+                            LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(path)));
                 }
             }
             if (fieldType.getTypeTag() == ATypeTag.UNION) {

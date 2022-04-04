@@ -39,7 +39,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
@@ -59,6 +59,7 @@ import org.apache.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeWithAntiMatterLo
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
 
@@ -82,7 +83,7 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
                 indexDetails.getKeyFieldNames().get(0), recordType).first;
         if (spatialType == null) {
             throw new CompilationException(ErrorCode.COMPILATION_FIELD_NOT_FOUND,
-                    StringUtils.join(indexDetails.getKeyFieldNames().get(0), '.'));
+                    LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(indexDetails.getKeyFieldNames().get(0))));
         }
         List<List<String>> primaryKeyFields = dataset.getPrimaryKeys();
         int numPrimaryKeys = primaryKeyFields.size();

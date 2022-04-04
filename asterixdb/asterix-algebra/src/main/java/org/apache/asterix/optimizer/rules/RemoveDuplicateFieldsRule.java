@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 /**
  * <pre>
@@ -116,7 +117,7 @@ public class RemoveDuplicateFieldsRule implements IAlgebraicRewriteRule {
                     IWarningCollector warningCollector = context.getWarningCollector();
                     if (warningCollector.shouldWarn()) {
                         warningCollector.warn(Warning.of(fieldNameExpr.getSourceLocation(),
-                                ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName));
+                                ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, LogRedactionUtil.userData(fieldName)));
                     }
                     iterator.remove();
                     iterator.next();

@@ -43,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public class OpenRecordConstructorResultType implements IResultTypeComputer {
 
@@ -78,7 +79,8 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
             String fieldName = ConstantExpressionUtil.getStringConstant(e1);
             if (fieldName != null && t2 != null && TypeHelper.isClosed(t2)) {
                 if (namesList.contains(fieldName)) {
-                    throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, f.getSourceLocation(), fieldName);
+                    throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, f.getSourceLocation(),
+                            LogRedactionUtil.userData(fieldName));
                 }
                 namesList.add(fieldName);
                 if (t2.getTypeTag() == ATypeTag.UNION) {

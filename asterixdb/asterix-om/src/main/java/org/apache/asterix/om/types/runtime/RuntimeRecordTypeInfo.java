@@ -32,6 +32,7 @@ import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
@@ -100,7 +101,8 @@ public class RuntimeRecordTypeInfo {
                     int j = getFieldIndex(baaos.getByteArray(), serializedFieldNameOffsets[i],
                             UTF8StringUtil.getStringLength(baaos.getByteArray(), serializedFieldNameOffsets[i]));
                     if (j != i) {
-                        throw new RuntimeDataException(ErrorCode.DUPLICATE_FIELD_NAME, fieldNames[i]);
+                        throw new RuntimeDataException(ErrorCode.DUPLICATE_FIELD_NAME,
+                                LogRedactionUtil.userData(fieldNames[i]));
                     }
                 }
             } catch (IOException e) {

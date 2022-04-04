@@ -242,7 +242,7 @@ public class ValidateUtil {
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                                 "The field '"
                                         + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(displayFieldName))
-                                        + "' which is " + "of type " + fieldType.getTypeTag()
+                                        + "' which is of type " + fieldType.getTypeTag()
                                         + " cannot be indexed using the BTree index.");
                 }
                 break;
