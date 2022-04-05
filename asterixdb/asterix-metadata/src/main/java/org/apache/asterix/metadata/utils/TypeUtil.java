@@ -42,6 +42,7 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 /**
  * Provider utility methods for data types
@@ -136,8 +137,9 @@ public class TypeUtil {
                     if (enforcedFieldType != null && !ATypeHierarchy.canPromote(enforcedFieldType.getTypeTag(),
                             index.getKeyFieldTypes().get(i).getTypeTag())) {
                         throw new AsterixException(ErrorCode.COMPILATION_ERROR,
-                                "Cannot enforce field \"" + String.join(".", index.getKeyFieldNames().get(i))
-                                        + "\" to have type " + index.getKeyFieldTypes().get(i));
+                                "Cannot enforce field '"
+                                        + LogRedactionUtil.userData(String.join(".", index.getKeyFieldNames().get(i)))
+                                        + "' to have type " + index.getKeyFieldTypes().get(i));
                     }
                     if (enforcedFieldType == null) {
                         recordNameTypesMap.put(splits.get(splits.size() - 1),
@@ -220,8 +222,8 @@ public class TypeUtil {
         IAType actualType = TypeComputeUtils.getActualType(nestedRecordType);
         if (actualType.getTypeTag() != ATypeTag.OBJECT) {
             String fName = String.join(".", fieldName);
-            throw new AsterixException(ErrorCode.COMPILATION_ERROR,
-                    "Field accessor is not defined for \"" + fName + "\" of type " + actualType.getTypeTag());
+            throw new AsterixException(ErrorCode.COMPILATION_ERROR, "Field accessor is not defined for '"
+                    + LogRedactionUtil.userData(fName) + "' of type " + actualType.getTypeTag());
         }
     }
 

@@ -40,6 +40,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public final class JRecord extends JComplexObject<Map<String, Object>> {
 
@@ -89,7 +90,8 @@ public final class JRecord extends JComplexObject<Map<String, Object>> {
             // check open part
             IJObject fieldValue = openFields.get(fieldName);
             if (fieldValue == null) {
-                throw new RuntimeDataException(ErrorCode.LIBRARY_JAVA_JOBJECTS_UNKNOWN_FIELD, fieldName);
+                throw new RuntimeDataException(ErrorCode.LIBRARY_JAVA_JOBJECTS_UNKNOWN_FIELD,
+                        LogRedactionUtil.userData(fieldName));
             }
             return fieldValue;
         }

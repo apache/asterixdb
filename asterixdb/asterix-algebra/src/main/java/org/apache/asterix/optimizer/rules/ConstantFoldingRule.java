@@ -98,6 +98,7 @@ import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -334,7 +335,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                         IWarningCollector warningCollector = optContext.getWarningCollector();
                         if (warningCollector.shouldWarn()) {
                             warningCollector.warn(Warning.of(fieldNameExpr.second.getSourceLocation(),
-                                    ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName));
+                                    ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, LogRedactionUtil.userData(fieldName)));
                         }
                         iterator.remove();
                         iterator.next();

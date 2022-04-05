@@ -43,6 +43,7 @@ import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -200,7 +201,7 @@ public class TweetParser extends AbstractDataParser implements IRecordDataParser
                 if (obj.get(curFNames[iter1]).isNull() && !(curTypes[iter1] instanceof AUnionType)) {
                     if (curRecType.isClosedField(curFNames[iter1])) {
                         throw new RuntimeDataException(ErrorCode.PARSER_EXT_DATA_PARSER_CLOSED_FIELD_NULL,
-                                curFNames[iter1]);
+                                LogRedactionUtil.userData(curFNames[iter1]));
                     } else {
                         continue;
                     }

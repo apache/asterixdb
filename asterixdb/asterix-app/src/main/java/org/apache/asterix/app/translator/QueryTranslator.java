@@ -41,6 +41,7 @@ import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.active.ActivityState;
 import org.apache.asterix.active.EntityId;
@@ -186,6 +187,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeSignature;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.asterix.translator.AbstractLangTranslator;
 import org.apache.asterix.translator.ClientRequest;
@@ -236,6 +238,7 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1090,7 +1093,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
                     if (stmtCreateIndex.isEnforced() && !fieldExpr.second.isUnknownable()) {
                         throw new AsterixException(ErrorCode.INDEX_ILLEGAL_ENFORCED_NON_OPTIONAL, sourceLoc,
-                                String.valueOf(fieldExpr.first));
+                                LogRedactionUtil.userData(String.valueOf(fieldExpr.first)));
                     }
                     // don't allow creating an enforced index on a closed-type field, fields that
                     // are part of schema.
@@ -1098,11 +1101,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     if (stmtCreateIndex.isEnforced()
                             && subType.getSubFieldType(fieldExpr.first.subList(i, fieldExpr.first.size())) != null) {
                         throw new AsterixException(ErrorCode.INDEX_ILLEGAL_ENFORCED_ON_CLOSED_FIELD, sourceLoc,
-                                String.valueOf(fieldExpr.first));
+                                LogRedactionUtil.userData(String.valueOf(fieldExpr.first)));
                     }
                     if (!isOpen) {
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Typed index on \""
-                                + fieldExpr.first + "\" field could be created only for open datatype");
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                                "Typed index on '"
+                                        + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(fieldExpr.first))
+                                        + "' " + "field could be created only for open datatype");
                     }
                     if (stmtCreateIndex.hasMetaField()) {
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -1115,8 +1120,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     overridesFieldTypes = true;
                 }
                 if (fieldType == null) {
-                    throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, fieldExpr.second == null
-                            ? String.valueOf(fieldExpr.first) : String.valueOf(fieldExpr.second));
+                    throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc,
+                            fieldExpr.second == null ? LogRedactionUtil.userData(String.valueOf(fieldExpr.first))
+                                    : String.valueOf(fieldExpr.second));
                 }
 
                 // try to add the key & its source to the set of keys, if key couldn't be added,
@@ -1124,7 +1130,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (!indexKeysSet
                         .add(new Pair<>(fieldExpr.first, stmtCreateIndex.getFieldSourceIndicators().get(keyIndex)))) {
                     throw new AsterixException(ErrorCode.INDEX_ILLEGAL_REPETITIVE_FIELD, sourceLoc,
-                            String.valueOf(fieldExpr.first));
+                            LogRedactionUtil.userData(String.valueOf(fieldExpr.first)));
                 }
 
                 indexFields.add(fieldExpr.first);
@@ -1232,10 +1238,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     if (existingIndex.getKeyFieldNames().equals(index.getKeyFieldNames())
                             && !existingIndex.getKeyFieldTypes().equals(index.getKeyFieldTypes())
                             && existingIndex.isEnforced()) {
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Cannot create index "
-                                + index.getIndexName() + " , enforced index " + existingIndex.getIndexName()
-                                + " on field \"" + StringUtils.join(index.getKeyFieldNames(), ',')
-                                + "\" is already defined with type \"" + existingIndex.getKeyFieldTypes() + "\"");
+                        String fieldNames = index.getKeyFieldNames().stream().map(RecordUtil::toFullyQualifiedName)
+                                .collect(Collectors.joining(","));
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                                "Cannot create index " + index.getIndexName() + " , enforced index "
+                                        + existingIndex.getIndexName() + " on field(s) '"
+                                        + LogRedactionUtil.userData(fieldNames) + "' is already defined with type(s) '"
+                                        + StringUtils.join(existingIndex.getKeyFieldTypes(), ',') + "'");
                     }
                 }
             }

@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public class ClosedRecordConstructorResultType implements IResultTypeComputer {
 
@@ -76,7 +77,8 @@ public class ClosedRecordConstructorResultType implements IResultTypeComputer {
             }
             for (int j = 0; j < i; j++) {
                 if (fieldName.equals(fieldNames[j])) {
-                    throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, f.getSourceLocation(), fieldName);
+                    throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, f.getSourceLocation(),
+                            LogRedactionUtil.userData(fieldName));
                 }
             }
             fieldTypes[i] = e2Type;
