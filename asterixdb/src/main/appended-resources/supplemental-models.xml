@@ -363,7 +363,7 @@
       <artifactId>jackson-annotations</artifactId>
       <properties>
         <!-- jackson-annotations does not provide an embedded NOTICE file -->
-        <license.ignoreMissingEmbeddedNotice>2.12.3,2.13.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>2.12.3,2.13.1,2.13.2</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
