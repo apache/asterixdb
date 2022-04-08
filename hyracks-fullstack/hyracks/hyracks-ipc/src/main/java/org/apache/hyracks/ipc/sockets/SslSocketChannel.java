@@ -127,7 +127,7 @@ public class SslSocketChannel implements ISocketChannel {
                     break;
                 case CLOSED:
                     close();
-                    return -1;
+                    return decryptedBytes;
                 default:
                     throw new IllegalStateException("Invalid SSL result status: " + result.getStatus());
             }
@@ -192,6 +192,9 @@ public class SslSocketChannel implements ISocketChannel {
             engine.closeOutbound();
             try {
                 new SslHandshake(this).handshake();
+            } catch (Exception e) {
+                // ignore exceptions on best effort graceful close handshake
+                LOGGER.trace("ssl socket close handshake failed", e);
             } finally {
                 socketChannel.close();
             }
@@ -239,7 +242,8 @@ public class SslSocketChannel implements ISocketChannel {
                 close();
             }
         } catch (Exception e) {
-            LOGGER.warn("failed to close socket gracefully", e);
+            // ignore close exception since we are closing quietly
+            LOGGER.trace("failed to close socket gracefully", e);
         }
     }
 

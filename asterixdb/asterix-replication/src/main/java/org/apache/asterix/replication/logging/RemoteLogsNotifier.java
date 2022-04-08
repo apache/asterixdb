@@ -57,7 +57,7 @@ class RemoteLogsNotifier implements Runnable {
     @Override
     public void run() {
         final String nodeId = appCtx.getServiceContext().getNodeId();
-        Thread.currentThread().setName(nodeId + RemoteLogsNotifier.class.getSimpleName());
+        Thread.currentThread().setName(RemoteLogsNotifier.class.getSimpleName() + ":" + nodeId);
         while (!Thread.currentThread().isInterrupted()) {
             try {
                 final RemoteLogRecord logRecord = remoteLogsQ.take();

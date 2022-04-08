@@ -83,6 +83,7 @@ public class PartitionReplica implements IPartitionReplica {
         setStatus(CATCHING_UP);
         appCtx.getThreadExecutor().execute(() -> {
             try {
+                Thread.currentThread().setName("Replica " + id.toString() + " Synchronizer");
                 new ReplicaSynchronizer(appCtx, this).sync();
                 setStatus(IN_SYNC);
             } catch (Exception e) {

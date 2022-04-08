@@ -53,7 +53,7 @@ public class DeleteFileTask implements IReplicaTask {
             final File localFile = ioManager.resolve(file).getFile();
             if (localFile.exists()) {
                 Files.delete(localFile.toPath());
-                LOGGER.info(() -> "Deleted file: " + localFile.getAbsolutePath());
+                LOGGER.debug(() -> "Deleted file: " + localFile.getAbsolutePath());
             } else {
                 LOGGER.warn(() -> "Requested to delete a non-existing file: " + localFile.getAbsolutePath());
             }
