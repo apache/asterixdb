@@ -17,11 +17,7 @@
  * under the License.
  */
 
-/*
- * Test additional information returned when client-type=jdbc
- */
+drop dataverse test1 if exists;
+create dataverse test1;
 
--- param client-type:string=jdbc
--- param compile-only:string=true
-
-select v from range(1,2) v where v between ? and ? ;
+create dataset test1.t1(c1 int not unknown, c2 int) primary key c1;

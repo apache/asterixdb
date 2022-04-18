@@ -1,0 +1,50 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse test1 if exists;
+create dataverse test1;
+
+use test1;
+
+create type t1 as closed {
+  c1 : bigint,
+  c2 : bigint
+};
+
+create dataset ds1(t1) primary key c1;
+
+create index idx1 on ds1(c2);
+
+create view v1 as select value v from ds1 v;
+
+create synonym s1 for v1;
+
+create function f1() {
+  select "Dataverse" as k, DataverseName as dv, DataverseName as n from Metadata.`Dataverse`
+  union all
+  select "Datatype" as k, DataverseName as dv, DatatypeName as n from Metadata.`Datatype`
+  union all
+  select "Dataset" as k, DataverseName as dv, DatasetName as n from Metadata.`Dataset`
+  union all
+  select "Index" as k, DataverseName as dv, IndexName as n from Metadata.`Index` where not(isPrimary)
+  union all
+  select "Synonym" as k, DataverseName as dv, SynonymName as n from Metadata.`Synonym`
+  union all
+  select "Function" as k, DataverseName as dv, Name as n from Metadata.`Function`
+};
