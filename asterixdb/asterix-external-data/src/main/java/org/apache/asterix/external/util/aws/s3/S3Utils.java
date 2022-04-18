@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.util.aws.s3;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
+import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.common.exceptions.ErrorCode.S3_REGION_NOT_SUPPORTED;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
@@ -50,6 +52,7 @@ import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.regions.Region;
@@ -81,6 +84,7 @@ public class S3Utils {
      */
     public static S3Client buildAwsS3Client(Map<String, String> configuration) throws CompilationException {
         // TODO(Hussain): Need to ensure that all required parameters are present in a previous step
+        String instanceProfile = configuration.get(INSTANCE_PROFILE_FIELD_NAME);
         String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
         String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
         String sessionToken = configuration.get(SESSION_TOKEN_FIELD_NAME);
@@ -92,11 +96,42 @@ public class S3Utils {
         // Credentials
         AwsCredentialsProvider credentialsProvider;
 
-        // No auth required
-        if (accessKeyId == null) {
+        // nothing provided, anonymous authentication
+        if (instanceProfile == null && accessKeyId == null && secretAccessKey == null && sessionToken == null) {
             credentialsProvider = AnonymousCredentialsProvider.create();
-        } else {
-            // auth required, check for temporary or permanent credentials
+        } else if (instanceProfile != null) {
+
+            // only "true" value is allowed
+            if (!instanceProfile.equalsIgnoreCase("true")) {
+                throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, INSTANCE_PROFILE_FIELD_NAME, "true");
+            }
+
+            // no other authentication parameters are allowed
+            if (accessKeyId != null) {
+                throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, ACCESS_KEY_ID_FIELD_NAME,
+                        INSTANCE_PROFILE_FIELD_NAME);
+            }
+            if (secretAccessKey != null) {
+                throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, SECRET_ACCESS_KEY_FIELD_NAME,
+                        INSTANCE_PROFILE_FIELD_NAME);
+            }
+            if (sessionToken != null) {
+                throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, SESSION_TOKEN_FIELD_NAME,
+                        INSTANCE_PROFILE_FIELD_NAME);
+            }
+            credentialsProvider = InstanceProfileCredentialsProvider.create();
+        } else if (accessKeyId != null || secretAccessKey != null) {
+            // accessKeyId authentication
+            if (accessKeyId == null) {
+                throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ACCESS_KEY_ID_FIELD_NAME,
+                        SECRET_ACCESS_KEY_FIELD_NAME);
+            }
+            if (secretAccessKey == null) {
+                throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, SECRET_ACCESS_KEY_FIELD_NAME,
+                        ACCESS_KEY_ID_FIELD_NAME);
+            }
+
+            // use session token if provided
             if (sessionToken != null) {
                 credentialsProvider = StaticCredentialsProvider
                         .create(AwsSessionCredentials.create(accessKeyId, secretAccessKey, sessionToken));
@@ -104,6 +139,10 @@ public class S3Utils {
                 credentialsProvider =
                         StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKeyId, secretAccessKey));
             }
+        } else {
+            // if only session token is provided, accessKeyId is required
+            throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ACCESS_KEY_ID_FIELD_NAME,
+                    SESSION_TOKEN_FIELD_NAME);
         }
 
         builder.credentialsProvider(credentialsProvider);
