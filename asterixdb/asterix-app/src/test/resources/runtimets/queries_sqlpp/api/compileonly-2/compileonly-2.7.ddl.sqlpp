@@ -18,10 +18,26 @@
  */
 
 /*
- * Test additional information returned when client-type=jdbc
+ * Test that CREATE DDL statements are not executed in compile-only mode
  */
 
--- param client-type:string=jdbc
 -- param compile-only:string=true
 
-select v from range(1,2) v where v between ? and ? ;
+use test1;
+
+create type t2 as closed {
+  c1 : bigint,
+  c2 : bigint
+};
+
+create dataset ds2(t2) primary key c1;
+
+create index idx2 on ds2(c2);
+
+create view v2 as select value v from ds2 v;
+
+create synonym s2 for v2;
+
+create function f2() {
+  select value v from v2 v
+};

@@ -18,10 +18,10 @@
  */
 
 /*
- * Test additional information returned when client-type=jdbc
+ * Test additional information returned when client-type=jdbc (update statement)
  */
 
 -- param client-type:string=jdbc
 -- param compile-only:string=true
 
-select v from range(1,2) v where v between ? and ? ;
+insert into test1.t1 [{"c1": 1, "c2": ? }, {"c1": 3, "c2": ? }];

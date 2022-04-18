@@ -18,10 +18,28 @@
  */
 
 /*
- * Test additional information returned when client-type=jdbc
+ * Test that DROP DDL statements are not executed in compile-only mode
  */
 
--- param client-type:string=jdbc
 -- param compile-only:string=true
 
-select v from range(1,2) v where v between ? and ? ;
+drop function test1.f1();
+
+drop synonym test1.s1;
+
+drop view test1.v1;
+
+drop index test1.ds1.idx1;
+
+drop dataset test1.ds1;
+
+drop type test1.t1;
+
+
+
+
+
+
+
+
+

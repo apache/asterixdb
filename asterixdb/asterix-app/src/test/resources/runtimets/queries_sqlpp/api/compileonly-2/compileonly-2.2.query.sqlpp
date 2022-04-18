@@ -17,8 +17,7 @@
  * under the License.
  */
 
--- param compile-only:string=true
--- param logical-plan:string=true
--- param plan-format:string=json
-
-select value v from range(1,2) v where v > ?;
+select k, n
+from test1.f1() t
+where dv like "test1"
+order by k, n;

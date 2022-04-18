@@ -17,11 +17,8 @@
  * under the License.
  */
 
-/*
- * Test additional information returned when client-type=jdbc
- */
-
--- param client-type:string=jdbc
 -- param compile-only:string=true
+-- param logical-plan:string=true
+-- param plan-format:string=json
 
-select v from range(1,2) v where v between ? and ? ;
+select value v from range(1,2) v where v > ?;
