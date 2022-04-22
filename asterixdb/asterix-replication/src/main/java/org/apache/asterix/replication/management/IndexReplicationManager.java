@@ -38,7 +38,6 @@ import org.apache.asterix.transaction.management.resource.PersistentLocalResourc
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.replication.IReplicationJob;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -153,7 +152,7 @@ public class IndexReplicationManager {
         if (!replicationJobsQ.isEmpty()) {
             return;
         }
-        LOGGER.log(Level.INFO, "No pending replication jobs. Closing connections to replicas");
+        LOGGER.trace("no pending replication jobs; closing connections to replicas");
         for (ReplicationDestination dest : destinations) {
             dest.getReplicas().stream().map(PartitionReplica.class::cast).forEach(PartitionReplica::close);
         }

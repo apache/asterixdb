@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public class RecordMergeTypeComputer implements IResultTypeComputer {
 
@@ -111,7 +112,7 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
                     // If the ignore duplicates flag is not set, we throw a duplicate field exception
                     else {
                         throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME,
-                                f.getSourceLocation(), fieldNames[i]);
+                                f.getSourceLocation(), LogRedactionUtil.userData(fieldNames[i]));
                     }
                 }
 
@@ -144,7 +145,8 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
     private IAType mergedNestedType(String fieldName, IAType fieldType1, IAType fieldType0, SourceLocation sourceLoc)
             throws AlgebricksException {
         if (fieldType1.getTypeTag() != ATypeTag.OBJECT || fieldType0.getTypeTag() != ATypeTag.OBJECT) {
-            throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, sourceLoc, fieldName);
+            throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, sourceLoc,
+                    LogRedactionUtil.userData(fieldName));
         }
 
         ARecordType resultType = (ARecordType) fieldType0;

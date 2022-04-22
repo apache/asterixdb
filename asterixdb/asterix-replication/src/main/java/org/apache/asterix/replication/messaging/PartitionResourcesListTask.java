@@ -33,12 +33,15 @@ import org.apache.asterix.replication.api.IReplicaTask;
 import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A task to get the list of the files in a partition on a replica
  */
 public class PartitionResourcesListTask implements IReplicaTask {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private final int partition;
 
     public PartitionResourcesListTask(int partition) {
@@ -47,20 +50,25 @@ public class PartitionResourcesListTask implements IReplicaTask {
 
     @Override
     public void perform(INcApplicationContext appCtx, IReplicationWorker worker) throws HyracksDataException {
+        LOGGER.debug("processing {}", this);
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         localResourceRepository.cleanup(partition);
+        LOGGER.debug("cleaned up partition {}", partition);
         final IReplicationStrategy replicationStrategy = appCtx.getReplicationManager().getReplicationStrategy();
         // .metadata file -> resource id
         Map<String, Long> partitionReplicatedResources =
                 localResourceRepository.getPartitionReplicatedResources(partition, replicationStrategy);
+        LOGGER.debug("got partition {} resources", partition);
         // all data files in partitions + .metadata files
         final List<String> partitionFiles =
                 localResourceRepository.getPartitionReplicatedFiles(partition, replicationStrategy).stream()
                         .map(StoragePathUtil::getFileRelativePath).collect(Collectors.toList());
+        LOGGER.debug("got partition {} files ({})", partition, partitionFiles.size());
         final PartitionResourcesListResponse response = new PartitionResourcesListResponse(partition,
                 partitionReplicatedResources, partitionFiles, appCtx.getReplicaManager().isPartitionOrigin(partition));
         ReplicationProtocol.sendTo(worker.getChannel(), response, worker.getReusableBuffer());
+        LOGGER.debug("sent partition {} files list to requester", partition);
     }
 
     @Override
@@ -76,6 +84,11 @@ public class PartitionResourcesListTask implements IReplicaTask {
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "PartitionResourcesListTask{" + "partition=" + partition + '}';
     }
 
     public static PartitionResourcesListTask create(DataInput input) throws HyracksDataException {

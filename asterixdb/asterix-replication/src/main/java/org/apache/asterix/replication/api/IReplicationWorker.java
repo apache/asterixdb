@@ -35,4 +35,9 @@ public interface IReplicationWorker extends Runnable {
      * @return the reusable buffer
      */
     ByteBuffer getReusableBuffer();
+
+    /**
+     * @return The remote address of the sender
+     */
+    String getRemoteAddress();
 }

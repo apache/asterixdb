@@ -37,12 +37,16 @@ import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.replication.sync.IndexSynchronizer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
+import org.apache.hyracks.util.ThreadDumpUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A task to mark a replicated LSM component as valid
  */
 public class MarkComponentValidTask implements IReplicaTask {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private final long masterLsn;
     private final long lastComponentId;
     private final String file;
@@ -90,7 +94,10 @@ public class MarkComponentValidTask implements IReplicaTask {
             // wait until the lsn mapping is flushed to disk
             while (!indexCheckpointManager.isFlushed(masterLsn)) {
                 if (replicationTimeOut <= 0) {
-                    throw new ReplicationException(new TimeoutException("Couldn't receive flush lsn from master"));
+                    LOGGER.warn("{} seconds passed without receiving flush lsn {} from master for component {}",
+                            appCtx.getReplicationProperties().getReplicationTimeOut(), masterLsn, file);
+                    LOGGER.debug("thead dump on receiving flush lsn timeout {}", ThreadDumpUtil::takeDumpString);
+                    throw new ReplicationException(new TimeoutException("couldn't receive flush lsn from master"));
                 }
                 final long startTime = System.nanoTime();
                 indexCheckpointManager.wait(replicationTimeOut);

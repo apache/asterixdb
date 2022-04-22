@@ -28,6 +28,8 @@ import org.apache.asterix.replication.messaging.CheckpointPartitionIndexesTask;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Performs the steps required to ensure any newly added replica
@@ -35,6 +37,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  */
 public class ReplicaSynchronizer {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private final INcApplicationContext appCtx;
     private final PartitionReplica replica;
 
@@ -44,16 +47,23 @@ public class ReplicaSynchronizer {
     }
 
     public void sync(boolean register, boolean deltaRecovery) throws IOException {
+        LOGGER.debug("starting replica sync process for replica {}", replica);
         Object partitionLock = appCtx.getReplicaManager().getPartitionSyncLock(replica.getIdentifier().getPartition());
         synchronized (partitionLock) {
+            LOGGER.trace("acquired partition replica lock");
             final ICheckpointManager checkpointManager = appCtx.getTransactionSubsystem().getCheckpointManager();
             try {
                 // suspend checkpointing datasets to prevent async IO operations while sync'ing replicas
                 checkpointManager.suspend();
+                LOGGER.debug("starting replica files sync");
                 syncFiles(deltaRecovery);
+                LOGGER.debug("completed replica files sync");
                 checkpointReplicaIndexes();
+                LOGGER.debug("replica indexes checkpoint completed");
                 if (register) {
+                    LOGGER.debug("registering replica");
                     appCtx.getReplicationManager().register(replica);
+                    LOGGER.debug("replica registered");
                 }
             } finally {
                 checkpointManager.resume();
@@ -68,6 +78,7 @@ public class ReplicaSynchronizer {
         appCtx.getDatasetLifecycleManager().flushDataset(replStrategy,
                 p -> p == replica.getIdentifier().getPartition());
         waitForReplicatedDatasetsIO();
+        LOGGER.debug("flushed partition datasets");
         fileSync.sync();
     }
 
@@ -77,6 +88,7 @@ public class ReplicaSynchronizer {
                 appCtx.getReplicaManager().isPartitionOrigin(partition) ? appCtx.getServiceContext().getNodeId() : null;
         CheckpointPartitionIndexesTask task =
                 new CheckpointPartitionIndexesTask(partition, getPartitionMaxComponentId(partition), masterNode);
+        LOGGER.debug("asking replica to checkpoint indexes");
         ReplicationProtocol.sendTo(replica, task);
         ReplicationProtocol.waitForAck(replica);
     }

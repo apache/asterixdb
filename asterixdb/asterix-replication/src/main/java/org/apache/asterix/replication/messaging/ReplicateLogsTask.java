@@ -34,12 +34,15 @@ import org.apache.asterix.replication.logging.RemoteLogsProcessor;
 import org.apache.asterix.replication.management.ReplicationChannel;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.network.ISocketChannel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A task to replicate transaction logs from master replica
  */
 public class ReplicateLogsTask implements IReplicaTask {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final int END_REPLICATION_LOG_SIZE = 1;
     private final String nodeId;
 
@@ -61,6 +64,7 @@ public class ReplicateLogsTask implements IReplicaTask {
                 logsBuffer = ReplicationProtocol.readRequest(channel, logsBuffer);
                 // check if it is end of handshake
                 if (logsBuffer.remaining() == END_REPLICATION_LOG_SIZE) {
+                    LOGGER.debug("ending log replication with {}", worker.getRemoteAddress());
                     break;
                 }
                 logsProcessor.process(logsBuffer, reusableLog, worker);

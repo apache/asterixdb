@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.ReplicationProperties;
@@ -52,6 +53,7 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
     private ServerSocketChannel serverSocketChannel = null;
     private final INcApplicationContext appCtx;
     private final RemoteLogsProcessor logsProcessor;
+    private final AtomicInteger replicationWorkerCounter = new AtomicInteger(0);
 
     public ReplicationChannel(INcApplicationContext appCtx) {
         this.appCtx = appCtx;
@@ -123,19 +125,25 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
 
         @Override
         public void run() {
-            Thread.currentThread().setName("Replication Worker");
+            Thread.currentThread().setName("Replication Worker-" + replicationWorkerCounter.incrementAndGet() + "("
+                    + getRemoteAddress() + ")");
             try {
                 if (socketChannel.requiresHandshake() && !socketChannel.handshake()) {
+                    LOGGER.warn("failed to complete handshake with {}", this::getRemoteAddress);
                     return;
                 }
                 socketChannel.getSocketChannel().configureBlocking(true);
+                LOGGER.trace("reading replication worker initial request");
                 ReplicationRequestType requestType = ReplicationProtocol.getRequestType(socketChannel, inBuffer);
+                LOGGER.trace("got request type: {}", requestType);
                 while (requestType != ReplicationRequestType.GOODBYE) {
                     handle(requestType);
+                    LOGGER.trace("handled request type: {}", requestType);
                     requestType = ReplicationProtocol.getRequestType(socketChannel, inBuffer);
+                    LOGGER.trace("got request type: {}", requestType);
                 }
             } catch (Exception e) {
-                LOGGER.warn("Unexpected error during replication.", e);
+                LOGGER.warn("unexpected error during replication.", e);
             } finally {
                 NetworkUtil.closeQuietly(socketChannel);
             }
@@ -149,6 +157,15 @@ public class ReplicationChannel extends Thread implements IReplicationChannel {
         @Override
         public ByteBuffer getReusableBuffer() {
             return outBuffer;
+        }
+
+        @Override
+        public String getRemoteAddress() {
+            try {
+                return socketChannel.getSocketChannel().getRemoteAddress().toString();
+            } catch (Exception e) {
+                return "unknown";
+            }
         }
 
         private void handle(ReplicationRequestType requestType) throws HyracksDataException {

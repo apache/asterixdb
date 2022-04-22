@@ -1235,13 +1235,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         if (stmtCreateIndex.isEnforced()) {
                             if (!projectTypeExpr.isUnknownable()) {
                                 throw new CompilationException(ErrorCode.INDEX_ILLEGAL_ENFORCED_NON_OPTIONAL,
-                                        indexedElement.getSourceLocation(), String.valueOf(projectPath));
+                                        indexedElement.getSourceLocation(),
+                                        LogRedactionUtil.userData(String.valueOf(projectPath)));
                             }
                             // don't allow creating an enforced index on a closed-type field, fields that
                             // are part of schema get the field type, if it's not null, then the field is closed-type
                             if (isFieldFromSchema) {
                                 throw new CompilationException(ErrorCode.INDEX_ILLEGAL_ENFORCED_ON_CLOSED_FIELD,
-                                        indexedElement.getSourceLocation(), String.valueOf(projectPath));
+                                        indexedElement.getSourceLocation(),
+                                        LogRedactionUtil.userData(String.valueOf(projectPath)));
                             }
                         } else {
                             if (indexType != IndexType.BTREE && indexType != IndexType.ARRAY) {
@@ -1272,7 +1274,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
                     if (fieldTypePrime == null) {
                         throw new CompilationException(ErrorCode.UNKNOWN_TYPE, indexedElement.getSourceLocation(),
-                                String.valueOf(projectPath));
+                                LogRedactionUtil.userData(String.valueOf(projectPath)));
                     }
                     validateIndexFieldType(indexType, fieldTypePrime, projectPath, indexedElement.getSourceLocation());
 
@@ -1284,7 +1286,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 // Try to add the key & its source to the set of keys for duplicate detection.
                 if (!indexKeysSet.add(indexedElement.toIdentifier())) {
                     throw new AsterixException(ErrorCode.INDEX_ILLEGAL_REPETITIVE_FIELD,
-                            indexedElement.getSourceLocation(), indexedElement.getProjectListDisplayForm());
+                            indexedElement.getSourceLocation(),
+                            LogRedactionUtil.userData(indexedElement.getProjectListDisplayForm()));
                 }
 
                 indexFieldTypes.add(fieldTypes);

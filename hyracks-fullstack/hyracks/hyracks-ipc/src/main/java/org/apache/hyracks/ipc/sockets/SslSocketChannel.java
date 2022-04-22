@@ -82,9 +82,9 @@ public class SslSocketChannel implements ISocketChannel {
 
     @Override
     public synchronized int read(ByteBuffer buffer) throws IOException {
-        int transfereeBytes = 0;
+        int transferredBytes = 0;
         if (cachedData) {
-            transfereeBytes += transferTo(inAppData, buffer);
+            transferredBytes += transferTo(inAppData, buffer);
         }
         if (buffer.hasRemaining()) {
             if (!partialRecord) {
@@ -97,17 +97,18 @@ public class SslSocketChannel implements ISocketChannel {
                 inAppData.clear();
                 if (decrypt() > 0) {
                     inAppData.flip();
-                    transfereeBytes += transferTo(inAppData, buffer);
+                    transferredBytes += transferTo(inAppData, buffer);
                 } else {
                     inAppData.limit(0);
                 }
             } else if (bytesRead < 0) {
+                LOGGER.trace("received EOF; transferred bytes: {}", transferredBytes);
                 handleEndOfStreamQuietly();
                 return -1;
             }
         }
         cachedData = inAppData.hasRemaining();
-        return transfereeBytes;
+        return transferredBytes;
     }
 
     private int decrypt() throws IOException {
@@ -127,7 +128,7 @@ public class SslSocketChannel implements ISocketChannel {
                     break;
                 case CLOSED:
                     close();
-                    return -1;
+                    return decryptedBytes;
                 default:
                     throw new IllegalStateException("Invalid SSL result status: " + result.getStatus());
             }
@@ -192,6 +193,9 @@ public class SslSocketChannel implements ISocketChannel {
             engine.closeOutbound();
             try {
                 new SslHandshake(this).handshake();
+            } catch (Exception e) {
+                // ignore exceptions on best effort graceful close handshake
+                LOGGER.trace("ssl socket close handshake failed", e);
             } finally {
                 socketChannel.close();
             }
@@ -239,7 +243,8 @@ public class SslSocketChannel implements ISocketChannel {
                 close();
             }
         } catch (Exception e) {
-            LOGGER.warn("failed to close socket gracefully", e);
+            // ignore close exception since we are closing quietly
+            LOGGER.trace("failed to close socket gracefully", e);
         }
     }
 
