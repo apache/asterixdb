@@ -124,7 +124,7 @@ public class MsgPackAccessors {
             int s = pointable.getStartOffset();
             int i = AInt32SerializerDeserializer.getInt(b, s + 1);
             out.writeByte(INT32);
-            out.writeByte(i);
+            out.writeInt(i);
             return null;
         }
     }
