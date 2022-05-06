@@ -57,13 +57,12 @@ public class StorageCleanupRequestMessage extends CcIdentifiedMessage implements
         INCMessageBroker broker = (INCMessageBroker) appContext.getServiceContext().getMessageBroker();
         PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appContext.getLocalResourceRepository();
-        Map<Long, LocalResource> localResources = localResourceRepository.loadAndGetAllResources();
         Set<Integer> nodePartitions = appContext.getReplicaManager().getPartitions();
+        Map<Long, LocalResource> localResources = localResourceRepository.getResources(lr -> true, nodePartitions);
         for (LocalResource resource : localResources.values()) {
             DatasetLocalResource lr = (DatasetLocalResource) resource.getResource();
-            if (!nodePartitions.contains(lr.getPartition())
-                    || MetadataIndexImmutableProperties.isMetadataDataset(lr.getDatasetId())) {
-                // skip replica partitions and metadata indexes
+            if (MetadataIndexImmutableProperties.isMetadataDataset(lr.getDatasetId())) {
+                // skip metadata indexes
                 continue;
             }
             if (!validDatasetIds.contains(lr.getDatasetId())) {
