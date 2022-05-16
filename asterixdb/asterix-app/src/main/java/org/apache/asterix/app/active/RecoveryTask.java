@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.active;
 
+import static org.apache.hyracks.util.ExitUtil.EC_ACTIVE_RECOVERY_FAILURE;
+
 import java.util.concurrent.Callable;
 
 import org.apache.asterix.active.ActivityState;
@@ -33,6 +35,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.IRetryPolicy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -63,7 +66,18 @@ public class RecoveryTask {
         IRetryPolicy policy = retryPolicyFactory.create(listener);
         return () -> {
             Thread.currentThread().setName("RecoveryTask (" + listener.getEntityId() + ")");
-            doRecover(policy);
+            try {
+                doRecover(policy);
+            } catch (InterruptedException e) {
+                LOGGER.warn("recovery task interrupted", e);
+                Thread.currentThread().interrupt();
+                throw e;
+            } catch (Throwable t) {
+                // in case of any unexpected exception during recovery, the recovery attempts will stop forever.
+                // we halt to ensure recovery attempts are resumed after the restart
+                LOGGER.fatal("unexpected exception during recovery; halting...", t);
+                ExitUtil.halt(EC_ACTIVE_RECOVERY_FAILURE);
+            }
             return null;
         };
     }
