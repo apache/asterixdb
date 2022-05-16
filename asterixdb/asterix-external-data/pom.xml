@@ -518,6 +518,10 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>com.google.cloud.bigdataoss</groupId>
+      <artifactId>gcs-connector</artifactId>
+    </dependency>
     <!-- apply patch for HADOOP-17225 to workaround CVE-2019-10172 -->
     <dependency>
       <groupId>org.codehaus.jackson</groupId>

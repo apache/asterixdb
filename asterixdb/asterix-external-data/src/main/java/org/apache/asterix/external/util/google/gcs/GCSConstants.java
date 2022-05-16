@@ -25,4 +25,22 @@ public class GCSConstants {
 
     public static final String JSON_CREDENTIALS_FIELD_NAME = "jsonCredentials";
     public static final String ENDPOINT_FIELD_NAME = "endpoint";
+
+    /*
+     * Hadoop internal configuration
+     */
+    public static final String HADOOP_GCS_PROTOCOL = "gs";
+
+    // hadoop credentials
+    public static final String HADOOP_AUTH_TYPE = "fs.gs.auth.type";
+    public static final String HADOOP_AUTH_UNAUTHENTICATED = "UNAUTHENTICATED";
+    public static final String HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE = "SERVICE_ACCOUNT_JSON_KEYFILE";
+    public static final String HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE_PATH =
+            "google.cloud.auth.service.account.json.keyfile";
+
+    // gs hadoop parameters
+    public static final String HADOOP_SUPPORT_COMPRESSED = "fs.gs.inputstream.support.gzip.encoding.enable";
+    public static final String HADOOP_ENDPOINT = "fs.gs.storage.root.url";
+    public static final String HADOOP_MAX_REQUESTS_PER_BATCH = "fs.gs.max.requests.per.batch";
+    public static final String HADOOP_BATCH_THREADS = "fs.gs.batch.threads";
 }
