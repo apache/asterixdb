@@ -24,4 +24,5 @@ public class GCSConstants {
     }
 
     public static final String JSON_CREDENTIALS_FIELD_NAME = "jsonCredentials";
+    public static final String ENDPOINT_FIELD_NAME = "endpoint";
 }

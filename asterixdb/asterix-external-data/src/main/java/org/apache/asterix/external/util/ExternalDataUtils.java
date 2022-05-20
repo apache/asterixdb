@@ -530,7 +530,7 @@ public class ExternalDataUtils {
             case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE:
                 validateAzureDataLakeProperties(configuration, srcLoc, collector, appCtx);
                 break;
-            case KEY_ADAPTER_NAME_GCS:
+            case ExternalDataConstants.KEY_ADAPTER_NAME_GCS:
                 validateProperties(configuration, srcLoc, collector);
                 break;
             default:
