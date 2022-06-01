@@ -753,7 +753,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             } else {
                 leftOuterUnnestMapRequired = false;
             }
-
+            AbstractUnnestMapOperator unnestMapOp;
             if (conditionRef.getValue() != null) {
                 // The job gen parameters are transferred to the actual job gen
                 // via the UnnestMapOperator's function arguments.
@@ -765,7 +765,6 @@ public class BTreeAccessMethod implements IAccessMethod {
                         new UnnestingFunctionCallExpression(primaryIndexSearch, primaryIndexFuncArgs);
                 primaryIndexSearchFunc.setSourceLocation(dataSourceOp.getSourceLocation());
                 primaryIndexSearchFunc.setReturnsUniqueValues(true);
-                AbstractUnnestMapOperator unnestMapOp;
                 if (!leftOuterUnnestMapRequired) {
                     unnestMapOp = new UnnestMapOperator(scanVariables,
                             new MutableObject<ILogicalExpression>(primaryIndexSearchFunc), primaryIndexOutputTypes,
@@ -775,10 +774,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                             new MutableObject<ILogicalExpression>(primaryIndexSearchFunc), primaryIndexOutputTypes,
                             leftOuterMissingValue);
                 }
-                unnestMapOp.setSourceLocation(dataSourceOp.getSourceLocation());
-                indexSearchOp = unnestMapOp;
             } else {
-                AbstractUnnestMapOperator unnestMapOp;
                 if (!leftOuterUnnestMapRequired) {
                     unnestMapOp = new UnnestMapOperator(scanVariables,
                             ((UnnestMapOperator) secondaryIndexUnnestOp).getExpressionRef(), primaryIndexOutputTypes,
@@ -788,11 +784,11 @@ public class BTreeAccessMethod implements IAccessMethod {
                             ((LeftOuterUnnestMapOperator) secondaryIndexUnnestOp).getExpressionRef(),
                             primaryIndexOutputTypes, leftOuterMissingValue);
                 }
-                unnestMapOp.setSourceLocation(dataSourceOp.getSourceLocation());
-                indexSearchOp = unnestMapOp;
             }
-            // TODO: shouldn't indexSearchOp execution mode be set to that of the input? the default is UNPARTITIONED
-            indexSearchOp.getInputs().add(new MutableObject<>(inputOp));
+            unnestMapOp.setExecutionMode(ExecutionMode.PARTITIONED);
+            unnestMapOp.setSourceLocation(dataSourceOp.getSourceLocation());
+            unnestMapOp.getInputs().add(new MutableObject<>(inputOp));
+            indexSearchOp = unnestMapOp;
 
             // Adds equivalence classes --- one equivalent class between a primary key
             // variable and a record field-access expression.
