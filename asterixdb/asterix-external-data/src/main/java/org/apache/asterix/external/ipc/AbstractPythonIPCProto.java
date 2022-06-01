@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -6,7 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -18,7 +20,6 @@ package org.apache.asterix.external.ipc;
 
 import static org.apache.hyracks.ipc.impl.Message.HEADER_SIZE;
 
-import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -26,16 +27,10 @@ import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.api.IExternalLangIPCProto;
 import org.apache.asterix.external.library.msgpack.MsgPackPointableVisitor;
-import org.apache.asterix.om.pointables.AFlatValuePointable;
-import org.apache.asterix.om.pointables.AListVisitablePointable;
-import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
-import org.apache.asterix.om.pointables.base.IVisitablePointable;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -45,40 +40,30 @@ import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
 import org.msgpack.core.buffer.ArrayBufferInput;
 
-public class PythonIPCProto {
+public abstract class AbstractPythonIPCProto {
+    public static final int HEADER_SIZE_LEN_INCLUSIVE = 21;
+    protected final PythonMessageBuilder messageBuilder;
+    protected final DataOutputStream sockOut;
+    protected final ArrayBufferInput unpackerInput;
+    protected final MessageUnpacker unpacker;
+    protected final ArrayBackedValueStorage argsStorage;
+    protected final PointableAllocator pointableAllocator;
+    protected final MsgPackPointableVisitor pointableVisitor;
+    private final ByteBuffer headerBuffer = ByteBuffer.allocate(HEADER_SIZE_LEN_INCLUSIVE);
+    protected ByteBuffer recvBuffer = ByteBuffer.allocate(32768);
+    protected long routeId;
+    protected Pair<ByteBuffer, Exception> bufferBox;
+    protected long maxFunctionId;
 
-    private final PythonMessageBuilder messageBuilder;
-    private final DataOutputStream sockOut;
-    private final ByteBuffer headerBuffer = ByteBuffer.allocate(21);
-    private ByteBuffer recvBuffer = ByteBuffer.allocate(32768);
-    private final ExternalFunctionResultRouter router;
-    private long routeId;
-    private Pair<ByteBuffer, Exception> bufferBox;
-    private final Process pythonProc;
-    private long maxFunctionId;
-    private final ArrayBufferInput unpackerInput;
-    private final MessageUnpacker unpacker;
-    private final ArrayBackedValueStorage argsStorage;
-    private final PointableAllocator pointableAllocator;
-    private final MsgPackPointableVisitor pointableVisitor;
-
-    public PythonIPCProto(OutputStream sockOut, ExternalFunctionResultRouter router, Process pythonProc) {
-        this.sockOut = new DataOutputStream(sockOut);
+    public AbstractPythonIPCProto(OutputStream sockOut) {
         messageBuilder = new PythonMessageBuilder();
-        this.router = router;
-        this.pythonProc = pythonProc;
+        this.sockOut = new DataOutputStream(sockOut);
         this.maxFunctionId = 0L;
         unpackerInput = new ArrayBufferInput(new byte[0]);
         unpacker = MessagePack.newDefaultUnpacker(unpackerInput);
         this.argsStorage = new ArrayBackedValueStorage();
         this.pointableAllocator = new PointableAllocator();
         this.pointableVisitor = new MsgPackPointableVisitor();
-    }
-
-    public void start() {
-        Pair<Long, Pair<ByteBuffer, Exception>> keyAndBufferBox = router.insertRoute(recvBuffer);
-        this.routeId = keyAndBufferBox.getFirst();
-        this.bufferBox = keyAndBufferBox.getSecond();
     }
 
     public void helo() throws IOException, AsterixException {
@@ -121,8 +106,8 @@ public class PythonIPCProto {
         messageBuilder.reset();
         argsStorage.reset();
         for (int i = 0; i < argTypes.length; i++) {
-            visitValueRef(argTypes[i], argsStorage.getDataOutput(), argValues[i], pointableAllocator, pointableVisitor,
-                    nullCall);
+            IExternalLangIPCProto.visitValueRef(argTypes[i], argsStorage.getDataOutput(), argValues[i],
+                    pointableAllocator, pointableVisitor, nullCall);
         }
         int len = argsStorage.getLength() + 5;
         sendHeader(functionId, len);
@@ -154,42 +139,11 @@ public class PythonIPCProto {
         return recvBuffer;
     }
 
-    //For future use with interpreter reuse between jobs.
     public void quit() throws HyracksDataException {
         messageBuilder.quit();
-        router.removeRoute(routeId);
     }
 
-    public void receiveMsg() throws IOException, AsterixException {
-        Exception except;
-        try {
-            synchronized (bufferBox) {
-                while ((bufferBox.getFirst().limit() == 0 || bufferBox.getSecond() != null) && pythonProc.isAlive()) {
-                    bufferBox.wait(100);
-                }
-            }
-            except = router.getAndRemoveException(routeId);
-            if (!pythonProc.isAlive()) {
-                except = new IOException("Python process exited with code: " + pythonProc.exitValue());
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new AsterixException(ErrorCode.EXTERNAL_UDF_EXCEPTION, e);
-        }
-        if (except != null) {
-            throw new AsterixException(except);
-        }
-        if (bufferBox.getFirst() != recvBuffer) {
-            recvBuffer = bufferBox.getFirst();
-        }
-        messageBuilder.readHead(recvBuffer);
-        if (messageBuilder.type == MessageType.ERROR) {
-            unpackerInput.reset(recvBuffer.array(), recvBuffer.position() + recvBuffer.arrayOffset(),
-                    recvBuffer.remaining());
-            unpacker.reset(unpackerInput);
-            throw new AsterixException(unpacker.unpackString());
-        }
-    }
+    public abstract void receiveMsg() throws IOException, AsterixException;
 
     public void sendHeader(long key, int msgLen) throws IOException {
         headerBuffer.clear();
@@ -226,65 +180,4 @@ public class PythonIPCProto {
     public DataOutputStream getSockOut() {
         return sockOut;
     }
-
-    public static void visitValueRef(IAType type, DataOutput out, IValueReference valueReference,
-            PointableAllocator pointableAllocator, MsgPackPointableVisitor pointableVisitor, boolean visitNull)
-            throws IOException {
-        IVisitablePointable pointable;
-        switch (type.getTypeTag()) {
-            case OBJECT:
-                pointable = pointableAllocator.allocateRecordValue(type);
-                pointable.set(valueReference);
-                pointableVisitor.visit((ARecordVisitablePointable) pointable, pointableVisitor.getTypeInfo(type, out));
-                break;
-            case ARRAY:
-            case MULTISET:
-                pointable = pointableAllocator.allocateListValue(type);
-                pointable.set(valueReference);
-                pointableVisitor.visit((AListVisitablePointable) pointable, pointableVisitor.getTypeInfo(type, out));
-                break;
-            case ANY:
-                ATypeTag rtTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                        .deserialize(valueReference.getByteArray()[valueReference.getStartOffset()]);
-                IAType rtType = TypeTagUtil.getBuiltinTypeByTag(rtTypeTag);
-                switch (rtTypeTag) {
-                    case OBJECT:
-                        pointable = pointableAllocator.allocateRecordValue(rtType);
-                        pointable.set(valueReference);
-                        pointableVisitor.visit((ARecordVisitablePointable) pointable,
-                                pointableVisitor.getTypeInfo(rtType, out));
-                        break;
-                    case ARRAY:
-                    case MULTISET:
-                        pointable = pointableAllocator.allocateListValue(rtType);
-                        pointable.set(valueReference);
-                        pointableVisitor.visit((AListVisitablePointable) pointable,
-                                pointableVisitor.getTypeInfo(rtType, out));
-                        break;
-                    case MISSING:
-                    case NULL:
-                        if (!visitNull) {
-                            return;
-                        }
-                    default:
-                        pointable = pointableAllocator.allocateFieldValue(rtType);
-                        pointable.set(valueReference);
-                        pointableVisitor.visit((AFlatValuePointable) pointable,
-                                pointableVisitor.getTypeInfo(rtType, out));
-                        break;
-                }
-                break;
-            case MISSING:
-            case NULL:
-                if (!visitNull) {
-                    return;
-                }
-            default:
-                pointable = pointableAllocator.allocateFieldValue(type);
-                pointable.set(valueReference);
-                pointableVisitor.visit((AFlatValuePointable) pointable, pointableVisitor.getTypeInfo(type, out));
-                break;
-        }
-    }
-
 }

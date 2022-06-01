@@ -978,7 +978,7 @@
           <plugin>
             <artifactId>jdeb</artifactId>
             <groupId>org.vafer</groupId>
-            <version>1.5</version>
+            <version>1.8</version>
             <executions>
               <execution>
                 <phase>package</phase>
@@ -988,26 +988,36 @@
                 <configuration>
                   <dataSet>
                     <data>
-                      <src>${project.build.directory}/${project.build.finalName}-binary-assembly/apache-asterixdb-${project.version}/</src>
-                      <excludes>bin/**</excludes>
+                      <src>${project.build.directory}/${project.build.finalName}-binary-assembly/apache-asterixdb-${project.version}</src>
                       <type>directory</type>
                       <mapper>
                         <type>perm</type>
-                        <prefix>/opt/apache-asterixdb-${project.version}/</prefix>
-                        <user>asterixdb</user>
-                        <group>asterixdb</group>
+                        <prefix>/opt/apache-asterixdb/</prefix>
+                        <user>root</user>
+                        <group>root</group>
+                        <filemode>755</filemode>
+                      </mapper>
+                    </data>
+                    <data>
+                      <type>file</type>
+                      <src>src/deb/systemd/cc.conf</src>
+                      <mapper>
+                        <prefix>/opt/apache-asterixdb/</prefix>
+                        <type>perm</type>
+                        <user>root</user>
+                        <group>root</group>
                         <filemode>644</filemode>
                       </mapper>
                     </data>
                     <data>
-                      <src>${project.build.directory}/${project.build.finalName}-binary-assembly/apache-asterixdb-${project.version}/bin</src>
-                      <type>directory</type>
+                      <type>file</type>
+                      <src>src/deb/udf_listener.py</src>
                       <mapper>
+                        <prefix>/opt/apache-asterixdb/bin</prefix>
                         <type>perm</type>
-                        <prefix>/opt/apache-asterixdb-${project.version}/bin</prefix>
-                        <user>asterixdb</user>
-                        <group>asterixdb</group>
-                        <filemode>754</filemode>
+                        <user>root</user>
+                        <group>root</group>
+                        <filemode>555</filemode>
                       </mapper>
                     </data>
                     <data>
@@ -1028,6 +1038,39 @@
                         <type>perm</type>
                         <user>root</user>
                         <group>root</group>
+                      </mapper>
+                    </data>
+                    <data>
+                      <type>file</type>
+                      <src>src/deb/systemd/pyudf.socket</src>
+                      <mapper>
+                        <prefix>/lib/systemd/system</prefix>
+                        <type>perm</type>
+                        <user>root</user>
+                        <group>root</group>
+                      </mapper>
+                    </data>
+                    <data>
+                      <type>file</type>
+                      <src>src/deb/systemd/pyudf@.service</src>
+                      <mapper>
+                        <prefix>/lib/systemd/system</prefix>
+                        <type>perm</type>
+                        <user>root</user>
+                        <group>root</group>
+                      </mapper>
+                    </data>
+                    <data>
+                      <type>template</type>
+                      <paths>
+                          <path>/opt/apache-asterixdb/logs</path>
+                          <path>/opt/apache-asterixdb/data</path>
+                      </paths>
+                      <mapper>
+                        <type>perm</type>
+                        <user>asterixdb</user>
+                        <group>asterixdb</group>
+                        <filemode>750</filemode>
                       </mapper>
                     </data>
                   </dataSet>

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,12 +17,10 @@
 # under the License.
 
 import sys
-from os import pathsep
-addr = str(sys.argv[1])
-port = str(sys.argv[2])
-paths = sys.argv[3]
-for p in paths.split(pathsep):
-    sys.path.append(p)
+from systemd.daemon import listen_fds
+from os import chdir
+from os import getcwd
+from os import getpid
 from struct import *
 import signal
 import msgpack
@@ -31,6 +30,7 @@ from importlib import import_module
 from pathlib import Path
 from enum import IntEnum
 from io import BytesIO
+
 
 PROTO_VERSION = 1
 HEADER_SZ = 8 + 8 + 1
@@ -66,8 +66,8 @@ class Wrapper(object):
     resp = None
     unpacked_msg = None
     msg_type = None
-    packer = msgpack.Packer(autoreset=False)
-    unpacker = msgpack.Unpacker()
+    packer = msgpack.Packer(autoreset=False, use_bin_type=False)
+    unpacker = msgpack.Unpacker(raw=False)
     response_buf = BytesIO()
     stdin_buf = BytesIO()
     wrapped_fns = {}
@@ -102,6 +102,7 @@ class Wrapper(object):
         cwd = Path('.').resolve()
         module_path = Path(module.__file__).resolve()
         return cwd in module_path.parents
+        return True
 
     def read_header(self, readbuf):
         self.sz, self.mid, self.rmid, self.flag = unpack(
@@ -130,14 +131,19 @@ class Wrapper(object):
         self.send_msg()
         self.packer.reset()
 
+    def cd(self, basedir):
+        chdir(basedir + "/site-packages")
+        sys.path.insert(0,getcwd())
+
     def helo(self):
         # need to ack the connection back before sending actual HELO
-        self.init_remote_ipc()
+        #   self.init_remote_ipc()
+        self.cd(self.unpacked_msg[1][1])
         self.flag = MessageFlags.NORMAL
         self.response_buf.seek(0)
         self.packer.pack(int(MessageType.HELO))
-        self.packer.pack("HELO")
-        dlen = 5  # tag(1) + body(4)
+        self.packer.pack(int(getpid()))
+        dlen = len(self.packer.bytes())  # tag(1) + body(4)
         resp_len = self.write_header(self.response_buf, dlen)
         self.response_buf.write(self.packer.bytes())
         self.resp = self.response_buf.getbuffer()[0:resp_len]
@@ -168,7 +174,6 @@ class Wrapper(object):
 
     def quit(self):
         self.alive = False
-        self.disconnect_sock()
         return True
 
     def handle_call(self):
@@ -199,7 +204,7 @@ class Wrapper(object):
         self.flag = MessageFlags.NORMAL
         self.packer.reset()
         self.response_buf.seek(0)
-        body = msgpack.packb(e)
+        body = msgpack.packb(str(e))
         dlen = len(body) + 1  # 1 for tag
         resp_len = self.write_header(self.response_buf, dlen)
         self.packer.pack(int(MessageType.ERROR))
@@ -218,9 +223,8 @@ class Wrapper(object):
         MessageType.CALL: handle_call
     }
 
-    def connect_sock(self, addr, port):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((addr, int(port)))
+    def connect_sock(self):
+        self.sock = socket.fromfd(listen_fds()[0], socket.AF_UNIX, socket.SOCK_STREAM)
 
     def disconnect_sock(self, *args):
         self.sock.shutdown(socket.SHUT_RDWR)
@@ -228,26 +232,26 @@ class Wrapper(object):
 
     def recv_msg(self):
         while self.alive:
-            pos = sys.stdin.buffer.readinto1(self.readbuf)
+            pos = self.sock.recv_into(self.readbuf)
             if pos <= 0:
                 self.alive = False
                 return
             try:
                 while pos < REAL_HEADER_SZ:
-                    read = sys.stdin.buffer.readinto1(self.readview[pos:])
+                    read = self.sock.recv_into(self.readview[pos:])
                     if read <= 0:
                         self.alive = False
                         return
                     pos += read
                 self.read_header(self.readview)
                 while pos < self.sz and len(self.readbuf) - pos > 0:
-                    read = sys.stdin.buffer.readinto1(self.readview[pos:])
+                    read = self.sock.recv_into(self.readview[pos:])
                     if read <= 0:
                         self.alive = False
                         return
                     pos += read
                 while pos < self.sz:
-                    vszchunk = sys.stdin.buffer.read1(FRAMESZ)
+                    vszchunk = self.sock.recv(4096)
                     if len(vszchunk) == 0:
                         self.alive = False
                         return
@@ -259,8 +263,8 @@ class Wrapper(object):
                 self.unpacked_msg = list(self.unpacker)
                 self.msg_type = MessageType(self.unpacked_msg[0])
                 self.type_handler[self.msg_type](self)
-            except BaseException:
-                self.handle_error(traceback.format_exc())
+            except BaseException as e:
+                self.handle_error(''.join(traceback.format_exc()))
 
     def send_msg(self):
         self.sock.sendall(self.resp)
@@ -274,6 +278,6 @@ class Wrapper(object):
 
 
 wrap = Wrapper()
-wrap.connect_sock(addr, port)
+wrap.connect_sock()
 signal.signal(signal.SIGTERM, wrap.disconnect_sock)
 wrap.recv_loop()

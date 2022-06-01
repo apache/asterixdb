@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.api.ILibraryEvaluator;
 import org.apache.asterix.external.library.msgpack.MessageUnpackerToADM;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
@@ -49,7 +50,7 @@ import org.msgpack.core.buffer.ArrayBufferInput;
 
 class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvaluator {
 
-    private final PythonLibraryEvaluator libraryEvaluator;
+    private final ILibraryEvaluator libraryEvaluator;
 
     private final ArrayBackedValueStorage resultBuffer = new ArrayBackedValueStorage();
     private final ByteBuffer argHolder;
@@ -115,7 +116,7 @@ class ExternalScalarPythonFunctionEvaluator extends ExternalScalarFunctionEvalua
             return;
         }
         try {
-            ByteBuffer res = libraryEvaluator.callPython(fnId, argTypes, argValues, nullCall);
+            ByteBuffer res = libraryEvaluator.call(fnId, argTypes, argValues, nullCall);
             resultBuffer.reset();
             wrap(res, resultBuffer.getDataOutput());
         } catch (Exception e) {

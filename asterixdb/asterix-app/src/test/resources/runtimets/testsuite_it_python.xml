@@ -52,15 +52,7 @@
     <test-case FilePath="external-library" check-warnings="true">
       <compilation-unit name="py_function_error">
         <output-dir compare="Clean-JSON">py_function_error</output-dir>
-        <expected-warn>ASX0201: External UDF returned exception. Returned exception was: Traceback (most recent call last):
-  File "entrypoint.py", line 181, in handle_call
-    result[0].append(self.next_tuple(*arg, key=self.mid))
-  File "entrypoint.py", line 99, in next_tuple
-    return self.wrapped_fns[key](*args)
-  File "site-packages/roundtrip.py", line 32, in warning
-    raise ArithmeticError("oof")
-ArithmeticError: oof
- (in line 28, at column 1)</expected-warn>
+        <expected-warn>ArithmeticError: oof</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">
@@ -76,8 +68,8 @@ ArithmeticError: oof
     <test-case FilePath="external-library" check-warnings="true">
       <compilation-unit name="crash">
         <output-dir compare="Text">crash</output-dir>
-        <expected-warn>ASX0201: External UDF returned exception. Returned exception was: Function externallibtest:crash#0 failed to execute (in line 23, at column 1)</expected-warn>
-        <expected-warn>ASX0201: External UDF returned exception. Returned exception was: java.io.IOException: Python process exited with code: 1 (in line 23, at column 1)</expected-warn>
+        <expected-warn>ASX0201: External UDF returned exception.</expected-warn>
+        <expected-warn>ASX0201: External UDF returned exception.</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-library">

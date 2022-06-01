@@ -33,12 +33,13 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.external.ipc.PythonIPCProto;
-import org.apache.asterix.external.library.PythonLibraryEvaluator;
+import org.apache.asterix.external.api.IExternalLangIPCProto;
+import org.apache.asterix.external.api.ILibraryEvaluator;
 import org.apache.asterix.external.library.PythonLibraryEvaluatorFactory;
 import org.apache.asterix.external.library.msgpack.MessageUnpackerToADM;
 import org.apache.asterix.external.library.msgpack.MsgPackPointableVisitor;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.functions.IExternalFunctionDescriptor;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.types.ATypeTag;
@@ -50,6 +51,7 @@ import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneO
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.data.std.primitive.TaggedValuePointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -87,7 +89,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
             private ArrayBackedValueStorage outputWrapper;
             private List<ArrayBackedValueStorage> argHolders;
             ArrayTupleBuilder tupleBuilder;
-            private List<Pair<Long, PythonLibraryEvaluator>> libraryEvaluators;
+            private List<Pair<Long, ILibraryEvaluator>> libraryEvaluators;
             private ATypeTag[][] nullCalls;
             private int[] numCalls;
             private VoidPointable ref;
@@ -97,6 +99,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
             private MessageUnpackerToADM unpackerToADM;
             private PointableAllocator pointableAllocator;
             private MsgPackPointableVisitor pointableVisitor;
+            private TaggedValuePointable anyPointer;
 
             @Override
             public void open() throws HyracksDataException {
@@ -109,7 +112,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                 try {
                     PythonLibraryEvaluatorFactory evalFactory = new PythonLibraryEvaluatorFactory(ctx);
                     for (IExternalFunctionDescriptor fnDesc : fnDescs) {
-                        PythonLibraryEvaluator eval = evalFactory.getEvaluator(fnDesc.getFunctionInfo(), sourceLoc);
+                        ILibraryEvaluator eval = evalFactory.getEvaluator(fnDesc.getFunctionInfo(), sourceLoc);
                         long id = eval.initialize(fnDesc.getFunctionInfo());
                         libraryEvaluators.add(new Pair<>(id, eval));
                     }
@@ -133,6 +136,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                 unpackerToADM = new MessageUnpackerToADM();
                 pointableAllocator = new PointableAllocator();
                 pointableVisitor = new MsgPackPointableVisitor();
+                anyPointer = TaggedValuePointable.FACTORY.createPointable();
             }
 
             private void resetBuffers(int numTuples, int[] numCalls) {
@@ -177,8 +181,12 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                             int numEntries = unpacker.unpackArrayHeader();
                             for (int j = 0; j < numEntries; j++) {
                                 if (ctx.getWarningCollector().shouldWarn()) {
-                                    ctx.getWarningCollector().warn(Warning.of(sourceLoc,
-                                            ErrorCode.EXTERNAL_UDF_EXCEPTION, unpacker.unpackString()));
+                                    //TODO: in domain socket mode, a NUL can appear at the end of the stacktrace strings.
+                                    //      this should probably not happen but warnings with control characters should
+                                    //      also be properly escaped
+                                    ctx.getWarningCollector()
+                                            .warn(Warning.of(sourceLoc, ErrorCode.EXTERNAL_UDF_EXCEPTION,
+                                                    unpacker.unpackString().replace('\0', ' ')));
                                 }
                             }
                         } catch (MessagePackException e) {
@@ -211,8 +219,8 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                                 for (int colIdx = 0; colIdx < cols.length; colIdx++) {
                                     ref.set(buffer.array(), tRef.getFieldStart(cols[colIdx]),
                                             tRef.getFieldLength(cols[colIdx]));
-                                    ATypeTag argumentPresence = PythonLibraryEvaluator
-                                            .peekArgument(fnDescs[func].getArgumentTypes()[colIdx], ref);
+                                    ATypeTag argumentPresence = ExternalDataUtils
+                                            .peekArgument(fnDescs[func].getArgumentTypes()[colIdx], ref, anyPointer);
                                     argumentStatus = handleNullMatrix(func, t, argumentPresence, argumentStatus);
                                 }
                             }
@@ -224,7 +232,7 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                                 for (int colIdx = 0; colIdx < cols.length; colIdx++) {
                                     ref.set(buffer.array(), tRef.getFieldStart(cols[colIdx]),
                                             tRef.getFieldLength(cols[colIdx]));
-                                    PythonIPCProto.visitValueRef(fnDescs[func].getArgumentTypes()[colIdx],
+                                    IExternalLangIPCProto.visitValueRef(fnDescs[func].getArgumentTypes()[colIdx],
                                             argHolders.get(func).getDataOutput(), ref, pointableAllocator,
                                             pointableVisitor, fnDescs[func].getFunctionInfo().getNullCall());
                                 }
@@ -232,21 +240,25 @@ public final class ExternalAssignBatchRuntimeFactory extends AbstractOneInputOne
                                 numCalls[func]--;
                             }
                             if (cols.length == 0) {
-                                PythonLibraryEvaluator.setVoidArgument(argHolders.get(func));
+                                ExternalDataUtils.setVoidArgument(argHolders.get(func));
                             }
                         }
                     }
 
                     //TODO: maybe this could be done in parallel for each unique library evaluator?
                     for (int argHolderIdx = 0; argHolderIdx < argHolders.size(); argHolderIdx++) {
-                        Pair<Long, PythonLibraryEvaluator> fnEval = libraryEvaluators.get(argHolderIdx);
-                        ByteBuffer columnResult = fnEval.getSecond().callPythonMulti(fnEval.getFirst(),
+                        Pair<Long, ILibraryEvaluator> fnEval = libraryEvaluators.get(argHolderIdx);
+                        ByteBuffer columnResult = fnEval.getSecond().callMulti(fnEval.getFirst(),
                                 argHolders.get(argHolderIdx), numCalls[argHolderIdx]);
                         if (columnResult != null) {
                             Pair<ByteBuffer, Counter> resultholder = batchResults.get(argHolderIdx);
-                            if (resultholder.getFirst().capacity() < columnResult.capacity()) {
-                                ByteBuffer realloc = ctx.reallocateFrame(resultholder.getFirst(),
-                                        columnResult.capacity() * 2, false);
+                            if (resultholder.getFirst().capacity() < columnResult.remaining()) {
+                                ByteBuffer realloc =
+                                        ctx.reallocateFrame(resultholder.getFirst(),
+                                                ctx.getInitialFrameSize()
+                                                        * ((columnResult.remaining() / ctx.getInitialFrameSize()) + 1),
+                                                false);
+                                realloc.limit(columnResult.limit());
                                 resultholder.setFirst(realloc);
                             }
                             ByteBuffer resultBuf = resultholder.getFirst();

@@ -99,6 +99,7 @@ public class NCConfig extends ControllerConfig {
         PYTHON_USE_BUNDLED_MSGPACK(BOOLEAN, true),
         PYTHON_ARGS(STRING_ARRAY, (String[]) null),
         PYTHON_ENV(STRING_ARRAY, (String[]) null),
+        PYTHON_DS_PATH(STRING, (String) null),
         CREDENTIAL_FILE(
                 OptionTypes.STRING,
                 (Function<IApplicationConfig, String>) appConfig -> FileUtil
@@ -248,6 +249,8 @@ public class NCConfig extends ControllerConfig {
                     return "Whether or not to attempt to automatically set PYTHON_CMD to a usable interpreter";
                 case PYTHON_ENV:
                     return "List of environment variables to set when invoking the Python interpreter for Python UDFs. E.g. FOO=1";
+                case PYTHON_DS_PATH:
+                    return "Path to systemd socket for fenced Python UDFs. Requires JDK17+, *nix operating system, and ";
                 case CREDENTIAL_FILE:
                     return "Path to HTTP basic credentials";
                 default:

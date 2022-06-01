@@ -21,6 +21,7 @@ Type=simple
 User=asterixdb
 ExecStart=/opt/apache-asterixdb/bin/asterixncservice
 Restart=on-abort
+WorkingDirectory=/opt/apache-asterixdb
 
 [Install]
 WantedBy=multi-user.target

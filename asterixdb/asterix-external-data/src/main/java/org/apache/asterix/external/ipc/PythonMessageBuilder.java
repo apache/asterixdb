@@ -82,6 +82,16 @@ public class PythonMessageBuilder {
         buf.put(serAddr);
     }
 
+    public void helloDS(String modulePath) throws IOException {
+        this.type = MessageType.HELO;
+        // sum(string lengths) + 2 from fix array tag and message type
+        dataLength = PythonMessageBuilder.getStringLength(modulePath) + 2;
+        packHeader();
+        MessagePackUtils.packFixArrayHeader(buf, (byte) 2);
+        MessagePackUtils.packStr(buf, "HELLO");
+        MessagePackUtils.packStr(buf, modulePath);
+    }
+
     public void quit() throws HyracksDataException {
         this.type = MessageType.QUIT;
         dataLength = getStringLength("QUIT");

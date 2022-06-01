@@ -13,15 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 [Unit]
-Description=Apache AsterixDB Cluster Controller
-After=network.target
+Description=AsterixDB UDF Domain Socket
+PartOf=asterixdb_udf.service
 
-[Service]
-Type=simple
-User=asterixdb
-ExecStart=/opt/apache-asterixdb/bin/asterixcc -config-file "/opt/apache-asterixdb/cc.conf"
-Restart=on-abort
-WorkingDirectory=/opt/apache-asterixdb
+[Socket]
+ListenStream=/tmp/pyudf.socket
+SocketMode=0660
+SocketUser=asterixdb-udf
+SocketGroup=asterixdb
+Accept=true
+DeferAcceptSec=1
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sockets.target

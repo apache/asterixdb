@@ -43,6 +43,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
 import org.apache.asterix.hyracks.bootstrap.NCApplication;
+import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.test.dataflow.TestLsmIoOpCallbackFactory;
 import org.apache.asterix.test.dataflow.TestPrimaryIndexOperationTrackerFactory;
 import org.apache.commons.io.FileUtils;
@@ -132,13 +133,13 @@ public class AsterixHyracksIntegrationUtil {
         cc = new ClusterControllerService(ccConfig, ccApplication);
 
         nodeNames = ccConfig.getConfigManager().getNodeNames();
-        if (deleteOldInstanceData) {
+        if (deleteOldInstanceData && nodeNames != null) {
             deleteTransactionLogs();
             removeTestStorageFiles();
             deleteCCFiles();
         }
         final List<NodeControllerService> nodeControllers = new ArrayList<>();
-        for (String nodeId : nodeNames) {
+        for (String nodeId : ExpressionUtils.emptyIfNull(nodeNames)) {
             // mark this NC as virtual, so that the CC doesn't try to start via NCService...
             configManager.set(nodeId, NCConfig.Option.NCSERVICE_PORT, NCConfig.NCSERVICE_PORT_DISABLED);
             final INCApplication ncApplication = createNCApplication();
@@ -303,7 +304,7 @@ public class AsterixHyracksIntegrationUtil {
 
         stopCC(false);
 
-        if (deleteOldInstanceData) {
+        if (deleteOldInstanceData && nodeNames != null) {
             deleteTransactionLogs();
             removeTestStorageFiles();
             deleteCCFiles();

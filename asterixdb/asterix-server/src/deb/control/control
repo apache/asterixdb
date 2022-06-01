@@ -17,8 +17,7 @@ Version: [[version]]
 Section: databases
 Priority: extra
 Architecture: all
-Depends: jdk (>= 1.8)
+Depends: java17-runtime-headless
 Maintainer: Ian Maxon <ian@maxons.email>
 Description: Apache AsterixDB - a scalable, open source Big Data Management System (BDMS)
 Distribution: development
-Depends: default-jre | java8-runtime
