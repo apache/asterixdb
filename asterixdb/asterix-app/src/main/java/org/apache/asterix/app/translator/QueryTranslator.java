@@ -110,6 +110,7 @@ import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.AdapterDropStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
@@ -552,6 +553,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw new CompilationException(ErrorCode.ILLEGAL_SET_PARAMETER, pname);
         }
         config.put(pname, pvalue);
+    }
+
+    protected LangRewritingContext createLangRewritingContext(MetadataProvider metadataProvider,
+            List<FunctionDecl> declaredFunctions, List<ViewDecl> declaredViews, IWarningCollector warningCollector,
+            int varCounter) {
+        return new LangRewritingContext(metadataProvider, declaredFunctions, declaredViews, warningCollector,
+                varCounter);
     }
 
     protected Pair<IAWriterFactory, FileSplit> handleWriteStatement(Statement stmt)
@@ -2736,8 +2744,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
             Query wrappedQuery = queryRewriter.createViewAccessorQuery(viewDecl);
             metadataProvider.setDefaultDataverse(dv);
-            apiFramework.reWriteQuery(declaredFunctions, Collections.singletonList(viewDecl), metadataProvider,
-                    wrappedQuery, sessionOutput, false, false, Collections.emptyList(), warningCollector);
+            LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider, declaredFunctions,
+                    Collections.singletonList(viewDecl), warningCollector, wrappedQuery.getVarCounter());
+            apiFramework.reWriteQuery(langRewritingContext, wrappedQuery, sessionOutput, false, false,
+                    Collections.emptyList());
 
             List<List<Triple<DataverseName, String, String>>> dependencies =
                     ViewUtil.getViewDependencies(viewDecl, foreignKeys, queryRewriter);
@@ -3011,8 +3021,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 fdList.addAll(declaredFunctions);
                 fdList.add(fd);
                 metadataProvider.setDefaultDataverse(dv);
-                apiFramework.reWriteQuery(fdList, null, metadataProvider, wrappedQuery, sessionOutput, false, false,
-                        Collections.emptyList(), warningCollector);
+                LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider, fdList, null,
+                        warningCollector, wrappedQuery.getVarCounter());
+                apiFramework.reWriteQuery(langRewritingContext, wrappedQuery, sessionOutput, false, false,
+                        Collections.emptyList());
 
                 List<List<Triple<DataverseName, String, String>>> dependencies =
                         FunctionUtil.getFunctionDependencies(fd, queryRewriter);
@@ -3750,8 +3762,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         Map<VarIdentifier, IAObject> externalVars = createExternalVariables(query, stmtParams);
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
-        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions, null,
-                metadataProvider, query, sessionOutput, true, true, externalVars.keySet(), warningCollector);
+        LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider, declaredFunctions,
+                null, warningCollector, query.getVarCounter());
+        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(langRewritingContext, query,
+                sessionOutput, true, true, externalVars.keySet());
 
         // Query Compilation (happens under the same ongoing metadata transaction)
         return apiFramework.compileQuery(clusterInfoCollector, metadataProvider, (Query) rewrittenResult.first,
@@ -3759,7 +3773,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 responsePrinter, warningCollector, requestParameters);
     }
 
-    private JobSpecification rewriteCompileInsertUpsert(IClusterInfoCollector clusterInfoCollector,
+    protected JobSpecification rewriteCompileInsertUpsert(IClusterInfoCollector clusterInfoCollector,
             MetadataProvider metadataProvider, InsertStatement insertUpsert, Map<String, IAObject> stmtParams)
             throws AlgebricksException, ACIDException {
         SourceLocation sourceLoc = insertUpsert.getSourceLocation();
@@ -3767,8 +3781,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         Map<VarIdentifier, IAObject> externalVars = createExternalVariables(insertUpsert, stmtParams);
 
         // Insert/upsert statement rewriting (happens under the same ongoing metadata transaction)
-        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(declaredFunctions, null,
-                metadataProvider, insertUpsert, sessionOutput, true, true, externalVars.keySet(), warningCollector);
+        LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider, declaredFunctions,
+                null, warningCollector, insertUpsert.getVarCounter());
+        Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(langRewritingContext,
+                insertUpsert, sessionOutput, true, true, externalVars.keySet());
 
         InsertStatement rewrittenInsertUpsert = (InsertStatement) rewrittenResult.first;
         DataverseName dataverseName = getActiveDataverseName(rewrittenInsertUpsert.getDataverseName());

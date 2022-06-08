@@ -32,7 +32,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
-public final class LangRewritingContext {
+public class LangRewritingContext {
     private final MetadataProvider metadataProvider;
     private final IWarningCollector warningCollector;
     private final Map<FunctionSignature, FunctionDecl> declaredFunctions;
