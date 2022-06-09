@@ -522,6 +522,9 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         if (!partProp.getPartitioningType().equals(partPropArg.getPartitioningType())) {
             return Boolean.FALSE;
         }
+        if (!partProp.getNodeDomain().sameAs(partPropArg.getNodeDomain())) {
+            return Boolean.FALSE;
+        }
         List<LogicalVariable> columns = new ArrayList<LogicalVariable>();
         partProp.getColumns(columns);
         List<LogicalVariable> columnsArg = new ArrayList<LogicalVariable>();

@@ -7212,6 +7212,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="metadata_only_02">
+        <output-dir compare="Text">metadata_only_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="cast-ASTERIXDB-2458">
         <output-dir compare="Text">cast-ASTERIXDB-2458</output-dir>
       </compilation-unit>
