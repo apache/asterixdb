@@ -1273,8 +1273,23 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
 
                     if (fieldTypePrime == null) {
-                        throw new CompilationException(ErrorCode.UNKNOWN_TYPE, indexedElement.getSourceLocation(),
-                                LogRedactionUtil.userData(String.valueOf(projectPath)));
+                        if (projectPath != null) {
+                            String fieldName = LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(projectPath));
+                            throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                                    indexedElement.getSourceLocation(),
+                                    "cannot find type of field '" + fieldName + "'");
+                        }
+                        // projectPath == null should only be the case with array index having UNNESTs only
+                        if (indexedElement.hasUnnest()) {
+                            List<List<String>> unnestList = indexedElement.getUnnestList();
+                            List<String> arrayField = unnestList.get(unnestList.size() - 1);
+                            String fieldName = LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(arrayField));
+                            throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                                    indexedElement.getSourceLocation(),
+                                    "cannot find type of elements of field '" + fieldName + "'");
+                        }
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                indexedElement.getSourceLocation(), "cannot find type of field");
                     }
                     validateIndexFieldType(indexType, fieldTypePrime, projectPath, indexedElement.getSourceLocation());
 
