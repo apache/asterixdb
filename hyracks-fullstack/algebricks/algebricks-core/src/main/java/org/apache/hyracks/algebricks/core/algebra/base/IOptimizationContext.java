@@ -33,6 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesV
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
@@ -93,4 +94,10 @@ public interface IOptimizationContext extends ITypingContext, IVariableContext {
     public PlanStructureVerifier getPlanStructureVerifier();
 
     public PlanStabilityVerifier getPlanStabilityVerifier();
+
+    void setCompilerFactory(Object factory);
+
+    Object getCompilerFactory();
+
+    IOptimizationContextFactory getOptimizationContextFactory();
 }

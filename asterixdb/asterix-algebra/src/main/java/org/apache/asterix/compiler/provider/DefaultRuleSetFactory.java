@@ -23,20 +23,30 @@ import java.util.List;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.optimizer.base.RuleCollections;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialFirstRuleCheckFixpointRuleController;
 import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialFixpointRuleController;
 import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialOnceRuleController;
 import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.algebricks.core.rewriter.base.IRuleSetKind;
 
 public class DefaultRuleSetFactory implements IRuleSetFactory {
 
     @Override
     public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getLogicalRewrites(
-            ICcApplicationContext appCtx) throws AlgebricksException {
+            ICcApplicationContext appCtx) {
         return buildLogical(appCtx);
+    }
+
+    @Override
+    public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getLogicalRewrites(IRuleSetKind ruleSetKind,
+            ICcApplicationContext appCtx) {
+        if (ruleSetKind == RuleSetKind.SAMPLING) {
+            return buildLogicalSampling();
+        } else {
+            throw new IllegalArgumentException(String.valueOf(ruleSetKind));
+        }
     }
 
     @Override
@@ -76,6 +86,14 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
         return defaultLogicalRewrites;
     }
 
+    public static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildLogicalSampling() {
+        List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites = new ArrayList<>();
+        SequentialFixpointRuleController seqCtrlNoDfs = new SequentialFixpointRuleController(false);
+        logicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildConsolidationRuleCollection()));
+        logicalRewrites.add(new Pair<>(seqCtrlNoDfs, RuleCollections.buildPlanCleanupRuleCollection()));
+        return logicalRewrites;
+    }
+
     public static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildPhysical(
             ICcApplicationContext appCtx) {
         List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultPhysicalRewrites = new ArrayList<>();
@@ -88,5 +106,4 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
         defaultPhysicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.prepareForJobGenRuleCollection()));
         return defaultPhysicalRewrites;
     }
-
 }

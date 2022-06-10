@@ -32,7 +32,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class SerializedDataWriterFactory implements IAWriterFactory {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+
+    public static final SerializedDataWriterFactory WITHOUT_RECORD_DESCRIPTOR = new SerializedDataWriterFactory(false);
+
+    private final boolean writeRecordDescriptor;
+
+    public SerializedDataWriterFactory(boolean writeRecordDescriptor) {
+        this.writeRecordDescriptor = writeRecordDescriptor;
+    }
 
     @Override
     public IAWriter createWriter(final int[] fields, final PrintStream ps, IPrinterFactory[] printerFactories,
@@ -41,15 +49,17 @@ public class SerializedDataWriterFactory implements IAWriterFactory {
 
             @Override
             public void init() throws HyracksDataException {
-                // dump the SerializerDeserializers to disk
-                try {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    ObjectOutputStream oos = new ObjectOutputStream(baos);
-                    oos.writeObject(inputRecordDescriptor);
-                    baos.writeTo(ps);
-                    oos.close();
-                } catch (IOException e) {
-                    throw HyracksDataException.create(e);
+                if (writeRecordDescriptor) {
+                    // dump the SerializerDeserializers to disk
+                    try {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        ObjectOutputStream oos = new ObjectOutputStream(baos);
+                        oos.writeObject(inputRecordDescriptor);
+                        baos.writeTo(ps);
+                        oos.close();
+                    } catch (IOException e) {
+                        throw HyracksDataException.create(e);
+                    }
                 }
             }
 

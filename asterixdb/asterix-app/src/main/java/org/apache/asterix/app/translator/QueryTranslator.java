@@ -236,13 +236,11 @@ import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.data.IAWriterFactory;
-import org.apache.hyracks.algebricks.data.IResultSerializerFactoryProvider;
-import org.apache.hyracks.algebricks.runtime.serializer.ResultSerializerFactoryProvider;
-import org.apache.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -331,10 +329,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     public void compileAndExecute(IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         validateStatements(requestParameters);
         trackRequest(requestParameters);
-        int resultSetIdCounter = 0;
+        Counter resultSetIdCounter = new Counter(0);
         FileSplit outputFile = null;
-        IAWriterFactory writerFactory = PrinterBasedWriterFactory.INSTANCE;
-        IResultSerializerFactoryProvider resultSerializerFactoryProvider = ResultSerializerFactoryProvider.INSTANCE;
         String threadName = Thread.currentThread().getName();
         Thread.currentThread().setName(
                 QueryTranslator.class.getSimpleName() + ":" + requestParameters.getRequestReference().getUuid());
@@ -354,8 +350,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 validateOperation(appCtx, activeDataverse, stmt);
                 MetadataProvider metadataProvider = MetadataProvider.create(appCtx, activeDataverse);
-                configureMetadataProvider(metadataProvider, config, resultSerializerFactoryProvider, writerFactory,
-                        outputFile, requestParameters, stmt);
+                configureMetadataProvider(metadataProvider, config, resultSetIdCounter, outputFile, requestParameters,
+                        stmt);
                 IStatementRewriter stmtRewriter = rewriterFactory.createStatementRewriter();
                 rewriteStatement(stmt, stmtRewriter, metadataProvider); // Rewrite the statement's AST.
                 Statement.Kind kind = stmt.getKind();
@@ -445,7 +441,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     case INSERT:
                     case UPSERT:
                         if (((InsertStatement) stmt).getReturnExpression() != null) {
-                            metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
+                            metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
                             metadataProvider.setResultAsyncMode(resultDelivery == ResultDelivery.ASYNC
                                     || resultDelivery == ResultDelivery.DEFERRED);
                             metadataProvider.setMaxResultReads(maxResultReads);
@@ -481,7 +477,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleCreateFeedPolicyStatement(metadataProvider, stmt);
                         break;
                     case QUERY:
-                        metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter++));
+                        metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
                         metadataProvider.setResultAsyncMode(
                                 resultDelivery == ResultDelivery.ASYNC || resultDelivery == ResultDelivery.DEFERRED);
                         metadataProvider.setMaxResultReads(maxResultReads);
@@ -507,7 +503,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         final ExtensionStatement extStmt = (ExtensionStatement) stmt;
                         statementProperties.setName(extStmt.getName());
                         if (!isCompileOnly()) {
-                            extStmt.handle(hcc, this, requestParameters, metadataProvider, resultSetIdCounter);
+                            extStmt.handle(hcc, this, requestParameters, metadataProvider,
+                                    resultSetIdCounter.getAndInc());
                         }
                         break;
                     default:
@@ -525,14 +522,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void configureMetadataProvider(MetadataProvider metadataProvider, Map<String, String> config,
-            IResultSerializerFactoryProvider resultSerializerFactoryProvider, IAWriterFactory writerFactory,
-            FileSplit outputFile, IRequestParameters requestParameters, Statement statement) {
+            Counter resultSetIdCounter, FileSplit outputFile, IRequestParameters requestParameters,
+            Statement statement) {
         if (statement.getKind() == Statement.Kind.QUERY && requestParameters.isSQLCompatMode()) {
             metadataProvider.getConfig().put(SqlppQueryRewriter.SQL_COMPAT_OPTION, Boolean.TRUE.toString());
         }
         metadataProvider.getConfig().putAll(config);
-        metadataProvider.setWriterFactory(writerFactory);
-        metadataProvider.setResultSerializerFactoryProvider(resultSerializerFactoryProvider);
+        metadataProvider.setResultSetIdCounter(resultSetIdCounter);
         metadataProvider.setOutputFile(outputFile);
     }
 
@@ -4369,8 +4365,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     private void updateJobStats(JobId jobId, Stats stats, ResultSetId rsId) throws HyracksDataException {
         final ClusterControllerService controllerService =
                 (ClusterControllerService) appCtx.getServiceContext().getControllerService();
-        org.apache.asterix.api.common.ResultMetadata resultMetadata =
-                (org.apache.asterix.api.common.ResultMetadata) controllerService.getResultDirectoryService()
+        org.apache.asterix.translator.ResultMetadata resultMetadata =
+                (org.apache.asterix.translator.ResultMetadata) controllerService.getResultDirectoryService()
                         .getResultMetadata(jobId, rsId);
         stats.setProcessedObjects(resultMetadata.getProcessedObjects());
         if (jobFlags.contains(JobFlag.PROFILE_RUNTIME)) {

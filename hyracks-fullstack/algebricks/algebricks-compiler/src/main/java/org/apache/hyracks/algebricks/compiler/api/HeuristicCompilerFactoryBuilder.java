@@ -18,8 +18,11 @@
  */
 package org.apache.hyracks.algebricks.compiler.api;
 
+import java.util.List;
+
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IConflictingTypeResolver;
@@ -33,10 +36,15 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.PlanCompiler;
+import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import org.apache.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.HeuristicOptimizer;
+import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
+import org.apache.hyracks.algebricks.core.rewriter.base.IRuleSetKind;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.algebricks.data.IAWriterFactory;
+import org.apache.hyracks.algebricks.runtime.writers.SerializedDataWriterFactory;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -58,14 +66,19 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                 IConflictingTypeResolver conflictingTypeResolver, PhysicalOptimizationConfig physicalOptimizationConfig,
                 AlgebricksPartitionConstraint clusterLocations, IWarningCollector warningCollector) {
             IPlanPrettyPrinter prettyPrinter = PlanPrettyPrinter.createStringPlanPrettyPrinter();
-            return new AlgebricksOptimizationContext(varCounter, expressionEvalSizeComputer,
+            return new AlgebricksOptimizationContext(this, varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
                     conflictingTypeResolver, physicalOptimizationConfig, clusterLocations, prettyPrinter,
                     warningCollector);
         }
+
+        @Override
+        public IOptimizationContext cloneOptimizationContext(IOptimizationContext oc) {
+            return new AlgebricksOptimizationContext((AlgebricksOptimizationContext) oc);
+        }
     }
 
-    private IOptimizationContextFactory optCtxFactory;
+    private final IOptimizationContextFactory optCtxFactory;
 
     public HeuristicCompilerFactoryBuilder() {
         this.optCtxFactory = DefaultOptimizationContextFactory.INSTANCE;
@@ -77,42 +90,85 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
 
     @Override
     public ICompilerFactory create() {
-        return new ICompilerFactory() {
-            @Override
-            public ICompiler createCompiler(final ILogicalPlan plan, final IMetadataProvider<?, ?> metadata,
-                    int varCounter) {
-                final IOptimizationContext oc = optCtxFactory.createOptimizationContext(varCounter,
-                        expressionEvalSizeComputer, mergeAggregationExpressionFactory, expressionTypeComputer,
-                        missableTypeComputer, conflictingTypeResolver, physicalOptimizationConfig, clusterLocations,
-                        warningCollector);
-                oc.setMetadataDeclarations(metadata);
-                final HeuristicOptimizer opt = new HeuristicOptimizer(plan, logicalRewrites, physicalRewrites, oc);
-                return new ICompiler() {
-
-                    @Override
-                    public void optimize() throws AlgebricksException {
-                        opt.optimize();
-                    }
-
-                    @Override
-                    public JobSpecification createJob(Object appContext,
-                            IJobletEventListenerFactory jobEventListenerFactory) throws AlgebricksException {
-                        AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Starting Job Generation.\n");
-                        JobGenContext context = new JobGenContext(null, metadata, appContext,
-                                serializerDeserializerProvider, hashFunctionFactoryProvider, hashFunctionFamilyProvider,
-                                comparatorFactoryProvider, typeTraitProvider, binaryBooleanInspectorFactory,
-                                binaryIntegerInspectorFactory, printerProvider, missingWriterFactory, nullWriterFactory,
-                                unnestingPositionWriterFactory, normalizedKeyComputerFactoryProvider,
-                                expressionRuntimeProvider, expressionTypeComputer, oc, expressionEvalSizeComputer,
-                                partialAggregationTypeComputer, predEvaluatorFactoryProvider,
-                                physicalOptimizationConfig.getFrameSize(), clusterLocations, warningCollector,
-                                maxWarnings, physicalOptimizationConfig);
-                        PlanCompiler pc = new PlanCompiler(context);
-                        return pc.compilePlan(plan, jobEventListenerFactory);
-                    }
-                };
-            }
-        };
+        return new CompilerFactoryImpl();
     }
 
+    private class CompilerFactoryImpl implements ICompilerFactory {
+        @Override
+        public ICompiler createCompiler(ILogicalPlan plan, IMetadataProvider<?, ?> metadata, int varCounter) {
+            IOptimizationContext optContext =
+                    optCtxFactory.createOptimizationContext(varCounter, expressionEvalSizeComputer,
+                            mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
+                            conflictingTypeResolver, physicalOptimizationConfig, clusterLocations, warningCollector);
+            optContext.setMetadataDeclarations(metadata);
+            optContext.setCompilerFactory(this);
+            return new CompilerImpl(this, plan, optContext, logicalRewrites.get(), physicalRewrites.get(),
+                    writerFactory);
+        }
+
+        @Override
+        public ICompiler createCompiler(ILogicalPlan plan, IOptimizationContext newOptContext,
+                IRuleSetKind ruleSetKind) {
+            if (newOptContext.getCompilerFactory() != this) {
+                throw new IllegalStateException();
+            }
+            return new CompilerImpl(this, plan, newOptContext, logicalRewritesByKind.apply(ruleSetKind),
+                    physicalRewrites.get(), SerializedDataWriterFactory.WITHOUT_RECORD_DESCRIPTOR);
+        }
+
+        private PlanCompiler createPlanCompiler(IOptimizationContext oc, Object appContext,
+                IAWriterFactory writerFactory) {
+            JobGenContext context = new JobGenContext(null, oc.getMetadataProvider(), appContext,
+                    serializerDeserializerProvider, hashFunctionFactoryProvider, hashFunctionFamilyProvider,
+                    comparatorFactoryProvider, typeTraitProvider, binaryBooleanInspectorFactory,
+                    binaryIntegerInspectorFactory, printerProvider, writerFactory, resultSerializerFactoryProvider,
+                    missingWriterFactory, nullWriterFactory, unnestingPositionWriterFactory,
+                    normalizedKeyComputerFactoryProvider, expressionRuntimeProvider, expressionTypeComputer, oc,
+                    expressionEvalSizeComputer, partialAggregationTypeComputer, predEvaluatorFactoryProvider,
+                    physicalOptimizationConfig.getFrameSize(), clusterLocations, warningCollector, maxWarnings,
+                    physicalOptimizationConfig);
+            return new PlanCompiler(context);
+        }
+    }
+
+    private static class CompilerImpl implements ICompiler {
+
+        private final CompilerFactoryImpl factory;
+
+        private final ILogicalPlan plan;
+
+        private final IOptimizationContext oc;
+
+        private final List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites;
+
+        private final List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> physicalRewrites;
+
+        private final IAWriterFactory writerFactory;
+
+        private CompilerImpl(CompilerFactoryImpl factory, ILogicalPlan plan, IOptimizationContext oc,
+                List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> logicalRewrites,
+                List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> physicalRewrites,
+                IAWriterFactory writerFactory) {
+            this.factory = factory;
+            this.plan = plan;
+            this.oc = oc;
+            this.logicalRewrites = logicalRewrites;
+            this.physicalRewrites = physicalRewrites;
+            this.writerFactory = writerFactory;
+        }
+
+        @Override
+        public void optimize() throws AlgebricksException {
+            HeuristicOptimizer opt = new HeuristicOptimizer(plan, logicalRewrites, physicalRewrites, oc);
+            opt.optimize();
+        }
+
+        @Override
+        public JobSpecification createJob(Object appContext, IJobletEventListenerFactory jobEventListenerFactory)
+                throws AlgebricksException {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Starting Job Generation.\n");
+            PlanCompiler pc = factory.createPlanCompiler(oc, appContext, writerFactory);
+            return pc.compilePlan(plan, jobEventListenerFactory);
+        }
+    }
 }

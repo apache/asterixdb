@@ -31,6 +31,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationE
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMissableTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.rewriter.base.AlgebricksOptimizationContext;
+import org.apache.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
@@ -39,17 +40,24 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 public final class AsterixOptimizationContext extends AlgebricksOptimizationContext {
 
-    private final Int2ObjectMap<Set<DataSource>> dataSourceMap = new Int2ObjectOpenHashMap<>();
+    private final Int2ObjectOpenHashMap<Set<DataSource>> dataSourceMap;
 
-    public AsterixOptimizationContext(int varCounter, IExpressionEvalSizeComputer expressionEvalSizeComputer,
+    public AsterixOptimizationContext(IOptimizationContextFactory optContextFactory, int varCounter,
+            IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
             IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer nullableTypeComputer,
             IConflictingTypeResolver conflictingTypeResovler, PhysicalOptimizationConfig physicalOptimizationConfig,
             AlgebricksPartitionConstraint clusterLocations, IPlanPrettyPrinter prettyPrinter,
             IWarningCollector warningCollector) {
-        super(varCounter, expressionEvalSizeComputer, mergeAggregationExpressionFactory, expressionTypeComputer,
-                nullableTypeComputer, conflictingTypeResovler, physicalOptimizationConfig, clusterLocations,
-                prettyPrinter, warningCollector);
+        super(optContextFactory, varCounter, expressionEvalSizeComputer, mergeAggregationExpressionFactory,
+                expressionTypeComputer, nullableTypeComputer, conflictingTypeResovler, physicalOptimizationConfig,
+                clusterLocations, prettyPrinter, warningCollector);
+        dataSourceMap = new Int2ObjectOpenHashMap<>();
+    }
+
+    public AsterixOptimizationContext(AsterixOptimizationContext from) {
+        super(from);
+        dataSourceMap = from.dataSourceMap.clone();
     }
 
     public void addDataSource(DataSource dataSource) {

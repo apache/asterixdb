@@ -16,12 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.api.common;
+package org.apache.asterix.translator;
 
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.translator.SessionConfig;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.result.IResultMetadata;
 

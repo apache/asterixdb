@@ -47,7 +47,7 @@ public final class PopulateResultMetadataRule implements IAlgebraicRewriteRule {
         }
         DistributeResultOperator dop = (DistributeResultOperator) op;
         IResultMetadata resultMetadata = dop.getResultMetadata();
-        if (resultMetadata.getOutputTypes() != null) {
+        if (resultMetadata == null || resultMetadata.getOutputTypes() != null) {
             return false;
         }
         List<Mutable<ILogicalExpression>> exprList = dop.getExpressions();

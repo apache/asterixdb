@@ -20,27 +20,10 @@
 package org.apache.asterix.common.exceptions;
 
 import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.Warning;
 
-public final class NoOpWarningCollector implements IWarningCollector {
-
-    public static final IWarningCollector INSTANCE = new NoOpWarningCollector();
+public final class NoOpWarningCollector {
+    public static final IWarningCollector INSTANCE = org.apache.hyracks.api.exceptions.NoOpWarningCollector.INSTANCE;
 
     private NoOpWarningCollector() {
-    }
-
-    @Override
-    public void warn(Warning warning) {
-        // no-op
-    }
-
-    @Override
-    public boolean shouldWarn() {
-        return false;
-    }
-
-    @Override
-    public long getTotalWarningsCount() {
-        return 0;
     }
 }
