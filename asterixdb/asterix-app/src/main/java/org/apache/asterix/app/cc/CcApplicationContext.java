@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.utils;
+package org.apache.asterix.app.cc;
 
 import java.io.IOException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
+import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IConfigValidator;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.ICoordinationService;
@@ -56,13 +57,21 @@ import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.asterix.runtime.job.listener.NodeJobTracker;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
+import org.apache.asterix.runtime.utils.BulkTxnIdFactory;
+import org.apache.asterix.runtime.utils.ClusterStateManager;
+import org.apache.asterix.runtime.utils.NoOpCoordinationService;
+import org.apache.asterix.runtime.utils.RequestTracker;
+import org.apache.asterix.runtime.utils.RuntimeComponentsProvider;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
+import org.apache.hyracks.api.result.IResultSet;
+import org.apache.hyracks.client.result.ResultSet;
 import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.util.NetworkUtil;
 
 /*
  * Acts as an holder class for IndexRegistryProvider, AsterixStorageManager
@@ -87,7 +96,8 @@ public class CcApplicationContext implements ICcApplicationContext {
     private MessagingProperties messagingProperties;
     private NodeProperties nodeProperties;
     private Supplier<IMetadataBootstrap> metadataBootstrapSupplier;
-    private IHyracksClientConnection hcc;
+    private volatile HyracksConnection hcc;
+    private volatile ResultSet resultSet;
     private Object extensionManager;
     private INcLifecycleCoordinator ftStrategy;
     private IJobLifecycleListener activeLifeCycleListener;
@@ -103,7 +113,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final IAdapterFactoryService adapterFactoryService;
     private final ReentrantReadWriteLock compilationLock = new ReentrantReadWriteLock(true);
 
-    public CcApplicationContext(ICCServiceContext ccServiceCtx, IHyracksClientConnection hcc,
+    public CcApplicationContext(ICCServiceContext ccServiceCtx, HyracksConnection hcc,
             Supplier<IMetadataBootstrap> metadataBootstrapSupplier, IGlobalRecoveryManager globalRecoveryManager,
             INcLifecycleCoordinator ftStrategy, IJobLifecycleListener activeLifeCycleListener,
             IStorageComponentProvider storageComponentProvider, IMetadataLockManager mdLockManager,
@@ -188,18 +198,44 @@ public class CcApplicationContext implements ICcApplicationContext {
 
     @Override
     public IHyracksClientConnection getHcc() throws HyracksDataException {
-        if (!hcc.isConnected()) {
+        HyracksConnection hc = hcc;
+        if (!hc.isConnected()) {
             synchronized (this) {
-                if (!hcc.isConnected()) {
+                hc = hcc;
+                if (!hc.isConnected()) {
                     try {
-                        hcc = new HyracksConnection(hcc.getHost(), hcc.getPort());
+                        ResultSet rs = resultSet;
+                        resultSet = null;
+                        NetworkUtil.closeQuietly(rs);
+
+                        NetworkUtil.closeQuietly(hc);
+                        hcc = hc = new HyracksConnection(hcc.getHost(), hcc.getPort());
                     } catch (Exception e) {
                         throw HyracksDataException.create(e);
                     }
                 }
             }
         }
-        return hcc;
+        return hc;
+    }
+
+    @Override
+    public IResultSet getResultSet() throws HyracksDataException {
+        ResultSet rs = resultSet;
+        if (rs == null) {
+            synchronized (this) {
+                rs = resultSet;
+                if (rs == null) {
+                    try {
+                        resultSet = rs = ResultReader.createResultSet(getHcc(), ccServiceCtx.getControllerService(),
+                                compilerProperties);
+                    } catch (Exception e) {
+                        throw HyracksDataException.create(e);
+                    }
+                }
+            }
+        }
+        return rs;
     }
 
     @Override

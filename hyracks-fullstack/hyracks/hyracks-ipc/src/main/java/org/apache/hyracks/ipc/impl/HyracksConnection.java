@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.ipc.impl;
 
+import java.io.Closeable;
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -70,7 +71,7 @@ import org.apache.logging.log4j.Logger;
  *
  * @author vinayakb
  */
-public final class HyracksConnection implements IHyracksClientConnection {
+public final class HyracksConnection implements Closeable, IHyracksClientConnection {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -120,6 +121,11 @@ public final class HyracksConnection implements IHyracksClientConnection {
 
     public HyracksConnection(String ccHost, int ccPort) throws Exception {
         this(ccHost, ccPort, PlainSocketChannelFactory.INSTANCE);
+    }
+
+    @Override
+    public void close() {
+        ipc.stop();
     }
 
     @Override

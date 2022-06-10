@@ -24,29 +24,22 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.result.IResultSet;
-import org.apache.hyracks.client.result.ResultSet;
 import org.apache.hyracks.http.api.IServletRequest;
 
 public class ServletUtil {
-    static IResultSet getResultSet(IHyracksClientConnection hcc, IApplicationContext appCtx,
-            final Map<String, Object> ctx) throws Exception {
+    static IResultSet getResultSet(IApplicationContext appCtx, final Map<String, Object> ctx) throws Exception {
         IResultSet resultSet = (IResultSet) ctx.get(RESULTSET_ATTR);
         if (resultSet == null) {
             synchronized (ctx) {
                 resultSet = (IResultSet) ctx.get(RESULTSET_ATTR);
                 if (resultSet == null) {
-                    resultSet = new ResultSet(hcc,
-                            appCtx.getServiceContext().getControllerService().getNetworkSecurityManager()
-                                    .getSocketChannelFactory(),
-                            appCtx.getCompilerProperties().getFrameSize(), ResultReader.NUM_READERS);
+                    resultSet = appCtx.getResultSet();
                     ctx.put(RESULTSET_ATTR, resultSet);
                 }
             }

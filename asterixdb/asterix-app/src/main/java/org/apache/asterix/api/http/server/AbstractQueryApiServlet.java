@@ -28,8 +28,6 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.http.server.AbstractServlet;
-import org.apache.hyracks.ipc.exceptions.IPCException;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -61,13 +59,7 @@ public class AbstractQueryApiServlet extends AbstractServlet {
     }
 
     protected IResultSet getResultSet() throws Exception { // NOSONAR
-        try {
-            return ServletUtil.getResultSet(getHyracksClientConnection(), appCtx, ctx);
-        } catch (IPCException e) {
-            LOGGER.log(Level.WARN, "Failed getting hyracks dataset connection. Resetting hyracks connection.", e);
-            ctx.put(HYRACKS_CONNECTION_ATTR, appCtx.getHcc());
-            return ServletUtil.getResultSet(getHyracksClientConnection(), appCtx, ctx);
-        }
+        return ServletUtil.getResultSet(appCtx, ctx);
     }
 
     protected IHyracksClientConnection getHyracksClientConnection() throws Exception { // NOSONAR

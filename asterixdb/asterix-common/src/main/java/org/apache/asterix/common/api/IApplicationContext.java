@@ -31,6 +31,7 @@ import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.result.IResultSet;
 
 public interface IApplicationContext {
 
@@ -65,6 +66,11 @@ public interface IApplicationContext {
      *             if connection couldn't be established to cluster controller
      */
     IHyracksClientConnection getHcc() throws HyracksDataException;
+
+    /**
+     * @return a result set provider associated with {@link IHyracksClientConnection}
+     */
+    IResultSet getResultSet() throws HyracksDataException;
 
     /**
      * @return the cluster coordination service.

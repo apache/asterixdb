@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.client.result;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
@@ -35,7 +36,7 @@ import org.apache.hyracks.ipc.impl.IPCSystem;
 import org.apache.hyracks.ipc.impl.JavaSerializationBasedPayloadSerializerDeserializer;
 
 //TODO(madhusudancs): Should this implementation be moved to org.apache.hyracks.client?
-public class ResultDirectory implements IResultDirectory {
+public class ResultDirectory implements IResultDirectory, Closeable {
     private final IPCSystem ipc;
     private final IResultDirectory remoteResultDirectory;
 
@@ -63,5 +64,10 @@ public class ResultDirectory implements IResultDirectory {
     @Override
     public IResultMetadata getResultMetadata(JobId jobId, ResultSetId rsId) throws Exception {
         return remoteResultDirectory.getResultMetadata(jobId, rsId);
+    }
+
+    @Override
+    public void close() throws IOException {
+        ipc.stop();
     }
 }

@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.client.result;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.context.IHyracksCommonContext;
@@ -25,15 +28,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.network.ISocketChannelFactory;
-import org.apache.hyracks.api.result.IResultDirectory;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.api.result.IResultSetReader;
 import org.apache.hyracks.api.result.ResultSetId;
 import org.apache.hyracks.client.net.ClientNetworkManager;
 import org.apache.hyracks.control.nc.resources.memory.FrameManager;
+import org.apache.hyracks.util.NetworkUtil;
 
-public class ResultSet implements IResultSet {
-    private final IResultDirectory resultDirectory;
+public class ResultSet implements IResultSet, Closeable {
+    private final ResultDirectory resultDirectory;
 
     private final ClientNetworkManager netManager;
 
@@ -48,6 +51,15 @@ public class ResultSet implements IResultSet {
         netManager.start();
 
         resultClientCtx = new ResultClientContext(frameSize);
+    }
+
+    @Override
+    public void close() throws IOException {
+        try {
+            netManager.stop();
+        } finally {
+            NetworkUtil.closeQuietly(resultDirectory);
+        }
     }
 
     @Override
