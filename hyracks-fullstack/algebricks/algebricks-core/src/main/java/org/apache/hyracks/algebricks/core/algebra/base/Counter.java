@@ -32,8 +32,16 @@ public class Counter {
         return counter;
     }
 
+    public int getAndInc() {
+        return counter++;
+    }
+
     public void inc() {
         ++counter;
+    }
+
+    public int incAndGet() {
+        return ++counter;
     }
 
     public void set(int newStart) {

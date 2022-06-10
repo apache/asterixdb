@@ -21,24 +21,30 @@ package org.apache.asterix.compiler.provider;
 import java.util.List;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.rewriter.base.AbstractRuleController;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.algebricks.core.rewriter.base.IRuleSetKind;
 
 public interface IRuleSetFactory {
 
+    enum RuleSetKind implements IRuleSetKind {
+        SAMPLING
+    }
+
     /**
      * @return the logical rewrites
-     * @throws AlgebricksException
      */
-    public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getLogicalRewrites(
-            ICcApplicationContext appCtx) throws AlgebricksException;
+    List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getLogicalRewrites(ICcApplicationContext appCtx);
+
+    /**
+     * @return the logical rewrites of the specified kind
+     */
+    List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getLogicalRewrites(IRuleSetKind ruleSetKind,
+            ICcApplicationContext appCtx);
 
     /**
      * @return the physical rewrites
      */
-    public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getPhysicalRewrites(
-            ICcApplicationContext appCtx) throws AlgebricksException;
-
+    List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getPhysicalRewrites(ICcApplicationContext appCtx);
 }

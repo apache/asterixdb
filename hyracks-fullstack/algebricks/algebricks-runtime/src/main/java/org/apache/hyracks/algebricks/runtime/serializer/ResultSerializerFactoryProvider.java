@@ -40,7 +40,7 @@ public class ResultSerializerFactoryProvider implements IResultSerializerFactory
     }
 
     @Override
-    public IResultSerializerFactory getAqlResultSerializerFactoryProvider(final int[] fields,
+    public IResultSerializerFactory getResultSerializerFactoryProvider(final int[] fields,
             final IPrinterFactory[] printerFactories, final IAWriterFactory writerFactory) {
         return new IResultSerializerFactory() {
             private static final long serialVersionUID = 1L;

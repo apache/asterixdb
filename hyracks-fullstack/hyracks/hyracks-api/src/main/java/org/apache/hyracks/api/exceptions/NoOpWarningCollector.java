@@ -16,15 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.compiler.api;
 
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
-import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
-import org.apache.hyracks.algebricks.core.rewriter.base.IRuleSetKind;
+package org.apache.hyracks.api.exceptions;
 
-public interface ICompilerFactory {
-    ICompiler createCompiler(ILogicalPlan plan, IMetadataProvider<?, ?> metadata, int varCounter);
+public final class NoOpWarningCollector implements IWarningCollector {
 
-    ICompiler createCompiler(ILogicalPlan plan, IOptimizationContext newOptContext, IRuleSetKind ruleSetKind);
+    public static final IWarningCollector INSTANCE = new NoOpWarningCollector();
+
+    private NoOpWarningCollector() {
+    }
+
+    @Override
+    public void warn(Warning warning) {
+        // no-op
+    }
+
+    @Override
+    public boolean shouldWarn() {
+        return false;
+    }
+
+    @Override
+    public long getTotalWarningsCount() {
+        return 0;
+    }
 }

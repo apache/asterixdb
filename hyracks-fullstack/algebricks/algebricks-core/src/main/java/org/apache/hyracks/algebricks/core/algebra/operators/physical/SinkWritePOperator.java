@@ -101,7 +101,7 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
         IMetadataProvider<?, ?> mp = context.getMetadataProvider();
 
         Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> runtimeAndConstraints =
-                mp.getWriteFileRuntime(write.getDataSink(), columns, pf, inputDesc);
+                mp.getWriteFileRuntime(write.getDataSink(), columns, pf, context.getWriterFactory(), inputDesc);
         IPushRuntimeFactory runtime = runtimeAndConstraints.first;
         runtime.setSourceLocation(write.getSourceLocation());
 

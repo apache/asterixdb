@@ -46,45 +46,29 @@ import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependenc
 import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.NoOpWarningCollector;
 
 /**
  * The Algebricks default implementation for IOptimizationContext.
  */
-@SuppressWarnings({ "unchecked", "rawtypes" })
+@SuppressWarnings({ "rawtypes" })
 public class AlgebricksOptimizationContext implements IOptimizationContext {
 
-    private int varCounter;
+    private final IOptimizationContextFactory optContextFactory;
     private final IExpressionEvalSizeComputer expressionEvalSizeComputer;
     private final IMergeAggregationExpressionFactory mergeAggregationExpressionFactory;
     private final PhysicalOptimizationConfig physicalOptimizationConfig;
-    private final IVariableEvalSizeEnvironment varEvalSizeEnv = new IVariableEvalSizeEnvironment() {
 
-        Map<LogicalVariable, Integer> varSizeMap = new HashMap<>();
-
-        @Override
-        public void setVariableEvalSize(LogicalVariable var, int size) {
-            varSizeMap.put(var, size);
-        }
-
-        @Override
-        public int getVariableEvalSize(LogicalVariable var) {
-            return varSizeMap.get(var);
-        }
-    };
-
-    private Map<ILogicalOperator, IVariableTypeEnvironment> typeEnvMap = new HashMap<>();
-
-    private Map<ILogicalOperator, HashSet<ILogicalOperator>> alreadyCompared = new HashMap<>();
-    private Map<IAlgebraicRewriteRule, HashSet<ILogicalOperator>> dontApply = new HashMap<>();
-    private Map<LogicalVariable, FunctionalDependency> varToPrimaryKey = new HashMap<>();
-
-    private IMetadataProvider metadataProvider;
-    private HashSet<LogicalVariable> notToBeInlinedVars = new HashSet<>();
-
+    private final VariableEvalSizeEnvironmentImpl varEvalSizeEnv = new VariableEvalSizeEnvironmentImpl();
+    private final Map<ILogicalOperator, IVariableTypeEnvironment> typeEnvMap = new HashMap<>();
+    private final Map<ILogicalOperator, HashSet<ILogicalOperator>> alreadyCompared = new HashMap<>();
+    private final Map<IAlgebraicRewriteRule, HashSet<ILogicalOperator>> dontApply = new HashMap<>();
+    private final Map<LogicalVariable, FunctionalDependency> varToPrimaryKey = new HashMap<>();
+    private final HashSet<LogicalVariable> notToBeInlinedVars = new HashSet<>();
     protected final Map<ILogicalOperator, List<FunctionalDependency>> fdGlobalMap = new HashMap<>();
     protected final Map<ILogicalOperator, Map<LogicalVariable, EquivalenceClass>> eqClassGlobalMap = new HashMap<>();
-
     protected final Map<ILogicalOperator, ILogicalPropertiesVector> logicalProps = new HashMap<>();
+
     private final IExpressionTypeComputer expressionTypeComputer;
     private final IMissableTypeComputer nullableTypeComputer;
     private final INodeDomain defaultNodeDomain;
@@ -94,12 +78,18 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     private final PlanStructureVerifier planStructureVerifier;
     private final PlanStabilityVerifier planStabilityVerifier;
 
-    public AlgebricksOptimizationContext(int varCounter, IExpressionEvalSizeComputer expressionEvalSizeComputer,
+    private int varCounter;
+    private IMetadataProvider metadataProvider;
+    private Object compilerFactory;
+
+    public AlgebricksOptimizationContext(IOptimizationContextFactory optContextFactory, int varCounter,
+            IExpressionEvalSizeComputer expressionEvalSizeComputer,
             IMergeAggregationExpressionFactory mergeAggregationExpressionFactory,
             IExpressionTypeComputer expressionTypeComputer, IMissableTypeComputer nullableTypeComputer,
             IConflictingTypeResolver conflictingTypeResovler, PhysicalOptimizationConfig physicalOptimizationConfig,
             AlgebricksPartitionConstraint clusterLocations, IPlanPrettyPrinter prettyPrinter,
             IWarningCollector warningCollector) {
+        this.optContextFactory = optContextFactory;
         this.varCounter = varCounter;
         this.expressionEvalSizeComputer = expressionEvalSizeComputer;
         this.mergeAggregationExpressionFactory = mergeAggregationExpressionFactory;
@@ -113,6 +103,35 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
         boolean isSanityCheckEnabled = physicalOptimizationConfig.isSanityCheckEnabled();
         this.planStructureVerifier = isSanityCheckEnabled ? new PlanStructureVerifier(prettyPrinter, this) : null;
         this.planStabilityVerifier = isSanityCheckEnabled ? new PlanStabilityVerifier(prettyPrinter) : null;
+    }
+
+    public AlgebricksOptimizationContext(AlgebricksOptimizationContext from) {
+        optContextFactory = from.optContextFactory;
+        varCounter = from.varCounter;
+        expressionEvalSizeComputer = from.expressionEvalSizeComputer;
+        mergeAggregationExpressionFactory = from.mergeAggregationExpressionFactory;
+        expressionTypeComputer = from.expressionTypeComputer;
+        nullableTypeComputer = from.nullableTypeComputer;
+        physicalOptimizationConfig = from.physicalOptimizationConfig;
+        defaultNodeDomain = from.defaultNodeDomain;
+        prettyPrinter = from.prettyPrinter;
+        conflictingTypeResovler = from.conflictingTypeResovler;
+        warningCollector = NoOpWarningCollector.INSTANCE;
+        boolean isSanityCheckEnabled = physicalOptimizationConfig.isSanityCheckEnabled();
+        planStructureVerifier = isSanityCheckEnabled ? new PlanStructureVerifier(from.prettyPrinter, this) : null;
+        planStabilityVerifier = isSanityCheckEnabled ? new PlanStabilityVerifier(from.prettyPrinter) : null;
+        metadataProvider = from.metadataProvider;
+        compilerFactory = from.compilerFactory;
+
+        varEvalSizeEnv.varSizeMap.putAll(from.varEvalSizeEnv.varSizeMap);
+        typeEnvMap.putAll(from.typeEnvMap);
+        alreadyCompared.putAll(from.alreadyCompared);
+        dontApply.putAll(from.dontApply);
+        varToPrimaryKey.putAll(from.varToPrimaryKey);
+        notToBeInlinedVars.addAll(from.notToBeInlinedVars);
+        fdGlobalMap.putAll(from.fdGlobalMap);
+        eqClassGlobalMap.putAll(from.eqClassGlobalMap);
+        logicalProps.putAll(from.logicalProps);
     }
 
     @Override
@@ -353,5 +372,35 @@ public class AlgebricksOptimizationContext implements IOptimizationContext {
     @Override
     public PlanStabilityVerifier getPlanStabilityVerifier() {
         return planStabilityVerifier;
+    }
+
+    @Override
+    public IOptimizationContextFactory getOptimizationContextFactory() {
+        return optContextFactory;
+    }
+
+    @Override
+    public void setCompilerFactory(Object compilerFactory) {
+        this.compilerFactory = compilerFactory;
+    }
+
+    @Override
+    public Object getCompilerFactory() {
+        return compilerFactory;
+    }
+
+    protected static class VariableEvalSizeEnvironmentImpl implements IVariableEvalSizeEnvironment {
+
+        protected final Map<LogicalVariable, Integer> varSizeMap = new HashMap<>();
+
+        @Override
+        public void setVariableEvalSize(LogicalVariable var, int size) {
+            varSizeMap.put(var, size);
+        }
+
+        @Override
+        public int getVariableEvalSize(LogicalVariable var) {
+            return varSizeMap.get(var);
+        }
     }
 }

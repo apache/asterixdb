@@ -22,7 +22,6 @@ import java.io.PrintWriter;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import org.apache.asterix.api.common.ResultMetadata;
 import org.apache.asterix.api.http.server.ResultUtil;
 import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
 import org.apache.asterix.common.annotations.RecordFieldOrderAnnotation;
@@ -34,6 +33,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.translator.ExecutionPlans;
+import org.apache.asterix.translator.ResultMetadata;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.util.JSONUtil;
 

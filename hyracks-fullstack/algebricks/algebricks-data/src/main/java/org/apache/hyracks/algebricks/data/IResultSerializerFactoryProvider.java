@@ -32,10 +32,8 @@ public interface IResultSerializerFactoryProvider extends Serializable {
      *            - A printer factory array to print the tuple containing different fields.
      * @param writerFactory
      *            - A writer factory to write the serialized data to the print stream.
-     * @param inputRecordDesc
-     *            - The record descriptor describing the input frame to be serialized.
      * @return A new instance of result serialized appender.
      */
-    public IResultSerializerFactory getAqlResultSerializerFactoryProvider(int[] fields,
-            IPrinterFactory[] printerFactories, IAWriterFactory writerFactory);
+    public IResultSerializerFactory getResultSerializerFactoryProvider(int[] fields, IPrinterFactory[] printerFactories,
+            IAWriterFactory writerFactory);
 }

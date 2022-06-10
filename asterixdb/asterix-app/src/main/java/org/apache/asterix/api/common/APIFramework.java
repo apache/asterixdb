@@ -40,6 +40,7 @@ import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -73,6 +74,7 @@ import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
 import org.apache.asterix.translator.ExecutionPlans;
 import org.apache.asterix.translator.IRequestParameters;
+import org.apache.asterix.translator.ResultMetadata;
 import org.apache.asterix.translator.SessionConfig;
 import org.apache.asterix.translator.SessionOutput;
 import org.apache.asterix.utils.ResourceUtils;
@@ -97,6 +99,8 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.PlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.rewriter.base.IOptimizationContextFactory;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.data.IPrinterFactoryProvider;
+import org.apache.hyracks.algebricks.runtime.serializer.ResultSerializerFactoryProvider;
+import org.apache.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
@@ -154,10 +158,15 @@ public class APIFramework {
                 IConflictingTypeResolver conflictingTypeResolver, PhysicalOptimizationConfig physicalOptimizationConfig,
                 AlgebricksPartitionConstraint clusterLocations, IWarningCollector warningCollector) {
             IPlanPrettyPrinter prettyPrinter = PlanPrettyPrinter.createStringPlanPrettyPrinter();
-            return new AsterixOptimizationContext(varCounter, expressionEvalSizeComputer,
+            return new AsterixOptimizationContext(this, varCounter, expressionEvalSizeComputer,
                     mergeAggregationExpressionFactory, expressionTypeComputer, missableTypeComputer,
                     conflictingTypeResolver, physicalOptimizationConfig, clusterLocations, prettyPrinter,
                     warningCollector);
+        }
+
+        @Override
+        public IOptimizationContext cloneOptimizationContext(IOptimizationContext oc) {
+            return new AsterixOptimizationContext((AsterixOptimizationContext) oc);
         }
     }
 
@@ -210,7 +219,8 @@ public class APIFramework {
                 && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
             generateLogicalPlan(plan, output.config().getPlanFormat());
         }
-        CompilerProperties compilerProperties = metadataProvider.getApplicationContext().getCompilerProperties();
+        ICcApplicationContext ccAppContext = metadataProvider.getApplicationContext();
+        CompilerProperties compilerProperties = ccAppContext.getCompilerProperties();
         Map<String, Object> querySpecificConfig = validateConfig(metadataProvider.getConfig(), sourceLoc);
         final PhysicalOptimizationConfig physOptConf =
                 OptimizationConfUtil.createPhysicalOptimizationConf(compilerProperties, querySpecificConfig, sourceLoc);
@@ -218,8 +228,9 @@ public class APIFramework {
         HeuristicCompilerFactoryBuilder builder =
                 new HeuristicCompilerFactoryBuilder(OptimizationContextFactory.INSTANCE);
         builder.setPhysicalOptimizationConfig(physOptConf);
-        builder.setLogicalRewrites(ruleSetFactory.getLogicalRewrites(metadataProvider.getApplicationContext()));
-        builder.setPhysicalRewrites(ruleSetFactory.getPhysicalRewrites(metadataProvider.getApplicationContext()));
+        builder.setLogicalRewrites(() -> ruleSetFactory.getLogicalRewrites(ccAppContext));
+        builder.setLogicalRewritesByKind(kind -> ruleSetFactory.getLogicalRewrites(kind, ccAppContext));
+        builder.setPhysicalRewrites(() -> ruleSetFactory.getPhysicalRewrites(ccAppContext));
         IDataFormat format = metadataProvider.getDataFormat();
         ICompilerFactory compilerFactory = builder.create();
         builder.setExpressionEvalSizeComputer(format.getExpressionEvalSizeComputer());
@@ -236,6 +247,24 @@ public class APIFramework {
         AlgebricksAbsolutePartitionConstraint computationLocations =
                 chooseLocations(clusterInfoCollector, parallelism, metadataProvider.getClusterLocations());
         builder.setClusterLocations(computationLocations);
+
+        builder.setBinaryBooleanInspectorFactory(format.getBinaryBooleanInspectorFactory());
+        builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());
+        builder.setComparatorFactoryProvider(format.getBinaryComparatorFactoryProvider());
+        builder.setExpressionRuntimeProvider(
+                new ExpressionRuntimeProvider(new QueryLogicalExpressionJobGen(metadataProvider.getFunctionManager())));
+        builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
+        builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
+        builder.setMissingWriterFactory(format.getMissingWriterFactory());
+        builder.setNullWriterFactory(format.getNullWriterFactory());
+        builder.setUnnestingPositionWriterFactory(format.getUnnestingPositionWriterFactory());
+        builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
+        builder.setPrinterProvider(getPrinterFactoryProvider(format, conf.fmt()));
+        builder.setWriterFactory(PrinterBasedWriterFactory.INSTANCE);
+        builder.setResultSerializerFactoryProvider(ResultSerializerFactoryProvider.INSTANCE);
+        builder.setSerializerDeserializerProvider(format.getSerdeProvider());
+        builder.setTypeTraitProvider(format.getTypeTraitProvider());
+        builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
         ICompiler compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter());
         if (conf.isOptimize()) {
@@ -285,32 +314,16 @@ public class APIFramework {
             return null;
         }
 
-        builder.setBinaryBooleanInspectorFactory(format.getBinaryBooleanInspectorFactory());
-        builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());
-        builder.setComparatorFactoryProvider(format.getBinaryComparatorFactoryProvider());
-        builder.setExpressionRuntimeProvider(
-                new ExpressionRuntimeProvider(new QueryLogicalExpressionJobGen(metadataProvider.getFunctionManager())));
-        builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
-        builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
-        builder.setMissingWriterFactory(format.getMissingWriterFactory());
-        builder.setNullWriterFactory(format.getNullWriterFactory());
-        builder.setUnnestingPositionWriterFactory(format.getUnnestingPositionWriterFactory());
-        builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
-        builder.setPrinterProvider(getPrinterFactoryProvider(format, conf.fmt()));
-        builder.setSerializerDeserializerProvider(format.getSerdeProvider());
-        builder.setTypeTraitProvider(format.getTypeTraitProvider());
-        builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
-
         JobEventListenerFactory jobEventListenerFactory =
                 new JobEventListenerFactory(txnId, metadataProvider.isWriteTransaction());
-        JobSpecification spec = compiler.createJob(metadataProvider.getApplicationContext(), jobEventListenerFactory);
+        JobSpecification spec = compiler.createJob(ccAppContext, jobEventListenerFactory);
 
         if (isQuery) {
             if (requestParameters == null || !requestParameters.isSkipAdmissionPolicy()) {
                 // Sets a required capacity, only for read-only queries.
                 // DDLs and DMLs are considered not that frequent.
                 // limit the computation locations to the locations that will be used in the query
-                final INodeJobTracker nodeJobTracker = metadataProvider.getApplicationContext().getNodeJobTracker();
+                final INodeJobTracker nodeJobTracker = ccAppContext.getNodeJobTracker();
                 final AlgebricksAbsolutePartitionConstraint jobLocations =
                         getJobLocations(spec, nodeJobTracker, computationLocations);
                 final IClusterCapacity jobRequiredCapacity =

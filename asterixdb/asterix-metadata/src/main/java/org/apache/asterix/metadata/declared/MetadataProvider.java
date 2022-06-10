@@ -115,6 +115,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConst
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
@@ -182,12 +183,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private Dataverse defaultDataverse;
     private MetadataTransactionContext mdTxnCtx;
     private boolean isWriteTransaction;
-    private IAWriterFactory writerFactory;
     private FileSplit outputFile;
     private boolean asyncResults;
     private long maxResultReads;
     private ResultSetId resultSetId;
-    private IResultSerializerFactoryProvider resultSerializerFactoryProvider;
+    private Counter resultSetIdCounter;
     private TxnId txnId;
     private Map<String, Integer> externalDataLocks;
     private boolean blockingOperatorDisabled = false;
@@ -262,20 +262,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         this.isWriteTransaction = writeTransaction;
     }
 
-    public void setWriterFactory(IAWriterFactory writerFactory) {
-        this.writerFactory = writerFactory;
-    }
-
     public void setMetadataTxnContext(MetadataTransactionContext mdTxnCtx) {
         this.mdTxnCtx = mdTxnCtx;
     }
 
     public MetadataTransactionContext getMetadataTxnContext() {
         return mdTxnCtx;
-    }
-
-    public IAWriterFactory getWriterFactory() {
-        return this.writerFactory;
     }
 
     public FileSplit getOutputFile() {
@@ -310,12 +302,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         this.resultSetId = resultSetId;
     }
 
-    public void setResultSerializerFactoryProvider(IResultSerializerFactoryProvider rafp) {
-        this.resultSerializerFactoryProvider = rafp;
+    public Counter getResultSetIdCounter() {
+        return resultSetIdCounter;
     }
 
-    public IResultSerializerFactoryProvider getResultSerializerFactoryProvider() {
-        return resultSerializerFactoryProvider;
+    public void setResultSetIdCounter(Counter resultSetIdCounter) {
+        this.resultSetIdCounter = resultSetIdCounter;
     }
 
     public boolean isWriteTransaction() {
@@ -683,7 +675,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     @Override
     public Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> getWriteFileRuntime(IDataSink sink,
-            int[] printColumns, IPrinterFactory[] printerFactories, RecordDescriptor inputDesc) {
+            int[] printColumns, IPrinterFactory[] printerFactories, IAWriterFactory writerFactory,
+            RecordDescriptor inputDesc) {
         FileSplitDataSink fsds = (FileSplitDataSink) sink;
         FileSplitSinkId fssi = fsds.getId();
         FileSplit fs = fssi.getFileSplit();
@@ -691,14 +684,15 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String nodeId = fs.getNodeName();
 
         SinkWriterRuntimeFactory runtime =
-                new SinkWriterRuntimeFactory(printColumns, printerFactories, outFile, getWriterFactory(), inputDesc);
+                new SinkWriterRuntimeFactory(printColumns, printerFactories, outFile, writerFactory, inputDesc);
         AlgebricksPartitionConstraint apc = new AlgebricksAbsolutePartitionConstraint(new String[] { nodeId });
         return new Pair<>(runtime, apc);
     }
 
     @Override
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getResultHandleRuntime(IDataSink sink,
-            int[] printColumns, IPrinterFactory[] printerFactories, RecordDescriptor inputDesc,
+            int[] printColumns, IPrinterFactory[] printerFactories, IAWriterFactory writerFactory,
+            IResultSerializerFactoryProvider resultSerializerFactoryProvider, RecordDescriptor inputDesc,
             IResultMetadata metadata, JobSpecification spec) throws AlgebricksException {
         ResultSetDataSink rsds = (ResultSetDataSink) sink;
         ResultSetSinkId rssId = rsds.getId();
@@ -706,7 +700,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         ResultWriterOperatorDescriptor resultWriter = null;
         try {
             IResultSerializerFactory resultSerializedAppenderFactory = resultSerializerFactoryProvider
-                    .getAqlResultSerializerFactoryProvider(printColumns, printerFactories, getWriterFactory());
+                    .getResultSerializerFactoryProvider(printColumns, printerFactories, writerFactory);
             resultWriter = new ResultWriterOperatorDescriptor(spec, rsId, metadata, getResultAsyncMode(),
                     resultSerializedAppenderFactory, getMaxResultReads());
         } catch (IOException e) {
