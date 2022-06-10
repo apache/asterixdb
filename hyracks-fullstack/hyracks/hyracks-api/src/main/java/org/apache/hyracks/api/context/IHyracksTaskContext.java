@@ -42,6 +42,8 @@ public interface IHyracksTaskContext
 
     TaskAttemptId getTaskAttemptId();
 
+    int getPartitionCount();
+
     ICounterContext getCounterContext();
 
     ExecutorService getExecutorService();

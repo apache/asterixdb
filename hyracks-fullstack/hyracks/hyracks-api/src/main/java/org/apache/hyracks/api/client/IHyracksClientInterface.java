@@ -30,6 +30,7 @@ import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobInfo;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.topology.ClusterTopology;
 
 public interface IHyracksClientInterface {
@@ -52,6 +53,8 @@ public interface IHyracksClientInterface {
     public NetworkAddress getResultDirectoryAddress() throws Exception;
 
     public void waitForCompletion(JobId jobId) throws Exception;
+
+    public List<IOperatorStats> waitForCompletion(JobId jobId, List<String> statOperatorNames) throws Exception;
 
     public Map<String, NodeControllerInfo> getNodeControllersInfo() throws Exception;
 

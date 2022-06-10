@@ -69,7 +69,7 @@ public class RunFileWriter implements IFrameWriter {
 
     @Override
     public void close() throws HyracksDataException {
-        if (!failed) {
+        if (!failed && handle != null) {
             ioManager.close(handle);
         }
     }

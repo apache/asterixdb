@@ -93,7 +93,7 @@ distribute result [$$94]
                                                   -- HASH_PARTITION_EXCHANGE [$$81]  |PARTITIONED|
                                                     project ([$$104, $$81])
                                                     -- STREAM_PROJECT  |PARTITIONED|
-                                                      assign [$$104, $$81] <- [TRUE, $$ht2.getField("text")]
+                                                      assign [$$104, $$81] <- [true, $$ht2.getField("text")]
                                                       -- ASSIGN  |PARTITIONED|
                                                         project ([$$ht2])
                                                         -- STREAM_PROJECT  |PARTITIONED|

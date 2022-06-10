@@ -76,7 +76,7 @@ public class TestUtils {
             INCServiceContext serviceCtx = new TestNCServiceContext(ioManager, null);
             TestJobletContext jobletCtx = new TestJobletContext(frameSize, serviceCtx, new JobId(0));
             TaskAttemptId tid = new TaskAttemptId(new TaskId(new ActivityId(new OperatorDescriptorId(0), 0), 0), 0);
-            IHyracksTaskContext taskCtx = new TestTaskContext(jobletCtx, tid);
+            IHyracksTaskContext taskCtx = new TestTaskContext(jobletCtx, tid, 1);
             return taskCtx;
         } catch (HyracksException e) {
             throw new RuntimeException(e);

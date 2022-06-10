@@ -87,6 +87,8 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private final TaskAttemptId taskAttemptId;
 
+    private final int partitionCount;
+
     private final String displayName;
 
     private final ExecutorService executorService;
@@ -131,12 +133,13 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
 
     private final Map<Long, IThreadStats> perThreadStats = new HashMap<>();
 
-    public Task(Joblet joblet, Set<JobFlag> jobFlags, TaskAttemptId taskId, String displayName,
+    public Task(Joblet joblet, Set<JobFlag> jobFlags, TaskAttemptId taskId, int partitionCount, String displayName,
             ExecutorService executor, NodeControllerService ncs,
             List<List<PartitionChannel>> inputChannelsFromConnectors) {
         this.joblet = joblet;
         this.jobFlags = jobFlags;
         this.taskAttemptId = taskId;
+        this.partitionCount = partitionCount;
         this.displayName = displayName;
         this.executorService = executor;
         fileFactory = new WorkspaceFileFactory(this, joblet.getIoManager());
@@ -222,6 +225,11 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
     @Override
     public TaskAttemptId getTaskAttemptId() {
         return taskAttemptId;
+    }
+
+    @Override
+    public int getPartitionCount() {
+        return partitionCount;
     }
 
     @Override

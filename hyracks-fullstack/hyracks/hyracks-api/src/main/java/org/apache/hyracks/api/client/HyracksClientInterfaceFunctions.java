@@ -346,12 +346,19 @@ public class HyracksClientInterfaceFunctions {
     }
 
     public static class WaitForCompletionFunction extends Function {
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2L;
 
         private final JobId jobId;
 
+        private final List<String> statOperatorNames;
+
         public WaitForCompletionFunction(JobId jobId) {
+            this(jobId, null);
+        }
+
+        public WaitForCompletionFunction(JobId jobId, List<String> statOperatorNames) {
             this.jobId = jobId;
+            this.statOperatorNames = statOperatorNames;
         }
 
         @Override
@@ -361,6 +368,10 @@ public class HyracksClientInterfaceFunctions {
 
         public JobId getJobId() {
             return jobId;
+        }
+
+        public List<String> getStatOperatorNames() {
+            return statOperatorNames;
         }
     }
 

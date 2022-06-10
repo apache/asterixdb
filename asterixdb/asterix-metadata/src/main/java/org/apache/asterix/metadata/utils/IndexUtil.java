@@ -79,6 +79,8 @@ public class IndexUtil {
         } else if (index.getIndexType() == DatasetConfig.IndexType.ARRAY) {
             numSecondaryKeys = ((Index.ArrayIndexDetails) index.getIndexDetails()).getElementList().stream()
                     .map(e -> e.getProjectList().size()).reduce(0, Integer::sum);
+        } else if (index.getIndexType() == DatasetConfig.IndexType.SAMPLE) {
+            return null;
         } else {
             throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, index.getIndexType().toString());
         }
@@ -111,6 +113,8 @@ public class IndexUtil {
             case SINGLE_PARTITION_NGRAM_INVIX:
             case SINGLE_PARTITION_WORD_INVIX:
                 break;
+            case SAMPLE:
+                break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
                         index.getIndexType().toString());
@@ -120,21 +124,21 @@ public class IndexUtil {
 
     public static JobSpecification buildDropIndexJobSpec(Index index, MetadataProvider metadataProvider,
             Dataset dataset, SourceLocation sourceLoc) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper =
+        ISecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
         return secondaryIndexHelper.buildDropJobSpec(EnumSet.noneOf(DropOption.class));
     }
 
     public static JobSpecification buildDropIndexJobSpec(Index index, MetadataProvider metadataProvider,
             Dataset dataset, Set<DropOption> options, SourceLocation sourceLoc) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper =
+        ISecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
         return secondaryIndexHelper.buildDropJobSpec(options);
     }
 
     public static JobSpecification buildSecondaryIndexCreationJobSpec(Dataset dataset, Index index,
             MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper =
+        ISecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
         return secondaryIndexHelper.buildCreationJobSpec();
     }
@@ -147,8 +151,8 @@ public class IndexUtil {
     public static JobSpecification buildSecondaryIndexLoadingJobSpec(Dataset dataset, Index index,
             MetadataProvider metadataProvider, List<ExternalFile> files, SourceLocation sourceLoc)
             throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper;
-        if (dataset.isCorrelated()) {
+        ISecondaryIndexOperationsHelper secondaryIndexHelper;
+        if (dataset.isCorrelated() && supportsCorrelated(index.getIndexType())) { //TODO:REVISIT
             secondaryIndexHelper = SecondaryCorrelatedTreeIndexOperationsHelper.createIndexOperationsHelper(dataset,
                     index, metadataProvider, sourceLoc);
         } else {
@@ -156,14 +160,18 @@ public class IndexUtil {
                     metadataProvider, sourceLoc);
         }
         if (files != null) {
-            secondaryIndexHelper.setExternalFiles(files);
+            ((SecondaryIndexOperationsHelper) secondaryIndexHelper).setExternalFiles(files);
         }
         return secondaryIndexHelper.buildLoadingJobSpec();
     }
 
+    private static boolean supportsCorrelated(DatasetConfig.IndexType indexType) {
+        return indexType != DatasetConfig.IndexType.SAMPLE;
+    }
+
     public static JobSpecification buildSecondaryIndexCompactJobSpec(Dataset dataset, Index index,
             MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
-        SecondaryIndexOperationsHelper secondaryIndexHelper =
+        ISecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
         return secondaryIndexHelper.buildCompactJobSpec();
     }
@@ -239,5 +247,10 @@ public class IndexUtil {
 
     public static boolean excludesUnknowns(Index index) {
         return !includesUnknowns(index);
+    }
+
+    public static Pair<String, String> getSampleIndexNames(String datasetName) {
+        return new Pair<>(MetadataConstants.SAMPLE_INDEX_1_PREFIX + datasetName,
+                MetadataConstants.SAMPLE_INDEX_2_PREFIX + datasetName);
     }
 }

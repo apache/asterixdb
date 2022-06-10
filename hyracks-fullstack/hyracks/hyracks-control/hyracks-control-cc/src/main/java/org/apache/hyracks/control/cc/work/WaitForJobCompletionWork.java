@@ -33,11 +33,14 @@ import org.apache.hyracks.control.common.work.SynchronizableWork;
 public class WaitForJobCompletionWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
     private final JobId jobId;
+    private final List<String> statOperatorNames;
     private final IResultCallback<Object> callback;
 
-    public WaitForJobCompletionWork(ClusterControllerService ccs, JobId jobId, IResultCallback<Object> callback) {
+    public WaitForJobCompletionWork(ClusterControllerService ccs, JobId jobId, List<String> statOperatorNames,
+            IResultCallback<Object> callback) {
         this.ccs = ccs;
         this.jobId = jobId;
+        this.statOperatorNames = statOperatorNames;
         this.callback = callback;
     }
 
@@ -53,7 +56,7 @@ public class WaitForJobCompletionWork extends SynchronizableWork {
                         Thread.currentThread()
                                 .setName(Thread.currentThread().getName() + " : WaitForCompletionForJobId: " + jobId);
                         jobRun.waitForCompletion();
-                        callback.setValue(null);
+                        callback.setValue(jobRun.getJobProfile().getAggregatedStats(statOperatorNames));
                     } catch (Exception e) {
                         callback.setException(e);
                     }

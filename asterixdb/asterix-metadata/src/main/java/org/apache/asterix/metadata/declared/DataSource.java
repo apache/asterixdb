@@ -60,6 +60,7 @@ public abstract class DataSource implements IDataSource<DataSourceId> {
         public static final byte FEED = 0x02;
         public static final byte LOADABLE = 0x03;
         public static final byte FUNCTION = 0x04;
+        public static final byte SAMPLE = 0x05;
 
         // Hide implicit public constructor
         private Type() {

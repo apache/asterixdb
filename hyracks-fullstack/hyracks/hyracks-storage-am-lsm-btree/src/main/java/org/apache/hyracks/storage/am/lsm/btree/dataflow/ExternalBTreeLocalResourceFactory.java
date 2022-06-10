@@ -46,13 +46,13 @@ public class ExternalBTreeLocalResourceFactory extends LSMBTreeLocalResourceFact
             IMetadataPageManagerFactory metadataPageManagerFactory,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, ILSMMergePolicyFactory mergePolicyFactory,
             Map<String, String> mergePolicyProperties, boolean durable, int[] bloomFilterKeyFields,
-            double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields, boolean hasBloomFilter,
-            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
+            double bloomFilterFalsePositiveRate, int[] btreeFields, boolean hasBloomFilter, ITypeTraits nullTypeTraits,
+            INullIntrospector nullIntrospector) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory, null,
                 ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, bloomFilterKeyFields,
-                bloomFilterFalsePositiveRate, isPrimary, btreeFields, NoOpCompressorDecompressorFactory.INSTANCE,
-                hasBloomFilter, nullTypeTraits, nullIntrospector);
+                bloomFilterFalsePositiveRate, false, btreeFields, NoOpCompressorDecompressorFactory.INSTANCE,
+                hasBloomFilter, nullTypeTraits, nullIntrospector, true);
     }
 
     @Override
@@ -61,6 +61,7 @@ public class ExternalBTreeLocalResourceFactory extends LSMBTreeLocalResourceFact
                 bloomFilterFalsePositiveRate, isPrimary, fileRef.getRelativePath(), storageManager, mergePolicyFactory,
                 mergePolicyProperties, filterTypeTraits, filterCmpFactories, btreeFields, bloomFilterKeyFields,
                 opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
-                ioSchedulerProvider, durable, hasBloomFilter, nullTypeTraits, nullIntrospector);
+                ioSchedulerProvider, durable, hasBloomFilter, nullTypeTraits, nullIntrospector,
+                isSecondaryNoIncrementalMaintenance);
     }
 }

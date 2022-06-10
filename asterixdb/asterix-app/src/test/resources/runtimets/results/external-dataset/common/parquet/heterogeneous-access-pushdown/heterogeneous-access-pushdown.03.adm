@@ -4,7 +4,7 @@ distribute result [$$20]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     project ([$$20])
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$20] <- [switch-case(TRUE, is-array($$22), $$24, $$25)]
+      assign [$$20] <- [switch-case(true, is-array($$22), $$24, $$25)]
       -- ASSIGN  |PARTITIONED|
         project ([$$22, $$24, $$25])
         -- STREAM_PROJECT  |PARTITIONED|

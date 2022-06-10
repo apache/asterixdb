@@ -20,6 +20,7 @@ package org.apache.asterix.om.base;
 
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.utils.RecordUtil;
+import org.apache.hyracks.util.JSONUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -89,7 +90,7 @@ public class ARecord implements IAObject {
                 if (i > 0) {
                     sb.append(", ");
                 }
-                sb.append(type.getFieldNames()[i]);
+                JSONUtil.quoteAndEscape(sb, type.getFieldNames()[i]);
                 sb.append(": ");
                 sb.append(fields[i]);
             }

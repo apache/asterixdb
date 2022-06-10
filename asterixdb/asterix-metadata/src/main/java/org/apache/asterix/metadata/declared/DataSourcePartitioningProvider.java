@@ -61,6 +61,7 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
                 pp = getFeedPartitioningProperty(ds, domain, scanVariables);
                 break;
             case DataSource.Type.INTERNAL_DATASET:
+            case DataSource.Type.SAMPLE:
                 Set<LogicalVariable> pvars = new ListSet<>();
                 pp = getInternalDatasetPartitioningProperty(ds, domain, scanVariables, pvars);
                 propsLocal.add(new LocalOrderProperty(getOrderColumns(pvars)));

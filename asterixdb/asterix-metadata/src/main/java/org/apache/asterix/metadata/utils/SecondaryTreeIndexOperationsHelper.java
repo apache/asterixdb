@@ -72,13 +72,19 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
 
     @Override
     public JobSpecification buildDropJobSpec(Set<DropOption> options) throws AlgebricksException {
+        return buildDropJobSpecImpl(dataset, index, options, metadataProvider, sourceLoc);
+    }
+
+    static JobSpecification buildDropJobSpecImpl(Dataset dataset, Index index, Set<DropOption> dropOptions,
+            MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
                 metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
         IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
         // The index drop operation should be persistent regardless of temp datasets or permanent dataset.
-        IndexDropOperatorDescriptor btreeDrop = new IndexDropOperatorDescriptor(spec, dataflowHelperFactory, options);
+        IndexDropOperatorDescriptor btreeDrop =
+                new IndexDropOperatorDescriptor(spec, dataflowHelperFactory, dropOptions);
         btreeDrop.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeDrop,
                 splitsAndConstraint.second);

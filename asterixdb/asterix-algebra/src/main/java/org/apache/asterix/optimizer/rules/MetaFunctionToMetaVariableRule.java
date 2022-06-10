@@ -95,7 +95,8 @@ public class MetaFunctionToMetaVariableRule implements IAlgebraicRewriteRule {
             if (dataSource.getDatasourceType() != DataSource.Type.EXTERNAL_DATASET
                     && dataSource.getDatasourceType() != DataSource.Type.INTERNAL_DATASET
                     && dataSource.getDatasourceType() != DataSource.Type.LOADABLE
-                    && dataSource.getDatasourceType() != DataSource.Type.FUNCTION) {
+                    && dataSource.getDatasourceType() != DataSource.Type.FUNCTION
+                    && dataSource.getDatasourceType() != DataSource.Type.SAMPLE) {
                 IMutationDataSource mds = (IMutationDataSource) dataSource;
                 if (mds.isChange()) {
                     transformers = new ArrayList<>();

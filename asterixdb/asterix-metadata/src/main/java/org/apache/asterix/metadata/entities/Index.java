@@ -275,6 +275,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         switch (indexType) {
             case ARRAY:
             case BTREE:
+            case SAMPLE:
                 return ResourceType.LSM_BTREE;
             case RTREE:
                 return ResourceType.LSM_RTREE;
@@ -296,7 +297,8 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     public enum IndexCategory {
         VALUE,
         TEXT,
-        ARRAY;
+        ARRAY,
+        SAMPLE;
 
         public static IndexCategory of(IndexType indexType) {
             switch (indexType) {
@@ -310,6 +312,8 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
                     return TEXT;
                 case ARRAY:
                     return ARRAY;
+                case SAMPLE:
+                    return SAMPLE;
                 default:
                     throw new IllegalArgumentException(String.valueOf(indexType));
             }
@@ -530,6 +534,68 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
         public int getSourceIndicator() {
             return sourceIndicator;
+        }
+    }
+
+    public static class SampleIndexDetails extends AbstractIndexDetails {
+
+        private static final long serialVersionUID = 1L;
+
+        private final List<List<String>> keyFieldNames;
+
+        private final List<Integer> keyFieldSourceIndicators;
+
+        private final List<IAType> keyFieldTypes;
+
+        private final int sampleCardinalityTarget;
+
+        private final long sourceCardinality;
+
+        private final int sourceAvgItemSize;
+
+        public SampleIndexDetails(List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators,
+                List<IAType> keyFieldTypes, int sampleCardinalityTarget, long sourceCardinality,
+                int sourceAvgItemSize) {
+            this.keyFieldNames = keyFieldNames;
+            this.keyFieldSourceIndicators = keyFieldSourceIndicators;
+            this.keyFieldTypes = keyFieldTypes;
+            this.sampleCardinalityTarget = sampleCardinalityTarget;
+            this.sourceCardinality = sourceCardinality;
+            this.sourceAvgItemSize = sourceAvgItemSize;
+        }
+
+        @Override
+        IndexCategory getIndexCategory() {
+            return IndexCategory.SAMPLE;
+        }
+
+        public List<List<String>> getKeyFieldNames() {
+            return keyFieldNames;
+        }
+
+        public List<Integer> getKeyFieldSourceIndicators() {
+            return keyFieldSourceIndicators;
+        }
+
+        public List<IAType> getKeyFieldTypes() {
+            return keyFieldTypes;
+        }
+
+        @Override
+        public boolean isOverridingKeyFieldTypes() {
+            return false;
+        }
+
+        public int getSampleCardinalityTarget() {
+            return sampleCardinalityTarget;
+        }
+
+        public long getSourceCardinality() {
+            return sourceCardinality;
+        }
+
+        public int getSourceAvgItemSize() {
+            return sourceAvgItemSize;
         }
     }
 

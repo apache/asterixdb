@@ -86,7 +86,7 @@ public class TestLsmBTreeResourceFactoryProvider implements IResourceFactoryProv
                 filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory,
                 metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties,
                 true, bloomFilterFields, bloomFilterFalsePositiveRate, index.isPrimaryIndex(), btreeFields,
-                bloomFilterFields != null);
+                bloomFilterFields != null, false);
     }
 
     private static ITypeTraits[] getTypeTraits(MetadataProvider metadataProvider, Dataset dataset, Index index,

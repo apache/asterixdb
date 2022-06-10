@@ -52,6 +52,9 @@ public interface IMetadataLockUtil {
     void refreshDatasetBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
             String datasetName) throws AlgebricksException;
 
+    void analyzeDatasetBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException;
+
     void compactBegin(IMetadataLockManager lockManager, LockList locks, DataverseName dataverseName, String datasetName)
             throws AlgebricksException;
 

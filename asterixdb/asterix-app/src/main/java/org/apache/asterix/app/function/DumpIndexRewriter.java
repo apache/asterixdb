@@ -25,6 +25,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.ISecondaryIndexOperationsHelper;
 import org.apache.asterix.metadata.utils.SecondaryIndexOperationsHelper;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -63,7 +64,7 @@ public class DumpIndexRewriter extends FunctionRewriter {
         if (index.isPrimaryIndex()) {
             throw new CompilationException(ErrorCode.OPERATION_NOT_SUPPORTED_ON_PRIMARY_INDEX, loc, indexName);
         }
-        SecondaryIndexOperationsHelper secondaryIndexHelper =
+        ISecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, loc);
         IndexDataflowHelperFactory indexDataflowHelperFactory =
                 new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),

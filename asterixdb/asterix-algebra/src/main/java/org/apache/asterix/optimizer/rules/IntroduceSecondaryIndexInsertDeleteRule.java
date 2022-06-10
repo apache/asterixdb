@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -190,17 +191,20 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
             metaType = (ARecordType) mp.findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         }
         List<Index> indexes = mp.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        Stream<Index> indexStream = indexes.stream();
+        indexStream = indexStream.filter(index -> index.getIndexType() != IndexType.SAMPLE);
         if (primaryIndexModificationOp.getOperation() == Kind.INSERT && !primaryIndexModificationOp.isBulkload()) {
             // for insert, primary key index is handled together when primary index
-            indexes = indexes.stream().filter(index -> !index.isPrimaryKeyIndex()).collect(Collectors.toList());
+            indexStream = indexStream.filter(index -> !index.isPrimaryKeyIndex());
         }
-
-        // Set the top operator pointer to the primary IndexInsertDeleteOperator
-        ILogicalOperator currentTop = primaryIndexModificationOp;
+        indexes = indexStream.collect(Collectors.toList());
 
         // Put an n-gram or a keyword index in the later stage of index-update,
         // since TokenizeOperator needs to be involved.
         Collections.sort(indexes, (o1, o2) -> o1.getIndexType().ordinal() - o2.getIndexType().ordinal());
+
+        // Set the top operator pointer to the primary IndexInsertDeleteOperator
+        ILogicalOperator currentTop = primaryIndexModificationOp;
 
         // At this point, we have the data type info, and the indexes info as well
         int secondaryIndexTotalCnt = indexes.size() - 1;

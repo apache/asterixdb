@@ -53,6 +53,7 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobInfo;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.api.util.InvokeUtil;
@@ -194,6 +195,17 @@ public final class HyracksConnection implements Closeable, IHyracksClientConnect
     public void waitForCompletion(JobId jobId) throws Exception {
         try {
             hci.waitForCompletion(jobId);
+        } catch (InterruptedException e) {
+            // Cancels an on-going job if the current thread gets interrupted.
+            cancelJob(jobId);
+            throw e;
+        }
+    }
+
+    @Override
+    public List<IOperatorStats> waitForCompletion(JobId jobId, List<String> statOperatorNames) throws Exception {
+        try {
+            return hci.waitForCompletion(jobId, statOperatorNames);
         } catch (InterruptedException e) {
             // Cancels an on-going job if the current thread gets interrupted.
             cancelJob(jobId);

@@ -21,11 +21,18 @@ package org.apache.hyracks.control.common.job.profiling.om;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
+import org.apache.hyracks.api.job.profiling.IStatsCollector;
+import org.apache.hyracks.api.job.profiling.OperatorStats;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -108,5 +115,45 @@ public class JobProfile extends AbstractProfile {
             output.writeUTF(entry.getKey());
             entry.getValue().writeFields(output);
         }
+    }
+
+    public List<IOperatorStats> getAggregatedStats(List<String> operatorNames) {
+        if (jobletProfiles == null || operatorNames == null || operatorNames.isEmpty()) {
+            return null;
+        }
+        // gather final task attempts for each task
+        Map<TaskId, TaskProfile> taskProfileMap = new HashMap<>();
+        for (JobletProfile jobletProfile : jobletProfiles.values()) {
+            for (TaskProfile taskProfile : jobletProfile.getTaskProfiles().values()) {
+                TaskAttemptId taskAttemptId = taskProfile.getTaskId();
+                TaskId taskId = taskAttemptId.getTaskId();
+                TaskProfile existingProfile = taskProfileMap.get(taskId);
+                if (existingProfile == null || taskAttemptId.getAttempt() > existingProfile.getTaskId().getAttempt()) {
+                    taskProfileMap.put(taskId, taskProfile);
+                }
+            }
+        }
+        // compute aggregated counts
+        int n = operatorNames.size();
+        IOperatorStats[] outStats = new IOperatorStats[n];
+        for (TaskProfile taskProfile : taskProfileMap.values()) {
+            IStatsCollector statsCollector = taskProfile.getStatsCollector();
+            for (int i = 0; i < n; i++) {
+                String operatorName = operatorNames.get(i);
+                IOperatorStats opTaskStats = statsCollector.getOperatorStats(operatorName);
+                if (opTaskStats == null) {
+                    continue;
+                }
+                IOperatorStats opOutStats = outStats[i];
+                if (opOutStats == null) {
+                    opOutStats = new OperatorStats(operatorName);
+                    outStats[i] = opOutStats;
+                }
+                opOutStats.getTupleCounter().update(opTaskStats.getTupleCounter().get());
+                opOutStats.getTimeCounter().update(opTaskStats.getTimeCounter().get());
+                opOutStats.getDiskIoCounter().update(opTaskStats.getDiskIoCounter().get());
+            }
+        }
+        return Arrays.asList(outStats);
     }
 }

@@ -15,7 +15,7 @@ distribute result [$$46]
               subplan {
                         aggregate [$$39] <- [empty-stream()]
                         -- AGGREGATE  |LOCAL|
-                          select (not(if-missing-or-null(eq($$48, "string"), FALSE)))
+                          select (not(if-missing-or-null(eq($$48, "string"), false)))
                           -- STREAM_SELECT  |LOCAL|
                             assign [$$48] <- [$$ht.getField("display_url")]
                             -- ASSIGN  |LOCAL|

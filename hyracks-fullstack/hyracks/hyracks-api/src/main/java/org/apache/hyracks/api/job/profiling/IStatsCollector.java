@@ -43,6 +43,13 @@ public interface IStatsCollector extends IWritable, Serializable {
     IOperatorStats getOrAddOperatorStats(String operatorName);
 
     /**
+     * @param operatorName
+     * @return {@link IOperatorStats} for the operator with name <code>operatorName</code>
+     * if it already exists, or {@code null} if the operator does not exist
+     */
+    IOperatorStats getOperatorStats(String operatorName);
+
+    /**
      * Get every registered operator stats object
      * @return All registered operators, and their collected stats, with the names as keys and stats as values
      */
