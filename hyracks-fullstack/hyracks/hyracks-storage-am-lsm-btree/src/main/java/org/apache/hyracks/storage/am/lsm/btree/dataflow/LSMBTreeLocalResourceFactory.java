@@ -48,6 +48,7 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
     protected final boolean isPrimary;
     protected final int[] btreeFields;
     protected final ICompressorDecompressorFactory compressorDecompressorFactory;
+    protected final boolean isSecondaryNoIncrementalMaintenance;
 
     public LSMBTreeLocalResourceFactory(IStorageManager storageManager, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] filterTypeTraits,
@@ -59,7 +60,8 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
             Map<String, String> mergePolicyProperties, boolean durable, int[] bloomFilterKeyFields,
             double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields,
             ICompressorDecompressorFactory compressorDecompressorFactory, boolean hasBloomFilter,
-            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector,
+            boolean isSecondaryNoIncrementalMaintenance) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                 vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, nullTypeTraits,
@@ -70,6 +72,7 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
         this.isPrimary = isPrimary;
         this.btreeFields = btreeFields;
         this.compressorDecompressorFactory = compressorDecompressorFactory;
+        this.isSecondaryNoIncrementalMaintenance = isSecondaryNoIncrementalMaintenance;
     }
 
     @Override
@@ -78,7 +81,8 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
                 isPrimary, fileRef.getRelativePath(), storageManager, mergePolicyFactory, mergePolicyProperties,
                 filterTypeTraits, filterCmpFactories, btreeFields, filterFields, opTrackerProvider, ioOpCallbackFactory,
                 pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, durable,
-                compressorDecompressorFactory, hasBloomFilter, nullTypeTraits, nullIntrospector);
+                compressorDecompressorFactory, hasBloomFilter, nullTypeTraits, nullIntrospector,
+                isSecondaryNoIncrementalMaintenance);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {

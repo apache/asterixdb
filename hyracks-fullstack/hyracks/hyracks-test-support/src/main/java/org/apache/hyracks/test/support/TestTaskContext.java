@@ -49,15 +49,17 @@ import org.apache.hyracks.util.ThreadStats;
 public class TestTaskContext implements IHyracksTaskContext {
     private final TestJobletContext jobletContext;
     private final TaskAttemptId taskId;
+    private int partitionCount;
     private WorkspaceFileFactory fileFactory;
     private Map<Object, IStateObject> stateObjectMap = new HashMap<>();
     private Object sharedObject;
     private final IStatsCollector statsCollector = new StatsCollector();
     private final ThreadStats threadStats = new ThreadStats();
 
-    public TestTaskContext(TestJobletContext jobletContext, TaskAttemptId taskId) {
+    public TestTaskContext(TestJobletContext jobletContext, TaskAttemptId taskId, int partitionCount) {
         this.jobletContext = jobletContext;
         this.taskId = taskId;
+        this.partitionCount = partitionCount;
         fileFactory = new WorkspaceFileFactory(this, getIoManager());
     }
 
@@ -126,6 +128,11 @@ public class TestTaskContext implements IHyracksTaskContext {
     @Override
     public TaskAttemptId getTaskAttemptId() {
         return taskId;
+    }
+
+    @Override
+    public int getPartitionCount() {
+        return partitionCount;
     }
 
     @Override

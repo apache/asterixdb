@@ -31,6 +31,7 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobInfo;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 
 /**
  * Interface used by clients to communicate with the Hyracks Cluster Controller.
@@ -155,6 +156,19 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
      * @throws Exception
      */
     void waitForCompletion(JobId jobId) throws Exception;
+
+    /**
+     * Waits until the specified job has completed, either successfully or has
+     * encountered a permanent failure.
+     *
+     * @param jobId
+     *            JobId of the Job
+     * @param statsOperatorNames
+     *            names of the operators which stats should be returned
+     * @return stats for the specified operators
+     * @throws Exception
+     */
+    List<IOperatorStats> waitForCompletion(JobId jobId, List<String> statsOperatorNames) throws Exception;
 
     /**
      * Deploy files to the cluster

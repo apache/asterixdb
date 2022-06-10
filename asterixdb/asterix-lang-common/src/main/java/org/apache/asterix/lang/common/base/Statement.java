@@ -107,6 +107,7 @@ public interface Statement extends ILangExpression {
         CREATE_SYNONYM,
         SYNONYM_DROP,
         VIEW_DROP,
+        ANALYZE,
         COMPACT,
         EXTERNAL_DATASET_REFRESH,
         SUBSCRIBE_FEED,

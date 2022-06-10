@@ -50,7 +50,7 @@ public final class ABoolean implements IAObject {
 
     @Override
     public String toString() {
-        return Boolean.toString(bVal).toUpperCase();
+        return Boolean.toString(bVal);
     }
 
     @Override

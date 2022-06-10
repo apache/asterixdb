@@ -52,6 +52,11 @@ public class StatsCollector implements IStatsCollector {
     }
 
     @Override
+    public IOperatorStats getOperatorStats(String operatorName) {
+        return operatorStatsMap.get(operatorName);
+    }
+
+    @Override
     public Map<String, IOperatorStats> getAllOperatorStats() {
         return Collections.unmodifiableMap(operatorStatsMap);
     }

@@ -4125,6 +4125,11 @@
         -->
   </test-group>
   <test-group name="ddl">
+    <test-case FilePath="ddl">
+      <compilation-unit name="analyze-dataset-1">
+        <output-dir compare="Text">analyze-dataset-1</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="ddl/create-index">
       <compilation-unit name="create-index-1">
         <output-dir compare="Text">create-index-1</output-dir>

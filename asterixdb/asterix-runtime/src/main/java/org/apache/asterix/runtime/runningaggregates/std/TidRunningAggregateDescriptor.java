@@ -48,8 +48,7 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
 
             @SuppressWarnings("unchecked")
             @Override
-            public IRunningAggregateEvaluator createRunningAggregateEvaluator(IEvaluatorContext ctx)
-                    throws HyracksDataException {
+            public IRunningAggregateEvaluator createRunningAggregateEvaluator(IEvaluatorContext ctx) {
 
                 return new IRunningAggregateEvaluator() {
 
@@ -57,7 +56,7 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
                     private final ISerializerDeserializer<AInt64> serde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
                     private final AMutableInt64 m = new AMutableInt64(0);
-                    private int cnt;
+                    private long cnt;
 
                     @Override
                     public void step(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
@@ -69,7 +68,7 @@ public class TidRunningAggregateDescriptor extends AbstractRunningAggregateFunct
                     }
 
                     @Override
-                    public void init() throws HyracksDataException {
+                    public void init() {
                         cnt = 1;
                     }
                 };

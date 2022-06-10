@@ -59,6 +59,7 @@ public class LSMBTreeLocalResource extends LsmResource {
     protected final boolean isPrimary;
     protected final int[] btreeFields;
     protected final ICompressorDecompressorFactory compressorDecompressorFactory;
+    protected final boolean isSecondaryNoIncrementalMaintenance;
 
     public LSMBTreeLocalResource(ITypeTraits[] typeTraits, IBinaryComparatorFactory[] cmpFactories,
             int[] bloomFilterKeyFields, double bloomFilterFalsePositiveRate, boolean isPrimary, String path,
@@ -70,7 +71,8 @@ public class LSMBTreeLocalResource extends LsmResource {
             IMetadataPageManagerFactory metadataPageManagerFactory, IVirtualBufferCacheProvider vbcProvider,
             ILSMIOOperationSchedulerProvider ioSchedulerProvider, boolean durable,
             ICompressorDecompressorFactory compressorDecompressorFactory, boolean hasBloomFilter,
-            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) {
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector,
+            boolean isSecondaryNoIncrementalMaintenance) {
         super(path, storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                 vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, nullTypeTraits,
@@ -81,12 +83,13 @@ public class LSMBTreeLocalResource extends LsmResource {
         this.btreeFields = btreeFields;
         this.compressorDecompressorFactory = compressorDecompressorFactory;
         this.hasBloomFilter = hasBloomFilter;
+        this.isSecondaryNoIncrementalMaintenance = isSecondaryNoIncrementalMaintenance;
     }
 
     protected LSMBTreeLocalResource(IPersistedResourceRegistry registry, JsonNode json, int[] bloomFilterKeyFields,
             double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields,
-            ICompressorDecompressorFactory compressorDecompressorFactory, boolean hasBloomFilter)
-            throws HyracksDataException {
+            ICompressorDecompressorFactory compressorDecompressorFactory, boolean hasBloomFilter,
+            boolean isSecondaryNoIncrementalMaintenance) throws HyracksDataException {
         super(registry, json);
         this.bloomFilterKeyFields = bloomFilterKeyFields;
         this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
@@ -94,6 +97,7 @@ public class LSMBTreeLocalResource extends LsmResource {
         this.btreeFields = btreeFields;
         this.compressorDecompressorFactory = compressorDecompressorFactory;
         this.hasBloomFilter = hasBloomFilter;
+        this.isSecondaryNoIncrementalMaintenance = isSecondaryNoIncrementalMaintenance;
     }
 
     @Override
@@ -114,6 +118,10 @@ public class LSMBTreeLocalResource extends LsmResource {
                 compressorDecompressorFactory, hasBloomFilter, nullTypeTraits, nullIntrospector);
     }
 
+    public boolean isSecondaryNoIncrementalMaintenance() {
+        return isSecondaryNoIncrementalMaintenance;
+    }
+
     @Override
     public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
         final ObjectNode jsonObject = registry.getClassIdentifier(getClass(), serialVersionUID);
@@ -131,8 +139,10 @@ public class LSMBTreeLocalResource extends LsmResource {
         final JsonNode compressorDecompressorNode = json.get("compressorDecompressorFactory");
         final ICompressorDecompressorFactory compDecompFactory = (ICompressorDecompressorFactory) registry
                 .deserializeOrDefault(compressorDecompressorNode, NoOpCompressorDecompressorFactory.class);
+        boolean isSecondaryNoIncrementalMaintenance =
+                getOrDefaultBoolean(json, "isSecondaryNoIncrementalMaintenance", false);
         return new LSMBTreeLocalResource(registry, json, bloomFilterKeyFields, bloomFilterFalsePositiveRate, isPrimary,
-                btreeFields, compDecompFactory, hasBloomFilter);
+                btreeFields, compDecompFactory, hasBloomFilter, isSecondaryNoIncrementalMaintenance);
     }
 
     @Override
@@ -145,13 +155,16 @@ public class LSMBTreeLocalResource extends LsmResource {
         json.put("isPrimary", isPrimary);
         json.putPOJO("btreeFields", btreeFields);
         json.putPOJO("compressorDecompressorFactory", compressorDecompressorFactory.toJson(registry));
+        json.put("isSecondaryNoIncrementalMaintenance", isSecondaryNoIncrementalMaintenance);
     }
 
     private static boolean getOrDefaultHasBloomFilter(JsonNode json, boolean isPrimary) {
-        if (json.has(HAS_BLOOM_FILTER_FIELD)) {
-            return json.get(HAS_BLOOM_FILTER_FIELD).asBoolean();
-        }
-        // for backward compatibiliy, only primary indexes have bloom filters
-        return isPrimary;
+        // for backward compatibility, only primary indexes have bloom filters
+        return getOrDefaultBoolean(json, HAS_BLOOM_FILTER_FIELD, isPrimary);
     }
+
+    private static boolean getOrDefaultBoolean(JsonNode jsonNode, String fieldName, boolean defaultValue) {
+        return jsonNode.has(fieldName) ? jsonNode.get(fieldName).asBoolean() : defaultValue;
+    }
+
 }

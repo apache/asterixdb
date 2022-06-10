@@ -93,7 +93,9 @@ import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.FullTextUtil;
+import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionExtensionManager;
@@ -429,6 +431,16 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return MetadataManagerUtil.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
     }
 
+    public Index findSampleIndex(DataverseName dataverseName, String datasetName) throws AlgebricksException {
+        Pair<String, String> sampleIndexNames = IndexUtil.getSampleIndexNames(datasetName);
+        Index sampleIndex = getIndex(dataverseName, datasetName, sampleIndexNames.first);
+        if (sampleIndex != null && sampleIndex.getPendingOp() == MetadataUtil.PENDING_NO_OP) {
+            return sampleIndex;
+        }
+        sampleIndex = getIndex(dataverseName, datasetName, sampleIndexNames.second);
+        return sampleIndex != null && sampleIndex.getPendingOp() == MetadataUtil.PENDING_NO_OP ? sampleIndex : null;
+    }
+
     public Triple<DataverseName, String, Boolean> resolveDatasetNameUsingSynonyms(DataverseName dataverseName,
             String datasetName, boolean includingViews) throws AlgebricksException {
         DataverseName dvName = getActiveDataverseName(dataverseName);
@@ -552,6 +564,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 break;
             case BTREE:
                 numSecondaryKeys = ((Index.ValueIndexDetails) theIndex.getIndexDetails()).getKeyFieldNames().size();
+                break;
+            case SAMPLE:
+                if (isIndexOnlyPlan) {
+                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, "");
+                }
+                numSecondaryKeys = 0;
                 break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,

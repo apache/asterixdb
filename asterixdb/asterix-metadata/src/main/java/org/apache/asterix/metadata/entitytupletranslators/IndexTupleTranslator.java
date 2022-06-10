@@ -47,6 +47,7 @@ import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ACollectionCursor;
 import org.apache.asterix.om.base.AInt32;
+import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.base.ANull;
@@ -90,6 +91,9 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     public static final String INDEX_SEARCHKEY_ELEMENTS_FIELD_NAME = "SearchKeyElements";
     public static final String COMPLEXSEARCHKEY_UNNEST_FIELD_NAME = "UnnestList";
     public static final String COMPLEXSEARCHKEY_PROJECT_FIELD_NAME = "ProjectList";
+    public static final String SAMPLE_CARDINALITY_TARGET = "SampleCardinalityTarget";
+    public static final String SOURCE_CARDINALITY = "SourceCardinality";
+    public static final String SOURCE_AVG_ITEM_SIZE = "SourceAvgItemSize";
 
     protected final TxnId txnId;
     protected final MetadataNode metadataNode;
@@ -239,6 +243,9 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                     }
                     searchElements.add(searchElement);
                 }
+                break;
+            case SAMPLE:
+                searchElements = Collections.emptyList();
                 break;
             default:
                 throw new AsterixException(ErrorCode.METADATA_ERROR, indexType.toString());
@@ -452,6 +459,33 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 }
                 indexDetails = new Index.ArrayIndexDetails(elementList, isOverridingKeyTypes);
                 break;
+            case SAMPLE:
+                keyFieldNames =
+                        searchElements.stream().map(Pair::getSecond).map(l -> l.get(0)).collect(Collectors.toList());
+                keyFieldTypes = searchKeyType.stream().map(l -> l.get(0)).collect(Collectors.toList());
+
+                int sampleCardinalityTargetPos = indexRecord.getType().getFieldIndex(SAMPLE_CARDINALITY_TARGET);
+                if (sampleCardinalityTargetPos < 0) {
+                    throw new AsterixException(ErrorCode.METADATA_ERROR, SAMPLE_CARDINALITY_TARGET);
+                }
+                int sampleCardinalityTarget =
+                        ((AInt32) indexRecord.getValueByPos(sampleCardinalityTargetPos)).getIntegerValue();
+
+                int sourceCardinalityPos = indexRecord.getType().getFieldIndex(SOURCE_CARDINALITY);
+                if (sourceCardinalityPos < 0) {
+                    throw new AsterixException(ErrorCode.METADATA_ERROR, SOURCE_CARDINALITY);
+                }
+                long sourceCardinality = ((AInt64) indexRecord.getValueByPos(sourceCardinalityPos)).getLongValue();
+
+                int sourceAvgItemSizePos = indexRecord.getType().getFieldIndex(SOURCE_AVG_ITEM_SIZE);
+                if (sourceAvgItemSizePos < 0) {
+                    throw new AsterixException(ErrorCode.METADATA_ERROR, SOURCE_AVG_ITEM_SIZE);
+                }
+                int sourceAvgItemSize = ((AInt32) indexRecord.getValueByPos(sourceAvgItemSizePos)).getIntegerValue();
+
+                indexDetails = new Index.SampleIndexDetails(keyFieldNames, keyFieldSourceIndicator, keyFieldTypes,
+                        sampleCardinalityTarget, sourceCardinality, sourceAvgItemSize);
+                break;
             default:
                 throw new AsterixException(ErrorCode.METADATA_ERROR, indexType.toString());
         }
@@ -527,6 +561,9 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 // If we have a complex index, we persist all of the names in the complex SK name array instead.
                 searchKey = Collections.emptyList();
                 break;
+            case SAMPLE:
+                searchKey = ((Index.SampleIndexDetails) index.getIndexDetails()).getKeyFieldNames();
+                break;
             default:
                 throw new AsterixException(ErrorCode.METADATA_ERROR, indexType.toString());
         }
@@ -596,6 +633,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         writeSearchKeySourceIndicator(index);
         writeExcludeUnknownKey(index);
         writeCast(index);
+        writeSampleDetails(index);
     }
 
     private void writeComplexSearchKeys(Index.ArrayIndexDetails indexDetails) throws HyracksDataException {
@@ -767,6 +805,9 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 keySourceIndicator = ((Index.ArrayIndexDetails) index.getIndexDetails()).getElementList().stream()
                         .map(Index.ArrayIndexElement::getSourceIndicator).collect(Collectors.toList());
                 break;
+            case SAMPLE:
+                keySourceIndicator = ((Index.SampleIndexDetails) index.getIndexDetails()).getKeyFieldSourceIndicators();
+                break;
             default:
                 throw new AsterixException(ErrorCode.METADATA_ERROR, index.getIndexType().toString());
         }
@@ -853,6 +894,33 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 castRecordBuilder.write(fieldValue.getDataOutput(), true);
                 recordBuilder.addField(nameValue, fieldValue);
             }
+        }
+    }
+
+    private void writeSampleDetails(Index index) throws HyracksDataException {
+        if (index.getIndexType() == IndexType.SAMPLE) {
+            Index.SampleIndexDetails indexDetails = (Index.SampleIndexDetails) index.getIndexDetails();
+
+            nameValue.reset();
+            fieldValue.reset();
+            aString.setValue(SAMPLE_CARDINALITY_TARGET);
+            stringSerde.serialize(aString, nameValue.getDataOutput());
+            int32Serde.serialize(new AInt32(indexDetails.getSampleCardinalityTarget()), fieldValue.getDataOutput());
+            recordBuilder.addField(nameValue, fieldValue);
+
+            nameValue.reset();
+            fieldValue.reset();
+            aString.setValue(SOURCE_CARDINALITY);
+            stringSerde.serialize(aString, nameValue.getDataOutput());
+            int64Serde.serialize(new AInt64(indexDetails.getSourceCardinality()), fieldValue.getDataOutput());
+            recordBuilder.addField(nameValue, fieldValue);
+
+            nameValue.reset();
+            fieldValue.reset();
+            aString.setValue(SOURCE_AVG_ITEM_SIZE);
+            stringSerde.serialize(aString, nameValue.getDataOutput());
+            int32Serde.serialize(new AInt32(indexDetails.getSourceAvgItemSize()), fieldValue.getDataOutput());
+            recordBuilder.addField(nameValue, fieldValue);
         }
     }
 }

@@ -6,7 +6,7 @@ distribute result [$$20]
     -- STREAM_PROJECT  |UNPARTITIONED|
       assign [$$20] <- [{"id": get-item($$t, 0), "v": get-item($$t, 1)}]
       -- ASSIGN  |UNPARTITIONED|
-        unnest $$t <- scan-collection(ordered-list-constructor(ordered-list-constructor(29, cast({ f1: "a", f2: 3 }))))
+        unnest $$t <- scan-collection(ordered-list-constructor(ordered-list-constructor(29, cast({ "f1": "a", "f2": 3 }))))
         -- UNNEST  |UNPARTITIONED|
           empty-tuple-source
           -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

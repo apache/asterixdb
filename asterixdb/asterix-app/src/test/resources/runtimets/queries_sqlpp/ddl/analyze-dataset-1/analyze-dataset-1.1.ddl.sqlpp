@@ -1,0 +1,55 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Description: Test ANALYZE DATASET statement
+ */
+
+set `import-private-functions` `true`;
+
+drop dataverse test if exists;
+create dataverse test;
+use test;
+
+create function listMetadata(showSourceAvgItemSize) {
+  select i.DatasetName, i.IndexName, i.SampleCardinalityTarget, i.SourceCardinality,
+    case when showSourceAvgItemSize then i.SourceAvgItemSize else i.SourceAvgItemSize > 0 end as SourceAvgItemSize
+  from Metadata.`Index` i
+  where i.DataverseName = "test" and i.IndexName like "sample_idx%"
+  order by i.IndexName
+};
+
+create function showSampleStats(dsName, idxName, showMinMax) {
+  select count(v.values) as cnt,
+    case when showMinMax then min(v.values[0]) else min(v.values[0]) > 0 end as min_pk,
+    case when showMinMax then max(v.values[0]) else max(v.values[0]) > 0 end as max_pk,
+    case when showMinMax then min(v.values[1].x) else min(v.values[1].x) < 0 end as min_x,
+    case when showMinMax then max(v.values[1].x) else max(v.values[1].x) < 0 end as max_x
+  from dump_index("test", dsName, idxName) as v
+};
+
+create type t1 as open {
+  id : bigint
+};
+
+create dataset ds1(t1) primary key id;
+
+-- analyze on an empty dataset
+
+analyze dataset ds1;

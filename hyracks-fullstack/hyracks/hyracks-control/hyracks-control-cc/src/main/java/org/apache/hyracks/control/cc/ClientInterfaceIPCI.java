@@ -147,8 +147,8 @@ class ClientInterfaceIPCI implements IIPCI {
             case WAIT_FOR_COMPLETION:
                 HyracksClientInterfaceFunctions.WaitForCompletionFunction wfcf =
                         (HyracksClientInterfaceFunctions.WaitForCompletionFunction) fn;
-                ccs.getWorkQueue()
-                        .schedule(new WaitForJobCompletionWork(ccs, wfcf.getJobId(), new IPCResponder<>(handle, mid)));
+                ccs.getWorkQueue().schedule(new WaitForJobCompletionWork(ccs, wfcf.getJobId(),
+                        wfcf.getStatOperatorNames(), new IPCResponder<>(handle, mid)));
                 break;
             case GET_NODE_CONTROLLERS_INFO:
                 ccs.getWorkQueue().schedule(

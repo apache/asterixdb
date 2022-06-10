@@ -117,6 +117,14 @@ public class OptimizationConfUtil {
                 sourceLoc);
     }
 
+    public static int getGroupByNumFrames(CompilerProperties compilerProperties,
+            Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AlgebricksException {
+        return getFrameLimit(CompilerProperties.COMPILER_GROUPMEMORY_KEY,
+                (String) querySpecificConfig.get(CompilerProperties.COMPILER_GROUPMEMORY_KEY),
+                compilerProperties.getGroupMemorySize(), compilerProperties.getFrameSize(),
+                MIN_FRAME_LIMIT_FOR_GROUP_BY, sourceLoc);
+    }
+
     public static int getTextSearchNumFrames(CompilerProperties compilerProperties,
             Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AlgebricksException {
         return getFrameLimit(CompilerProperties.COMPILER_TEXTSEARCHMEMORY_KEY,

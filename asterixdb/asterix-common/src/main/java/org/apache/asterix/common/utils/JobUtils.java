@@ -20,11 +20,14 @@
 package org.apache.asterix.common.utils;
 
 import java.util.EnumSet;
+import java.util.List;
 
+import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 
 public class JobUtils {
 
@@ -52,5 +55,22 @@ public class JobUtils {
             }
         }
         return jobId;
+    }
+
+    public static Pair<JobId, List<IOperatorStats>> runJob(IHyracksClientConnection hcc, JobSpecification spec,
+            EnumSet<JobFlag> jobFlags, boolean waitForCompletion, List<String> statOperatorNames) throws Exception {
+        spec.setMaxReattempts(0);
+        final JobId jobId = hcc.startJob(spec, jobFlags);
+        List<IOperatorStats> opStats = null;
+        if (waitForCompletion) {
+            String nameBefore = Thread.currentThread().getName();
+            try {
+                Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
+                opStats = hcc.waitForCompletion(jobId, statOperatorNames);
+            } finally {
+                Thread.currentThread().setName(nameBefore);
+            }
+        }
+        return new Pair<>(jobId, opStats);
     }
 }

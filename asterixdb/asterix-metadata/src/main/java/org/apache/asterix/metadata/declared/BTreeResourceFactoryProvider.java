@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.declared;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -92,13 +93,13 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                                 filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory,
                                 ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                                 ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
-                                bloomFilterFalsePositiveRate, false, btreeFields, hasBloomFilter,
+                                bloomFilterFalsePositiveRate, btreeFields, hasBloomFilter,
                                 typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE)
                         : new ExternalBTreeWithBuddyLocalResourceFactory(storageManager, typeTraits, cmpFactories,
                                 filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory,
                                 ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                                 ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
-                                bloomFilterFalsePositiveRate, false, btreeFields, hasBloomFilter,
+                                bloomFilterFalsePositiveRate, btreeFields, hasBloomFilter,
                                 typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE);
             case INTERNAL:
                 AsterixVirtualBufferCacheProvider vbcProvider =
@@ -112,12 +113,15 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     compDecompFactory = NoOpCompressorDecompressorFactory.INSTANCE;
                 }
 
+                boolean isSecondaryNoIncrementalMaintenance = index.getIndexType() == DatasetConfig.IndexType.SAMPLE;
+
                 return new LSMBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
                         filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory,
                         pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
                         mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
                         bloomFilterFalsePositiveRate, index.isPrimaryIndex(), btreeFields, compDecompFactory,
-                        hasBloomFilter, typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE);
+                        hasBloomFilter, typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE,
+                        isSecondaryNoIncrementalMaintenance);
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_DATASET_TYPE,
                         dataset.getDatasetType().toString());
@@ -127,7 +131,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
     private static ITypeTraits[] getTypeTraits(MetadataProvider metadataProvider, Dataset dataset, Index index,
             ARecordType recordType, ARecordType metaType) throws AlgebricksException {
         ITypeTraits[] primaryTypeTraits = dataset.getPrimaryTypeTraits(metadataProvider, recordType, metaType);
-        if (index.isPrimaryIndex()) {
+        if (index.isPrimaryIndex() || index.getIndexType() == DatasetConfig.IndexType.SAMPLE) {
             return primaryTypeTraits;
         } else if (dataset.getDatasetType() == DatasetType.EXTERNAL
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
@@ -162,7 +166,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
             Index index, ARecordType recordType, ARecordType metaType) throws AlgebricksException {
         IBinaryComparatorFactory[] primaryCmpFactories =
                 dataset.getPrimaryComparatorFactories(metadataProvider, recordType, metaType);
-        if (index.isPrimaryIndex()) {
+        if (index.isPrimaryIndex() || index.getIndexType() == DatasetConfig.IndexType.SAMPLE) {
             return dataset.getPrimaryComparatorFactories(metadataProvider, recordType, metaType);
         } else if (dataset.getDatasetType() == DatasetType.EXTERNAL
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
@@ -200,7 +204,8 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
         if (index.isPrimaryIndex() || index.isPrimaryKeyIndex()) {
             return dataset.getPrimaryBloomFilterFields();
         }
-        if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
+        if (dataset.getDatasetType() == DatasetType.EXTERNAL
+                && index.getIndexType() != DatasetConfig.IndexType.SAMPLE) {
             if (index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
                 return FilesIndexDescription.BLOOM_FILTER_FIELDS;
             } else {
@@ -224,6 +229,8 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     bloomFilterKeyFields[i] = i;
                 }
                 return bloomFilterKeyFields;
+            case SAMPLE:
+                return null;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE,
                         String.valueOf(index.getIndexType()));

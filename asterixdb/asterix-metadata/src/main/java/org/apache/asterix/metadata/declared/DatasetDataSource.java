@@ -78,13 +78,18 @@ public class DatasetDataSource extends DataSource {
 
     private void initInternalDataset(IAType itemType, IAType metaItemType, IDatasetDetails datasetDetails)
             throws AlgebricksException {
-        InternalDatasetDetails internalDatasetDetails = (InternalDatasetDetails) datasetDetails;
+        schemaTypes =
+                createSchemaTypesForInternalDataset(itemType, metaItemType, (InternalDatasetDetails) datasetDetails);
+    }
+
+    static IAType[] createSchemaTypesForInternalDataset(IAType itemType, IAType metaItemType,
+            InternalDatasetDetails internalDatasetDetails) throws AlgebricksException {
         ARecordType recordType = (ARecordType) itemType;
         ARecordType metaRecordType = (ARecordType) metaItemType;
         List<IAType> partitioningKeyTypes =
                 KeyFieldTypeUtil.getPartitioningKeyTypes(internalDatasetDetails, recordType, metaRecordType);
         int n = partitioningKeyTypes.size();
-        schemaTypes = metaItemType == null ? new IAType[n + 1] : new IAType[n + 2];
+        IAType[] schemaTypes = metaItemType == null ? new IAType[n + 1] : new IAType[n + 2];
         for (int keyIndex = 0; keyIndex < n; ++keyIndex) {
             schemaTypes[keyIndex] = partitioningKeyTypes.get(keyIndex);
         }
@@ -92,11 +97,17 @@ public class DatasetDataSource extends DataSource {
         if (metaItemType != null) {
             schemaTypes[n + 1] = metaItemType;
         }
+        return schemaTypes;
     }
 
     private void initExternalDataset(IAType itemType) {
-        schemaTypes = new IAType[1];
+        schemaTypes = createSchemaTypesForExternalDataset(itemType);
+    }
+
+    static IAType[] createSchemaTypesForExternalDataset(IAType itemType) {
+        IAType[] schemaTypes = new IAType[1];
         schemaTypes[0] = itemType;
+        return schemaTypes;
     }
 
     @Override

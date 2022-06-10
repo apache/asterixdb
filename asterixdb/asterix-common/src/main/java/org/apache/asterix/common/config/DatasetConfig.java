@@ -41,7 +41,8 @@ public class DatasetConfig {
         SINGLE_PARTITION_NGRAM_INVIX,
         LENGTH_PARTITIONED_WORD_INVIX,
         LENGTH_PARTITIONED_NGRAM_INVIX,
-        ARRAY;
+        ARRAY,
+        SAMPLE;
     }
 
     public enum TransactionState {

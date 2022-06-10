@@ -740,6 +740,11 @@ public class LSMInvertedIndexTestUtils {
         }
 
         @Override
+        public int getPartitionCount() {
+            return 1;
+        }
+
+        @Override
         public ICounterContext getCounterContext() {
             return null;
         }

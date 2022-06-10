@@ -76,6 +76,7 @@ import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
+import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.AbstractLangExpression;
 import org.apache.asterix.lang.common.base.AbstractStatement;
@@ -124,6 +125,7 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
 import org.apache.asterix.lang.common.statement.AdapterDropStatement;
+import org.apache.asterix.lang.common.statement.AnalyzeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
@@ -205,7 +207,7 @@ import org.apache.asterix.lang.sqlpp.struct.SetOperationRight;
 import org.apache.asterix.lang.sqlpp.util.ExpressionToVariableUtil;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
-import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.exceptions.TypeMismatchException;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.BuiltinType;
@@ -836,6 +838,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = UpsertStatement()
     | stmt = ConnectionStatement()
     | stmt = CompactStatement()
+    | stmt = AnalyzeStatement()
     | stmt = Query()
     | stmt = RefreshExternalDatasetStatement()
   )
@@ -1378,7 +1381,7 @@ CreateIndexStatement PrimaryIndexSpecification(Token startStmtToken) throws Pars
   <ON> nameComponents = QualifiedName() (<TYPE> <BTREE>)?
   {
     if (indexName == null) {
-      indexName = "primary_idx_" + nameComponents.second;
+      indexName = MetadataConstants.PRIMARY_INDEX_PREFIX + nameComponents.second;
     }
     CreateIndexStatement stmt = new CreateIndexStatement(nameComponents.first, nameComponents.second,
       new Identifier(indexName), IndexType.BTREE, Collections.emptyList(), false, -1, null, ifNotExists, null, null,
@@ -2626,6 +2629,25 @@ String AdapterName() throws ParseException :
     {
       return adapterName;
     }
+}
+
+Statement AnalyzeStatement() throws ParseException:
+{
+  Token startToken = null;
+  Pair<DataverseName,Identifier> nameComponents = null;
+  RecordConstructor withRecord = null;
+}
+{
+  <ANALYZE> { startToken = token; } Dataset() nameComponents = QualifiedName()
+  ( <WITH> withRecord = RecordConstructor() )?
+  {
+    try {
+    AnalyzeStatement stmt = new AnalyzeStatement(nameComponents.first, nameComponents.second.getValue(), withRecord);
+    return addSourceLocation(stmt, startToken);
+    } catch (CompilationException e) {
+       throw new SqlppParseException(getSourceLocation(startToken), e.getMessage());
+    }
+  }
 }
 
 Statement CompactStatement() throws ParseException:
@@ -5318,6 +5340,7 @@ TOKEN [IGNORE_CASE]:
 {
   <ADAPTER: "adapter">
   | <ALL : "all">
+  | <ANALYZE: "analyze">
   | <AND : "and">
   | <ANY : "any">
   | <APPLY : "apply">

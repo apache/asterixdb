@@ -72,6 +72,10 @@ public class DatasetLocalResource implements IResource {
         this.partition = partition;
     }
 
+    public IResource getResource() {
+        return resource;
+    }
+
     @Override
     public IIndex createInstance(INCServiceContext ncServiceCtx) throws HyracksDataException {
         return resource.createInstance(ncServiceCtx);

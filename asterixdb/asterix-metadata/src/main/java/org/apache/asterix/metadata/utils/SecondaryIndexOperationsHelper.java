@@ -91,7 +91,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 // TODO: We should eventually have a hierarchy of classes that can create all
 // possible index job specs,
 // not just for creation.
-public abstract class SecondaryIndexOperationsHelper {
+public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexOperationsHelper {
     protected final MetadataProvider metadataProvider;
     protected final Dataset dataset;
     protected final Index index;
@@ -160,10 +160,10 @@ public abstract class SecondaryIndexOperationsHelper {
                 metadataProvider.getConfig(), sourceLoc);
     }
 
-    public static SecondaryIndexOperationsHelper createIndexOperationsHelper(Dataset dataset, Index index,
+    public static ISecondaryIndexOperationsHelper createIndexOperationsHelper(Dataset dataset, Index index,
             MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
 
-        SecondaryIndexOperationsHelper indexOperationsHelper;
+        ISecondaryIndexOperationsHelper indexOperationsHelper;
         switch (index.getIndexType()) {
             case ARRAY:
                 indexOperationsHelper =
@@ -181,6 +181,9 @@ public abstract class SecondaryIndexOperationsHelper {
             case LENGTH_PARTITIONED_NGRAM_INVIX:
                 indexOperationsHelper =
                         new SecondaryInvertedIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
+                break;
+            case SAMPLE:
+                indexOperationsHelper = new SampleOperationsHelper(dataset, index, metadataProvider, sourceLoc);
                 break;
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, sourceLoc,
@@ -202,7 +205,8 @@ public abstract class SecondaryIndexOperationsHelper {
 
     protected abstract int getNumSecondaryKeys();
 
-    protected void init() throws AlgebricksException {
+    @Override
+    public void init() throws AlgebricksException {
         payloadSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
         metaSerde =
                 metaType == null ? null : SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);

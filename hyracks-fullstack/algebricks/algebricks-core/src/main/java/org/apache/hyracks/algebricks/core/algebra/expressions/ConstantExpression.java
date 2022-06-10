@@ -55,7 +55,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
 
         @Override
         public String toString() {
-            return "TRUE";
+            return "true";
         }
 
         @Override
@@ -92,7 +92,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
 
         @Override
         public String toString() {
-            return "FALSE";
+            return "false";
         }
 
         @Override

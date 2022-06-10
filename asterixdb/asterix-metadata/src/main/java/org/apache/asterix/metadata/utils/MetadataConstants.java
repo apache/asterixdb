@@ -57,6 +57,11 @@ public class MetadataConstants {
     public static final String FULL_TEXT_CONFIG_DATASET_NAME = "FullTextConfig";
     public static final String FULL_TEXT_FILTER_DATASET_NAME = "FullTextFilter";
 
+    public static final String PRIMARY_INDEX_PREFIX = "primary_idx_";
+    public static final String SAMPLE_INDEX_PREFIX = "sample_idx_";
+    public static final String SAMPLE_INDEX_1_PREFIX = SAMPLE_INDEX_PREFIX + "1_";
+    public static final String SAMPLE_INDEX_2_PREFIX = SAMPLE_INDEX_PREFIX + "2_";
+
     private MetadataConstants() {
     }
 }
