@@ -53,6 +53,7 @@ import org.apache.asterix.api.http.server.ShutdownApiServlet;
 import org.apache.asterix.api.http.server.VersionApiServlet;
 import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.app.cc.CCExtensionManager;
+import org.apache.asterix.app.cc.CcApplicationContext;
 import org.apache.asterix.app.config.ConfigValidator;
 import org.apache.asterix.app.io.PersistedResourceRegistry;
 import org.apache.asterix.app.replication.NcLifecycleCoordinator;
@@ -85,7 +86,6 @@ import org.apache.asterix.metadata.bootstrap.AsterixStateProxy;
 import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.metadata.utils.MetadataLockUtil;
 import org.apache.asterix.runtime.job.resource.JobCapacityController;
-import org.apache.asterix.runtime.utils.CcApplicationContext;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.asterix.translator.Receptionist;
 import org.apache.asterix.util.MetadataBuiltinFunctions;
@@ -126,7 +126,7 @@ public class CCApplication extends BaseCCApplication {
     protected WebManager webManager;
     protected ICcApplicationContext appCtx;
     private IJobCapacityController jobCapacityController;
-    private IHyracksClientConnection hcc;
+    private HyracksConnection hcc;
 
     @Override
     public void init(IServiceContext serviceCtx) throws Exception {
@@ -209,7 +209,7 @@ public class CCApplication extends BaseCCApplication {
             IReceptionistFactory receptionistFactory, IConfigValidatorFactory configValidatorFactory,
             CCExtensionManager ccExtensionManager, IAdapterFactoryService adapterFactoryService)
             throws AlgebricksException, IOException {
-        return new CcApplicationContext(ccServiceCtx, getHcc(), () -> MetadataManager.INSTANCE, globalRecoveryManager,
+        return new CcApplicationContext(ccServiceCtx, hcc, () -> MetadataManager.INSTANCE, globalRecoveryManager,
                 lifecycleCoordinator, new ActiveNotificationHandler(), componentProvider, new MetadataLockManager(),
                 createMetadataLockUtil(), receptionistFactory, configValidatorFactory, ccExtensionManager,
                 adapterFactoryService);

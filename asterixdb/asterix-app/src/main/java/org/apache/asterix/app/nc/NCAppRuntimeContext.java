@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.asterix.active.ActiveManager;
+import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IConfigValidator;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.ICoordinationService;
@@ -86,6 +87,8 @@ import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.network.INetworkSecurityManager;
+import org.apache.hyracks.api.result.IResultSet;
+import org.apache.hyracks.client.result.ResultSet;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.ipc.impl.HyracksConnection;
@@ -108,6 +111,7 @@ import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 import org.apache.hyracks.util.MaintainedThreadNameExecutorService;
+import org.apache.hyracks.util.NetworkUtil;
 import org.apache.hyracks.util.cache.CacheManager;
 import org.apache.hyracks.util.cache.ICacheManager;
 import org.apache.logging.log4j.Level;
@@ -147,7 +151,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private final NCExtensionManager ncExtensionManager;
     private final IStorageComponentProvider componentProvider;
     private final IPersistedResourceRegistry persistedResourceRegistry;
-    private IHyracksClientConnection hcc;
+    private volatile HyracksConnection hcc;
+    private volatile ResultSet resultSet;
     private IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     private IReplicaManager replicaManager;
     private IReceptionist receptionist;
@@ -513,15 +518,22 @@ public class NCAppRuntimeContext implements INcApplicationContext {
 
     @Override
     public IHyracksClientConnection getHcc() throws HyracksDataException {
-        if (hcc == null || !hcc.isConnected()) {
+        HyracksConnection hc = hcc;
+        if (hc == null || !hc.isConnected()) {
             synchronized (this) {
-                if (hcc == null || !hcc.isConnected()) {
+                hc = hcc;
+                if (hc == null || !hc.isConnected()) {
                     try {
+                        ResultSet rs = resultSet;
+                        resultSet = null;
+                        NetworkUtil.closeQuietly(rs);
+
                         NodeControllerService ncSrv = (NodeControllerService) ncServiceContext.getControllerService();
                         // TODO(mblow): multicc
                         CcId primaryCcId = ncSrv.getPrimaryCcId();
                         ClusterControllerInfo ccInfo = ncSrv.getNodeParameters(primaryCcId).getClusterControllerInfo();
-                        hcc = new HyracksConnection(ccInfo.getClientNetAddress(), ccInfo.getClientNetPort(),
+                        NetworkUtil.closeQuietly(hc);
+                        hcc = hc = new HyracksConnection(ccInfo.getClientNetAddress(), ccInfo.getClientNetPort(),
                                 ncSrv.getNetworkSecurityManager().getSocketChannelFactory());
                     } catch (Exception e) {
                         throw HyracksDataException.create(e);
@@ -529,7 +541,26 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                 }
             }
         }
-        return hcc;
+        return hc;
+    }
+
+    @Override
+    public IResultSet getResultSet() throws HyracksDataException {
+        ResultSet rs = resultSet;
+        if (rs == null) {
+            synchronized (this) {
+                rs = resultSet;
+                if (rs == null) {
+                    try {
+                        resultSet = rs = ResultReader.createResultSet(getHcc(), ncServiceContext.getControllerService(),
+                                compilerProperties);
+                    } catch (Exception e) {
+                        throw HyracksDataException.create(e);
+                    }
+                }
+            }
+        }
+        return rs;
     }
 
     @Override

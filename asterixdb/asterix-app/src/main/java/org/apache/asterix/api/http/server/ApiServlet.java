@@ -134,7 +134,7 @@ public class ApiServlet extends AbstractServlet {
         try {
             // TODO: warnings should be retrieved from warnings collectors
             IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
-            IResultSet resultSet = ServletUtil.getResultSet(hcc, appCtx, ctx);
+            IResultSet resultSet = ServletUtil.getResultSet(appCtx, ctx);
             IParser parser = parserFactory.createParser(query);
             List<Statement> statements = parser.parse();
             SessionConfig sessionConfig = new SessionConfig(format, true, isSet(executeQuery), true, planFormat);

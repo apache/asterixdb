@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.result;
 
+import org.apache.asterix.common.config.CompilerProperties;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -27,12 +29,14 @@ import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.api.result.IResultSetReader;
 import org.apache.hyracks.api.result.ResultJobRecord.Status;
 import org.apache.hyracks.api.result.ResultSetId;
+import org.apache.hyracks.api.service.IControllerService;
+import org.apache.hyracks.client.result.ResultSet;
 import org.apache.hyracks.dataflow.common.comm.io.ResultFrameTupleAccessor;
 
 public class ResultReader {
-    private IResultSetReader reader;
+    private final IResultSetReader reader;
 
-    private IFrameTupleAccessor frameTupleAccessor;
+    private final IFrameTupleAccessor frameTupleAccessor;
 
     // Number of parallel result reader buffers
     public static final int NUM_READERS = 1;
@@ -56,5 +60,11 @@ public class ResultReader {
 
     public IResultMetadata getMetadata() {
         return reader.getResultMetadata();
+    }
+
+    public static ResultSet createResultSet(IHyracksClientConnection hcc, IControllerService srv,
+            CompilerProperties compilerProperties) throws Exception {
+        return new ResultSet(hcc, srv.getNetworkSecurityManager().getSocketChannelFactory(),
+                compilerProperties.getFrameSize(), ResultReader.NUM_READERS);
     }
 }
