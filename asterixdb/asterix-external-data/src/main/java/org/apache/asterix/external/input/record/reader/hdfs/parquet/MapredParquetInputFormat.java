@@ -25,14 +25,18 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.parquet.hadoop.Footer;
 import org.apache.parquet.hadoop.ParquetInputFormat;
 import org.apache.parquet.hadoop.ParquetInputSplit;
@@ -103,8 +107,8 @@ public class MapredParquetInputFormat extends org.apache.hadoop.mapred.FileInput
                 } else if (oldSplit instanceof FileSplit) {
                     realReader.initialize((FileSplit) oldSplit, oldJobConf, reporter);
                 } else {
-                    throw new IllegalArgumentException(
-                            "Invalid split (not a FileSplit or ParquetInputSplitWrapper): " + oldSplit);
+                    throw RuntimeDataException.create(ErrorCode.INVALID_PARQUET_FILE,
+                            LogRedactionUtil.userData(oldSplit.toString()), "invalid file split");
                 }
                 valueContainer = new VoidPointable();
                 firstRecord = false;
@@ -119,6 +123,26 @@ public class MapredParquetInputFormat extends org.apache.hadoop.mapred.FileInput
                 }
             } catch (InterruptedException e) {
                 throw new IOException(e);
+            } catch (HyracksDataException | AsterixParquetRuntimeException e) {
+                throw e;
+            } catch (Exception e) {
+                if (e.getMessage() != null && e.getMessage().contains("not a Parquet file")) {
+                    throw RuntimeDataException.create(ErrorCode.INVALID_PARQUET_FILE,
+                            LogRedactionUtil.userData(getPath(oldSplit)), "not a Parquet file");
+                }
+
+                throw RuntimeDataException.create(ErrorCode.UNEXPECTED_ERROR_ENCOUNTERED,
+                        LogRedactionUtil.userData(e.toString()));
+            }
+        }
+
+        private String getPath(InputSplit split) {
+            if (split instanceof FileSplit) {
+                return ((FileSplit) split).getPath().toString();
+            } else if (split instanceof ParquetInputSplitWrapper) {
+                return ((ParquetInputSplitWrapper) split).realSplit.getPath().toString();
+            } else {
+                return split.toString();
             }
         }
 
@@ -214,6 +238,11 @@ public class MapredParquetInputFormat extends org.apache.hadoop.mapred.FileInput
         @Override
         public void write(DataOutput out) throws IOException {
             realSplit.write(out);
+        }
+
+        @Override
+        public String toString() {
+            return realSplit.toString();
         }
     }
 }
