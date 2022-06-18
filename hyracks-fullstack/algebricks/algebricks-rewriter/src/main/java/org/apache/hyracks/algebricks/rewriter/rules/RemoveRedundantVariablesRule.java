@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -139,9 +138,12 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
                 if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
                     continue;
                 }
-                VariableReferenceExpression rhsVarRefExpr = (VariableReferenceExpression) expr;
-                // Update equivalence class map.
                 LogicalVariable lhs = assignOp.getVariables().get(i);
+                if (context.shouldNotBeInlined(lhs)) {
+                    continue;
+                }
+                // Update equivalence class map.
+                VariableReferenceExpression rhsVarRefExpr = (VariableReferenceExpression) expr;
                 LogicalVariable rhs = rhsVarRefExpr.getVariableReference();
                 updateEquivalenceClassMap(lhs, rhs);
             }
@@ -159,7 +161,6 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
                 modified = true;
             }
         } else {
-            substVisitor.reset(context);
             if (op.acceptExpressionTransform(substVisitor)) {
                 modified = true;
             }
@@ -284,13 +285,6 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
     }
 
     private class VariableSubstitutionVisitor implements ILogicalExpressionReferenceTransform {
-
-        private IOptimizationContext context;
-
-        void reset(IOptimizationContext context) {
-            this.context = Objects.requireNonNull(context);
-        }
-
         @Override
         public boolean transform(Mutable<ILogicalExpression> exprRef) {
             ILogicalExpression e = exprRef.getValue();
@@ -299,9 +293,6 @@ public class RemoveRedundantVariablesRule implements IAlgebraicRewriteRule {
                     // Replace variable references with their equivalent representative in the equivalence class map.
                     VariableReferenceExpression varRefExpr = (VariableReferenceExpression) e;
                     LogicalVariable var = varRefExpr.getVariableReference();
-                    if (context.shouldNotBeInlined(var)) {
-                        return false;
-                    }
                     LogicalVariable representative = findEquivalentRepresentativeVar(var);
                     if (representative != null) {
                         varRefExpr.setVariable(representative);
