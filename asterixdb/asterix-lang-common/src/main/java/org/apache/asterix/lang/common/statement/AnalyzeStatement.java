@@ -34,6 +34,7 @@ import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class AnalyzeStatement extends AbstractStatement {
 
@@ -46,6 +47,8 @@ public class AnalyzeStatement extends AbstractStatement {
     private static final int SAMPLE_HIGH_SIZE = SAMPLE_MEDIUM_SIZE * 4;
     private static final int SAMPLE_DEFAULT_SIZE = SAMPLE_LOW_SIZE;
 
+    private static final String SAMPLE_SEED_FIELD_NAME = "sample-seed";
+
     private final DataverseName dataverseName;
     private final String datasetName;
     private final AdmObjectNode options;
@@ -54,7 +57,20 @@ public class AnalyzeStatement extends AbstractStatement {
             throws CompilationException {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
-        this.options = options == null ? null : ExpressionUtils.toNode(options);
+        this.options = options == null ? null : validateOptions(ExpressionUtils.toNode(options));
+    }
+
+    private static AdmObjectNode validateOptions(AdmObjectNode options) throws CompilationException {
+        for (String fieldName : options.getFieldNames()) {
+            switch (fieldName) {
+                case SAMPLE_FIELD_NAME:
+                case SAMPLE_SEED_FIELD_NAME:
+                    break;
+                default:
+                    throw new CompilationException(ErrorCode.INVALID_PARAM, fieldName);
+            }
+        }
+        return options;
     }
 
     @Override
@@ -104,6 +120,34 @@ public class AnalyzeStatement extends AbstractStatement {
                 throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE, SAMPLE_FIELD_NAME,
                         BuiltinType.ASTRING.getTypeName(), n.getType().toString());
         }
+    }
+
+    public long getOrCreateSampleSeed() throws AlgebricksException {
+        IAdmNode n = getOption(SAMPLE_SEED_FIELD_NAME);
+        return n != null ? getSampleSeed(n) : createSampleSeed();
+    }
+
+    private long getSampleSeed(IAdmNode n) throws CompilationException {
+        switch (n.getType()) {
+            case BIGINT:
+                return ((AdmBigIntNode) n).get();
+            case DOUBLE:
+                return (long) ((AdmDoubleNode) n).get();
+            case STRING:
+                String s = ((AdmStringNode) n).get();
+                try {
+                    return Long.parseLong(s);
+                } catch (NumberFormatException e) {
+                    throw new CompilationException(ErrorCode.INVALID_PROPERTY_FORMAT, SAMPLE_SEED_FIELD_NAME);
+                }
+            default:
+                throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE, SAMPLE_SEED_FIELD_NAME,
+                        BuiltinType.AINT64.getTypeName(), n.getType().toString());
+        }
+    }
+
+    private long createSampleSeed() {
+        return System.nanoTime() + System.identityHashCode(this);
     }
 
     private boolean isValidSampleSize(int v) {

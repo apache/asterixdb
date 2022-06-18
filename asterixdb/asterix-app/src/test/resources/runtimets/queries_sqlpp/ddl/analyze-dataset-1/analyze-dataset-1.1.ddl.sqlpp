@@ -27,9 +27,10 @@ drop dataverse test if exists;
 create dataverse test;
 use test;
 
-create function listMetadata(showSourceAvgItemSize) {
+create function listMetadata(showSourceAvgItemSize, showSeed) {
   select i.DatasetName, i.IndexName, i.SampleCardinalityTarget, i.SourceCardinality,
-    case when showSourceAvgItemSize then i.SourceAvgItemSize else i.SourceAvgItemSize > 0 end as SourceAvgItemSize
+    case when showSourceAvgItemSize then i.SourceAvgItemSize else i.SourceAvgItemSize > 0 end as SourceAvgItemSize,
+    case when showSeed then i.SampleSeed else i.SampleSeed is known end as SampleSeed
   from Metadata.`Index` i
   where i.DataverseName = "test" and i.IndexName like "sample_idx%"
   order by i.IndexName

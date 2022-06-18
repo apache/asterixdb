@@ -553,15 +553,18 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
         private final int sourceAvgItemSize;
 
+        private final long sampleSeed;
+
         public SampleIndexDetails(List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators,
-                List<IAType> keyFieldTypes, int sampleCardinalityTarget, long sourceCardinality,
-                int sourceAvgItemSize) {
+                List<IAType> keyFieldTypes, int sampleCardinalityTarget, long sourceCardinality, int sourceAvgItemSize,
+                long sampleSeed) {
             this.keyFieldNames = keyFieldNames;
             this.keyFieldSourceIndicators = keyFieldSourceIndicators;
             this.keyFieldTypes = keyFieldTypes;
             this.sampleCardinalityTarget = sampleCardinalityTarget;
             this.sourceCardinality = sourceCardinality;
             this.sourceAvgItemSize = sourceAvgItemSize;
+            this.sampleSeed = sampleSeed;
         }
 
         @Override
@@ -596,6 +599,10 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
         public int getSourceAvgItemSize() {
             return sourceAvgItemSize;
+        }
+
+        public long getSampleSeed() {
+            return sampleSeed;
         }
     }
 

@@ -157,6 +157,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
         Index.SampleIndexDetails indexDetails = (Index.SampleIndexDetails) index.getIndexDetails();
         int sampleCardinalityTarget = indexDetails.getSampleCardinalityTarget();
+        long sampleSeed = indexDetails.getSampleSeed();
         IDataFormat format = metadataProvider.getDataFormat();
         int nFields = recordDesc.getFieldCount();
         int[] columns = new int[nFields];
@@ -211,7 +212,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         RecordDescriptor raggRecordDesc = new RecordDescriptor(raggSerdes, raggTraits);
 
         IRunningAggregateEvaluatorFactory raggSlotEvalFactory =
-                new SampleSlotRunningAggregateFunctionFactory(sampleCardinalityTarget);
+                new SampleSlotRunningAggregateFunctionFactory(sampleCardinalityTarget, sampleSeed);
         IRunningAggregateEvaluatorFactory raggCounterEvalFactory = TidRunningAggregateDescriptor.FACTORY
                 .createFunctionDescriptor().createRunningAggregateEvaluatorFactory(new IScalarEvaluatorFactory[0]);
         RunningAggregateRuntimeFactory raggRuntimeFactory =

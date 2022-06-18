@@ -21,4 +21,4 @@
  * Description: Test sample size parameter
  */
 
-analyze dataset test.ds1 with { "sample": "low" };
+analyze dataset test.ds1 with { "sample": "low", "sample-seed": 123 };

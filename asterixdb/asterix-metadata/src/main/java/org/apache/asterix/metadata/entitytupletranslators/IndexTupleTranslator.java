@@ -91,6 +91,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     public static final String INDEX_SEARCHKEY_ELEMENTS_FIELD_NAME = "SearchKeyElements";
     public static final String COMPLEXSEARCHKEY_UNNEST_FIELD_NAME = "UnnestList";
     public static final String COMPLEXSEARCHKEY_PROJECT_FIELD_NAME = "ProjectList";
+    public static final String SAMPLE_SEED = "SampleSeed";
     public static final String SAMPLE_CARDINALITY_TARGET = "SampleCardinalityTarget";
     public static final String SOURCE_CARDINALITY = "SourceCardinality";
     public static final String SOURCE_AVG_ITEM_SIZE = "SourceAvgItemSize";
@@ -464,6 +465,12 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                         searchElements.stream().map(Pair::getSecond).map(l -> l.get(0)).collect(Collectors.toList());
                 keyFieldTypes = searchKeyType.stream().map(l -> l.get(0)).collect(Collectors.toList());
 
+                int sampleSeedPos = indexRecord.getType().getFieldIndex(SAMPLE_SEED);
+                if (sampleSeedPos < 0) {
+                    throw new AsterixException(ErrorCode.METADATA_ERROR, SAMPLE_SEED);
+                }
+                long sampleSeed = ((AInt64) indexRecord.getValueByPos(sampleSeedPos)).getLongValue();
+
                 int sampleCardinalityTargetPos = indexRecord.getType().getFieldIndex(SAMPLE_CARDINALITY_TARGET);
                 if (sampleCardinalityTargetPos < 0) {
                     throw new AsterixException(ErrorCode.METADATA_ERROR, SAMPLE_CARDINALITY_TARGET);
@@ -484,7 +491,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 int sourceAvgItemSize = ((AInt32) indexRecord.getValueByPos(sourceAvgItemSizePos)).getIntegerValue();
 
                 indexDetails = new Index.SampleIndexDetails(keyFieldNames, keyFieldSourceIndicator, keyFieldTypes,
-                        sampleCardinalityTarget, sourceCardinality, sourceAvgItemSize);
+                        sampleCardinalityTarget, sourceCardinality, sourceAvgItemSize, sampleSeed);
                 break;
             default:
                 throw new AsterixException(ErrorCode.METADATA_ERROR, indexType.toString());
@@ -900,6 +907,13 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     private void writeSampleDetails(Index index) throws HyracksDataException {
         if (index.getIndexType() == IndexType.SAMPLE) {
             Index.SampleIndexDetails indexDetails = (Index.SampleIndexDetails) index.getIndexDetails();
+
+            nameValue.reset();
+            fieldValue.reset();
+            aString.setValue(SAMPLE_SEED);
+            stringSerde.serialize(aString, nameValue.getDataOutput());
+            int64Serde.serialize(new AInt64(indexDetails.getSampleSeed()), fieldValue.getDataOutput());
+            recordBuilder.addField(nameValue, fieldValue);
 
             nameValue.reset();
             fieldValue.reset();

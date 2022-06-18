@@ -24,4 +24,4 @@
 
 use test;
 
-listMetadata(true);
+listMetadata(true, false);

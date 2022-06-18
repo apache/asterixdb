@@ -27,5 +27,5 @@ set `import-private-functions` `true`;
 use test;
 
 select * from
-  listMetadata(false) metadata,
+  listMetadata(false, true) metadata,
   showSampleStats("ds1", "sample_idx_2_ds1", true) stats;
