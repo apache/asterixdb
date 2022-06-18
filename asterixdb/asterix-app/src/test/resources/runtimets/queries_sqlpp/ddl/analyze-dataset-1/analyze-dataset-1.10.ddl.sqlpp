@@ -24,4 +24,4 @@
 
 use test;
 
-analyze dataset test.ds1 with { "sample": "medium" };
+analyze dataset test.ds1 with { "sample": "medium", "sample-seed": 234.0 };

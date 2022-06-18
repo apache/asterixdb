@@ -41,12 +41,15 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
  */
 public class SampleSlotRunningAggregateFunctionFactory implements IRunningAggregateEvaluatorFactory {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final int sampleCardinalityTarget;
 
-    public SampleSlotRunningAggregateFunctionFactory(int sampleCardinalityTarget) {
+    private final long sampleSeed;
+
+    public SampleSlotRunningAggregateFunctionFactory(int sampleCardinalityTarget, long sampleSeed) {
         this.sampleCardinalityTarget = sampleCardinalityTarget;
+        this.sampleSeed = sampleSeed;
     }
 
     @Override
@@ -65,7 +68,7 @@ public class SampleSlotRunningAggregateFunctionFactory implements IRunningAggreg
                     SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT32);
             private final AMutableInt32 aInt32 = new AMutableInt32(0);
 
-            private final Random rnd = new Random();
+            private final Random rnd = new Random(sampleSeed);
             private long counter;
 
             @Override

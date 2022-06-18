@@ -24,4 +24,4 @@
 use test;
 
 select count(*) cnt
-from listMetadata(true) v;
+from listMetadata(true, false) v;
