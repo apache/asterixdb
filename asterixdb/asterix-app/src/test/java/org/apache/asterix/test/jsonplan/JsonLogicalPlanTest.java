@@ -27,8 +27,6 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.api.java.AsterixJavaClient;
@@ -63,7 +61,7 @@ public class JsonLogicalPlanTest extends AbstractOptimizerTest {
 
     static {
         EXTENSION_RESULT = "plan.json";
-        PATH_ACTUAL = "target" + File.separator + "jplantest" + SEPARATOR;
+        PATH_ACTUAL = "target" + SEPARATOR + "jplantest" + SEPARATOR;
     }
 
     @Parameters(name = "JsonLogicalPlanTest {index}: {0}")
@@ -71,8 +69,8 @@ public class JsonLogicalPlanTest extends AbstractOptimizerTest {
         return AbstractOptimizerTest.tests();
     }
 
-    public JsonLogicalPlanTest(final File queryFile, final File expectedFile, final File actualFile) {
-        super(queryFile, expectedFile, actualFile);
+    public JsonLogicalPlanTest(File queryFile, String expectedFilePath, File actualFile) {
+        super(queryFile, actualFile);
     }
 
     @Test
@@ -82,7 +80,7 @@ public class JsonLogicalPlanTest extends AbstractOptimizerTest {
 
     @Override
     protected void runAndCompare(String query, ILangCompilationProvider provider, Map<String, IAObject> queryParams,
-            IHyracksClientConnection hcc, List<String> linesExpected) throws Exception {
+            IHyracksClientConnection hcc) throws Exception {
         FileUtils.writeStringToFile(actualFile, "", StandardCharsets.UTF_8);
         String planStr;
         try (PrintWriter plan = new PrintWriter(actualFile)) {
@@ -99,7 +97,7 @@ public class JsonLogicalPlanTest extends AbstractOptimizerTest {
         }
 
         BufferedReader readerActual =
-                new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), "UTF-8"));
+                new BufferedReader(new InputStreamReader(new FileInputStream(actualFile), StandardCharsets.UTF_8));
         String lineActual, objectActual = "";
         boolean firstPlan = false;
         while ((lineActual = readerActual.readLine()) != null) {
@@ -122,11 +120,5 @@ public class JsonLogicalPlanTest extends AbstractOptimizerTest {
         } finally {
             readerActual.close();
         }
-    }
-
-    @Override
-    protected List<String> getExpectedLines() {
-        // this test only checks the produced result is valid, so no expected results
-        return Collections.emptyList();
     }
 }

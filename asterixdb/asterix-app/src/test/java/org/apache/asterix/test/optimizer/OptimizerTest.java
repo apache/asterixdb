@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -51,12 +52,14 @@ import org.junit.runners.Parameterized.Parameters;
 @RunWith(Parameterized.class)
 public class OptimizerTest extends AbstractOptimizerTest {
 
+    protected static final String PATH_EXPECTED = PATH_BASE + "results" + SEPARATOR;
     private static final String PATTERN_VAR_ID_PREFIX = "\\$\\$";
     private static final Pattern PATTERN_VAR_ID = Pattern.compile(PATTERN_VAR_ID_PREFIX + "(\\d+)");
+    protected String expectedFilePath;
 
     static {
         EXTENSION_RESULT = "plan";
-        PATH_ACTUAL = "target" + File.separator + "opttest" + SEPARATOR;
+        PATH_ACTUAL = "target" + SEPARATOR + "opttest" + SEPARATOR;
     }
 
     @Parameters(name = "OptimizerTest {index}: {0}")
@@ -64,8 +67,9 @@ public class OptimizerTest extends AbstractOptimizerTest {
         return AbstractOptimizerTest.tests();
     }
 
-    public OptimizerTest(final File queryFile, final File expectedFile, final File actualFile) {
-        super(queryFile, expectedFile, actualFile);
+    public OptimizerTest(File queryFile, String expectedFilePath, File actualFile) {
+        super(queryFile, actualFile);
+        this.expectedFilePath = expectedFilePath;
     }
 
     @Test
@@ -75,7 +79,7 @@ public class OptimizerTest extends AbstractOptimizerTest {
 
     @Override
     protected void runAndCompare(String query, ILangCompilationProvider provider, Map<String, IAObject> queryParams,
-            IHyracksClientConnection hcc, List<String> linesExpected) throws Exception {
+            IHyracksClientConnection hcc) throws Exception {
         FileUtils.writeStringToFile(actualFile, "", StandardCharsets.UTF_8);
         try (PrintWriter plan = new PrintWriter(actualFile)) {
             AsterixJavaClient asterix = new AsterixJavaClient(
@@ -89,6 +93,7 @@ public class OptimizerTest extends AbstractOptimizerTest {
 
         List<String> linesActual = Files.readAllLines(actualFile.toPath(), StandardCharsets.UTF_8);
 
+        List<String> linesExpected = getExpectedLines();
         int varBaseExpected = findBaseVarId(linesExpected);
         int varBaseActual = findBaseVarId(linesActual);
 
@@ -116,9 +121,8 @@ public class OptimizerTest extends AbstractOptimizerTest {
         }
     }
 
-    @Override
     protected List<String> getExpectedLines() throws IOException {
-        return Files.readAllLines(expectedFile.toPath(), StandardCharsets.UTF_8);
+        return Files.readAllLines(Path.of(PATH_EXPECTED, expectedFilePath), StandardCharsets.UTF_8);
     }
 
     private boolean planLineEquals(String lineExpected, int varIdBaseExpected, String lineActual, int varIdBaseActual) {

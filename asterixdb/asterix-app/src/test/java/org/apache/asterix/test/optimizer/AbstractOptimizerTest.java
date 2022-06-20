@@ -19,12 +19,10 @@
 package org.apache.asterix.test.optimizer;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -68,12 +66,11 @@ public abstract class AbstractOptimizerTest {
     protected static final String PATH_BASE =
             "src" + SEPARATOR + "test" + SEPARATOR + "resources" + SEPARATOR + "optimizerts" + SEPARATOR;
     protected static final String PATH_QUERIES = PATH_BASE + "queries" + SEPARATOR;
-    protected static final String PATH_EXPECTED = PATH_BASE + "results" + SEPARATOR;
     protected static String PATH_ACTUAL;
 
     protected static final ArrayList<String> ignore = AsterixTestHelper.readTestListFile(FILENAME_IGNORE, PATH_BASE);
     protected static final ArrayList<String> only = AsterixTestHelper.readTestListFile(FILENAME_ONLY, PATH_BASE);
-    protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
+    protected static String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
     protected static final ILangCompilationProvider sqlppCompilationProvider = new SqlppCompilationProvider();
     protected static ILangCompilationProvider extensionLangCompilationProvider = null;
     protected static IStatementExecutorFactory statementExecutorFactory = new DefaultStatementExecutorFactory();
@@ -123,9 +120,8 @@ public abstract class AbstractOptimizerTest {
         }
         if (file.isFile() && file.getName().endsWith(EXTENSION_SQLPP)) {
             String resultFileName = AsterixTestHelper.extToResExt(file.getName(), EXTENSION_RESULT);
-            File expectedFile = new File(PATH_EXPECTED + path + resultFileName);
             File actualFile = new File(PATH_ACTUAL + SEPARATOR + path + resultFileName);
-            testArgs.add(new Object[] { file, expectedFile, actualFile });
+            testArgs.add(new Object[] { file, path + resultFileName, actualFile });
         }
     }
 
@@ -143,20 +139,15 @@ public abstract class AbstractOptimizerTest {
     }
 
     protected final File actualFile;
-    protected final File expectedFile;
     protected final File queryFile;
 
-    public AbstractOptimizerTest(final File queryFile, final File expectedFile, final File actualFile) {
+    public AbstractOptimizerTest(final File queryFile, final File actualFile) {
         this.queryFile = queryFile;
-        this.expectedFile = expectedFile;
         this.actualFile = actualFile;
     }
 
     protected abstract void runAndCompare(String query, ILangCompilationProvider provider,
-            Map<String, IAObject> queryParams, IHyracksClientConnection hcc, List<String> linesExpected)
-            throws Exception;
-
-    protected abstract List<String> getExpectedLines() throws IOException;
+            Map<String, IAObject> queryParams, IHyracksClientConnection hcc) throws Exception;
 
     @Test
     public void test() throws Exception {
@@ -202,11 +193,10 @@ public abstract class AbstractOptimizerTest {
                 provider = extensionLangCompilationProvider;
             }
             IHyracksClientConnection hcc = integrationUtil.getHyracksClientConnection();
-            List<String> linesExpected = getExpectedLines();
             if (repeat) {
-                runAndRepeat(placeholder, substitutions, query, provider, queryParams, hcc, linesExpected);
+                runAndRepeat(placeholder, substitutions, query, provider, queryParams, hcc);
             } else {
-                runAndCompare(query, provider, queryParams, hcc, linesExpected);
+                runAndCompare(query, provider, queryParams, hcc);
             }
 
             LOGGER.info("Test \"" + queryFile.getPath() + "\" PASSED!");
@@ -222,16 +212,16 @@ public abstract class AbstractOptimizerTest {
     }
 
     private void runAndRepeat(String placeholder, JsonNode substitutions, String query,
-            ILangCompilationProvider provider, Map<String, IAObject> queryParams, IHyracksClientConnection hcc,
-            List<String> linesExpected) throws Exception {
+            ILangCompilationProvider provider, Map<String, IAObject> queryParams, IHyracksClientConnection hcc)
+            throws Exception {
         if (substitutions.isArray()) {
             for (int i = 0, size = substitutions.size(); i < size; i++) {
                 String substitute = substitutions.get(i).asText();
                 String newQuery = query.replaceAll(placeholder, substitute);
-                runAndCompare(newQuery, provider, queryParams, hcc, linesExpected);
+                runAndCompare(newQuery, provider, queryParams, hcc);
             }
         } else {
-            runAndCompare(query, provider, queryParams, hcc, linesExpected);
+            runAndCompare(query, provider, queryParams, hcc);
         }
     }
 }

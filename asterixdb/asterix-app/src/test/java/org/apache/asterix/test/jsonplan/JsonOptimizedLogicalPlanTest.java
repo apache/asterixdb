@@ -32,11 +32,11 @@ public class JsonOptimizedLogicalPlanTest extends JsonLogicalPlanTest {
     static {
         EXTENSION_RESULT = "plan.json";
         optimized = true;
-        PATH_ACTUAL = "target" + File.separator + "joptplantest" + SEPARATOR;
+        PATH_ACTUAL = "target" + SEPARATOR + "joptplantest" + SEPARATOR;
     }
 
-    public JsonOptimizedLogicalPlanTest(File queryFile, File expectedFile, File actualFile) {
-        super(queryFile, expectedFile, actualFile);
+    public JsonOptimizedLogicalPlanTest(File queryFile, String expectedFilePath, File actualFile) {
+        super(queryFile, expectedFilePath, actualFile);
     }
 
     @Parameterized.Parameters(name = "JsonOptimizedLogicalPlanTest {index}: {0}")
