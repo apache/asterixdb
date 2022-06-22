@@ -129,7 +129,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
 
         @Override
         public String toString() {
-            return "NULL";
+            return "null";
         }
 
         @Override
@@ -166,7 +166,7 @@ public final class ConstantExpression extends AbstractLogicalExpression {
 
         @Override
         public String toString() {
-            return "MISSING";
+            return "missing";
         }
 
         @Override
