@@ -382,10 +382,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                     // Finds the field name of each variable in the sub-tree such as variables for order by.
                     // This step is required when checking index-only plan.
                     if (checkLeftSubTreeMetadata) {
-                        fillFieldNamesInTheSubTree(leftSubTree);
+                        fillFieldNamesInTheSubTree(leftSubTree, context);
                     }
                     if (checkRightSubTreeMetadata) {
-                        fillFieldNamesInTheSubTree(rightSubTree);
+                        fillFieldNamesInTheSubTree(rightSubTree, context);
                     }
 
                     // Applies the plan transformation using chosen index.

@@ -59,13 +59,23 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  */
 public class OptimizableOperatorSubTree {
 
-    public static enum DataSourceType {
+    public enum DataSourceType {
         DATASOURCE_SCAN,
         EXTERNAL_SCAN,
         PRIMARY_INDEX_LOOKUP,
         COLLECTION_SCAN,
         INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP,
         NO_DATASOURCE
+    }
+
+    public static class RecordTypeSource {
+        final ARecordType recordType;
+        final int sourceIndicator;
+
+        RecordTypeSource(ARecordType recordType, int sourceIndicator) {
+            this.recordType = recordType;
+            this.sourceIndicator = sourceIndicator;
+        }
     }
 
     private ILogicalOperator root = null;
@@ -91,6 +101,7 @@ public class OptimizableOperatorSubTree {
     private List<DataSourceType> ixJoinOuterAdditionalDataSourceTypes = null;
     private List<Dataset> ixJoinOuterAdditionalDatasets = null;
     private List<ARecordType> ixJoinOuterAdditionalRecordTypes = null;
+    private final Map<LogicalVariable, RecordTypeSource> varsToRecordType = new HashMap<>();
 
     /**
      * Identifies the root of the subtree and initializes the data-source, assign, and unnest information.
@@ -172,10 +183,10 @@ public class OptimizableOperatorSubTree {
                             AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                             jobGenParams.readFromFuncArgs(f.getArguments());
                             if (jobGenParams.isPrimaryIndex()) {
-                                intializeDataSourceRefAndType(DataSourceType.PRIMARY_INDEX_LOOKUP, subTreeOpRef);
+                                initializeDataSourceRefAndType(DataSourceType.PRIMARY_INDEX_LOOKUP, subTreeOpRef);
                                 dataSourceFound = true;
                             } else if (unnestMapOp.getGenerateCallBackProceedResultVar()) {
-                                intializeDataSourceRefAndType(DataSourceType.INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP,
+                                initializeDataSourceRefAndType(DataSourceType.INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP,
                                         subTreeOpRef);
                                 dataSourceFound = true;
                             }
@@ -221,7 +232,7 @@ public class OptimizableOperatorSubTree {
         return false;
     }
 
-    private void intializeDataSourceRefAndType(DataSourceType dsType, Mutable<ILogicalOperator> opRef) {
+    private void initializeDataSourceRefAndType(DataSourceType dsType, Mutable<ILogicalOperator> opRef) {
         if (getDataSourceRef() == null) {
             setDataSourceRef(opRef);
             setDataSourceType(dsType);
@@ -238,12 +249,6 @@ public class OptimizableOperatorSubTree {
      * Also sets recordType to be the type of that dataset.
      */
     public boolean setDatasetAndTypeMetadata(MetadataProvider metadataProvider) throws AlgebricksException {
-        DataverseName dataverseName = null;
-        String datasetName = null;
-
-        Dataset ds = null;
-        ARecordType rType = null;
-
         List<Mutable<ILogicalOperator>> sourceOpRefs = new ArrayList<>();
         List<DataSourceType> dsTypes = new ArrayList<>();
 
@@ -259,6 +264,9 @@ public class OptimizableOperatorSubTree {
         }
 
         for (int i = 0; i < sourceOpRefs.size(); i++) {
+            List<LogicalVariable> vars;
+            DataverseName dataverseName;
+            String datasetName;
             switch (dsTypes.get(i)) {
                 case DATASOURCE_SCAN:
                     DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) sourceOpRefs.get(i).getValue();
@@ -272,6 +280,7 @@ public class OptimizableOperatorSubTree {
                     Pair<DataverseName, String> datasetInfo = AnalysisUtil.getDatasetInfo(dataSourceScan);
                     dataverseName = datasetInfo.first;
                     datasetName = datasetInfo.second;
+                    vars = dataSourceScan.getScanVariables();
                     break;
                 case PRIMARY_INDEX_LOOKUP:
                 case INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP:
@@ -282,12 +291,14 @@ public class OptimizableOperatorSubTree {
                     jobGenParams.readFromFuncArgs(f.getArguments());
                     datasetName = jobGenParams.getDatasetName();
                     dataverseName = jobGenParams.getDataverseName();
+                    vars = unnestMapOp.getScanVariables();
                     break;
                 case EXTERNAL_SCAN:
                     UnnestMapOperator externalScan = (UnnestMapOperator) sourceOpRefs.get(i).getValue();
                     datasetInfo = AnalysisUtil.getExternalDatasetInfo(externalScan);
                     dataverseName = datasetInfo.first;
                     datasetName = datasetInfo.second;
+                    vars = externalScan.getScanVariables();
                     break;
                 case COLLECTION_SCAN:
                     if (i != 0) {
@@ -303,7 +314,7 @@ public class OptimizableOperatorSubTree {
                 return false;
             }
             // Find the dataset corresponding to the datasource in the metadata.
-            ds = metadataProvider.findDataset(dataverseName, datasetName);
+            Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
             if (ds == null) {
                 throw new CompilationException(ErrorCode.NO_METADATA_FOR_DATASET, root.getSourceLocation(),
                         datasetName);
@@ -318,26 +329,31 @@ public class OptimizableOperatorSubTree {
                     getIxJoinOuterAdditionalRecordTypes().add(null);
                 }
             }
-            rType = (ARecordType) itemType;
+            ARecordType rType = (ARecordType) itemType;
 
             // Get the meta record type for that dataset.
-            IAType metaItemType =
-                    metadataProvider.findType(ds.getMetaItemTypeDataverseName(), ds.getMetaItemTypeName());
+            ARecordType metaItemType = (ARecordType) metadataProvider.findType(ds.getMetaItemTypeDataverseName(),
+                    ds.getMetaItemTypeName());
 
             // First index is always the primary datasource in this subtree.
             if (i == 0) {
                 setDataset(ds);
                 setRecordType(rType);
-                setMetaRecordType((ARecordType) metaItemType);
+                setMetaRecordType(metaItemType);
             } else {
                 getIxJoinOuterAdditionalDatasets().add(ds);
                 getIxJoinOuterAdditionalRecordTypes().add(rType);
             }
 
-            dataverseName = null;
-            datasetName = null;
-            ds = null;
-            rType = null;
+            if (!vars.isEmpty()) {
+                int numVars = vars.size();
+                if (ds.hasMetaPart()) {
+                    varsToRecordType.put(vars.get(numVars - 2), new RecordTypeSource(rType, 0));
+                    varsToRecordType.put(vars.get(numVars - 1), new RecordTypeSource(metaItemType, 1));
+                } else {
+                    varsToRecordType.put(vars.get(numVars - 1), new RecordTypeSource(rType, 0));
+                }
+            }
         }
 
         return true;
@@ -364,17 +380,6 @@ public class OptimizableOperatorSubTree {
         return getDataSourceType() == DataSourceType.DATASOURCE_SCAN;
     }
 
-    public boolean hasIxJoinOuterAdditionalDataSourceScan() {
-        if (getIxJoinOuterAdditionalDataSourceTypes() != null) {
-            for (int i = 0; i < getIxJoinOuterAdditionalDataSourceTypes().size(); i++) {
-                if (getIxJoinOuterAdditionalDataSourceTypes().get(i) == DataSourceType.DATASOURCE_SCAN) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     public void reset() {
         setRoot(null);
         setRootRef(null);
@@ -392,6 +397,7 @@ public class OptimizableOperatorSubTree {
         setIxJoinOuterAdditionalRecordTypes(null);
         lastMatchedDataSourceVars.first = -1;
         lastMatchedDataSourceVars.second = -1;
+        varsToRecordType.clear();
     }
 
     /**
@@ -543,6 +549,10 @@ public class OptimizableOperatorSubTree {
 
     public ARecordType getRecordType() {
         return recordType;
+    }
+
+    public RecordTypeSource getRecordTypeFor(LogicalVariable var) {
+        return varsToRecordType.get(var);
     }
 
     public void setRecordType(ARecordType recordType) {
