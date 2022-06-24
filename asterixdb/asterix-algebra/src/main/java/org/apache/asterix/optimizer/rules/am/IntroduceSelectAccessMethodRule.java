@@ -453,7 +453,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                     AccessMethodAnalysisContext analysisCtx = analyzedAMs.get(chosenIndexes.get(0).first);
 
                     // Finds the field name of each variable in the sub-tree.
-                    fillFieldNamesInTheSubTree(subTree);
+                    fillFieldNamesInTheSubTree(subTree, context);
 
                     // Finally, try to apply plan transformation using chosen index.
                     res = chosenIndexes.get(0).first.applySelectPlanTransformation(afterSelectRefs, selectRef, subTree,

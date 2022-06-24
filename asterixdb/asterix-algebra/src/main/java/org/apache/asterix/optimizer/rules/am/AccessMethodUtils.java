@@ -24,7 +24,6 @@ import static org.apache.asterix.om.functions.BuiltinFunctions.FIELD_ACCESS_BY_N
 import static org.apache.asterix.om.functions.BuiltinFunctions.FIELD_ACCESS_NESTED;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -146,6 +145,8 @@ public class AccessMethodUtils {
             BuiltinFunctions.DAY_TIME_DURATION_DEFAULT_NULL_CONSTRUCTOR,
             BuiltinFunctions.YEAR_MONTH_DURATION_DEFAULT_NULL_CONSTRUCTOR,
             BuiltinFunctions.UUID_DEFAULT_NULL_CONSTRUCTOR, BuiltinFunctions.BINARY_BASE64_DEFAULT_NULL_CONSTRUCTOR);
+
+    private final static Pair<List<String>, Integer> NO_FIELD_NAME = new Pair<>(Collections.emptyList(), 0);
 
     public static void appendPrimaryIndexTypes(Dataset dataset, IAType itemType, IAType metaItemType,
             List<Object> target) throws AlgebricksException {
@@ -2898,17 +2899,16 @@ public class AccessMethodUtils {
         return ann == null ? null : ann.getIndexNames();
     }
 
-    public static List<String> getFieldNameSetStepsFromSubTree(IOptimizableFuncExpr optFuncExpr,
-            OptimizableOperatorSubTree subTree, int opIndex, int assignVarIndex, ARecordType recordType,
-            int funcVarIndex, ILogicalExpression parentFuncExpr, ARecordType metaType, LogicalVariable metaVar,
-            MutableInt fieldSource, boolean isUnnestOverVarAllowed) throws AlgebricksException {
+    public static Pair<List<String>, Integer> getFieldNameSetStepsFromSubTree(IOptimizableFuncExpr optFuncExpr,
+            OptimizableOperatorSubTree subTree, int opIndex, int assignVarIndex, int funcVarIndex,
+            ILogicalExpression parentFuncExpr, IOptimizationContext context) throws AlgebricksException {
         if (optFuncExpr != null) {
             if (parentFuncExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                 optFuncExpr.addStepExpr(funcVarIndex, ((AbstractFunctionCallExpression) parentFuncExpr));
             }
         }
-        return getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, opIndex, assignVarIndex, recordType, funcVarIndex,
-                parentFuncExpr, metaType, metaVar, fieldSource, isUnnestOverVarAllowed);
+        return getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, opIndex, assignVarIndex, funcVarIndex,
+                parentFuncExpr, context);
     }
 
     /**
@@ -2918,10 +2918,9 @@ public class AccessMethodUtils {
      *
      * @throws AlgebricksException
      */
-    private static List<String> getFieldNameAndStepsFromSubTree(IOptimizableFuncExpr optFuncExpr,
-            OptimizableOperatorSubTree subTree, int opIndex, int assignVarIndex, ARecordType recordType,
-            int funcVarIndex, ILogicalExpression parentFuncExpr, ARecordType metaType, LogicalVariable metaVar,
-            MutableInt fieldSource, boolean isUnnestOverVarAllowed) throws AlgebricksException {
+    private static Pair<List<String>, Integer> getFieldNameAndStepsFromSubTree(IOptimizableFuncExpr optFuncExpr,
+            OptimizableOperatorSubTree subTree, int opIndex, int assignVarIndex, int funcVarIndex,
+            ILogicalExpression parentFuncExpr, IOptimizationContext context) throws AlgebricksException {
         // Get expression corresponding to opVar at varIndex.
         AbstractLogicalExpression expr = null;
         AbstractFunctionCallExpression childFuncExpr = null;
@@ -2931,23 +2930,23 @@ public class AccessMethodUtils {
             expr = (AbstractLogicalExpression) assignOp.getExpressions().get(assignVarIndex).getValue();
             // Can't get a field name from a constant expression. So, return null.
             if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                return Collections.emptyList();
+                return NO_FIELD_NAME;
             }
             childFuncExpr = (AbstractFunctionCallExpression) expr;
         } else {
             UnnestOperator unnestOp = (UnnestOperator) op;
             expr = (AbstractLogicalExpression) unnestOp.getExpressionRef().getValue();
             if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-                return Collections.emptyList();
+                return NO_FIELD_NAME;
             }
             childFuncExpr = (AbstractFunctionCallExpression) expr;
             if (childFuncExpr.getFunctionIdentifier() != BuiltinFunctions.SCAN_COLLECTION) {
-                return Collections.emptyList();
+                return NO_FIELD_NAME;
             }
             expr = (AbstractLogicalExpression) childFuncExpr.getArguments().get(0).getValue();
         }
         if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return Collections.emptyList();
+            return NO_FIELD_NAME;
         }
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
         FunctionIdentifier funcIdent = funcExpr.getFunctionIdentifier();
@@ -2960,21 +2959,21 @@ public class AccessMethodUtils {
         if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_NAME) {
             fieldName = ConstantExpressionUtil.getStringArgument(funcExpr, 1);
             if (fieldName == null) {
-                return Collections.emptyList();
+                return NO_FIELD_NAME;
             }
             isFieldAccess = true;
             isByName = true;
         } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_BY_INDEX) {
             Integer idx = ConstantExpressionUtil.getIntArgument(funcExpr, 1);
             if (idx == null) {
-                return Collections.emptyList();
+                return NO_FIELD_NAME;
             }
             fieldIndex = idx;
             isFieldAccess = true;
         } else if (funcIdent == BuiltinFunctions.FIELD_ACCESS_NESTED) {
             ILogicalExpression nameArg = funcExpr.getArguments().get(1).getValue();
             if (nameArg.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                return Collections.emptyList();
+                return NO_FIELD_NAME;
             }
             ConstantExpression constExpr = (ConstantExpression) nameArg;
             AOrderedList orderedNestedFieldName =
@@ -2989,11 +2988,6 @@ public class AccessMethodUtils {
         if (isFieldAccess) {
             LogicalVariable sourceVar =
                     ((VariableReferenceExpression) funcExpr.getArguments().get(0).getValue()).getVariableReference();
-            if (sourceVar.equals(metaVar)) {
-                fieldSource.setValue(1);
-            } else {
-                fieldSource.setValue(0);
-            }
             if (optFuncExpr != null) {
                 optFuncExpr.setLogicalExpr(funcVarIndex, parentFuncExpr);
                 optFuncExpr.addStepExpr(funcVarIndex, funcExpr);
@@ -3024,8 +3018,7 @@ public class AccessMethodUtils {
                     if (parentVars.contains(var)) {
                         //Found the variable we are looking for.
                         //return assign and index of expression
-                        int[] returnValues = { i, varIndex };
-                        assignAndExpressionIndexes = returnValues;
+                        assignAndExpressionIndexes = new int[] { i, varIndex };
                     }
                 }
             }
@@ -3033,34 +3026,25 @@ public class AccessMethodUtils {
                 //We found the nested assign
 
                 //Recursive call on nested assign
-                List<String> parentFieldNames = getFieldNameAndStepsFromSubTree(optFuncExpr, subTree,
-                        assignAndExpressionIndexes[0], assignAndExpressionIndexes[1], recordType, funcVarIndex,
-                        parentFuncExpr, metaType, metaVar, fieldSource, isUnnestOverVarAllowed);
+                Pair<List<String>, Integer> parentFieldNames =
+                        getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, assignAndExpressionIndexes[0],
+                                assignAndExpressionIndexes[1], funcVarIndex, parentFuncExpr, context);
 
-                boolean isPreviousOperatorLegalUnnest = isUnnestOverVarAllowed && subTree.getAssignsAndUnnests()
-                        .get(assignAndExpressionIndexes[0]).getOperatorTag().equals(LogicalOperatorTag.UNNEST);
-                if (parentFieldNames.isEmpty() && !isPreviousOperatorLegalUnnest) {
+                if (parentFieldNames.first.isEmpty()) {
                     //Nested assign was not a field access.
                     //We will not use index
-                    return Collections.emptyList();
-                } else if (isPreviousOperatorLegalUnnest) {
-                    parentFieldNames = new ArrayList<>();
+                    return NO_FIELD_NAME;
                 }
 
                 if (!isByName) {
-                    IAType subFieldType;
-                    if (isUnnestOverVarAllowed && isPreviousOperatorLegalUnnest) {
-                        // In the case of UNNESTing over a variable, we use the record type given by our caller instead.
-                        subFieldType = sourceVar.equals(metaVar) ? metaType : recordType;
-                    } else {
-                        subFieldType = sourceVar.equals(metaVar) ? metaType.getSubFieldType(parentFieldNames)
-                                : recordType.getSubFieldType(parentFieldNames);
-                        // Sub-field type can be AUnionType in case if optional. Thus, needs to get the actual type.
-                        subFieldType = TypeComputeUtils.getActualType(subFieldType);
-                        if (subFieldType.getTypeTag() != ATypeTag.OBJECT) {
-                            throw CompilationException.create(ErrorCode.TYPE_CONVERT, subFieldType,
-                                    ARecordType.class.getName());
-                        }
+                    IVariableTypeEnvironment outputTypeEnvironment = context.getOutputTypeEnvironment(
+                            subTree.getAssignsAndUnnests().get(assignAndExpressionIndexes[0]));
+                    IAType subFieldType = (IAType) outputTypeEnvironment.getVarType(sourceVar);
+                    // Sub-field type can be AUnionType in case if optional. Thus, needs to get the actual type.
+                    subFieldType = TypeComputeUtils.getActualType(subFieldType);
+                    if (subFieldType.getTypeTag() != ATypeTag.OBJECT) {
+                        throw CompilationException.create(ErrorCode.TYPE_CONVERT, subFieldType,
+                                ARecordType.class.getName());
                     }
                     fieldName = ((ARecordType) subFieldType).getFieldNames()[fieldIndex];
 
@@ -3070,11 +3054,9 @@ public class AccessMethodUtils {
                 }
                 //add fieldName to the nested fieldName, return
                 if (nestedAccessFieldName != null) {
-                    for (int i = 0; i < nestedAccessFieldName.size(); i++) {
-                        parentFieldNames.add(nestedAccessFieldName.get(i));
-                    }
+                    parentFieldNames.first.addAll(nestedAccessFieldName);
                 } else {
-                    parentFieldNames.add(fieldName);
+                    parentFieldNames.first.add(fieldName);
                 }
                 return (parentFieldNames);
             }
@@ -3083,15 +3065,15 @@ public class AccessMethodUtils {
                 optFuncExpr.setSourceVar(funcVarIndex, ((AssignOperator) op).getVariables().get(assignVarIndex));
             }
             //no nested assign, we are at the lowest level.
+            OptimizableOperatorSubTree.RecordTypeSource recType = subTree.getRecordTypeFor(sourceVar);
             if (isByName) {
                 if (nestedAccessFieldName != null) {
-                    return nestedAccessFieldName;
+                    return new Pair<>(nestedAccessFieldName, recType.sourceIndicator);
                 }
-                return new ArrayList<>(Arrays.asList(fieldName));
+                return new Pair<>(new ArrayList<>(List.of(fieldName)), recType.sourceIndicator);
             }
-            return new ArrayList<>(Arrays.asList(sourceVar.equals(metaVar) ? metaType.getFieldNames()[fieldIndex]
-                    : recordType.getFieldNames()[fieldIndex]));
-
+            return new Pair<>(new ArrayList<>(List.of(recType.recordType.getFieldNames()[fieldIndex])),
+                    recType.sourceIndicator);
         }
 
         // We use a part of the field in edit distance computation
@@ -3101,17 +3083,17 @@ public class AccessMethodUtils {
         }
         List<Mutable<ILogicalExpression>> funcArgs = funcExpr.getArguments();
         if (funcArgs.isEmpty()) {
-            return Collections.emptyList();
+            return NO_FIELD_NAME;
         }
         // We expect the function's argument to be a variable, otherwise we
         // cannot apply an index.
         ILogicalExpression argExpr = funcArgs.get(0).getValue();
         if (argExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-            return Collections.emptyList();
+            return NO_FIELD_NAME;
         }
         for (int i = 1; i < funcArgs.size(); i++) {
             if (funcArgs.get(i).getValue().getExpressionTag() != LogicalExpressionTag.CONSTANT) {
-                return Collections.emptyList();
+                return NO_FIELD_NAME;
             }
         }
         if (optFuncExpr != null) {
@@ -3131,20 +3113,19 @@ public class AccessMethodUtils {
                     if (var.equals(curVar) && optFuncExpr != null) {
                         optFuncExpr.setSourceVar(funcVarIndex, var);
                         return getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, varIndex,
-                                recordType, funcVarIndex, childFuncExpr, metaType, metaVar, fieldSource,
-                                isUnnestOverVarAllowed);
+                                funcVarIndex, childFuncExpr, context);
                     }
                 }
             } else {
                 UnnestOperator unnestOp = (UnnestOperator) curOp;
                 LogicalVariable var = unnestOp.getVariable();
                 if (var.equals(curVar)) {
-                    getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0, recordType,
-                            funcVarIndex, childFuncExpr, metaType, metaVar, fieldSource, isUnnestOverVarAllowed);
+                    getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0, funcVarIndex,
+                            childFuncExpr, context);
                 }
             }
         }
-        return Collections.emptyList();
+        return NO_FIELD_NAME;
     }
 
     public static Triple<Integer, List<String>, IAType> analyzeVarForArrayIndexes(List<Index> datasetIndexes,

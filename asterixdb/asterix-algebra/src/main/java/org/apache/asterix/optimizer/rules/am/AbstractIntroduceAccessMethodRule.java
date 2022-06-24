@@ -821,7 +821,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         // Remember matching subtree.
         optFuncExpr.setOptimizableSubTree(funcVarIndex, subTree);
         List<String> fieldName = null;
-        MutableInt fieldSource = new MutableInt(0);
+        int fieldSource = 0;
         if (subTree.getDataSourceType() == DataSourceType.COLLECTION_SCAN) {
             ILogicalExpression expr = optFuncExpr.getArgument(funcVarIndex).getValue();
             if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
@@ -832,9 +832,11 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             if (subTree.getDataSourceType() == DataSourceType.DATASOURCE_SCAN) {
                 subTree.setLastMatchedDataSourceVars(0, funcVarIndex);
             }
-            fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0,
-                    subTree.getRecordType(), funcVarIndex, optFuncExpr.getArgument(funcVarIndex).getValue(),
-                    subTree.getMetaRecordType(), datasetMetaVar, fieldSource, false);
+            Pair<List<String>, Integer> fieldNameAndSource =
+                    AccessMethodUtils.getFieldNameSetStepsFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex, 0,
+                            funcVarIndex, optFuncExpr.getArgument(funcVarIndex).getValue(), context);
+            fieldName = fieldNameAndSource.first;
+            fieldSource = fieldNameAndSource.second;
             if (fieldName.isEmpty()) {
                 return;
             }
@@ -843,13 +845,13 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 (IAType) context.getOutputTypeEnvironment(unnestOp).getType(optFuncExpr.getLogicalExpr(funcVarIndex));
         // Set the fieldName in the corresponding matched function
         // expression.
-        optFuncExpr.setFieldName(funcVarIndex, fieldName, fieldSource.intValue());
+        optFuncExpr.setFieldName(funcVarIndex, fieldName, fieldSource);
         optFuncExpr.setFieldType(funcVarIndex, fieldType);
 
         setTypeTag(context, subTree, optFuncExpr, funcVarIndex);
         if (subTree.hasDataSource()) {
             fillIndexExprs(datasetIndexes, fieldName, fieldType, optFuncExpr, optFuncExprIndex, funcVarIndex, subTree,
-                    analysisCtx, fieldSource.intValue(), accessMethod);
+                    analysisCtx, fieldSource, accessMethod);
         }
     }
 
@@ -860,7 +862,6 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         boolean doesArrayIndexQualify = context.getPhysicalOptimizationConfig().isArrayIndexEnabled()
                 && datasetIndexes.stream().anyMatch(i -> i.getIndexType() == IndexType.ARRAY);
         List<LogicalVariable> varList = assignOp.getVariables();
-        MutableInt fieldSource = new MutableInt(0);
         for (int varIndex = 0; varIndex < varList.size(); varIndex++) {
             LogicalVariable var = varList.get(varIndex);
             int optVarIndex = optFuncExpr.findLogicalVar(var);
@@ -871,8 +872,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                             .analyzeVarForArrayIndexes(datasetIndexes, optFuncExpr, subTree, context, var, analysisCtx);
                     if (fieldTriplet != null && subTree.hasDataSource()) {
                         fillIndexExprs(datasetIndexes, fieldTriplet.second, fieldTriplet.third, optFuncExpr,
-                                optFuncExprIndex, fieldTriplet.first, subTree, analysisCtx, fieldSource.intValue(),
-                                accessMethod);
+                                optFuncExprIndex, fieldTriplet.first, subTree, analysisCtx, 0, accessMethod);
                     }
                 }
                 continue;
@@ -885,22 +885,22 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 subTree.setLastMatchedDataSourceVars(varIndex, optVarIndex);
             }
 
-            fieldSource.setValue(0);
-            List<String> fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(optFuncExpr, subTree,
-                    assignOrUnnestIndex, varIndex, subTree.getRecordType(), optVarIndex,
-                    optFuncExpr.getArgument(optVarIndex).getValue(), subTree.getMetaRecordType(), datasetMetaVar,
-                    fieldSource, false);
+            Pair<List<String>, Integer> fieldNameAndSource =
+                    AccessMethodUtils.getFieldNameSetStepsFromSubTree(optFuncExpr, subTree, assignOrUnnestIndex,
+                            varIndex, optVarIndex, optFuncExpr.getArgument(optVarIndex).getValue(), context);
+            List<String> fieldName = fieldNameAndSource.first;
+            int fieldSource = fieldNameAndSource.second;
 
             IAType fieldType = (IAType) context.getOutputTypeEnvironment(assignOp).getVarType(var);
             // Set the fieldName in the corresponding matched
             // function expression.
-            optFuncExpr.setFieldName(optVarIndex, fieldName, fieldSource.intValue());
+            optFuncExpr.setFieldName(optVarIndex, fieldName, fieldSource);
             optFuncExpr.setFieldType(optVarIndex, fieldType);
 
             setTypeTag(context, subTree, optFuncExpr, optVarIndex);
             if (subTree.hasDataSource()) {
                 fillIndexExprs(datasetIndexes, fieldName, fieldType, optFuncExpr, optFuncExprIndex, optVarIndex,
-                        subTree, analysisCtx, fieldSource.intValue(), accessMethod);
+                        subTree, analysisCtx, fieldSource, accessMethod);
             }
         }
     }
@@ -989,16 +989,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     /**
      * Finds the field name of each variable in the ASSIGN or UNNEST operators of the sub-tree.
      */
-    protected void fillFieldNamesInTheSubTree(OptimizableOperatorSubTree subTree) throws AlgebricksException {
-        LogicalVariable datasetMetaVar = null;
-        if (subTree.getDataSourceType() != DataSourceType.COLLECTION_SCAN
-                && subTree.getDataSourceType() != DataSourceType.INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP) {
-            List<LogicalVariable> datasetVars = subTree.getDataSourceVariables();
-            if (subTree.getDataset().hasMetaPart()) {
-                datasetMetaVar = datasetVars.get(datasetVars.size() - 1);
-            }
-        }
-        MutableInt fieldSource = new MutableInt(0);
+    protected void fillFieldNamesInTheSubTree(OptimizableOperatorSubTree subTree, IOptimizationContext context)
+            throws AlgebricksException {
         for (int assignOrUnnestIndex = 0; assignOrUnnestIndex < subTree.getAssignsAndUnnests()
                 .size(); assignOrUnnestIndex++) {
             AbstractLogicalOperator op = subTree.getAssignsAndUnnests().get(assignOrUnnestIndex);
@@ -1009,10 +1001,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     LogicalVariable var = varList.get(varIndex);
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
-                    fieldSource.setValue(0);
                     List<String> fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(null, subTree,
-                            assignOrUnnestIndex, varIndex, subTree.getRecordType(), -1, null,
-                            subTree.getMetaRecordType(), datasetMetaVar, fieldSource, false);
+                            assignOrUnnestIndex, varIndex, -1, null, context).first;
                     if (fieldName != null && !fieldName.isEmpty()) {
                         subTree.getVarsToFieldNameMap().put(var, fieldName);
                     }
@@ -1020,14 +1010,11 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
             } else if (op.getOperatorTag() == LogicalOperatorTag.UNNEST) {
                 UnnestOperator unnestOp = (UnnestOperator) op;
                 LogicalVariable var = unnestOp.getVariable();
-                List<String> fieldName = null;
                 if (subTree.getDataSourceType() != DataSourceType.COLLECTION_SCAN) {
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
-                    fieldSource.setValue(0);
-                    fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(null, subTree, assignOrUnnestIndex, 0,
-                            subTree.getRecordType(), -1, null, subTree.getMetaRecordType(), datasetMetaVar, fieldSource,
-                            false);
+                    List<String> fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(null, subTree,
+                            assignOrUnnestIndex, 0, -1, null, context).first;
                     if (fieldName != null && !fieldName.isEmpty()) {
                         subTree.getVarsToFieldNameMap().put(var, fieldName);
                     }
@@ -1052,10 +1039,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     LogicalVariable var = varList.get(varIndex);
                     // funcVarIndex is not required. Thus, we set it to -1.
                     // optFuncExpr and parentFuncExpr are not required, too. Thus, we set them to null.
-                    fieldSource.setValue(0);
                     List<String> fieldName = AccessMethodUtils.getFieldNameSetStepsFromSubTree(null, subTree,
-                            assignOrUnnestIndex, varIndex, subTree.getRecordType(), -1, null,
-                            subTree.getMetaRecordType(), datasetMetaVar, fieldSource, false);
+                            assignOrUnnestIndex, varIndex, -1, null, context).first;
                     if (fieldName != null && !fieldName.isEmpty()) {
                         subTree.getVarsToFieldNameMap().put(var, fieldName);
                     }
