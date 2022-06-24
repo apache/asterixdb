@@ -104,7 +104,7 @@ public class HyracksDataException extends HyracksException {
 
     private HyracksDataException(HyracksDataException hde, String nodeId) {
         super(hde.getError().orElse(null), hde.getComponent(), hde.getErrorCode(), hde.getMessage(), hde.getCause(),
-                hde.getSourceLocation(), nodeId, hde.getStackTrace(), hde.getParams());
+                hde.getSourceLocation(), nodeId, hde.getParams());
     }
 
     protected HyracksDataException(IError error, Throwable cause, SourceLocation sourceLoc, Serializable... params) {
