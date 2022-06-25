@@ -87,7 +87,10 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(defaultAlgorithm);
             TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(defaultAlgorithm);
             keyManagerFactory.init(engineKeyStore, password);
-            final KeyStore trustStore = loadTrustStoreFromFile(password, config);
+            KeyStore trustStore = config.getTrustStore();
+            if (trustStore == null) {
+                trustStore = loadTrustStoreFromFile(password, config);
+            }
             trustManagerFactory.init(trustStore);
             SSLContext ctx = SSLContext.getInstance(TSL_VERSION);
             ctx.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
