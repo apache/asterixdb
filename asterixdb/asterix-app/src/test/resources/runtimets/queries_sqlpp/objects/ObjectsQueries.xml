@@ -120,9 +120,10 @@
       <expected-error>ASX1001: Syntax error: Cannot infer field name</expected-error>
     </compilation-unit>
   </test-case>
-  <test-case FilePath="objects">
+  <test-case FilePath="objects" check-warnings="true">
     <compilation-unit name="object_concat">
       <output-dir compare="Text">object_concat</output-dir>
+      <expected-warn>ASX0013: Duplicate field name 'v'</expected-warn>
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">

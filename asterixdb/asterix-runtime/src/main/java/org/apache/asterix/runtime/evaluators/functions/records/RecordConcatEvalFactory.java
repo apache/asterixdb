@@ -25,6 +25,7 @@ import java.util.BitSet;
 import java.util.List;
 
 import org.apache.asterix.builders.RecordBuilder;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
@@ -41,12 +42,16 @@ import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.BinaryEntry;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.LogRedactionUtil;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
 class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
 
@@ -77,7 +82,7 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
         for (int i = 0; i < args.length; i++) {
             argEvals[i] = args[i].createScalarEvaluator(ctx);
         }
-        return new RecordConcatEvaluator(argEvals);
+        return new RecordConcatEvaluator(argEvals, ctx.getWarningCollector());
     }
 
     private final class RecordConcatEvaluator implements IScalarEvaluator {
@@ -109,10 +114,13 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
         private final BinaryEntry keyEntry;
         private final BinaryEntry valEntry;
 
+        private final IWarningCollector warningCollector;
+
         private int numRecords;
 
-        private RecordConcatEvaluator(IScalarEvaluator[] argEvals) {
+        private RecordConcatEvaluator(IScalarEvaluator[] argEvals, IWarningCollector warningCollector) {
             this.argEvals = argEvals;
+            this.warningCollector = warningCollector;
 
             firstArg = new VoidPointable();
             openRecordPointable = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
@@ -309,6 +317,12 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
                 if (canAppendField(fieldName.getByteArray(), fieldName.getStartOffset() + 1,
                         fieldName.getLength() - 1)) {
                     outRecordBuilder.addField(fieldName, fieldValues.get(i));
+                } else {
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(sourceLoc, ErrorCode.DUPLICATE_FIELD_NAME,
+                                LogRedactionUtil.userData(UTF8StringUtil.toString(fieldName.getByteArray(),
+                                        fieldName.getStartOffset() + 1))));
+                    }
                 }
             }
         }
