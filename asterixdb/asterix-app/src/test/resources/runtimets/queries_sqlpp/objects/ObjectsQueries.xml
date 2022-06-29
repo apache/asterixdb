@@ -204,6 +204,11 @@
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects" check-warnings="true">
+    <compilation-unit name="open-object-constructor-with-missing-field-name">
+      <output-dir compare="Text">open-object-constructor-with-missing-field-name</output-dir>
+    </compilation-unit>
+  </test-case>
+  <test-case FilePath="objects" check-warnings="true">
     <compilation-unit name="open-closed-fieldname-conflict_issue173">
       <output-dir compare="Text">open-closed-fieldname-conflict_issue173</output-dir>
       <source-location>false</source-location>
