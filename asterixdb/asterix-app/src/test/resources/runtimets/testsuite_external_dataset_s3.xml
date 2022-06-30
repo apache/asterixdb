@@ -172,6 +172,14 @@
         <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/invalid-parquet-files">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">none</output-dir>
+        <source-location>false</source-location>
+        <expected-error>20-records.json. Reason: not a Parquet file</expected-error>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-dataset" check-warnings="true">
       <compilation-unit name="common/parquet/parquet-types/unset-flags">
         <placeholder name="adapter" value="S3" />

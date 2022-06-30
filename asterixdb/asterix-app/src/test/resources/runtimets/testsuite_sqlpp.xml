@@ -8180,6 +8180,18 @@
           <source-location>false</source-location>
         </compilation-unit>
       </test-case>
+      <test-case FilePath="array-index/error-handling">
+        <compilation-unit name="no-field-type">
+          <output-dir compare="Text">no-field-type</output-dir>
+          <expected-error>ASX1079: Compilation error: cannot find type of elements of field 'open_array_f'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of elements of field 'nested_array'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of elements of field 'nested_array'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of field 'proj1'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of field 'proj1'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of field 'proj1'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of field 'proj1'</expected-error>
+        </compilation-unit>
+      </test-case>
     </test-group>
     <test-group name="array-index/metadata">
       <test-case FilePath="array-index/metadata/closed">
