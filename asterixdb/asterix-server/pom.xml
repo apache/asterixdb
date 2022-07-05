@@ -314,72 +314,72 @@
             </override>
             <override>
               <gavs>
-                <gav>com.google.http-client:google-http-client:1.41.0</gav>
-                <gav>com.google.http-client:google-http-client-jackson2:1.41.0</gav>
-                <gav>com.google.http-client:google-http-client-appengine:1.41.0</gav>
-                <gav>com.google.http-client:google-http-client-gson:1.41.0</gav>
-                <gav>com.google.http-client:google-http-client-apache-v2:1.41.0</gav>
+                <gav>com.google.http-client:google-http-client:1.42.0</gav>
+                <gav>com.google.http-client:google-http-client-jackson2:1.42.0</gav>
+                <gav>com.google.http-client:google-http-client-appengine:1.42.0</gav>
+                <gav>com.google.http-client:google-http-client-gson:1.42.0</gav>
+                <gav>com.google.http-client:google-http-client-apache-v2:1.42.0</gav>
               </gavs>
-              <url>https://raw.githubusercontent.com/googleapis/google-http-java-client/v1.41.0/LICENSE</url>
+              <url>https://raw.githubusercontent.com/googleapis/google-http-java-client/v1.42.0/LICENSE</url>
             </override>
             <override>
-              <gav>com.google.oauth-client:google-oauth-client:1.32.1</gav>
-              <url>https://raw.githubusercontent.com/googleapis/google-oauth-java-client/v1.32.1/LICENSE</url>
+              <gav>com.google.oauth-client:google-oauth-client:1.34.1</gav>
+              <url>https://raw.githubusercontent.com/googleapis/google-oauth-java-client/v1.34.1/LICENSE</url>
             </override>
             <override>
               <gavs>
-                <gav>com.google.protobuf:protobuf-java:3.19.2</gav>
-                <gav>com.google.protobuf:protobuf-java-util:3.19.2</gav>
+                <gav>com.google.protobuf:protobuf-java:3.21.1</gav>
+                <gav>com.google.protobuf:protobuf-java-util:3.21.1</gav>
               </gavs>
-              <url>https://raw.githubusercontent.com/protocolbuffers/protobuf/v3.19.2/LICENSE</url>
+              <url>https://raw.githubusercontent.com/protocolbuffers/protobuf/v3.21.1/LICENSE</url>
             </override>
             <override>
               <gavs>
-                <gav>com.google.auth:google-auth-library-oauth2-http:1.3.0</gav>
-                <gav>com.google.auth:google-auth-library-credentials:1.3.0</gav>
+                <gav>com.google.auth:google-auth-library-oauth2-http:1.7.0</gav>
+                <gav>com.google.auth:google-auth-library-credentials:1.7.0</gav>
               </gavs>
-              <url>https://raw.githubusercontent.com/googleapis/google-auth-library-java/v1.3.0/LICENSE</url>
+              <url>https://raw.githubusercontent.com/googleapis/google-auth-library-java/v1.7.0/LICENSE</url>
             </override>
             <override>
               <gavs>
-                <gav>com.google.cloud:google-cloud-core:2.3.5</gav>
-                <gav>com.google.cloud:google-cloud-core-http:2.3.5</gav>
+                <gav>com.google.cloud:google-cloud-core:2.8.0</gav>
+                <gav>com.google.cloud:google-cloud-core-http:2.8.0</gav>
               </gavs>
-              <url>https://raw.githubusercontent.com/googleapis/java-core/v2.3.5/LICENSE</url>
+              <url>https://raw.githubusercontent.com/googleapis/java-core/v2.8.0/LICENSE</url>
             </override>
             <override>
-              <gav>com.google.cloud:google-cloud-storage:2.3.0</gav>
-              <url>https://raw.githubusercontent.com/googleapis/java-storage/v2.3.0/LICENSE</url>
+              <gav>com.google.cloud:google-cloud-storage:2.9.0</gav>
+              <url>https://raw.githubusercontent.com/googleapis/java-storage/v2.9.0/LICENSE</url>
             </override>
             <override>
               <gavs>
-                <gav>io.opencensus:opencensus-api:0.28.0</gav>
-                <gav>io.opencensus:opencensus-contrib-http-util:0.28.0</gav>
+                <gav>io.opencensus:opencensus-api:0.31.1</gav>
+                <gav>io.opencensus:opencensus-contrib-http-util:0.31.1</gav>
               </gavs>
-              <url>https://raw.githubusercontent.com/census-instrumentation/opencensus-java/v0.28.0/LICENSE</url>
+              <url>https://raw.githubusercontent.com/census-instrumentation/opencensus-java/v0.31.1/LICENSE</url>
             </override>
             <override>
-              <gav>com.google.api-client:google-api-client:1.33.0</gav>
-              <url>https://raw.githubusercontent.com/googleapis/google-api-java-client/v1.33.0/LICENSE</url>
+              <gav>com.google.api-client:google-api-client:1.35.1</gav>
+              <url>https://raw.githubusercontent.com/googleapis/google-api-java-client/v1.35.1/LICENSE</url>
             </override>
             <override>
-              <gav>com.google.api.grpc:proto-google-iam-v1:1.2.0</gav>
-              <url>https://raw.githubusercontent.com/googleapis/java-iam/v1.2.0/proto-google-iam-v1/LICENSE</url>
+              <gav>com.google.api.grpc:proto-google-iam-v1:1.4.1</gav>
+              <url>https://raw.githubusercontent.com/googleapis/java-iam/v1.4.1/proto-google-iam-v1/LICENSE</url>
             </override>
             <override>
-              <gav>com.google.api.grpc:proto-google-common-protos:2.7.1</gav>
-              <url>https://raw.githubusercontent.com/googleapis/java-common-protos/v2.7.1/proto-google-common-protos/LICENSE</url>
+              <gav>com.google.api.grpc:proto-google-common-protos:2.9.0</gav>
+              <url>https://raw.githubusercontent.com/googleapis/java-common-protos/v2.9.0/proto-google-common-protos/LICENSE</url>
             </override>
             <override>
-              <gav>com.google.api:api-common:2.1.2</gav>
-              <url>https://raw.githubusercontent.com/googleapis/api-common-java/v2.1.2/LICENSE</url>
+              <gav>com.google.api:api-common:2.2.1</gav>
+              <url>https://raw.githubusercontent.com/googleapis/api-common-java/v2.2.1/LICENSE</url>
             </override>
             <override>
               <gavs>
-                <gav>com.google.api:gax-httpjson:0.93.1</gav>
-                <gav>com.google.api:gax:2.8.1</gav>
+                <gav>com.google.api:gax-httpjson:0.103.2</gav>
+                <gav>com.google.api:gax:2.18.2</gav>
               </gavs>
-              <url>https://raw.githubusercontent.com/googleapis/gax-java/v2.8.1/LICENSE</url>
+              <url>https://raw.githubusercontent.com/googleapis/gax-java/v2.18.2/LICENSE</url>
             </override>
             <override>
               <gav>com.google.auto.value:auto-value-annotations:1.9</gav>
@@ -390,8 +390,8 @@
               <url>https://raw.githubusercontent.com/findbugsproject/findbugs/3.0.2_preview2/findbugs/licenses/LICENSE-jsr305.txt</url>
             </override>
             <override>
-              <gav>com.google.code.gson:gson:2.8.9</gav>
-              <url>https://raw.githubusercontent.com/google/gson/gson-parent-2.8.9/LICENSE</url>
+              <gav>com.google.code.gson:gson:2.9.0</gav>
+              <url>https://raw.githubusercontent.com/google/gson/gson-parent-2.9.0/LICENSE</url>
             </override>
             <override>
               <gav>com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava</gav>
@@ -402,9 +402,9 @@
               <url>https://raw.githubusercontent.com/google/j2objc/1.3/LICENSE</url>
             </override>
             <override>
-              <gav>io.grpc:grpc-context:1.43.2</gav>
-              <url>https://raw.githubusercontent.com/grpc/grpc-java/v1.43.2/LICENSE</url>
-              <noticeUrl>https://raw.githubusercontent.com/grpc/grpc-java/v1.43.2/NOTICE.txt</noticeUrl>
+              <gav>io.grpc:grpc-context:1.47.0</gav>
+              <url>https://raw.githubusercontent.com/grpc/grpc-java/v1.47.0/LICENSE</url>
+              <noticeUrl>https://raw.githubusercontent.com/grpc/grpc-java/v1.47.0/NOTICE.txt</noticeUrl>
             </override>
             <override>
               <gav>org.mindrot:jbcrypt:0.4</gav>
@@ -462,10 +462,17 @@
                 <aliasUrl>https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions/raw/5d13925b57ace092ea5e1131c338f464d85545f4/LICENSE.txt</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/google/auto/auto-value-1.9/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/google/j2objc/1.3/LICENSE</aliasUrl>
-                <aliasUrl>https://raw.githubusercontent.com/googleapis/java-common-protos/v2.7.1/proto-google-common-protos/LICENSE</aliasUrl>
-                <aliasUrl>https://raw.githubusercontent.com/googleapis/java-iam/v1.2.0/proto-google-iam-v1/LICENSE</aliasUrl>
-                <aliasUrl>https://raw.githubusercontent.com/googleapis/java-storage/v2.3.0/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/googleapis/java-common-protos/v2.9.0/proto-google-common-protos/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/googleapis/java-iam/v1.4.1/proto-google-iam-v1/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/googleapis/java-storage/v2.9.0/LICENSE</aliasUrl>
                 <aliasUrl>http://repository.jboss.org/licenses/apache-2.0.txt</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/googleapis/google-http-java-client/v1.42.0/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/census-instrumentation/opencensus-java/v0.31.1/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/googleapis/google-oauth-java-client/v1.34.1/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/googleapis/java-core/v2.8.0/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/google/gson/gson-parent-2.9.0/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/googleapis/google-api-java-client/v1.35.1/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/grpc/grpc-java/v1.47.0/LICENSE</aliasUrl>
               </aliasUrls>
               <metric>1</metric>
             </license>

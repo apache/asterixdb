@@ -1115,9 +1115,9 @@
       <groupId>com.google.api</groupId>
       <artifactId>api-common</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.1.2</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.1.2</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>2.1.2</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>2.2.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.2.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>2.2.1</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1128,9 +1128,9 @@
       <groupId>com.google.api</groupId>
       <artifactId>gax-httpjson</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>0.93.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>0.93.1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>0.93.1</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>0.103.2</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.103.2</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>0.103.2</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1141,9 +1141,9 @@
       <groupId>com.google.api</groupId>
       <artifactId>gax</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.8.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.8.1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>2.8.1</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>2.18.2</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.18.2</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>2.18.2</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1154,9 +1154,9 @@
       <groupId>com.google.api-client</groupId>
       <artifactId>google-api-client</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.33.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.33.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.33.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.35.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.35.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.35.1</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1167,9 +1167,9 @@
       <groupId>io.opencensus</groupId>
       <artifactId>opencensus-api</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>0.28.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>0.28.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>0.28.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>0.31.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.31.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>0.31.1</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1180,9 +1180,9 @@
       <groupId>io.opencensus</groupId>
       <artifactId>opencensus-contrib-http-util</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>0.28.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>0.28.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>0.28.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>0.31.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.31.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>0.31.1</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1193,9 +1193,9 @@
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-core</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.3.5</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.3.5</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>2.3.5</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>2.8.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.8.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>2.8.0</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1206,9 +1206,9 @@
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-core-http</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.3.5</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.3.5</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>2.3.5</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>2.8.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.8.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>2.8.0</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1219,9 +1219,9 @@
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-credentials</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.3.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.3.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.3.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.7.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.7.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.7.0</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1232,9 +1232,9 @@
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-oauth2-http</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.3.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.3.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.3.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.7.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.7.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.7.0</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1245,9 +1245,9 @@
       <groupId>io.grpc</groupId>
       <artifactId>grpc-context</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.43.2</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.43.2</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.43.2</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.47.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.47.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.47.0</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1258,9 +1258,9 @@
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java-util</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>3.19.2</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>3.19.2</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>3.19.2</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>3.21.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>3.21.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>3.21.1</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1271,9 +1271,9 @@
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>3.19.2</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>3.19.2</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>3.19.2</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>3.21.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>3.21.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>3.21.1</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1284,7 +1284,7 @@
       <groupId>org.threeten</groupId>
       <artifactId>threetenbp</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>1.5.2</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>1.6.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1295,8 +1295,8 @@
       <groupId>com.google.http-client</groupId>
       <artifactId>google-http-client-jackson2</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.41.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.41.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.42.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.42.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1307,8 +1307,8 @@
       <groupId>com.google.http-client</groupId>
       <artifactId>google-http-client</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.41.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.41.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.42.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.42.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1319,8 +1319,8 @@
       <groupId>com.google.http-client</groupId>
       <artifactId>google-http-client-appengine</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.41.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.41.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.42.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.42.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1331,8 +1331,8 @@
       <groupId>com.google.http-client</groupId>
       <artifactId>google-http-client-apache-v2</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.41.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.41.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.42.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.42.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1343,8 +1343,8 @@
       <groupId>com.google.http-client</groupId>
       <artifactId>google-http-client-gson</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.41.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.41.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.42.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.42.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1368,9 +1368,9 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.8.9</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.8.9</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>2.8.9</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>2.9.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.9.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>2.9.0</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1394,7 +1394,7 @@
       <groupId>org.checkerframework</groupId>
       <artifactId>checker-qual</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>3.20.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>3.22.2</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1429,8 +1429,8 @@
       <groupId>com.google.apis</groupId>
       <artifactId>google-api-services-storage</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>v1-rev20211201-1.32.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>v1-rev20211201-1.32.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>v1-rev20220608-1.32.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>v1-rev20220608-1.32.1</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1441,9 +1441,9 @@
       <groupId>com.google.oauth-client</groupId>
       <artifactId>google-oauth-client</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.32.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.32.1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.32.1</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.34.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.34.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.34.1</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -1454,8 +1454,8 @@
       <groupId>com.google.api.grpc</groupId>
       <artifactId>proto-google-iam-v1</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.2.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.2.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.4.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.4.1</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1466,8 +1466,8 @@
       <groupId>com.google.api.grpc</groupId>
       <artifactId>proto-google-common-protos</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.7.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.7.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.9.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.9.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1478,8 +1478,8 @@
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-storage</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.3.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.3.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.9.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.9.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
