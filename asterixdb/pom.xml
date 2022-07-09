@@ -92,7 +92,7 @@
     <hadoop-awsjavasdk.version>1.12.109</hadoop-awsjavasdk.version>
     <azureblobjavasdk.version>12.14.2</azureblobjavasdk.version>
     <azuredatalakejavasdk.version>12.7.2</azuredatalakejavasdk.version>
-    <gcsjavasdk.version>2.3.0</gcsjavasdk.version>
+    <gcsjavasdk.version>2.9.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.6</hadoop-gcs.version>
 

@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalIndexer;
 import org.apache.asterix.external.api.IIndexibleExternalDataSource;
@@ -131,7 +132,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
                 this.recordClass = char[].class;
             }
         } catch (IOException e) {
-            throw new AsterixException(e);
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, e);
         }
     }
 

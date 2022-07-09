@@ -1,0 +1,44 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+WITH src AS [
+   { "category_name": "Video Card", "status": "Shipped", "order_id": 1, "order_value": 10 },
+   { "category_name": "Video Card", "status": "Shipped", "order_id": 2, "order_value": 20 },
+   { "category_name": "Video Card", "status": "Cancelled", "order_id": 3, "order_value": 30 },
+   { "category_name": "Video Card", "status": "Cancelled", "order_id": 4, "order_value": 40 },
+   { "category_name": "Video Card", "status": "Pending", "order_id": 5, "order_value": 50 },
+   { "category_name": "Video Card", "status": "Pending", "order_id": 6, "order_value": 50 },
+   { "category_name": "Storage", "status": "Shipped", "order_id": 11, "order_value": 110 },
+   { "category_name": "Storage", "status": "Shipped", "order_id": 12, "order_value": 120 },
+   { "category_name": "Storage", "status": "Cancelled", "order_id": 13, "order_value": 130 },
+   { "category_name": "Storage", "status": "Cancelled", "order_id": 14, "order_value": 140 },
+   { "category_name": "Storage", "status": "Pending", "order_id": 15, "order_value": 150 },
+   { "category_name": "Storage", "status": "Pending", "order_id": 16, "order_value": 160 }
+],
+t1 AS (
+   select category_name, status, count(order_id) orders, sum(order_value) sales
+   from src
+   group by category_name, status
+)
+SELECT status, v.*
+FROM t1 group BY status GROUP AS g
+let v = OBJECT_CONCAT((
+    SELECT VALUE { g.t1.category_name || " Orders": g.t1.orders, g.t1.UNKNOWN_FIELD || " Sales": g.t1.sales } FROM g
+))
+ORDER BY status;

@@ -186,9 +186,16 @@ public class RecordBuilder implements IARecordBuilder {
         if (data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
             return;
         }
-        // ignore adding duplicate fields
         byte[] nameBytes = name.getByteArray();
-        int nameStart = name.getStartOffset() + 1;
+        int nameOffset = name.getStartOffset();
+        // ignore adding fields with NULL/MISSING names
+        if (nameBytes[nameOffset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG
+                || nameBytes[nameOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+            // TODO(ali): issue a warning
+            return;
+        }
+        // ignore adding duplicate fields
+        int nameStart = nameOffset + 1;
         int nameLength = name.getLength() - 1;
         if (recType != null && recTypeInfo.getFieldIndex(nameBytes, nameStart, nameLength) >= 0) {
             // TODO(ali): issue a warning
