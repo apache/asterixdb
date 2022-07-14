@@ -2035,6 +2035,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (activeDataverse.getDataverseName().equals(dataverseName)) {
                 activeDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
             }
+
+            validateDataverseDatasetsStateAfterDrop(metadataProvider, mdTxnCtx, datasets);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -2081,7 +2083,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void validateDataverseStateBeforeDrop(MetadataProvider metadataProvider, Dataverse dataverse,
             SourceLocation sourceLoc) throws AlgebricksException {
-        // may be overriden by product extensions for additional checks before dropping the dataverse
+        // may be overridden by product extensions for additional checks before dropping the dataverse
+    }
+
+    protected void validateDataverseDatasetsStateAfterDrop(MetadataProvider metadataProvider,
+            MetadataTransactionContext mdTxnCtx, List<Dataset> datasets) throws AlgebricksException {
+        // may be overridden by product extensions for additional checks after dropping the dataverse
     }
 
     public void handleDatasetDropStatement(MetadataProvider metadataProvider, Statement stmt,
