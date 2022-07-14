@@ -18,34 +18,24 @@
  */
 package org.apache.asterix.lang.common.base;
 
-public interface Clause extends ILangExpression {
-    public ClauseType getClauseType();
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-    public enum ClauseType {
-        FOR_CLAUSE,
-        LET_CLAUSE,
-        WHERE_CLAUSE,
-        GROUP_BY_CLAUSE,
-        DISTINCT_BY_CLAUSE,
-        ORDER_BY_CLAUSE,
-        LIMIT_CLAUSE,
-        UPDATE_CLAUSE,
-
-        // SQL related clause
-        FROM_CLAUSE,
-        FROM_TERM,
-        HAVING_CLAUSE,
-        JOIN_CLAUSE,
-        NEST_CLAUSE,
-        PROJECTION,
-        SELECT_BLOCK,
-        SELECT_CLAUSE,
-        SELECT_ELEMENT,
-        SELECT_REGULAR,
-        SELECT_SET_OPERATION,
-        UNNEST_CLAUSE,
-
-        EXTENSION
+public abstract class AbstractExtensionClause extends AbstractClause {
+    /**
+     * Parent languages should handle extension functionality via a new method in {@link IVisitorExtension}.
+     */
+    @Override
+    public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
+        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, getSourceLocation(),
+                "Unhandled dispatch to an extension clause node!");
     }
 
+    public abstract IVisitorExtension getVisitorExtension();
+
+    @Override
+    public final ClauseType getClauseType() {
+        return ClauseType.EXTENSION;
+    }
 }

@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.common.visitor.base;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -222,4 +223,6 @@ public interface ILangVisitor<R, T> {
     R visit(ViewDropStatement vds, T arg) throws CompilationException;
 
     R visit(ViewDecl vd, T arg) throws CompilationException;
+
+    R visit(IVisitorExtension ve, T arg) throws CompilationException;
 }

@@ -32,6 +32,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -411,6 +412,11 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
             }
         }
         return winExpr;
+    }
+
+    @Override
+    public Expression visit(IVisitorExtension ve, ILangExpression arg) throws CompilationException {
+        return ve.variableScopeDispatch(this, arg, scopeChecker);
     }
 
     // Adds a new encountered alias identifier into a scope

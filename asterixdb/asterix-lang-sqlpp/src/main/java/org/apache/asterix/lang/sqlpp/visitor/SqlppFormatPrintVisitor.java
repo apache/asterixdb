@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
@@ -280,6 +281,12 @@ public class SqlppFormatPrintVisitor extends FormatPrintVisitor implements ISqlp
             out.print(")");
         }
         out.println();
+        return null;
+    }
+
+    @Override
+    public Void visit(IVisitorExtension ve, Integer arg) throws CompilationException {
+        // Language extensions should create a child of this class.
         return null;
     }
 

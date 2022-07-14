@@ -139,7 +139,8 @@ public class SqlppWindowAggregationSugarVisitor extends AbstractSqlppExpressionS
         winExpr.setExprList(newExprList);
     }
 
-    private List<Pair<Expression, Identifier>> createWindowFieldList(SelectBlock selectBlock) {
+    private List<Pair<Expression, Identifier>> createWindowFieldList(SelectBlock selectBlock)
+            throws CompilationException {
         List<Pair<Expression, Identifier>> fieldList = new ArrayList<>();
         if (selectBlock != null) {
             addToFieldList(fieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getFromClause()));

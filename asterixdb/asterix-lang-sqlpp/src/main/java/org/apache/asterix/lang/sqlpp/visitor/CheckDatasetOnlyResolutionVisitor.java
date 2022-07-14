@@ -21,6 +21,7 @@ package org.apache.asterix.lang.sqlpp.visitor;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -157,6 +158,11 @@ public final class CheckDatasetOnlyResolutionVisitor
     @Override
     public Boolean visit(ListSliceExpression expression, VariableExpr arg) throws CompilationException {
         return false;
+    }
+
+    @Override
+    public Boolean visit(IVisitorExtension ve, VariableExpr arg) throws CompilationException {
+        return ve.checkDatasetOnlyDispatch(this, arg);
     }
 
     @Override

@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -224,6 +225,11 @@ public abstract class GatherFunctionCallsVisitor extends AbstractQueryExpression
     public Void visit(VariableExpr v, Void arg) throws CompilationException {
         // do nothing
         return null;
+    }
+
+    @Override
+    public Void visit(IVisitorExtension ve, Void arg) throws CompilationException {
+        return ve.gatherFunctionsDispatch(this, calls);
     }
 
     @Override

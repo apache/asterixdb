@@ -29,17 +29,11 @@ import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Clause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
-import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
-import org.apache.asterix.lang.common.expression.GbyVariableExpressionPair;
-import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.struct.Identifier;
-import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
-import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
-import org.apache.asterix.lang.sqlpp.clause.FromClause;
-import org.apache.asterix.lang.sqlpp.clause.FromTerm;
+import org.apache.asterix.lang.sqlpp.visitor.BindingVariableVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.FreeVariableVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -131,61 +125,14 @@ public class SqlppVariableUtil {
         return freeVars;
     }
 
-    public static List<VariableExpr> getBindingVariables(FromClause fromClause) {
-        if (fromClause == null) {
+    public static List<VariableExpr> getBindingVariables(ILangExpression langExpr) throws CompilationException {
+        if (langExpr == null) {
             return Collections.emptyList();
         }
-        List<VariableExpr> bindingVars = new ArrayList<>();
-        for (FromTerm fromTerm : fromClause.getFromTerms()) {
-            bindingVars.addAll(getBindingVariables(fromTerm));
-        }
-        return bindingVars;
-    }
 
-    public static List<VariableExpr> getBindingVariables(FromTerm fromTerm) {
+        final BindingVariableVisitor visitor = new BindingVariableVisitor();
         List<VariableExpr> bindingVars = new ArrayList<>();
-        if (fromTerm == null) {
-            return bindingVars;
-        }
-        bindingVars.add(fromTerm.getLeftVariable());
-        if (fromTerm.hasPositionalVariable()) {
-            bindingVars.add(fromTerm.getPositionalVariable());
-        }
-        for (AbstractBinaryCorrelateClause correlateClause : fromTerm.getCorrelateClauses()) {
-            bindingVars.add(correlateClause.getRightVariable());
-            if (correlateClause.hasPositionalVariable()) {
-                bindingVars.add(correlateClause.getPositionalVariable());
-            }
-        }
-        return bindingVars;
-    }
-
-    public static List<VariableExpr> getBindingVariables(GroupbyClause gbyClause) {
-        List<VariableExpr> bindingVars = new ArrayList<>();
-        if (gbyClause == null) {
-            return bindingVars;
-        }
-        Set<VariableExpr> gbyKeyVars = new HashSet<>();
-        for (List<GbyVariableExpressionPair> gbyPairList : gbyClause.getGbyPairList()) {
-            for (GbyVariableExpressionPair gbyKey : gbyPairList) {
-                VariableExpr var = gbyKey.getVar();
-                if (var != null && gbyKeyVars.add(var)) {
-                    bindingVars.add(var);
-                }
-            }
-        }
-        if (gbyClause.hasDecorList()) {
-            for (GbyVariableExpressionPair gbyKey : gbyClause.getDecorPairList()) {
-                VariableExpr var = gbyKey.getVar();
-                if (var != null) {
-                    bindingVars.add(var);
-                }
-            }
-        }
-        if (gbyClause.hasWithMap()) {
-            bindingVars.addAll(gbyClause.getWithVarMap().values());
-        }
-        bindingVars.add(gbyClause.getGroupVar());
+        langExpr.accept(visitor, bindingVars);
         return bindingVars;
     }
 
@@ -199,15 +146,6 @@ public class SqlppVariableUtil {
                 LetClause letClause = (LetClause) clause;
                 bindingVars.add(letClause.getVarExpr());
             }
-        }
-        return bindingVars;
-    }
-
-    public static List<VariableExpr> getBindingVariables(QuantifiedExpression qe) {
-        List<QuantifiedPair> quantifiedList = qe.getQuantifiedList();
-        List<VariableExpr> bindingVars = new ArrayList<>(quantifiedList.size());
-        for (QuantifiedPair qp : quantifiedList) {
-            bindingVars.add(qp.getVarExpr());
         }
         return bindingVars;
     }

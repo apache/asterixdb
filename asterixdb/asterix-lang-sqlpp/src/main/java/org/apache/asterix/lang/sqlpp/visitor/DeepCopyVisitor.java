@@ -28,6 +28,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -504,6 +505,11 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         copy.setSourceLocation(expression.getSourceLocation());
         copy.addHints(expression.getHints());
         return copy;
+    }
+
+    @Override
+    public ILangExpression visit(IVisitorExtension ve, Void arg) throws CompilationException {
+        return ve.deepCopyDispatch(this);
     }
 
     @Override

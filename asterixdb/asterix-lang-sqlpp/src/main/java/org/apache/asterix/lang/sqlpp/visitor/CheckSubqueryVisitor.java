@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -228,6 +229,11 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
     public Boolean visit(ListSliceExpression expression, ILangExpression arg) throws CompilationException {
         return visit(expression.getExpr(), arg) || visit(expression.getStartIndexExpression(), arg)
                 || visit(expression.getEndIndexExpression(), arg);
+    }
+
+    @Override
+    public Boolean visit(IVisitorExtension ve, ILangExpression arg) throws CompilationException {
+        return ve.checkSubqueryDispatch(this, arg);
     }
 
     @Override

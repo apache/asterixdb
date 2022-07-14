@@ -27,6 +27,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Clause.ClauseType;
 import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -464,6 +465,12 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         if (expression.hasEndExpression()) {
             expression.getEndIndexExpression().accept(this, freeVars);
         }
+        return null;
+    }
+
+    @Override
+    public Void visit(IVisitorExtension ve, Collection<VariableExpr> arg) throws CompilationException {
+        ve.freeVariableDispatch(this, arg);
         return null;
     }
 

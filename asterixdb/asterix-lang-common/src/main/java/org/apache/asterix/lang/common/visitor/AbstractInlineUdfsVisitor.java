@@ -31,6 +31,7 @@ import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -261,6 +262,11 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     @Override
     public Boolean visit(LiteralExpr l, Void arg) throws CompilationException {
         return false;
+    }
+
+    @Override
+    public Boolean visit(IVisitorExtension ve, Void arg) throws CompilationException {
+        return ve.inlineUDFsDispatch(this);
     }
 
     @Override

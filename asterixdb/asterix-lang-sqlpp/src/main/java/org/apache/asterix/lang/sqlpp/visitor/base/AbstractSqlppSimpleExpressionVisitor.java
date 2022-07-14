@@ -25,6 +25,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -384,6 +385,11 @@ public class AbstractSqlppSimpleExpressionVisitor
     }
 
     @Override
+    public Expression visit(IVisitorExtension ve, ILangExpression arg) throws CompilationException {
+        return ve.simpleExpressionDispatch(this, arg);
+    }
+
+    @Override
     public Expression visit(CaseExpression caseExpr, ILangExpression arg) throws CompilationException {
         caseExpr.setConditionExpr(visit(caseExpr.getConditionExpr(), arg));
         caseExpr.setWhenExprs(visit(caseExpr.getWhenExprs(), arg));
@@ -403,7 +409,7 @@ public class AbstractSqlppSimpleExpressionVisitor
         return null;
     }
 
-    protected Expression visit(Expression expr, ILangExpression arg) throws CompilationException {
+    public Expression visit(Expression expr, ILangExpression arg) throws CompilationException {
         return postVisit(preVisit(expr).accept(this, arg));
     }
 

@@ -19,6 +19,8 @@
 package org.apache.asterix.lang.common.visitor.base;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -130,4 +132,8 @@ public abstract class AbstractAstVisitor<R, T> extends AbstractQueryExpressionVi
         return null;
     }
 
+    @Override
+    public R visit(IVisitorExtension ve, T arg) throws CompilationException {
+        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, "Extension dispatch not implemented!");
+    }
 }

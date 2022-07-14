@@ -24,6 +24,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -154,6 +155,11 @@ public class CheckSql92AggregateVisitor extends AbstractSqlppQueryExpressionVisi
         }
 
         return false;
+    }
+
+    @Override
+    public Boolean visit(IVisitorExtension ve, ILangExpression arg) throws CompilationException {
+        return ve.check92AggregateDispatch(this, arg);
     }
 
     @Override

@@ -22,6 +22,7 @@ package org.apache.asterix.lang.sqlpp.visitor;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppContainsExpressionVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -67,5 +68,10 @@ public final class CheckNonFunctionalExpressionVisitor extends AbstractSqlppCont
             }
         }
         return super.visit(callExpr, arg);
+    }
+
+    @Override
+    public Boolean visit(IVisitorExtension ve, Void arg) throws CompilationException {
+        return ve.checkNonFunctionalDispatch(this);
     }
 }

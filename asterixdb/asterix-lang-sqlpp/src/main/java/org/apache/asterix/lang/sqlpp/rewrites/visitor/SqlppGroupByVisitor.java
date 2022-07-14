@@ -124,7 +124,8 @@ public class SqlppGroupByVisitor extends AbstractSqlppExpressionExtractionVisito
         return expr.accept(visitor, selectBlock);
     }
 
-    private List<Pair<Expression, Identifier>> createGroupFieldList(SelectBlock selectBlock) {
+    private List<Pair<Expression, Identifier>> createGroupFieldList(SelectBlock selectBlock)
+            throws CompilationException {
         List<Pair<Expression, Identifier>> groupFieldList = new ArrayList<>();
         addToFieldList(groupFieldList, SqlppVariableUtil.getBindingVariables(selectBlock.getFromClause()));
         addToFieldList(groupFieldList, SqlppVariableUtil.getLetBindingVariables(selectBlock.getLetWhereList()));

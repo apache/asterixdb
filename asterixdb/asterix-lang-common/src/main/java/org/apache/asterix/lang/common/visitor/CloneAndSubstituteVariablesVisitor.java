@@ -29,6 +29,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.IVisitorExtension;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -336,6 +337,12 @@ public class CloneAndSubstituteVariablesVisitor extends
         resultExpression.setSourceLocation(expression.getSourceLocation());
         resultExpression.addHints(expression.getHints());
         return new Pair<>(resultExpression, env);
+    }
+
+    @Override
+    public Pair<ILangExpression, VariableSubstitutionEnvironment> visit(IVisitorExtension ve,
+            VariableSubstitutionEnvironment arg) throws CompilationException {
+        return ve.remapCloneDispatch(this, arg);
     }
 
     @Override
