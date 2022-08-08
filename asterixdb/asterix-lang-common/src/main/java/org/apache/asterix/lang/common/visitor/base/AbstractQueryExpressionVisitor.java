@@ -25,6 +25,7 @@ import org.apache.asterix.lang.common.expression.RecordTypeDefinition;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.statement.AdapterDropStatement;
+import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
@@ -263,6 +264,11 @@ public abstract class AbstractQueryExpressionVisitor<R, T> implements ILangVisit
 
     @Override
     public R visit(AnalyzeStatement as, T arg) throws CompilationException {
+        return null;
+    }
+
+    @Override
+    public R visit(AnalyzeDropStatement as, T arg) throws CompilationException {
         return null;
     }
 

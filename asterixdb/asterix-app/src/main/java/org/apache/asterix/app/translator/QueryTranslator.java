@@ -111,6 +111,7 @@ import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.AdapterDropStatement;
+import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
@@ -492,6 +493,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         break;
                     case ANALYZE:
                         handleAnalyzeStatement(metadataProvider, stmt, hcc, requestParameters);
+                        break;
+                    case ANALYZE_DROP:
+                        handleAnalyzeDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case COMPACT:
                         handleCompactStatement(metadataProvider, stmt, hcc);
@@ -2277,14 +2281,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 ensureNonPrimaryIndexDrop(index, sourceLoc);
                 validateDatasetState(metadataProvider, ds, sourceLoc);
-                // #. prepare a job to drop the index in NC.
-                jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, ds, sourceLoc));
-
-                // #. mark PendingDropOp on the existing index
-                MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
-                MetadataManager.INSTANCE.addIndex(mdTxnCtx,
-                        new Index(dataverseName, datasetName, indexName, index.getIndexType(), index.getIndexDetails(),
-                                index.isEnforced(), index.isPrimaryIndex(), MetadataUtil.PENDING_DROP_OP));
+                prepareIndexDrop(metadataProvider, dataverseName, datasetName, sourceLoc, indexName, jobsToExecute,
+                        mdTxnCtx, ds, index);
 
                 // #. commit the existing transaction before calling runJob.
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -2318,8 +2316,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             "Dropping " + dataset() + " files index is not allowed.");
                 }
                 ensureNonPrimaryIndexDrop(index, sourceLoc);
-                // #. prepare a job to drop the index in NC.
-                jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, ds, sourceLoc));
+                prepareIndexDrop(metadataProvider, dataverseName, datasetName, sourceLoc, indexName, jobsToExecute,
+                        mdTxnCtx, ds, index);
+
                 List<Index> datasetIndexes =
                         MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
                 if (datasetIndexes.size() == 2) {
@@ -2340,12 +2339,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         }
                     }
                 }
-
-                // #. mark PendingDropOp on the existing index
-                MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
-                MetadataManager.INSTANCE.addIndex(mdTxnCtx,
-                        new Index(dataverseName, datasetName, indexName, index.getIndexType(), index.getIndexDetails(),
-                                index.isEnforced(), index.isPrimaryIndex(), MetadataUtil.PENDING_DROP_OP));
 
                 // #. commit the existing transaction before calling runJob.
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -4426,6 +4419,155 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             throw e;
+        }
+    }
+
+    protected void handleAnalyzeDropStatement(MetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc, IRequestParameters requestParams) throws Exception {
+        AnalyzeDropStatement analyzeDropStmt = (AnalyzeDropStatement) stmt;
+        metadataProvider.validateDatabaseObjectName(analyzeDropStmt.getDataverseName(),
+                analyzeDropStmt.getDatasetName(), analyzeDropStmt.getSourceLocation());
+        DataverseName dataverseName = getActiveDataverseName(analyzeDropStmt.getDataverseName());
+        String datasetName = analyzeDropStmt.getDatasetName();
+        if (isCompileOnly()) {
+            return;
+        }
+        lockUtil.analyzeDatasetDropBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        try {
+            doAnalyzeDatasetDrop(metadataProvider, analyzeDropStmt, dataverseName, datasetName, hcc, requestParams);
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+    }
+
+    protected boolean doAnalyzeDatasetDrop(MetadataProvider metadataProvider, AnalyzeDropStatement stmtIndexDrop,
+            DataverseName dataverseName, String datasetName, IHyracksClientConnection hcc,
+            IRequestParameters requestParams) throws Exception {
+        SourceLocation sourceLoc = stmtIndexDrop.getSourceLocation();
+        Pair<String, String> sampleIndexNames = IndexUtil.getSampleIndexNames(datasetName);
+        String indexName1 = sampleIndexNames.first;
+        String indexName2 = sampleIndexNames.second;
+        ProgressState progress = ProgressState.NO_PROGRESS;
+        List<JobSpecification> jobsToExecute = new ArrayList<>();
+
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        boolean index1Exists = false, index2Exists = false;
+        try {
+            Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
+            if (ds == null) {
+                throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                        dataverseName);
+            }
+            if (ds.getDatasetType() != DatasetType.INTERNAL) {
+                throw new CompilationException(ErrorCode.OPERATION_NOT_SUPPORTED, sourceLoc);
+            }
+            Index index1 = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, indexName1);
+            Index index2 = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, indexName2);
+            index1Exists = index1 != null;
+            index2Exists = index2 != null;
+            if (!index1Exists && !index2Exists) {
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                return false;
+            }
+            ensureNonPrimaryIndexesDrop(index1, index2, sourceLoc);
+            validateDatasetState(metadataProvider, ds, sourceLoc);
+            prepareIndexDrop(metadataProvider, dataverseName, datasetName, sourceLoc, indexName1, jobsToExecute,
+                    mdTxnCtx, ds, index1);
+            prepareIndexDrop(metadataProvider, dataverseName, datasetName, sourceLoc, indexName2, jobsToExecute,
+                    mdTxnCtx, ds, index2);
+
+            // #. commit the existing transaction before calling runJob.
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+            progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
+
+            for (JobSpecification jobSpec : jobsToExecute) {
+                runJob(hcc, jobSpec);
+            }
+
+            // #. begin a new transaction
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+
+            // #. finally, delete the existing indexes
+            if (index1Exists) {
+                MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName1);
+            }
+            if (index2Exists) {
+                MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName2);
+            }
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return true;
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                abort(e, e, mdTxnCtx);
+            }
+
+            if (progress == ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA) {
+                // #. execute compensation operations remove the all indexes in NC
+                try {
+                    for (JobSpecification jobSpec : jobsToExecute) {
+                        runJob(hcc, jobSpec);
+                    }
+                } catch (Exception e2) {
+                    // do no throw exception since still the metadata needs to be compensated.
+                    e.addSuppressed(e2);
+                }
+
+                // remove the record from the metadata.
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                metadataProvider.setMetadataTxnContext(mdTxnCtx);
+                try {
+                    if (index1Exists) {
+                        MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
+                                datasetName, indexName1);
+                    }
+                    if (index2Exists) {
+                        MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
+                                datasetName, indexName2);
+                    }
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                } catch (Exception e2) {
+                    e.addSuppressed(e2);
+                    abort(e, e2, mdTxnCtx);
+                    String msg = String.format(
+                            "System is in inconsistent state: pending index %1$s.%2$s.%3$s and/or %1$s.%2$s.%4$s "
+                                    + "couldn't be removed from the metadata",
+                            dataverseName, datasetName, indexName1, indexName2);
+                    throw new IllegalStateException(msg, e);
+                }
+            }
+
+            throw e;
+        }
+    }
+
+    private void ensureNonPrimaryIndexesDrop(Index index1, Index index2, SourceLocation sourceLoc)
+            throws AlgebricksException {
+        if (index1 != null) {
+            ensureNonPrimaryIndexDrop(index1, sourceLoc);
+        }
+        if (index2 != null) {
+            ensureNonPrimaryIndexDrop(index2, sourceLoc);
+        }
+    }
+
+    private void prepareIndexDrop(MetadataProvider metadataProvider, DataverseName dataverseName, String datasetName,
+            SourceLocation sourceLoc, String indexName, List<JobSpecification> jobsToExecute,
+            MetadataTransactionContext mdTxnCtx, Dataset ds, Index index) throws AlgebricksException {
+        if (index != null) {
+            // #. prepare a job to drop the index in NC.
+            jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, ds, sourceLoc));
+
+            // #. mark PendingDropOp on the existing index
+            MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
+            MetadataManager.INSTANCE.addIndex(mdTxnCtx,
+                    new Index(dataverseName, datasetName, indexName, index.getIndexType(), index.getIndexDetails(),
+                            index.isEnforced(), index.isPrimaryIndex(), MetadataUtil.PENDING_DROP_OP));
         }
     }
 

@@ -42,6 +42,7 @@ import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.AdapterDropStatement;
+import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
@@ -209,6 +210,8 @@ public interface ILangVisitor<R, T> {
     R visit(SynonymDropStatement del, T arg) throws CompilationException;
 
     R visit(AnalyzeStatement as, T arg) throws CompilationException;
+
+    R visit(AnalyzeDropStatement as, T step) throws CompilationException;
 
     R visit(CompactStatement del, T arg) throws CompilationException;
 

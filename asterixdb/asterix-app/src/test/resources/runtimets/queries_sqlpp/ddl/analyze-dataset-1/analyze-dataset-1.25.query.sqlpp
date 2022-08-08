@@ -18,9 +18,10 @@
  */
 
 /*
- * Description: test that the sample index is dropped using "analyze dataset drop statistics" statement
+ * Description: check that the sample was dropped
  */
 
 use test;
 
-analyze dataset ds1 drop statistics;
+select count(*) cnt
+from listMetadata(true, false) v;

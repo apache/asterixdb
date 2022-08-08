@@ -126,6 +126,7 @@ import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
 import org.apache.asterix.lang.common.statement.AdapterDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
+import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
@@ -259,6 +260,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private static final String REPLACE = "REPLACE";
     private static final String RETURNS = "RETURNS";
     private static final String CONFIG = "CONFIG";
+    private static final String STATISTICS = "STATISTICS";
 
 
     private static final String INT_TYPE_NAME = "int";
@@ -2634,19 +2636,44 @@ String AdapterName() throws ParseException :
 Statement AnalyzeStatement() throws ParseException:
 {
   Token startToken = null;
+  Statement stmt = null;
   Pair<DataverseName,Identifier> nameComponents = null;
-  RecordConstructor withRecord = null;
 }
 {
   <ANALYZE> { startToken = token; } Dataset() nameComponents = QualifiedName()
+  (
+    stmt = AnalyzeDatasetDropStatement(startToken, nameComponents.first, nameComponents.second)
+    | stmt = AnalyzeDatasetStatement(startToken, nameComponents.first, nameComponents.second)
+  )
+  {
+    return stmt;
+  }
+}
+
+Statement AnalyzeDatasetStatement(Token startToken, DataverseName dvName, Identifier identifier) throws ParseException:
+{
+  RecordConstructor withRecord = null;
+}
+{
   ( <WITH> withRecord = RecordConstructor() )?
   {
     try {
-    AnalyzeStatement stmt = new AnalyzeStatement(nameComponents.first, nameComponents.second.getValue(), withRecord);
+    AnalyzeStatement stmt = new AnalyzeStatement(dvName, identifier.getValue(), withRecord);
     return addSourceLocation(stmt, startToken);
     } catch (CompilationException e) {
        throw new SqlppParseException(getSourceLocation(startToken), e.getMessage());
     }
+  }
+}
+
+Statement AnalyzeDatasetDropStatement(Token startToken, DataverseName dvName, Identifier identifier) throws ParseException:
+{
+}
+{
+  <DROP> <IDENTIFIER> { expectToken(STATISTICS); }
+  {
+    AnalyzeDropStatement stmt = new AnalyzeDropStatement(dvName, identifier.getValue());
+    return addSourceLocation(stmt, startToken);
   }
 }
 

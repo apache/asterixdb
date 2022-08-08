@@ -21,44 +21,29 @@ package org.apache.asterix.lang.common.statement;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
-import org.apache.asterix.lang.common.base.Statement;
-import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
-public class IndexDropStatement extends AbstractStatement {
+public class AnalyzeDropStatement extends AbstractStatement {
 
     private final DataverseName dataverseName;
-    private final Identifier datasetName;
-    private final Identifier indexName;
-    private final boolean ifExists;
+    private final String datasetName;
 
-    public IndexDropStatement(DataverseName dataverseName, Identifier datasetName, Identifier indexName,
-            boolean ifExists) {
+    public AnalyzeDropStatement(DataverseName dataverseName, String datasetName) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
-        this.indexName = indexName;
-        this.ifExists = ifExists;
     }
 
     @Override
     public Kind getKind() {
-        return Statement.Kind.INDEX_DROP;
+        return Kind.ANALYZE_DROP;
     }
 
     public DataverseName getDataverseName() {
         return dataverseName;
     }
 
-    public Identifier getDatasetName() {
+    public String getDatasetName() {
         return datasetName;
-    }
-
-    public Identifier getIndexName() {
-        return indexName;
-    }
-
-    public boolean getIfExists() {
-        return ifExists;
     }
 
     @Override

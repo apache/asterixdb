@@ -318,6 +318,13 @@ public class MetadataLockUtil implements IMetadataLockUtil {
     }
 
     @Override
+    public void analyzeDatasetDropBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
+        lockMgr.acquireDataverseReadLock(locks, dataverseName);
+        lockMgr.acquireDatasetWriteLock(locks, dataverseName, datasetName);
+    }
+
+    @Override
     public void compactBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
             String datasetName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
