@@ -75,16 +75,18 @@ public class NestedLoopJoinPOperator extends AbstractJoinPOperator {
         }
 
         IPartitioningProperty pp;
-
         AbstractLogicalOperator op = (AbstractLogicalOperator) iop;
 
+        // the partitioning property of the nested loop join is the same as the left branch.
+        // it cannot be the same as the right branch (BROADCAST) because the final joined data is not replicated at
+        // all partitions, and hence the final joined data is not BROADCAST.
         if (op.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
-            AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(1).getValue();
-            IPhysicalPropertiesVector pv1 = op2.getPhysicalOperator().getDeliveredProperties();
-            if (pv1 == null) {
+            AbstractLogicalOperator leftOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+            IPhysicalPropertiesVector leftOpProperties = leftOp.getPhysicalOperator().getDeliveredProperties();
+            if (leftOpProperties == null) {
                 pp = null;
             } else {
-                pp = pv1.getPartitioningProperty();
+                pp = leftOpProperties.getPartitioningProperty();
             }
         } else {
             pp = IPartitioningProperty.UNPARTITIONED;

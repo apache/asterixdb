@@ -27,7 +27,7 @@
                                                     -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                          -- HASH_PARTITION_EXCHANGE [$$54]  |PARTITIONED|
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
                               -- STREAM_SELECT  |PARTITIONED|
                                 -- SUBPLAN  |PARTITIONED|
