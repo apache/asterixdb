@@ -86,7 +86,7 @@
                                                                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                       -- RTREE_SEARCH (channels.Shelters.s_location)  |PARTITIONED|
-                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                        -- BROADCAST_EXCHANGE  |PARTITIONED|
                                                                                                           -- ASSIGN  |PARTITIONED|
                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                               -- NESTED_LOOP  |PARTITIONED|
@@ -133,7 +133,7 @@
                                                                                             -- STREAM_PROJECT  |PARTITIONED|
                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                 -- RTREE_SEARCH (channels.Shelters.s_location)  |PARTITIONED|
-                                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                  -- BROADCAST_EXCHANGE  |PARTITIONED|
                                                                                                     -- ASSIGN  |PARTITIONED|
                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                         -- NESTED_LOOP  |PARTITIONED|

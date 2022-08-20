@@ -6666,6 +6666,16 @@
         <output-dir compare="Text">join-with-empty-dataset</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="join">
+      <compilation-unit name="nlj_partitioning_property">
+        <output-dir compare="Text">nlj_partitioning_property</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
+      <compilation-unit name="inner_right_corr">
+        <output-dir compare="Text">inner_right_corr</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="list">
     <test-case FilePath="list">

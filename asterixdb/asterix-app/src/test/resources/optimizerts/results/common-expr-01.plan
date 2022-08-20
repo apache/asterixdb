@@ -34,7 +34,7 @@
                                                 }
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- STABLE_SORT [$$172(ASC)]  |PARTITIONED|
-                                              -- HASH_PARTITION_EXCHANGE [$$172]  |PARTITIONED|
+                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     -- NESTED_LOOP  |PARTITIONED|

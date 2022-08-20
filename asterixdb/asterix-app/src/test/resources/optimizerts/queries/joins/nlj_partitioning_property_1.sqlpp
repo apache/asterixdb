@@ -1,0 +1,71 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Test the fix for nested loop join delivered partitioning property ASTERIXDB-3066
+ */
+
+DROP DATAVERSE tpch IF EXISTS;
+CREATE DATAVERSE tpch;
+
+USE tpch;
+
+CREATE TYPE tpch.SupplierType AS
+ CLOSED {
+  s_suppkey : bigint,
+  s_name : string,
+  s_address : string,
+  s_nationkey : bigint,
+  s_phone : string,
+  s_acctbal : double,
+  s_comment : string
+};
+
+CREATE TYPE tpch.PartType AS
+ CLOSED {
+  p_partkey : bigint,
+  p_name : string,
+  p_mfgr : string,
+  p_brand : string,
+  p_type : string,
+  p_size : bigint,
+  p_container : string,
+  p_retailprice : double,
+  p_comment : string
+};
+
+CREATE TYPE tpch.PartSuppType AS
+ CLOSED {
+  ps_partkey : bigint,
+  ps_suppkey : bigint,
+  ps_availqty : bigint,
+  ps_supplycost : double,
+  ps_comment : string
+};
+
+CREATE DATASET Supplier(SupplierType) PRIMARY KEY s_suppkey;
+CREATE DATASET Part(PartType) PRIMARY KEY p_partkey;
+CREATE DATASET Partsupp(PartSuppType) PRIMARY KEY ps_partkey,ps_suppkey;
+
+CREATE INDEX partsupp_fk_part ON Partsupp (ps_partkey);
+CREATE INDEX partsupp_fk_supplier ON Partsupp (ps_suppkey);
+
+FROM Supplier s JOIN (FROM Partsupp ps, Part p SELECT ps.ps_suppkey AS suppkey) AS p_ps
+ON s.s_suppkey /*+ hash-bcast */ = p_ps.suppkey
+SELECT count(*) AS count;

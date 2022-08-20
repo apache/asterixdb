@@ -21,7 +21,7 @@
                             -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                      -- HASH_PARTITION_EXCHANGE [$$87]  |PARTITIONED|
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- ASSIGN  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- UNNEST  |PARTITIONED|
