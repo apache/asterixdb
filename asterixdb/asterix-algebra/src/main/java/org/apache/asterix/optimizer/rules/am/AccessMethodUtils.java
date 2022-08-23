@@ -1736,10 +1736,10 @@ public class AccessMethodUtils {
      * false positive results, we can apply instantTryLock() on PK optimization since a result from these indexes
      * doesn't have to be verified by the primary index-lookup and a subsequent SELECT operator.
      * (i.e., we can guarantee the correctness of the result.)
-     *
+     * <p>
      * Case A) non-index-only plan
      * sidx-search -> (optional) sort -> (optional) distinct -> pdix-search
-     *
+     * <p>
      * Case B) index-only plan
      * left path (an instantTryLock() on the PK fail path):
      * right path(an instantTryLock() on the PK success path):
@@ -2359,10 +2359,9 @@ public class AccessMethodUtils {
      * unless the variables are produced after the SELECT (JOIN) operator.
      *
      * @return Pair<Boolean, Boolean>: the first boolean value tells whether the given plan is an index-only plan.
-     *         The second boolean value tells whether the secondary key field variable(s) are used after the given
-     *         SELECT (JOIN) operator.
+     * The second boolean value tells whether the secondary key field variable(s) are used after the given
+     * SELECT (JOIN) operator.
      * @throws AlgebricksException
-     *
      */
     private static void checkVarUsageAfterSelectOp(List<Mutable<ILogicalOperator>> afterSelectOpRefs,
             List<LogicalVariable> liveVarsAfterSelJoinOp, List<LogicalVariable> dataScanPKVars,
@@ -2849,12 +2848,9 @@ public class AccessMethodUtils {
     /**
      * Checks whether a LogicalVariable exists in a list of Triple<LogicalVariable, LogicalVariable, LogicalVariable>.
      *
-     * @param varsList
-     *            list that contains triples of LogicalVariable.
-     * @param varToFind
-     *            a LogicalVariable to find
-     * @param checkOnlyFirst
-     *            specifies whether it is required to check only the first variable in the given triple.
+     * @param varsList       list that contains triples of LogicalVariable.
+     * @param varToFind      a LogicalVariable to find
+     * @param checkOnlyFirst specifies whether it is required to check only the first variable in the given triple.
      * @return
      */
     public static boolean findVarInTripleVarList(

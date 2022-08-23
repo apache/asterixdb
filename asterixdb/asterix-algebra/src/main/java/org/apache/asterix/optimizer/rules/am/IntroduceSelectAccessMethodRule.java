@@ -54,6 +54,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 
 /**
@@ -176,7 +177,44 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         afterSelectRefs = new ArrayList<>();
         // Recursively check the given plan whether the desired pattern exists in it.
         // If so, try to optimize the plan.
-        boolean planTransformed = checkAndApplyTheSelectTransformation(opRef, context);
+        List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
+        Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = null;
+        boolean planTransformed =
+                checkAndApplyTheSelectTransformation(opRef, context, false, chosenIndexes, analyzedAMs);
+
+        if (selectOp != null) {
+            // We found an optimization here. Don't need to optimize this operator again.
+            context.addToDontApplySet(this, selectOp);
+        }
+
+        if (!planTransformed) {
+            return false;
+        } else {
+            OperatorPropertiesUtil.typeOpRec(opRef, context);
+        }
+
+        return planTransformed;
+    }
+
+    public boolean checkApplicable(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
+            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
+            throws AlgebricksException {
+        clear();
+        setMetadataDeclarations(context);
+
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+
+        // Already checked?
+        if (context.checkIfInDontApplySet(this, op)) {
+            return false;
+        }
+
+        afterSelectRefs = new ArrayList<>();
+        // Recursively check the given plan whether the desired pattern exists in it.
+        // If so, try to optimize the plan.
+
+        boolean planTransformed =
+                checkAndApplyTheSelectTransformation(opRef, context, true, chosenIndexes, analyzedAMs);
 
         if (selectOp != null) {
             // We found an optimization here. Don't need to optimize this operator again.
@@ -256,7 +294,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
      *
      * @param chosenIndexes
      * @return Pair<IAccessMethod, Index> for the primary index
-     *         null otherwise
+     * null otherwise
      * @throws AlgebricksException
      */
     private Pair<IAccessMethod, Index> fetchPrimaryIndexAmongChosenIndexes(
@@ -328,11 +366,13 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
      * if it is not already optimized.
      */
     protected boolean checkAndApplyTheSelectTransformation(Mutable<ILogicalOperator> opRef,
-            IOptimizationContext context) throws AlgebricksException {
+            IOptimizationContext context, boolean checkApplicableOnly, List<Pair<IAccessMethod, Index>> chosenIndexes,
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         boolean selectFoundAndOptimizationApplied;
         boolean isSelectOp = false;
 
+        IPlanPrettyPrinter pp = context.getPrettyPrinter();
         Mutable<ILogicalOperator> selectRefFromThisOp = null;
         SelectOperator selectOpFromThisOp = null;
 
@@ -351,7 +391,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         // Recursively check the plan and try to optimize it. We first check the children of the given operator
         // to make sure an earlier select in the path is optimized first.
         for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            selectFoundAndOptimizationApplied = checkAndApplyTheSelectTransformation(inputOpRef, context);
+            selectFoundAndOptimizationApplied = checkAndApplyTheSelectTransformation(inputOpRef, context,
+                    checkApplicableOnly, chosenIndexes, analyzedAMs);
             if (selectFoundAndOptimizationApplied) {
                 return true;
             }
@@ -376,8 +417,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
             // For each access method, contains the information about
             // whether an available index can be applicable or not.
-            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = null;
-            if (continueCheck) {
+            if (!checkApplicableOnly && continueCheck) {
                 analyzedAMs = new TreeMap<>();
             }
 
@@ -386,14 +426,14 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                 // If there exists a composite atomic-array index, our conjuncts will be split across multiple
                 // SELECTs. This rewrite is to be used **solely** for the purpose of changing a DATA-SCAN into a
                 // non-index-only plan branch. No nodes introduced from this rewrite will be used beyond this point.
-                if (rewriteLocallyAndTransform(selectRef, context, mergedSelectRewrite)) {
+                if (!checkApplicableOnly && rewriteLocallyAndTransform(selectRef, context, mergedSelectRewrite)) {
                     return true;
                 }
 
                 // If there exists a SUBPLAN in our plan, and we are conditioning on a variable, attempt to rewrite
                 // this subplan to allow an array-index AM to be introduced. Again, this rewrite is to be used
                 // **solely** for the purpose of changing a DATA-SCAN into a non-index-only plan branch.
-                if (rewriteLocallyAndTransform(selectRef, context, selectFromSubplanRewrite)) {
+                if (!checkApplicableOnly && rewriteLocallyAndTransform(selectRef, context, selectFromSubplanRewrite)) {
                     return true;
                 }
             }
@@ -426,20 +466,22 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                 fillSubTreeIndexExprs(subTree, analyzedAMs, context, false);
 
                 // Prune the access methods based on the function expression and access methods.
-                pruneIndexCandidates(analyzedAMs, context, typeEnvironment);
+                pruneIndexCandidates(analyzedAMs, context, typeEnvironment, false);
 
                 // Choose all indexes that will be applied.
-                List<Pair<IAccessMethod, Index>> chosenIndexes = chooseAllIndexes(analyzedAMs);
+                chooseAllIndexes(analyzedAMs, chosenIndexes);
 
                 if (chosenIndexes == null || chosenIndexes.isEmpty()) {
                     // We can't apply any index for this SELECT operator
                     context.addToDontApplySet(this, selectRef.getValue());
                     return false;
                 }
+                if (checkApplicableOnly) {
+                    return true;
+                }
 
                 // Apply plan transformation using chosen index.
                 boolean res;
-
                 // Primary index applicable?
                 Pair<IAccessMethod, Index> chosenPrimaryIndex = fetchPrimaryIndexAmongChosenIndexes(chosenIndexes);
                 if (chosenPrimaryIndex != null) {
@@ -497,7 +539,10 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         boolean transformationResult = false;
         if (selectRewrite != null) {
             Mutable<ILogicalOperator> selectRuleInput = new MutableObject<>(selectRewrite);
-            transformationResult = checkAndApplyTheSelectTransformation(selectRuleInput, context);
+            List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = null;
+            transformationResult =
+                    checkAndApplyTheSelectTransformation(selectRuleInput, context, false, chosenIndexes, analyzedAMs);
         }
 
         // Restore our state, so we can look for more optimizations if this transformation failed.

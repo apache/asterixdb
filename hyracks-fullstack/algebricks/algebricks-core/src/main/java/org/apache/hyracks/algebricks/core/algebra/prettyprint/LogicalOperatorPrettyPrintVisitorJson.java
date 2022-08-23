@@ -33,7 +33,9 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -96,6 +98,8 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     private static final String EXPRESSION_FIELD = "expression";
     private static final String CONDITION_FIELD = "condition";
     private static final String MISSING_VALUE_FIELD = "missing-value";
+    private static final String OP_CARDINALITY = "cardinality";
+    private static final String OP_COST = "cost";
 
     private final Map<AbstractLogicalOperator, String> operatorIdentity = new HashMap<>();
     private final IdCounter idCounter = new IdCounter();
@@ -196,6 +200,33 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 jsonGenerator.writeStringField("physical-operator", pOp.toString(false));
             }
             jsonGenerator.writeStringField("execution-mode", op.getExecutionMode().toString());
+
+            for (Map.Entry<String, Object> anno : op.getAnnotations().entrySet()) {
+                Object annotationVal = anno.getValue();
+                if (annotationVal != null) {
+                    String annotation = anno.getKey();
+                    switch (annotation) {
+                        case OperatorAnnotations.OP_COST_LOCAL:
+                        case OperatorAnnotations.OP_COST_TOTAL:
+                            jsonGenerator.writeStringField(annotation.toLowerCase().replace('_', '-'),
+                                    annotationVal.toString());
+                            break;
+                        case OperatorAnnotations.OP_INPUT_CARDINALITY:
+                            if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+                                jsonGenerator.writeStringField(OP_CARDINALITY, annotationVal.toString());
+                            }
+                            break;
+                        case OperatorAnnotations.OP_OUTPUT_CARDINALITY:
+                            if (op.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
+                                jsonGenerator.writeStringField(OP_CARDINALITY, annotationVal.toString());
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+
             if (printInputs && !op.getInputs().isEmpty()) {
                 jsonGenerator.writeArrayFieldStart("inputs");
                 for (Mutable<ILogicalOperator> k : op.getInputs()) {
@@ -884,13 +915,17 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     /////////////// string fields ///////////////
 
-    /** Writes "fieldName": "expr" */
+    /**
+     * Writes "fieldName": "expr"
+     */
     private void writeStringFieldExpression(String fieldName, Mutable<ILogicalExpression> expressionRef, Void indent)
             throws AlgebricksException, IOException {
         writeStringFieldExpression(fieldName, expressionRef.getValue(), indent);
     }
 
-    /** Writes "fieldName": "expr" */
+    /**
+     * Writes "fieldName": "expr"
+     */
     private void writeStringFieldExpression(String fieldName, ILogicalExpression expression, Void indent)
             throws AlgebricksException, IOException {
         jsonGenerator.writeStringField(fieldName, expression.accept(exprVisitor, indent));
@@ -898,7 +933,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     /////////////// array fields ///////////////
 
-    /** Writes "fieldName": [ "var1", "var2", ... ] */
+    /**
+     * Writes "fieldName": [ "var1", "var2", ... ]
+     */
     private void writeArrayFieldOfVariables(String fieldName, List<LogicalVariable> variables) throws IOException {
         jsonGenerator.writeArrayFieldStart(fieldName);
         for (int i = 0, size = variables.size(); i < size; i++) {
@@ -907,7 +944,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         jsonGenerator.writeEndArray();
     }
 
-    /** Writes "fieldName": [ ["var1", "var2", ...], ["var1", "var2", ...] ] */
+    /**
+     * Writes "fieldName": [ ["var1", "var2", ...], ["var1", "var2", ...] ]
+     */
     private void writeArrayFieldOfNestedVariablesList(String fieldName, List<List<LogicalVariable>> nestedVarList)
             throws IOException {
         jsonGenerator.writeArrayFieldStart(fieldName);
@@ -920,7 +959,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         jsonGenerator.writeEndArray();
     }
 
-    /** Writes "fieldName" : [ "expr" ] */
+    /**
+     * Writes "fieldName" : [ "expr" ]
+     */
     private void writeArrayFieldOfExpression(String fieldName, Mutable<ILogicalExpression> expr, Void indent)
             throws IOException, AlgebricksException {
         jsonGenerator.writeArrayFieldStart(fieldName);
@@ -928,7 +969,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         jsonGenerator.writeEndArray();
     }
 
-    /** Writes "fieldName" : [ "expr1", "expr2", ...] */
+    /**
+     * Writes "fieldName" : [ "expr1", "expr2", ...]
+     */
     private void writeArrayFieldOfExpressions(String fieldName, List<Mutable<ILogicalExpression>> exprs, Void indent)
             throws IOException, AlgebricksException {
         jsonGenerator.writeArrayFieldStart(fieldName);
@@ -938,7 +981,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         jsonGenerator.writeEndArray();
     }
 
-    /** Writes "fieldName" : [ { "variable": "var1", "expression": "expr1" }, ... ] */
+    /**
+     * Writes "fieldName" : [ { "variable": "var1", "expression": "expr1" }, ... ]
+     */
     private void writeArrayFieldOfVariableExpressionPairs(String fieldName,
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> varExprPairs, Void indent)
             throws AlgebricksException, IOException {
@@ -954,7 +999,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         jsonGenerator.writeEndArray();
     }
 
-    /** Writes "fieldName" : [ { "order": "", "expression": "" }, ... ] */
+    /**
+     * Writes "fieldName" : [ { "order": "", "expression": "" }, ... ]
+     */
     private void writeArrayFieldOfOrderExprList(String fieldName,
             List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderList, Void indent)
             throws AlgebricksException, IOException {
@@ -970,7 +1017,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     /////////////// object fields ///////////////
 
-    /** Writes "fieldName" : { "expressions": [ "expr1", "expr2", ...] } */
+    /**
+     * Writes "fieldName" : { "expressions": [ "expr1", "expr2", ...] }
+     */
     private void writeObjectFieldWithExpressions(String fieldName, List<Mutable<ILogicalExpression>> exprs, Void indent)
             throws IOException, AlgebricksException {
         jsonGenerator.writeObjectFieldStart(fieldName);
@@ -980,7 +1029,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     /////////////// other fields ///////////////
 
-    /** Writes "fieldName": null */
+    /**
+     * Writes "fieldName": null
+     */
     private void writeNullField(String fieldName) throws IOException {
         jsonGenerator.writeNullField(fieldName);
     }

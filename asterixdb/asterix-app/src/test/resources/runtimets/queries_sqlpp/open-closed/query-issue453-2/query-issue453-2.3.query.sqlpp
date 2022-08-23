@@ -25,8 +25,7 @@
 
 use test;
 
-
-select element d
+select d.int_m, d.int_o, d.string_m, d.string_o
 from  DataOpen as d
-order by d.id
+order by d.int_m, d.int_o, d.string_m, d.string_o;
 ;

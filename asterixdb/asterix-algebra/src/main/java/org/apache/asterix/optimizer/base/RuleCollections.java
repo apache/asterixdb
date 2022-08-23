@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.AddEquivalenceClassForRecordConstructorRule;
+import org.apache.asterix.optimizer.rules.AnnotateOperatorCostCardinalityRule;
 import org.apache.asterix.optimizer.rules.AsterixConsolidateWindowOperatorsRule;
 import org.apache.asterix.optimizer.rules.AsterixExtractFunctionsFromJoinConditionRule;
 import org.apache.asterix.optimizer.rules.AsterixInlineVariablesRule;
@@ -96,6 +97,8 @@ import org.apache.asterix.optimizer.rules.am.IntroduceJoinAccessMethodRule;
 import org.apache.asterix.optimizer.rules.am.IntroduceLSMComponentFilterRule;
 import org.apache.asterix.optimizer.rules.am.IntroducePrimaryIndexForAggregationRule;
 import org.apache.asterix.optimizer.rules.am.IntroduceSelectAccessMethodRule;
+import org.apache.asterix.optimizer.rules.cbo.EnumerateJoinsRule;
+import org.apache.asterix.optimizer.rules.cbo.JoinEnum;
 import org.apache.asterix.optimizer.rules.subplan.AsterixMoveFreeVariableOperatorOutOfSubplanRule;
 import org.apache.asterix.optimizer.rules.subplan.InlineSubplanInputForNestedTupleSourceRule;
 import org.apache.asterix.optimizer.rules.temporal.TranslateIntervalExpressionRule;
@@ -354,6 +357,15 @@ public final class RuleCollections {
         return dataExchange;
     }
 
+    public static final List<IAlgebraicRewriteRule> buildCBORuleCollection() {
+        List<IAlgebraicRewriteRule> cbo = new LinkedList<>();
+        cbo.add(new ConsolidateSelectsRule());
+        cbo.add(new EnumerateJoinsRule(new JoinEnum()));
+        cbo.add(new ReinferAllTypesRule());
+        cbo.add(new AsterixExtractFunctionsFromJoinConditionRule());
+        return cbo;
+    }
+
     public static final List<IAlgebraicRewriteRule> buildPhysicalRewritesAllLevelsRuleCollection() {
         List<IAlgebraicRewriteRule> physicalRewritesAllLevels = new LinkedList<>();
         physicalRewritesAllLevels.add(new PullSelectOutOfEqJoin());
@@ -420,6 +432,7 @@ public final class RuleCollections {
         prepareForJobGenRewrites.add(new SweepIllegalNonfunctionalFunctions());
         prepareForJobGenRewrites.add(new FixReplicateOperatorOutputsRule());
         prepareForJobGenRewrites.add(new PopulateResultMetadataRule());
+        prepareForJobGenRewrites.add(new AnnotateOperatorCostCardinalityRule());
         return prepareForJobGenRewrites;
     }
 }

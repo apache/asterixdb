@@ -37,8 +37,10 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
@@ -305,10 +307,8 @@ public class OperatorManipulationUtil {
     /**
      * Compute type environment of a newly generated operator {@code op} and its input.
      *
-     * @param op,
-     *            the logical operator.
-     * @param context,the
-     *            optimization context.
+     * @param op,         the logical operator.
+     * @param context,the optimization context.
      * @throws AlgebricksException
      */
     public static void computeTypeEnvironmentBottomUp(ILogicalOperator op, ITypingContext context)
@@ -330,10 +330,8 @@ public class OperatorManipulationUtil {
     /**
      * Computes the type environment for a logical query plan.
      *
-     * @param plan,
-     *            the logical plan to consider.
-     * @param context
-     *            the typing context.
+     * @param plan,   the logical plan to consider.
+     * @param context the typing context.
      * @throws AlgebricksException
      */
     public static void computeTypeEnvironment(ILogicalPlan plan, ITypingContext context) throws AlgebricksException {
@@ -402,8 +400,8 @@ public class OperatorManipulationUtil {
     /**
      * Find an item a given list
      *
-     * @param list list to search in
-     * @param predicate predicate to test
+     * @param list           list to search in
+     * @param predicate      predicate to test
      * @param predicateParam parameter to pass to the predicate
      * @return item position in the given list or {@code -1} if not found
      */
@@ -445,9 +443,10 @@ public class OperatorManipulationUtil {
     /**
      * Finds a variable assigned to a given expression and returns a new {@link VariableReferenceExpression}
      * referring to this variable.
-     * @param assignVarList list of variables
+     *
+     * @param assignVarList  list of variables
      * @param assignExprList list of expressions assigned to those variables
-     * @param searchExpr expression to search for
+     * @param searchExpr     expression to search for
      * @return said value, {@code null} if a variable is not found
      */
     public static VariableReferenceExpression findAssignedVariable(List<LogicalVariable> assignVarList,
@@ -507,6 +506,20 @@ public class OperatorManipulationUtil {
             VariableReferenceExpression varRef = new VariableReferenceExpression(var);
             varRef.setSourceLocation(sourceLoc);
             outVarRefList.add(new MutableObject<>(varRef));
+        }
+    }
+
+    public static void replaceVarWithExpr(AbstractFunctionCallExpression inExpr, LogicalVariable var,
+            ILogicalExpression replacementExpr) {
+        for (Mutable<ILogicalExpression> arg : inExpr.getArguments()) {
+            if (arg.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                replaceVarWithExpr((AbstractFunctionCallExpression) (arg.getValue()), var, replacementExpr);
+            } else if (arg.getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                LogicalVariable v = ((VariableReferenceExpression) arg.getValue()).getVariableReference();
+                if (v.equals(var)) {
+                    arg.setValue(replacementExpr.cloneExpression());
+                }
+            }
         }
     }
 }

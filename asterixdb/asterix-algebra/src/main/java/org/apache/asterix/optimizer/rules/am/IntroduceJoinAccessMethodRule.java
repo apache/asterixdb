@@ -58,21 +58,21 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * The order of the join inputs matters (left branch - outer relation, right branch - inner relation).
  * This rule tries to utilize an index on the inner relation.
  * If that's not possible, it stops transforming the given join into an index-nested-loop join.
- *
+ * <p>
  * This rule replaces the above pattern with the following simplified plan:
  * select <-- assign+ <-- unnest-map(pidx) <-- sort <-- unnest-map(sidx) <-- assign+ <-- (datasource scan|unnest-map)
  * The sorting PK process is optional, and some access methods may choose not to sort.
  * Note that for some index-based optimizations we do not remove the triggering
  * condition from the join, since the secondary index may only act as a filter, and the
  * final verification must still be done with the original join condition.
- *
+ * <p>
  * The basic outline of this rule is:
  * 1. Match operator pattern.
  * 2. Analyze join condition to see if there are optimizable functions (delegated to IAccessMethods).
  * 3. Check metadata to see if there are applicable indexes.
  * 4. Choose an index to apply (for now only a single index will be chosen).
  * 5. Rewrite plan using index (delegated to IAccessMethods).
- *
+ * <p>
  * For left-outer-join, additional patterns are checked and additional treatment is needed as follows:
  * 1. First it checks if there is a groupByOp above the join: groupby <-- leftouterjoin
  * 2. Inherently, only the right-subtree of the lojOp can be used as indexSubtree.
@@ -81,7 +81,7 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * Here, the primary key variable from datasourceScanOp replaces the introduced null placeholder variable.
  * If the primary key is a composite key, then the first variable of the primary key variables becomes the
  * null place holder variable. This null placeholder variable works for all three types of indexes.
- *
+ * <p>
  * If the inner-branch can be transformed as an index-only plan, this rule creates an index-only-plan path
  * that is similar to one described in IntroduceSelectAccessMethod Rule.
  */
@@ -140,12 +140,33 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         afterJoinRefs = new ArrayList<>();
         // Recursively checks the given plan whether the desired pattern exists in it.
         // If so, try to optimize the plan.
-        boolean planTransformed = checkAndApplyJoinTransformation(opRef, context);
+        boolean planTransformed = checkAndApplyJoinTransformation(opRef, context, false);
 
         if (joinOp != null) {
             // We found an optimization here. Don't need to optimize this operator again.
             context.addToDontApplySet(this, joinOp);
         }
+
+        if (!planTransformed) {
+            return false;
+        } else {
+            OperatorPropertiesUtil.typeOpRec(opRef, context);
+        }
+
+        return planTransformed;
+    }
+
+    public boolean checkApplicable(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        clear();
+        setMetadataDeclarations(context);
+
+        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+
+        afterJoinRefs = new ArrayList<>();
+        // Recursively checks the given plan whether the desired pattern exists in it.
+        // If so, try to optimize the plan.
+        boolean planTransformed = checkAndApplyJoinTransformation(opRef, context, true);
 
         if (!planTransformed) {
             return false;
@@ -234,8 +255,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
      * optimize the path from the given join operator to the EMPTY_TUPLE_SOURCE operator
      * if it is not already optimized.
      */
-    protected boolean checkAndApplyJoinTransformation(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
-            throws AlgebricksException {
+    protected boolean checkAndApplyJoinTransformation(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
+            boolean checkApplicableOnly) throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         boolean joinFoundAndOptimizationApplied;
 
@@ -246,7 +267,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         // Recursively check the plan and try to optimize it. We first check the children of the given operator
         // to make sure an earlier join in the path is optimized first.
         for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            joinFoundAndOptimizationApplied = checkAndApplyJoinTransformation(inputOpRef, context);
+            joinFoundAndOptimizationApplied = checkAndApplyJoinTransformation(inputOpRef, context, checkApplicableOnly);
             if (joinFoundAndOptimizationApplied) {
                 return true;
             }
@@ -313,7 +334,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                 // the subplan into the index branch and giving the join a condition for this rule to optimize.
                 // *No nodes* from this rewrite will be used beyond this point.
                 joinFromSubplanRewrite.findAfterSubplanSelectOperator(afterJoinRefs);
-                if (rewriteLocallyAndTransform(joinRef, context, joinFromSubplanRewrite)) {
+                if (rewriteLocallyAndTransform(joinRef, context, joinFromSubplanRewrite, checkApplicableOnly)) {
                     // Connect the after-join operators to the index subtree root before this rewrite. This also avoids
                     // performing the secondary index validation step twice.
                     ILogicalOperator lastAfterJoinOp = afterJoinRefs.get(afterJoinRefs.size() - 1).getValue();
@@ -364,7 +385,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                 fillSubTreeIndexExprs(rightSubTree, analyzedAMs, context, false);
 
                 // Prunes the access methods based on the function expression and access methods.
-                pruneIndexCandidates(analyzedAMs, context, typeEnvironment);
+                pruneIndexCandidates(analyzedAMs, context, typeEnvironment, checkApplicableOnly);
 
                 // If the right subtree (inner branch) has indexes, one of those indexes will be used.
                 // Removes the indexes from the outer branch in the optimizer's consideration list for this rule.
@@ -424,6 +445,10 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                     if (!rightSubTree.hasDataSourceScan()
                             && !indexDataset.getDatasetName().equals(rightSubTree.getDataset().getDatasetName())) {
                         return false;
+                    }
+
+                    if (checkApplicableOnly) {
+                        return true;
                     }
 
                     // Finally, tries to apply plan transformation using the chosen index.
@@ -487,12 +512,13 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     private boolean rewriteLocallyAndTransform(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            IIntroduceAccessMethodRuleLocalRewrite<AbstractBinaryJoinOperator> rewriter) throws AlgebricksException {
+            IIntroduceAccessMethodRuleLocalRewrite<AbstractBinaryJoinOperator> rewriter, boolean checkApplicableOnly)
+            throws AlgebricksException {
         AbstractBinaryJoinOperator joinRewrite = rewriter.createOperator(joinOp, context);
         boolean transformationResult = false;
         if (joinRewrite != null) {
             Mutable<ILogicalOperator> joinRuleInput = new MutableObject<>(joinRewrite);
-            transformationResult = checkAndApplyJoinTransformation(joinRuleInput, context);
+            transformationResult = checkAndApplyJoinTransformation(joinRuleInput, context, checkApplicableOnly);
         }
 
         // Restore our state, so we can look for more optimizations if this transformation failed.

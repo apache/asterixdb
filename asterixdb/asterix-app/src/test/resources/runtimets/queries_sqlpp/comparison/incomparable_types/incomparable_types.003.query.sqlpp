@@ -17,6 +17,7 @@
  * under the License.
  */
 
+set `compiler.parallelism` "1";
 -- param max-warnings:string=10
 
 use test;

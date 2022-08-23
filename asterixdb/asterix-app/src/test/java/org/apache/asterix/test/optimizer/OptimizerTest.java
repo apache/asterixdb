@@ -58,6 +58,7 @@ public class OptimizerTest extends AbstractOptimizerTest {
     protected String expectedFilePath;
 
     static {
+        TEST_CONFIG_FILE_NAME = "src/main/resources/cc_no_cbo.conf";
         EXTENSION_RESULT = "plan";
         PATH_ACTUAL = "target" + SEPARATOR + "opttest" + SEPARATOR;
     }

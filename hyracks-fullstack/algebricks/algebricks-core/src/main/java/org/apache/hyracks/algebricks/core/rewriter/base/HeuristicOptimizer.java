@@ -61,6 +61,7 @@ public class HeuristicOptimizer {
         logPlanAt("Plan Before Optimization", Level.TRACE);
         sanityCheckBeforeOptimization(plan);
         runLogicalOptimizationSets(plan, logicalRewrites);
+        logPlanAt("LogicalPlan ", Level.TRACE);
         computeSchemaBottomUpForPlan(plan);
         runPhysicalOptimizationSets(plan, physicalRewrites);
         logPlanAt("Plan After Optimization", Level.TRACE);

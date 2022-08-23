@@ -120,11 +120,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * @param analyzedAMs
      * @param context
      * @param isJoinLeftBranch
-     * @param isArbitraryFormOfSubtree
-     *            if the given subtree is in an arbitrary form that OptimizableSubTree class can't initialize, we try
-     *            to fill the field type of each variable that is used in the optimizable function expressions.
-     *            This way, an index-nested-loop-join transformation can be conducted properly since the transformation
-     *            process skips an optimzable function expression if the field type of one of its variable is unknown.
+     * @param isArbitraryFormOfSubtree if the given subtree is in an arbitrary form that OptimizableSubTree class can't initialize, we try
+     *                                 to fill the field type of each variable that is used in the optimizable function expressions.
+     *                                 This way, an index-nested-loop-join transformation can be conducted properly since the transformation
+     *                                 process skips an optimzable function expression if the field type of one of its variable is unknown.
      * @throws AlgebricksException
      */
     protected void fillSubTreeIndexExprs(OptimizableOperatorSubTree subTree,
@@ -174,13 +173,14 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
     }
 
     protected void pruneIndexCandidates(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
-            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
+            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment, boolean checkApplicableOnly)
+            throws AlgebricksException {
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
         // Check applicability of indexes by access method type.
         while (amIt.hasNext()) {
             Map.Entry<IAccessMethod, AccessMethodAnalysisContext> entry = amIt.next();
             AccessMethodAnalysisContext amCtx = entry.getValue();
-            pruneIndexCandidates(entry.getKey(), amCtx, context, typeEnvironment);
+            pruneIndexCandidates(entry.getKey(), amCtx, context, typeEnvironment, checkApplicableOnly);
             // Remove access methods for which there are definitely no
             // applicable indexes.
             if (amCtx.isIndexExprsAndVarsEmpty()) {
@@ -194,7 +194,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * process by making it more systematic.
      */
     protected Pair<IAccessMethod, Index> chooseBestIndex(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
-        List<Pair<IAccessMethod, Index>> list = chooseAllIndexes(analyzedAMs);
+        List<Pair<IAccessMethod, Index>> list = new ArrayList<>();
+        chooseAllIndexes(analyzedAMs, list);
         return list.isEmpty() ? null : list.get(0);
     }
 
@@ -206,9 +207,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * [InvertedIndexAccessMethod, IndexType.SINGLE_PARTITION_WORD_INVIX || SINGLE_PARTITION_NGRAM_INVIX ||
      * LENGTH_PARTITIONED_WORD_INVIX || LENGTH_PARTITIONED_NGRAM_INVIX]
      */
-    protected List<Pair<IAccessMethod, Index>> chooseAllIndexes(
-            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
-        List<Pair<IAccessMethod, Index>> result = new ArrayList<>();
+    protected void chooseAllIndexes(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
+            List<Pair<IAccessMethod, Index>> result) {
         // Use variables (fields) to the index types map to check which type of indexes are applied for the vars.
         Map<List<Pair<Integer, Integer>>, List<IndexType>> resultVarsToIndexTypesMap = new HashMap<>();
         Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
@@ -265,7 +265,6 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 }
             }
         }
-        return result;
     }
 
     private boolean isSameFullTextConfigInIndexAndQuery(AccessMethodAnalysisContext analysisCtx,
@@ -305,7 +304,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * @throws AlgebricksException
      */
     public void pruneIndexCandidates(IAccessMethod accessMethod, AccessMethodAnalysisContext analysisCtx,
-            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment) throws AlgebricksException {
+            IOptimizationContext context, IVariableTypeEnvironment typeEnvironment, boolean checkApplicableOnly)
+            throws AlgebricksException {
         Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexExprAndVarIt =
                 analysisCtx.getIteratorForIndexExprsAndVars();
         boolean hasIndexPreferences = false;
@@ -363,7 +363,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     final IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprAndVarIdx.first);
                     // If expr is not optimizable by concrete index then remove
                     // expr and continue.
-                    if (!accessMethod.exprIsOptimizable(index, optFuncExpr)) {
+                    if (!accessMethod.exprIsOptimizable(index, optFuncExpr, checkApplicableOnly)) {
                         exprsAndVarIter.remove();
                         continue;
                     }
@@ -662,7 +662,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * optimizable function expression.
      *
      * @return true if a candidate index was added to foundIndexExprs, false
-     *         otherwise
+     * otherwise
      * @throws AlgebricksException
      */
     protected boolean fillIndexExprs(List<Index> datasetIndexes, List<String> fieldName, IAType fieldType,

@@ -45,6 +45,7 @@ import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
+import org.apache.hyracks.algebricks.core.algebra.expressions.PredicateCardinalityAnnotation;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVisitor {
@@ -85,6 +86,7 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
     private Expression processLikeOperator(OperatorExpr operatorExpr, OperatorType opType) {
         CallExpr likeExpr =
                 new CallExpr(new FunctionSignature(BuiltinFunctions.STRING_LIKE), operatorExpr.getExprList());
+        likeExpr.addHints(operatorExpr.getHints());
         likeExpr.setSourceLocation(operatorExpr.getSourceLocation());
         switch (opType) {
             case LIKE:
@@ -135,6 +137,20 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         return callExpr;
     }
 
+    private List<IExpressionAnnotation> removeSelectivityHints(OperatorExpr expr) {
+        if (expr.hasHints()) {
+            List<IExpressionAnnotation> copyHintsExceptSelectivity = new ArrayList<>();
+            for (IExpressionAnnotation h : expr.getHints()) {
+                if (!(h.getClass().equals(PredicateCardinalityAnnotation.class))) {
+                    copyHintsExceptSelectivity.add(h);
+                }
+            }
+            return copyHintsExceptSelectivity;
+        } else {
+            return expr.getHints();
+        }
+    }
+
     private Expression processBetweenOperator(OperatorExpr operatorExpr, OperatorType opType)
             throws CompilationException {
         // The grammar guarantees that the BETWEEN operator gets exactly three expressions.
@@ -147,8 +163,11 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
                 operatorExpr.getSourceLocation());
         // Creates the expression target <= right.
         Expression targetCopy = (Expression) SqlppRewriteUtil.deepCopy(target);
+
+        // remove any selectivity hints from operatorExpr; do not want to duplicate those hints
         Expression rightComparison = createOperatorExpression(OperatorType.LE, targetCopy, right,
-                operatorExpr.getHints(), operatorExpr.getSourceLocation());
+                removeSelectivityHints(operatorExpr), operatorExpr.getSourceLocation());
+
         Expression andExpr = createOperatorExpression(OperatorType.AND, leftComparison, rightComparison, null,
                 operatorExpr.getSourceLocation());
         switch (opType) {
