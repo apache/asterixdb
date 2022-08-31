@@ -156,9 +156,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
             switch (workingOriginalOperator.getOperatorTag()) {
                 case UNNEST:
                     UnnestOperator originalUnnest = (UnnestOperator) workingOriginalOperator;
-                    UnnestOperator newUnnest =
-                            new UnnestOperator(originalUnnest.getVariable(), originalUnnest.getExpressionRef());
-                    newUnnest.setSourceLocation(sourceLocation);
+                    UnnestOperator newUnnest = (UnnestOperator) OperatorManipulationUtil.deepCopy(originalUnnest);
                     workingNewOperator.getInputs().add(new MutableObject<>(newUnnest));
                     workingNewOperator = newUnnest;
                     bottommostNewUnnest = (UnnestOperator) workingNewOperator;
@@ -166,8 +164,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
 
                 case ASSIGN:
                     AssignOperator originalAssign = (AssignOperator) workingOriginalOperator;
-                    AssignOperator newAssign =
-                            new AssignOperator(originalAssign.getVariables(), originalAssign.getExpressions());
+                    AssignOperator newAssign = (AssignOperator) OperatorManipulationUtil.deepCopy(originalAssign);
                     newAssign.setSourceLocation(sourceLocation);
                     workingNewOperator.getInputs().add(new MutableObject<>(newAssign));
                     workingNewOperator = newAssign;
@@ -508,7 +505,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
                 if (splitIntoConjuncts(conjunct.getValue(), innerExprConjuncts)) {
                     conjuncts.addAll(innerExprConjuncts);
                 } else {
-                    conjuncts.add(conjunct);
+                    conjuncts.add(new MutableObject<>(conjunct.getValue().cloneExpression()));
                 }
             }
             return true;
