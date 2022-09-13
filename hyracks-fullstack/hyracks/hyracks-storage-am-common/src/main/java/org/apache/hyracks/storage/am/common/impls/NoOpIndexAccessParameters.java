@@ -47,4 +47,9 @@ public class NoOpIndexAccessParameters implements IIndexAccessParameters {
     public Map<String, Object> getParameters() {
         return paramMap;
     }
+
+    @Override
+    public <T> T getParameter(String key, Class<T> clazz) {
+        return null;
+    }
 }

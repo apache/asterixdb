@@ -59,6 +59,11 @@ public class IndexAccessParameters implements IIndexAccessParameters {
         return paramMap;
     }
 
+    @Override
+    public <T> T getParameter(String key, Class<T> clazz) {
+        return paramMap != null && clazz.isInstance(paramMap.get(key)) ? clazz.cast(paramMap.get(key)) : null;
+    }
+
     public static IIndexAccessParameters createNoOpParams(IIndexCursorStats stats) {
         if (stats == NoOpIndexCursorStats.INSTANCE) {
             return NoOpIndexAccessParameters.INSTANCE;

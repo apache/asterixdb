@@ -40,4 +40,14 @@ public interface IIndexAccessParameters {
      * Gets additional parameters.
      */
     Map<String, Object> getParameters();
+
+    /**
+     * Gets a parameter.
+     *
+     * @param key   of a parameter
+     * @param clazz used to explicitly cast the requested parameter to the required type
+     * @param <T>   the required type
+     * @return the requested parameter
+     */
+    <T> T getParameter(String key, Class<T> clazz);
 }
