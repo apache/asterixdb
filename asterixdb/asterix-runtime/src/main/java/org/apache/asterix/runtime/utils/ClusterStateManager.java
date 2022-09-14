@@ -420,6 +420,7 @@ public class ClusterStateManager implements IClusterStateManager {
                 clusterPartitions.remove(nodePartition.getPartitionId());
             }
             participantNodes.remove(nodeId);
+            failedNodes.remove(nodeId);
         }
     }
 
