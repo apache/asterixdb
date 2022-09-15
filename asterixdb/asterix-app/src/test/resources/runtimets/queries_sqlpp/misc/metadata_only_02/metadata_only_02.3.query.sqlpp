@@ -1,0 +1,49 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * test fix for ASTERIXDB-3075
+ */
+
+LET dv_name = ["test2", "test1"], ds_name = ["ds2", "ds1"], syn_name = [ "syn2", "syn1" ],
+synonym_names = (SELECT s.SynonymName, s.ObjectName
+                 FROM Metadata.`Synonym` s, syn_name
+                 WHERE s.SynonymName = syn_name),
+
+dataset_ds_dv_names = (SELECT d.DatasetName, d.DataverseName
+                       FROM Metadata.`Dataset` d, (SELECT * FROM ds_name, dv_name) AS ds_dv_names
+                       WHERE d.DatasetName = ds_dv_names.ds_name AND d.DataverseName = ds_dv_names.dv_name),
+
+dataset_dv_ds_names = (SELECT d.DatasetName, d.DataverseName
+                       FROM Metadata.`Dataset` d, (SELECT * FROM dv_name, ds_name) AS dv_ds_names
+                       WHERE d.DatasetName = dv_ds_names.ds_name AND d.DataverseName = dv_ds_names.dv_name),
+
+left_branch = (SELECT s.SynonymName, s.DataverseName, s.ObjectName
+               FROM Metadata.`Synonym` s LEFT OUTER JOIN dataset_dv_ds_names
+               ON dataset_dv_ds_names.DatasetName = s.ObjectName
+               ORDER BY s.DataverseName, s.SynonymName),
+
+right_branch = (SELECT synonym_names.SynonymName
+                FROM synonym_names LEFT OUTER JOIN dataset_ds_dv_names
+                ON dataset_ds_dv_names.DatasetName = synonym_names.ObjectName)
+
+FROM left_branch lb LEFT OUTER JOIN right_branch rb
+ON lb.ObjectName = rb.SynonymName
+SELECT lb.DataverseName, lb.SynonymName
+ORDER BY lb.DataverseName, lb.SynonymName;
