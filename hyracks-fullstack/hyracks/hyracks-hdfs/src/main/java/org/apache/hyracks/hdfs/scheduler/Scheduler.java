@@ -37,6 +37,7 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.hdfs.api.INcCollection;
 import org.apache.hyracks.hdfs.api.INcCollectionBuilder;
@@ -56,16 +57,24 @@ public class Scheduler {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    /** a list of NCs */
+    /**
+     * a list of NCs
+     */
     private String[] NCs;
 
-    /** a map from ip to NCs */
+    /**
+     * a map from ip to NCs
+     */
     private Map<String, List<String>> ipToNcMapping = new HashMap<>();
 
-    /** a map from the NC name to the index */
+    /**
+     * a map from the NC name to the index
+     */
     private Map<String, Integer> ncNameToIndex = new HashMap<>();
 
-    /** a map from NC name to the NodeControllerInfo */
+    /**
+     * a map from NC name to the NodeControllerInfo
+     */
     private Map<String, NodeControllerInfo> ncNameToNcInfos;
 
     /**
@@ -76,34 +85,19 @@ public class Scheduler {
     /**
      * The constructor of the scheduler.
      *
-     * @param ncNameToNcInfos
+     * @param ipAddress      IP address
+     * @param port           Port
+     * @param channelFactory Channel Factory
      * @throws HyracksException
      */
 
-    public Scheduler(String ipAddress, int port) throws HyracksException {
+    public Scheduler(String ipAddress, int port, ISocketChannelFactory channelFactory) throws HyracksException {
         try {
-            IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
+            IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port, channelFactory);
             this.ncNameToNcInfos = hcc.getNodeControllerInfos();
             ClusterTopology topology = hcc.getClusterTopology();
             this.ncCollectionBuilder = topology == null ? new IPProximityNcCollectionBuilder()
                     : new RackAwareNcCollectionBuilder(topology);
-            loadIPAddressToNCMap(ncNameToNcInfos);
-        } catch (Exception e) {
-            throw HyracksException.create(e);
-        }
-    }
-
-    /**
-     * The constructor of the scheduler.
-     *
-     * @param ncNameToNcInfos
-     * @throws HyracksException
-     */
-    public Scheduler(String ipAddress, int port, INcCollectionBuilder ncCollectionBuilder) throws HyracksException {
-        try {
-            IHyracksClientConnection hcc = new HyracksConnection(ipAddress, port);
-            this.ncNameToNcInfos = hcc.getNodeControllerInfos();
-            this.ncCollectionBuilder = ncCollectionBuilder;
             loadIPAddressToNCMap(ncNameToNcInfos);
         } catch (Exception e) {
             throw HyracksException.create(e);
