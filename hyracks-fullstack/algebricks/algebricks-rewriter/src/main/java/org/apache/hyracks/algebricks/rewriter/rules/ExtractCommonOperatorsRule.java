@@ -99,7 +99,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 changed = false;
                 // applying the rewriting until fixpoint
                 topDownMaterialization(roots);
-                genCandidates(context);
+                genCandidates();
                 removeTrivialShare();
                 if (!equivalenceClasses.isEmpty()) {
                     changed = rewrite(context);
@@ -110,9 +110,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 equivalenceClasses.clear();
                 childrenToParents.clear();
                 opToCandidateInputs.clear();
-                clusterMap.clear();
-                clusterWaitForMap.clear();
-                lastUsedClusterId = 0; // Resets lastUsedClusterId to 0.
+                resetPlanClusterState();
             } while (changed);
             roots.clear();
         }
@@ -151,7 +149,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
 
     private boolean rewriteForOneEquivalentClass(List<Mutable<ILogicalOperator>> members, IOptimizationContext context)
             throws AlgebricksException {
-        List<Mutable<ILogicalOperator>> group = new ArrayList<Mutable<ILogicalOperator>>();
+        List<Mutable<ILogicalOperator>> group = new ArrayList<>();
         boolean rewritten = false;
         while (members.size() > 0) {
             group.clear();
@@ -176,14 +174,14 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
             AbstractLogicalOperator aopCandidate = (AbstractLogicalOperator) candidate.getValue();
             List<Mutable<ILogicalOperator>> originalCandidateParents = childrenToParents.get(candidate);
 
-            rop.setExecutionMode(((AbstractLogicalOperator) candidate.getValue()).getExecutionMode());
+            rop.setExecutionMode(candidate.getValue().getExecutionMode());
             if (aopCandidate.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
                 rop.getInputs().add(candidate);
             } else {
                 AbstractLogicalOperator beforeExchange = new ExchangeOperator();
                 beforeExchange.setPhysicalOperator(new OneToOneExchangePOperator());
                 beforeExchange.setExecutionMode(rop.getExecutionMode());
-                Mutable<ILogicalOperator> beforeExchangeRef = new MutableObject<ILogicalOperator>(beforeExchange);
+                Mutable<ILogicalOperator> beforeExchangeRef = new MutableObject<>(beforeExchange);
                 beforeExchange.getInputs().add(candidate);
                 context.computeAndSetTypeEnvironmentForOperator(beforeExchange);
                 beforeExchange.recomputeSchema();
@@ -202,7 +200,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                     AbstractLogicalOperator exchange = new ExchangeOperator();
                     exchange.setPhysicalOperator(new OneToOneExchangePOperator());
                     exchange.setExecutionMode(rop.getExecutionMode());
-                    MutableObject<ILogicalOperator> exchangeRef = new MutableObject<ILogicalOperator>(exchange);
+                    MutableObject<ILogicalOperator> exchangeRef = new MutableObject<>(exchange);
                     exchange.getInputs().add(new MutableObject<>(rop));
                     rop.getOutputs().add(exchangeRef);
                     context.computeAndSetTypeEnvironmentForOperator(exchange);
@@ -246,10 +244,10 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 exchOp.setPhysicalOperator(new OneToOneExchangePOperator());
                 exchOp.setExecutionMode(rop.getExecutionMode());
                 exchOp.getInputs().add(new MutableObject<>(rop));
-                MutableObject<ILogicalOperator> exchOpRef = new MutableObject<ILogicalOperator>(exchOp);
+                MutableObject<ILogicalOperator> exchOpRef = new MutableObject<>(exchOp);
                 rop.getOutputs().add(exchOpRef);
                 assignOperator.getInputs().add(exchOpRef);
-                projectOperator.getInputs().add(new MutableObject<ILogicalOperator>(assignOperator));
+                projectOperator.getInputs().add(new MutableObject<>(assignOperator));
 
                 // set the types
                 context.computeAndSetTypeEnvironmentForOperator(exchOp);
@@ -267,15 +265,15 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                             parentOp.getOperatorTag() == LogicalOperatorTag.PROJECT ? assignOperator : projectOperator;
                     if (parentOp.getPhysicalOperator().isMicroOperator()
                             || parentOp.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
-                        parentOp.getInputs().set(index, new MutableObject<ILogicalOperator>(childOp));
+                        parentOp.getInputs().set(index, new MutableObject<>(childOp));
                     } else {
                         // If the parent operator is a hyracks operator,
                         // an extra one-to-one exchange is needed.
                         AbstractLogicalOperator exchg = new ExchangeOperator();
                         exchg.setPhysicalOperator(new OneToOneExchangePOperator());
                         exchg.setExecutionMode(childOp.getExecutionMode());
-                        exchg.getInputs().add(new MutableObject<ILogicalOperator>(childOp));
-                        parentOp.getInputs().set(index, new MutableObject<ILogicalOperator>(exchg));
+                        exchg.getInputs().add(new MutableObject<>(childOp));
+                        parentOp.getInputs().set(index, new MutableObject<>(exchg));
                         context.computeAndSetTypeEnvironmentForOperator(exchg);
                         exchg.recomputeSchema();
                     }
@@ -285,8 +283,15 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
             }
             cleanupPlan();
             rewritten = true;
+            resetPlanClusterState();
         }
         return rewritten;
+    }
+
+    private void resetPlanClusterState() {
+        clusterMap.clear();
+        clusterWaitForMap.clear();
+        lastUsedClusterId = 0;
     }
 
     /**
@@ -348,17 +353,15 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private void genCandidates(IOptimizationContext context) throws AlgebricksException {
-        List<List<Mutable<ILogicalOperator>>> previousEquivalenceClasses =
-                new ArrayList<List<Mutable<ILogicalOperator>>>();
+    private void genCandidates() throws AlgebricksException {
+        List<List<Mutable<ILogicalOperator>>> previousEquivalenceClasses = new ArrayList<>();
         while (equivalenceClasses.size() > 0) {
             previousEquivalenceClasses.clear();
             for (List<Mutable<ILogicalOperator>> candidates : equivalenceClasses) {
-                List<Mutable<ILogicalOperator>> candidatesCopy = new ArrayList<Mutable<ILogicalOperator>>();
-                candidatesCopy.addAll(candidates);
+                List<Mutable<ILogicalOperator>> candidatesCopy = new ArrayList<>(candidates);
                 previousEquivalenceClasses.add(candidatesCopy);
             }
-            List<Mutable<ILogicalOperator>> currentLevelOpRefs = new ArrayList<Mutable<ILogicalOperator>>();
+            List<Mutable<ILogicalOperator>> currentLevelOpRefs = new ArrayList<>();
             for (List<Mutable<ILogicalOperator>> candidates : equivalenceClasses) {
                 if (candidates.size() > 0) {
                     for (Mutable<ILogicalOperator> opRef : candidates) {
@@ -376,11 +379,11 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
             if (currentLevelOpRefs.size() == 0) {
                 break;
             }
-            prune(context);
+            prune();
         }
         if (equivalenceClasses.size() < 1 && previousEquivalenceClasses.size() > 0) {
             equivalenceClasses.addAll(previousEquivalenceClasses);
-            prune(context);
+            prune();
         }
     }
 
@@ -412,8 +415,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
     }
 
     private void candidatesGrow(List<Mutable<ILogicalOperator>> opList, List<Mutable<ILogicalOperator>> candidates) {
-        List<Mutable<ILogicalOperator>> previousCandidates = new ArrayList<Mutable<ILogicalOperator>>();
-        previousCandidates.addAll(candidates);
+        List<Mutable<ILogicalOperator>> previousCandidates = new ArrayList<>(candidates);
         candidates.clear();
         boolean validCandidate = false;
         for (Mutable<ILogicalOperator> op : opList) {
@@ -450,23 +452,18 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         }
     }
 
-    private void prune(IOptimizationContext context) throws AlgebricksException {
-        List<List<Mutable<ILogicalOperator>>> previousEquivalenceClasses =
-                new ArrayList<List<Mutable<ILogicalOperator>>>();
+    private void prune() throws AlgebricksException {
+        List<List<Mutable<ILogicalOperator>>> previousEquivalenceClasses = new ArrayList<>();
         for (List<Mutable<ILogicalOperator>> candidates : equivalenceClasses) {
-            List<Mutable<ILogicalOperator>> candidatesCopy = new ArrayList<Mutable<ILogicalOperator>>();
-            candidatesCopy.addAll(candidates);
+            List<Mutable<ILogicalOperator>> candidatesCopy = new ArrayList<>(candidates);
             previousEquivalenceClasses.add(candidatesCopy);
         }
         equivalenceClasses.clear();
         for (List<Mutable<ILogicalOperator>> candidates : previousEquivalenceClasses) {
             boolean[] reserved = new boolean[candidates.size()];
-            for (int i = 0; i < reserved.length; i++) {
-                reserved[i] = false;
-            }
             for (int i = candidates.size() - 1; i >= 0; i--) {
-                if (reserved[i] == false) {
-                    List<Mutable<ILogicalOperator>> equivalentClass = new ArrayList<Mutable<ILogicalOperator>>();
+                if (!reserved[i]) {
+                    List<Mutable<ILogicalOperator>> equivalentClass = new ArrayList<>();
                     ILogicalOperator candidate = candidates.get(i).getValue();
                     equivalentClass.add(candidates.get(i));
                     for (int j = i - 1; j >= 0; j--) {
@@ -502,7 +499,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         boolean worthMaterialization = worthMaterialization(group.get(0));
         boolean requiresMaterialization;
         // get clusterIds for each candidate in the group
-        List<Integer> groupClusterIds = new ArrayList<Integer>(group.size());
+        List<Integer> groupClusterIds = new ArrayList<>(group.size());
         for (int i = 0; i < group.size(); i++) {
             groupClusterIds.add(clusterMap.get(group.get(i)).getValue());
         }
