@@ -54,7 +54,6 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
-import org.apache.hyracks.algebricks.core.rewriter.base.CardHints;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -108,24 +107,6 @@ public class JoinNode {
 
     public boolean IsHigherLevelJoinNode() {
         return !IsBaseLevelJoinNode();
-    }
-
-    protected double findCardinality() {
-        CardHints ch = joinEnum.cardHints;
-        if (ch == null) {
-            return Cost.MAX_CARD;
-        }
-        List<String> ls = CardHints.isolateVariables(this.datasetNames);
-        return ch.findCardinality(ls);
-    }
-
-    protected double findSize() {
-        CardHints ch = joinEnum.cardHints;
-        if (ch == null) {
-            return Cost.MAX_CARD;
-        }
-        List<String> ls = CardHints.isolateVariables(this.datasetNames);
-        return ch.findSize(ls);
     }
 
     public double computeJoinCardinality() {
