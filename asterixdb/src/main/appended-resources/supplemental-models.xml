@@ -2156,9 +2156,21 @@
       <groupId>com.github.luben</groupId>
       <artifactId>zstd-jni</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.4.9-1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.4.9-1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.4.9-1</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.5.0-1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.5.0-1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.5.0-1</license.ignoreLicenseOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <supplement>
+    <project>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-reload4j</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>1.7.36</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.7.36</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.7.36</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -2168,8 +2180,8 @@
       <groupId>org.apache.parquet</groupId>
       <artifactId>parquet-format-structures</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.3</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.3</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -2179,8 +2191,8 @@
       <groupId>org.apache.parquet</groupId>
       <artifactId>parquet-common</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.3</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.3</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -2191,7 +2203,7 @@
       <groupId>org.apache.parquet</groupId>
       <artifactId>parquet-column</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>1.12.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>1.12.3</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -2202,7 +2214,7 @@
       <groupId>org.apache.parquet</groupId>
       <artifactId>parquet-encoding</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>1.12.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>1.12.3</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -2213,7 +2225,7 @@
       <groupId>org.apache.parquet</groupId>
       <artifactId>parquet-hadoop</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>1.12.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>1.12.3</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>

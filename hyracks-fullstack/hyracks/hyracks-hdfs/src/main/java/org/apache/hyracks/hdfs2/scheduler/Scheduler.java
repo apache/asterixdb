@@ -26,6 +26,7 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.api.topology.ClusterTopology;
 import org.apache.hyracks.hdfs.api.INcCollectionBuilder;
 
@@ -44,15 +45,14 @@ public class Scheduler {
      * @param ncNameToNcInfos
      * @throws HyracksException
      */
-    public Scheduler(String ipAddress, int port) throws HyracksException {
-        scheduler = new org.apache.hyracks.hdfs.scheduler.Scheduler(ipAddress, port);
+    public Scheduler(String ipAddress, int port, ISocketChannelFactory channelFactory) throws HyracksException {
+        scheduler = new org.apache.hyracks.hdfs.scheduler.Scheduler(ipAddress, port, channelFactory);
     }
 
     /**
      * The constructor of the scheduler.
      *
-     * @param ncNameToNcInfos
-     *            the mapping from nc names to nc infos
+     * @param ncNameToNcInfos the mapping from nc names to nc infos
      * @throws HyracksException
      */
     public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos) throws HyracksException {
@@ -62,10 +62,8 @@ public class Scheduler {
     /**
      * The constructor of the scheduler.
      *
-     * @param ncNameToNcInfos
-     *            the mapping from nc names to nc infos
-     * @param topology
-     *            the hyracks cluster toplogy
+     * @param ncNameToNcInfos the mapping from nc names to nc infos
+     * @param topology        the hyracks cluster toplogy
      * @throws HyracksException
      */
     public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, ClusterTopology topology)
@@ -76,8 +74,7 @@ public class Scheduler {
     /**
      * The constructor of the scheduler.
      *
-     * @param ncNameToNcInfos
-     *            the mapping from nc names to nc infos
+     * @param ncNameToNcInfos the mapping from nc names to nc infos
      * @throws HyracksException
      */
     public Scheduler(Map<String, NodeControllerInfo> ncNameToNcInfos, INcCollectionBuilder builder)

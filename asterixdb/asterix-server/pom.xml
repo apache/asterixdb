@@ -450,8 +450,12 @@
               <noticeUrl>https://raw.githubusercontent.com/msgpack/msgpack-java/0.8.20/NOTICE</noticeUrl>
             </override>
             <override>
-              <gav>com.github.luben:zstd-jni:1.4.9-1</gav>
-              <url>https://raw.githubusercontent.com/luben/zstd-jni/v1.4.9-1/LICENSE</url>
+              <gav>com.github.luben:zstd-jni:1.5.0-1</gav>
+              <url>https://raw.githubusercontent.com/luben/zstd-jni/v1.5.0-1/LICENSE</url>
+            </override>
+            <override>
+              <gav>org.slf4j:slf4j-reload4j:1.7.36</gav>
+              <url>https://raw.githubusercontent.com/qos-ch/slf4j/v_1.7.36/LICENSE.txt</url>
             </override>
             <override>
               <gavs>
@@ -651,15 +655,6 @@
               <aliasUrls>https://creativecommons.org/publicdomain/zero/1.0/</aliasUrls>
               <aliasUrls>http://creativecommons.org/publicdomain/zero/1.0/legalcode</aliasUrls>
               <aliasUrls>http://creativecommons.org/publicdomain/zero/1.0/</aliasUrls>
-            </license>
-            <license>
-              <displayName>The 2-Clause BSD License</displayName>
-              <url>https://opensource.org/licenses/BSD-2-Clause</url>
-              <contentFile>raw.githubusercontent.com_luben_zstd-jni_v1.4.9-1_LICENSE.txt</contentFile>
-              <aliasUrls>
-                <aliasURL>https://opensource.org/licenses/bsd-license.php</aliasURL>
-                <aliasUrl>https://raw.githubusercontent.com/luben/zstd-jni/v1.4.9-1/LICENSE</aliasUrl>
-              </aliasUrls>
             </license>
             <license>
               <displayName>The Go license</displayName>
