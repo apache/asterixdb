@@ -56,7 +56,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceSc
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
-import org.apache.hyracks.algebricks.core.rewriter.base.CardHints;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.logging.log4j.LogManager;
@@ -130,12 +129,10 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         printPlan(pp, (AbstractLogicalOperator) op, "Original Whole plan2");
 
         int numberOfFromTerms = emptyTupleAndDataSourceOps.size();
-        Map<String, Object> querySpecificConfig = context.getMetadataProvider().getConfig();
-        CardHints cardHints = CardHints.getCardHintsInfo((String) querySpecificConfig.get("cardinality"));
 
         joinEnum.initEnum((AbstractLogicalOperator) op, cboMode, cboTestMode, numberOfFromTerms,
                 emptyTupleAndDataSourceOps, joinLeafInputsHashMap, dataSourceEmptyTupleHashMap, internalEdges, joinOps,
-                cardHints, context);
+                context);
 
         if (cboMode) {
             if (!doAllDataSourcesHaveSamples(emptyTupleAndDataSourceOps, context)) {

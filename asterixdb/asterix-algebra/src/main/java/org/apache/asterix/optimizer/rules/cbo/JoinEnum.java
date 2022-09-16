@@ -67,7 +67,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
-import org.apache.hyracks.algebricks.core.rewriter.base.CardHints;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -80,7 +79,6 @@ public class JoinEnum {
     protected List<PlanNode> allPlans; // list of all plans
     protected JoinNode[] jnArray; // array of all join nodes
     protected int jnArraySize;
-    protected CardHints cardHints; // cardinality hints
     protected List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps;
     protected Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap;
     protected Map<DataSourceScanOperator, EmptyTupleSourceOperator> dataSourceEmptyTupleHashMap;
@@ -109,15 +107,13 @@ public class JoinEnum {
             List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps,
             Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap,
             Map<DataSourceScanOperator, EmptyTupleSourceOperator> dataSourceEmptyTupleHashMap,
-            List<ILogicalOperator> internalEdges, List<ILogicalOperator> joinOps, CardHints cardHints,
-            IOptimizationContext context) {
+            List<ILogicalOperator> internalEdges, List<ILogicalOperator> joinOps, IOptimizationContext context) {
         this.joinConditions = new ArrayList<>();
         this.internalEdges = new ArrayList<>();
         this.allPlans = new ArrayList<>();
         this.numberOfTerms = numberOfFromTerms;
         this.cboMode = cboMode;
         this.cboTestMode = cboTestMode;
-        this.cardHints = cardHints;
         this.connectedJoinGraph = true;
         this.optCtx = context;
         this.physOptConfig = context.getPhysicalOptimizationConfig();
