@@ -25,6 +25,7 @@ import static org.apache.hyracks.util.string.UTF8StringSample.STRING_LEN_MEDIUM;
 import static org.apache.hyracks.util.string.UTF8StringSample.STRING_UTF8_3;
 import static org.apache.hyracks.util.string.UTF8StringSample.STRING_UTF8_MIX;
 import static org.apache.hyracks.util.string.UTF8StringSample.STRING_UTF8_MIX_LOWERCASE;
+import static org.apache.hyracks.util.string.UTF8StringSample.THREE_BYTES_UTF8_CHAR;
 import static org.apache.hyracks.util.string.UTF8StringUtil.charAt;
 import static org.apache.hyracks.util.string.UTF8StringUtil.charSize;
 import static org.apache.hyracks.util.string.UTF8StringUtil.compareTo;
@@ -77,13 +78,14 @@ public class UTF8StringUtilTest {
     }
 
     @Test
-    public void testCompareToAndNormolize() throws Exception {
+    public void testCompareToAndNormalize() throws Exception {
         testCompare(STRING_UTF8_MIX, STRING_UTF8_MIX, OPTION.STANDARD);
         testCompare(STRING_UTF8_3, STRING_UTF8_MIX, OPTION.STANDARD);
         testCompare(STRING_LEN_MEDIUM, STRING_UTF8_MIX, OPTION.STANDARD);
+        testCompare(THREE_BYTES_UTF8_CHAR, THREE_BYTES_UTF8_CHAR, OPTION.STANDARD);
     }
 
-    public boolean isSameSign(int r1, int r2) {
+    private static boolean isSameSign(int r1, int r2) {
         if (r1 > 0) {
             return r2 > 0;
         }
@@ -99,7 +101,7 @@ public class UTF8StringUtilTest {
         LOWERCASE
     }
 
-    public void testCompare(String str1, String str2, OPTION option) throws IOException {
+    private static void testCompare(String str1, String str2, OPTION option) {
         byte[] buffer1 = writeStringToBytes(str1);
         byte[] buffer2 = writeStringToBytes(str2);
 
@@ -117,7 +119,6 @@ public class UTF8StringUtilTest {
                 assertEquals(str1.compareToIgnoreCase(str2), lowerCaseCompareTo(buffer1, 0, buffer2, 0));
                 break;
         }
-
     }
 
     @Test

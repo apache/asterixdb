@@ -244,12 +244,13 @@ public class UTF8StringUtil {
      * consistent with the comparison result.
      */
     public static int normalize(byte[] bytes, int start) {
-        int len = getUTFLength(bytes, start);
         long nk = 0;
+        int len = getUTFLength(bytes, start);
         int offset = start + getNumBytesToStoreLength(len);
+        int end = offset + len;
         for (int i = 0; i < 2; ++i) {
             nk <<= 16;
-            if (i < len) {
+            if (offset < end) {
                 nk += (charAt(bytes, offset)) & 0xffff;
                 offset += charSize(bytes, offset);
             }
@@ -498,19 +499,15 @@ public class UTF8StringUtil {
      * are exactly the same as for the <code>readUTF</code>
      * method of <code>DataInput</code>.
      *
-     * @param in
-     *            a data input stream.
+     * @param in a data input stream.
      * @return a Unicode string.
-     * @throws EOFException
-     *             if the input stream reaches the end
-     *             before all the bytes.
-     * @throws IOException
-     *             the stream has been closed and the contained
-     *             input stream does not support reading after close, or
-     *             another I/O error occurs.
-     * @throws UTFDataFormatException
-     *             if the bytes do not represent a
-     *             valid modified UTF-8 encoding of a Unicode string.
+     * @throws EOFException           if the input stream reaches the end
+     *                                before all the bytes.
+     * @throws IOException            the stream has been closed and the contained
+     *                                input stream does not support reading after close, or
+     *                                another I/O error occurs.
+     * @throws UTFDataFormatException if the bytes do not represent a
+     *                                valid modified UTF-8 encoding of a Unicode string.
      * @see java.io.DataInputStream#readUnsignedShort()
      */
     public static String readUTF8(DataInput in) throws IOException {
@@ -602,10 +599,8 @@ public class UTF8StringUtil {
     /**
      * Write a UTF8 String <code>str</code> into the DataOutput <code>out</code>
      *
-     * @param str,
-     *            a Unicode string;
-     * @param out,
-     *            a Data output stream.
+     * @param str, a Unicode string;
+     * @param out, a Data output stream.
      * @throws IOException
      */
     public static void writeUTF8(CharSequence str, DataOutput out) throws IOException {

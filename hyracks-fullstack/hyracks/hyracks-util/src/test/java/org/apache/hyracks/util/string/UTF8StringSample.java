@@ -35,7 +35,8 @@ public class UTF8StringSample {
 
     public static final String STRING_LEN_3 = "xyz";
     public static final String STRING_UTF8_3 = "锟斤拷";
-    public static final String STRING_UTF8_MIX = "\uD841\uDF0E\uD841\uDF31锟X斤Y拷Zà"; // one, two, three, and four bytes
+    // one, two, three, and four bytes
+    public static final String STRING_UTF8_MIX = "\uD841\uDF0E\uD841\uDF31锟X斤Y拷Zà";
     public static final String STRING_UTF8_MIX_LOWERCASE = "\uD841\uDF0E\uD841\uDF31锟x斤y拷zà";
     public static final String STRING_NEEDS_2_JAVA_CHARS_1 = "\uD83D\uDE22\uD83D\uDE22\uD83D\uDC89\uD83D\uDC89";
     public static final String STRING_NEEDS_2_JAVA_CHARS_2 = "😢😢💉💉";
@@ -43,6 +44,8 @@ public class UTF8StringSample {
             "\uD83D\uDC68\u200D\uD83D\uDC68\u200D\uD83D\uDC66\u200D\uD83D\uDC66";
     public static final String STRING_EMOJI_FAMILY_OF_2 = "\uD83D\uDC68\u200D\uD83D\uDC66";
     public static final String EMOJI_BASKETBALL = "\uD83C\uDFC0";
+
+    public static final String THREE_BYTES_UTF8_CHAR = "ह";
 
     public static final String STRING_LEN_127 = generateStringRepeatBy(ONE_ASCII_CHAR, 127);
     public static final String STRING_LEN_128 = generateStringRepeatBy(ONE_ASCII_CHAR, 128);
