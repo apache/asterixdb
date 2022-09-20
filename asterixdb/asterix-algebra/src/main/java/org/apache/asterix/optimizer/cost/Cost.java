@@ -22,8 +22,6 @@ package org.apache.asterix.optimizer.cost;
 public class Cost implements ICost {
 
     public static final double MAX_CARD = 1.0e200;
-    protected static final int COST_GT = 1;
-    protected static final int COST_LT = -1;
     protected static final int COST_EQ = 0;
 
     private final double cost;
@@ -37,63 +35,57 @@ public class Cost implements ICost {
     }
 
     @Override
-    public Cost zeroCost() {
+    public ICost zeroCost() {
         return new Cost();
     }
 
     @Override
-    public Cost maxCost() {
+    public ICost maxCost() {
         return new Cost(MAX_CARD);
     }
 
     @Override
-    public Cost costAdd(ICost iCost2) {
-        return new Cost(this.computeTotalCost() + iCost2.computeTotalCost());
+    public ICost costAdd(ICost cost) {
+        return new Cost(computeTotalCost() + cost.computeTotalCost());
     }
 
     @Override
-    public Cost costAdd(ICost iCost2, ICost iCost3) {
-        return this.costAdd(iCost2.costAdd(iCost3));
+    public boolean costEQ(ICost cost) {
+        return compareTo(cost) == COST_EQ;
     }
 
     @Override
-    public int costCompare(ICost iCost2) {
-        if (this.computeTotalCost() > iCost2.computeTotalCost()) {
-            return COST_GT;
-        } else if (this.computeTotalCost() < iCost2.computeTotalCost()) {
-            return COST_LT;
-        } else {
-            return COST_EQ;
-        }
+    public boolean costLT(ICost cost) {
+        return compareTo(cost) < COST_EQ;
     }
 
     @Override
-    public boolean costEQ(ICost iCost2) {
-        return this.costCompare(iCost2) == COST_EQ;
+    public boolean costGT(ICost cost) {
+        return compareTo(cost) > COST_EQ;
     }
 
     @Override
-    public boolean costLT(ICost iCost2) {
-        return this.costCompare(iCost2) == COST_LT;
+    public boolean costLE(ICost cost) {
+        return compareTo(cost) <= COST_EQ;
     }
 
     @Override
-    public boolean costGT(ICost iCost2) {
-        return this.costCompare(iCost2) == COST_GT;
-    }
-
-    @Override
-    public boolean costLE(ICost iCost2) {
-        return this.costLT(iCost2) || this.costEQ(iCost2);
-    }
-
-    @Override
-    public boolean costGE(ICost iCost2) {
-        return this.costGT(iCost2) || this.costEQ(iCost2);
+    public boolean costGE(ICost cost) {
+        return compareTo(cost) >= COST_EQ;
     }
 
     @Override
     public double computeTotalCost() {
-        return this.cost;
+        return cost;
+    }
+
+    @Override
+    public int compareTo(ICost cost) {
+        return Double.compare(computeTotalCost(), cost.computeTotalCost());
+    }
+
+    @Override
+    public String toString() {
+        return Double.toString(cost);
     }
 }
