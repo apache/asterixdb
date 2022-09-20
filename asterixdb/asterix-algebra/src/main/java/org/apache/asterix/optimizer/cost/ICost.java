@@ -19,27 +19,24 @@
 
 package org.apache.asterix.optimizer.cost;
 
-public interface ICost {
+public interface ICost extends Comparable<ICost> {
 
     ICost zeroCost();
 
     ICost maxCost();
 
-    ICost costAdd(ICost cost2);
+    ICost costAdd(ICost cost);
 
-    ICost costAdd(ICost cost2, ICost cost3);
+    boolean costEQ(ICost cost);
 
-    int costCompare(ICost cost2);
+    boolean costLT(ICost cost);
 
-    boolean costEQ(ICost cost2);
+    boolean costGT(ICost cost);
 
-    boolean costLT(ICost cost2);
+    boolean costLE(ICost cost);
 
-    boolean costGT(ICost cost2);
-
-    boolean costLE(ICost cost2);
-
-    boolean costGE(ICost cost2);
+    boolean costGE(ICost cost);
 
     double computeTotalCost();
+
 }
