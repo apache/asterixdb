@@ -431,11 +431,9 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     public static void printPlan(IPlanPrettyPrinter pp, AbstractLogicalOperator op, String text)
             throws AlgebricksException {
         if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("---------------------------- " + text);
             pp.reset();
             pp.printOperator(op, true);
-            LOGGER.trace(pp);
-            LOGGER.trace("---------------------------- ");
+            LOGGER.trace("---------------------------- {}\n{}\n----------------------------", text, pp);
         }
     }
 
