@@ -742,27 +742,29 @@ public class JoinEnum {
         JoinNode lastJn = jnArray[lastJnNum];
         if (LOGGER.isTraceEnabled()) {
             EnumerateJoinsRule.printPlan(pp, op, "Original Whole plan in JN END");
-            dumpJoinNodes(lastJnNum);
+            LOGGER.trace(dumpJoinNodes(lastJnNum));
         }
 
         // find the cheapest plan
         int cheapestPlanIndex = lastJn.cheapestPlanIndex;
         if (LOGGER.isTraceEnabled() && cheapestPlanIndex > 0) {
-            LOGGER.trace("Cheapest Plan is " + cheapestPlanIndex + " number of terms is " + numberOfTerms
-                    + " joinNodes " + lastJnNum);
+            LOGGER.trace("Cheapest Plan is {} number of terms is {} joinNodes {}", cheapestPlanIndex, numberOfTerms,
+                    lastJnNum);
         }
 
         return cheapestPlanIndex;
     }
 
-    private void dumpJoinNodes(int numJoinNodes) {
-        LOGGER.trace(LocalDateTime.now());
+    private String dumpJoinNodes(int numJoinNodes) {
+        StringBuilder sb = new StringBuilder(128);
+        sb.append(LocalDateTime.now());
         for (int i = 1; i <= numJoinNodes; i++) {
             JoinNode jn = jnArray[i];
-            LOGGER.trace(jn);
+            sb.append(jn);
         }
-        LOGGER.trace("Printing cost of all Final Plans");
-        jnArray[numJoinNodes].printCostOfAllPlans();
+        sb.append('\n').append("Printing cost of all Final Plans").append('\n');
+        jnArray[numJoinNodes].printCostOfAllPlans(sb);
+        return sb.toString();
     }
 
     public static boolean getForceJoinOrderMode(IOptimizationContext context) {

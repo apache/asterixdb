@@ -99,7 +99,6 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     private static final String CONDITION_FIELD = "condition";
     private static final String MISSING_VALUE_FIELD = "missing-value";
     private static final String OP_CARDINALITY = "cardinality";
-    private static final String OP_COST = "cost";
 
     private final Map<AbstractLogicalOperator, String> operatorIdentity = new HashMap<>();
     private final IdCounter idCounter = new IdCounter();
@@ -142,8 +141,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 stringPrefix = stringPrefix.isEmpty() ? val.toString() : stringPrefix + "." + val.toString();
             }
             if (!operatorIdentity.containsKey(op)) {
-                String opId = stringPrefix.isEmpty() ? "" + Integer.toString(++id)
-                        : stringPrefix + "." + Integer.toString(++id);
+                String opId = stringPrefix.isEmpty() ? "" + (++id) : stringPrefix + "." + (++id);
                 operatorIdentity.put(op, opId);
             }
             return operatorIdentity.get(op);

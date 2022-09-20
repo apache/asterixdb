@@ -769,20 +769,6 @@ public class JoinNode {
         return new Pair<>(this.cheapestPlanIndex, this.cheapestPlanCost);
     }
 
-    protected int findCheapestPlan() {
-        List<PlanNode> allPlans = joinEnum.allPlans;
-        ICost cheapestCost = joinEnum.getCostHandle().maxCost();
-        int cheapestIndex = PlanNode.NO_PLAN;
-
-        for (int planIndex : this.planIndexesArray) {
-            if (allPlans.get(planIndex).totalCost.costLT(cheapestCost)) {
-                cheapestCost = allPlans.get(planIndex).totalCost;
-                cheapestIndex = planIndex;
-            }
-        }
-        return cheapestIndex;
-    }
-
     @Override
     public String toString() {
         if (planIndexesArray.isEmpty()) {
@@ -851,10 +837,11 @@ public class JoinNode {
         return sb.toString();
     }
 
-    public void printCostOfAllPlans() {
+    public void printCostOfAllPlans(StringBuilder sb) {
         List<PlanNode> allPlans = joinEnum.allPlans;
         for (int planIndex : planIndexesArray) {
-            LOGGER.trace("plan " + planIndex + " cost is " + allPlans.get(planIndex).totalCost.computeTotalCost());
+            sb.append("plan ").append(planIndex).append(" cost is ")
+                    .append(allPlans.get(planIndex).totalCost.computeTotalCost()).append('\n');
         }
     }
 }
