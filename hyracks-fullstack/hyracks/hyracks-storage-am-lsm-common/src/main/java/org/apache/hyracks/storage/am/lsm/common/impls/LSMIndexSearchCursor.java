@@ -236,7 +236,7 @@ public abstract class LSMIndexSearchCursor extends EnforcedIndexCursor implement
                     } else {
                         // If the previous tuple and the head tuple are different
                         // the info of previous tuple is useless
-                        if (needPushElementIntoQueue == true) {
+                        if (needPushElementIntoQueue) {
                             pushIntoQueueFromCursorAndReplaceThisElement(outputElement);
                             needPushElementIntoQueue = false;
                         }
@@ -303,6 +303,10 @@ public abstract class LSMIndexSearchCursor extends EnforcedIndexCursor implement
 
         public MultiComparator getMultiComparator() {
             return cmp;
+        }
+
+        public void setMultiComparator(MultiComparator cmp) {
+            this.cmp = cmp;
         }
     }
 
