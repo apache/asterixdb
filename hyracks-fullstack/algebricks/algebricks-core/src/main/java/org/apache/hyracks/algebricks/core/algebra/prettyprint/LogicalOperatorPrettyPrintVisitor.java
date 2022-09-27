@@ -20,6 +20,7 @@ package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -91,6 +92,14 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public final IPlanPrettyPrinter printPlan(ILogicalPlan plan) throws AlgebricksException {
+        printPlanImpl(plan, 0);
+        return this;
+    }
+
+    @Override
+    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys)
+            throws AlgebricksException {
+        //TODO(ian): would be nice if the text plan returned real operator ids too
         printPlanImpl(plan, 0);
         return this;
     }

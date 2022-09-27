@@ -20,6 +20,7 @@ package org.apache.hyracks.api.job.profiling;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.io.IWritable;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
@@ -43,7 +44,46 @@ public interface IOperatorStats extends IWritable, Serializable {
     ICounter getTimeCounter();
 
     /**
-     * @return A counter used to track the number of pages pinned by an opeartor
+     * @return A counter used to track the number of pages pinned by an operator
      */
-    ICounter getDiskIoCounter();
+    ICounter getPageReads();
+
+    /**
+     * @return A counter used to track the number of pages read from disk by an operator
+     */
+
+    ICounter coldReadCounter();
+
+    /**
+     * @return A counter used to set the average tuple size outputted by an operator
+     */
+
+    ICounter getAverageTupleSz();
+
+    /**
+     * @return A counter used to set the max tuple size outputted by an operator
+     */
+
+    ICounter getMaxTupleSz();
+
+    /**
+     * @return A counter used to set the min tuple size outputted by an operator
+     */
+
+    ICounter getMinTupleSz();
+
+    /**
+     * @return A counter used to track the number of tuples read by operators that originate data,
+     *         like index searches or other scan types
+     */
+
+    ICounter getInputTupleCounter();
+
+    ICounter getLevel();
+
+    ICounter getBytesRead();
+
+    ICounter getBytesWritten();
+
+    OperatorDescriptorId getId();
 }

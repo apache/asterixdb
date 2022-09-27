@@ -281,17 +281,20 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
     }
 
     @Override
-    public void flushPartition(int pid, IFrameWriter writer) throws HyracksDataException {
+    public int flushPartition(int pid, IFrameWriter writer) throws HyracksDataException {
         IFrameBufferManager partition = partitionArray[pid];
+        int written = 0;
         if (partition != null && getNumTuples(pid) > 0) {
             for (int i = 0; i < partition.getNumFrames(); ++i) {
                 partition.getFrame(i, tempInfo);
                 tempInfo.getBuffer().position(tempInfo.getStartOffset());
                 tempInfo.getBuffer().limit(tempInfo.getStartOffset() + tempInfo.getLength());
+                int sz = tempInfo.getLength();
                 writer.nextFrame(tempInfo.getBuffer());
+                written += sz;
             }
         }
-
+        return written;
     }
 
     @Override

@@ -270,10 +270,6 @@ public class APIFramework {
                     AlgebricksStringBuilderWriter buf = new AlgebricksStringBuilderWriter(PlanPrettyPrinter.INIT_SIZE);
                     PlanPrettyPrinter.printPhysicalOps(plan, buf, 0, true);
                     output.out().write(buf.toString());
-                } else {
-                    if (isQuery || isLoad) {
-                        generateOptimizedLogicalPlan(plan, output.config().getPlanFormat());
-                    }
                 }
             }
         }
@@ -293,19 +289,14 @@ public class APIFramework {
 
         boolean printSignature = isQuery && requestParameters != null && requestParameters.isPrintSignature();
 
-        if (isExplainOnly) {
-            printPlanAsResult(metadataProvider, output, printer, printSignature);
-            if (!conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
-                executionPlans.setOptimizedLogicalPlan(null);
-            }
-            return null;
-        }
-
-        if (printSignature) {
+        if (printSignature && !isExplainOnly) { //explainOnly adds the signature later
             printer.addResultPrinter(SignaturePrinter.newInstance(executionPlans));
         }
 
         if (!conf.isGenerateJobSpec()) {
+            if (isQuery || isLoad) {
+                generateOptimizedLogicalPlan(plan, output.config().getPlanFormat());
+            }
             return null;
         }
 
@@ -326,6 +317,21 @@ public class APIFramework {
                 spec.setRequiredClusterCapacity(jobRequiredCapacity);
             }
         }
+
+        if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
+            if (isQuery || isLoad) {
+                generateOptimizedLogicalPlan(plan, spec.getLogical2PhysicalMap(), output.config().getPlanFormat());
+            }
+        }
+
+        if (isExplainOnly) {
+            printPlanAsResult(metadataProvider, output, printer, printSignature);
+            if (!conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
+                executionPlans.setOptimizedLogicalPlan(null);
+            }
+            return null;
+        }
+
         if (isQuery && conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
             generateJob(spec);
         }
@@ -513,6 +519,11 @@ public class APIFramework {
 
     private void generateLogicalPlan(ILogicalPlan plan, SessionConfig.PlanFormat format) throws AlgebricksException {
         executionPlans.setLogicalPlan(getPrettyPrintVisitor(format).printPlan(plan).toString());
+    }
+
+    private void generateOptimizedLogicalPlan(ILogicalPlan plan, Map<Object, String> log2phys,
+            SessionConfig.PlanFormat format) throws AlgebricksException {
+        executionPlans.setOptimizedLogicalPlan(getPrettyPrintVisitor(format).printPlan(plan, log2phys).toString());
     }
 
     private void generateOptimizedLogicalPlan(ILogicalPlan plan, SessionConfig.PlanFormat format)

@@ -34,6 +34,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -91,6 +92,7 @@ public class OptimizedHybridHashJoin {
     // corresponding function signature.
     private final TuplePointer tempPtr = new TuplePointer();
     private int[] probePSizeInTups;
+    private IOperatorStats stats = null;
 
     public OptimizedHybridHashJoin(IHyracksJobletContext jobletCtx, int memSizeInFrames, int numOfPartitions,
             String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
@@ -183,7 +185,10 @@ public class OptimizedHybridHashJoin {
 
     private void spillPartition(int pid) throws HyracksDataException {
         RunFileWriter writer = getSpillWriterOrCreateNewOneIfNotExist(buildRFWriters, buildRelName, pid);
-        bufferManager.flushPartition(pid, writer);
+        int spilt = bufferManager.flushPartition(pid, writer);
+        if (stats != null) {
+            stats.getBytesWritten().update(spilt);
+        }
         bufferManager.clearPartition(pid);
         spilledStatus.set(pid);
     }
@@ -261,8 +266,12 @@ public class OptimizedHybridHashJoin {
             for (int pid = spilledStatus.nextSetBit(0); pid >= 0 && pid < numOfPartitions; pid =
                     spilledStatus.nextSetBit(pid + 1)) {
                 if (bufferManager.getNumTuples(pid) > 0) {
-                    bufferManager.flushPartition(pid,
+                    int spilt = bufferManager.flushPartition(pid,
                             getSpillWriterOrCreateNewOneIfNotExist(runFileWriters, refName, pid));
+                    if (stats != null) {
+                        stats.getBytesWritten().update(spilt);
+
+                    }
                     bufferManager.clearPartition(pid);
                 }
             }
@@ -417,6 +426,10 @@ public class OptimizedHybridHashJoin {
                 reloadBuffer = new VSizeFrame(jobletCtx);
             }
             while (r.nextFrame(reloadBuffer)) {
+                if (stats != null) {
+                    //TODO: be certain it is the case this is actually eagerly read
+                    stats.getBytesRead().update(reloadBuffer.getBuffer().limit());
+                }
                 accessorBuild.reset(reloadBuffer.getBuffer());
                 for (int tid = 0; tid < accessorBuild.getTupleCount(); tid++) {
                     if (!bufferManager.insertTuple(pid, accessorBuild, tid, tempPtr)) {
@@ -520,7 +533,10 @@ public class OptimizedHybridHashJoin {
             if (victim >= 0 && bufferManager.getPhysicalSize(victim) >= recordSize) {
                 RunFileWriter runFileWriter =
                         getSpillWriterOrCreateNewOneIfNotExist(probeRFWriters, probeRelName, victim);
-                bufferManager.flushPartition(victim, runFileWriter);
+                int spilt = bufferManager.flushPartition(victim, runFileWriter);
+                if (stats != null) {
+                    stats.getBytesWritten().update(spilt);
+                }
                 bufferManager.clearPartition(victim);
                 if (!bufferManager.insertTuple(pid, accessorProbe, tupleId, tempPtr)) {
                     // This should not happen if the size calculations are correct, just not to let the query fail.
@@ -542,6 +558,9 @@ public class OptimizedHybridHashJoin {
         if (!bigFrameAppender.append(accessor, i)) {
 
             throw new HyracksDataException("The given tuple is too big");
+        }
+        if (stats != null) {
+            stats.getBytesWritten().update(bigFrameAppender.getBuffer().limit());
         }
         bigFrameAppender.write(runFileWriter, true);
     }
@@ -612,5 +631,9 @@ public class OptimizedHybridHashJoin {
             throw new IllegalStateException();
         }
         this.isReversed = reversed;
+    }
+
+    public void setOperatorStats(IOperatorStats stats) {
+        this.stats = stats;
     }
 }

@@ -51,7 +51,6 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.result.ResultSetId;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -137,6 +136,7 @@ public interface IStatementExecutor {
         private Profile profile;
         private ProfileType profileType;
         private long totalWarningsCount;
+        private long compileTime;
 
         public long getCount() {
             return count;
@@ -187,10 +187,18 @@ public interface IStatementExecutor {
         public void setProfileType(ProfileType profileType) {
             this.profileType = profileType;
         }
+
+        public void setCompileTime(long compileTime) {
+            this.compileTime = compileTime;
+        }
+
+        public long getCompileTime() {
+            return compileTime;
+        }
     }
 
     class Profile implements Serializable {
-        private static final long serialVersionUID = 4813321148252768375L;
+        private static final long serialVersionUID = 4813321148252768376L;
 
         private transient ObjectNode profile;
 
@@ -200,16 +208,15 @@ public interface IStatementExecutor {
 
         private void writeObject(ObjectOutputStream out) throws IOException {
             ObjectMapper om = new ObjectMapper();
-            out.writeUTF(om.writeValueAsString(profile));
+            byte[] bytes = om.writeValueAsBytes(profile);
+            out.writeInt(bytes.length);
+            out.write(bytes);
         }
 
         private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
             ObjectMapper om = new ObjectMapper();
-            JsonNode inNode = om.readTree(in.readUTF());
-            if (!inNode.isObject()) {
-                throw new IOException("Deserialization error");
-            }
-            profile = (ObjectNode) inNode;
+            int length = in.readInt();
+            profile = (ObjectNode) om.readTree(in.readNBytes(length));
         }
 
         public ObjectNode getProfile() {

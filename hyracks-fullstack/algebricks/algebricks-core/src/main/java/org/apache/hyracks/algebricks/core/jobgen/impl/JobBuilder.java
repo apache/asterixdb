@@ -21,6 +21,7 @@ package org.apache.hyracks.algebricks.core.jobgen.impl;
 import static org.apache.hyracks.api.exceptions.ErrorCode.DESCRIPTOR_GENERATION_ERROR;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -147,6 +148,15 @@ public class JobBuilder implements IHyracksJobBuilder {
         hyracksOps.put(op, opDesc);
     }
 
+    public Map<Object, String> getLogical2PhysicalMap() {
+        Map<ILogicalOperator, String> mergedOperatorMap = new HashMap<>();
+        hyracksOps.forEach(((k, v) -> mergedOperatorMap.put(k, v.getOperatorId().toString())));
+        algebraicOpBelongingToMetaAsterixOp
+                .forEach((k, v) -> mergedOperatorMap.put(k, metaAsterixOps.get(v).getOperatorId().toString()));
+        connectors.forEach((k, v) -> mergedOperatorMap.put(k, v.getFirst().getConnectorId().toString()));
+        return Collections.unmodifiableMap(mergedOperatorMap);
+    }
+
     @Override
     public void contributeAlgebricksPartitionConstraint(IOperatorDescriptor opDesc,
             AlgebricksPartitionConstraint apcArg) {
@@ -174,6 +184,7 @@ public class JobBuilder implements IHyracksJobBuilder {
             jobSpec.addRoot(opDesc);
         }
         setAllPartitionConstraints(tgtConstraints);
+        jobSpec.setLogical2PhysicalMap(getLogical2PhysicalMap());
     }
 
     public List<IOperatorDescriptor> getGeneratedMetaOps() {

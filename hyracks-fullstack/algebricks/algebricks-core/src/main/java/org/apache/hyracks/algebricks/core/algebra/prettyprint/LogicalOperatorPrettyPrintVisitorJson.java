@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -101,6 +102,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     private static final String OP_CARDINALITY = "cardinality";
 
     private final Map<AbstractLogicalOperator, String> operatorIdentity = new HashMap<>();
+    private Map<Object, String> log2odid = Collections.emptyMap();
     private final IdCounter idCounter = new IdCounter();
     private final JsonGenerator jsonGenerator;
 
@@ -164,6 +166,15 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     }
 
     @Override
+    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys)
+            throws AlgebricksException {
+        this.log2odid = log2phys;
+        printPlanImpl(plan);
+        flushContentToWriter();
+        return this;
+    }
+
+    @Override
     public final IPlanPrettyPrinter printOperator(AbstractLogicalOperator op, boolean printInputs)
             throws AlgebricksException {
         printOperatorImpl(op, printInputs);
@@ -193,6 +204,10 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeStartObject();
             op.accept(this, null);
             jsonGenerator.writeStringField("operatorId", idCounter.printOperatorId(op));
+            String od = log2odid.get(op);
+            if (od != null) {
+                jsonGenerator.writeStringField("runtime-id", od);
+            }
             IPhysicalOperator pOp = op.getPhysicalOperator();
             if (pOp != null) {
                 jsonGenerator.writeStringField("physical-operator", pOp.toString(false));

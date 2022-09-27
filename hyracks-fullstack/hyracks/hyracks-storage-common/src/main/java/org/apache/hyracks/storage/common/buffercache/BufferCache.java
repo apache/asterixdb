@@ -552,6 +552,10 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         BufferedFileHandle fInfo = getFileHandle(cPage);
         cPage.buffer.clear();
         fInfo.read(cPage);
+        final IThreadStats threadStats = statsSubscribers.get(Thread.currentThread());
+        if (threadStats != null) {
+            threadStats.coldRead();
+        }
     }
 
     @Override

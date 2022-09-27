@@ -29,6 +29,7 @@ import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputer;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.dataflow.common.io.GeneratedRunFileReader;
@@ -65,8 +66,13 @@ public class TopKSorterOperatorDescriptor extends AbstractSorterOperatorDescript
                 final boolean profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
                 IRunGenerator runGen = new HybridTopKSortRunGenerator(ctx, framesLimit, topK, sortFields,
                         keyNormalizerFactories, comparatorFactories, outRecDescs[0]);
-                return profile ? TimedRunGenerator.time(runGen, ctx, "TopKSort (Sort)") : runGen;
-
+                try {
+                    return profile ? ProfiledRunGenerator.time(runGen, ctx, "TopKSort (Sort)", this.getActivityId())
+                            : runGen;
+                } catch (HyracksDataException e) {
+                    e.printStackTrace();
+                }
+                return null;
             }
         };
     }

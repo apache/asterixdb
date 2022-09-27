@@ -130,7 +130,28 @@ public class TaskProfile extends AbstractProfile {
             jpe.put("name", key);
             jpe.put("time", Double
                     .parseDouble(new DecimalFormat("#.####").format((double) value.getTimeCounter().get() / 1000000)));
-            jpe.put("disk-io", value.getDiskIoCounter().get());
+            if (value.getId().getId() >= 0) {
+                jpe.put("runtime-id", value.getId().toString());
+            }
+            if (value.getPageReads().get() > 0) {
+                jpe.put("pages-read", value.getPageReads().get());
+                jpe.put("pages-read-cold", value.coldReadCounter().get());
+            }
+            if (value.getTupleCounter().get() > 0) {
+                jpe.put("cardinality-out", value.getTupleCounter().get());
+                jpe.put("avg-tuple-size", value.getAverageTupleSz().get());
+                jpe.put("min-tuple-size", value.getMinTupleSz().get());
+                jpe.put("max-tuple-size", value.getMaxTupleSz().get());
+            }
+            if (value.getLevel().get() > -1) {
+                jpe.put("level", value.getLevel().get());
+            }
+            if (value.getBytesRead().get() > 0) {
+                jpe.put("bytes-read", value.getBytesRead().get());
+            }
+            if (value.getBytesWritten().get() > 0) {
+                jpe.put("bytes-written", value.getBytesWritten().get());
+            }
             countersObj.add(jpe);
         });
         json.set("counters", countersObj);

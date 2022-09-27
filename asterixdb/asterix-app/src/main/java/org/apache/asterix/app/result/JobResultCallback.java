@@ -82,7 +82,7 @@ public class JobResultCallback implements IJobResultCallback {
             for (JobletProfile jp : jobletProfiles) {
                 final Collection<TaskProfile> jobletTasksProfile = jp.getTaskProfiles().values();
                 for (TaskProfile tp : jobletTasksProfile) {
-                    processedObjects += tp.getStatsCollector().getAggregatedStats().getTupleCounter().get();
+                    processedObjects += tp.getStatsCollector().getAggregatedStats().getInputTupleCounter().get();
                     aggregateTotalWarningsCount += tp.getTotalWarningsCount();
                     Set<Warning> taskWarnings = tp.getWarnings();
                     if (AggregateWarnings.size() < maxWarnings && !taskWarnings.isEmpty()) {

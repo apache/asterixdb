@@ -2,5 +2,6 @@
 	"results": [
 	  "result"
   ],
-  "metrics": "R{.*}"
+  "metrics": "R{.*}",
+  "profile": "R{.*}"
 }

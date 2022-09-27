@@ -55,9 +55,12 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
 
     @Override
     public String toString() {
-        String s = "stream-limit " + maxObjectsEvalFactory.toString();
+        String s = "stream-limit ";
+        if (maxObjectsEvalFactory != null) {
+            s += maxObjectsEvalFactory.toString();
+        }
         if (offsetEvalFactory != null) {
-            return s + ", " + offsetEvalFactory.toString();
+            return s + maxObjectsEvalFactory == null ? "" : ", " + offsetEvalFactory.toString();
         } else {
             return s;
         }

@@ -28,7 +28,7 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
-import org.apache.hyracks.api.dataflow.TimedFrameWriter;
+import org.apache.hyracks.api.dataflow.ProfiledFrameWriter;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobFlag;
@@ -67,7 +67,7 @@ public class NestedPlansRunningAggregatorFactory extends AbstractAggregatorDescr
                 new RunningAggregatorOutput(ctx, subplans, keyFieldIdx.length + decorFieldIdx.length, writer);
         IFrameWriter fw = outputWriter;
         if (profile) {
-            fw = TimedFrameWriter.time(outputWriter, ctx, "Aggregate Writer");
+            fw = ProfiledFrameWriter.time(outputWriter, ctx, "Aggregate Writer");
         } else if (enforce) {
             fw = EnforceFrameWriter.enforce(outputWriter);
         }

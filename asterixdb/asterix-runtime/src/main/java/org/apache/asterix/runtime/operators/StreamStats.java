@@ -32,13 +32,13 @@ public final class StreamStats {
 
     public StreamStats(IOperatorStats opStats) {
         this.cardinality = opStats.getTupleCounter().get();
-        long totalTupleSize = opStats.getDiskIoCounter().get();
+        long totalTupleSize = opStats.getPageReads().get();
         this.avgTupleSize = cardinality > 0 ? (int) (totalTupleSize / cardinality) : 0;
     }
 
     static void update(IOperatorStats opStats, long tupleCount, long tupleSize) {
         opStats.getTupleCounter().update(tupleCount);
-        opStats.getDiskIoCounter().update(tupleSize);
+        opStats.getPageReads().update(tupleSize);
     }
 
     public long getCardinality() {

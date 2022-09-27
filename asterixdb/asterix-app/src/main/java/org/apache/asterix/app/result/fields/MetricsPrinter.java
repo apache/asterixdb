@@ -32,6 +32,7 @@ public class MetricsPrinter implements IResponseFieldPrinter {
     public enum Metrics {
         ELAPSED_TIME("elapsedTime"),
         EXECUTION_TIME("executionTime"),
+        COMPILE_TIME("compileTime"),
         RESULT_COUNT("resultCount"),
         RESULT_SIZE("resultSize"),
         ERROR_COUNT("errorCount"),
@@ -70,6 +71,8 @@ public class MetricsPrinter implements IResponseFieldPrinter {
         pw.print("\n\t");
         ResultUtil.printField(pw, Metrics.EXECUTION_TIME.str(),
                 Duration.formatNanos(metrics.getExecutionTime(), useAscii));
+        pw.print("\n\t");
+        ResultUtil.printField(pw, Metrics.COMPILE_TIME.str(), Duration.formatNanos(metrics.getCompileTime(), useAscii));
         pw.print("\n\t");
         ResultUtil.printField(pw, Metrics.RESULT_COUNT.str(), metrics.getResultCount(), true);
         pw.print("\n\t");

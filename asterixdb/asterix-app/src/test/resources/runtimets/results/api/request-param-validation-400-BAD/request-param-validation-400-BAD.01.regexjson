@@ -6,6 +6,7 @@
 	"metrics": {
 		"elapsedTime": "R{.*}",
 		"executionTime": "R{.*}",
+		"compileTime": "R{.*}",
 		"resultCount": 0,
 		"resultSize": 0,
 		"processedObjects": 0,

@@ -16,13 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.test.runtime;
 
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.test.common.ProfilingTestExecutor;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -31,15 +37,17 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 /**
- * Runs the cluster runtime tests and checks the query metrics.
+ * Runs the SQL++ runtime tests with full runtime profiling.
  */
 @RunWith(Parameterized.class)
-public class MetricsExecutionTest {
+public class SqlppProfiledExecutionTest {
     protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
 
     @BeforeClass
     public static void setUp() throws Exception {
-        LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, new TestExecutor());
+        final TestExecutor testExecutor = new ProfilingTestExecutor();
+        LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, testExecutor);
+        setNcEndpoints(testExecutor);
     }
 
     @AfterClass
@@ -47,19 +55,32 @@ public class MetricsExecutionTest {
         LangExecutionUtil.tearDown();
     }
 
-    @Parameters(name = "MetricsExecutionTest {index}: {0}")
+    @Parameters(name = "SqlppProfiledExecutionTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        return LangExecutionUtil.buildTestsInXml("metrics.xml");
+        return LangExecutionUtil.tests("only_sqlpp.xml", "testsuite_sqlpp_profiled.xml");
     }
 
     protected TestCaseContext tcCtx;
 
-    public MetricsExecutionTest(TestCaseContext tcCtx) {
+    public SqlppProfiledExecutionTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
     }
 
     @Test
     public void test() throws Exception {
         LangExecutionUtil.test(tcCtx);
+    }
+
+    private static void setNcEndpoints(TestExecutor testExecutor) {
+        final NodeControllerService[] ncs = ExecutionTestUtil.integrationUtil.ncs;
+        final Map<String, InetSocketAddress> ncEndPoints = new HashMap<>();
+        final String ip = InetAddress.getLoopbackAddress().getHostAddress();
+        for (NodeControllerService nc : ncs) {
+            final String nodeId = nc.getId();
+            final INcApplicationContext appCtx = (INcApplicationContext) nc.getApplicationContext();
+            int apiPort = appCtx.getExternalProperties().getNcApiPort();
+            ncEndPoints.put(nodeId, InetSocketAddress.createUnresolved(ip, apiPort));
+        }
+        testExecutor.setNcEndPoints(ncEndPoints);
     }
 }

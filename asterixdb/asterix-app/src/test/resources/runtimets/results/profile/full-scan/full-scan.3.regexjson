@@ -1,5 +1,9 @@
 {
     "job-id": "R{[A-Z0-9.:]+}",
+    "create-time": "R{[0-9.]+}",
+    "start-time": "R{[0-9.]+}",
+    "queued-time": "R{.+}",
+    "end-time": "R{[0-9.]+}",
     "counters": [],
     "joblets": [
         {
@@ -29,19 +33,29 @@
                     ],
                     "counters": [
                         {
-                            "name": "Empty Tuple Source",
+                            "name": "R{.+}",
                             "time": "R{[0-9.]+}",
-                            "disk-io": "R{[0-9.]+}"
-                        },
-                        {
-                            "name": "Index Search",
-                            "time": "R{[0-9.]+}",
-                            "disk-io": "R{[0-9.]+}"
+                            "runtime-id": "R{.+}"
                         },
                         {
                             "name": "R{.+}",
                             "time": "R{[0-9.]+}",
-                            "disk-io": "R{[0-9.]+}"
+                            "runtime-id": "R{.+}",
+                            "pages-read": "R{[0-9.]+}",
+                            "pages-read-cold": "R{[0-9.]+}",
+                            "cardinality-out": "R{[0-9.]+}",
+                            "avg-tuple-size": "R{[0-9.]+}",
+                            "min-tuple-size": "R{[0-9.]+}",
+                            "max-tuple-size": "R{[0-9.]+}"
+                        },
+                        {
+                            "name": "R{.+}",
+                            "time": "R{[0-9.]+}",
+                            "runtime-id": "R{.+}",
+                            "cardinality-out": "R{[0-9.]+}",
+                            "avg-tuple-size": "R{[0-9.]+}",
+                            "min-tuple-size": "R{[0-9.]+}",
+                            "max-tuple-size": "R{[0-9.]+}"
                         }
                     ]
                 },
@@ -52,18 +66,21 @@
                   "partition-send-profile": [],
                   "counters": [
                     {
-                      "name": "R{.+}",
-                      "time": "R{[0-9.]+}",
-                      "disk-io": "R{[0-9.]+}"
+                        "name": "R{.+}",
+                        "time": "R{[0-9.]+}",
+                        "runtime-id": "R{.+}",
+                        "cardinality-out": "R{[0-9.]+}",
+                        "avg-tuple-size": "R{[0-9.]+}",
+                        "min-tuple-size": "R{[0-9.]+}",
+                        "max-tuple-size": "R{[0-9.]+}"
                     },
                     {
-                      "name": "Result Writer",
-                      "time": "R{[0-9.]+}",
-                      "disk-io": "R{[0-9.]+}"
+                        "name": "R{.+}",
+                        "time": "R{[0-9.]+}",
+                        "runtime-id": "R{.+}"
                     }
                   ]
                 }
             ]
-        }
-    ]
+    }]
 }

@@ -43,7 +43,7 @@ import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
-import org.apache.hyracks.api.dataflow.TimedOperatorNodePushable;
+import org.apache.hyracks.api.dataflow.ProfiledOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -109,10 +109,12 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
         for (Entry<ActivityId, IActivity> entry : startActivities.entrySet()) {
             IOperatorNodePushable opPushable = null;
             if (profile) {
-                opPushable = TimedOperatorNodePushable
-                        .time(entry.getValue().createPushRuntime(ctx, recordDescProvider, partition, nPartitions), ctx);
+                IOperatorNodePushable wrapped =
+                        entry.getValue().createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
+                opPushable = ProfiledOperatorNodePushable.time(wrapped, ctx, entry.getKey(), null);
             } else {
                 opPushable = entry.getValue().createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
+                ProfiledOperatorNodePushable.onlyAddStats(opPushable, ctx, entry.getKey());
             }
             operatorNodePushablesBFSOrder.add(opPushable);
             operatorNodePushables.put(entry.getKey(), opPushable);
@@ -141,11 +143,18 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
             IOperatorNodePushable destOp = operatorNodePushables.get(destId);
             if (destOp == null) {
                 if (profile) {
-                    destOp = TimedOperatorNodePushable.time(channel.getRight().getLeft().createPushRuntime(ctx,
-                            recordDescProvider, partition, nPartitions), ctx);
+                    IOperatorNodePushable wrapped = channel.getRight().getLeft().createPushRuntime(ctx,
+                            recordDescProvider, partition, nPartitions);
+                    if (sourceOp instanceof ProfiledOperatorNodePushable) {
+                        destOp = ProfiledOperatorNodePushable.time(wrapped, ctx, destId,
+                                (ProfiledOperatorNodePushable) sourceOp);
+                    } else {
+                        destOp = ProfiledOperatorNodePushable.time(wrapped, ctx, destId, null);
+                    }
                 } else {
                     destOp = channel.getRight().getLeft().createPushRuntime(ctx, recordDescProvider, partition,
                             nPartitions);
+                    ProfiledOperatorNodePushable.onlyAddStats(destOp, ctx, destId);
                 }
                 operatorNodePushablesBFSOrder.add(destOp);
                 operatorNodePushables.put(destId, destOp);

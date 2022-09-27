@@ -37,7 +37,7 @@ import org.apache.hyracks.dataflow.std.sort.AbstractExternalSortRunMerger;
 import org.apache.hyracks.dataflow.std.sort.AbstractSorterOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.Algorithm;
 import org.apache.hyracks.dataflow.std.sort.IRunGenerator;
-import org.apache.hyracks.dataflow.std.sort.TimedRunGenerator;
+import org.apache.hyracks.dataflow.std.sort.ProfiledRunGenerator;
 
 /**
  * This Operator pushes group-by aggregation into the external sort.
@@ -148,7 +148,8 @@ public class SortGroupByOperatorDescriptor extends AbstractSorterOperatorDescrip
                         recordDescriptorProvider.getInputRecordDescriptor(this.getActivityId(), 0), framesLimit,
                         groupFields, keyNormalizerFactories, comparatorFactories, partialAggregatorFactory,
                         partialAggRecordDesc, ALG);
-                return profile ? TimedRunGenerator.time(runGen, ctx, "GroupBy (Sort Runs)") : runGen;
+                return profile ? ProfiledRunGenerator.time(runGen, ctx, "GroupBy (Sort Runs)", this.getActivityId())
+                        : runGen;
             }
         };
     }

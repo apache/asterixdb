@@ -31,4 +31,16 @@ public interface IThreadStats {
      * @return the pinned pages count
      */
     long getPinnedPagesCount();
+
+    /**
+     * Indicates that this thread caused a cold read from disk
+     */
+    void coldRead();
+
+    /**
+     * Gets the count of pages read in from disk
+     *
+     * @return the cold read count
+     */
+    long getColdReadCount();
 }

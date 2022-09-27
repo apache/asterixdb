@@ -32,6 +32,7 @@ import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
+import org.apache.hyracks.api.job.profiling.NoOpOperatorStats;
 import org.apache.hyracks.api.job.profiling.OperatorStats;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,9 +40,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JobProfile extends AbstractProfile {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private JobId jobId;
+    private long createTime;
+    private long startTime;
+    private String startTimeZoneId;
+    private long endTime;
 
     private Map<String, JobletProfile> jobletProfiles;
 
@@ -68,12 +73,32 @@ public class JobProfile extends AbstractProfile {
         return jobletProfiles;
     }
 
+    public void setCreateTime(long createTime) {
+        this.createTime = createTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setStartTimeZoneId(String startTimeZoneId) {
+        this.startTimeZoneId = startTimeZoneId;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
+    }
+
     @Override
     public ObjectNode toJSON() {
         ObjectMapper om = new ObjectMapper();
         ObjectNode json = om.createObjectNode();
 
         json.put("job-id", jobId.toString());
+        json.put("create-time", createTime);
+        json.put("start-time", startTime);
+        json.put("queued-time", startTime - createTime);
+        json.put("end-time", endTime);
         populateCounters(json);
         ArrayNode jobletsArray = om.createArrayNode();
         for (JobletProfile p : jobletProfiles.values()) {
@@ -98,6 +123,10 @@ public class JobProfile extends AbstractProfile {
     @Override
     public void readFields(DataInput input) throws IOException {
         jobId = JobId.create(input);
+        createTime = input.readLong();
+        startTime = input.readLong();
+        endTime = input.readLong();
+        startTimeZoneId = input.readUTF();
         int size = input.readInt();
         jobletProfiles = new HashMap<>();
         for (int i = 0; i < size; i++) {
@@ -110,6 +139,10 @@ public class JobProfile extends AbstractProfile {
     @Override
     public void writeFields(DataOutput output) throws IOException {
         jobId.writeFields(output);
+        output.writeLong(createTime);
+        output.writeLong(startTime);
+        output.writeLong(endTime);
+        output.writeUTF(startTimeZoneId);
         output.writeInt(jobletProfiles.size());
         for (Entry<String, JobletProfile> entry : jobletProfiles.entrySet()) {
             output.writeUTF(entry.getKey());
@@ -141,7 +174,7 @@ public class JobProfile extends AbstractProfile {
             for (int i = 0; i < n; i++) {
                 String operatorName = operatorNames.get(i);
                 IOperatorStats opTaskStats = statsCollector.getOperatorStats(operatorName);
-                if (opTaskStats == null) {
+                if (opTaskStats.equals(NoOpOperatorStats.INSTANCE)) {
                     continue;
                 }
                 IOperatorStats opOutStats = outStats[i];
@@ -151,9 +184,10 @@ public class JobProfile extends AbstractProfile {
                 }
                 opOutStats.getTupleCounter().update(opTaskStats.getTupleCounter().get());
                 opOutStats.getTimeCounter().update(opTaskStats.getTimeCounter().get());
-                opOutStats.getDiskIoCounter().update(opTaskStats.getDiskIoCounter().get());
+                opOutStats.getPageReads().update(opTaskStats.getPageReads().get());
             }
         }
         return Arrays.asList(outStats);
     }
+
 }

@@ -29,6 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
+import org.apache.hyracks.api.job.profiling.OperatorStats;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
@@ -40,7 +41,7 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperato
  */
 public final class StreamStatsOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final String operatorName;
 
@@ -66,6 +67,10 @@ public final class StreamStatsOperatorDescriptor extends AbstractSingleActivityO
                 fta = new FrameTupleAccessor(outRecDescs[0]);
                 totalTupleCount = 0;
                 writer.open();
+                IStatsCollector coll = ctx.getStatsCollector();
+                if (coll != null) {
+                    coll.add(new OperatorStats(operatorName));
+                }
             }
 
             @Override
@@ -92,7 +97,7 @@ public final class StreamStatsOperatorDescriptor extends AbstractSingleActivityO
             public void close() throws HyracksDataException {
                 IStatsCollector statsCollector = ctx.getStatsCollector();
                 if (statsCollector != null) {
-                    IOperatorStats stats = statsCollector.getOrAddOperatorStats(operatorName);
+                    IOperatorStats stats = statsCollector.getOperatorStats(operatorName);
                     StreamStats.update(stats, totalTupleCount, totalTupleLength);
                 }
                 writer.close();

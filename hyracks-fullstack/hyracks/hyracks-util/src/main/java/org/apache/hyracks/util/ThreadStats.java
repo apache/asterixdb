@@ -26,6 +26,7 @@ import org.apache.hyracks.util.annotations.ThreadSafe;
 public class ThreadStats implements IThreadStats {
 
     private AtomicLong pinnedPagesCount = new AtomicLong();
+    private AtomicLong coldReadCount = new AtomicLong();
 
     @Override
     public void pagePinned() {
@@ -35,5 +36,15 @@ public class ThreadStats implements IThreadStats {
     @Override
     public long getPinnedPagesCount() {
         return pinnedPagesCount.get();
+    }
+
+    @Override
+    public long getColdReadCount() {
+        return coldReadCount.get();
+    }
+
+    @Override
+    public void coldRead() {
+        coldReadCount.incrementAndGet();
     }
 }

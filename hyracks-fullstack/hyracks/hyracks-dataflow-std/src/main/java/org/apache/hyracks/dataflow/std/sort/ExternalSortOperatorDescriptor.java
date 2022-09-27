@@ -82,7 +82,8 @@ public class ExternalSortOperatorDescriptor extends AbstractSorterOperatorDescri
                 final boolean profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
                 IRunGenerator runGen = new ExternalSortRunGenerator(ctx, sortFields, keyNormalizerFactories,
                         comparatorFactories, outRecDescs[0], alg, policy, framesLimit, outputLimit);
-                return profile ? TimedRunGenerator.time(runGen, ctx, "ExternalSort(Sort)") : runGen;
+                return profile ? ProfiledRunGenerator.time(runGen, ctx, "ExternalSort(Sort)", this.getActivityId())
+                        : runGen;
             }
         };
     }

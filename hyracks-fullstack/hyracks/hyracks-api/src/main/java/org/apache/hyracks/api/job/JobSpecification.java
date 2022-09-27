@@ -21,6 +21,7 @@ package org.apache.hyracks.api.job;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -49,7 +50,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JobSpecification implements Serializable, IOperatorDescriptorRegistry, IConnectorDescriptorRegistry {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private static final int DEFAULT_FRAME_SIZE = 32768;
 
@@ -66,6 +67,8 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
     private final Map<OperatorDescriptorId, List<IConnectorDescriptor>> opOutputMap;
 
     private final Map<ConnectorDescriptorId, Pair<Pair<IOperatorDescriptor, Integer>, Pair<IOperatorDescriptor, Integer>>> connectorOpMap;
+
+    private transient Map<Object, String> logical2PhysicalMap;
 
     private final Map<String, Serializable> properties;
 
@@ -108,6 +111,7 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
         opOutputMap = new HashMap<>();
         connectorOpMap = new HashMap<>();
         properties = new HashMap<>();
+        logical2PhysicalMap = Collections.emptyMap();
         userConstraints = new HashSet<>();
         operatorIdCounter = 0;
         connectorIdCounter = 0;
@@ -324,6 +328,14 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     public List<IOperatorDescriptor> getMetaOps() {
         return metaOps;
+    }
+
+    public void setLogical2PhysicalMap(Map<Object, String> logical2PhysicalMap) {
+        this.logical2PhysicalMap = logical2PhysicalMap;
+    }
+
+    public Map<Object, String> getLogical2PhysicalMap() {
+        return logical2PhysicalMap;
     }
 
     private <K, V> void insertIntoIndexedMap(Map<K, List<V>> map, K key, int index, V value) {

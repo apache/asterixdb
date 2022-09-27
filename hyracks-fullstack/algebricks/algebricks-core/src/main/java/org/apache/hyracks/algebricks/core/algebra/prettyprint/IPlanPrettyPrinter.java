@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 
+import java.util.Map;
+
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -41,6 +43,9 @@ public interface IPlanPrettyPrinter {
 
     /** Prints the whole logical plan. */
     IPlanPrettyPrinter printPlan(ILogicalPlan plan) throws AlgebricksException;
+
+    /** Prints the logical plan, annotated with physical operator and connector ids */
+    IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys) throws AlgebricksException;
 
     /** Resets the state of the pretty printer. */
     IPlanPrettyPrinter reset() throws AlgebricksException;

@@ -23,24 +23,51 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hyracks.api.com.job.profiling.counters.Counter;
+import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
 public class OperatorStats implements IOperatorStats {
-    private static final long serialVersionUID = 6401830963367567167L;
+    private static final long serialVersionUID = 6401830963367567169L;
 
     public final String operatorName;
+    public OperatorDescriptorId id;
     public final ICounter tupleCounter;
     public final ICounter timeCounter;
-    public final ICounter diskIoCounter;
+    public final ICounter pageReads;
+    public final ICounter coldReadCounter;
+    public final ICounter avgTupleSz;
+    public final ICounter minTupleSz;
+    public final ICounter maxTupleSz;
+    public final ICounter inputTupleCounter;
+    public final ICounter level;
+    public final ICounter bytesRead;
+    public final ICounter bytesWritten;
 
-    public OperatorStats(String operatorName) {
+    //TODO: this is quickly becoming gross it should just be a map where the value is obliged to be a Counter
+
+    public OperatorStats(String operatorName, OperatorDescriptorId id) {
         if (operatorName == null || operatorName.isEmpty()) {
             throw new IllegalArgumentException("operatorName must not be null or empty");
         }
         this.operatorName = operatorName;
+        this.id = id;
         tupleCounter = new Counter("tupleCounter");
         timeCounter = new Counter("timeCounter");
-        diskIoCounter = new Counter("diskIoCounter");
+        pageReads = new Counter("diskIoCounter");
+        coldReadCounter = new Counter("coldReadCounter");
+        avgTupleSz = new Counter("avgTupleSz");
+        minTupleSz = new Counter("minTupleSz");
+        maxTupleSz = new Counter("maxTupleSz");
+        inputTupleCounter = new Counter("inputTupleCounter");
+        level = new Counter("level");
+        bytesRead = new Counter("bytesRead");
+        bytesWritten = new Counter("bytesWritten");
+        level.set(-1);
+
+    }
+
+    public OperatorStats(String operatorName) {
+        this(operatorName, new OperatorDescriptorId(-1));
     }
 
     public static IOperatorStats create(DataInput input) throws IOException {
@@ -66,28 +93,97 @@ public class OperatorStats implements IOperatorStats {
     }
 
     @Override
-    public ICounter getDiskIoCounter() {
-        return diskIoCounter;
+    public ICounter getPageReads() {
+        return pageReads;
+    }
+
+    @Override
+    public ICounter coldReadCounter() {
+        return coldReadCounter;
+    }
+
+    @Override
+    public ICounter getAverageTupleSz() {
+        return avgTupleSz;
+    }
+
+    @Override
+    public ICounter getMaxTupleSz() {
+        return maxTupleSz;
+    }
+
+    @Override
+    public ICounter getMinTupleSz() {
+        return minTupleSz;
+    }
+
+    @Override
+    public ICounter getInputTupleCounter() {
+        return inputTupleCounter;
+    }
+
+    @Override
+    public ICounter getLevel() {
+        return level;
+    }
+
+    @Override
+    public ICounter getBytesRead() {
+        return bytesRead;
+    }
+
+    @Override
+    public ICounter getBytesWritten() {
+        return bytesWritten;
+    }
+
+    @Override
+    public OperatorDescriptorId getId() {
+        return id;
     }
 
     @Override
     public void writeFields(DataOutput output) throws IOException {
         output.writeUTF(operatorName);
+        id.writeFields(output);
         output.writeLong(tupleCounter.get());
         output.writeLong(timeCounter.get());
-        output.writeLong(diskIoCounter.get());
+        output.writeLong(pageReads.get());
+        output.writeLong(coldReadCounter.get());
+        output.writeLong(avgTupleSz.get());
+        output.writeLong(minTupleSz.get());
+        output.writeLong(maxTupleSz.get());
+        output.writeLong(inputTupleCounter.get());
+        output.writeLong(level.get());
+        output.writeLong(bytesRead.get());
+        output.writeLong(bytesWritten.get());
     }
 
     @Override
     public void readFields(DataInput input) throws IOException {
+        id = OperatorDescriptorId.create(input);
         tupleCounter.set(input.readLong());
         timeCounter.set(input.readLong());
-        diskIoCounter.set(input.readLong());
+        pageReads.set(input.readLong());
+        coldReadCounter.set(input.readLong());
+        avgTupleSz.set(input.readLong());
+        minTupleSz.set(input.readLong());
+        maxTupleSz.set(input.readLong());
+        inputTupleCounter.set(input.readLong());
+        level.set(input.readLong());
+        bytesRead.set(input.readLong());
+        bytesWritten.set(input.readLong());
     }
 
     @Override
     public String toString() {
         return "{ " + "\"operatorName\": \"" + operatorName + "\", " + "\"" + tupleCounter.getName() + "\": "
-                + tupleCounter.get() + ", \"" + timeCounter.getName() + "\": " + timeCounter.get() + " }";
+                + tupleCounter.get() + ", \"" + timeCounter.getName() + "\": " + timeCounter.get() + ", \""
+                + coldReadCounter.getName() + "\": " + coldReadCounter.get() + avgTupleSz.getName() + "\": "
+                + avgTupleSz.get() + ", \"" + minTupleSz.getName() + "\": " + minTupleSz.get() + ", \""
+                + minTupleSz.getName() + "\": " + timeCounter.get() + ", \"" + inputTupleCounter.getName() + "\": "
+                + bytesRead.get() + ", \"" + bytesRead.getName() + "\": " + bytesWritten.get() + ", \""
+                + bytesWritten.getName() + "\": " + inputTupleCounter.get() + ", \"" + level.getName() + "\": "
+                + level.get() + " }";
     }
 }

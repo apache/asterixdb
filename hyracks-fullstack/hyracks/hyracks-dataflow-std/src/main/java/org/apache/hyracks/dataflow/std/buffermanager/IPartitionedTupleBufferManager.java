@@ -108,9 +108,10 @@ public interface IPartitionedTupleBufferManager {
      *
      * @param pid
      * @param writer
+     * @return number of bytes spilled
      * @throws HyracksDataException
      */
-    void flushPartition(int pid, IFrameWriter writer) throws HyracksDataException;
+    int flushPartition(int pid, IFrameWriter writer) throws HyracksDataException;
 
     /**
      * Clear the memory occupation of the particular partition.

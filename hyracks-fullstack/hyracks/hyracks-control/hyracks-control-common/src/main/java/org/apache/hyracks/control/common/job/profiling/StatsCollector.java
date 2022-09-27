@@ -30,10 +30,11 @@ import java.util.Map;
 import org.apache.hyracks.api.dataflow.IPassableTimer;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
+import org.apache.hyracks.api.job.profiling.NoOpOperatorStats;
 import org.apache.hyracks.api.job.profiling.OperatorStats;
 
 public class StatsCollector implements IStatsCollector {
-    private static final long serialVersionUID = 6858817639895434578L;
+    private static final long serialVersionUID = 6858817639895434572L;
 
     private final Map<String, IOperatorStats> operatorStatsMap = new LinkedHashMap<>();
     private transient Deque<IPassableTimer> clockHolder = new ArrayDeque<>();
@@ -47,13 +48,8 @@ public class StatsCollector implements IStatsCollector {
     }
 
     @Override
-    public IOperatorStats getOrAddOperatorStats(String operatorName) {
-        return operatorStatsMap.computeIfAbsent(operatorName, OperatorStats::new);
-    }
-
-    @Override
     public IOperatorStats getOperatorStats(String operatorName) {
-        return operatorStatsMap.get(operatorName);
+        return operatorStatsMap.getOrDefault(operatorName, NoOpOperatorStats.INSTANCE);
     }
 
     @Override
@@ -71,9 +67,9 @@ public class StatsCollector implements IStatsCollector {
     public IOperatorStats getAggregatedStats() {
         IOperatorStats aggregatedStats = new OperatorStats("aggregated");
         for (IOperatorStats stats : operatorStatsMap.values()) {
-            aggregatedStats.getTupleCounter().update(stats.getTupleCounter().get());
+            aggregatedStats.getInputTupleCounter().update(stats.getInputTupleCounter().get());
             aggregatedStats.getTimeCounter().update(stats.getTimeCounter().get());
-            aggregatedStats.getDiskIoCounter().update(stats.getDiskIoCounter().get());
+            aggregatedStats.getPageReads().update(stats.getPageReads().get());
         }
         return aggregatedStats;
     }

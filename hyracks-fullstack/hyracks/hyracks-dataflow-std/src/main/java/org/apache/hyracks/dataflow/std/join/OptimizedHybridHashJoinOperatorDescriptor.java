@@ -45,6 +45,8 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
+import org.apache.hyracks.api.job.profiling.NoOpOperatorStats;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -288,6 +290,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         new FieldHashPartitionComputerFamily(buildKeys, buildHashFunctionFactories)
                                 .createPartitioner(INIT_SEED);
                 boolean failed = false;
+                IOperatorStats stats = new NoOpOperatorStats();
 
                 @Override
                 public void open() throws HyracksDataException {
@@ -300,6 +303,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     state.hybridHJ = new OptimizedHybridHashJoin(ctx.getJobletContext(), state.memForJoin,
                             state.numOfPartitions, PROBE_REL, BUILD_REL, probeRd, buildRd, probeHpc, buildHpc,
                             probePredEval, buildPredEval, isLeftOuter, nonMatchWriterFactories);
+                    state.hybridHJ.setOperatorStats(stats);
 
                     state.hybridHJ.initBuild();
                     if (LOGGER.isTraceEnabled()) {
@@ -339,6 +343,11 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 @Override
                 public String getDisplayName() {
                     return "Hybrid Hash Join: Build";
+                }
+
+                @Override
+                public void setOperatorStats(IOperatorStats stats) {
+                    this.stats = stats;
                 }
 
             };
@@ -394,6 +403,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 private FrameTupleAppender nullResultAppender = null;
                 private FrameTupleAccessor probeTupleAccessor;
                 private boolean failed = false;
+                IOperatorStats stats = null;
 
                 @Override
                 public void open() throws HyracksDataException {
@@ -402,6 +412,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                     writer.open();
                     state.hybridHJ.initProbe(probComp);
+                    state.hybridHJ.setOperatorStats(stats);
 
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug("OptimizedHybridHashJoin is starting the probe phase.");
@@ -485,6 +496,11 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     }
                 }
 
+                @Override
+                public void setOperatorStats(IOperatorStats stats) {
+                    this.stats = stats;
+                }
+
                 private void logProbeComplete() {
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug("OptimizedHybridHashJoin closed its probe phase");
@@ -505,6 +521,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     long buildPartSize = (long) Math.ceil((double) buildSideReader.getFileSize() / (double) frameSize);
                     long probePartSize = (long) Math.ceil((double) probeSideReader.getFileSize() / (double) frameSize);
                     int beforeMax = Math.max(buildSizeInTuple, probeSizeInTuple);
+                    if (stats.getLevel().get() < level) {
+                        stats.getLevel().set(level);
+                    }
 
                     if (LOGGER.isDebugEnabled()) {
                         LOGGER.debug("\n>>>Joining Partition Pairs (thread_id " + Thread.currentThread().getId()
@@ -758,6 +777,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         bReader.open();
                         rPartbuff.reset();
                         while (bReader.nextFrame(rPartbuff)) {
+                            stats.getBytesRead().update(rPartbuff.getBuffer().limit());
                             // We need to allocate a copyBuffer, because this buffer gets added to the buffers list
                             // in the InMemoryHashJoin.
                             ByteBuffer copyBuffer = bufferManager.acquireFrame(rPartbuff.getFrameSize());
@@ -786,6 +806,9 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         rPartbuff.reset();
                         try {
                             while (pReader.nextFrame(rPartbuff)) {
+                                if (stats != null) {
+                                    stats.getBytesRead().update(rPartbuff.getBuffer().limit());
+                                }
                                 joiner.join(rPartbuff.getBuffer(), writer);
                                 rPartbuff.reset();
                             }

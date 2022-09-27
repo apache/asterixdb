@@ -27,6 +27,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
+import org.apache.hyracks.api.job.profiling.NoOpOperatorStats;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.api.ITupleFilter;
@@ -66,29 +67,29 @@ public class ExternalScanOperatorDescriptor extends AbstractSingleActivityOperat
 
         return new AbstractUnaryOutputSourceOperatorNodePushable() {
 
-            private IOperatorStats stats;
+            private IOperatorStats stats = NoOpOperatorStats.INSTANCE;
 
             @Override
             public void initialize() throws HyracksDataException {
                 IDataSourceAdapter adapter;
-                if (ctx.getStatsCollector() != null) {
-                    stats = ctx.getStatsCollector().getOrAddOperatorStats(getDisplayName());
-                }
                 try {
                     writer.open();
                     ITupleFilter tupleFilter =
                             tupleFilterFactory != null ? tupleFilterFactory.createTupleFilter(ctx) : null;
                     adapter = adapterFactory.createAdapter(ctx, partition);
                     adapter.start(partition, writer, tupleFilter, outputLimit);
-                    if (stats != null) {
-                        stats.getTupleCounter().update(adapter.getProcessedTuples());
-                    }
+                    stats.getInputTupleCounter().update(adapter.getProcessedTuples());
                 } catch (Exception e) {
                     writer.fail();
                     throw HyracksDataException.create(e);
                 } finally {
                     writer.close();
                 }
+            }
+
+            @Override
+            public void setOperatorStats(IOperatorStats stats) {
+                this.stats = stats;
             }
         };
 
