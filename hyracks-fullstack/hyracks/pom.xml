@@ -17,90 +17,89 @@
  ! under the License.
  !-->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>hyracks</artifactId>
-    <packaging>pom</packaging>
-    <name>hyracks</name>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>hyracks</artifactId>
+  <packaging>pom</packaging>
+  <name>hyracks</name>
 
-    <parent>
-        <groupId>org.apache.hyracks</groupId>
-        <artifactId>apache-hyracks</artifactId>
-        <version>0.3.8-SNAPSHOT</version>
-    </parent>
+  <parent>
+    <groupId>org.apache.hyracks</groupId>
+    <artifactId>apache-hyracks</artifactId>
+    <version>0.3.8-SNAPSHOT</version>
+  </parent>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-plugin-plugin</artifactId>
+          <version>3.6.0</version>
+        </plugin>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-plugin-plugin</artifactId>
-                    <version>3.6.0</version>
-                </plugin>
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-                <plugin>
-                    <groupId>org.eclipse.m2e</groupId>
-                    <artifactId>lifecycle-mapping</artifactId>
-                    <version>1.0.0</version>
-                    <configuration>
-                        <lifecycleMappingMetadata>
-                            <pluginExecutions>
-                                <pluginExecution>
-                                    <pluginExecutionFilter>
-                                        <groupId>org.apache.maven.plugins</groupId>
-                                        <artifactId>maven-plugin-plugin</artifactId>
-                                        <versionRange>[0.0,)</versionRange>
-                                        <goals>
-                                            <goal>descriptor</goal>
-                                        </goals>
-                                    </pluginExecutionFilter>
-                                    <action>
-                                        <ignore/>
-                                    </action>
-                                </pluginExecution>
-                            </pluginExecutions>
-                        </lifecycleMappingMetadata>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
+                    <versionRange>[0.0,)</versionRange>
+                    <goals>
+                      <goal>descriptor</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore />
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 
-    <properties>
-        <root.dir>${basedir}/..</root.dir>
-    </properties>
+  <properties>
+    <root.dir>${basedir}/..</root.dir>
+  </properties>
 
-    <modules>
-        <module>hyracks-util</module>
-        <module>hyracks-api</module>
-        <module>hyracks-ipc</module>
-        <module>hyracks-comm</module>
-        <module>hyracks-client</module>
-        <module>hyracks-dataflow-common</module>
-        <module>hyracks-dataflow-std</module>
-        <module>hyracks-control</module>
-        <module>hyracks-net</module>
-        <module>hyracks-data</module>
-        <module>hyracks-storage-common</module>
-        <module>hyracks-storage-am-common</module>
-        <module>hyracks-storage-am-bloomfilter</module>
-        <module>hyracks-storage-am-btree</module>
-        <module>hyracks-storage-am-lsm-invertedindex</module>
-        <module>hyracks-storage-am-lsm-common</module>
-        <module>hyracks-storage-am-lsm-btree</module>
-        <module>hyracks-storage-am-lsm-btree-column</module>
-        <module>hyracks-storage-am-lsm-rtree</module>
-        <module>hyracks-storage-am-rtree</module>
-        <module>hyracks-test-support</module>
-        <module>hyracks-tests</module>
-        <module>hyracks-server</module>
-        <module>hyracks-examples</module>
-        <module>hyracks-documentation</module>
-        <!--module>hyracks-hadoop-compat</module-->
-        <module>hyracks-maven-plugins</module>
-        <module>hyracks-hdfs</module>
-        <module>hyracks-dist</module>
-        <module>hyracks-http</module>
-    </modules>
+  <modules>
+    <module>hyracks-util</module>
+    <module>hyracks-api</module>
+    <module>hyracks-ipc</module>
+    <module>hyracks-comm</module>
+    <module>hyracks-client</module>
+    <module>hyracks-dataflow-common</module>
+    <module>hyracks-dataflow-std</module>
+    <module>hyracks-control</module>
+    <module>hyracks-net</module>
+    <module>hyracks-data</module>
+    <module>hyracks-storage-common</module>
+    <module>hyracks-storage-am-common</module>
+    <module>hyracks-storage-am-bloomfilter</module>
+    <module>hyracks-storage-am-btree</module>
+    <module>hyracks-storage-am-lsm-invertedindex</module>
+    <module>hyracks-storage-am-lsm-common</module>
+    <module>hyracks-storage-am-lsm-btree</module>
+    <module>hyracks-storage-am-lsm-btree-column</module>
+    <module>hyracks-storage-am-lsm-rtree</module>
+    <module>hyracks-storage-am-rtree</module>
+    <module>hyracks-test-support</module>
+    <module>hyracks-tests</module>
+    <module>hyracks-server</module>
+    <module>hyracks-examples</module>
+    <module>hyracks-documentation</module>
+    <!--module>hyracks-hadoop-compat</module-->
+    <module>hyracks-maven-plugins</module>
+    <module>hyracks-hdfs</module>
+    <module>hyracks-dist</module>
+    <module>hyracks-http</module>
+  </modules>
 </project>
