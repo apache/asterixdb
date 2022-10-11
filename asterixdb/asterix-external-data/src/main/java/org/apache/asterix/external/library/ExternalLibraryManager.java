@@ -49,6 +49,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -77,7 +78,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContexts;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -92,6 +92,7 @@ import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.ipc.impl.IPCSystem;
+import org.apache.hyracks.ipc.security.NetworkSecurityManager;
 import org.apache.hyracks.ipc.sockets.PlainSocketChannelFactory;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
@@ -102,7 +103,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-public final class ExternalLibraryManager implements ILibraryManager, ILifeCycleComponent {
+public class ExternalLibraryManager implements ILibraryManager, ILifeCycleComponent {
 
     public static final String LIBRARY_MANAGER_BASE_DIR_NAME = "library";
 
@@ -140,6 +141,7 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
     private final ExternalFunctionResultRouter router;
     private final IIOManager ioManager;
     private boolean sslEnabled;
+    private Function<ILibraryManager, CloseableHttpClient> uploadClientSupp;
 
     public ExternalLibraryManager(NodeControllerService ncs, IPersistedResourceRegistry reg, FileReference appDir,
             IIOManager ioManager) {
@@ -155,6 +157,7 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
         router = new ExternalFunctionResultRouter();
         this.sslEnabled = ncs.getConfiguration().isSslEnabled();
         this.ioManager = ioManager;
+        uploadClientSupp = ExternalLibraryManager::defaultHttpClient;
     }
 
     public void initialize(boolean resetStorageData) throws HyracksDataException {
@@ -486,6 +489,11 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
         return pythonIPC;
     }
 
+    @Override
+    public NodeControllerService getNcs() {
+        return ncs;
+    }
+
     private static final class DeleteDirectoryWork extends AbstractWork {
 
         private final Path path;
@@ -630,29 +638,36 @@ public final class ExternalLibraryManager implements ILibraryManager, ILifeCycle
         }
     }
 
-    //TODO: this should probably be static so it could be reused somewhere else, or made such that the trust store is not
-    // reloaded from disk on every client intialization?
-    private CloseableHttpClient newClient() {
+    public CloseableHttpClient newClient() {
         if (sslEnabled) {
-            try {
-                final INetworkSecurityManager networkSecurityManager = ncs.getNetworkSecurityManager();
-                final INetworkSecurityConfig configuration = networkSecurityManager.getConfiguration();
-                KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                try (FileInputStream trustStoreFile = new FileInputStream(configuration.getTrustStoreFile())) {
-                    String ksPassword = configuration.getKeyStorePassword();
-                    trustStore.load(trustStoreFile,
-                            ksPassword == null || ksPassword.isEmpty() ? null : ksPassword.toCharArray());
-                }
-                SSLContext sslcontext = SSLContexts.custom().loadTrustMaterial(trustStore, null).build();
-                SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext,
-                        new String[] { "TLSv1.2" }, null, SSLConnectionSocketFactory.getDefaultHostnameVerifier());
-                return HttpClients.custom().setSSLSocketFactory(sslsf).build();
-
-            } catch (Exception e) {
-                throw new IllegalStateException(e);
-            }
+            return uploadClientSupp.apply(this);
         } else {
             return HttpClients.createDefault();
+        }
+    }
+
+    @Override
+    public void setUploadClient(Function<ILibraryManager, CloseableHttpClient> f) {
+        uploadClientSupp = f;
+    }
+
+    private static CloseableHttpClient defaultHttpClient(ILibraryManager extLib) {
+        try {
+            final INetworkSecurityManager networkSecurityManager = extLib.getNcs().getNetworkSecurityManager();
+            final INetworkSecurityConfig configuration = networkSecurityManager.getConfiguration();
+            KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            try (FileInputStream trustStoreFile = new FileInputStream(configuration.getTrustStoreFile())) {
+                String ksPassword = configuration.getKeyStorePassword();
+                trustStore.load(trustStoreFile,
+                        ksPassword == null || ksPassword.isEmpty() ? null : ksPassword.toCharArray());
+            }
+            SSLContext sslcontext = NetworkSecurityManager.newSSLContext(configuration);
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, new String[] { "TLSv1.2" },
+                    null, SSLConnectionSocketFactory.getDefaultHostnameVerifier());
+            return HttpClients.custom().setSSLSocketFactory(sslsf).build();
+
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
         }
     }
 

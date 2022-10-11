@@ -24,13 +24,16 @@ import java.io.InputStream;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.util.List;
+import java.util.function.Function;
 
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.ipc.ExternalFunctionResultRouter;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.ipc.impl.IPCSystem;
 
 public interface ILibraryManager {
@@ -59,9 +62,13 @@ public interface ILibraryManager {
 
     IPCSystem getIPCI();
 
+    NodeControllerService getNcs();
+
     MessageDigest download(FileReference targetFile, String authToken, URI libLocation) throws HyracksException;
 
     void unzip(FileReference sourceFile, FileReference outputDir) throws IOException;
 
     void writeAndForce(FileReference outputFile, InputStream dataStream, byte[] copyBuf) throws IOException;
+
+    void setUploadClient(Function<ILibraryManager, CloseableHttpClient> f);
 }
