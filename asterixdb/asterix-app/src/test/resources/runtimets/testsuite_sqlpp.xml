@@ -6541,7 +6541,7 @@
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="index-on-closed-type">
           <output-dir compare="Text">index-on-closed-type</output-dir>
-          <expected-error>Typed index on "[value]" field could be created only for open datatype</expected-error>
+          <expected-error>Typed index on 'value' field could be created only for open datatype</expected-error>
         </compilation-unit>
       </test-case>
     </test-group>

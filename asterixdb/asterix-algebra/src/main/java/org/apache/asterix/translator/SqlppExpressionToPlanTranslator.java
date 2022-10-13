@@ -132,6 +132,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperat
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 /**
  * Each visit returns a pair of an operator and a variable. The variable
@@ -888,7 +889,8 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     private FieldBinding generateFieldBinding(String fieldName, Expression fieldValueExpr, Set<String> outFieldNames,
             SourceLocation sourceLoc) throws CompilationException {
         if (!outFieldNames.add(fieldName)) {
-            throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, sourceLoc, fieldName);
+            throw new CompilationException(ErrorCode.DUPLICATE_FIELD_NAME, sourceLoc,
+                    LogRedactionUtil.userData(fieldName));
         }
         return new FieldBinding(new LiteralExpr(new StringLiteral(fieldName)), fieldValueExpr);
     }

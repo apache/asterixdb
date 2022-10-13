@@ -31,7 +31,6 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.common.exceptions.WarningCollector;
-import org.apache.asterix.common.exceptions.WarningUtil;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
@@ -91,9 +90,11 @@ import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -326,8 +327,8 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                     if (isDuplicate) {
                         IWarningCollector warningCollector = optContext.getWarningCollector();
                         if (warningCollector.shouldWarn()) {
-                            warningCollector.warn(WarningUtil.forAsterix(fieldNameExpr.second.getSourceLocation(),
-                                    ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, fieldName));
+                            warningCollector.warn(Warning.of(fieldNameExpr.second.getSourceLocation(),
+                                    ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, LogRedactionUtil.userData(fieldName)));
                         }
                         iterator.remove();
                         iterator.next();

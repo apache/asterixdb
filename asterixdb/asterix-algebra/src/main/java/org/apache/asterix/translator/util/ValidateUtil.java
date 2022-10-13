@@ -33,6 +33,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 /**
  * A util that can verify if a filter field, a list of partitioning expressions,
@@ -62,7 +63,7 @@ public class ValidateUtil {
         IAType fieldType = recordType.getSubFieldType(filterField);
         if (fieldType == null) {
             throw new CompilationException(ErrorCode.COMPILATION_FIELD_NOT_FOUND, sourceLoc,
-                    RecordUtil.toFullyQualifiedName(filterField));
+                    LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(filterField)));
         }
         switch (fieldType.getTypeTag()) {
             case TINYINT:
@@ -82,7 +83,7 @@ public class ValidateUtil {
                 break;
             case UNION:
                 throw new CompilationException(ErrorCode.COMPILATION_FILTER_CANNOT_BE_NULLABLE,
-                        RecordUtil.toFullyQualifiedName(filterField));
+                        LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(filterField)));
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_FILTER_TYPE,
                         fieldType.getTypeTag().name());
@@ -124,7 +125,8 @@ public class ValidateUtil {
             IAType fieldType = recType.getSubFieldType(fieldName);
             if (fieldType == null) {
                 String unTypeField = fieldName.get(0) == null ? "" : fieldName.get(0);
-                throw new CompilationException(ErrorCode.COMPILATION_FIELD_NOT_FOUND, sourceLoc, unTypeField);
+                throw new CompilationException(ErrorCode.COMPILATION_FIELD_NOT_FOUND, sourceLoc,
+                        LogRedactionUtil.userData(unTypeField));
             }
             partitioningExprTypes.add(fieldType);
             ATypeTag pkTypeTag = fieldType.getTypeTag();
@@ -140,14 +142,14 @@ public class ValidateUtil {
                 IAType fieldType = partitioningExprTypes.get(i);
                 if (fieldType == null) {
                     throw new CompilationException(ErrorCode.COMPILATION_FIELD_NOT_FOUND, sourceLoc,
-                            RecordUtil.toFullyQualifiedName(partitioningExpr));
+                            LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(partitioningExpr)));
                 }
                 boolean nullable = KeyFieldTypeUtil.chooseSource(keySourceIndicators, i, recType, metaRecType)
                         .isSubFieldNullable(partitioningExpr);
                 if (nullable) {
                     // key field is nullable
                     throw new CompilationException(ErrorCode.COMPILATION_PRIMARY_KEY_CANNOT_BE_NULLABLE, sourceLoc,
-                            RecordUtil.toFullyQualifiedName(partitioningExpr));
+                            LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(partitioningExpr)));
                 }
                 switch (fieldType.getTypeTag()) {
                     case TINYINT:
@@ -167,7 +169,7 @@ public class ValidateUtil {
                         break;
                     case UNION:
                         throw new CompilationException(ErrorCode.COMPILATION_PRIMARY_KEY_CANNOT_BE_NULLABLE, sourceLoc,
-                                RecordUtil.toFullyQualifiedName(partitioningExpr));
+                                LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(partitioningExpr)));
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_PRIMARY_KEY_TYPE, sourceLoc,
                                 fieldType.getTypeTag());
@@ -181,18 +183,18 @@ public class ValidateUtil {
      * Validates the key fields that will be used as keys of an index.
      *
      * @param recType
-     *            the record type
+     *         the record type
      * @param keyFieldNames
-     *            a map of key fields that will be validated
+     *         a map of key fields that will be validated
      * @param keyFieldTypes
-     *            a map of key types (if provided) that will be validated
+     *         a map of key types (if provided) that will be validated
      * @param indexType
-     *            the type of the index that its key fields is being validated
+     *         the type of the index that its key fields is being validated
      * @throws AlgebricksException
      */
     public static void validateKeyFields(ARecordType recType, ARecordType metaRecType, List<List<String>> keyFieldNames,
-            List<Integer> keySourceIndicators, List<IAType> keyFieldTypes, IndexType indexType)
-            throws AlgebricksException {
+            List<Integer> keySourceIndicators, List<IAType> keyFieldTypes, IndexType indexType,
+            SourceLocation sourceLoc) throws AlgebricksException {
         List<IAType> fieldTypes =
                 KeyFieldTypeUtil.getKeyTypes(recType, metaRecType, keyFieldNames, keySourceIndicators);
         int pos = 0;
@@ -202,16 +204,21 @@ public class ValidateUtil {
             if (fieldType == null) {
                 fieldType = keyFieldTypes.get(pos);
                 if (keyFieldTypes.get(pos) == BuiltinType.AMISSING) {
-                    throw new AsterixException("A field with this name  \"" + fieldName + "\" could not be found.");
+                    throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                            "A field with this name  \""
+                                    + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(fieldName))
+                                    + "\" could not be found.");
                 }
             } else if (openFieldCompositeIdx) {
-                throw new AsterixException("A closed field \"" + fieldName
-                        + "\" could be only in a prefix part of the composite index, containing opened field.");
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                        "A closed field \"" + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(fieldName))
+                                + "\" could be only in a prefix part of the composite index, containing opened field.");
             }
             if (keyFieldTypes.get(pos) != BuiltinType.AMISSING
                     && fieldType.getTypeTag() != keyFieldTypes.get(pos).getTypeTag()) {
-                throw new AsterixException(
-                        "A field \"" + fieldName + "\" is already defined with the type \"" + fieldType + "\"");
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                        "A field \"" + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(fieldName)) + "\" is "
+                                + "already defined with the type \"" + fieldType + "\"");
             }
             switch (indexType) {
                 case BTREE:
@@ -233,8 +240,11 @@ public class ValidateUtil {
                         case DAYTIMEDURATION:
                             break;
                         default:
-                            throw new AsterixException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the BTree index.");
+                            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                                    "The field '"
+                                            + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(fieldName))
+                                            + "' which is of type " + fieldType.getTypeTag()
+                                            + " cannot be indexed using the BTree index.");
                     }
                     break;
                 case RTREE:
@@ -247,8 +257,11 @@ public class ValidateUtil {
                         case UNION:
                             break;
                         default:
-                            throw new AsterixException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the RTree index.");
+                            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                                    "The field '"
+                                            + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(fieldName))
+                                            + "' which is of type " + fieldType.getTypeTag()
+                                            + " cannot be indexed using the RTree index.");
                     }
                     break;
                 case LENGTH_PARTITIONED_NGRAM_INVIX:
@@ -257,8 +270,10 @@ public class ValidateUtil {
                         case UNION:
                             break;
                         default:
-                            throw new AsterixException(
-                                    "The field \"" + fieldName + "\" which is of type " + fieldType.getTypeTag()
+                            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                                    "The field '"
+                                            + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(fieldName))
+                                            + "' which is of type " + fieldType.getTypeTag()
                                             + " cannot be indexed using the Length Partitioned N-Gram index.");
                     }
                     break;
@@ -270,8 +285,10 @@ public class ValidateUtil {
                         case UNION:
                             break;
                         default:
-                            throw new AsterixException(
-                                    "The field \"" + fieldName + "\" which is of type " + fieldType.getTypeTag()
+                            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                                    "The field '"
+                                            + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(fieldName))
+                                            + "' which is of type " + fieldType.getTypeTag()
                                             + " cannot be indexed using the Length Partitioned Keyword index.");
                     }
                     break;
@@ -281,8 +298,11 @@ public class ValidateUtil {
                         case UNION:
                             break;
                         default:
-                            throw new AsterixException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the N-Gram index.");
+                            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                                    "The field '"
+                                            + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(fieldName))
+                                            + "' which is of type " + fieldType.getTypeTag()
+                                            + " cannot be indexed using the N-Gram index.");
                     }
                     break;
                 case SINGLE_PARTITION_WORD_INVIX:
@@ -293,8 +313,11 @@ public class ValidateUtil {
                         case UNION:
                             break;
                         default:
-                            throw new AsterixException("The field \"" + fieldName + "\" which is of type "
-                                    + fieldType.getTypeTag() + " cannot be indexed using the Keyword index.");
+                            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                                    "The field '"
+                                            + LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(fieldName))
+                                            + "' which is of type " + fieldType.getTypeTag()
+                                            + " cannot be indexed using the Keyword index.");
                     }
                     break;
                 default:
