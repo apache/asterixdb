@@ -100,7 +100,6 @@ public class JoinEnum {
     protected ICostMethods costMethods;
 
     public JoinEnum() {
-        singleDatasetPreds = new ArrayList<>();
     }
 
     public void initEnum(AbstractLogicalOperator op, boolean cboMode, boolean cboTestMode, int numberOfFromTerms,
@@ -108,6 +107,7 @@ public class JoinEnum {
             Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap,
             Map<DataSourceScanOperator, EmptyTupleSourceOperator> dataSourceEmptyTupleHashMap,
             List<ILogicalOperator> internalEdges, List<ILogicalOperator> joinOps, IOptimizationContext context) {
+        this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
         this.internalEdges = new ArrayList<>();
         this.allPlans = new ArrayList<>();
