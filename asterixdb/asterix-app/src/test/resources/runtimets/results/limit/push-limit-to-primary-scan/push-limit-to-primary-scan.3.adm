@@ -7,12 +7,12 @@ distribute result [$$paper]
       project ([$$paper])
       -- STREAM_PROJECT  |PARTITIONED|
         exchange
-        -- SORT_MERGE_EXCHANGE [$$12(ASC) ]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$13(ASC) ]  |PARTITIONED|
           limit 10
           -- STREAM_LIMIT  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              data-scan []<-[$$12, $$paper] <- test.DBLP1 limit 10
+              data-scan []<-[$$13, $$paper] <- test.DBLP1 limit 10
               -- DATASOURCE_SCAN  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

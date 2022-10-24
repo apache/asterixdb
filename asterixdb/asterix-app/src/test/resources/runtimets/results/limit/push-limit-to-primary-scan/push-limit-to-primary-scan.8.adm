@@ -1,23 +1,23 @@
-distribute result [$$75]
+distribute result [$$80]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 5 offset 5
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$75])
+      project ([$$80])
       -- STREAM_PROJECT  |PARTITIONED|
-        assign [$$75] <- [get-item($$73, 0)]
+        assign [$$80] <- [get-item($$78, 0)]
         -- ASSIGN  |PARTITIONED|
-          project ([$$73])
+          project ([$$78])
           -- STREAM_PROJECT  |PARTITIONED|
             exchange
-            -- SORT_MERGE_EXCHANGE [$$77(ASC) ]  |PARTITIONED|
-              project ([$$73, $$77])
+            -- SORT_MERGE_EXCHANGE [$$82(ASC) ]  |PARTITIONED|
+              project ([$$78, $$82])
               -- STREAM_PROJECT  |PARTITIONED|
                 subplan {
-                          aggregate [$$73] <- [listify($$72)]
+                          aggregate [$$78] <- [listify($$77)]
                           -- AGGREGATE  |LOCAL|
-                            assign [$$72] <- [object-remove(object-remove(object-remove($$t0, "title"), "authors"), "misc")]
+                            assign [$$77] <- [object-remove(object-remove(object-remove($$t0, "title"), "authors"), "misc")]
                             -- ASSIGN  |LOCAL|
                               unnest $$t0 <- scan-collection(to-array($$paper))
                               -- UNNEST  |LOCAL|
@@ -29,7 +29,7 @@ distribute result [$$75]
                   -- STREAM_LIMIT  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$77, $$paper] <- test.DBLP1 limit 10
+                      data-scan []<-[$$82, $$paper] <- test.DBLP1 limit 10
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

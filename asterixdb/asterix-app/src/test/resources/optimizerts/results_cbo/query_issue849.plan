@@ -22,8 +22,8 @@
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             -- BTREE_SEARCH (test.s.s)  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [$$52(ASC)]  |PARTITIONED|
-                  -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
+                -- STABLE_SORT [$$55(ASC)]  |PARTITIONED|
+                  -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|
                     -- ASSIGN  |UNPARTITIONED|
                       -- UNNEST  |UNPARTITIONED|
                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

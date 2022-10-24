@@ -1,10 +1,10 @@
-distribute result [$$16]
+distribute result [$$17]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$16])
+    project ([$$17])
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$16] <- [or(true, lt(get-year(current-date()), $$x))]
+      assign [$$17] <- [or(true, lt(get-year(current-date()), $$x))]
       -- ASSIGN  |UNPARTITIONED|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|

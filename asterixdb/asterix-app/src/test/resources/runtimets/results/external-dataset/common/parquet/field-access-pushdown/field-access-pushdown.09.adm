@@ -1,26 +1,26 @@
-distribute result [$$28]
+distribute result [$$30]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$28])
+    project ([$$30])
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$28] <- [{"p1": $$p1, "id": $$30}]
+      assign [$$30] <- [{"p1": $$p1, "id": $$32}]
       -- ASSIGN  |PARTITIONED|
         exchange
-        -- SORT_MERGE_EXCHANGE [$$30(ASC) ]  |PARTITIONED|
-          order (ASC, $$30)
-          -- STABLE_SORT [$$30(ASC)]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$32(ASC) ]  |PARTITIONED|
+          order (ASC, $$32)
+          -- STABLE_SORT [$$32(ASC)]  |PARTITIONED|
             exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              project ([$$p1, $$30])
+              project ([$$p1, $$32])
               -- STREAM_PROJECT  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  join (eq($$31, $$30))
-                  -- HYBRID_HASH_JOIN [$$31][$$30]  |PARTITIONED|
+                  join (eq($$33, $$32))
+                  -- HYBRID_HASH_JOIN [$$33][$$32]  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$31]  |PARTITIONED|
-                      assign [$$31] <- [$$p1.getField("id")]
+                    -- HASH_PARTITION_EXCHANGE [$$33]  |PARTITIONED|
+                      assign [$$33] <- [$$p1.getField("id")]
                       -- ASSIGN  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -31,10 +31,10 @@ distribute result [$$28]
                               empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                     exchange
-                    -- HASH_PARTITION_EXCHANGE [$$30]  |PARTITIONED|
-                      project ([$$30])
+                    -- HASH_PARTITION_EXCHANGE [$$32]  |PARTITIONED|
+                      project ([$$32])
                       -- STREAM_PROJECT  |PARTITIONED|
-                        assign [$$30] <- [$$p2.getField("id")]
+                        assign [$$32] <- [$$p2.getField("id")]
                         -- ASSIGN  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

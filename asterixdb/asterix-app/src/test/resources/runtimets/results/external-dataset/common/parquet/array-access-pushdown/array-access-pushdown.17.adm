@@ -1,33 +1,33 @@
-distribute result [$$46]
+distribute result [$$49]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    aggregate [$$46] <- [agg-sql-sum($$52)]
+    aggregate [$$49] <- [agg-sql-sum($$55)]
     -- AGGREGATE  |UNPARTITIONED|
       exchange
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        aggregate [$$52] <- [agg-sql-count(1)]
+        aggregate [$$55] <- [agg-sql-count(1)]
         -- AGGREGATE  |PARTITIONED|
-          select ($$39)
+          select ($$42)
           -- STREAM_SELECT  |PARTITIONED|
-            project ([$$39])
+            project ([$$42])
             -- STREAM_PROJECT  |PARTITIONED|
               subplan {
-                        aggregate [$$39] <- [empty-stream()]
+                        aggregate [$$42] <- [empty-stream()]
                         -- AGGREGATE  |LOCAL|
-                          select (not(if-missing-or-null(eq($$48, "string"), false)))
+                          select (not(if-missing-or-null(eq($$51, "string"), false)))
                           -- STREAM_SELECT  |LOCAL|
-                            assign [$$48] <- [$$ht.getField("display_url")]
+                            assign [$$51] <- [$$ht.getField("display_url")]
                             -- ASSIGN  |LOCAL|
-                              unnest $$ht <- scan-collection($$47)
+                              unnest $$ht <- scan-collection($$50)
                               -- UNNEST  |LOCAL|
                                 nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                      }
               -- SUBPLAN  |PARTITIONED|
-                project ([$$47])
+                project ([$$50])
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$47] <- [$$p.getField("entities").getField("urls")]
+                  assign [$$50] <- [$$p.getField("entities").getField("urls")]
                   -- ASSIGN  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

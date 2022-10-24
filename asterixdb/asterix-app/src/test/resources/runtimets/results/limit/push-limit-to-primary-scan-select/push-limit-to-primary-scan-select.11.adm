@@ -1,10 +1,10 @@
-distribute result [$$202]
+distribute result [$$210]
 -- DISTRIBUTE_RESULT  |LOCAL|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-    aggregate [$$202] <- [agg-sql-sum($$231)]
+    aggregate [$$210] <- [agg-sql-sum($$239)]
     -- AGGREGATE  |LOCAL|
-      aggregate [$$231] <- [agg-sql-count(1)]
+      aggregate [$$239] <- [agg-sql-count(1)]
       -- AGGREGATE  |LOCAL|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -17,14 +17,14 @@ distribute result [$$202]
                 project ([])
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange
-                  -- SORT_MERGE_EXCHANGE [$$134(ASC) ]  |PARTITIONED|
+                  -- SORT_MERGE_EXCHANGE [$$142(ASC) ]  |PARTITIONED|
                     limit 1000
                     -- STREAM_LIMIT  |PARTITIONED|
-                      project ([$$134])
+                      project ([$$142])
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$134, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), 1), le($$onek1.getField(2), 10))) limit 1000
+                          data-scan []<-[$$142, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), 1), le($$onek1.getField(2), 10))) limit 1000
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -37,14 +37,14 @@ distribute result [$$202]
                 project ([])
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange
-                  -- SORT_MERGE_EXCHANGE [$$135(ASC) ]  |PARTITIONED|
+                  -- SORT_MERGE_EXCHANGE [$$143(ASC) ]  |PARTITIONED|
                     limit 1000
                     -- STREAM_LIMIT  |PARTITIONED|
-                      project ([$$135])
+                      project ([$$143])
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$135, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), -10), le($$onek1.getField(2), -1))) limit 1000
+                          data-scan []<-[$$143, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), -10), le($$onek1.getField(2), -1))) limit 1000
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

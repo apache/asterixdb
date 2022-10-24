@@ -42,6 +42,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeHelper;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -84,6 +85,7 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
             case STRING:
                 String fn = ((AString) fieldName).getStringValue();
                 fieldNameSet.add(fn);
+                pathList.add(List.of(fn));
                 break;
             case ARRAY:
                 AOrderedList pathOrdereList = (AOrderedList) fieldName;
@@ -237,16 +239,18 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         IAType[] fieldTypes = inputRecordType.getFieldTypes();
 
         for (int i = 0; i < fieldNames.length; i++) {
+            IAType originalType = fieldTypes[i];
+            IAType actualType = TypeComputeUtils.getActualType(originalType);
             if (!fieldNameSet.contains(fieldNames[i])) { // The main field is to be kept
                 addField(inputRecordType, fieldNames[i], resultFieldNames, resultFieldTypes);
-            } else if (!pathList.isEmpty() && fieldTypes[i].getTypeTag() == ATypeTag.OBJECT) {
-                ARecordType subRecord = (ARecordType) fieldTypes[i];
+            } else if (!pathList.isEmpty() && actualType.getTypeTag() == ATypeTag.OBJECT) {
+                ARecordType subRecord = (ARecordType) actualType;
                 fieldPathStack.push(fieldNames[i]);
-                subRecord = deepCheckAndCopy(fieldPathStack, subRecord, pathList, inputRecordType.isOpen());
+                subRecord = deepCheckAndCopy(fieldPathStack, subRecord, pathList, subRecord.isOpen());
                 fieldPathStack.pop();
                 if (subRecord != null) {
                     resultFieldNames.add(fieldNames[i]);
-                    resultFieldTypes.add(subRecord);
+                    resultFieldTypes.add(wrapWithOriginalType(subRecord, originalType));
                 }
             }
         }
@@ -257,6 +261,18 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         return new ARecordType(resultTypeName, resultFieldNames.toArray(new String[n]),
                 resultFieldTypes.toArray(new IAType[n]), true); // Make the output type open always
 
+    }
+
+    private static IAType wrapWithOriginalType(IAType typeToModify, IAType originalType) {
+        if (TypeHelper.canBeMissing(originalType) && !TypeHelper.canBeNull(originalType)) {
+            return AUnionType.createMissableType(typeToModify);
+        } else if (!TypeHelper.canBeMissing(originalType) && TypeHelper.canBeNull(originalType)) {
+            return AUnionType.createNullableType(typeToModify);
+        } else if (TypeHelper.canBeUnknown(originalType)) {
+            return AUnionType.createUnknownableType(typeToModify);
+        } else {
+            return typeToModify;
+        }
     }
 
     /**
@@ -314,12 +330,14 @@ public class RecordRemoveFieldsTypeComputer implements IResultTypeComputer {
         for (int i = 0; i < srcFieldNames.length; i++) {
             fieldPath.push(srcFieldNames[i]);
             if (!isRemovePath(fieldPath, pathList)) {
-                if (srcFieldTypes[i].getTypeTag() == ATypeTag.OBJECT) {
-                    ARecordType subRecord = (ARecordType) srcFieldTypes[i];
+                IAType originalType = srcFieldTypes[i];
+                IAType actualType = TypeComputeUtils.getActualType(originalType);
+                if (actualType.getTypeTag() == ATypeTag.OBJECT) {
+                    ARecordType subRecord = (ARecordType) actualType;
                     subRecord = deepCheckAndCopy(fieldPath, subRecord, pathList, isOpen);
                     if (subRecord != null) {
                         destFieldNames.add(srcFieldNames[i]);
-                        destFieldTypes.add(subRecord);
+                        destFieldTypes.add(wrapWithOriginalType(subRecord, originalType));
                     }
                 } else {
                     destFieldNames.add(srcFieldNames[i]);

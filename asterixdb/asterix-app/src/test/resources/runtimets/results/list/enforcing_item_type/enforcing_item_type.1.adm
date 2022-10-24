@@ -1,10 +1,10 @@
-distribute result [$$20]
+distribute result [$$21]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$20])
+    project ([$$21])
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$20] <- [{"id": get-item($$t, 0), "v": get-item($$t, 1)}]
+      assign [$$21] <- [{"id": get-item($$t, 0), "v": get-item($$t, 1)}]
       -- ASSIGN  |UNPARTITIONED|
         unnest $$t <- scan-collection(ordered-list-constructor(ordered-list-constructor(29, cast({ "f1": "a", "f2": 3 }))))
         -- UNNEST  |UNPARTITIONED|

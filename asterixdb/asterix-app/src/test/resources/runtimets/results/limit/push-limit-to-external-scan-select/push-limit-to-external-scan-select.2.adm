@@ -1,4 +1,4 @@
-distribute result [$$16]
+distribute result [$$17]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -8,9 +8,9 @@ distribute result [$$16]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
         limit 5
         -- STREAM_LIMIT  |PARTITIONED|
-          project ([$$16])
+          project ([$$17])
           -- STREAM_PROJECT  |PARTITIONED|
-            assign [$$16] <- [$$t.getField(0)]
+            assign [$$17] <- [$$t.getField(0)]
             -- ASSIGN  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -1,30 +1,30 @@
-distribute result [$$48]
+distribute result [$$51]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$48])
+    project ([$$51])
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$48] <- [{"$1": $$51}]
+      assign [$$51] <- [{"$1": $$54}]
       -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$51] <- [agg-global-sql-sum($$53)]
+        aggregate [$$54] <- [agg-global-sql-sum($$56)]
         -- AGGREGATE  |UNPARTITIONED|
           exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$53] <- [agg-local-sql-sum($$46)]
+            aggregate [$$56] <- [agg-local-sql-sum($$49)]
             -- AGGREGATE  |PARTITIONED|
-              project ([$$46])
+              project ([$$49])
               -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$46] <- [object-length($$p1)]
+                assign [$$49] <- [object-length($$p1)]
                 -- ASSIGN  |PARTITIONED|
                   project ([$$p1])
                   -- STREAM_PROJECT  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      join (eq($$49, $$50))
-                      -- HYBRID_HASH_JOIN [$$50][$$49]  |PARTITIONED|
+                      join (eq($$52, $$53))
+                      -- HYBRID_HASH_JOIN [$$53][$$52]  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
-                          assign [$$50] <- [$$p1.getField("id")]
+                        -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
+                          assign [$$53] <- [$$p1.getField("id")]
                           -- ASSIGN  |PARTITIONED|
                             exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -35,10 +35,10 @@ distribute result [$$48]
                                   empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         exchange
-                        -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
-                          project ([$$49])
+                        -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
+                          project ([$$52])
                           -- STREAM_PROJECT  |PARTITIONED|
-                            assign [$$49] <- [$$p2.getField("id")]
+                            assign [$$52] <- [$$p2.getField("id")]
                             -- ASSIGN  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

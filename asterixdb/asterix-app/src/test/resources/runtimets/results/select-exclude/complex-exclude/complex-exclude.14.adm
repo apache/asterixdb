@@ -1,0 +1,2 @@
+{ "user_id": 1, "best_friend": 2, "bestFriends": [ { "user_id": 2, "best_friend": 1, "address": { "zip_code": "99929", "street": "2341 Apple Street" } } ] }
+{ "user_id": 2, "best_friend": 1, "bestFriends": [ { "user_id": 1, "best_friend": 2, "phones": [ { "kind": "MOBILE", "number": "222-222-2222" } ] } ] }

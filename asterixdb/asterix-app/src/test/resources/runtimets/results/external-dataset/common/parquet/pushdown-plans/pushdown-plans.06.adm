@@ -1,4 +1,4 @@
-distribute result [$$21]
+distribute result [$$22]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -6,15 +6,15 @@ distribute result [$$21]
     -- STREAM_LIMIT  |UNPARTITIONED|
       exchange
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        project ([$$21])
+        project ([$$22])
         -- STREAM_PROJECT  |PARTITIONED|
-          assign [$$21] <- [{"display_url": get-item($$22, 0).getField("display_url")}]
+          assign [$$22] <- [{"display_url": get-item($$23, 0).getField("display_url")}]
           -- ASSIGN  |PARTITIONED|
             limit 10
             -- STREAM_LIMIT  |PARTITIONED|
-              project ([$$22])
+              project ([$$23])
               -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$22] <- [$$p.getField("entities").getField("urls")]
+                assign [$$23] <- [$$p.getField("entities").getField("urls")]
                 -- ASSIGN  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -300,6 +300,8 @@ public final class FunctionTypeInferers {
             IAType type1 = (IAType) context.getType(le);
             if (type0.getTypeTag().equals(ATypeTag.ANY)) {
                 type0 = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+            } else if (type0.getTypeTag().equals(ATypeTag.UNION)) {
+                type0 = ((AUnionType) type0).getActualType();
             }
             if (type1.getTypeTag().equals(ATypeTag.ANY)) {
                 type1 = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;

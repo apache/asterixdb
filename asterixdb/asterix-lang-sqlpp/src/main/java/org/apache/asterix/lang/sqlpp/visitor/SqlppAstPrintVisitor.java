@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -179,6 +180,11 @@ public class SqlppAstPrintVisitor extends QueryPrintVisitor implements ISqlppVis
     public Void visit(SelectClause selectClause, Integer step) throws CompilationException {
         if (selectClause.selectRegular()) {
             selectClause.getSelectRegular().accept(this, step);
+            if (!selectClause.getFieldExclusions().isEmpty()) {
+                out.print(skip(step) + "EXCLUDE ");
+                out.println(selectClause.getFieldExclusions().stream().map(e -> String.join(".", e))
+                        .collect(Collectors.joining(",")));
+            }
         }
         if (selectClause.selectElement()) {
             selectClause.getSelectElement().accept(this, step);

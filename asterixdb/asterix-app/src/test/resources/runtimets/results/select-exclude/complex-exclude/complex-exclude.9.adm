@@ -1,0 +1,4 @@
+{ "U": { "user_id": 1, "best_friend": 2 }, "miscInfo": { "24as": "23412" } }
+{ "U": { "user_id": 2, "best_friend": 1 }, "miscInfo": { "24as": "23412" } }
+{ "U": { "user_id": 3, "best_friend": 1, "favorite_color": "Green" }, "miscInfo": { "24as": "23412" } }
+{ "U": { "user_id": 4, "best_friend": null }, "miscInfo": { "24as": "23412" } }

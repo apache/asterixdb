@@ -194,7 +194,14 @@ public class DeepCopyVisitor extends AbstractSqlppQueryExpressionVisitor<ILangEx
         if (selectClause.selectRegular()) {
             selectRegular = (SelectRegular) selectClause.getSelectRegular().accept(this, arg);
         }
-        SelectClause copy = new SelectClause(selectElement, selectRegular, selectClause.distinct());
+        List<List<String>> fieldExclusions = new ArrayList<>();
+        if (!selectClause.getFieldExclusions().isEmpty()) {
+            for (List<String> fieldExclusion : selectClause.getFieldExclusions()) {
+                List<String> fieldExclusionCopy = new ArrayList<>(fieldExclusion);
+                fieldExclusions.add(fieldExclusionCopy);
+            }
+        }
+        SelectClause copy = new SelectClause(selectElement, selectRegular, fieldExclusions, selectClause.distinct());
         copy.setSourceLocation(selectClause.getSourceLocation());
         return copy;
     }

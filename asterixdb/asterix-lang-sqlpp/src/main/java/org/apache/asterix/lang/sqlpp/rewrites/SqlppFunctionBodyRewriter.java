@@ -97,6 +97,9 @@ public class SqlppFunctionBodyRewriter extends SqlppQueryRewriter {
         // Inlines column aliases.
         inlineColumnAlias();
 
+        // Rewrite SELECT EXCLUDE to use OBJECT_REMOVE_FIELDS.
+        rewriteSelectExcludeSugar();
+
         // Window expression core rewrites.
         rewriteWindowExpressions();
 

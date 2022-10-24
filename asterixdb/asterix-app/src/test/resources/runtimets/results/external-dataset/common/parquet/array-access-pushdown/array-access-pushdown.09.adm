@@ -1,28 +1,28 @@
-distribute result [$$21]
+distribute result [$$22]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$21])
+    project ([$$22])
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$21] <- [{"display_url": $$25}]
+      assign [$$22] <- [{"display_url": $$26}]
       -- ASSIGN  |PARTITIONED|
-        project ([$$25])
+        project ([$$26])
         -- STREAM_PROJECT  |PARTITIONED|
           exchange
-          -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
-            order (ASC, $$24)
-            -- STABLE_SORT [$$24(ASC)]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$25(ASC) ]  |PARTITIONED|
+            order (ASC, $$25)
+            -- STABLE_SORT [$$25(ASC)]  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$25, $$24])
+                project ([$$26, $$25])
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$25] <- [array-star($$23).getField("display_url")]
+                  assign [$$26] <- [array-star($$24).getField("display_url")]
                   -- ASSIGN  |PARTITIONED|
-                    select (not(is-missing($$23)))
+                    select (not(is-missing($$24)))
                     -- STREAM_SELECT  |PARTITIONED|
-                      project ([$$23, $$24])
+                      project ([$$24, $$25])
                       -- STREAM_PROJECT  |PARTITIONED|
-                        assign [$$23, $$24] <- [$$p.getField("entities").getField("urls"), $$p.getField("id")]
+                        assign [$$24, $$25] <- [$$p.getField("entities").getField("urls"), $$p.getField("id")]
                         -- ASSIGN  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

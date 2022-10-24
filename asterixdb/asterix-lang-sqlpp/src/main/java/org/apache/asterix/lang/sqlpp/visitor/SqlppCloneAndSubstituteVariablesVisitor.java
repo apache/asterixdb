@@ -269,7 +269,15 @@ public class SqlppCloneAndSubstituteVariablesVisitor extends CloneAndSubstituteV
         } else {
             Pair<ILangExpression, VariableSubstitutionEnvironment> newSelectRegular =
                     selectClause.getSelectRegular().accept(this, env);
-            SelectClause newSelectClause = new SelectClause(null, (SelectRegular) newSelectRegular.first, distinct);
+            List<List<String>> fieldExclusions = new ArrayList<>();
+            if (!selectClause.getFieldExclusions().isEmpty()) {
+                for (List<String> fieldExclusion : selectClause.getFieldExclusions()) {
+                    List<String> fieldExclusionCopy = new ArrayList<>(fieldExclusion);
+                    fieldExclusions.add(fieldExclusionCopy);
+                }
+            }
+            SelectClause newSelectClause =
+                    new SelectClause(null, (SelectRegular) newSelectRegular.first, fieldExclusions, distinct);
             newSelectClause.setSourceLocation(selectClause.getSourceLocation());
             return new Pair<>(newSelectClause, newSelectRegular.second);
         }

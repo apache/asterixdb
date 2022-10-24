@@ -1,22 +1,22 @@
-distribute result [$$15]
+distribute result [$$16]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$15])
+    project ([$$16])
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$15] <- [object-concat($$18, $$19)]
+      assign [$$16] <- [object-concat($$19, $$20)]
       -- ASSIGN  |PARTITIONED|
-        project ([$$18, $$19])
+        project ([$$19, $$20])
         -- STREAM_PROJECT  |PARTITIONED|
           exchange
-          -- SORT_MERGE_EXCHANGE [$$17(ASC) ]  |PARTITIONED|
-            order (ASC, $$17)
-            -- STABLE_SORT [$$17(ASC)]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$18(ASC) ]  |PARTITIONED|
+            order (ASC, $$18)
+            -- STABLE_SORT [$$18(ASC)]  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$18, $$19, $$17])
+                project ([$$19, $$20, $$18])
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$19, $$18, $$17] <- [$$p.getField("user"), $$p.getField("coordinates"), $$p.getField("id")]
+                  assign [$$20, $$19, $$18] <- [$$p.getField("user"), $$p.getField("coordinates"), $$p.getField("id")]
                   -- ASSIGN  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

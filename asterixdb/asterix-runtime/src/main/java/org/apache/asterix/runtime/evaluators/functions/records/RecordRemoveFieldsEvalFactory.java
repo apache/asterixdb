@@ -33,6 +33,7 @@ import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -170,8 +171,9 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
                 int pos = runtimeRecordTypeInfo.getFieldIndex(fieldNamePointable.getByteArray(),
                         fieldNamePointable.getStartOffset() + 1, fieldNamePointable.getLength() - 1);
                 if (pos >= 0) { // Closed field
-                    if (PointableHelper.sameType(ATypeTag.OBJECT, fieldTypePointable)) {
-                        processRecord((ARecordType) requiredType.getFieldTypes()[pos],
+                    if (PointableHelper.sameType(ATypeTag.OBJECT, fieldTypePointable)
+                            && PointableHelper.sameType(ATypeTag.OBJECT, fieldValuePointable)) {
+                        processRecord((ARecordType) TypeComputeUtils.getActualType(requiredType.getFieldTypes()[pos]),
                                 (ARecordVisitablePointable) fieldValuePointable, inputList, nestedLevel + 1);
                         tabvs.reset();
                         rbStack.get(nestedLevel + 1).write(tabvs.getDataOutput(), true);

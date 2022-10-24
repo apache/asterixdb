@@ -1,8 +1,8 @@
-distribute result [$$14]
+distribute result [$$15]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$14] <- [true]
+    assign [$$15] <- [true]
     -- ASSIGN  |UNPARTITIONED|
       project ([])
       -- STREAM_PROJECT  |UNPARTITIONED|

@@ -9924,6 +9924,25 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="select-exclude">
+    <test-case FilePath="select-exclude">
+      <compilation-unit name="tiny-social">
+        <output-dir compare="Text">tiny-social</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-exclude">
+      <compilation-unit name="complex-exclude">
+        <output-dir compare="Text">complex-exclude</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-exclude">
+      <compilation-unit name="exclude-negative">
+        <output-dir compare="Text">exclude-negative</output-dir>
+        <expected-error>ASX1001: Syntax error</expected-error>
+        <expected-error>ASX1001: Syntax error</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="semistructured">
     <test-case FilePath="semistructured">
       <compilation-unit name="count-nullable">

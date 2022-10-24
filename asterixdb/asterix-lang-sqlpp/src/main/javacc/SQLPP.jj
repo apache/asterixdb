@@ -4776,12 +4776,33 @@ SelectClause SelectClause() throws ParseException:
   Token startToken = null;
   SelectRegular selectRegular = null;
   SelectElement selectElement = null;
+  List<List<String>> fieldExclusions = new ArrayList<List<String>>();
+  List<String> nestedField = new ArrayList<String>();
+  String identifier;
   boolean distinct = false;
 }
 {
   <SELECT> { startToken = token; } (<ALL>|<DISTINCT> { distinct = true; } )?
   (
-    selectRegular = SelectRegular()
+    (
+      selectRegular = SelectRegular()
+      ( LOOKAHEAD({laIdentifier(EXCLUDE)}) <IDENTIFIER>
+        identifier = Identifier() { nestedField.add(identifier); }
+        ( <DOT> identifier = Identifier() { nestedField.add(identifier); } )*
+        {
+          fieldExclusions.add(nestedField);
+          nestedField = new ArrayList<String>();
+        }
+        ( LOOKAHEAD(1) // Force <COMMA> to be recognized for a nested field in our EXCLUDE list.
+          <COMMA> identifier = Identifier() { nestedField.add(identifier); }
+          ( <DOT> identifier = Identifier() { nestedField.add(identifier); } )*
+          {
+            fieldExclusions.add(nestedField);
+            nestedField = new ArrayList<String>();
+          }
+        )*
+      )?
+    )
     |
     selectElement = SelectElement()
   )?
@@ -4795,7 +4816,7 @@ SelectClause SelectClause() throws ParseException:
         selectRegular = new SelectRegular(projections);
         selectRegular.setSourceLocation(sourceLoc);
     }
-    SelectClause selectClause = new SelectClause(selectElement, selectRegular, distinct);
+    SelectClause selectClause = new SelectClause(selectElement, selectRegular, fieldExclusions, distinct);
     selectClause.setSourceLocation(sourceLoc);
     return selectClause;
   }
@@ -4853,7 +4874,12 @@ Projection Projection() throws ParseException :
   (
     <MUL> { kind = Projection.Kind.STAR; startSrcLoc = getSourceLocation(token); }
     | LOOKAHEAD(3) expr = VariableRef() <DOT> <MUL> { kind = Projection.Kind.VAR_STAR; }
-    | expr = Expression() ((<AS>)? name = Identifier())?
+    | expr = Expression()
+      ( // EXCLUDE is a soft-keyword-- we want to avoid mistaking EXCLUDE as an identifier here.
+        LOOKAHEAD({ getToken(1).kind == AS || getToken(1).kind == QUOTED_STRING
+                    || (getToken(1).kind == IDENTIFIER && !laIdentifier(1, EXCLUDE)) })
+        (<AS>)? name = Identifier()
+      )?
       {
         kind = Projection.Kind.NAMED_EXPR;
         if (name == null) {

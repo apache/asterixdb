@@ -1,26 +1,26 @@
-distribute result [$$26]
+distribute result [$$28]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$26])
+    project ([$$28])
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$26] <- [{"display_url": $$urls.getField("display_url")}]
+      assign [$$28] <- [{"display_url": $$urls.getField("display_url")}]
       -- ASSIGN  |PARTITIONED|
         project ([$$urls])
         -- STREAM_PROJECT  |PARTITIONED|
           exchange
-          -- SORT_MERGE_EXCHANGE [$$29(ASC) ]  |PARTITIONED|
-            order (ASC, $$29)
-            -- STABLE_SORT [$$29(ASC)]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$31(ASC) ]  |PARTITIONED|
+            order (ASC, $$31)
+            -- STABLE_SORT [$$31(ASC)]  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$urls, $$29])
+                project ([$$urls, $$31])
                 -- STREAM_PROJECT  |PARTITIONED|
-                  unnest $$urls <- scan-collection($$28)
+                  unnest $$urls <- scan-collection($$30)
                   -- UNNEST  |PARTITIONED|
-                    project ([$$28, $$29])
+                    project ([$$30, $$31])
                     -- STREAM_PROJECT  |PARTITIONED|
-                      assign [$$28, $$29] <- [$$p.getField("entities").getField("urls"), $$p.getField("id")]
+                      assign [$$30, $$31] <- [$$p.getField("entities").getField("urls"), $$p.getField("id")]
                       -- ASSIGN  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

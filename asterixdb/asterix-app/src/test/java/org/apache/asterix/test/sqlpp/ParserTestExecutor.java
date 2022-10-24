@@ -279,6 +279,7 @@ public class ParserTestExecutor extends TestExecutor {
         invokeMethod(rewriter, "rewriteGroupBys");
         invokeMethod(rewriter, "rewriteSetOperations");
         invokeMethod(rewriter, "inlineColumnAlias");
+        invokeMethod(rewriter, "rewriteSelectExcludeSugar");
         invokeMethod(rewriter, "rewriteWindowExpressions");
         invokeMethod(rewriter, "rewriteGroupingSets");
         invokeMethod(rewriter, "variableCheckAndRewrite");

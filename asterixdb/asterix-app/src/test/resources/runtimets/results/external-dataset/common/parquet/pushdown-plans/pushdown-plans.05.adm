@@ -1,44 +1,44 @@
-distribute result [$$64]
+distribute result [$$68]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$64])
+    project ([$$68])
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$64] <- [{"text": $$text, "$1": $$67}]
+      assign [$$68] <- [{"text": $$text, "$1": $$71}]
       -- ASSIGN  |PARTITIONED|
         exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          group by ([$$text := $$74]) decor ([]) {
-                    aggregate [$$67] <- [agg-global-sql-sum($$73)]
+          group by ([$$text := $$78]) decor ([]) {
+                    aggregate [$$71] <- [agg-global-sql-sum($$77)]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
-          -- SORT_GROUP_BY[$$74]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$78]  |PARTITIONED|
             exchange
-            -- HASH_PARTITION_EXCHANGE [$$74]  |PARTITIONED|
-              group by ([$$74 := $$66]) decor ([]) {
-                        aggregate [$$73] <- [agg-local-sql-sum(sql-sum($$70))]
+            -- HASH_PARTITION_EXCHANGE [$$78]  |PARTITIONED|
+              group by ([$$78 := $$70]) decor ([]) {
+                        aggregate [$$77] <- [agg-local-sql-sum(sql-sum($$74))]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                      }
-              -- SORT_GROUP_BY[$$66]  |PARTITIONED|
+              -- SORT_GROUP_BY[$$70]  |PARTITIONED|
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  select (eq(lowercase($$66), "string"))
+                  select (eq(lowercase($$70), "string"))
                   -- STREAM_SELECT  |PARTITIONED|
-                    project ([$$70, $$66])
+                    project ([$$74, $$70])
                     -- STREAM_PROJECT  |PARTITIONED|
-                      assign [$$70, $$66] <- [$$ht.getField("indices"), $$ht.getField("text")]
+                      assign [$$74, $$70] <- [$$ht.getField("indices"), $$ht.getField("text")]
                       -- ASSIGN  |PARTITIONED|
                         project ([$$ht])
                         -- STREAM_PROJECT  |PARTITIONED|
-                          unnest $$ht <- scan-collection($$69)
+                          unnest $$ht <- scan-collection($$73)
                           -- UNNEST  |PARTITIONED|
-                            project ([$$69])
+                            project ([$$73])
                             -- STREAM_PROJECT  |PARTITIONED|
-                              assign [$$69] <- [$$p1.getField("entities").getField("hashtags")]
+                              assign [$$73] <- [$$p1.getField("entities").getField("hashtags")]
                               -- ASSIGN  |PARTITIONED|
                                 select (gt($$p1.getField("id"), 10))
                                 -- STREAM_SELECT  |PARTITIONED|

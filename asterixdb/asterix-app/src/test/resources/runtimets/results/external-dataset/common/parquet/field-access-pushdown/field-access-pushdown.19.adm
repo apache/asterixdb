@@ -1,12 +1,12 @@
-distribute result [$$31]
+distribute result [$$33]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    aggregate [$$31] <- [agg-sql-sum($$32)]
+    aggregate [$$33] <- [agg-sql-sum($$34)]
     -- AGGREGATE  |UNPARTITIONED|
       exchange
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        aggregate [$$32] <- [agg-sql-count(1)]
+        aggregate [$$34] <- [agg-sql-count(1)]
         -- AGGREGATE  |PARTITIONED|
           exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

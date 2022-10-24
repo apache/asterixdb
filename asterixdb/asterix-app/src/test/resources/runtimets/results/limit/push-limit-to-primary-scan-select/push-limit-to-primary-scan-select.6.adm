@@ -1,26 +1,26 @@
-distribute result [$$18]
+distribute result [$$19]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 1
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$18])
+      project ([$$19])
       -- STREAM_PROJECT  |PARTITIONED|
         exchange
-        -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
-          project ([$$20, $$18])
+        -- SORT_MERGE_EXCHANGE [$$21(ASC) ]  |PARTITIONED|
+          project ([$$21, $$19])
           -- STREAM_PROJECT  |PARTITIONED|
-            assign [$$18] <- [{"$1": substring($$19, 0, 21)}]
+            assign [$$19] <- [{"$1": substring($$20, 0, 21)}]
             -- ASSIGN  |PARTITIONED|
               limit 1
               -- STREAM_LIMIT  |PARTITIONED|
-                project ([$$20, $$19])
+                project ([$$21, $$20])
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$19] <- [$$DBLP1.getField(1)]
+                  assign [$$20] <- [$$DBLP1.getField(1)]
                   -- ASSIGN  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$20, $$DBLP1] <- test.DBLP1 condition (gt($$DBLP1.getField(1), "series")) limit 1
+                      data-scan []<-[$$21, $$DBLP1] <- test.DBLP1 condition (gt($$DBLP1.getField(1), "series")) limit 1
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

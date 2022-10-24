@@ -1,0 +1,3 @@
+{ "A": { "b": 2, "EXCLUDE": 3 } }
+{ "EXCLUDE": 3 }
+{ "EXCLUDE": { "a": 1, "b": 2, "EXCLUDE": 3 } }

@@ -1,0 +1,4 @@
+{ "user_id": 1, "best_friend": 2, "phones": [ { "kind": "MOBILE", "number": "222-222-2222" } ] }
+{ "user_id": 2, "best_friend": 1 }
+{ "user_id": 3, "best_friend": 1, "favorite_color": "Green" }
+{ "user_id": 4, "best_friend": null }
