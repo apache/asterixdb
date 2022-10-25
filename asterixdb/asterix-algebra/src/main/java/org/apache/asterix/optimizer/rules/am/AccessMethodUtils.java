@@ -26,11 +26,15 @@ import static org.apache.asterix.om.functions.BuiltinFunctions.FIELD_ACCESS_NEST
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.asterix.algebra.operators.physical.ExternalDataLookupPOperator;
 import org.apache.asterix.common.annotations.AbstractExpressionAnnotationWithIndexNames;
@@ -84,6 +88,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionTypeComputer;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
@@ -92,6 +97,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
@@ -145,6 +151,19 @@ public class AccessMethodUtils {
             BuiltinFunctions.DAY_TIME_DURATION_DEFAULT_NULL_CONSTRUCTOR,
             BuiltinFunctions.YEAR_MONTH_DURATION_DEFAULT_NULL_CONSTRUCTOR,
             BuiltinFunctions.UUID_DEFAULT_NULL_CONSTRUCTOR, BuiltinFunctions.BINARY_BASE64_DEFAULT_NULL_CONSTRUCTOR);
+
+    // TODO (GLENN): We can definitely expand the whitelist here...
+    private final static Map<FunctionIdentifier, Set<Integer>> INDEX_USE_ON_FUNCTION_CALL_WHITELIST;
+    private final static Set<Integer> ALL_INDEX_FUNCTION_ARGUMENTS = Collections.emptySet();
+    static {
+        INDEX_USE_ON_FUNCTION_CALL_WHITELIST = new HashMap<>();
+        INDEX_USE_ON_FUNCTION_CALL_WHITELIST.put(BuiltinFunctions.RECORD_ADD, Set.of(0));
+        INDEX_USE_ON_FUNCTION_CALL_WHITELIST.put(BuiltinFunctions.ADD_FIELDS, Set.of(0));
+        INDEX_USE_ON_FUNCTION_CALL_WHITELIST.put(BuiltinFunctions.RECORD_REMOVE, Set.of(0));
+        INDEX_USE_ON_FUNCTION_CALL_WHITELIST.put(BuiltinFunctions.RECORD_RENAME, Set.of(0));
+        INDEX_USE_ON_FUNCTION_CALL_WHITELIST.put(BuiltinFunctions.REMOVE_FIELDS, Set.of(0));
+        INDEX_USE_ON_FUNCTION_CALL_WHITELIST.put(BuiltinFunctions.RECORD_CONCAT, ALL_INDEX_FUNCTION_ARGUMENTS);
+    }
 
     private final static Pair<List<String>, Integer> NO_FIELD_NAME = new Pair<>(Collections.emptyList(), 0);
 
@@ -2982,8 +3001,26 @@ public class AccessMethodUtils {
             isByName = true;
         }
         if (isFieldAccess) {
-            LogicalVariable sourceVar =
-                    ((VariableReferenceExpression) funcExpr.getArguments().get(0).getValue()).getVariableReference();
+            ILogicalExpression funcExprArg0 = funcExpr.getArguments().get(0).getValue();
+            MutableInt sourceIndicator = new MutableInt(0);
+            LogicalVariable sourceVar;
+            if (funcExprArg0.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                // This might be a field-access on an indexable-function-call (or nested indexable-function-calls).
+                List<LogicalVariable> foundDatasourceVariables = new ArrayList<>();
+                if (canUseIndexOnFunction((AbstractFunctionCallExpression) funcExprArg0, sourceIndicator,
+                        foundDatasourceVariables, optFuncExpr, op.computeInputTypeEnvironment(context), context)) {
+                    // TODO (GLENN): In the case of OBJECT_CONCAT w/ potentially multiple datasource variables, we
+                    //               will not explore each variable. This method definitely needs refactoring in the
+                    //               future to handle such a case.
+                    sourceVar = foundDatasourceVariables.get(0);
+                } else {
+                    return NO_FIELD_NAME;
+                }
+            } else if (funcExprArg0.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                return NO_FIELD_NAME;
+            } else {
+                sourceVar = ((VariableReferenceExpression) funcExprArg0).getVariableReference();
+            }
             if (optFuncExpr != null) {
                 optFuncExpr.setLogicalExpr(funcVarIndex, parentFuncExpr);
                 optFuncExpr.addStepExpr(funcVarIndex, funcExpr);
@@ -3021,12 +3058,27 @@ public class AccessMethodUtils {
             if (assignAndExpressionIndexes != null && assignAndExpressionIndexes[0] > -1) {
                 //We found the nested assign
 
-                //Recursive call on nested assign
-                Pair<List<String>, Integer> parentFieldNames =
-                        getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, assignAndExpressionIndexes[0],
-                                assignAndExpressionIndexes[1], funcVarIndex, parentFuncExpr, context);
+                // Is the next operator composed of functions that are not a field access? If so, do not recurse.
+                ILogicalOperator nextOp = subTree.getAssignsAndUnnests().get(assignAndExpressionIndexes[0]);
+                boolean isIndexOnFunction = false;
+                if (nextOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                    AssignOperator nextAssignOp = (AssignOperator) nextOp;
+                    ILogicalExpression leadingArgumentExpr = nextAssignOp.getExpressions().get(0).getValue();
+                    if (leadingArgumentExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                        IVariableTypeEnvironment typeEnv = nextAssignOp.computeInputTypeEnvironment(context);
+                        isIndexOnFunction = canUseIndexOnFunction((AbstractFunctionCallExpression) leadingArgumentExpr,
+                                sourceIndicator, new HashSet<>(), optFuncExpr, typeEnv, context);
+                    }
+                }
 
-                if (parentFieldNames.first.isEmpty()) {
+                // Otherwise... recurse.
+                Pair<List<String>, Integer> parentFieldNames =
+                        !isIndexOnFunction
+                                ? getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, assignAndExpressionIndexes[0],
+                                        assignAndExpressionIndexes[1], funcVarIndex, parentFuncExpr, context)
+                                : NO_FIELD_NAME;
+
+                if (parentFieldNames.first.isEmpty() && !isIndexOnFunction) {
                     //Nested assign was not a field access.
                     //We will not use index
                     return NO_FIELD_NAME;
@@ -3048,13 +3100,23 @@ public class AccessMethodUtils {
                 if (optFuncExpr != null) {
                     optFuncExpr.setSourceVar(funcVarIndex, ((AssignOperator) op).getVariables().get(assignVarIndex));
                 }
-                //add fieldName to the nested fieldName, return
-                if (nestedAccessFieldName != null) {
-                    parentFieldNames.first.addAll(nestedAccessFieldName);
+
+                if (!isIndexOnFunction) {
+                    //add fieldName to the nested fieldName, return
+                    if (nestedAccessFieldName != null) {
+                        parentFieldNames.first.addAll(nestedAccessFieldName);
+                    } else {
+                        parentFieldNames.first.add(fieldName);
+                    }
+                    return (parentFieldNames);
+
                 } else {
-                    parentFieldNames.first.add(fieldName);
+                    if (nestedAccessFieldName != null) {
+                        return new Pair<>(nestedAccessFieldName, sourceIndicator.getValue());
+                    } else {
+                        return new Pair<>(new ArrayList<>(List.of(fieldName)), sourceIndicator.getValue());
+                    }
                 }
-                return (parentFieldNames);
             }
 
             if (optFuncExpr != null) {
@@ -3190,5 +3252,74 @@ public class AccessMethodUtils {
     public static boolean isFieldAccess(FunctionIdentifier funId) {
         return funId.equals(FIELD_ACCESS_BY_NAME) || funId.equals(FIELD_ACCESS_BY_INDEX)
                 || funId.equals(FIELD_ACCESS_NESTED);
+    }
+
+    /**
+     * If we are accessing some field through a function application (or series of function applications) of the
+     * following:
+     * <p><pre>
+     * | OBJECT_ADD    | OBJECT_REMOVE | OBJECT_ADD_FIELDS    |
+     * | OBJECT_CONCAT | OBJECT_RENAME | OBJECT_REMOVE_FIELDS |
+     * </pre>
+     * ...then we still might be able to use an index. Check the output type of applying our function(s) and verify
+     * that the input is a data source variable.
+     */
+    public static boolean canUseIndexOnFunction(AbstractFunctionCallExpression funcExpr, MutableInt sourceIndicator,
+            Collection<LogicalVariable> foundDatasourceVariables, IOptimizableFuncExpr optFuncExpr,
+            IVariableTypeEnvironment typeEnv, IOptimizationContext context) throws AlgebricksException {
+        FunctionIdentifier functionID = funcExpr.getFunctionIdentifier();
+        if (!INDEX_USE_ON_FUNCTION_CALL_WHITELIST.containsKey(functionID)) {
+            return false;
+        }
+
+        // Our output should be an object (this is more of a sanity check given that we have a whitelist).
+        IExpressionTypeComputer expressionTypeComputer = context.getExpressionTypeComputer();
+        IMetadataProvider<?, ?> metadataProvider = context.getMetadataProvider();
+        IAType originalOutputType = (IAType) expressionTypeComputer.getType(funcExpr, metadataProvider, typeEnv);
+        IAType outputType = TypeComputeUtils.getActualType(originalOutputType);
+        ARecordType outputRecordType = TypeComputeUtils.extractRecordType(outputType);
+        if (outputRecordType == null) {
+            return false;
+        }
+
+        // Check the type of our input, according to record variables in each function's argument.
+        boolean isDataSourceVariableFound = false;
+        Set<Integer> indicesToCheck = INDEX_USE_ON_FUNCTION_CALL_WHITELIST.get(functionID);
+        if (indicesToCheck.equals(ALL_INDEX_FUNCTION_ARGUMENTS)) {
+            indicesToCheck = IntStream.range(0, funcExpr.getArguments().size()).boxed().collect(Collectors.toSet());
+        }
+        for (Integer functionCallArgumentIndex : indicesToCheck) {
+            ILogicalExpression inputRecordExpr = funcExpr.getArguments().get(functionCallArgumentIndex).getValue();
+            switch (inputRecordExpr.getExpressionTag()) {
+                case FUNCTION_CALL:
+                    AbstractFunctionCallExpression arg0FuncExpr = (AbstractFunctionCallExpression) inputRecordExpr;
+                    isDataSourceVariableFound |= canUseIndexOnFunction(arg0FuncExpr, sourceIndicator,
+                            foundDatasourceVariables, optFuncExpr, typeEnv, context);
+                    break;
+
+                case VARIABLE:
+                    // Base case. We should be using a data source variable here.
+                    VariableReferenceExpression inputRecordVarExpr = (VariableReferenceExpression) inputRecordExpr;
+                    LogicalVariable inputRecordVar = inputRecordVarExpr.getVariableReference();
+                    if (optFuncExpr != null) {
+                        for (int i = 0; i < optFuncExpr.getNumLogicalVars(); i++) {
+                            OptimizableOperatorSubTree operatorSubTree = optFuncExpr.getOperatorSubTree(i);
+                            if (operatorSubTree == null) {
+                                continue;
+                            }
+                            if (operatorSubTree.getDataSourceVariables().stream().anyMatch(inputRecordVar::equals)) {
+                                OptimizableOperatorSubTree.RecordTypeSource recordTypeSource =
+                                        operatorSubTree.getRecordTypeFor(inputRecordVar);
+                                foundDatasourceVariables.add(inputRecordVar);
+                                sourceIndicator.setValue(recordTypeSource.sourceIndicator);
+                                isDataSourceVariableFound = true;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+        return isDataSourceVariableFound;
     }
 }

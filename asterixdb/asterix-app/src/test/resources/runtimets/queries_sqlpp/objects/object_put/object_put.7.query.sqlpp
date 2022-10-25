@@ -1,0 +1,60 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// For OBJECT_PUT.
+USE     TestDataverse;
+LET     openUValues = (
+          FROM    UsersOpen U2
+          WHERE   U2._id = 4
+          SELECT  VALUE U2
+        ),
+        closedUValues = (
+          FROM    UsersClosed U1
+          WHERE   U1._id = 1
+          SELECT  VALUE U1
+        )
+SELECT  VALUE {
+  // New constant field into closed and open record.
+  "t1c": ( FROM UsersClosed U SELECT VALUE OBJECT_PUT(U, "name", "John") ORDER BY U._id ),
+  "t1o": ( FROM UsersOpen U SELECT VALUE OBJECT_PUT(U, "name", "John") ORDER BY U._id ),
+
+  // New record field from open record into closed and open record.
+  "t2c": ( FROM UsersClosed U SELECT VALUE OBJECT_PUT(U, "newFriend", openUValues[0]) ORDER BY U._id ) ,
+  "t2o": ( FROM UsersOpen U SELECT VALUE OBJECT_PUT(U, "newFriend", openUValues[0]) ORDER BY U._id ) ,
+
+  // New record field from closed record into closed and open record.
+  "t3c": ( FROM UsersClosed U SELECT VALUE OBJECT_PUT(U, "newFriend", closedUValues[0]) ORDER BY U._id ),
+  "t3o": ( FROM UsersOpen U SELECT VALUE OBJECT_PUT(U, "newFriend", closedUValues[0]) ORDER BY U._id ),
+
+  // New list field from open dataset into closed and open record.
+  "t4c": ( FROM UsersClosed U SELECT VALUE OBJECT_PUT(U, "newFriends", openUValues) ORDER BY U._id ),
+  "t4o": ( FROM UsersOpen U SELECT VALUE OBJECT_PUT(U, "newFriends", openUValues) ORDER BY U._id ),
+
+  // New list field from closed dataset into closed and open record.
+  "t5c": ( FROM UsersClosed U SELECT VALUE OBJECT_PUT(U, "newFriends", closedUValues) ORDER BY U._id ),
+  "t5o": ( FROM UsersOpen U SELECT VALUE OBJECT_PUT(U, "newFriends", closedUValues) ORDER BY U._id ),
+
+  // Old field of open type into closed record (we should overwrite).
+  "t6c": ( FROM   UsersClosed U
+           LET    newFriends = [
+             { "_id": 8 }, { "_id": 9 }
+           ]
+           SELECT VALUE OBJECT_PUT(U, "friends", newFriends)
+           ORDER BY U._id )
+};

@@ -23,7 +23,9 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -34,7 +36,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @MissingNullInOutFunction
 public class RecordRenameDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -43,16 +44,18 @@ public class RecordRenameDescriptor extends AbstractScalarFunctionDynamicDescrip
 
         @Override
         public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.RecordAccessorTypeInferer.INSTANCE_LAX;
+            return FunctionTypeInferers.RECORD_MODIFY_INFERER;
         }
     };
 
     private static final long serialVersionUID = 1L;
-    private ARecordType recordType;
+    private ARecordType outRecType;
+    private ARecordType inRecType;
 
     @Override
     public void setImmutableStates(Object... states) {
-        recordType = (ARecordType) states[0];
+        outRecType = TypeComputeUtils.extractRecordType((IAType) states[0]);
+        inRecType = TypeComputeUtils.extractRecordType((IAType) states[1]);
     }
 
     @Override
@@ -66,7 +69,7 @@ public class RecordRenameDescriptor extends AbstractScalarFunctionDynamicDescrip
                 for (int i = 0; i < args.length; i++) {
                     argEvals[i] = args[i].createScalarEvaluator(ctx);
                 }
-                return new RecordRenameEvaluator(argEvals[0], argEvals[1], argEvals[2], recordType);
+                return new RecordRenameEvaluator(argEvals[0], argEvals[1], argEvals[2], outRecType, inRecType);
             }
         };
     }

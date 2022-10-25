@@ -16,42 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.runtime.evaluators.functions.records;
 
 import java.util.List;
 
-import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
-import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
 
 class RecordAddEvaluator extends AbstractRecordAddPutEvaluator {
-
-    RecordAddEvaluator(IScalarEvaluator eval0, IScalarEvaluator eval1, IScalarEvaluator eval2, IAType[] argTypes) {
-        super(eval0, eval1, eval2, argTypes);
+    RecordAddEvaluator(IScalarEvaluator eval0, IScalarEvaluator eval1, IScalarEvaluator eval2, ARecordType outRecType,
+            ARecordType inRecType) {
+        super(eval0, eval1, eval2, outRecType, inRecType);
     }
 
     @Override
-    protected void buildOutputRecord() throws HyracksDataException {
+    protected void buildOutputRecord(IPointable result) throws HyracksDataException {
         resultStorage.reset();
-        outRecordBuilder.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-        outRecordBuilder.init();
-        inputOpenRecordPointable.set(inputRecordPointable);
-        final List<IVisitablePointable> fieldNames = inputOpenRecordPointable.getFieldNames();
-        final List<IVisitablePointable> fieldValues = inputOpenRecordPointable.getFieldValues();
+        outRecordBuilder.reset(outRecType);
+        inputRecordPointable.set(inputPointable);
+        final List<IVisitablePointable> fieldNames = inputRecordPointable.getFieldNames();
+        final List<IVisitablePointable> fieldValues = inputRecordPointable.getFieldValues();
         boolean newFieldFound = false;
         for (int i = 0, fieldCount = fieldNames.size(); i < fieldCount; i++) {
             final IVisitablePointable fieldName = fieldNames.get(i);
-            if (PointableHelper.isEqual(fieldName, newFieldNamePointable, stringBinaryComparator)) {
+            final IVisitablePointable fieldValue = fieldValues.get(i);
+            if (!newFieldFound && PointableHelper.isEqual(fieldName, newFieldNamePointable, stringBinaryComparator)) {
                 newFieldFound = true;
             }
-            outRecordBuilder.addField(fieldName, fieldValues.get(i));
+            addField(fieldName, fieldValue);
         }
         if (!newFieldValueIsMissing && !newFieldFound) {
-            outRecordBuilder.addField(newFieldNamePointable, newFieldValuePointable);
+            addField(newFieldNamePointable, newFieldValuePointable);
         }
         outRecordBuilder.write(resultOutput, true);
     }

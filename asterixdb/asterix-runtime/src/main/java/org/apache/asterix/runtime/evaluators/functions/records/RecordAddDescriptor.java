@@ -22,6 +22,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
@@ -32,7 +34,6 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class RecordAddDescriptor extends AbstractScalarFunctionDynamicDescriptor {
-
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
@@ -41,19 +42,18 @@ public class RecordAddDescriptor extends AbstractScalarFunctionDynamicDescriptor
 
         @Override
         public IFunctionTypeInferer createFunctionTypeInferer() {
-            return FunctionTypeInferers.SET_ARGUMENTS_TYPE;
+            return FunctionTypeInferers.RECORD_MODIFY_INFERER;
         }
     };
 
     private static final long serialVersionUID = 1L;
-    private IAType[] argTypes;
+    private ARecordType outRecType;
+    private ARecordType inRecType;
 
     @Override
     public void setImmutableStates(Object... states) {
-        argTypes = new IAType[states.length];
-        for (int i = 0; i < states.length; i++) {
-            argTypes[i] = (IAType) states[i];
-        }
+        outRecType = TypeComputeUtils.extractRecordType((IAType) states[0]);
+        inRecType = TypeComputeUtils.extractRecordType((IAType) states[1]);
     }
 
     @Override
@@ -67,7 +67,7 @@ public class RecordAddDescriptor extends AbstractScalarFunctionDynamicDescriptor
                 for (int i = 0; i < args.length; i++) {
                     argEvals[i] = args[i].createScalarEvaluator(ctx);
                 }
-                return new RecordAddEvaluator(argEvals[0], argEvals[1], argEvals[2], argTypes);
+                return new RecordAddEvaluator(argEvals[0], argEvals[1], argEvals[2], outRecType, inRecType);
             }
         };
     }

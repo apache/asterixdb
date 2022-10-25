@@ -116,6 +116,16 @@ public final class FunctionTypeInferers {
         }
     };
 
+    public static final IFunctionTypeInferer RECORD_MODIFY_INFERER = (expr, fd, context, compilerProps) -> {
+        AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
+        IAType outType = (IAType) context.getType(expr);
+        IAType inType = (IAType) context.getType(f.getArguments().get(0).getValue());
+        if (inType.getTypeTag().equals(ATypeTag.ANY)) {
+            inType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+        }
+        fd.setImmutableStates(outType, inType);
+    };
+
     public static final class CastTypeInferer implements IFunctionTypeInferer {
         @Override
         public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
