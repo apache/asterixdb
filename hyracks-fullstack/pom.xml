@@ -71,7 +71,7 @@
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.17.1</log4j.version>
     <snappy.version>1.1.8.4</snappy.version>
-    <jackson.version>2.13.2</jackson.version>
+    <jackson.version>2.13.4</jackson.version>
 
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
@@ -83,32 +83,32 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-buffer</artifactId>
-        <version>4.1.73.Final</version>
+        <version>4.1.84.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-common</artifactId>
-        <version>4.1.73.Final</version>
+        <version>4.1.84.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-codec-http</artifactId>
-        <version>4.1.73.Final</version>
+        <version>4.1.84.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-transport</artifactId>
-        <version>4.1.73.Final</version>
+        <version>4.1.84.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-codec</artifactId>
-        <version>4.1.73.Final</version>
+        <version>4.1.84.Final</version>
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-handler</artifactId>
-        <version>4.1.73.Final</version>
+        <version>4.1.84.Final</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
@@ -174,12 +174,12 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-text</artifactId>
-        <version>1.9</version>
+        <version>1.10.0</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>2.13.2.2</version>
+        <version>2.13.4.2</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
