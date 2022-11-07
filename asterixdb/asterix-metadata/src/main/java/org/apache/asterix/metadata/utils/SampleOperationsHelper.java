@@ -19,6 +19,7 @@
 
 package org.apache.asterix.metadata.utils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,8 +37,8 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.aggregates.collections.FirstElementEvalFactory;
 import org.apache.asterix.runtime.evaluators.comparisons.GreaterThanDescriptor;
+import org.apache.asterix.runtime.operators.DatasetStreamStatsOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor;
-import org.apache.asterix.runtime.operators.StreamStatsOperatorDescriptor;
 import org.apache.asterix.runtime.runningaggregates.std.SampleSlotRunningAggregateFunctionFactory;
 import org.apache.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
@@ -82,6 +83,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
+import org.apache.hyracks.storage.common.IStorageManager;
 
 /**
  * Utility class for sampling operations.
@@ -164,10 +166,10 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         for (int i = 0; i < nFields; i++) {
             columns[i] = i;
         }
-
+        IStorageManager storageMgr = metadataProvider.getStorageComponentProvider().getStorageManager();
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
-                metadataProvider.getStorageComponentProvider().getStorageManager(), fileSplitProvider);
+        IIndexDataflowHelperFactory dataflowHelperFactory =
+                new IndexDataflowHelperFactory(storageMgr, fileSplitProvider);
 
         // job spec:
         IndexUtil.bindJobEventListener(spec, metadataProvider);
@@ -179,7 +181,16 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         sourceOp = targetOp;
 
         // primary index scan ----> stream stats op
-        targetOp = new StreamStatsOperatorDescriptor(spec, recordDesc, DATASET_STATS_OPERATOR_NAME);
+        List<Pair<IFileSplitProvider, String>> indexesInfo = metadataProvider.getSplitProviderOfAllIndexes(dataset);
+        IndexDataflowHelperFactory[] indexes = new IndexDataflowHelperFactory[indexesInfo.size()];
+        String[] names = new String[indexesInfo.size()];
+        for (int i = 0; i < indexes.length; i++) {
+            Pair<IFileSplitProvider, String> indexInfo = indexesInfo.get(i);
+            indexes[i] = new IndexDataflowHelperFactory(storageMgr, indexInfo.first);
+            names[i] = indexInfo.second;
+        }
+        targetOp =
+                new DatasetStreamStatsOperatorDescriptor(spec, recordDesc, DATASET_STATS_OPERATOR_NAME, indexes, names);
         spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
         sourceOp = targetOp;
 

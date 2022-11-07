@@ -20,7 +20,10 @@
 package org.apache.asterix.runtime.operators;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -29,26 +32,38 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
+import org.apache.hyracks.api.job.profiling.IndexStats;
+import org.apache.hyracks.api.job.profiling.OperatorStats;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperatorNodePushable;
+import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
+import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.AbstractLSMWithBloomFilterDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 
 /**
  * Computes total tuple count and total tuple length for all input tuples,
  * and emits these values as operator stats.
  */
-public final class StreamStatsOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 1L;
 
     private final String operatorName;
+    private final IIndexDataflowHelperFactory[] indexes;
+    private final String[] indexesNames;
+    private Map<String, IndexStats> indexStats;
 
-    public StreamStatsOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc,
-            String operatorName) {
+    public DatasetStreamStatsOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc,
+            String operatorName, IIndexDataflowHelperFactory[] indexes, String[] indexesNames) {
         super(spec, 1, 1);
         outRecDescs[0] = rDesc;
         this.operatorName = operatorName;
+        this.indexes = indexes;
+        this.indexesNames = indexesNames;
     }
 
     @Override
@@ -66,6 +81,33 @@ public final class StreamStatsOperatorDescriptor extends AbstractSingleActivityO
                 fta = new FrameTupleAccessor(outRecDescs[0]);
                 totalTupleCount = 0;
                 writer.open();
+                IStatsCollector coll = ctx.getStatsCollector();
+                if (coll != null) {
+                    coll.add(new OperatorStats(operatorName));
+                }
+                INCServiceContext serviceCtx = ctx.getJobletContext().getServiceContext();
+                indexStats = new HashMap<>();
+                for (int i = 0; i < indexes.length; i++) {
+                    IIndexDataflowHelper idxFlowHelper = indexes[i].create(serviceCtx, partition);
+                    try {
+                        idxFlowHelper.open();
+                        ILSMIndex indexInstance = (ILSMIndex) idxFlowHelper.getIndexInstance();
+                        long numPages = 0;
+                        synchronized (indexInstance.getOperationTracker()) {
+                            for (ILSMDiskComponent component : indexInstance.getDiskComponents()) {
+                                long componentSize = component.getComponentSize();
+                                if (component instanceof AbstractLSMWithBloomFilterDiskComponent) {
+                                    componentSize -= ((AbstractLSMWithBloomFilterDiskComponent) component)
+                                            .getBloomFilter().getFileReference().getFile().length();
+                                }
+                                numPages += componentSize / indexInstance.getBufferCache().getPageSize();
+                            }
+                        }
+                        indexStats.put(indexesNames[i], new IndexStats(indexesNames[i], numPages));
+                    } finally {
+                        idxFlowHelper.close();
+                    }
+                }
             }
 
             @Override
@@ -93,7 +135,7 @@ public final class StreamStatsOperatorDescriptor extends AbstractSingleActivityO
                 IStatsCollector statsCollector = ctx.getStatsCollector();
                 if (statsCollector != null) {
                     IOperatorStats stats = statsCollector.getOrAddOperatorStats(operatorName);
-                    StreamStats.update(stats, totalTupleCount, totalTupleLength);
+                    DatasetStreamStats.update(stats, totalTupleCount, totalTupleLength, indexStats);
                 }
                 writer.close();
             }

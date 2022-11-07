@@ -19,6 +19,7 @@
 package org.apache.hyracks.api.job.profiling;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import org.apache.hyracks.api.io.IWritable;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
@@ -46,4 +47,10 @@ public interface IOperatorStats extends IWritable, Serializable {
      * @return A counter used to track the number of pages pinned by an opeartor
      */
     ICounter getDiskIoCounter();
+
+    void updateIndexesStats(Map<String, IndexStats> indexesStats);
+
+    Map<String, IndexStats> getIndexesStats();
+
+    void updateFrom(IOperatorStats stats);
 }

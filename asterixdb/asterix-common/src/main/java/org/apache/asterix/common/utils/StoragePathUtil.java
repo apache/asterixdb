@@ -46,9 +46,13 @@ public class StoragePathUtil {
     private StoragePathUtil() {
     }
 
+    public static IFileSplitProvider splitProvider(FileSplit[] splits) {
+        return new ConstantFileSplitProvider(splits);
+    }
+
     public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitProviderAndPartitionConstraints(
             FileSplit[] splits) {
-        IFileSplitProvider splitProvider = new ConstantFileSplitProvider(splits);
+        IFileSplitProvider splitProvider = splitProvider(splits);
         String[] loc = new String[splits.length];
         for (int p = 0; p < splits.length; p++) {
             loc[p] = splits[p].getNodeName();

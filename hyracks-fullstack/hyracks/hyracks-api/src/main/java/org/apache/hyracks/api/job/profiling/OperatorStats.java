@@ -21,6 +21,8 @@ package org.apache.hyracks.api.job.profiling;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.hyracks.api.com.job.profiling.counters.Counter;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
@@ -32,6 +34,7 @@ public class OperatorStats implements IOperatorStats {
     public final ICounter tupleCounter;
     public final ICounter timeCounter;
     public final ICounter diskIoCounter;
+    private final Map<String, IndexStats> indexesStats;
 
     public OperatorStats(String operatorName) {
         if (operatorName == null || operatorName.isEmpty()) {
@@ -41,6 +44,7 @@ public class OperatorStats implements IOperatorStats {
         tupleCounter = new Counter("tupleCounter");
         timeCounter = new Counter("timeCounter");
         diskIoCounter = new Counter("diskIoCounter");
+        indexesStats = new HashMap<>();
     }
 
     public static IOperatorStats create(DataInput input) throws IOException {
@@ -71,11 +75,42 @@ public class OperatorStats implements IOperatorStats {
     }
 
     @Override
+    public void updateIndexesStats(Map<String, IndexStats> stats) {
+        if (stats == null) {
+            return;
+        }
+        for (Map.Entry<String, IndexStats> stat : stats.entrySet()) {
+            String indexName = stat.getKey();
+            IndexStats indexStat = stat.getValue();
+            IndexStats existingIndexStat = indexesStats.get(indexName);
+            if (existingIndexStat == null) {
+                indexesStats.put(indexName, new IndexStats(indexName, indexStat.getNumPages()));
+            } else {
+                existingIndexStat.updateNumPages(indexStat.getNumPages());
+            }
+        }
+    }
+
+    @Override
+    public Map<String, IndexStats> getIndexesStats() {
+        return indexesStats;
+    }
+
+    @Override
+    public void updateFrom(IOperatorStats stats) {
+        tupleCounter.update(stats.getTupleCounter().get());
+        timeCounter.update(stats.getTimeCounter().get());
+        diskIoCounter.update(stats.getDiskIoCounter().get());
+        updateIndexesStats(stats.getIndexesStats());
+    }
+
+    @Override
     public void writeFields(DataOutput output) throws IOException {
         output.writeUTF(operatorName);
         output.writeLong(tupleCounter.get());
         output.writeLong(timeCounter.get());
         output.writeLong(diskIoCounter.get());
+        writeIndexesStats(output);
     }
 
     @Override
@@ -83,11 +118,30 @@ public class OperatorStats implements IOperatorStats {
         tupleCounter.set(input.readLong());
         timeCounter.set(input.readLong());
         diskIoCounter.set(input.readLong());
+        readIndexesStats(input);
+    }
+
+    private void writeIndexesStats(DataOutput output) throws IOException {
+        output.writeInt(indexesStats.size());
+        for (Map.Entry<String, IndexStats> indexStat : indexesStats.entrySet()) {
+            output.writeUTF(indexStat.getKey());
+            indexStat.getValue().writeFields(output);
+        }
+    }
+
+    private void readIndexesStats(DataInput input) throws IOException {
+        int numIndexes = input.readInt();
+        for (int i = 0; i < numIndexes; i++) {
+            String indexName = input.readUTF();
+            IndexStats indexStats = IndexStats.create(input);
+            indexesStats.put(indexName, indexStats);
+        }
     }
 
     @Override
     public String toString() {
         return "{ " + "\"operatorName\": \"" + operatorName + "\", " + "\"" + tupleCounter.getName() + "\": "
-                + tupleCounter.get() + ", \"" + timeCounter.getName() + "\": " + timeCounter.get() + " }";
+                + tupleCounter.get() + ", \"" + timeCounter.getName() + "\": " + timeCounter.get() + ", \""
+                + ", \"indexesStats\": \"" + indexesStats + "\" }";
     }
 }

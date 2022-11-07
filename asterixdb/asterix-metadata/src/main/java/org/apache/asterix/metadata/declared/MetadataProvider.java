@@ -26,11 +26,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -1828,6 +1830,24 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             String indexName) throws AlgebricksException {
         FileSplit[] splits = splitsForIndex(mdTxnCtx, ds, indexName);
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
+    }
+
+    public List<Pair<IFileSplitProvider, String>> getSplitProviderOfAllIndexes(Dataset ds) throws AlgebricksException {
+        List<Index> dsIndexes = getDatasetIndexes(ds.getDataverseName(), ds.getDatasetName()).stream()
+                .filter(idx -> idx.getIndexType() != IndexType.SAMPLE && idx.isSecondaryIndex())
+                .collect(Collectors.toList());
+        if (dsIndexes.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> datasetNodes = findNodes(ds.getNodeGroupName());
+        List<Pair<IFileSplitProvider, String>> indexesSplits =
+                dsIndexes.stream()
+                        .map(idx -> new Pair<>(
+                                StoragePathUtil.splitProvider(SplitsAndConstraintsUtil.getIndexSplits(
+                                        appCtx.getClusterStateManager(), ds, idx.getIndexName(), datasetNodes)),
+                                idx.getIndexName()))
+                        .collect(Collectors.toList());
+        return indexesSplits;
     }
 
     public LockList getLocks() {

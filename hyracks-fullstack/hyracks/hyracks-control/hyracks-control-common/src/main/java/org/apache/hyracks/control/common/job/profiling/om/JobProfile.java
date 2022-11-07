@@ -39,7 +39,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JobProfile extends AbstractProfile {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private JobId jobId;
 
@@ -149,9 +149,7 @@ public class JobProfile extends AbstractProfile {
                     opOutStats = new OperatorStats(operatorName);
                     outStats[i] = opOutStats;
                 }
-                opOutStats.getTupleCounter().update(opTaskStats.getTupleCounter().get());
-                opOutStats.getTimeCounter().update(opTaskStats.getTimeCounter().get());
-                opOutStats.getDiskIoCounter().update(opTaskStats.getDiskIoCounter().get());
+                opOutStats.updateFrom(opTaskStats);
             }
         }
         return Arrays.asList(outStats);
