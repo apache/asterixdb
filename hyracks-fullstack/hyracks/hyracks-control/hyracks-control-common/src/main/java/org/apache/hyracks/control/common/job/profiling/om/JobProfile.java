@@ -182,9 +182,7 @@ public class JobProfile extends AbstractProfile {
                     opOutStats = new OperatorStats(operatorName);
                     outStats[i] = opOutStats;
                 }
-                opOutStats.getTupleCounter().update(opTaskStats.getTupleCounter().get());
-                opOutStats.getTimeCounter().update(opTaskStats.getTimeCounter().get());
-                opOutStats.getPageReads().update(opTaskStats.getPageReads().get());
+                opOutStats.updateFrom(opTaskStats);
             }
         }
         return Arrays.asList(outStats);

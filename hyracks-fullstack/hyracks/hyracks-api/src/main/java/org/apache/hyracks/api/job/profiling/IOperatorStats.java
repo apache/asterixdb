@@ -19,6 +19,7 @@
 package org.apache.hyracks.api.job.profiling;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.io.IWritable;
@@ -86,4 +87,10 @@ public interface IOperatorStats extends IWritable, Serializable {
     ICounter getBytesWritten();
 
     OperatorDescriptorId getId();
+
+    void updateIndexesStats(Map<String, IndexStats> indexesStats);
+
+    Map<String, IndexStats> getIndexesStats();
+
+    void updateFrom(IOperatorStats stats);
 }

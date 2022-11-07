@@ -21,6 +21,8 @@ package org.apache.hyracks.api.job.profiling;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.hyracks.api.com.job.profiling.counters.Counter;
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
@@ -42,6 +44,7 @@ public class OperatorStats implements IOperatorStats {
     public final ICounter level;
     public final ICounter bytesRead;
     public final ICounter bytesWritten;
+    private final Map<String, IndexStats> indexesStats;
 
     //TODO: this is quickly becoming gross it should just be a map where the value is obliged to be a Counter
 
@@ -63,7 +66,7 @@ public class OperatorStats implements IOperatorStats {
         bytesRead = new Counter("bytesRead");
         bytesWritten = new Counter("bytesWritten");
         level.set(-1);
-
+        indexesStats = new HashMap<>();
     }
 
     public OperatorStats(String operatorName) {
@@ -143,6 +146,36 @@ public class OperatorStats implements IOperatorStats {
     }
 
     @Override
+    public void updateIndexesStats(Map<String, IndexStats> stats) {
+        if (stats == null) {
+            return;
+        }
+        for (Map.Entry<String, IndexStats> stat : stats.entrySet()) {
+            String indexName = stat.getKey();
+            IndexStats indexStat = stat.getValue();
+            IndexStats existingIndexStat = indexesStats.get(indexName);
+            if (existingIndexStat == null) {
+                indexesStats.put(indexName, new IndexStats(indexName, indexStat.getNumPages()));
+            } else {
+                existingIndexStat.updateNumPages(indexStat.getNumPages());
+            }
+        }
+    }
+
+    @Override
+    public Map<String, IndexStats> getIndexesStats() {
+        return indexesStats;
+    }
+
+    @Override
+    public void updateFrom(IOperatorStats stats) {
+        tupleCounter.update(stats.getTupleCounter().get());
+        timeCounter.update(stats.getTimeCounter().get());
+        pageReads.update(stats.getPageReads().get());
+        updateIndexesStats(stats.getIndexesStats());
+    }
+
+    @Override
     public void writeFields(DataOutput output) throws IOException {
         output.writeUTF(operatorName);
         id.writeFields(output);
@@ -157,6 +190,7 @@ public class OperatorStats implements IOperatorStats {
         output.writeLong(level.get());
         output.writeLong(bytesRead.get());
         output.writeLong(bytesWritten.get());
+        writeIndexesStats(output);
     }
 
     @Override
@@ -173,6 +207,24 @@ public class OperatorStats implements IOperatorStats {
         level.set(input.readLong());
         bytesRead.set(input.readLong());
         bytesWritten.set(input.readLong());
+        readIndexesStats(input);
+    }
+
+    private void writeIndexesStats(DataOutput output) throws IOException {
+        output.writeInt(indexesStats.size());
+        for (Map.Entry<String, IndexStats> indexStat : indexesStats.entrySet()) {
+            output.writeUTF(indexStat.getKey());
+            indexStat.getValue().writeFields(output);
+        }
+    }
+
+    private void readIndexesStats(DataInput input) throws IOException {
+        int numIndexes = input.readInt();
+        for (int i = 0; i < numIndexes; i++) {
+            String indexName = input.readUTF();
+            IndexStats indexStats = IndexStats.create(input);
+            indexesStats.put(indexName, indexStats);
+        }
     }
 
     @Override
@@ -184,6 +236,6 @@ public class OperatorStats implements IOperatorStats {
                 + minTupleSz.getName() + "\": " + timeCounter.get() + ", \"" + inputTupleCounter.getName() + "\": "
                 + bytesRead.get() + ", \"" + bytesRead.getName() + "\": " + bytesWritten.get() + ", \""
                 + bytesWritten.getName() + "\": " + inputTupleCounter.get() + ", \"" + level.getName() + "\": "
-                + level.get() + " }";
+                + level.get() + ", \"indexesStats\": \"" + indexesStats + "\" }";
     }
 }

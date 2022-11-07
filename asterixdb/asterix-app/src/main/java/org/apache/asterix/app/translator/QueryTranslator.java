@@ -212,7 +212,7 @@ import org.apache.asterix.runtime.fulltext.AbstractFullTextFilterDescriptor;
 import org.apache.asterix.runtime.fulltext.FullTextConfigDescriptor;
 import org.apache.asterix.runtime.fulltext.IFullTextFilterDescriptor;
 import org.apache.asterix.runtime.fulltext.StopwordsFullTextFilterDescriptor;
-import org.apache.asterix.runtime.operators.StreamStats;
+import org.apache.asterix.runtime.operators.DatasetStreamStats;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.asterix.translator.AbstractLangTranslator;
 import org.apache.asterix.translator.ClientRequest;
@@ -4288,9 +4288,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             int sampleCardinalityTarget = stmtAnalyze.getSampleSize();
             long sampleSeed = stmtAnalyze.getOrCreateSampleSeed();
 
-            Index.SampleIndexDetails newIndexDetailsPendingAdd =
-                    new Index.SampleIndexDetails(dsDetails.getPrimaryKey(), dsDetails.getKeySourceIndicator(),
-                            dsDetails.getPrimaryKeyType(), sampleCardinalityTarget, 0, 0, sampleSeed);
+            Index.SampleIndexDetails newIndexDetailsPendingAdd = new Index.SampleIndexDetails(dsDetails.getPrimaryKey(),
+                    dsDetails.getKeySourceIndicator(), dsDetails.getPrimaryKeyType(), sampleCardinalityTarget, 0, 0,
+                    sampleSeed, Collections.emptyMap());
             newIndexPendingAdd = new Index(dataverseName, datasetName, newIndexName, sampleIndexType,
                     newIndexDetailsPendingAdd, false, false, MetadataUtil.PENDING_ADD_OP);
 
@@ -4328,11 +4328,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (opStats == null || opStats.size() == 0) {
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, "", sourceLoc);
             }
-            StreamStats stats = new StreamStats(opStats.get(0));
+            DatasetStreamStats stats = new DatasetStreamStats(opStats.get(0));
 
             Index.SampleIndexDetails newIndexDetailsFinal = new Index.SampleIndexDetails(dsDetails.getPrimaryKey(),
                     dsDetails.getKeySourceIndicator(), dsDetails.getPrimaryKeyType(), sampleCardinalityTarget,
-                    stats.getCardinality(), stats.getAvgTupleSize(), sampleSeed);
+                    stats.getCardinality(), stats.getAvgTupleSize(), sampleSeed, stats.getIndexesStats());
             Index newIndexFinal = new Index(dataverseName, datasetName, newIndexName, sampleIndexType,
                     newIndexDetailsFinal, false, false, MetadataUtil.PENDING_NO_OP);
 

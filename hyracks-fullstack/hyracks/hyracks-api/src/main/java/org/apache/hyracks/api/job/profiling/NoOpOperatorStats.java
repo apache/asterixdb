@@ -21,6 +21,8 @@ package org.apache.hyracks.api.job.profiling;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
 
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
@@ -130,5 +132,20 @@ public class NoOpOperatorStats implements IOperatorStats {
     @Override
     public OperatorDescriptorId getId() {
         return INVALID_ODID;
+    }
+
+    @Override
+    public void updateIndexesStats(Map<String, IndexStats> indexesStats) {
+        // no op
+    }
+
+    @Override
+    public Map<String, IndexStats> getIndexesStats() {
+        return Collections.emptyMap();
+    }
+
+    @Override
+    public void updateFrom(IOperatorStats stats) {
+        // no op
     }
 }

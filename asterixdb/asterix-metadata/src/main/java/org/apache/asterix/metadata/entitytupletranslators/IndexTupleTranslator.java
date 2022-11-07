@@ -25,7 +25,9 @@ import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NA
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.builders.IARecordBuilder;
@@ -49,6 +51,7 @@ import org.apache.asterix.om.base.ACollectionCursor;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
+import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.AMutableInt8;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AOrderedList;
@@ -67,6 +70,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.profiling.IndexStats;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.util.OptionalBoolean;
@@ -95,6 +99,9 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     public static final String SAMPLE_CARDINALITY_TARGET = "SampleCardinalityTarget";
     public static final String SOURCE_CARDINALITY = "SourceCardinality";
     public static final String SOURCE_AVG_ITEM_SIZE = "SourceAvgItemSize";
+    public static final String INDEXES_STATS = "IndexesStats";
+    public static final String STATS_NUM_PAGES = "NumPages";
+    public static final String STATS_INDEX_NAME = "IndexName";
 
     protected final TxnId txnId;
     protected final MetadataNode metadataNode;
@@ -105,13 +112,15 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     protected OrderedListBuilder complexSearchKeyNameListBuilder;
     protected IARecordBuilder complexSearchKeyNameRecordBuilder;
     protected IARecordBuilder castRecordBuilder;
+    protected OrderedListBuilder indexesStatsListBuilder;
+    protected IARecordBuilder indexStatsRecordBuilder;
     protected AOrderedListType stringList;
     protected AOrderedListType int8List;
     protected ArrayBackedValueStorage nameValue;
     protected ArrayBackedValueStorage itemValue;
     protected AMutableInt8 aInt8;
+    protected AMutableInt64 aInt64;
     protected ISerializerDeserializer<AInt8> int8Serde;
-    protected ISerializerDeserializer<ANull> nullSerde;
 
     @SuppressWarnings("unchecked")
     protected IndexTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
@@ -124,14 +133,16 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             primaryKeyListBuilder = new OrderedListBuilder();
             complexSearchKeyNameRecordBuilder = new RecordBuilder();
             castRecordBuilder = new RecordBuilder();
+            indexesStatsListBuilder = new OrderedListBuilder();
+            indexStatsRecordBuilder = new RecordBuilder();
             complexSearchKeyNameListBuilder = new OrderedListBuilder();
             stringList = new AOrderedListType(BuiltinType.ASTRING, null);
             int8List = new AOrderedListType(BuiltinType.AINT8, null);
             nameValue = new ArrayBackedValueStorage();
             itemValue = new ArrayBackedValueStorage();
             aInt8 = new AMutableInt8((byte) 0);
+            aInt64 = new AMutableInt64(0);
             int8Serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT8);
-            nullSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
         }
     }
 
@@ -490,8 +501,26 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 }
                 int sourceAvgItemSize = ((AInt32) indexRecord.getValueByPos(sourceAvgItemSizePos)).getIntegerValue();
 
+                int indexesStatsPos = indexRecord.getType().getFieldIndex(INDEXES_STATS);
+                Map<String, IndexStats> indexesStats;
+                if (indexesStatsPos >= 0) {
+                    AOrderedList indexesStatsList = (AOrderedList) indexRecord.getValueByPos(indexesStatsPos);
+                    int numIndexes = indexesStatsList.size();
+                    indexesStats = numIndexes > 0 ? new HashMap<>() : Collections.emptyMap();
+                    for (int i = 0; i < numIndexes; i++) {
+                        ARecord stats = (ARecord) indexesStatsList.getItem(i);
+                        IAObject numPages = stats.getValueByPos(stats.getType().getFieldIndex(STATS_NUM_PAGES));
+                        IAObject idxNameObj = stats.getValueByPos(stats.getType().getFieldIndex(STATS_INDEX_NAME));
+                        String idxName = ((AString) idxNameObj).getStringValue();
+                        IndexStats idxStats = new IndexStats(idxName, ((AInt64) numPages).getLongValue());
+                        indexesStats.put(idxName, idxStats);
+                    }
+                } else {
+                    indexesStats = Collections.emptyMap();
+                }
+
                 indexDetails = new Index.SampleIndexDetails(keyFieldNames, keyFieldSourceIndicator, keyFieldTypes,
-                        sampleCardinalityTarget, sourceCardinality, sourceAvgItemSize, sampleSeed);
+                        sampleCardinalityTarget, sourceCardinality, sourceAvgItemSize, sampleSeed, indexesStats);
                 break;
             default:
                 throw new AsterixException(ErrorCode.METADATA_ERROR, indexType.toString());
@@ -935,6 +964,41 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             stringSerde.serialize(aString, nameValue.getDataOutput());
             int32Serde.serialize(new AInt32(indexDetails.getSourceAvgItemSize()), fieldValue.getDataOutput());
             recordBuilder.addField(nameValue, fieldValue);
+
+            Map<String, IndexStats> indexesStats = indexDetails.getIndexesStats();
+            if (!indexesStats.isEmpty()) {
+                indexesStatsListBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+                for (Map.Entry<String, IndexStats> stats : indexesStats.entrySet()) {
+                    indexStatsRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
+                    // index name
+                    nameValue.reset();
+                    itemValue.reset();
+                    aString.setValue(STATS_INDEX_NAME);
+                    stringSerde.serialize(aString, nameValue.getDataOutput());
+                    aString.setValue(stats.getKey());
+                    stringSerde.serialize(aString, itemValue.getDataOutput());
+                    indexStatsRecordBuilder.addField(nameValue, itemValue);
+
+                    // index number of pages
+                    nameValue.reset();
+                    itemValue.reset();
+                    aString.setValue(STATS_NUM_PAGES);
+                    stringSerde.serialize(aString, nameValue.getDataOutput());
+                    aInt64.setValue(stats.getValue().getNumPages());
+                    int64Serde.serialize(aInt64, itemValue.getDataOutput());
+                    indexStatsRecordBuilder.addField(nameValue, itemValue);
+
+                    itemValue.reset();
+                    indexStatsRecordBuilder.write(itemValue.getDataOutput(), true);
+                    indexesStatsListBuilder.addItem(itemValue);
+                }
+                nameValue.reset();
+                fieldValue.reset();
+                aString.setValue(INDEXES_STATS);
+                stringSerde.serialize(aString, nameValue.getDataOutput());
+                indexesStatsListBuilder.write(fieldValue.getDataOutput(), true);
+                recordBuilder.addField(nameValue, fieldValue);
+            }
         }
     }
 }

@@ -19,26 +19,33 @@
 
 package org.apache.asterix.runtime.operators;
 
+import java.util.Map;
+
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
+import org.apache.hyracks.api.job.profiling.IndexStats;
 
 /**
- * Helper method to access stats produced by {@link org.apache.asterix.runtime.operators.StreamStatsOperatorDescriptor}
+ * Helper method to access stats produced by {@link DatasetStreamStatsOperatorDescriptor}
  */
-public final class StreamStats {
+public final class DatasetStreamStats {
 
     private final long cardinality;
 
     private final int avgTupleSize;
 
-    public StreamStats(IOperatorStats opStats) {
+    private final Map<String, IndexStats> indexesStats;
+
+    public DatasetStreamStats(IOperatorStats opStats) {
         this.cardinality = opStats.getTupleCounter().get();
         long totalTupleSize = opStats.getPageReads().get();
         this.avgTupleSize = cardinality > 0 ? (int) (totalTupleSize / cardinality) : 0;
+        this.indexesStats = opStats.getIndexesStats();
     }
 
-    static void update(IOperatorStats opStats, long tupleCount, long tupleSize) {
+    static void update(IOperatorStats opStats, long tupleCount, long tupleSize, Map<String, IndexStats> indexStats) {
         opStats.getTupleCounter().update(tupleCount);
         opStats.getPageReads().update(tupleSize);
+        opStats.updateIndexesStats(indexStats);
     }
 
     public long getCardinality() {
@@ -47,5 +54,9 @@ public final class StreamStats {
 
     public int getAvgTupleSize() {
         return avgTupleSize;
+    }
+
+    public Map<String, IndexStats> getIndexesStats() {
+        return indexesStats;
     }
 }

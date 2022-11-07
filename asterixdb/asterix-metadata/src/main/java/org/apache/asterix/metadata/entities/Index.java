@@ -22,6 +22,7 @@ package org.apache.asterix.metadata.entities;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -39,6 +40,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.job.profiling.IndexStats;
 import org.apache.hyracks.util.OptionalBoolean;
 
 /**
@@ -554,10 +556,11 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         private final int sourceAvgItemSize;
 
         private final long sampleSeed;
+        private final Map<String, IndexStats> indexesStats;
 
         public SampleIndexDetails(List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators,
                 List<IAType> keyFieldTypes, int sampleCardinalityTarget, long sourceCardinality, int sourceAvgItemSize,
-                long sampleSeed) {
+                long sampleSeed, Map<String, IndexStats> indexesStats) {
             this.keyFieldNames = keyFieldNames;
             this.keyFieldSourceIndicators = keyFieldSourceIndicators;
             this.keyFieldTypes = keyFieldTypes;
@@ -565,6 +568,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
             this.sourceCardinality = sourceCardinality;
             this.sourceAvgItemSize = sourceAvgItemSize;
             this.sampleSeed = sampleSeed;
+            this.indexesStats = indexesStats;
         }
 
         @Override
@@ -603,6 +607,10 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
         public long getSampleSeed() {
             return sampleSeed;
+        }
+
+        public Map<String, IndexStats> getIndexesStats() {
+            return indexesStats;
         }
     }
 
