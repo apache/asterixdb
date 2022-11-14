@@ -142,6 +142,6 @@ public class OperatorStats implements IOperatorStats {
     public String toString() {
         return "{ " + "\"operatorName\": \"" + operatorName + "\", " + "\"" + tupleCounter.getName() + "\": "
                 + tupleCounter.get() + ", \"" + timeCounter.getName() + "\": " + timeCounter.get() + ", \""
-                + ", \"indexesStats\": \"" + indexesStats + "\" }";
+                + ", \"indexStats\": \"" + indexesStats + "\" }";
     }
 }
