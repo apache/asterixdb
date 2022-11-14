@@ -99,7 +99,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     public static final String SAMPLE_CARDINALITY_TARGET = "SampleCardinalityTarget";
     public static final String SOURCE_CARDINALITY = "SourceCardinality";
     public static final String SOURCE_AVG_ITEM_SIZE = "SourceAvgItemSize";
-    public static final String INDEXES_STATS = "IndexesStats";
+    public static final String INDEXES_STATS = "IndexStats";
     public static final String STATS_NUM_PAGES = "NumPages";
     public static final String STATS_INDEX_NAME = "IndexName";
 

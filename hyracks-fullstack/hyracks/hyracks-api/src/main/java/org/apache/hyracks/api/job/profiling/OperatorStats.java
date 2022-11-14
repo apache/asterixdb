@@ -236,6 +236,6 @@ public class OperatorStats implements IOperatorStats {
                 + minTupleSz.getName() + "\": " + timeCounter.get() + ", \"" + inputTupleCounter.getName() + "\": "
                 + bytesRead.get() + ", \"" + bytesRead.getName() + "\": " + bytesWritten.get() + ", \""
                 + bytesWritten.getName() + "\": " + inputTupleCounter.get() + ", \"" + level.getName() + "\": "
-                + level.get() + ", \"indexesStats\": \"" + indexesStats + "\" }";
+                + level.get() + ", \"indexStats\": \"" + indexesStats + "\" }";
     }
 }
