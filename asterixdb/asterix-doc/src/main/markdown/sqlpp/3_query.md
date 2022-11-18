@@ -248,7 +248,7 @@ The `DISTINCT` keyword is used to eliminate duplicate items from the results of 
 
 ##### Example
 
-(Q3.5) Returns all of the different cities in the `customers` dataset.
+(Q3.5a) Returns all of the different cities in the `customers` dataset.
 
     FROM customers AS c
     SELECT DISTINCT c.address.city;
@@ -267,6 +267,32 @@ Result:
         },
         {
             "city": "Rome, Italy"
+        }
+    ]
+
+### <a id="Select_exclude">SELECT EXCLUDE</a>
+The `EXCLUDE` keyword is used to remove one or more fields that would otherwise be returned from the `SELECT` clause.
+Conceptually, the scope of the `EXCLUDE` clause is the output of the `SELECT` clause itself.
+In a Stream Generator with both `DISTINCT` and `EXCLUDE` clauses, the `DISTINCT` clause is applied after the `EXCLUDE` clause.
+
+##### Example
+
+(Q3.5b) For the customer with `custid = C13`, return their information _excluding_ the `zipcode` field inside the `address` object and the top-level `name` field.
+
+    FROM customers AS c
+    WHERE c.custid = "C13"
+    SELECT c.* EXCLUDE address.zipcode, name;
+
+Result:
+
+    [
+        {
+            "custid": "C13",
+            "address": {
+                "street": "201 Main St.",
+                "city": "St. Louis, MO"
+            },
+            "rating": 750
         }
     ]
 

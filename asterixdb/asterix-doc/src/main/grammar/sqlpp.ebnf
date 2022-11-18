@@ -59,7 +59,7 @@ QueryBlock ::= SelectClause ( ( LetClause WhereClause? ) | StreamGenerator )?
 
 StreamGenerator::= FromClause LetClause? WhereClause? (GroupByClause LetClause? HavingClause?)?
 
-SelectClause ::= "SELECT" ("DISTINCT" | "ALL")? ( "VALUE" Expr | Projection ("," Projection)*)
+SelectClause ::= "SELECT" ("DISTINCT" | "ALL")? ( "VALUE" Expr | Projection ("," Projection)* ( "EXCLUDE" Identifier (("," | ".") Identifier)* )?  )
 
 Projection ::= (Expr ("AS"? Identifier)?) | (VariableRef "." "*") | "*"
 
