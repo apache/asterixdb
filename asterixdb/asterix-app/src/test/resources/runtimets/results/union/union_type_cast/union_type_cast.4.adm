@@ -1,0 +1,72 @@
+distribute result [$#1]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$#1])
+    -- STREAM_PROJECT  |PARTITIONED|
+      exchange
+      -- SORT_MERGE_EXCHANGE [$$102(ASC) ]  |PARTITIONED|
+        order (ASC, $$102)
+        -- STABLE_SORT [$$102(ASC)]  |PARTITIONED|
+          exchange
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            union ($$64, $$140, $#1) ($$103, $$70, $$102)
+            -- UNION_ALL  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                union ($$139, $$141, $$64) ($$68, $$69, $$103)
+                -- UNION_ALL  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$139, $$68])
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$139] <- [cast({"id": $$68, "no_in_response_to": object-remove($$s, "in-response-to")})]
+                      -- ASSIGN  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate
+                          -- REPLICATE  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              data-scan []<-[$$68, $$s] <- TinySocial.FacebookMessages
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$141, $$69])
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$141] <- [cast({"id": $$69, "user": $$t})]
+                      -- ASSIGN  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$69, $$t] <- TinySocial.FacebookUsers
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$140, $$70])
+                -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$140] <- [cast({"id": $$70, "no_author_id": object-remove($$s, "author-id")})]
+                  -- ASSIGN  |PARTITIONED|
+                    project ([$$70, $$s])
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$70, $$s] <- [$$68, $$s]
+                      -- ASSIGN  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate
+                          -- REPLICATE  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              data-scan []<-[$$68, $$s] <- TinySocial.FacebookMessages
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

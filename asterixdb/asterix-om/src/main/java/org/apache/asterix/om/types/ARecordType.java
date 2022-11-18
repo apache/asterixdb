@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.asterix.common.annotations.IRecordTypeAnnotation;
@@ -73,30 +72,21 @@ public class ARecordType extends AbstractComplexType {
     private final Set<String> allPossibleAdditionalFieldNames;
 
     /**
-     * @param typeName
-     *            the name of the type
-     * @param fieldNames
-     *            the names of the closed fields
-     * @param fieldTypes
-     *            the types of the closed fields
-     * @param isOpen
-     *            whether the record is open
+     * @param typeName   the name of the type
+     * @param fieldNames the names of the closed fields
+     * @param fieldTypes the types of the closed fields
+     * @param isOpen     whether the record is open
      */
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen) {
         this(typeName, fieldNames, fieldTypes, isOpen, null);
     }
 
     /**
-     * @param typeName
-     *            the name of the type
-     * @param fieldNames
-     *            the names of the closed fields
-     * @param fieldTypes
-     *            the types of the closed fields
-     * @param isOpen
-     *            whether the record is open
-     * @param allPossibleAdditionalFieldNames,
-     *            all possible additional field names.
+     * @param typeName                         the name of the type
+     * @param fieldNames                       the names of the closed fields
+     * @param fieldTypes                       the types of the closed fields
+     * @param isOpen                           whether the record is open
+     * @param allPossibleAdditionalFieldNames, all possible additional field names.
      */
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen,
             Set<String> allPossibleAdditionalFieldNames) {
@@ -189,8 +179,7 @@ public class ARecordType extends AbstractComplexType {
     /**
      * Returns the position of the field in the closed schema or -1 if the field does not exist.
      *
-     * @param fieldName
-     *            the name of the field whose position is sought
+     * @param fieldName the name of the field whose position is sought
      * @return the position of the field in the closed schema or -1 if the field does not exist.
      */
     public int getFieldIndex(String fieldName) {
@@ -206,10 +195,8 @@ public class ARecordType extends AbstractComplexType {
     }
 
     /**
-     * @param subFieldName
-     *            The full pathname of the child
-     * @param parent
-     *            The type of the parent
+     * @param subFieldName The full pathname of the child
+     * @param parent       The type of the parent
      * @return the type of the child
      */
 
@@ -222,8 +209,7 @@ public class ARecordType extends AbstractComplexType {
     }
 
     /**
-     * @param subFieldName
-     *            The full pathname of the child
+     * @param subFieldName The full pathname of the child
      * @return the type of the child
      * @throws AsterixException
      */
@@ -248,9 +234,7 @@ public class ARecordType extends AbstractComplexType {
     }
 
     /**
-     *
-     * @param subFieldName
-     *            The full pathname of the field
+     * @param subFieldName The full pathname of the field
      * @return The nullability of the field
      * @throws AlgebricksException
      */
@@ -283,10 +267,9 @@ public class ARecordType extends AbstractComplexType {
     /**
      * Returns the field type of the field name if it exists, otherwise null.
      *
-     * @param fieldName
-     *            the fieldName whose type is sought
+     * @param fieldName the fieldName whose type is sought
      * @return the field type of the field name if it exists, otherwise null
-     *         NOTE: this method doesn't work for nested fields
+     * NOTE: this method doesn't work for nested fields
      */
     public IAType getFieldType(String fieldName) {
         int fieldPos = getFieldIndex(fieldName);
@@ -299,8 +282,7 @@ public class ARecordType extends AbstractComplexType {
     /**
      * Returns true or false indicating whether or not a field is closed.
      *
-     * @param fieldName
-     *            the name of the field to check
+     * @param fieldName the name of the field to check
      * @return true if fieldName is a closed field, otherwise false
      */
     public boolean isClosedField(String fieldName) {
@@ -360,8 +342,7 @@ public class ARecordType extends AbstractComplexType {
         }
         ARecordType rt = (ARecordType) obj;
         return (isOpen == rt.isOpen) && Arrays.deepEquals(fieldNames, rt.fieldNames)
-                && Arrays.deepEquals(fieldTypes, rt.fieldTypes)
-                && Objects.equals(allPossibleAdditionalFieldNames, rt.allPossibleAdditionalFieldNames);
+                && Arrays.deepEquals(fieldTypes, rt.fieldTypes);
     }
 
     @Override
@@ -382,11 +363,7 @@ public class ARecordType extends AbstractComplexType {
         ObjectNode type = om.createObjectNode();
         type.put("type", ARecordType.class.getName());
         type.put("name", typeName);
-        if (isOpen) {
-            type.put("open", true);
-        } else {
-            type.put("open", false);
-        }
+        type.put("open", isOpen);
 
         ArrayNode fields = om.createArrayNode();
         for (int i = 0; i < fieldNames.length; i++) {

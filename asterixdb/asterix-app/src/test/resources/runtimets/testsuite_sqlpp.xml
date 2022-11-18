@@ -15007,6 +15007,11 @@
         <output-dir compare="Text">query-ASTERIXDB-1354</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_type_cast">
+        <output-dir compare="Text">union_type_cast</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="upsert">
     <test-case FilePath="upsert">
