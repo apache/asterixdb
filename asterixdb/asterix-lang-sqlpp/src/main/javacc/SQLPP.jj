@@ -1032,6 +1032,13 @@ void Dataset() throws ParseException:
     (<DATASET>|<COLLECTION>)
 }
 
+void DatasetToken() throws ParseException:
+{
+}
+{
+    Dataset()
+}
+
 DatasetDecl CreateDatasetStatement(Token startStmtToken) throws ParseException:
 {
   DatasetDecl stmt = null;
@@ -2680,7 +2687,7 @@ Statement AnalyzeStatement() throws ParseException:
   Pair<DataverseName,Identifier> nameComponents = null;
 }
 {
-  <ANALYZE> { startToken = token; } Dataset() nameComponents = QualifiedName()
+  <ANALYZE> { startToken = token; } DatasetToken() nameComponents = QualifiedName()
   (
     stmt = AnalyzeDatasetDropStatement(startToken, nameComponents.first, nameComponents.second)
     | stmt = AnalyzeDatasetStatement(startToken, nameComponents.first, nameComponents.second)
