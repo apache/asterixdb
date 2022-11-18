@@ -162,7 +162,7 @@ CreateDataverse ::= "CREATE" "DATAVERSE" DataverseName ("IF" "NOT" "EXISTS")?
 
 CreateType ::= "CREATE" "TYPE" QualifiedName ("IF" "NOT" "EXISTS")? "AS" ObjectTypeDef
 
-ObjectTypeDef ::= ("CLOSED" | "OPEN")? "{" ObjectField ("," ObjectField)* "}"
+ObjectTypeDef ::= ("CLOSED" | "OPEN")? "{" ( ObjectField ("," ObjectField)* )? "}"
 
 ObjectField ::= Identifier ":" Identifier "?"?
 
