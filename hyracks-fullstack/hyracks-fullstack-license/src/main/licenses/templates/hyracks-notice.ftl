@@ -30,6 +30,9 @@ Hyracks and Algebricks utilize many libraries, which come with the following app
    <#assign noticeText = e.getKey()/>
    <#assign projects = e.getValue()/>
    <#list projects as p>
+     <#if p.shadowed>
+       <#continue/>
+     </#if>
 ${p.name} (${p.groupId}:${p.artifactId}:${p.version})
        <#list p.locations as loc>
 - ${loc}${p.jarName}

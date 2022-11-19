@@ -41,6 +41,7 @@ public class Project {
     private String licenseText;
     private String sourcePointer;
     private String classifier;
+    private final boolean shadowed;
 
     @JsonIgnore
     private MavenProject mavenProject;
@@ -48,7 +49,7 @@ public class Project {
     public static final Comparator<Project> PROJECT_COMPARATOR =
             (o1, o2) -> o1.compareToken().compareTo(o2.compareToken());
 
-    public Project(MavenProject project, String location, File artifactPath) {
+    public Project(MavenProject project, String location, File artifactPath, boolean shadowed) {
         mavenProject = project;
         name = project.getName();
         groupId = project.getGroupId();
@@ -57,6 +58,7 @@ public class Project {
         url = project.getUrl();
         classifier = project.getArtifact().getClassifier();
         this.artifactPath = artifactPath.getPath();
+        this.shadowed = shadowed;
         setLocation(location);
     }
 
@@ -65,7 +67,8 @@ public class Project {
             @JsonProperty("artifactId") String artifactId, @JsonProperty("url") String url,
             @JsonProperty("version") String version, @JsonProperty("location") String location,
             @JsonProperty("artifactPath") String artifactPath, @JsonProperty("noticeText") String noticeText,
-            @JsonProperty("licenseText") String licenseText, @JsonProperty("classifier") String classifier) {
+            @JsonProperty("licenseText") String licenseText, @JsonProperty("classifier") String classifier,
+            @JsonProperty("shadowed") boolean shadowed) {
         this.name = name;
         this.groupId = groupId;
         this.artifactId = artifactId;
@@ -76,6 +79,7 @@ public class Project {
         this.noticeText = noticeText;
         this.licenseText = licenseText;
         this.classifier = classifier;
+        this.shadowed = shadowed;
     }
 
     public String getName() {
@@ -183,6 +187,10 @@ public class Project {
 
     public void setSourcePointer(String sourcePointer) {
         this.sourcePointer = sourcePointer;
+    }
+
+    public boolean isShadowed() {
+        return shadowed;
     }
 
     @Override

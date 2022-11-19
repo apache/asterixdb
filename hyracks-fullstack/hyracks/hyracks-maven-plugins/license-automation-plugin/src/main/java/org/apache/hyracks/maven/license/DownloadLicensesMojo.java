@@ -63,7 +63,7 @@ public class DownloadLicensesMojo extends LicenseMojo {
                 String fileName = entry.getLicense().getContentFile(false);
                 doDownload(timeoutMillis, i, url, fileName);
             });
-        } catch (ProjectBuildingException e) {
+        } catch (ProjectBuildingException | IOException e) {
             throw new MojoExecutionException("Unexpected exception: " + e, e);
         }
     }
