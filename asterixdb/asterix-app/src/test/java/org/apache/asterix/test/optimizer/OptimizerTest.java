@@ -26,16 +26,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.asterix.api.java.AsterixJavaClient;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.test.common.TestHelper;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -53,8 +51,6 @@ import org.junit.runners.Parameterized.Parameters;
 public class OptimizerTest extends AbstractOptimizerTest {
 
     protected static final String PATH_EXPECTED = PATH_BASE + "results" + SEPARATOR;
-    private static final String PATTERN_VAR_ID_PREFIX = "\\$\\$";
-    private static final Pattern PATTERN_VAR_ID = Pattern.compile(PATTERN_VAR_ID_PREFIX + "(\\d+)");
     protected String expectedFilePath;
 
     static {
@@ -93,72 +89,11 @@ public class OptimizerTest extends AbstractOptimizerTest {
         }
 
         List<String> linesActual = Files.readAllLines(actualFile.toPath(), StandardCharsets.UTF_8);
-
         List<String> linesExpected = getExpectedLines();
-        int varBaseExpected = findBaseVarId(linesExpected);
-        int varBaseActual = findBaseVarId(linesActual);
-
-        Iterator<String> readerExpected = linesExpected.iterator();
-        Iterator<String> readerActual = linesActual.iterator();
-        String lineExpected, lineActual;
-        int num = 1;
-        while (readerExpected.hasNext()) {
-            lineExpected = readerExpected.next();
-            if (!readerActual.hasNext()) {
-                throw new Exception(
-                        "Result for " + queryFile + " changed at line " + num + ":\n< " + lineExpected + "\n> ");
-            }
-            lineActual = readerActual.next();
-
-            if (!planLineEquals(lineExpected, varBaseExpected, lineActual, varBaseActual)) {
-                throw new Exception("Result for " + queryFile + " changed at line " + num + ":\n< " + lineExpected
-                        + "\n> " + lineActual);
-            }
-            ++num;
-        }
-        if (readerActual.hasNext()) {
-            throw new Exception(
-                    "Result for " + queryFile + " changed at line " + num + ":\n< \n> " + readerActual.next());
-        }
+        TestHelper.comparePlans(linesExpected, linesActual, queryFile);
     }
 
     protected List<String> getExpectedLines() throws IOException {
         return Files.readAllLines(Path.of(PATH_EXPECTED, expectedFilePath), StandardCharsets.UTF_8);
-    }
-
-    private boolean planLineEquals(String lineExpected, int varIdBaseExpected, String lineActual, int varIdBaseActual) {
-        String lineExpectedNorm = normalizePlanLine(lineExpected, varIdBaseExpected);
-        String lineActualNorm = normalizePlanLine(lineActual, varIdBaseActual);
-        return lineExpectedNorm.equals(lineActualNorm);
-    }
-
-    // rewrite variable ids in given plan line: $$varId -> $$(varId-varIdBase)
-    private String normalizePlanLine(String line, int varIdBase) {
-        if (varIdBase == Integer.MAX_VALUE) {
-            // plan did not contain any variables -> no rewriting necessary
-            return line;
-        }
-        Matcher m = PATTERN_VAR_ID.matcher(line);
-        StringBuffer sb = new StringBuffer(line.length());
-        while (m.find()) {
-            int varId = Integer.parseInt(m.group(1));
-            int newVarId = varId - varIdBase;
-            m.appendReplacement(sb, PATTERN_VAR_ID_PREFIX + newVarId);
-        }
-        m.appendTail(sb);
-        return sb.toString();
-    }
-
-    private int findBaseVarId(Collection<String> plan) {
-        int varIdBase = Integer.MAX_VALUE;
-        Matcher m = PATTERN_VAR_ID.matcher("");
-        for (String line : plan) {
-            m.reset(line);
-            while (m.find()) {
-                int varId = Integer.parseInt(m.group(1));
-                varIdBase = Math.min(varIdBase, varId);
-            }
-        }
-        return varIdBase;
     }
 }

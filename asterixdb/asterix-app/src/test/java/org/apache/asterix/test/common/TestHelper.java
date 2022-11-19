@@ -27,12 +27,15 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -62,7 +65,8 @@ public final class TestHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String TEST_DIR_BASE_PATH = System.getProperty("user.dir") + File.separator + "target";
     private static final String[] TEST_DIRS = new String[] { "txnLogDir", "IODevice", "spill_area", "config" };
-
+    private static final String PATTERN_VAR_ID_PREFIX = "\\$\\$";
+    private static final Pattern PATTERN_VAR_ID = Pattern.compile(PATTERN_VAR_ID_PREFIX + "(\\d+)");
     private static final ObjectMapper SORTED_MAPPER = new ObjectMapper();
     private static final ObjectWriter PRETTY_SORTED_WRITER;
 
@@ -308,5 +312,69 @@ public final class TestHelper {
         objectMapper.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
         objectMapper.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true);
         return objectMapper;
+    }
+
+    public static void comparePlans(List<String> linesExpected, List<String> linesActual, File queryFile)
+            throws Exception {
+        int varBaseExpected = findBaseVarId(linesExpected);
+        int varBaseActual = findBaseVarId(linesActual);
+
+        Iterator<String> readerExpected = linesExpected.iterator();
+        Iterator<String> readerActual = linesActual.iterator();
+        String lineExpected, lineActual;
+        int num = 1;
+        while (readerExpected.hasNext()) {
+            lineExpected = readerExpected.next();
+            if (!readerActual.hasNext()) {
+                throw TestExecutor.createLineNotFoundException(queryFile, lineExpected, num);
+            }
+            lineActual = readerActual.next();
+
+            if (!planLineEquals(lineExpected, varBaseExpected, lineActual, varBaseActual)) {
+                throw TestExecutor.createLineChangedException(queryFile, lineExpected, lineActual, num);
+            }
+            ++num;
+        }
+        if (readerActual.hasNext()) {
+            throw new Exception(
+                    "Result for " + queryFile + " changed at line " + num + ":\n< \n> " + readerActual.next());
+        }
+    }
+
+    private static boolean planLineEquals(String lineExpected, int varIdBaseExpected, String lineActual,
+            int varIdBaseActual) {
+        String lineExpectedNorm = normalizePlanLine(lineExpected, varIdBaseExpected);
+        String lineActualNorm = normalizePlanLine(lineActual, varIdBaseActual);
+        return lineExpectedNorm.equals(lineActualNorm);
+    }
+
+    // rewrite variable ids in given plan line: $$varId -> $$(varId-varIdBase)
+    private static String normalizePlanLine(String line, int varIdBase) {
+        if (varIdBase == Integer.MAX_VALUE) {
+            // plan did not contain any variables -> no rewriting necessary
+            return line;
+        }
+        Matcher m = PATTERN_VAR_ID.matcher(line);
+        StringBuilder sb = new StringBuilder(line.length());
+        while (m.find()) {
+            int varId = Integer.parseInt(m.group(1));
+            int newVarId = varId - varIdBase;
+            m.appendReplacement(sb, PATTERN_VAR_ID_PREFIX + newVarId);
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    private static int findBaseVarId(Collection<String> plan) {
+        int varIdBase = Integer.MAX_VALUE;
+        Matcher m = PATTERN_VAR_ID.matcher("");
+        for (String line : plan) {
+            m.reset(line);
+            while (m.find()) {
+                int varId = Integer.parseInt(m.group(1));
+                varIdBase = Math.min(varIdBase, varId);
+            }
+        }
+        return varIdBase;
     }
 }
