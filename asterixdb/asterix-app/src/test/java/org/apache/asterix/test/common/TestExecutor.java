@@ -354,6 +354,9 @@ public class TestExecutor {
             } else if (actualFile.toString().endsWith(".unorderedtxt")) {
                 runScriptAndCompareWithResultUnorderedLinesText(scriptFile, readerExpected, readerActual);
                 return;
+            } else if (actualFile.toString().endsWith(".plan")) {
+                runScriptAndCompareWithResultPlan(scriptFile, readerExpected, readerActual);
+                return;
             }
 
             String lineExpected, lineActual;
@@ -414,15 +417,15 @@ public class TestExecutor {
 
     }
 
-    private ComparisonException createLineChangedException(File scriptFile, String lineExpected, String lineActual,
-            int num) {
+    public static ComparisonException createLineChangedException(File scriptFile, String lineExpected,
+            String lineActual, int num) {
         return new ComparisonException("Result for " + canonicalize(scriptFile) + " changed at line " + num
                 + ":\nexpected < " + truncateIfLong(lineExpected) + "\nactual   > " + truncateIfLong(lineActual));
     }
 
-    private ComparisonException createLineNotFoundException(File scriptFile, String lineExpected) {
-        return new ComparisonException(
-                "Result for " + canonicalize(scriptFile) + " expected line not found: " + truncateIfLong(lineExpected));
+    public static ComparisonException createLineNotFoundException(File scriptFile, String lineExpected, int num) {
+        return new ComparisonException("Result for " + canonicalize(scriptFile) + " expected line at " + num
+                + " not found: " + truncateIfLong(lineExpected));
     }
 
     private ComparisonException createExpectedLinesNotReturnedException(File scriptFile, List<String> expectedLines) {
@@ -430,7 +433,7 @@ public class TestExecutor {
                 + String.join("\n", expectedLines));
     }
 
-    private String truncateIfLong(String string) {
+    private static String truncateIfLong(String string) {
         if (string.length() < TRUNCATE_THRESHOLD) {
             return string;
         }
@@ -637,16 +640,25 @@ public class TestExecutor {
         List<String> expectedLines = readerExpected.lines().collect(Collectors.toList());
         List<String> actualLines = readerActual.lines().collect(Collectors.toList());
 
+        int num = 1;
         for (String line : actualLines) {
             if (!expectedLines.remove(line)) {
-                throw createLineNotFoundException(scriptFile, line);
+                throw createLineNotFoundException(scriptFile, line, num);
             }
+            num++;
         }
 
         // number of expect > actual
         if (expectedLines.size() > 0) {
             throw createExpectedLinesNotReturnedException(scriptFile, expectedLines);
         }
+    }
+
+    public void runScriptAndCompareWithResultPlan(File scriptFile, BufferedReader readerExpected,
+            BufferedReader readerActual) throws Exception {
+        List<String> expectedLines = readerExpected.lines().collect(Collectors.toList());
+        List<String> actualLines = readerActual.lines().collect(Collectors.toList());
+        TestHelper.comparePlans(expectedLines, actualLines, scriptFile);
     }
 
     // For tests where you simply want the byte-for-byte output.
