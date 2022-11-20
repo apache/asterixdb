@@ -70,7 +70,7 @@ public class BroadcastSideSwitchingVisitor implements ILogicalExpressionVisitor<
             }
         }
         BroadcastExpressionAnnotation bcastAnn = expr.removeAnnotation(BroadcastExpressionAnnotation.class);
-        if (bcastAnn != null) {
+        if (bcastAnn != null && bcastAnn.getBroadcastSide() != null) {
             BroadcastExpressionAnnotation.BroadcastSide oppositeSide =
                     BroadcastExpressionAnnotation.BroadcastSide.getOppositeSide(bcastAnn.getBroadcastSide());
             expr.putAnnotation(new BroadcastExpressionAnnotation(oppositeSide));

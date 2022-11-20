@@ -38,13 +38,37 @@ public final class BroadcastExpressionAnnotation implements IExpressionAnnotatio
         }
     }
 
-    private final BroadcastSide side;
+    private String name;
+    private BroadcastSide side;
+
+    public BroadcastExpressionAnnotation(String name) {
+        this.name = validateName(name);
+        this.side = null;
+    }
 
     public BroadcastExpressionAnnotation(BroadcastSide side) {
+        this.name = null;
         this.side = Objects.requireNonNull(side);
+    }
+
+    public String getName() {
+        return name;
     }
 
     public BroadcastSide getBroadcastSide() {
         return side;
+    }
+
+    public void setBroadcastSide(BroadcastSide side) {
+        this.name = null;
+        this.side = Objects.requireNonNull(side);
+    }
+
+    private String validateName(String name) {
+        String n = Objects.requireNonNull(name);
+        if (n.isBlank()) {
+            throw new IllegalArgumentException("BroadcastExpressionAnnotation:" + name + "cannot be blank");
+        }
+        return n;
     }
 }

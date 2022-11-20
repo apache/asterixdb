@@ -414,6 +414,32 @@ class SQLPPParser extends ScopeChecker implements IParser {
         return new SQLPPParser(text).parseParenthesizedIdentifierList();
     }
 
+    private Pair<HashJoinExpressionAnnotation.BuildOrProbe, String> parseHashJoinParams() throws CompilationException {
+        return parseImpl(new ParseFunction<Pair<HashJoinExpressionAnnotation.BuildOrProbe, String>>() {
+            @Override
+            public  Pair<HashJoinExpressionAnnotation.BuildOrProbe, String> parse() throws ParseException {
+                return SQLPPParser.this.buildOrProbeParenthesizedIdentifier();
+            }
+        });
+    }
+
+    private static Pair<HashJoinExpressionAnnotation.BuildOrProbe, String> parseHashJoinParams(String text) throws CompilationException {
+        return new SQLPPParser(text).parseHashJoinParams();
+    }
+
+    private String parseBroadcastJoinParams() throws CompilationException {
+            return parseImpl(new ParseFunction<String>() {
+                @Override
+                public  String parse() throws ParseException {
+                    return SQLPPParser.this.parenthesizedIdentifier();
+                }
+            });
+        }
+
+    private static String parseBroadcastJoinParams(String text) throws CompilationException {
+        return new SQLPPParser(text).parseBroadcastJoinParams();
+    }
+
     private List<Literal> parseParenthesizedLiteralList() throws CompilationException {
         return parseImpl(new ParseFunction<List<Literal>>() {
             @Override
@@ -692,9 +718,23 @@ class SQLPPParser extends ScopeChecker implements IParser {
             // attach hint to global scope
             return new JoinProductivityAnnotation (productivity, leftSideDataSet);
           case HASH_BROADCAST_JOIN_HINT:
-            return new BroadcastExpressionAnnotation(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
+            if (hintToken.hintParams == null) {
+              return new BroadcastExpressionAnnotation(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
+            }
+            else {
+              // if parameter parsing fails then ignore this hint.
+              String name = parseBroadcastJoinParams(hintToken.hintParams);
+              return new BroadcastExpressionAnnotation(name);
+            }
           case HASH_JOIN_HINT:
-            return new HashJoinExpressionAnnotation(HashJoinExpressionAnnotation.BuildSide.RIGHT);
+            if (hintToken.hintParams == null) {
+              throw new SqlppParseException(getSourceLocation(hintToken), "Expected hash join build/probe collection name");
+            }
+            else {
+              // if parameter parsing fails then ignore this hint.
+              Pair<HashJoinExpressionAnnotation.BuildOrProbe, String> pair = parseHashJoinParams(hintToken.hintParams);
+              return new HashJoinExpressionAnnotation(pair);
+            }
           case INDEXED_NESTED_LOOP_JOIN_HINT:
             if (hintToken.hintParams == null) {
               return IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX;
@@ -3167,6 +3207,39 @@ List<String> ParenthesizedIdentifierList() throws ParseException:
   <RIGHTPAREN>
   {
     return list;
+  }
+}
+
+Pair<HashJoinExpressionAnnotation.BuildOrProbe, String> buildOrProbeParenthesizedIdentifier() throws ParseException:
+{
+  String ident1 = null;
+  String ident2 = null;
+}
+{
+  ident1 = Identifier() <LEFTPAREN> ident2 = Identifier() <RIGHTPAREN>
+  {
+    // check
+    if (ident1.equals("build")) {
+        return new Pair<HashJoinExpressionAnnotation.BuildOrProbe, String>(HashJoinExpressionAnnotation.BuildOrProbe.BUILD, ident2);
+    }
+    else if (ident1.equals("probe")) {
+            return new Pair<HashJoinExpressionAnnotation.BuildOrProbe, String>(HashJoinExpressionAnnotation.BuildOrProbe.PROBE, ident2);
+    }
+    else {
+        throw new SqlppParseException(getSourceLocation(token), "The string after hashjoin has to be \"build\" or \"probe\".");
+    }
+    return null;
+  }
+}
+
+String parenthesizedIdentifier() throws ParseException:
+{
+  String ident = null;
+}
+{
+  <LEFTPAREN> ident = Identifier() <RIGHTPAREN>
+  {
+    return ident;
   }
 }
 

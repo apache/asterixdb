@@ -246,7 +246,7 @@ public class JoinEnum {
         return eqPredFound ? andExpr : null;
     }
 
-    public HashJoinExpressionAnnotation.BuildSide findHashJoinHint(List<Integer> newJoinConditions) {
+    public HashJoinExpressionAnnotation findHashJoinHint(List<Integer> newJoinConditions) {
         for (int i : newJoinConditions) {
             JoinCondition jc = joinConditions.get(i);
             if (jc.comparisonType != JoinCondition.comparisonOp.OP_EQ) {
@@ -257,14 +257,14 @@ public class JoinEnum {
                 AbstractFunctionCallExpression AFCexpr = (AbstractFunctionCallExpression) expr;
                 HashJoinExpressionAnnotation hjea = AFCexpr.getAnnotation(HashJoinExpressionAnnotation.class);
                 if (hjea != null) {
-                    return hjea.getBuildSide();
+                    return hjea;
                 }
             }
         }
         return null;
     }
 
-    public BroadcastExpressionAnnotation.BroadcastSide findBroadcastHashJoinHint(List<Integer> newJoinConditions) {
+    public BroadcastExpressionAnnotation findBroadcastHashJoinHint(List<Integer> newJoinConditions) {
         for (int i : newJoinConditions) {
             JoinCondition jc = joinConditions.get(i);
             if (jc.comparisonType != JoinCondition.comparisonOp.OP_EQ) {
@@ -275,14 +275,14 @@ public class JoinEnum {
                 AbstractFunctionCallExpression AFCexpr = (AbstractFunctionCallExpression) expr;
                 BroadcastExpressionAnnotation bcasthjea = AFCexpr.getAnnotation(BroadcastExpressionAnnotation.class);
                 if (bcasthjea != null) {
-                    return bcasthjea.getBroadcastSide();
+                    return bcasthjea;
                 }
             }
         }
         return null;
     }
 
-    public boolean findNLJoinHint(List<Integer> newJoinConditions) {
+    public IndexedNLJoinExpressionAnnotation findNLJoinHint(List<Integer> newJoinConditions) {
         for (int i : newJoinConditions) {
             JoinCondition jc = joinConditions.get(i);
             ILogicalExpression expr = jc.joinCondition;
@@ -291,18 +291,18 @@ public class JoinEnum {
                 IndexedNLJoinExpressionAnnotation inljea =
                         AFCexpr.getAnnotation(IndexedNLJoinExpressionAnnotation.class);
                 if (inljea != null) {
-                    return true;
+                    return inljea;
                 }
             }
         }
-        return false;
+        return null;
     }
 
     public int findJoinNodeIndexByName(String name) {
         for (int i = 1; i <= this.numberOfTerms; i++) {
             if (name.equals(jnArray[i].datasetNames.get(0))) {
                 return i;
-            } else if (name.equals(jnArray[i].alias)) {
+            } else if (name.equals(jnArray[i].aliases.get(0))) {
                 return i;
             }
         }
@@ -582,16 +582,19 @@ public class JoinEnum {
                     jn.datasetNames.addAll(jnI.datasetNames);
                     jn.datasetNames.addAll(jnJ.datasetNames);
                     Collections.sort(jn.datasetNames);
+                    jn.aliases = new ArrayList<>();
+                    jn.aliases.addAll(jnI.aliases);
+                    jn.aliases.addAll(jnJ.aliases);
+                    Collections.sort(jn.aliases);
                     jn.size = jnI.size + jnJ.size;
                     jn.cardinality = jn.computeJoinCardinality();
-
                 } else {
                     addPlansToThisJn = jnNewBits.jnIndex;
                 }
 
                 JoinNode jnIJ = jnArray[addPlansToThisJn];
                 jnIJ.jnArrayIndex = addPlansToThisJn;
-                jnIJ.addMultiDatasetPlans(jnI, jnJ, level);
+                jnIJ.addMultiDatasetPlans(jnI, jnJ);
                 if (forceJoinOrderMode) {
                     break;
                 }
@@ -668,7 +671,7 @@ public class JoinEnum {
             DataSourceScanOperator scanOp = emptyTupleAndDataSourceOps.get(i - 1).getSecond();
             if (scanOp != null) {
                 DataSourceId id = (DataSourceId) scanOp.getDataSource().getId();
-                jn.alias = findAlias(scanOp);
+                jn.aliases = new ArrayList<>(Collections.singleton(findAlias(scanOp)));
                 jn.datasetNames = new ArrayList<>(Collections.singleton(id.getDatasourceName()));
                 Index.SampleIndexDetails idxDetails;
                 Index index = stats.findSampleIndex(scanOp, optCtx);
@@ -695,6 +698,7 @@ public class JoinEnum {
             } else {
                 // could be unnest or assign
                 jn.datasetNames = new ArrayList<>(Collections.singleton("unnestOrAssign"));
+                jn.aliases = new ArrayList<>(Collections.singleton("unnestOrAssign"));
                 jn.origCardinality = jn.cardinality = findInListCard(leafInput);
                 // just a guess
                 jn.size = 10;

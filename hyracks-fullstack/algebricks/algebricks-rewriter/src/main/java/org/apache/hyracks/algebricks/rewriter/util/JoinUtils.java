@@ -32,6 +32,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation.BroadcastSide;
+import org.apache.hyracks.algebricks.core.algebra.expressions.HashJoinExpressionAnnotation;
+import org.apache.hyracks.algebricks.core.algebra.expressions.HashJoinExpressionAnnotation.BuildSide;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
@@ -65,11 +67,35 @@ public class JoinUtils {
         List<LogicalVariable> varsRight = op.getInputs().get(1).getValue().getSchema();
         ILogicalExpression conditionExpr = op.getCondition().getValue();
         if (isHashJoinCondition(conditionExpr, varsLeft, varsRight, sideLeft, sideRight)) {
-            BroadcastSide side = getBroadcastJoinSide(conditionExpr);
-            if (side == null) {
-                setHashJoinOp(op, JoinPartitioningType.PAIRWISE, sideLeft, sideRight, context);
+            BroadcastSide broadcastSide = getBroadcastJoinSide(conditionExpr, varsLeft, varsRight, context);
+            if (broadcastSide == null) {
+                BuildSide buildSide = getHashJoinBuildSide(conditionExpr, varsLeft, varsRight, context);
+                if (buildSide == null) {
+                    setHashJoinOp(op, JoinPartitioningType.PAIRWISE, sideLeft, sideRight, context);
+                } else {
+                    switch (buildSide) {
+                        case RIGHT:
+                            setHashJoinOp(op, JoinPartitioningType.PAIRWISE, sideLeft, sideRight, context);
+                            break;
+                        case LEFT:
+                            if (op.getJoinKind() == AbstractBinaryJoinOperator.JoinKind.INNER) {
+                                Mutable<ILogicalOperator> opRef0 = op.getInputs().get(0);
+                                Mutable<ILogicalOperator> opRef1 = op.getInputs().get(1);
+                                ILogicalOperator tmp = opRef0.getValue();
+                                opRef0.setValue(opRef1.getValue());
+                                opRef1.setValue(tmp);
+                                setHashJoinOp(op, JoinPartitioningType.PAIRWISE, sideRight, sideLeft, context);
+                            } else {
+                                setHashJoinOp(op, JoinPartitioningType.PAIRWISE, sideLeft, sideRight, context);
+                            }
+                            break;
+                        default:
+                            // This should never happen
+                            throw new IllegalStateException(buildSide.toString());
+                    }
+                }
             } else {
-                switch (side) {
+                switch (broadcastSide) {
                     case RIGHT:
                         setHashJoinOp(op, JoinPartitioningType.BROADCAST, sideLeft, sideRight, context);
                         break;
@@ -87,7 +113,7 @@ public class JoinUtils {
                         break;
                     default:
                         // This should never happen
-                        throw new IllegalStateException(side.toString());
+                        throw new IllegalStateException(broadcastSide.toString());
                 }
             }
         } else {
@@ -188,7 +214,8 @@ public class JoinUtils {
         }
     }
 
-    private static BroadcastSide getBroadcastJoinSide(ILogicalExpression e) {
+    private static BroadcastSide getBroadcastJoinSide(ILogicalExpression e, List<LogicalVariable> varsLeft,
+            List<LogicalVariable> varsRight, IOptimizationContext context) {
         BroadcastSide side = null;
         if (e.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return null;
@@ -197,7 +224,7 @@ public class JoinUtils {
         FunctionIdentifier fi = fexp.getFunctionIdentifier();
         if (fi.equals(AlgebricksBuiltinFunctions.AND)) {
             for (Mutable<ILogicalExpression> a : fexp.getArguments()) {
-                BroadcastSide newSide = getBroadcastJoinSide(a.getValue());
+                BroadcastSide newSide = getBroadcastJoinSide(a.getValue(), varsLeft, varsRight, context);
                 if (side == null) {
                     side = newSide;
                 } else if (newSide != null && !newSide.equals(side)) {
@@ -206,9 +233,83 @@ public class JoinUtils {
             }
             return side;
         } else {
-            BroadcastExpressionAnnotation bcastAnnnotation = fexp.getAnnotation(BroadcastExpressionAnnotation.class);
-            if (bcastAnnnotation != null) {
-                return bcastAnnnotation.getBroadcastSide();
+            BroadcastExpressionAnnotation bcastAnnotation = fexp.getAnnotation(BroadcastExpressionAnnotation.class);
+            if (bcastAnnotation != null) {
+                BroadcastExpressionAnnotation.BroadcastSide bcastSide = bcastAnnotation.getBroadcastSide();
+                if (bcastSide != null) {
+                    return bcastSide;
+                }
+                String broadcastObject = "$$" + bcastAnnotation.getName();
+                if (varsRight.stream().map(LogicalVariable::toString).anyMatch(v -> v.equals(broadcastObject))) {
+                    bcastAnnotation.setBroadcastSide(BroadcastSide.RIGHT);
+                    return bcastAnnotation.getBroadcastSide();
+                } else if (varsLeft.stream().map(LogicalVariable::toString).anyMatch(v -> v.equals(broadcastObject))) {
+                    bcastAnnotation.setBroadcastSide(BroadcastSide.LEFT);
+                    return bcastAnnotation.getBroadcastSide();
+                } else {
+                    IWarningCollector warningCollector = context.getWarningCollector();
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(e.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
+                                "broadcast hash join", "broadcast " + bcastAnnotation.getName()));
+                    }
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static BuildSide getHashJoinBuildSide(ILogicalExpression e, List<LogicalVariable> varsLeft,
+            List<LogicalVariable> varsRight, IOptimizationContext context) {
+        BuildSide side = null;
+        if (e.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return null;
+        }
+        AbstractFunctionCallExpression fexp = (AbstractFunctionCallExpression) e;
+        FunctionIdentifier fi = fexp.getFunctionIdentifier();
+        if (fi.equals(AlgebricksBuiltinFunctions.AND)) {
+            for (Mutable<ILogicalExpression> a : fexp.getArguments()) {
+                BuildSide newSide = getHashJoinBuildSide(a.getValue(), varsLeft, varsRight, context);
+                if (side == null) {
+                    side = newSide;
+                } else if (newSide != null && !newSide.equals(side)) {
+                    return null;
+                }
+            }
+            return side;
+        } else {
+            HashJoinExpressionAnnotation hashJoinAnnotation = fexp.getAnnotation(HashJoinExpressionAnnotation.class);
+            if (hashJoinAnnotation != null) {
+                BuildSide buildSide = hashJoinAnnotation.getBuildSide();
+                if (buildSide != null) {
+                    return buildSide;
+                }
+                boolean build =
+                        (hashJoinAnnotation.getBuildOrProbe() == HashJoinExpressionAnnotation.BuildOrProbe.BUILD);
+                boolean probe =
+                        (hashJoinAnnotation.getBuildOrProbe() == HashJoinExpressionAnnotation.BuildOrProbe.PROBE);
+
+                String buildOrProbeObject = "$$" + hashJoinAnnotation.getName();
+                if ((build && varsRight.stream().map(LogicalVariable::toString)
+                        .anyMatch(v -> v.equals(buildOrProbeObject)))
+                        || (probe && varsLeft.stream().map(LogicalVariable::toString)
+                                .anyMatch(v -> v.equals(buildOrProbeObject)))) {
+                    hashJoinAnnotation.setBuildSide(HashJoinExpressionAnnotation.BuildSide.RIGHT);
+                    return hashJoinAnnotation.getBuildSide();
+                } else if ((build
+                        && varsLeft.stream().map(LogicalVariable::toString).anyMatch(v -> v.equals(buildOrProbeObject)))
+                        || (probe && varsRight.stream().map(LogicalVariable::toString)
+                                .anyMatch(v -> v.equals(buildOrProbeObject)))) {
+                    hashJoinAnnotation.setBuildSide(HashJoinExpressionAnnotation.BuildSide.LEFT);
+                    return hashJoinAnnotation.getBuildSide();
+                } else {
+                    IWarningCollector warningCollector = context.getWarningCollector();
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(e.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
+                                "hash join", (build ? "build " : "probe ") + "with " + hashJoinAnnotation.getName()));
+                    }
+                    return null;
+                }
             }
         }
         return null;

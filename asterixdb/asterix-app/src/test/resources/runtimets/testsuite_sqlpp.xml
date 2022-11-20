@@ -15387,6 +15387,29 @@
   </test-group>
   <test-group name="warnings">
     <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="broadcast-join-hint-warning">
+        <output-dir compare="Text">broadcast-join-hint-warning</output-dir>
+        <expected-warn><![CDATA[ASX1107: Unexpected hint: hash-bcas. "hash-bcast", "indexnl", "hashjoin", "skip-index", "use-index", "selectivity", "productivity" expected at this location (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hash-bcast. ASX1001: Syntax error: In line 1 >>()<< Encountered ")" at column 2.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply broadcast hash join hint: broadcast cn (in line 36, at column 43)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="hashjoin-hint-warning">
+        <output-dir compare="Text">hashjoin-hint-warning</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>build<< Encountered <EOF> at column 5.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1107: Unexpected hint: hashjon build. "hash-bcast", "indexnl", "hashjoin", "skip-index", "use-index", "selectivity", "productivity" expected at this location (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>buil<< Encountered <EOF> at column 4.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>build ()<< Encountered ")" at column 8.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply hash join hint: build with cn (in line 36, at column 47)</expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>probe<< Encountered <EOF> at column 5.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1107: Unexpected hint: hashjon probe. "hash-bcast", "indexnl", "hashjoin", "skip-index", "use-index", "selectivity", "productivity" expected at this location (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>prob<< Encountered <EOF> at column 4.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>probe ()<< Encountered ")" at column 8.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply hash join hint: probe with cn (in line 36, at column 47)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
       <compilation-unit name="inapplicable-hint-warning">
         <output-dir compare="Text">inapplicable-hint-warning</output-dir>
         <expected-warn>HYR10006: Could not apply Group By hint: hash</expected-warn>
