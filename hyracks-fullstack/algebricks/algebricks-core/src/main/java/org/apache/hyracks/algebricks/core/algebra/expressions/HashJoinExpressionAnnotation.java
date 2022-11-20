@@ -21,19 +21,59 @@ package org.apache.hyracks.algebricks.core.algebra.expressions;
 
 import java.util.Objects;
 
+import org.apache.hyracks.algebricks.common.utils.Pair;
+
 public class HashJoinExpressionAnnotation implements IExpressionAnnotation {
+
+    public enum BuildOrProbe {
+        BUILD,
+        PROBE
+    }
+
     public enum BuildSide {
         LEFT,
         RIGHT
     }
 
-    private final BuildSide side;
+    private BuildOrProbe buildOrProbe;
+    private String name;
+    private BuildSide side;
+
+    public HashJoinExpressionAnnotation(Pair<BuildOrProbe, String> pair) {
+        this.buildOrProbe = Objects.requireNonNull(pair.getFirst());
+        this.name = validateName(pair.getSecond());
+        this.side = null;
+    }
 
     public HashJoinExpressionAnnotation(BuildSide side) {
+        this.buildOrProbe = null;
+        this.name = null;
         this.side = Objects.requireNonNull(side);
+    }
+
+    public BuildOrProbe getBuildOrProbe() {
+        return buildOrProbe;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public BuildSide getBuildSide() {
         return side;
+    }
+
+    public void setBuildSide(BuildSide side) {
+        this.buildOrProbe = null;
+        this.name = null;
+        this.side = Objects.requireNonNull(side);
+    }
+
+    private String validateName(String name) {
+        String n = Objects.requireNonNull(name);
+        if (n.isBlank()) {
+            throw new IllegalArgumentException("HashJoinExpressionAnnotation:" + name + "cannot be blank");
+        }
+        return n;
     }
 }

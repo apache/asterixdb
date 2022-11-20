@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
+import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -68,7 +69,7 @@ public class JoinNode {
     protected int datasetBits; // this is bitmap of all the keyspaceBits present in this joinNode
     protected List<Integer> datasetIndexes;
     protected List<String> datasetNames;
-    protected String alias;
+    protected List<String> aliases;
     protected int cheapestPlanIndex;
     protected ICost cheapestPlanCost;
     protected double origCardinality; // without any selections
@@ -171,8 +172,8 @@ public class JoinNode {
         return rightJn;
     }
 
-    public String getAlias() {
-        return alias;
+    public List<String> getAliases() {
+        return aliases;
     }
 
     public List<String> getDatasetNames() {
@@ -381,7 +382,8 @@ public class JoinNode {
         }
     }
 
-    protected int buildHashJoinPlan(JoinNode leftJn, JoinNode rightJn, ILogicalExpression hashJoinExpr) {
+    protected int buildHashJoinPlan(JoinNode leftJn, JoinNode rightJn, ILogicalExpression hashJoinExpr,
+            HashJoinExpressionAnnotation hintHashJoin) {
         List<PlanNode> allPlans = joinEnum.allPlans;
         PlanNode pn;
         ICost hjCost, childCosts, totalCost;
@@ -405,7 +407,8 @@ public class JoinNode {
             return PlanNode.NO_PLAN;
         }
 
-        if (rightJn.cardinality * rightJn.size <= leftJn.cardinality * leftJn.size || joinEnum.forceJoinOrderMode
+        if (rightJn.cardinality * rightJn.size <= leftJn.cardinality * leftJn.size || hintHashJoin != null
+                || joinEnum.forceJoinOrderMode
                 || !joinEnum.queryPlanShape.equals(AlgebricksConfig.QUERY_PLAN_SHAPE_ZIGZAG)) {
             // We want to build with the smaller side.
             hjCost = joinEnum.getCostMethodsHandle().costHashJoin(this);
@@ -419,6 +422,9 @@ public class JoinNode {
                 pn.planIndexes[0] = leftPlan;
                 pn.planIndexes[1] = rightPlan;
                 pn.joinOp = PlanNode.JoinMethod.HYBRID_HASH_JOIN; // need to check that all the conditions have equality predicates ONLY.
+                if (hintHashJoin != null) {
+                    hintHashJoin.setBuildSide(HashJoinExpressionAnnotation.BuildSide.RIGHT);
+                }
                 pn.side = HashJoinExpressionAnnotation.BuildSide.RIGHT;
                 pn.joinExpr = hashJoinExpr;
                 pn.opCost = hjCost;
@@ -437,7 +443,8 @@ public class JoinNode {
         return PlanNode.NO_PLAN;
     }
 
-    protected int buildBroadcastHashJoinPlan(JoinNode leftJn, JoinNode rightJn, ILogicalExpression hashJoinExpr) {
+    protected int buildBroadcastHashJoinPlan(JoinNode leftJn, JoinNode rightJn, ILogicalExpression hashJoinExpr,
+            BroadcastExpressionAnnotation hintBroadcastHashJoin) {
         List<PlanNode> allPlans = joinEnum.allPlans;
         PlanNode pn;
         ICost bcastHjCost, childCosts, totalCost;
@@ -461,7 +468,8 @@ public class JoinNode {
             return PlanNode.NO_PLAN;
         }
 
-        if (rightJn.cardinality * rightJn.size <= leftJn.cardinality * leftJn.size || joinEnum.forceJoinOrderMode
+        if (rightJn.cardinality * rightJn.size <= leftJn.cardinality * leftJn.size || hintBroadcastHashJoin != null
+                || joinEnum.forceJoinOrderMode
                 || !joinEnum.queryPlanShape.equals(AlgebricksConfig.QUERY_PLAN_SHAPE_ZIGZAG)) {
             // We want to broadcast and build with the smaller side.
             bcastHjCost = joinEnum.getCostMethodsHandle().costBroadcastHashJoin(this);
@@ -475,6 +483,9 @@ public class JoinNode {
                 pn.planIndexes[0] = leftPlan;
                 pn.planIndexes[1] = rightPlan;
                 pn.joinOp = PlanNode.JoinMethod.BROADCAST_HASH_JOIN; // need to check that all the conditions have equality predicates ONLY.
+                if (hintBroadcastHashJoin != null) {
+                    hintBroadcastHashJoin.setBroadcastSide(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
+                }
                 pn.side = HashJoinExpressionAnnotation.BuildSide.RIGHT;
                 pn.joinExpr = hashJoinExpr;
                 pn.opCost = bcastHjCost;
@@ -597,8 +608,7 @@ public class JoinNode {
         return PlanNode.NO_PLAN;
     }
 
-    protected Pair<Integer, ICost> addMultiDatasetPlans(JoinNode leftJn, JoinNode rightJn, int level)
-            throws AlgebricksException {
+    protected Pair<Integer, ICost> addMultiDatasetPlans(JoinNode leftJn, JoinNode rightJn) throws AlgebricksException {
         this.leftJn = leftJn;
         this.rightJn = rightJn;
         ICost noJoinCost = joinEnum.getCostHandle().maxCost();
@@ -632,26 +642,37 @@ public class JoinNode {
         hjPlan = commutativeHjPlan = bcastHjPlan =
                 commutativeBcastHjPlan = nljPlan = commutativeNljPlan = cpPlan = commutativeCpPlan = PlanNode.NO_PLAN;
 
-        HashJoinExpressionAnnotation.BuildSide hintHashJoin = joinEnum.findHashJoinHint(newJoinConditions);
-        BroadcastExpressionAnnotation.BroadcastSide hintBroadcastHashJoin = null;
-        boolean hintNLJoin = false;
-        if (hintHashJoin == null) {
-            hintBroadcastHashJoin = joinEnum.findBroadcastHashJoinHint(newJoinConditions);
-            if (hintBroadcastHashJoin == null) {
-                hintNLJoin = joinEnum.findNLJoinHint(newJoinConditions);
-            }
-        }
+        HashJoinExpressionAnnotation hintHashJoin = joinEnum.findHashJoinHint(newJoinConditions);
+        BroadcastExpressionAnnotation hintBroadcastHashJoin = joinEnum.findBroadcastHashJoinHint(newJoinConditions);;
+        IndexedNLJoinExpressionAnnotation hintNLJoin = joinEnum.findNLJoinHint(newJoinConditions);
 
         if (leftJn.cheapestPlanIndex == PlanNode.NO_PLAN || rightJn.cheapestPlanIndex == PlanNode.NO_PLAN) {
             return new Pair<>(PlanNode.NO_PLAN, noJoinCost);
         }
 
         if (hintHashJoin != null) {
-            hjPlan = buildHashJoinPlan(leftJn, rightJn, hashJoinExpr);
-            if (!joinEnum.forceJoinOrderMode && hintHashJoin != HashJoinExpressionAnnotation.BuildSide.RIGHT) {
-                commutativeHjPlan = buildHashJoinPlan(rightJn, leftJn, hashJoinExpr);
+            boolean build = (hintHashJoin.getBuildOrProbe() == HashJoinExpressionAnnotation.BuildOrProbe.BUILD);
+            boolean probe = (hintHashJoin.getBuildOrProbe() == HashJoinExpressionAnnotation.BuildOrProbe.PROBE);
+            boolean validBuildOrProbeObject = false;
+            String buildOrProbeObject = hintHashJoin.getName();
+            if (buildOrProbeObject != null && (rightJn.datasetNames.contains(buildOrProbeObject)
+                    || rightJn.aliases.contains(buildOrProbeObject) || leftJn.datasetNames.contains(buildOrProbeObject)
+                    || leftJn.aliases.contains(buildOrProbeObject))) {
+                validBuildOrProbeObject = true;
             }
-            if (hjPlan == PlanNode.NO_PLAN && commutativeHjPlan == PlanNode.NO_PLAN) {
+            if (validBuildOrProbeObject) {
+                if ((build && (rightJn.datasetNames.contains(buildOrProbeObject)
+                        || rightJn.aliases.contains(buildOrProbeObject)))
+                        || (probe && (leftJn.datasetNames.contains(buildOrProbeObject)
+                                || leftJn.aliases.contains(buildOrProbeObject)))) {
+                    hjPlan = buildHashJoinPlan(leftJn, rightJn, hashJoinExpr, hintHashJoin);
+                } else if ((build && (leftJn.datasetNames.contains(buildOrProbeObject)
+                        || leftJn.aliases.contains(buildOrProbeObject)))
+                        || (probe && (rightJn.datasetNames.contains(buildOrProbeObject)
+                                || rightJn.aliases.contains(buildOrProbeObject)))) {
+                    commutativeHjPlan = buildHashJoinPlan(rightJn, leftJn, hashJoinExpr, hintHashJoin);
+                }
+            } else {
                 // Hints are attached to predicates, so newJoinConditions should not be empty, but adding the check to be safe.
                 if (!joinEnum.getJoinConditions().isEmpty() && !newJoinConditions.isEmpty()) {
                     IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
@@ -659,12 +680,17 @@ public class JoinNode {
                         warningCollector.warn(Warning.of(
                                 joinEnum.getJoinConditions().get(newJoinConditions.get(0)).joinCondition
                                         .getSourceLocation(),
-                                ErrorCode.INAPPLICABLE_HINT, "Hash join hint not applicable and was ignored"));
+                                ErrorCode.INAPPLICABLE_HINT, "hash join",
+                                (build ? "build " : "probe ") + "with " + buildOrProbeObject));
                     }
                 }
-                bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, hashJoinExpr);
+                hjPlan = buildHashJoinPlan(leftJn, rightJn, hashJoinExpr, null);
                 if (!joinEnum.forceJoinOrderMode) {
-                    commutativeBcastHjPlan = buildBroadcastHashJoinPlan(rightJn, leftJn, hashJoinExpr);
+                    commutativeHjPlan = buildHashJoinPlan(rightJn, leftJn, hashJoinExpr, null);
+                }
+                bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, hashJoinExpr, null);
+                if (!joinEnum.forceJoinOrderMode) {
+                    commutativeBcastHjPlan = buildBroadcastHashJoinPlan(rightJn, leftJn, hashJoinExpr, null);
                 }
                 nljPlan = buildNLJoinPlan(leftJn, rightJn, nestedLoopJoinExpr);
                 if (!joinEnum.forceJoinOrderMode) {
@@ -676,12 +702,27 @@ public class JoinNode {
                 }
             }
         } else if (hintBroadcastHashJoin != null) {
-            bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, hashJoinExpr);
-            if (!joinEnum.forceJoinOrderMode
-                    && hintBroadcastHashJoin != BroadcastExpressionAnnotation.BroadcastSide.RIGHT) {
-                commutativeBcastHjPlan = buildBroadcastHashJoinPlan(rightJn, leftJn, hashJoinExpr);
+            boolean validBroadcastObject = false;
+            String broadcastObject = hintBroadcastHashJoin.getName();
+            if (broadcastObject != null && (rightJn.datasetNames.contains(broadcastObject)
+                    || rightJn.aliases.contains(broadcastObject) || leftJn.datasetNames.contains(broadcastObject)
+                    || leftJn.aliases.contains(broadcastObject))) {
+                validBroadcastObject = true;
             }
-            if (bcastHjPlan == PlanNode.NO_PLAN && commutativeBcastHjPlan == PlanNode.NO_PLAN) {
+            if (validBroadcastObject) {
+                if (rightJn.datasetNames.contains(broadcastObject) || rightJn.aliases.contains(broadcastObject)) {
+                    bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, hashJoinExpr, hintBroadcastHashJoin);
+                } else if (leftJn.datasetNames.contains(broadcastObject) || leftJn.aliases.contains(broadcastObject)) {
+                    commutativeBcastHjPlan =
+                            buildBroadcastHashJoinPlan(rightJn, leftJn, hashJoinExpr, hintBroadcastHashJoin);
+                }
+            } else if (broadcastObject == null) {
+                bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, hashJoinExpr, hintBroadcastHashJoin);
+                if (!joinEnum.forceJoinOrderMode) {
+                    commutativeBcastHjPlan =
+                            buildBroadcastHashJoinPlan(rightJn, leftJn, hashJoinExpr, hintBroadcastHashJoin);
+                }
+            } else {
                 // Hints are attached to predicates, so newJoinConditions should not be empty, but adding the check to be safe.
                 if (!joinEnum.getJoinConditions().isEmpty() && !newJoinConditions.isEmpty()) {
                     IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
@@ -689,14 +730,17 @@ public class JoinNode {
                         warningCollector.warn(Warning.of(
                                 joinEnum.getJoinConditions().get(newJoinConditions.get(0)).joinCondition
                                         .getSourceLocation(),
-                                ErrorCode.INAPPLICABLE_HINT,
-                                "Broadcast hash join hint not applicable and was ignored"));
+                                ErrorCode.INAPPLICABLE_HINT, "broadcast hash join", "broadcast " + broadcastObject));
                     }
                 }
 
-                hjPlan = buildHashJoinPlan(leftJn, rightJn, hashJoinExpr);
+                hjPlan = buildHashJoinPlan(leftJn, rightJn, hashJoinExpr, null);
                 if (!joinEnum.forceJoinOrderMode) {
-                    commutativeHjPlan = buildHashJoinPlan(rightJn, leftJn, hashJoinExpr);
+                    commutativeHjPlan = buildHashJoinPlan(rightJn, leftJn, hashJoinExpr, null);
+                }
+                bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, hashJoinExpr, null);
+                if (!joinEnum.forceJoinOrderMode) {
+                    commutativeBcastHjPlan = buildBroadcastHashJoinPlan(rightJn, leftJn, hashJoinExpr, null);
                 }
                 nljPlan = buildNLJoinPlan(leftJn, rightJn, nestedLoopJoinExpr);
                 if (!joinEnum.forceJoinOrderMode) {
@@ -707,7 +751,7 @@ public class JoinNode {
                     commutativeCpPlan = buildCPJoinPlan(rightJn, leftJn, hashJoinExpr, nestedLoopJoinExpr);
                 }
             }
-        } else if (hintNLJoin) {
+        } else if (hintNLJoin != null) {
             nljPlan = buildNLJoinPlan(leftJn, rightJn, nestedLoopJoinExpr);
             if (!joinEnum.forceJoinOrderMode) {
                 commutativeNljPlan = buildNLJoinPlan(rightJn, leftJn, nestedLoopJoinExpr);
@@ -720,16 +764,16 @@ public class JoinNode {
                         warningCollector.warn(Warning.of(
                                 joinEnum.getJoinConditions().get(newJoinConditions.get(0)).joinCondition
                                         .getSourceLocation(),
-                                ErrorCode.INAPPLICABLE_HINT, "Index nested join hint not applicable and was ignored"));
+                                ErrorCode.INAPPLICABLE_HINT, "index nested loop join", "ignored"));
                     }
                 }
-                hjPlan = buildHashJoinPlan(leftJn, rightJn, hashJoinExpr);
+                hjPlan = buildHashJoinPlan(leftJn, rightJn, hashJoinExpr, null);
                 if (!joinEnum.forceJoinOrderMode) {
-                    commutativeHjPlan = buildHashJoinPlan(rightJn, leftJn, hashJoinExpr);
+                    commutativeHjPlan = buildHashJoinPlan(rightJn, leftJn, hashJoinExpr, null);
                 }
-                bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, hashJoinExpr);
+                bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, hashJoinExpr, null);
                 if (!joinEnum.forceJoinOrderMode) {
-                    commutativeBcastHjPlan = buildBroadcastHashJoinPlan(rightJn, leftJn, hashJoinExpr);
+                    commutativeBcastHjPlan = buildBroadcastHashJoinPlan(rightJn, leftJn, hashJoinExpr, null);
                 }
                 cpPlan = buildCPJoinPlan(leftJn, rightJn, hashJoinExpr, nestedLoopJoinExpr);
                 if (!joinEnum.forceJoinOrderMode) {
@@ -737,13 +781,13 @@ public class JoinNode {
                 }
             }
         } else {
-            hjPlan = buildHashJoinPlan(leftJn, rightJn, hashJoinExpr);
+            hjPlan = buildHashJoinPlan(leftJn, rightJn, hashJoinExpr, null);
             if (!joinEnum.forceJoinOrderMode) {
-                commutativeHjPlan = buildHashJoinPlan(rightJn, leftJn, hashJoinExpr);
+                commutativeHjPlan = buildHashJoinPlan(rightJn, leftJn, hashJoinExpr, null);
             }
-            bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, hashJoinExpr);
+            bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, hashJoinExpr, null);
             if (!joinEnum.forceJoinOrderMode) {
-                commutativeBcastHjPlan = buildBroadcastHashJoinPlan(rightJn, leftJn, hashJoinExpr);
+                commutativeBcastHjPlan = buildBroadcastHashJoinPlan(rightJn, leftJn, hashJoinExpr, null);
             }
             nljPlan = buildNLJoinPlan(leftJn, rightJn, nestedLoopJoinExpr);
             if (!joinEnum.forceJoinOrderMode) {
