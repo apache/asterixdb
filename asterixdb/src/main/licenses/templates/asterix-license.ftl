@@ -44,6 +44,9 @@ ${license.content}
      <#assign isare = "are"/>
    </#if>
    <#list projects as p>
+     <#if p.shadowed>
+       <#continue/>
+     </#if>
        * ${p.name} (${p.groupId}:${p.artifactId}:${p.version})
      <#list p.locations as loc>
          - ${loc}${p.jarName}

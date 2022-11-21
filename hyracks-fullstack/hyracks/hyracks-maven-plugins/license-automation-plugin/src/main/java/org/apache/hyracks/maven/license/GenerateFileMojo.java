@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -56,15 +57,22 @@ import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.maven.license.freemarker.IndentDirective;
 import org.apache.hyracks.maven.license.freemarker.LoadFileDirective;
 import org.apache.hyracks.maven.license.project.LicensedProjects;
 import org.apache.hyracks.maven.license.project.Project;
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.DefaultArtifact;
+import org.apache.maven.artifact.handler.ArtifactHandler;
+import org.apache.maven.artifact.handler.DefaultArtifactHandler;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 import org.apache.maven.project.ProjectBuildingException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -110,6 +118,9 @@ public class GenerateFileMojo extends LicenseMojo {
     @Parameter
     private boolean stripFoundationAssertionFromNotices = false;
 
+    @Parameter
+    private boolean validateShadowLicenses = false;
+
     private SortedMap<String, SortedSet<Project>> noticeMap;
 
     @java.lang.Override
@@ -143,11 +154,12 @@ public class GenerateFileMojo extends LicenseMojo {
         }
         licenseSpecs.addAll(urlToLicenseMap.values());
         for (LicenseSpec license : licenseSpecs) {
-            resolveArtifactContent(license, true);
+            resolveArtifactContent(license, true, false);
         }
     }
 
-    private String resolveArtifactContent(ArtifactSpec artifact, boolean bestEffort) throws IOException {
+    private String resolveArtifactContent(ArtifactSpec artifact, boolean bestEffort, boolean suppressWarning)
+            throws IOException {
         if (artifact.getContent() == null) {
             getLog().debug("Resolving content for " + artifact.getUrl() + " (" + artifact.getContentFile() + ")");
             File cFile = new File(artifact.getContentFile());
@@ -161,7 +173,9 @@ public class GenerateFileMojo extends LicenseMojo {
             }
             if (!cFile.exists()) {
                 if (!bestEffort) {
-                    getLog().warn("MISSING: content file (" + cFile + ") for url: " + artifact.getUrl());
+                    if (!suppressWarning) {
+                        getLog().warn("MISSING: content file (" + cFile + ") for url: " + artifact.getUrl());
+                    }
                     artifact.setContent("MISSING: " + artifact.getContentFile() + " (" + artifact.getUrl() + ")");
                 }
             } else {
@@ -268,10 +282,12 @@ public class GenerateFileMojo extends LicenseMojo {
             for (Project p : lps.getProjects()) {
                 String licenseText = p.getLicenseText();
                 if (licenseText == null) {
-                    warnUnlessFlag(p.gav(), IGNORE_MISSING_EMBEDDED_LICENSE,
-                            "Using license other than from within artifact: " + p.gav() + " (" + lps.getLicense()
-                                    + ")");
-                    licenseText = resolveArtifactContent(lps.getLicense(), false);
+                    if (validateProjectLicense(p)) {
+                        warnUnlessFlag(p.gav(), IGNORE_MISSING_EMBEDDED_LICENSE,
+                                "Using license other than from within artifact: " + p.gav() + " (" + lps.getLicense()
+                                        + ")");
+                    }
+                    licenseText = resolveArtifactContent(lps.getLicense(), false, !validateProjectLicense(p));
                 }
                 LicenseSpec spec = lps.getLicense();
                 if (spec.getDisplayName() == null) {
@@ -297,6 +313,10 @@ public class GenerateFileMojo extends LicenseMojo {
         licenseMap = licenseMap2;
     }
 
+    private boolean validateProjectLicense(Project p) {
+        return !p.isShadowed() || validateShadowLicenses;
+    }
+
     private Set<Project> getProjects() {
         Set<Project> projects = new HashSet<>();
         licenseMap.values().forEach(p -> projects.addAll(p.getProjects()));
@@ -309,9 +329,11 @@ public class GenerateFileMojo extends LicenseMojo {
             String noticeText = p.getNoticeText();
             if (noticeText == null && noticeOverrides.containsKey(p.gav())) {
                 String noticeUrl = noticeOverrides.get(p.gav());
-                warnUnlessFlag(p.gav(), IGNORE_NOTICE_OVERRIDE,
-                        "Using notice other than from within artifact: " + p.gav() + " (" + noticeUrl + ")");
-                p.setNoticeText(resolveArtifactContent(new NoticeSpec(noticeUrl), false));
+                if (validateProjectLicense(p)) {
+                    warnUnlessFlag(p.gav(), IGNORE_NOTICE_OVERRIDE,
+                            "Using notice other than from within artifact: " + p.gav() + " (" + noticeUrl + ")");
+                }
+                p.setNoticeText(resolveArtifactContent(new NoticeSpec(noticeUrl), false, p.isShadowed()));
             } else if (noticeText == null && !noticeOverrides.containsKey(p.gav())
                     && Boolean.TRUE.equals(getProjectFlag(p.gav(), IGNORE_NOTICE_OVERRIDE))) {
                 getLog().warn(p + " has IGNORE_NOTICE_OVERRIDE flag set, but no override defined...");
@@ -370,7 +392,7 @@ public class GenerateFileMojo extends LicenseMojo {
                 // this seems way too liberal
                 filter = entry -> entry.getName().matches("(.*/|^)" + "NOTICE" + "(.(txt|md))?");
                 consumer = Project::setNoticeText;
-                contentTransformer = UnaryOperator.identity();
+                contentTransformer = getNoticeFileContentTransformer();
                 break;
             case LICENSE:
                 name = "LICENSE";
@@ -381,8 +403,7 @@ public class GenerateFileMojo extends LicenseMojo {
                 // this seems way too liberal
                 filter = entry -> entry.getName().matches("(.*/|^)" + "LICENSE" + "(.(txt|md))?");
                 consumer = Project::setLicenseText;
-                contentTransformer = stripFoundationAssertionFromNotices
-                        ? text -> FOUNDATION_PATTERN.matcher(text).replaceAll("") : UnaryOperator.identity();
+                contentTransformer = UnaryOperator.identity();
                 break;
             default:
                 throw new IllegalStateException("NYI: " + artifact);
@@ -393,6 +414,9 @@ public class GenerateFileMojo extends LicenseMojo {
                 throw new MojoExecutionException("Artifact file " + artifactFile + " does not exist!");
             } else if (!artifactFile.getName().endsWith(".jar")) {
                 getLog().info("Skipping unknown artifact file type: " + artifactFile);
+                continue;
+            } else if (!validateShadowLicenses && p.isShadowed()) {
+                getLog().info("Skipping shadowed project: " + p.gav());
                 continue;
             }
             String alternateFilename = (String) getProjectFlag(p.gav(), alternateFilenameFlag);
@@ -471,5 +495,72 @@ public class GenerateFileMojo extends LicenseMojo {
             }
         }
         return matches;
+    }
+
+    private UnaryOperator<String> getNoticeFileContentTransformer() {
+        UnaryOperator<String> transformer;
+        if (stripFoundationAssertionFromNotices) {
+            transformer = text -> FOUNDATION_PATTERN.matcher(text).replaceAll("");
+        } else {
+            transformer = UnaryOperator.identity();
+        }
+        return transformer;
+    }
+
+    @java.lang.Override
+    protected void gatherProjectDependencies(MavenProject project,
+            Map<MavenProject, List<Pair<String, String>>> dependencyLicenseMap,
+            Map<String, MavenProject> dependencyGavMap) throws ProjectBuildingException, MojoExecutionException {
+        super.gatherProjectDependencies(project, dependencyLicenseMap, dependencyGavMap);
+        gatherShadowedDependencies(dependencyLicenseMap, dependencyGavMap);
+    }
+
+    @java.lang.Override
+    protected void processExtraDependencies(Map<MavenProject, List<Pair<String, String>>> dependencyLicenseMap,
+            Map<String, MavenProject> dependencyGavMap) throws ProjectBuildingException, MojoExecutionException {
+        super.processExtraDependencies(dependencyLicenseMap, dependencyGavMap);
+        gatherShadowedDependencies(dependencyLicenseMap, dependencyGavMap);
+    }
+
+    private void gatherShadowedDependencies(Map<MavenProject, List<Pair<String, String>>> dependencyLicenseMap,
+            Map<String, MavenProject> dependencyGavMap) throws MojoExecutionException, ProjectBuildingException {
+        Set<MavenProject> projects = new TreeSet<>(Comparator.comparing(MavenProject::getId));
+        projects.addAll(dependencyLicenseMap.keySet());
+        for (MavenProject p : projects) {
+            boolean finished = false;
+            File artifactFile = p.getArtifact().getFile();
+            if (!artifactFile.exists()) {
+                throw new MojoExecutionException("Artifact file " + artifactFile + " does not exist!");
+            } else if (!artifactFile.getName().endsWith(".jar")) {
+                getLog().info("Skipping unknown artifact file type: " + artifactFile);
+                finished = true;
+            }
+            if (!finished) {
+                try (JarFile jarFile = new JarFile(artifactFile)) {
+                    SortedMap<String, JarEntry> matches = gatherMatchingEntries(jarFile,
+                            entry -> entry.getName().matches("(.*/|^)" + "pom\\.properties"));
+                    if (!matches.isEmpty()) {
+                        for (JarEntry entry : matches.values()) {
+                            Properties props = new Properties();
+                            props.load(jarFile.getInputStream(entry));
+                            String groupId = props.getProperty("groupId");
+                            String artifactId = props.getProperty("artifactId");
+                            String version = props.getProperty("version");
+                            String gav = groupId + ":" + artifactId + ":" + version;
+                            if (!dependencyGavMap.containsKey(gav)) {
+                                getLog().info("adding " + gav + " (shadowed from " + p.getId() + ")");
+                                ArtifactHandler handler = new DefaultArtifactHandler("jar");
+                                String[] gavParts = StringUtils.split(gav, ':');
+                                Artifact manualDep = new DefaultArtifact(gavParts[0], gavParts[1], gavParts[2],
+                                        Artifact.SCOPE_COMPILE, "jar", null, handler);
+                                processArtifact(manualDep, dependencyLicenseMap, dependencyGavMap, true);
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new MojoExecutionException(e);
+                }
+            }
+        }
     }
 }
