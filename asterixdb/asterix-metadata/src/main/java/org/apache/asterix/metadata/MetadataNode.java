@@ -106,9 +106,11 @@ import org.apache.asterix.metadata.valueextractors.TupleCopyValueExtractor;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.AbstractComplexType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -1483,15 +1485,20 @@ public class MetadataNode implements IMetadataNode {
             ARecordType recType = (ARecordType) parentType.getDatatype();
             subTypes = Arrays.asList(recType.getFieldTypes());
         } else if (parentType.getDatatype().getTypeTag() == ATypeTag.UNION) {
-            AUnionType recType = (AUnionType) parentType.getDatatype();
-            subTypes = recType.getUnionList();
+            AUnionType unionType = (AUnionType) parentType.getDatatype();
+            subTypes = unionType.getUnionList();
+        } else if (parentType.getDatatype().getTypeTag() == ATypeTag.ARRAY
+                || parentType.getDatatype().getTypeTag() == ATypeTag.MULTISET) {
+            AbstractCollectionType collType = (AbstractCollectionType) parentType.getDatatype();
+            subTypes = List.of(collType.getItemType());
         }
 
         List<String> nestedTypes = new ArrayList<>();
         if (subTypes != null) {
             for (IAType subType : subTypes) {
-                if (!(subType instanceof BuiltinType)) {
-                    nestedTypes.add(subType.getTypeName());
+                IAType actualType = TypeComputeUtils.getActualType(subType);
+                if (!(actualType instanceof BuiltinType)) {
+                    nestedTypes.add(actualType.getTypeName());
                 }
             }
         }

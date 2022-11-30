@@ -4369,6 +4369,11 @@
         <expected-error>Parameter invalid_date cannot be set</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="drop-anonymous-nested-types">
+        <output-dir compare="Text">drop-anonymous-nested-types</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="dml">
     <test-case FilePath="dml">
