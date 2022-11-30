@@ -35,10 +35,11 @@ import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.std.misc.MaterializerTaskState;
 
 /**
- * Abstract class for two replication related operator descriptor - replicate and split
+ * Abstract class for three replication related operator descriptors - replicate, split, and switch.
  * Replicate operator propagates all frames to all output branches.
  * That is, each tuple will be propagated to all output branches.
  * Split operator propagates each tuple in a frame to one output branch only.
+ * Switch is a generalization of split that propagates tuples based on a given output mapping.
  */
 public abstract class AbstractReplicateOperatorDescriptor extends AbstractOperatorDescriptor {
     protected static final long serialVersionUID = 1L;

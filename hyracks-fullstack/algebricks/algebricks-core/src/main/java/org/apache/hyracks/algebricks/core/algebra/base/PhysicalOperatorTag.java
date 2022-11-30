@@ -68,6 +68,7 @@ public enum PhysicalOperatorTag {
     SORT_MERGE_EXCHANGE,
     SPATIAL_JOIN,
     SPLIT,
+    SWITCH,
     STABLE_SORT,
     STATS,
     STREAM_LIMIT,

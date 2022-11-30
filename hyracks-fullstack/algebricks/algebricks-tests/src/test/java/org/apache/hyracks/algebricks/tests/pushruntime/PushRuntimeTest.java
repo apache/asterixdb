@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
@@ -58,6 +59,7 @@ import org.apache.hyracks.algebricks.runtime.operators.std.StreamLimitRuntimeFac
 import org.apache.hyracks.algebricks.runtime.operators.std.StreamProjectRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.StreamSelectRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.StringStreamingRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.std.SwitchOperatorDescriptor;
 import org.apache.hyracks.algebricks.runtime.operators.std.UnnestRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.writers.PrinterBasedWriterFactory;
 import org.apache.hyracks.algebricks.tests.util.AlgebricksHyracksIntegrationUtil;
@@ -684,6 +686,76 @@ public class PushRuntimeTest {
         spec.connect(new OneToOneConnectorDescriptor(spec), intScanner, 0, splitOp, 0);
         for (int i = 0; i < outputArity; i++) {
             spec.connect(new OneToOneConnectorDescriptor(spec), splitOp, i, outputOp[i], 0);
+        }
+
+        for (int i = 0; i < outputArity; i++) {
+            spec.addRoot(outputOp[i]);
+        }
+        AlgebricksHyracksIntegrationUtil.runJob(spec);
+
+        for (int i = 0; i < outputArity; i++) {
+            compareFiles("data" + File.separator + "device0" + File.separator + inputFileName[i + 1],
+                    outputFile[i].getAbsolutePath());
+        }
+    }
+
+    @Test
+    public void scanSwitchWrite() throws Exception {
+        final int outputArity = 3;
+
+        JobSpecification spec = new JobSpecification(FRAME_SIZE);
+
+        String inputFileName[] = { "data" + File.separator + "simple" + File.separator + "int-string-part2.tbl",
+                "data" + File.separator + "simple" + File.separator + "int-string-part2-switch-0.tbl",
+                "data" + File.separator + "simple" + File.separator + "int-string-part2-switch-1.tbl",
+                "data" + File.separator + "simple" + File.separator + "int-string-part2-switch-2.tbl" };
+        File[] inputFiles = new File[inputFileName.length];
+        for (int i = 0; i < inputFileName.length; i++) {
+            inputFiles[i] = new File(inputFileName[i]);
+        }
+        File[] outputFile = new File[outputArity];
+        FileSplit[] outputFileSplit = new FileSplit[outputArity];
+        for (int i = 0; i < outputArity; i++) {
+            outputFileSplit[i] = createFile(AlgebricksHyracksIntegrationUtil.nc1);
+            outputFile[i] = outputFileSplit[i].getFile(AlgebricksHyracksIntegrationUtil.nc1.getIoManager());
+        }
+
+        FileSplit[] inputSplits =
+                new FileSplit[] { new ManagedFileSplit(AlgebricksHyracksIntegrationUtil.NC1_ID, inputFileName[0]) };
+        IFileSplitProvider intSplitProvider = new ConstantFileSplitProvider(inputSplits);
+
+        RecordDescriptor scannerDesc = new RecordDescriptor(new ISerializerDeserializer[] {
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer() });
+
+        IValueParserFactory[] valueParsers =
+                new IValueParserFactory[] { IntegerParserFactory.INSTANCE, UTF8StringParserFactory.INSTANCE };
+
+        FileScanOperatorDescriptor intScanner = new FileScanOperatorDescriptor(spec, intSplitProvider,
+                new DelimitedDataTupleParserFactory(valueParsers, '|'), scannerDesc);
+
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, intScanner, DEFAULT_NODES);
+
+        HashMap<Integer, int[]> outputMapping = new HashMap<>();
+        outputMapping.put(0, new int[] { 1, 2 });
+        outputMapping.put(1, new int[] { 0, 2 });
+        outputMapping.put(2, new int[] { 0, 1 });
+
+        SwitchOperatorDescriptor switchOp = new SwitchOperatorDescriptor(spec, scannerDesc, outputArity,
+                new TupleFieldEvaluatorFactory(0), BinaryIntegerInspectorImpl.FACTORY, outputMapping);
+
+        PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, switchOp,
+                new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
+
+        IOperatorDescriptor outputOp[] = new IOperatorDescriptor[outputFile.length];
+        for (int i = 0; i < outputArity; i++) {
+            outputOp[i] = new LineFileWriteOperatorDescriptor(spec, new FileSplit[] { outputFileSplit[i] });
+            PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, outputOp[i],
+                    new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
+        }
+
+        spec.connect(new OneToOneConnectorDescriptor(spec), intScanner, 0, switchOp, 0);
+        for (int i = 0; i < outputArity; i++) {
+            spec.connect(new OneToOneConnectorDescriptor(spec), switchOp, i, outputOp[i], 0);
         }
 
         for (int i = 0; i < outputArity; i++) {

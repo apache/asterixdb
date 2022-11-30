@@ -46,6 +46,7 @@ public enum LogicalOperatorTag {
     SELECT,
     SINK,
     SPLIT,
+    SWITCH,
     SUBPLAN,
     TOKENIZE,
     UNIONALL,

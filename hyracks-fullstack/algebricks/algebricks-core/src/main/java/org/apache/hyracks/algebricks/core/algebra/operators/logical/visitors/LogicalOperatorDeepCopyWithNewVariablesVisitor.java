@@ -28,6 +28,7 @@ import java.util.Set;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -64,6 +65,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.ScriptOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SwitchOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -444,6 +446,12 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
         SplitOperator opCopy = new SplitOperator(op.getOutputArity(), op.getBranchingExpression());
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
+    }
+
+    @Override
+    public ILogicalOperator visitSwitchOperator(SwitchOperator op, ILogicalOperator arg) throws AlgebricksException {
+        // TODO (GLENN): Implement this logic
+        throw new NotImplementedException();
     }
 
     @Override

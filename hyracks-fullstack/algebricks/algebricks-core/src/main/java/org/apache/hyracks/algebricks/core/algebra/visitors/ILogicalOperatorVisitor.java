@@ -48,6 +48,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SwitchOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -87,6 +88,8 @@ public interface ILogicalOperatorVisitor<R, T> {
     public R visitReplicateOperator(ReplicateOperator op, T arg) throws AlgebricksException;
 
     public R visitSplitOperator(SplitOperator op, T arg) throws AlgebricksException;
+
+    public R visitSwitchOperator(SwitchOperator op, T arg) throws AlgebricksException;
 
     public R visitMaterializeOperator(MaterializeOperator op, T arg) throws AlgebricksException;
 

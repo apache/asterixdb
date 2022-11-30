@@ -73,6 +73,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SwitchOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -112,6 +113,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.StreamProje
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StreamSelectPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StringStreamingScriptPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.SubplanPOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.physical.SwitchPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.TokenizePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.UnionAllPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.UnnestPOperator;
@@ -306,6 +308,11 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
         @Override
         public IPhysicalOperator visitSplitOperator(SplitOperator op, Boolean topLevelOp) {
             return new SplitPOperator();
+        }
+
+        @Override
+        public IPhysicalOperator visitSwitchOperator(SwitchOperator op, Boolean topLevelOp) {
+            return new SwitchPOperator();
         }
 
         @Override

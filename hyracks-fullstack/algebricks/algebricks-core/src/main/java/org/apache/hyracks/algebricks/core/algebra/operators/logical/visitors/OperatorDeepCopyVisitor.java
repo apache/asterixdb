@@ -20,6 +20,7 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -63,6 +64,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SwitchOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
@@ -176,7 +178,13 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
 
     @Override
     public ILogicalOperator visitSplitOperator(SplitOperator op, Void arg) throws AlgebricksException {
-        return new SplitOperator(op.getOutputArity(), op.getBranchingExpression());
+        return new SplitOperator(op.getOutputArity(), deepCopyExpressionRef(op.getBranchingExpression()));
+    }
+
+    @Override
+    public ILogicalOperator visitSwitchOperator(SwitchOperator op, Void arg) throws AlgebricksException {
+        return new SwitchOperator(op.getOutputArity(), deepCopyExpressionRef(op.getBranchingExpression()),
+                new HashMap<>(op.getOutputMapping()));
     }
 
     @Override
