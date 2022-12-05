@@ -3671,6 +3671,10 @@ Expression RelExpr() throws ParseException:
             annotation = parseExpressionAnnotation(hintToken);
             annotationList.add(annotation);
             hintToken = hintToken.specialToken;
+            if (hintToken != null) {
+                SourceLocation sourceLoc = getSourceLocation(hintToken);
+                hintCollector.remove(sourceLoc);
+            }
           }
           String operator = opToken.image.toLowerCase();
           if (operator.equals("<>")){

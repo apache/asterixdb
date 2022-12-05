@@ -100,10 +100,7 @@ public class JoinNode {
     }
 
     public boolean IsBaseLevelJoinNode() {
-        if (this.jnArrayIndex <= joinEnum.numberOfTerms) {
-            return true;
-        }
-        return false;
+        return this.jnArrayIndex <= joinEnum.numberOfTerms;
     }
 
     public boolean IsHigherLevelJoinNode() {
@@ -233,9 +230,9 @@ public class JoinNode {
 
         // Now call the rewritePre code
         IntroduceJoinAccessMethodRule tmp = new IntroduceJoinAccessMethodRule();
-        boolean temp = tmp.checkApplicable(new MutableObject<>(joinEnum.localJoinOp), joinEnum.optCtx);
+        boolean retVal = tmp.checkApplicable(new MutableObject<>(joinEnum.localJoinOp), joinEnum.optCtx);
 
-        return temp;
+        return retVal;
     }
 
     /** one is a subset of two */
@@ -341,18 +338,17 @@ public class JoinNode {
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
         // Skip indexes with selectivity greater than 0.1, add the SKIP_SECONDARY_INDEX annotation to its expression.
         double sel;
-        Iterator<Map.Entry<IAccessMethod, AccessMethodAnalysisContext>> amIt = analyzedAMs.entrySet().iterator();
-        while (amIt.hasNext()) {
-            Map.Entry<IAccessMethod, AccessMethodAnalysisContext> amEntry = amIt.next();
+        int exprIndex;
+        for (Map.Entry<IAccessMethod, AccessMethodAnalysisContext> amEntry : analyzedAMs.entrySet()) {
             AccessMethodAnalysisContext analysisCtx = amEntry.getValue();
             Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt =
                     analysisCtx.getIteratorForIndexExprsAndVars();
             List<IOptimizableFuncExpr> exprs = analysisCtx.getMatchedFuncExprs();
-            int exprIndex = 0;
             while (indexIt.hasNext()) {
                 Map.Entry<Index, List<Pair<Integer, Integer>>> indexEntry = indexIt.next();
                 Index chosenIndex = indexEntry.getKey();
-                IOptimizableFuncExpr expr = exprs.get(exprIndex++);
+                exprIndex = indexEntry.getValue().get(0).getFirst();
+                IOptimizableFuncExpr expr = exprs.get(exprIndex);
                 AbstractFunctionCallExpression afce = expr.getFuncExpr();
                 PredicateCardinalityAnnotation selectivityAnnotation =
                         afce.getAnnotation(PredicateCardinalityAnnotation.class);
@@ -386,8 +382,7 @@ public class JoinNode {
             HashJoinExpressionAnnotation hintHashJoin) {
         List<PlanNode> allPlans = joinEnum.allPlans;
         PlanNode pn;
-        ICost hjCost, childCosts, totalCost;
-
+        ICost hjCost, leftExchangeCost, rightExchangeCost, childCosts, totalCost;
         this.leftJn = leftJn;
         this.rightJn = rightJn;
         int leftPlan = leftJn.cheapestPlanIndex;
@@ -412,8 +407,10 @@ public class JoinNode {
                 || !joinEnum.queryPlanShape.equals(AlgebricksConfig.QUERY_PLAN_SHAPE_ZIGZAG)) {
             // We want to build with the smaller side.
             hjCost = joinEnum.getCostMethodsHandle().costHashJoin(this);
+            leftExchangeCost = joinEnum.getCostMethodsHandle().computeHJProbeExchangeCost(this);
+            rightExchangeCost = joinEnum.getCostMethodsHandle().computeHJBuildExchangeCost(this);
             childCosts = allPlans.get(leftPlan).totalCost.costAdd(allPlans.get(rightPlan).totalCost);
-            totalCost = hjCost.costAdd(childCosts);
+            totalCost = hjCost.costAdd(leftExchangeCost).costAdd(rightExchangeCost).costAdd(childCosts);
             if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost)) {
                 pn = new PlanNode(allPlans.size(), joinEnum);
                 pn.jn = this;
@@ -429,9 +426,8 @@ public class JoinNode {
                 pn.joinExpr = hashJoinExpr;
                 pn.opCost = hjCost;
                 pn.totalCost = totalCost;
-                pn.leftExchangeCost = joinEnum.getCostMethodsHandle().computeHJProbeExchangeCost(this);
-                pn.rightExchangeCost = joinEnum.getCostMethodsHandle().computeHJBuildExchangeCost(this);
-
+                pn.leftExchangeCost = leftExchangeCost;
+                pn.rightExchangeCost = rightExchangeCost;
                 allPlans.add(pn);
                 this.planIndexesArray.add(allPlans.size() - 1);
                 this.cheapestPlanCost = totalCost;
@@ -447,7 +443,7 @@ public class JoinNode {
             BroadcastExpressionAnnotation hintBroadcastHashJoin) {
         List<PlanNode> allPlans = joinEnum.allPlans;
         PlanNode pn;
-        ICost bcastHjCost, childCosts, totalCost;
+        ICost bcastHjCost, leftExchangeCost, rightExchangeCost, childCosts, totalCost;
 
         this.leftJn = leftJn;
         this.rightJn = rightJn;
@@ -473,8 +469,10 @@ public class JoinNode {
                 || !joinEnum.queryPlanShape.equals(AlgebricksConfig.QUERY_PLAN_SHAPE_ZIGZAG)) {
             // We want to broadcast and build with the smaller side.
             bcastHjCost = joinEnum.getCostMethodsHandle().costBroadcastHashJoin(this);
+            leftExchangeCost = joinEnum.getCostHandle().zeroCost();
+            rightExchangeCost = joinEnum.getCostMethodsHandle().computeBHJBuildExchangeCost(this);
             childCosts = allPlans.get(leftPlan).totalCost.costAdd(allPlans.get(rightPlan).totalCost);
-            totalCost = bcastHjCost.costAdd(childCosts);
+            totalCost = bcastHjCost.costAdd(rightExchangeCost).costAdd(childCosts);
             if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost)) {
                 pn = new PlanNode(allPlans.size(), joinEnum);
                 pn.jn = this;
@@ -490,8 +488,8 @@ public class JoinNode {
                 pn.joinExpr = hashJoinExpr;
                 pn.opCost = bcastHjCost;
                 pn.totalCost = totalCost;
-                pn.leftExchangeCost = joinEnum.getCostHandle().zeroCost();
-                pn.rightExchangeCost = joinEnum.getCostMethodsHandle().computeBHJBuildExchangeCost(this);
+                pn.leftExchangeCost = leftExchangeCost;
+                pn.rightExchangeCost = rightExchangeCost;
 
                 allPlans.add(pn);
                 this.planIndexesArray.add(allPlans.size() - 1);
@@ -511,7 +509,7 @@ public class JoinNode {
         List<PlanNode> allPlans = joinEnum.allPlans;
         int numberOfTerms = joinEnum.numberOfTerms;
         PlanNode pn;
-        ICost nljCost, childCosts, totalCost;
+        ICost nljCost, leftExchangeCost, rightExchangeCost, childCosts, totalCost;
 
         this.leftJn = leftJn;
         this.rightJn = rightJn;
@@ -527,8 +525,10 @@ public class JoinNode {
         }
 
         nljCost = joinEnum.getCostMethodsHandle().costIndexNLJoin(this);
+        leftExchangeCost = joinEnum.getCostMethodsHandle().computeNLJOuterExchangeCost(this);
+        rightExchangeCost = joinEnum.getCostHandle().zeroCost();
         childCosts = allPlans.get(leftPlan).totalCost;
-        totalCost = nljCost.costAdd(childCosts);
+        totalCost = nljCost.costAdd(leftExchangeCost).costAdd(childCosts);
         if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost)) {
             pn = new PlanNode(allPlans.size(), joinEnum);
             pn.jn = this;
@@ -540,8 +540,8 @@ public class JoinNode {
             pn.joinExpr = nestedLoopJoinExpr; // save it so can be used to add the NESTED annotation in getNewTree.
             pn.opCost = nljCost;
             pn.totalCost = totalCost;
-            pn.leftExchangeCost = joinEnum.getCostMethodsHandle().computeNLJOuterExchangeCost(this);
-            pn.rightExchangeCost = joinEnum.getCostHandle().zeroCost();
+            pn.leftExchangeCost = leftExchangeCost;
+            pn.rightExchangeCost = rightExchangeCost;
 
             allPlans.add(pn);
             this.planIndexesArray.add(allPlans.size() - 1);
@@ -557,7 +557,7 @@ public class JoinNode {
         // Now build a cartesian product nested loops plan
         List<PlanNode> allPlans = joinEnum.allPlans;
         PlanNode pn;
-        ICost cpCost, childCosts, totalCost;
+        ICost cpCost, leftExchangeCost, rightExchangeCost, childCosts, totalCost;
 
         this.leftJn = leftJn;
         this.rightJn = rightJn;
@@ -570,11 +570,11 @@ public class JoinNode {
             cpJoinExpr = joinEnum.combineAllConditions(newJoinConditions);
         } else if (hashJoinExpr != null && nestedLoopJoinExpr == null) {
             cpJoinExpr = hashJoinExpr;
-        } else if (hashJoinExpr == null && nestedLoopJoinExpr != null) {
+        } else if (hashJoinExpr == null) {
             cpJoinExpr = nestedLoopJoinExpr;
-        } else if (Objects.equals(hashJoinExpr, nestedLoopJoinExpr) == true) {
+        } else if (Objects.equals(hashJoinExpr, nestedLoopJoinExpr)) {
             cpJoinExpr = hashJoinExpr;
-        } else if (Objects.equals(hashJoinExpr, nestedLoopJoinExpr) == false) {
+        } else {
             ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
                     BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
             andExpr.getArguments().add(new MutableObject<>(hashJoinExpr));
@@ -583,8 +583,10 @@ public class JoinNode {
         }
 
         cpCost = joinEnum.getCostMethodsHandle().costCartesianProductJoin(this);
+        leftExchangeCost = joinEnum.getCostHandle().zeroCost();
+        rightExchangeCost = joinEnum.getCostMethodsHandle().computeCPRightExchangeCost(this);
         childCosts = allPlans.get(leftPlan).totalCost.costAdd(allPlans.get(rightPlan).totalCost);
-        totalCost = cpCost.costAdd(childCosts);
+        totalCost = cpCost.costAdd(rightExchangeCost).costAdd(childCosts);
         if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost)) {
             pn = new PlanNode(allPlans.size(), joinEnum);
             pn.jn = this;
@@ -596,8 +598,8 @@ public class JoinNode {
             pn.joinExpr = Objects.requireNonNullElse(cpJoinExpr, ConstantExpression.TRUE);
             pn.opCost = cpCost;
             pn.totalCost = totalCost;
-            pn.leftExchangeCost = joinEnum.getCostHandle().zeroCost();
-            pn.rightExchangeCost = joinEnum.getCostMethodsHandle().computeCPRightExchangeCost(this);
+            pn.leftExchangeCost = leftExchangeCost;
+            pn.rightExchangeCost = rightExchangeCost;
 
             allPlans.add(pn);
             this.planIndexesArray.add(allPlans.size() - 1);
@@ -823,9 +825,9 @@ public class JoinNode {
         // This will avoid printing JoinNodes that have no plans
         sb.append("Printing Join Node ").append(jnArrayIndex).append('\n');
         sb.append("datasetNames ").append('\n');
-        for (int j = 0; j < datasetNames.size(); j++) {
+        for (String datasetName : datasetNames) {
             // Need to not print newline
-            sb.append(datasetNames.get(j)).append(' ');
+            sb.append(datasetName).append(' ');
         }
         sb.append("datasetIndex ").append('\n');
         for (int j = 0; j < datasetIndexes.size(); j++) {
@@ -843,7 +845,7 @@ public class JoinNode {
             int k = planIndexesArray.get(j);
             PlanNode pn = allPlans.get(k);
             sb.append("planIndexesArray  [").append(j).append("] is ").append(k).append('\n');
-            sb.append("Printing PlanNode ").append(k);
+            sb.append("Printing PlanNode ").append(k).append('\n');;
             if (IsBaseLevelJoinNode()) {
                 sb.append("DATA_SOURCE_SCAN").append('\n');
             } else {
@@ -857,6 +859,7 @@ public class JoinNode {
                 }
             }
             sb.append("card ").append((double) Math.round(cardinality * 100) / 100).append('\n');
+            sb.append("------------------").append('\n');
             sb.append("operator cost ").append(pn.opCost.computeTotalCost()).append('\n');
             sb.append("total cost ").append(pn.totalCost.computeTotalCost()).append('\n');
             sb.append("jnIndexes ").append(pn.jnIndexes[0]).append(" ").append(pn.jnIndexes[1]).append('\n');
@@ -883,9 +886,14 @@ public class JoinNode {
 
     public void printCostOfAllPlans(StringBuilder sb) {
         List<PlanNode> allPlans = joinEnum.allPlans;
+        ICost minCost = joinEnum.getCostHandle().maxCost();
         for (int planIndex : planIndexesArray) {
-            sb.append("plan ").append(planIndex).append(" cost is ")
-                    .append(allPlans.get(planIndex).totalCost.computeTotalCost()).append('\n');
+            ICost planCost = allPlans.get(planIndex).totalCost;
+            sb.append("plan ").append(planIndex).append(" cost is ").append(planCost.computeTotalCost()).append('\n');
+            if (planCost.costLT(minCost)) {
+                minCost = planCost;
+            }
         }
+        sb.append("LOWEST COST ").append(minCost.computeTotalCost()).append('\n');
     }
 }
