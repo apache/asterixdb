@@ -174,8 +174,8 @@ public class JoinEnum {
 
     public ILogicalOperator findLeafInput(List<LogicalVariable> logicalVars) throws AlgebricksException {
         Set<LogicalVariable> vars = new HashSet<>();
-        for (int pos = 0; pos < emptyTupleAndDataSourceOps.size(); pos++) {
-            EmptyTupleSourceOperator emptyOp = emptyTupleAndDataSourceOps.get(pos).getFirst();
+        for (Pair<EmptyTupleSourceOperator, DataSourceScanOperator> emptyTupleAndDataSourceOp : emptyTupleAndDataSourceOps) {
+            EmptyTupleSourceOperator emptyOp = emptyTupleAndDataSourceOp.getFirst();
             ILogicalOperator op = joinLeafInputsHashMap.get(emptyOp);
             vars.clear();
             // this is expensive to do. So store this once and reuse

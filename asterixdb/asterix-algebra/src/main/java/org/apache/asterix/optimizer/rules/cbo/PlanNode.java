@@ -67,6 +67,10 @@ public class PlanNode {
         jnIndexes = new int[2]; // join node index(es)
     }
 
+    public int getIndex() {
+        return allPlansIndex;
+    }
+
     public int[] getPlanIndexes() {
         return planIndexes;
     }
@@ -113,7 +117,7 @@ public class PlanNode {
         return getLeftPlanIndex() != NO_PLAN && getRightPlanIndex() != NO_PLAN;
     }
 
-    Pair<String, String> joinMethod() {
+    public Pair<String, String> joinMethod() {
         if (this.joinOp == PlanNode.JoinMethod.HYBRID_HASH_JOIN) {
             return new Pair<>("HASH JOIN", "HJ");
         } else if (this.joinOp == PlanNode.JoinMethod.BROADCAST_HASH_JOIN) {
@@ -150,12 +154,12 @@ public class PlanNode {
         return totalCost;
     }
 
-    public double getLeftExchangeCost() {
-        return leftExchangeCost.computeTotalCost();
+    public ICost getLeftExchangeCost() {
+        return leftExchangeCost;
     }
 
-    public double getRightExchangeCost() {
-        return rightExchangeCost.computeTotalCost();
+    public ICost getRightExchangeCost() {
+        return rightExchangeCost;
     }
 
     public double computeTotalCost() {

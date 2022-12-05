@@ -2,19 +2,19 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$381(ASC), $$382(ASC) ]  |PARTITIONED|
-          -- STABLE_SORT [$$381(ASC), $$382(ASC)]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$405(ASC), $$406(ASC) ]  |PARTITIONED|
+          -- STABLE_SORT [$$405(ASC), $$406(ASC)]  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               -- STREAM_PROJECT  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- HYBRID_HASH_JOIN [$$390][$$386]  |PARTITIONED|
-                    -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$381(ASC), $$382(ASC)] HASH:[$$390]  |PARTITIONED|
-                      -- STABLE_SORT [$$381(ASC), $$382(ASC)]  |PARTITIONED|
+                  -- HYBRID_HASH_JOIN [$$414][$$410]  |PARTITIONED|
+                    -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$405(ASC), $$406(ASC)] HASH:[$$414]  |PARTITIONED|
+                      -- STABLE_SORT [$$405(ASC), $$406(ASC)]  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- HYBRID_HASH_JOIN [$$390][$$384]  |PARTITIONED|
-                                -- HASH_PARTITION_EXCHANGE [$$390]  |PARTITIONED|
+                              -- HYBRID_HASH_JOIN [$$414][$$408]  |PARTITIONED|
+                                -- HASH_PARTITION_EXCHANGE [$$414]  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ASSIGN  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
@@ -25,13 +25,13 @@
                                                 -- DATASOURCE_SCAN (Metadata.Synonym)  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                -- HASH_PARTITION_EXCHANGE [$$384]  |PARTITIONED|
+                                -- HASH_PARTITION_EXCHANGE [$$408]  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- HYBRID_HASH_JOIN [$$384][$$ds_name]  |PARTITIONED|
+                                      -- HYBRID_HASH_JOIN [$$408][$$ds_name]  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- REPLICATE  |PARTITIONED|
-                                            -- HASH_PARTITION_EXCHANGE [$$384]  |PARTITIONED|
+                                            -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                   -- BTREE_SEARCH (Metadata.Dataset.Dataset)  |PARTITIONED|
@@ -40,18 +40,18 @@
                                                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- REPLICATE  |PARTITIONED|
-                                            -- HASH_PARTITION_EXCHANGE [$$ds_name]  |PARTITIONED|
+                                            -- BROADCAST_EXCHANGE  |PARTITIONED|
                                               -- UNNEST  |UNPARTITIONED|
                                                 -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
-                    -- HASH_PARTITION_EXCHANGE [$$386]  |PARTITIONED|
+                    -- HASH_PARTITION_EXCHANGE [$$410]  |PARTITIONED|
                       -- STREAM_PROJECT  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- HYBRID_HASH_JOIN [$$404][$$388]  |PARTITIONED|
-                            -- HASH_PARTITION_EXCHANGE [$$404]  |PARTITIONED|
+                          -- HYBRID_HASH_JOIN [$$428][$$412]  |PARTITIONED|
+                            -- HASH_PARTITION_EXCHANGE [$$428]  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- HYBRID_HASH_JOIN [$$386][$$syn_name]  |PARTITIONED|
-                                    -- HASH_PARTITION_EXCHANGE [$$386]  |PARTITIONED|
+                                  -- HYBRID_HASH_JOIN [$$410][$$syn_name]  |PARTITIONED|
+                                    -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ASSIGN  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
@@ -61,19 +61,19 @@
                                                   -- DATASOURCE_SCAN (Metadata.Synonym)  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                    -- HASH_PARTITION_EXCHANGE [$$syn_name]  |PARTITIONED|
+                                    -- BROADCAST_EXCHANGE  |PARTITIONED|
                                       -- UNNEST  |UNPARTITIONED|
                                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
-                            -- HASH_PARTITION_EXCHANGE [$$388]  |PARTITIONED|
+                            -- HASH_PARTITION_EXCHANGE [$$412]  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- HYBRID_HASH_JOIN [$$388][$$ds_name]  |PARTITIONED|
+                                  -- HYBRID_HASH_JOIN [$$412][$$ds_name]  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ASSIGN  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- REPLICATE  |PARTITIONED|
-                                              -- HASH_PARTITION_EXCHANGE [$$384]  |PARTITIONED|
+                                              -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     -- BTREE_SEARCH (Metadata.Dataset.Dataset)  |PARTITIONED|
@@ -85,6 +85,6 @@
                                         -- ASSIGN  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- REPLICATE  |PARTITIONED|
-                                              -- HASH_PARTITION_EXCHANGE [$$ds_name]  |PARTITIONED|
+                                              -- BROADCAST_EXCHANGE  |PARTITIONED|
                                                 -- UNNEST  |UNPARTITIONED|
                                                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
