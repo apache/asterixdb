@@ -21,6 +21,7 @@ package org.apache.hyracks.maven.license.project;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 
 import org.apache.hyracks.maven.license.LicenseSpec;
 
@@ -49,6 +50,11 @@ public class LicensedProjects {
 
     public SortedSet<Project> getProjects() {
         return projects;
+    }
+
+    public SortedSet<Project> getNonShadowedProjects() {
+        return projects.stream().filter(Predicate.not(Project::isShadowed))
+                .collect(() -> new TreeSet<>(Project.PROJECT_COMPARATOR), TreeSet::add, TreeSet::addAll);
     }
 
     public void addProject(Project project) {

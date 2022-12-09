@@ -34,8 +34,11 @@ ${license.content}
 <#list licenseMap as e>
    <#assign licenseUrl = e.getKey()/>
    <#assign entry = e.getValue()/>
-   <#assign projects = entry.projects/>
+   <#assign projects = entry.nonShadowedProjects/>
    <#assign license = entry.getLicense()/>
+   <#if projects?size == 0>
+     <#continue/>
+   </#if>
    <#if projects?size == 1>
    Component:
      <#assign isare = "is"/>
@@ -44,9 +47,6 @@ ${license.content}
      <#assign isare = "are"/>
    </#if>
    <#list projects as p>
-     <#if p.shadowed>
-       <#continue/>
-     </#if>
        * ${p.name} (${p.groupId}:${p.artifactId}:${p.version})
      <#list p.locations as loc>
          - ${loc}${p.jarName}
