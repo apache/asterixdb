@@ -124,6 +124,10 @@
     <compilation-unit name="object_concat">
       <output-dir compare="Text">object_concat</output-dir>
       <expected-warn>ASX0013: Duplicate field name 'v'</expected-warn>
+      <expected-warn>ASX0013: Duplicate field name 'f'</expected-warn>
+      <expected-warn>ASX0013: Duplicate field name 'id'</expected-warn>
+      <expected-warn>ASX0013: Duplicate field name 'id'</expected-warn>
+      <expected-warn>ASX0013: Duplicate field name 'dup'</expected-warn>
     </compilation-unit>
   </test-case>
   <test-case FilePath="objects">
