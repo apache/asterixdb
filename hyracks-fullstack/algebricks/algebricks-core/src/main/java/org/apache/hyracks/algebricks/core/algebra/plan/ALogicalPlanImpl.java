@@ -53,7 +53,7 @@ public class ALogicalPlanImpl implements ILogicalPlan {
     }
 
     public static String prettyPrintPlan(ILogicalPlan plan) throws AlgebricksException {
-        return PlanPrettyPrinter.createStringPlanPrettyPrinter().printPlan(plan).toString();
+        return PlanPrettyPrinter.createStringPlanPrettyPrinter().printPlan(plan, true).toString();
     }
 
     @Override

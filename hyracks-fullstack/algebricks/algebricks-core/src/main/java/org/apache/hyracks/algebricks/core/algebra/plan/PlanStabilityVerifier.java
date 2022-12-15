@@ -263,7 +263,7 @@ public final class PlanStabilityVerifier {
 
     static String printOperator(ILogicalOperator op, IPlanPrettyPrinter printer) {
         try {
-            return printer.reset().printOperator((AbstractLogicalOperator) op, false).toString();
+            return printer.reset().printOperator((AbstractLogicalOperator) op, false, false).toString();
         } catch (AlgebricksException e) {
             // shouldn't happen
             return op.toString();

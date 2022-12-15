@@ -159,37 +159,38 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     }
 
     @Override
-    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan) throws AlgebricksException {
-        printPlanImpl(plan);
+    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan, boolean printOptimizerEstimates)
+            throws AlgebricksException {
+        printPlanImpl(plan, printOptimizerEstimates);
         flushContentToWriter();
         return this;
     }
 
     @Override
-    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys)
-            throws AlgebricksException {
+    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys,
+            boolean printOptimizerEstimates) throws AlgebricksException {
         this.log2odid = log2phys;
-        printPlanImpl(plan);
+        printPlanImpl(plan, printOptimizerEstimates);
         flushContentToWriter();
         return this;
     }
 
     @Override
-    public final IPlanPrettyPrinter printOperator(AbstractLogicalOperator op, boolean printInputs)
-            throws AlgebricksException {
-        printOperatorImpl(op, printInputs);
+    public final IPlanPrettyPrinter printOperator(AbstractLogicalOperator op, boolean printInputs,
+            boolean printOptimizerEstimates) throws AlgebricksException {
+        printOperatorImpl(op, printInputs, printOptimizerEstimates);
         flushContentToWriter();
         return this;
     }
 
-    private void printPlanImpl(ILogicalPlan plan) throws AlgebricksException {
+    private void printPlanImpl(ILogicalPlan plan, boolean printOptimizerEstimates) throws AlgebricksException {
         try {
             boolean writeArrayOfRoots = plan.getRoots().size() > 1;
             if (writeArrayOfRoots) {
                 jsonGenerator.writeStartArray();
             }
             for (Mutable<ILogicalOperator> root : plan.getRoots()) {
-                printOperatorImpl((AbstractLogicalOperator) root.getValue(), true);
+                printOperatorImpl((AbstractLogicalOperator) root.getValue(), true, printOptimizerEstimates);
             }
             if (writeArrayOfRoots) {
                 jsonGenerator.writeEndArray();
@@ -199,8 +200,11 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         }
     }
 
-    private void printOperatorImpl(AbstractLogicalOperator op, boolean printInputs) throws AlgebricksException {
+    private void printOperatorImpl(AbstractLogicalOperator op, boolean printInputs, boolean printOptimizerEstimates)
+            throws AlgebricksException {
         try {
+            boolean nestPlanInPlanField = nestPlanInPlanField(op, printOptimizerEstimates);
+
             jsonGenerator.writeStartObject();
             op.accept(this, null);
             jsonGenerator.writeStringField("operatorId", idCounter.printOperatorId(op));
@@ -214,24 +218,71 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             jsonGenerator.writeStringField("execution-mode", op.getExecutionMode().toString());
 
+            generateCardCostFields(op);
+
+            if (printInputs && !op.getInputs().isEmpty()) {
+                jsonGenerator.writeArrayFieldStart("inputs");
+                for (Mutable<ILogicalOperator> k : op.getInputs()) {
+                    printOperatorImpl((AbstractLogicalOperator) k.getValue(), printInputs, printOptimizerEstimates);
+                }
+                jsonGenerator.writeEndArray();
+            }
+            jsonGenerator.writeEndObject();
+            if (nestPlanInPlanField) {
+                jsonGenerator.writeEndObject();
+            }
+        } catch (IOException e) {
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
+        }
+    }
+
+    private boolean nestPlanInPlanField(AbstractLogicalOperator op, boolean printOptimizerEstimates)
+            throws IOException {
+        if (op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT && printOptimizerEstimates) {
+            double cardinality = 0.0;
+            double cost = 0.0;
+            for (Map.Entry<String, Object> anno : op.getAnnotations().entrySet()) {
+                if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_OUTPUT_CARDINALITY)) {
+                    cardinality = (double) anno.getValue();
+                } else if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_COST_TOTAL)) {
+                    cost = (double) anno.getValue();
+                }
+            }
+
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeNumberField("cardinality", cardinality);
+            jsonGenerator.writeNumberField("cost", cost);
+            jsonGenerator.writeFieldName("plan");
+            return true;
+        }
+        return false;
+    }
+
+    private void generateCardCostFields(AbstractLogicalOperator op) throws AlgebricksException {
+        try {
+            double opCard = 0.0;
+            double opCostLocal = 0.0;
+            double opCostTotal = 0.0;
+
             for (Map.Entry<String, Object> anno : op.getAnnotations().entrySet()) {
                 Object annotationVal = anno.getValue();
                 if (annotationVal != null) {
                     String annotation = anno.getKey();
                     switch (annotation) {
                         case OperatorAnnotations.OP_COST_LOCAL:
+                            opCostLocal = (double) annotationVal;
+                            break;
                         case OperatorAnnotations.OP_COST_TOTAL:
-                            jsonGenerator.writeStringField(annotation.toLowerCase().replace('_', '-'),
-                                    annotationVal.toString());
+                            opCostTotal = (double) annotationVal;
                             break;
                         case OperatorAnnotations.OP_INPUT_CARDINALITY:
                             if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
-                                jsonGenerator.writeStringField(OP_CARDINALITY, annotationVal.toString());
+                                opCard = (double) annotationVal;
                             }
                             break;
                         case OperatorAnnotations.OP_OUTPUT_CARDINALITY:
                             if (op.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
-                                jsonGenerator.writeStringField(OP_CARDINALITY, annotationVal.toString());
+                                opCard = (double) annotationVal;
                             }
                             break;
                         default:
@@ -239,14 +290,12 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                     }
                 }
             }
-
-            if (printInputs && !op.getInputs().isEmpty()) {
-                jsonGenerator.writeArrayFieldStart("inputs");
-                for (Mutable<ILogicalOperator> k : op.getInputs()) {
-                    printOperatorImpl((AbstractLogicalOperator) k.getValue(), printInputs);
-                }
-                jsonGenerator.writeEndArray();
-            }
+            jsonGenerator.writeObjectFieldStart("optimizer-estimates");
+            jsonGenerator.writeNumberField(OP_CARDINALITY, opCard);
+            jsonGenerator.writeNumberField(OperatorAnnotations.OP_COST_LOCAL.toLowerCase().replace('_', '-'),
+                    opCostLocal);
+            jsonGenerator.writeNumberField(OperatorAnnotations.OP_COST_TOTAL.toLowerCase().replace('_', '-'),
+                    opCostTotal);
             jsonGenerator.writeEndObject();
         } catch (IOException e) {
             throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
@@ -811,7 +860,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeArrayFieldStart("subplan");
             List<ILogicalPlan> nestedPlans = op.getNestedPlans();
             for (int i = 0, size = nestedPlans.size(); i < size; i++) {
-                printPlanImpl(nestedPlans.get(i));
+                printPlanImpl(nestedPlans.get(i), false);
             }
             jsonGenerator.writeEndArray();
             idCounter.previousPrefix();

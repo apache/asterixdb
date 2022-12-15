@@ -69,7 +69,7 @@ public class HeuristicOptimizer {
 
     private void logPlanAt(String name, Level lvl) throws AlgebricksException {
         if (AlgebricksConfig.ALGEBRICKS_LOGGER.isEnabled(lvl)) {
-            String planStr = context.getPrettyPrinter().reset().printPlan(plan).toString();
+            String planStr = context.getPrettyPrinter().reset().printPlan(plan, true).toString();
             AlgebricksConfig.ALGEBRICKS_LOGGER.log(lvl, name + ":\n" + LogRedactionUtil.userData(planStr));
         }
     }

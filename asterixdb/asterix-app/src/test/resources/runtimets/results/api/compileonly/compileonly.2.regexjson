@@ -4,6 +4,7 @@
 	  "expressions":"R{.*}",
 	  "operatorId":"R{.*}",
 	  "execution-mode":"R{.*}",
+	  "optimizer-estimates":{"cardinality":0.0,"op-cost":0.0,"total-cost":0.0},
 	  "inputs":"R{.*}"
   }
 }

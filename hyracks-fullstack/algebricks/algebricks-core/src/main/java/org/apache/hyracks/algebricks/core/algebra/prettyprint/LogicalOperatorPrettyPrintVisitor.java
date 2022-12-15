@@ -91,22 +91,23 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     }
 
     @Override
-    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan) throws AlgebricksException {
+    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan, boolean printOptimizerEstimates)
+            throws AlgebricksException {
         printPlanImpl(plan, 0);
         return this;
     }
 
     @Override
-    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys)
-            throws AlgebricksException {
+    public final IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys,
+            boolean printOptimizerEstimates) throws AlgebricksException {
         //TODO(ian): would be nice if the text plan returned real operator ids too
         printPlanImpl(plan, 0);
         return this;
     }
 
     @Override
-    public final IPlanPrettyPrinter printOperator(AbstractLogicalOperator op, boolean printInputs)
-            throws AlgebricksException {
+    public final IPlanPrettyPrinter printOperator(AbstractLogicalOperator op, boolean printInputs,
+            boolean printOptimizerEstimates) throws AlgebricksException {
         printOperatorImpl(op, 0, printInputs);
         return this;
     }

@@ -513,7 +513,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         if (LOGGER.isTraceEnabled()) {
             pp.reset();
-            pp.printOperator(op, true);
+            pp.printOperator(op, true, false);
             LOGGER.trace("---------------------------- {}\n{}\n----------------------------", text, pp);
         }
     }

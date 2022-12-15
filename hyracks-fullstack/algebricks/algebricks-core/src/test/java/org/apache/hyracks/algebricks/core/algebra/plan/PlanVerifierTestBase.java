@@ -71,7 +71,7 @@ public abstract class PlanVerifierTestBase {
 
     String printOp(ILogicalOperator op) {
         try {
-            return planPrinter.reset().printOperator((AbstractLogicalOperator) op, false).toString();
+            return planPrinter.reset().printOperator((AbstractLogicalOperator) op, false, false).toString();
         } catch (AlgebricksException e) {
             throw new RuntimeException(e);
         }
