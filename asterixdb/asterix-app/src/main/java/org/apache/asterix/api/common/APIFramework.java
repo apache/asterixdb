@@ -217,7 +217,7 @@ public class APIFramework {
 
         if ((isQuery || isLoad) && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
                 && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
-            generateLogicalPlan(plan, output.config().getPlanFormat());
+            generateLogicalPlan(plan, output.config().getPlanFormat(), isExplainOnly);
         }
         ICcApplicationContext ccAppContext = metadataProvider.getApplicationContext();
         CompilerProperties compilerProperties = ccAppContext.getCompilerProperties();
@@ -277,7 +277,7 @@ public class APIFramework {
                     output.out().write(buf.toString());
                 } else {
                     if (isQuery || isLoad) {
-                        generateOptimizedLogicalPlan(plan, output.config().getPlanFormat());
+                        generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), isExplainOnly);
                     }
                 }
             }
@@ -311,6 +311,9 @@ public class APIFramework {
         }
 
         if (!conf.isGenerateJobSpec()) {
+            if (isQuery || isLoad) {
+                generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), isExplainOnly);
+            }
             return null;
         }
 
@@ -331,6 +334,21 @@ public class APIFramework {
                 spec.setRequiredClusterCapacity(jobRequiredCapacity);
             }
         }
+
+        if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
+            if (isQuery || isLoad) {
+                generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), isExplainOnly);
+            }
+        }
+
+        if (isExplainOnly) {
+            printPlanAsResult(metadataProvider, output, printer, printSignature);
+            if (!conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
+                executionPlans.setOptimizedLogicalPlan(null);
+            }
+            return null;
+        }
+
         if (isQuery && conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
             generateJob(spec);
         }
@@ -516,13 +534,16 @@ public class APIFramework {
         }
     }
 
-    private void generateLogicalPlan(ILogicalPlan plan, SessionConfig.PlanFormat format) throws AlgebricksException {
-        executionPlans.setLogicalPlan(getPrettyPrintVisitor(format).printPlan(plan).toString());
+    private void generateLogicalPlan(ILogicalPlan plan, SessionConfig.PlanFormat format,
+            boolean printOptimizerEstimates) throws AlgebricksException {
+        executionPlans
+                .setLogicalPlan(getPrettyPrintVisitor(format).printPlan(plan, printOptimizerEstimates).toString());
     }
 
-    private void generateOptimizedLogicalPlan(ILogicalPlan plan, SessionConfig.PlanFormat format)
-            throws AlgebricksException {
-        executionPlans.setOptimizedLogicalPlan(getPrettyPrintVisitor(format).printPlan(plan).toString());
+    private void generateOptimizedLogicalPlan(ILogicalPlan plan, SessionConfig.PlanFormat format,
+            boolean printOptimizerEstimates) throws AlgebricksException {
+        executionPlans.setOptimizedLogicalPlan(
+                getPrettyPrintVisitor(format).printPlan(plan, printOptimizerEstimates).toString());
     }
 
     private void generateJob(JobSpecification spec) {

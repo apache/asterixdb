@@ -30,17 +30,18 @@ public interface IPlanPrettyPrinter {
 
     /** Prints the plan rooted at the operator argument. */
     default IPlanPrettyPrinter printOperator(AbstractLogicalOperator operator) throws AlgebricksException {
-        return printOperator(operator, true);
+        return printOperator(operator, true, false);
     }
 
     /** Prints given operator and optionally it's inputs */
-    IPlanPrettyPrinter printOperator(AbstractLogicalOperator operator, boolean printInputs) throws AlgebricksException;
+    IPlanPrettyPrinter printOperator(AbstractLogicalOperator operator, boolean printInputs,
+            boolean printOptimizerEstimates) throws AlgebricksException;
 
     /** Prints given expression */
     IPlanPrettyPrinter printExpression(ILogicalExpression expression) throws AlgebricksException;
 
     /** Prints the whole logical plan. */
-    IPlanPrettyPrinter printPlan(ILogicalPlan plan) throws AlgebricksException;
+    IPlanPrettyPrinter printPlan(ILogicalPlan plan, boolean printOptimizerEstimates) throws AlgebricksException;
 
     /** Resets the state of the pretty printer. */
     IPlanPrettyPrinter reset() throws AlgebricksException;
