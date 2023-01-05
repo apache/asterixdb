@@ -327,6 +327,7 @@ import org.apache.asterix.runtime.evaluators.constructors.UnorderedListConstruct
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.AnyCollectionMemberDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayAppendDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayBinarySearchDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayConcatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayDistinctDescriptor;
@@ -335,6 +336,7 @@ import org.apache.asterix.runtime.evaluators.functions.ArrayFlattenDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayIfNullDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayInsertDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayIntersectDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArrayMoveDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayPositionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayPrependDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayPutDescriptor;
@@ -349,6 +351,7 @@ import org.apache.asterix.runtime.evaluators.functions.ArraySliceWithEndPosition
 import org.apache.asterix.runtime.evaluators.functions.ArraySliceWithoutEndPositionDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArraySortDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayStarDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ArraySwapDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArraySymDiffDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArraySymDiffnDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ArrayUnionDescriptor;
@@ -669,6 +672,9 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ArraySymDiffnDescriptor.FACTORY);
         fc.add(ArrayStarDescriptor.FACTORY);
         fc.add(ArrayExceptDescriptor.FACTORY);
+        fc.add(ArrayMoveDescriptor.FACTORY);
+        fc.add(ArraySwapDescriptor.FACTORY);
+        fc.add(ArrayBinarySearchDescriptor.FACTORY);
 
         // unnesting functions
         fc.add(TidRunningAggregateDescriptor.FACTORY);

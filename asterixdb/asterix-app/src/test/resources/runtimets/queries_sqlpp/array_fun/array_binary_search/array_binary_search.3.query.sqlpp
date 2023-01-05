@@ -1,0 +1,48 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use TinySocial;
+
+FROM [
+  {"id":1, "t1": (select array_binary_search(null, 1))},
+  {"id":2, "t2": (select array_binary_search(missing, 1))},
+  {"id":3, "t3": (select array_binary_search([], 1))},
+  {"id":4, "t4": (select array_binary_search([1,2,3,4,5,6,7], 4))},
+  {"id":5, "t5": (select array_binary_search([1,2,3,4,5,6,7], 1))},
+  {"id":6, "t6": (select array_binary_search([1,2,3,4,5,6,7], 7))},
+  {"id":7, "t7": (select array_binary_search(["a", "b", "c", "d", "e", "f", "g"], "c"))},
+  {"id":8, "t8": (select array_binary_search(["a", "b", "c", "d", "e", "f", "g"], "a"))},
+  {"id":9, "t9": (select array_binary_search(["a", "b", "c", "d", "e", "f", "g"], "g"))},
+  {"id":10, "t10": (select array_binary_search([1,2,3,4,5,6,7,8], 3.0))},
+  {"id":11, "t11": (select array_binary_search([1,2,3,4,5,6,7,8], 8.0))},
+  {"id":12, "t12": (select array_binary_search([1,2,3,4,5,6,7,8], 2.5))},
+  {"id":13, "t13": (select array_binary_search("not-an-array", 3))},
+  {"id":14, "t14": (select array_binary_search([ ["a", "b"], ["b", "c"], ["c", "d"], ["d", "e"] ], ["a", "b"]))},
+  {"id":15, "t15": (select array_binary_search([ ["a", "b"], ["b", "c"], ["c", "d"], ["d", "e"] ], ["d", "e"]))},
+  {"id":16, "t16": (from openDs select array_binary_search(list_f, [9999,3]) order by id)},
+  {"id":17, "t17": (from openDs select array_binary_search(list_f, {"state": "OH", "country": "US"}) order by id)},
+  {"id":18, "t18": (from closedDs select array_binary_search(list_f, {"state": "OH", "country": "US"}) order by id)},
+  {"id":19, "t19": (select array_binary_search([{"id": 1, "age": 34}, {"id": 2, "age": 29}, {"id": 3, "age": 90}, {"id": 4, "age": 10}], {"id": 2, "age": 29} ))},
+  {"id":20, "t20": (select array_binary_search([0,0,1,1,1,2,3,3,3,3,4,5,6,6,6,7], 3))},
+  {"id":21, "t21": (select array_binary_search(["a", "b", "b", "b", "c", "d", "e", "e", "f", "f", "f", "g", "h", "i", "j"], "f"))},
+  {"id":22, "t22": (select array_binary_search( {{1, 2, 3, 4, 5}}, 3))}
+] as d
+
+SELECT VALUE d
+ORDER BY d.id;

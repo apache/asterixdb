@@ -41,6 +41,8 @@ public class AListTypeComputer extends AbstractResultTypeComputer {
     public static final AListTypeComputer INSTANCE_INSERT = new AListTypeComputer(3, false, true, false);
     public static final AListTypeComputer INSTANCE_REPLACE = new AListTypeComputer(3, false, true, false);
     public static final AListTypeComputer INSTANCE_SLICE = new AListTypeComputer(-1, false, false, true);
+    public static final AListTypeComputer INSTANCE_MOVE = new AListTypeComputer(3, false, false, true);
+    public static final AListTypeComputer INSTANCE_SWAP = new AListTypeComputer(3, false, false, true);
 
     private final int minNumArgs;
     private final boolean listIsLast;

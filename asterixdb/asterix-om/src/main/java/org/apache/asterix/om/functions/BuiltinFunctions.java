@@ -254,6 +254,12 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-slice", 3);
     public static final FunctionIdentifier ARRAY_EXCEPT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-except", 2);
+    public static final FunctionIdentifier ARRAY_SWAP =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-swap", 3);
+    public static final FunctionIdentifier ARRAY_MOVE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-move", 3);
+    public static final FunctionIdentifier ARRAY_BINARY_SEARCH =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "array-binary-search", 2);
 
     // objects
     public static final FunctionIdentifier RECORD_MERGE =
@@ -2409,6 +2415,9 @@ public class BuiltinFunctions {
         addFunction(ARRAY_SLICE_WITH_END_POSITION, AListTypeComputer.INSTANCE_SLICE, true);
         addFunction(ARRAY_SLICE_WITHOUT_END_POSITION, AListTypeComputer.INSTANCE_SLICE, true);
         addFunction(ARRAY_EXCEPT, ArrayExceptTypeComputer.INSTANCE, true);
+        addFunction(ARRAY_MOVE, AListTypeComputer.INSTANCE_MOVE, true);
+        addFunction(ARRAY_SWAP, AListTypeComputer.INSTANCE_SWAP, true);
+        addFunction(ARRAY_BINARY_SEARCH, AInt32TypeComputer.INSTANCE_NULLABLE, true);
 
         // objects
         addFunction(RECORD_MERGE, RecordMergeTypeComputer.INSTANCE, true);

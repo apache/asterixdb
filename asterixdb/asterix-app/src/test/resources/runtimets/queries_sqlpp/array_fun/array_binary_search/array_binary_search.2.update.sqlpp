@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use TinySocial;
+
+load  dataset TweetMessages using localfs ((`path`=`asterix_nc1://data/tinysocial/twm.adm`),(`format`=`adm`));
+
+insert into d1([
+{"id":1, "compType":{"sth":33}},
+{"id":2, "compType":{"sth":44}, "followers":["John Green", "Emily Jones"]}
+]);
+
+insert into openDs([
+{"id": 1, "list_f": [ [1,2,1], [9999,3] ]},
+{"id": 2, "list_f": [ ["white","blue","magenta"], ["red", "black"] ]},
+{"id": 3, "list_f": [ 1 , 2 ]},
+{"id": 4, "list_f": [ {"state": "OH", "country": "US"} , {"state": "CA", "country": "US", "zip_code": 92863} ]},
+{"id": 5, "list_f": [ {"state": "OR", "country": "US", "zip_code": null} , {"state": "IL", "country": "US", "zip_code": 92863} ]},
+{"id": 6, "list_f": null},
+{"id": 7}
+]);
+
+insert into closedDs([
+{"id": 1, "list_f": [ {"state": "OH", "country": "US"} , {"state": "CA", "country": "US", "zip_code": 92863} ]},
+{"id": 2, "list_f": [ {"state": "OR", "country": "US", "zip_code": null} , {"state": "IL", "country": "US", "zip_code": 92863} ]}
+]);

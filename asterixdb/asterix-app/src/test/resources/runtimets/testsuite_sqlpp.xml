@@ -3106,6 +3106,21 @@
         <expected-error>Input contains different list types (in line 25, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_binary_search">
+        <output-dir compare="Text">array_binary_search</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_move">
+        <output-dir compare="Text">array_move</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_swap">
+        <output-dir compare="Text">array_swap</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="bitwise">
     <test-case FilePath="bitwise">
