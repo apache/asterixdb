@@ -207,8 +207,12 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
                         // Add the inputs from our subplan.
                         Mutable<ILogicalOperator> traversalOperator = traversalOutput.first.getInputs().get(0);
                         while (traversalOperator != null) {
-                            workingNewOperator.getInputs().add(new MutableObject<>(
-                                    OperatorManipulationUtil.deepCopy(traversalOperator.getValue())));
+                            ILogicalOperator traversalOperatorDeepCopy =
+                                    OperatorManipulationUtil.deepCopy(traversalOperator.getValue());
+                            if (traversalOperator.getValue().equals(traversalOutput.second)) {
+                                traversalOutput.second = (UnnestOperator) traversalOperatorDeepCopy;
+                            }
+                            workingNewOperator.getInputs().add(new MutableObject<>(traversalOperatorDeepCopy));
                             workingNewOperator = workingNewOperator.getInputs().get(0).getValue();
                             traversalOperator = (traversalOperator.getValue().getInputs().isEmpty()) ? null
                                     : traversalOperator.getValue().getInputs().get(0);
