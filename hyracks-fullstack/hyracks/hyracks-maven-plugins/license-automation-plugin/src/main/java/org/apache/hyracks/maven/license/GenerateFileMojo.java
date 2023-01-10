@@ -119,6 +119,9 @@ public class GenerateFileMojo extends LicenseMojo {
     private boolean stripFoundationAssertionFromNotices = false;
 
     @Parameter
+    private boolean includeShadowedDependencies = true;
+
+    @Parameter
     private boolean validateShadowLicenses = false;
 
     private SortedMap<String, SortedSet<Project>> noticeMap;
@@ -524,6 +527,11 @@ public class GenerateFileMojo extends LicenseMojo {
 
     private void gatherShadowedDependencies(Map<MavenProject, List<Pair<String, String>>> dependencyLicenseMap,
             Map<String, MavenProject> dependencyGavMap) throws MojoExecutionException, ProjectBuildingException {
+        if (!includeShadowedDependencies) {
+            getLog().info("Not gathering shadowed dependencies as 'includeShadowedDependencies' is set to "
+                    + includeShadowedDependencies);
+            return;
+        }
         Set<MavenProject> projects = new TreeSet<>(Comparator.comparing(MavenProject::getId));
         projects.addAll(dependencyLicenseMap.keySet());
         for (MavenProject p : projects) {
