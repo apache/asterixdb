@@ -28,9 +28,12 @@ import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.heartbeat.HeartbeatData;
 import org.apache.hyracks.control.common.ipc.NodeControllerRemoteProxy;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class NodeHeartbeatWork extends AbstractHeartbeatWork {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private final InetSocketAddress ncAddress;
 
     public NodeHeartbeatWork(ClusterControllerService ccs, String nodeId, HeartbeatData hbData,
@@ -47,6 +50,8 @@ public class NodeHeartbeatWork extends AbstractHeartbeatWork {
             ncState.getNodeController().heartbeatAck(ccs.getCcId(), null);
         } else {
             // unregistered nc- let him know
+            LOGGER.info("received a heartbeat from unregistered node {}; sending negative ack to node address {}",
+                    nodeId, ncAddress);
             NodeControllerRemoteProxy nc =
                     new NodeControllerRemoteProxy(ccs.getCcId(), ccs.getClusterIPC().getReconnectingHandle(ncAddress));
             nc.heartbeatAck(ccs.getCcId(), HyracksDataException.create(ErrorCode.NO_SUCH_NODE, nodeId));

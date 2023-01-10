@@ -27,6 +27,7 @@ import java.util.List;
 import org.apache.asterix.algebra.base.OperatorAnnotation;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -64,7 +65,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
 public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
 
-    private ExtractFieldLoadExpressionVisitor exprVisitor = new ExtractFieldLoadExpressionVisitor();
+    private final ExtractFieldLoadExpressionVisitor exprVisitor = new ExtractFieldLoadExpressionVisitor();
 
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
@@ -98,13 +99,13 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
             // checking if we can annotate a Selection as using just one field
             // access
             SelectOperator sigma = (SelectOperator) op1;
-            LinkedList<LogicalVariable> vars = new LinkedList<LogicalVariable>();
+            List<LogicalVariable> vars = new ArrayList<>();
             VariableUtilities.getUsedVariables(sigma, vars);
             if (vars.size() == 1) {
                 // we can annotate Selection
                 AssignOperator assign1 = (AssignOperator) op1.getInputs().get(0).getValue();
-                AbstractLogicalExpression expr1 = (AbstractLogicalExpression) getFirstExpr(assign1);
-                if (expr1.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                ILogicalExpression expr1 = getFirstExpr(assign1);
+                if (FunctionUtil.isFieldAccessFunction(expr1)) {
                     AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr1;
                     // f should be a call to a field/data access kind of
                     // function
@@ -141,7 +142,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                     }
                     // create an assign
                     LogicalVariable v = context.newVar();
-                    AssignOperator a2 = new AssignOperator(v, new MutableObject<ILogicalExpression>(f));
+                    AssignOperator a2 = new AssignOperator(v, new MutableObject<>(f));
                     a2.setSourceLocation(expr.getSourceLocation());
                     pushFieldAssign(a2, topOp, context);
                     context.computeAndSetTypeEnvironmentForOperator(a2);
@@ -151,7 +152,7 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
                         LogicalVariable var = ref.getVariableReference();
                         List<LogicalVariable> keys = context.findPrimaryKey(var);
                         if (keys != null) {
-                            List<LogicalVariable> tail = new ArrayList<LogicalVariable>();
+                            List<LogicalVariable> tail = new ArrayList<>();
                             tail.add(v);
                             FunctionalDependency pk = new FunctionalDependency(keys, tail);
                             context.addPrimaryKey(pk);
@@ -408,5 +409,4 @@ public class LoadRecordFieldsRule implements IAlgebraicRewriteRule {
     private static ILogicalExpression getFirstExpr(AssignOperator assign) {
         return assign.getExpressions().get(0).getValue();
     }
-
 }
