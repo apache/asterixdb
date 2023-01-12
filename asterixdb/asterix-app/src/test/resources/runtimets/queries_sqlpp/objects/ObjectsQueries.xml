@@ -248,4 +248,9 @@
       <expected-warn>Duplicate field name 'fname1' (in line 25, at column 45)</expected-warn>
     </compilation-unit>
   </test-case>
+  <test-case FilePath="objects">
+    <compilation-unit name="load-record-fields">
+      <output-dir compare="Text">load-record-fields</output-dir>
+    </compilation-unit>
+  </test-case>
 </test-group>

@@ -58,6 +58,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -302,5 +303,17 @@ public class FunctionUtil {
             throw new CompilationException(ErrorCode.COMPILATION_BAD_FUNCTION_DEFINITION, e, sourceLoc,
                     function.getSignature(), e.getMessage());
         }
+    }
+
+    public static boolean isFieldAccessFunction(ILogicalExpression expression) {
+        if (expression.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expression;
+        FunctionIdentifier fid = funcExpr.getFunctionIdentifier();
+
+        return BuiltinFunctions.FIELD_ACCESS_BY_INDEX.equals(fid) || BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fid)
+                || BuiltinFunctions.FIELD_ACCESS_NESTED.equals(fid);
     }
 }
