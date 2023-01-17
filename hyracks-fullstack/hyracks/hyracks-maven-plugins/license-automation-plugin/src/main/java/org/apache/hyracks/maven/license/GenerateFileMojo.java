@@ -20,11 +20,13 @@ package org.apache.hyracks.maven.license;
 
 import static org.apache.hyracks.maven.license.GenerateFileMojo.EmbeddedArtifact.LICENSE;
 import static org.apache.hyracks.maven.license.GenerateFileMojo.EmbeddedArtifact.NOTICE;
+import static org.apache.hyracks.maven.license.LicenseUtil.toGav;
 import static org.apache.hyracks.maven.license.ProjectFlag.ALTERNATE_LICENSE_FILE;
 import static org.apache.hyracks.maven.license.ProjectFlag.ALTERNATE_NOTICE_FILE;
 import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_MISSING_EMBEDDED_LICENSE;
 import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_MISSING_EMBEDDED_NOTICE;
 import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_NOTICE_OVERRIDE;
+import static org.apache.hyracks.maven.license.ProjectFlag.IGNORE_SHADOWED_DEPENDENCIES;
 import static org.apache.hyracks.maven.license.ProjectFlag.ON_MULTIPLE_EMBEDDED_LICENSE;
 import static org.apache.hyracks.maven.license.ProjectFlag.ON_MULTIPLE_EMBEDDED_NOTICE;
 
@@ -36,6 +38,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -55,8 +58,10 @@ import java.util.function.UnaryOperator;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.maven.license.freemarker.IndentDirective;
@@ -527,39 +532,50 @@ public class GenerateFileMojo extends LicenseMojo {
         Set<MavenProject> projects = new TreeSet<>(Comparator.comparing(MavenProject::getId));
         projects.addAll(dependencyLicenseMap.keySet());
         for (MavenProject p : projects) {
-            boolean finished = false;
             File artifactFile = p.getArtifact().getFile();
             if (!artifactFile.exists()) {
                 throw new MojoExecutionException("Artifact file " + artifactFile + " does not exist!");
             } else if (!artifactFile.getName().endsWith(".jar")) {
                 getLog().info("Skipping unknown artifact file type: " + artifactFile);
-                finished = true;
+                continue;
             }
-            if (!finished) {
-                try (JarFile jarFile = new JarFile(artifactFile)) {
-                    SortedMap<String, JarEntry> matches = gatherMatchingEntries(jarFile,
-                            entry -> entry.getName().matches("(.*/|^)" + "pom\\.properties"));
-                    if (!matches.isEmpty()) {
-                        for (JarEntry entry : matches.values()) {
-                            Properties props = new Properties();
-                            props.load(jarFile.getInputStream(entry));
-                            String groupId = props.getProperty("groupId");
-                            String artifactId = props.getProperty("artifactId");
-                            String version = props.getProperty("version");
-                            String gav = groupId + ":" + artifactId + ":" + version;
-                            if (!dependencyGavMap.containsKey(gav)) {
-                                getLog().info("adding " + gav + " (shadowed from " + p.getId() + ")");
-                                ArtifactHandler handler = new DefaultArtifactHandler("jar");
-                                String[] gavParts = StringUtils.split(gav, ':');
-                                Artifact manualDep = new DefaultArtifact(gavParts[0], gavParts[1], gavParts[2],
-                                        Artifact.SCOPE_COMPILE, "jar", null, handler);
-                                processArtifact(manualDep, dependencyLicenseMap, dependencyGavMap, true);
+            @SuppressWarnings("unchecked")
+            List<String[]> specs = (List<String[]>) getProjectFlags()
+                    .getOrDefault(Pair.of(toGav(p), IGNORE_SHADOWED_DEPENDENCIES), Collections.emptyList());
+            getLog().debug(p + " has " + IGNORE_SHADOWED_DEPENDENCIES.propName() + " set to "
+                    + specs.stream().map(ArrayUtils::toString).collect(Collectors.joining(",")));
+            try (JarFile jarFile = new JarFile(artifactFile)) {
+                SortedMap<String, JarEntry> matches = gatherMatchingEntries(jarFile,
+                        entry -> entry.getName().matches("(.*/|^)" + "pom\\.properties"));
+                if (!matches.isEmpty()) {
+                    jarEntryLoop: for (JarEntry entry : matches.values()) {
+                        Properties props = new Properties();
+                        props.load(jarFile.getInputStream(entry));
+                        String groupId = props.getProperty("groupId");
+                        String artifactId = props.getProperty("artifactId");
+                        String version = props.getProperty("version");
+                        String gav = groupId + ":" + artifactId + ":" + version;
+                        if (!dependencyGavMap.containsKey(gav)) {
+                            for (String[] ignoreSpec : specs) {
+                                if ((ignoreSpec[0].equals(groupId) || ignoreSpec[0].equals("*"))
+                                        && (ignoreSpec[1].equals(artifactId) || ignoreSpec[1].equals("*"))
+                                        && (ignoreSpec[2].equals(version) || ignoreSpec[2].equals("*"))) {
+                                    getLog().info("skipping " + gav + " (shadowed from " + p.getId()
+                                            + "), as it matches " + IGNORE_SHADOWED_DEPENDENCIES.propName());
+                                    continue jarEntryLoop;
+                                }
                             }
+                            getLog().info("adding " + gav + " (shadowed from " + p.getId() + ")");
+                            ArtifactHandler handler = new DefaultArtifactHandler("jar");
+                            String[] gavParts = StringUtils.split(gav, ':');
+                            Artifact manualDep = new DefaultArtifact(gavParts[0], gavParts[1], gavParts[2],
+                                    Artifact.SCOPE_COMPILE, "jar", null, handler);
+                            processArtifact(manualDep, dependencyLicenseMap, dependencyGavMap, true);
                         }
                     }
-                } catch (IOException e) {
-                    throw new MojoExecutionException(e);
                 }
+            } catch (IOException e) {
+                throw new MojoExecutionException(e);
             }
         }
     }
