@@ -8586,6 +8586,11 @@
           <output-dir compare="Text">using-feed</output-dir>
         </compilation-unit>
       </test-case>
+      <test-case FilePath="array-index/select-unnest-queries/open">
+        <compilation-unit name="multiple-indexes">
+          <output-dir compare="Text">multiple-indexes</output-dir>
+        </compilation-unit>
+      </test-case>
     </test-group>
     <test-group name="array-index/select-quantified-queries">
       <test-case FilePath="array-index/select-quantified-queries">
@@ -8616,6 +8621,11 @@
       <test-case FilePath="array-index/select-quantified-queries">
         <compilation-unit name="with-open-index">
           <output-dir compare="Text">with-open-index</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="array-index/select-quantified-queries">
+        <compilation-unit name="multiple-indexes">
+          <output-dir compare="Text">multiple-indexes</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>

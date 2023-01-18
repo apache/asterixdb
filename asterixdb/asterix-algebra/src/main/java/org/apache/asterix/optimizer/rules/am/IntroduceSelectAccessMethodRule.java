@@ -50,6 +50,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DelegateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
@@ -324,21 +325,31 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                         "The primary search has multiple inputs.");
             }
 
+            // The operator directly under the subroot may either be an ORDER-BY or a DISTINCT (if an array index).
             ILogicalOperator curRoot = subRoots.get(i);
-            OrderOperator order = (OrderOperator) curRoot.getInputs().get(0).getValue();
-            List<LogicalVariable> orderedColumn = new ArrayList<>(order.getOrderExpressions().size());
-            for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> orderExpression : order
-                    .getOrderExpressions()) {
-                if (orderExpression.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
-                    throw new CompilationException(ErrorCode.COMPILATION_ERROR,
-                            orderExpression.second.getValue().getSourceLocation(),
-                            "The order by expression should be variables, but they aren't variables.");
+            ILogicalOperator curRootInput = curRoot.getInputs().get(0).getValue();
+            if (curRootInput.getOperatorTag() == LogicalOperatorTag.ORDER) {
+                OrderOperator order = (OrderOperator) curRootInput;
+                List<LogicalVariable> orderedColumn = new ArrayList<>(order.getOrderExpressions().size());
+                for (Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>> orderExpression : order
+                        .getOrderExpressions()) {
+                    if (orderExpression.second.getValue().getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                                orderExpression.second.getValue().getSourceLocation(),
+                                "The order by expression should be variables, but they aren't variables.");
+                    }
+                    VariableReferenceExpression orderedVar =
+                            (VariableReferenceExpression) orderExpression.second.getValue();
+                    orderedColumn.add(orderedVar.getVariableReference());
                 }
-                VariableReferenceExpression orderedVar =
-                        (VariableReferenceExpression) orderExpression.second.getValue();
-                orderedColumn.add(orderedVar.getVariableReference());
+                inputVars.add(orderedColumn);
+            } else if (curRootInput.getOperatorTag() == LogicalOperatorTag.DISTINCT) {
+                DistinctOperator distinct = (DistinctOperator) curRootInput;
+                inputVars.add(distinct.getDistinctByVarList());
+            } else {
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, curRootInput.getSourceLocation(),
+                        "Operator directly below the primary index search should be either a DISTINCT or an ORDER!");
             }
-            inputVars.add(orderedColumn);
         }
 
         List<LogicalVariable> inputVars0 = inputVars.get(0);
