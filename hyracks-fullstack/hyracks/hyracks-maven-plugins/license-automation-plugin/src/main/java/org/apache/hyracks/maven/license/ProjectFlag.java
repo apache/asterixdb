@@ -20,9 +20,12 @@ package org.apache.hyracks.maven.license;
 
 import static org.apache.hyracks.maven.license.LicenseUtil.toGav;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.util.StringUtil;
@@ -36,13 +39,15 @@ enum ProjectFlag {
     ON_MULTIPLE_EMBEDDED_LICENSE,
     ON_MULTIPLE_EMBEDDED_NOTICE,
     ALTERNATE_LICENSE_FILE,
-    ALTERNATE_NOTICE_FILE;
+    ALTERNATE_NOTICE_FILE,
+    IGNORE_SHADOWED_DEPENDENCIES;
 
     String propName() {
         return "license." + StringUtil.toCamelCase(name());
     }
 
     void visit(MavenProject depObj, Properties properties, LicenseMojo licenseMojo) {
+        licenseMojo.getLog().debug("+" + propName() + ".visit: " + toGav(depObj));
         String value = properties.getProperty(propName());
         if (value == null) {
             return;
@@ -59,12 +64,34 @@ enum ProjectFlag {
                             + " for " + toGav(depObj));
                 }
                 break;
+            case IGNORE_SHADOWED_DEPENDENCIES:
+                // <license.ignoreShadowedDependencies>*:com.couchbase.client:core-io:*</license.ignoreShadowedDependencies>
+                List<String[]> specsList = new ArrayList<>();
+                for (String spec : StringUtils.split(value, ",")) {
+                    boolean found = false;
+                    String[] specSplit = StringUtils.split(spec, ":");
+                    if (specSplit.length != 4) {
+                        throw new IllegalArgumentException(spec);
+                    }
+                    if (specSplit[0].equals(depObj.getVersion()) || specSplit[0].equals("*")) {
+                        specsList.add(ArrayUtils.subarray(specSplit, 1, specSplit.length));
+                        found = true;
+                    }
+                    if (!found) {
+                        licenseMojo.getLog().info(propName() + " defined on versions that *do not* match: "
+                                + specSplit[0] + " for " + toGav(depObj));
+                    }
+                }
+                if (!specsList.isEmpty()) {
+                    licenseMojo.getProjectFlags().put(Pair.of(toGav(depObj), this), specsList);
+                }
+                break;
             case ALTERNATE_LICENSE_FILE:
             case ALTERNATE_NOTICE_FILE:
             case ON_MULTIPLE_EMBEDDED_NOTICE:
             case ON_MULTIPLE_EMBEDDED_LICENSE:
-                boolean found = false;
                 for (String spec : StringUtils.split(value, ",")) {
+                    boolean found = false;
                     String[] specSplit = StringUtils.split(spec, ":");
                     if (specSplit.length != 2) {
                         throw new IllegalArgumentException(spec);
@@ -73,10 +100,10 @@ enum ProjectFlag {
                         licenseMojo.getProjectFlags().put(Pair.of(toGav(depObj), this), specSplit[1]);
                         found = true;
                     }
-                }
-                if (!found) {
-                    licenseMojo.getLog().info(propName() + " defined on versions that *do not* match: " + value
-                            + " for " + toGav(depObj));
+                    if (!found) {
+                        licenseMojo.getLog().info(propName() + " defined on versions that *do not* match: " + value
+                                + " for " + toGav(depObj));
+                    }
                 }
                 break;
             default:
