@@ -18,11 +18,15 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 
+import java.util.Map;
+
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionVisitor;
@@ -30,6 +34,10 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 public abstract class AbstractLogicalOperatorPrettyPrintVisitor<T> implements ILogicalOperatorVisitor<Void, T> {
 
+    protected static final String CARDINALITY = "cardinality";
+    protected static final String PLAN_COST = "cost";
+    protected static final String OP_COST_LOCAL = "op-cost";
+    protected static final String OP_COST_TOTAL = "total-cost";
     protected final ILogicalExpressionVisitor<String, T> exprVisitor;
     protected final AlgebricksStringBuilderWriter buffer;
 
@@ -47,6 +55,52 @@ public abstract class AbstractLogicalOperatorPrettyPrintVisitor<T> implements IL
 
     protected void resetState() {
         buffer.getBuilder().setLength(0);
+    }
+
+    protected double getPlanCardinality(ILogicalOperator op) {
+        Double planCard = null;
+        if (op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT) {
+            planCard = (Double) getAnnotationValue(op, OperatorAnnotations.OP_OUTPUT_CARDINALITY);
+        }
+        return (planCard != null) ? planCard : 0.0;
+    }
+
+    protected double getPlanCost(ILogicalOperator op) {
+        Double planCost = null;
+        if (op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT) {
+            planCost = (Double) getAnnotationValue(op, OperatorAnnotations.OP_COST_TOTAL);
+        }
+        return (planCost != null) ? planCost : 0.0;
+    }
+
+    protected double getOpCardinality(ILogicalOperator op) {
+        Double opCard;
+
+        if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+            opCard = (Double) getAnnotationValue(op, OperatorAnnotations.OP_INPUT_CARDINALITY);
+        } else {
+            opCard = (Double) getAnnotationValue(op, OperatorAnnotations.OP_OUTPUT_CARDINALITY);
+        }
+
+        return (opCard != null) ? opCard : 0.0;
+    }
+
+    protected double getOpLocalCost(ILogicalOperator op) {
+        Double opLocalCost = (Double) getAnnotationValue(op, OperatorAnnotations.OP_COST_LOCAL);
+        return (opLocalCost != null) ? opLocalCost : 0.0;
+    }
+
+    protected double getOpTotalCost(ILogicalOperator op) {
+        Double opTotalCost = (Double) getAnnotationValue(op, OperatorAnnotations.OP_COST_TOTAL);
+        return (opTotalCost != null) ? opTotalCost : 0.0;
+    }
+
+    protected Object getAnnotationValue(ILogicalOperator op, String key) {
+        Map<String, Object> annotations = op.getAnnotations();
+        if (annotations != null && annotations.containsKey(key)) {
+            return annotations.get(key);
+        }
+        return null;
     }
 
     @Override

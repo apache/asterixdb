@@ -1,18 +1,20 @@
-distribute result [$$15]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$15] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$15])
+    project ([$$15]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$15] <- [or(null, le($$x, 2))]
+      assign [$$15] <- [or(null, le($$x, 2))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |UNPARTITIONED|
-        exchange
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-          order (ASC, $$x)
+          order (ASC, $$x) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STABLE_SORT [$$x(ASC)]  |UNPARTITIONED|
-            exchange
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-              unnest $$x <- range(1, 4)
+              unnest $$x <- range(1, 4) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- UNNEST  |UNPARTITIONED|
-                empty-tuple-source
+                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

@@ -1,52 +1,54 @@
-distribute result [$$210]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$210] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |LOCAL|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-    aggregate [$$210] <- [agg-sql-sum($$239)]
+    aggregate [$$210] <- [agg-sql-sum($$239)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- AGGREGATE  |LOCAL|
-      aggregate [$$239] <- [agg-sql-count(1)]
+      aggregate [$$239] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- AGGREGATE  |LOCAL|
-        exchange
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-          union
+          union [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- UNION_ALL  |UNPARTITIONED|
-            exchange
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-              limit 1000
+              limit 1000 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_LIMIT  |UNPARTITIONED|
-                project ([])
+                project ([]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  exchange
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- SORT_MERGE_EXCHANGE [$$142(ASC) ]  |PARTITIONED|
-                    limit 1000
+                    limit 1000 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_LIMIT  |PARTITIONED|
-                      project ([$$142])
+                      project ([$$142]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
-                        exchange
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$142, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), 1), le($$onek1.getField(2), 10))) limit 1000
+                          data-scan []<-[$$142, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), 1), le($$onek1.getField(2), 10))) limit 1000 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
-                            exchange
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              empty-tuple-source
+                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-            exchange
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-              limit 1000
+              limit 1000 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_LIMIT  |UNPARTITIONED|
-                project ([])
+                project ([]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  exchange
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- SORT_MERGE_EXCHANGE [$$143(ASC) ]  |PARTITIONED|
-                    limit 1000
+                    limit 1000 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_LIMIT  |PARTITIONED|
-                      project ([$$143])
+                      project ([$$143]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
-                        exchange
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$143, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), -10), le($$onek1.getField(2), -1))) limit 1000
+                          data-scan []<-[$$143, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), -10), le($$onek1.getField(2), -1))) limit 1000 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
-                            exchange
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              empty-tuple-source
+                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,39 +1,41 @@
-distribute result [$$49]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$49] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    aggregate [$$49] <- [agg-sql-sum($$55)]
+    aggregate [$$49] <- [agg-sql-sum($$55)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- AGGREGATE  |UNPARTITIONED|
-      exchange
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        aggregate [$$55] <- [agg-sql-count(1)]
+        aggregate [$$55] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- AGGREGATE  |PARTITIONED|
-          select ($$42)
+          select ($$42) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STREAM_SELECT  |PARTITIONED|
-            project ([$$42])
+            project ([$$42]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_PROJECT  |PARTITIONED|
               subplan {
-                        aggregate [$$42] <- [empty-stream()]
+                        aggregate [$$42] <- [empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- AGGREGATE  |LOCAL|
-                          select (not(if-missing-or-null(eq($$51, "string"), false)))
+                          select (not(if-missing-or-null(eq($$51, "string"), false))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_SELECT  |LOCAL|
-                            assign [$$51] <- [$$ht.getField("display_url")]
+                            assign [$$51] <- [$$ht.getField("display_url")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ASSIGN  |LOCAL|
-                              unnest $$ht <- scan-collection($$50)
+                              unnest $$ht <- scan-collection($$50) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- UNNEST  |LOCAL|
-                                nested tuple source
+                                nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     }
+                     } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- SUBPLAN  |PARTITIONED|
-                project ([$$50])
+                project ([$$50]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$50] <- [$$p.getField("entities").getField("urls")]
+                  assign [$$50] <- [$$p.getField("entities").getField("urls")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
-                    exchange
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$p] <- test.ParquetDataset project ({entities:{urls:[{display_url:any}]}})
+                      data-scan []<-[$$p] <- test.ParquetDataset project ({entities:{urls:[{display_url:any}]}}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
-                        exchange
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          empty-tuple-source
+                          empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

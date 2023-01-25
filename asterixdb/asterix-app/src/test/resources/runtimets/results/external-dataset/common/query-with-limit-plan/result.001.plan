@@ -1,22 +1,24 @@
-distribute result [$$14]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$14] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 3
+    limit 3 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      exchange
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        project ([$$14])
+        project ([$$14]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          assign [$$14] <- [{"test": $$test}]
+          assign [$$14] <- [{"test": $$test}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ASSIGN  |PARTITIONED|
-            limit 3
+            limit 3 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_LIMIT  |PARTITIONED|
-              exchange
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                data-scan []<-[$$test] <- test.test limit 3
+                data-scan []<-[$$test] <- test.test limit 3 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- DATASOURCE_SCAN  |PARTITIONED|
-                  exchange
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    empty-tuple-source
+                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

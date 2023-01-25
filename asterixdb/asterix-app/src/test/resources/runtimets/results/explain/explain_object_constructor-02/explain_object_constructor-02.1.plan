@@ -1,8 +1,10 @@
-distribute result [$$2]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$2] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$2] <- [{ "a": "1" }]
+    assign [$$2] <- [{ "a": "1" }] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
-      empty-tuple-source
+      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

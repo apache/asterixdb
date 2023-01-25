@@ -1,18 +1,20 @@
-distribute result [$$17]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$17] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$17])
+    project ([$$17]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$17] <- [or(true, lt(get-year(current-date()), $$x))]
+      assign [$$17] <- [or(true, lt(get-year(current-date()), $$x))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |UNPARTITIONED|
-        exchange
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-          order (ASC, $$x)
+          order (ASC, $$x) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STABLE_SORT [$$x(ASC)]  |UNPARTITIONED|
-            exchange
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-              unnest $$x <- range(1, 4)
+              unnest $$x <- range(1, 4) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- UNNEST  |UNPARTITIONED|
-                empty-tuple-source
+                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

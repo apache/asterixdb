@@ -37,7 +37,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
@@ -103,8 +102,8 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     private static final String EXPRESSION_FIELD = "expression";
     private static final String CONDITION_FIELD = "condition";
     private static final String MISSING_VALUE_FIELD = "missing-value";
-    private static final String OP_CARDINALITY = "cardinality";
-
+    private static final String OPTIMIZER_ESTIMATES = "optimizer-estimates";
+    private static final String QUERY_PLAN = "plan";
     private final Map<AbstractLogicalOperator, String> operatorIdentity = new HashMap<>();
     private Map<Object, String> log2odid = Collections.emptyMap();
     private final IdCounter idCounter = new IdCounter();
@@ -208,7 +207,6 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             throws AlgebricksException {
         try {
             boolean nestPlanInPlanField = nestPlanInPlanField(op, printOptimizerEstimates);
-
             jsonGenerator.writeStartObject();
             op.accept(this, null);
             jsonGenerator.writeStringField("operatorId", idCounter.printOperatorId(op));
@@ -222,7 +220,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             }
             jsonGenerator.writeStringField("execution-mode", op.getExecutionMode().toString());
 
-            generateCardCostFields(op);
+            generateCardCostFields(op, printOptimizerEstimates);
 
             List<Mutable<ILogicalOperator>> inputs = op.getInputs();
             if (printInputs && !inputs.isEmpty()) {
@@ -255,67 +253,35 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     private boolean nestPlanInPlanField(AbstractLogicalOperator op, boolean printOptimizerEstimates)
             throws IOException {
+        double planCard, planCost;
         if (op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT && printOptimizerEstimates) {
-            double cardinality = 0.0;
-            double cost = 0.0;
-            for (Map.Entry<String, Object> anno : op.getAnnotations().entrySet()) {
-                if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_OUTPUT_CARDINALITY)) {
-                    cardinality = (double) anno.getValue();
-                } else if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_COST_TOTAL)) {
-                    cost = (double) anno.getValue();
-                }
-            }
-
+            planCard = getPlanCardinality(op);
+            planCost = getPlanCost(op);
             jsonGenerator.writeStartObject();
-            jsonGenerator.writeNumberField("cardinality", cardinality);
-            jsonGenerator.writeNumberField("cost", cost);
-            jsonGenerator.writeFieldName("plan");
+            jsonGenerator.writeNumberField(CARDINALITY, planCard);
+            jsonGenerator.writeNumberField(PLAN_COST, planCost);
+            jsonGenerator.writeFieldName(QUERY_PLAN);
             return true;
         }
         return false;
     }
 
-    private void generateCardCostFields(AbstractLogicalOperator op) throws AlgebricksException {
-        try {
-            double opCard = 0.0;
-            double opCostLocal = 0.0;
-            double opCostTotal = 0.0;
-
-            for (Map.Entry<String, Object> anno : op.getAnnotations().entrySet()) {
-                Object annotationVal = anno.getValue();
-                if (annotationVal != null) {
-                    String annotation = anno.getKey();
-                    switch (annotation) {
-                        case OperatorAnnotations.OP_COST_LOCAL:
-                            opCostLocal = (double) annotationVal;
-                            break;
-                        case OperatorAnnotations.OP_COST_TOTAL:
-                            opCostTotal = (double) annotationVal;
-                            break;
-                        case OperatorAnnotations.OP_INPUT_CARDINALITY:
-                            if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
-                                opCard = (double) annotationVal;
-                            }
-                            break;
-                        case OperatorAnnotations.OP_OUTPUT_CARDINALITY:
-                            if (op.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
-                                opCard = (double) annotationVal;
-                            }
-                            break;
-                        default:
-                            break;
-                    }
-                }
+    private void generateCardCostFields(AbstractLogicalOperator op, boolean printOptimizerEstimates)
+            throws AlgebricksException {
+        double opCard, opLocalCost, opTotalCost;
+        if (printOptimizerEstimates) {
+            opCard = getOpCardinality(op);
+            opLocalCost = getOpLocalCost(op);
+            opTotalCost = getOpTotalCost(op);
+            try {
+                jsonGenerator.writeObjectFieldStart(OPTIMIZER_ESTIMATES);
+                jsonGenerator.writeNumberField(CARDINALITY, opCard);
+                jsonGenerator.writeNumberField(OP_COST_LOCAL, opLocalCost);
+                jsonGenerator.writeNumberField(OP_COST_TOTAL, opTotalCost);
+                jsonGenerator.writeEndObject();
+            } catch (IOException e) {
+                throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
             }
-            jsonGenerator.writeObjectFieldStart("optimizer-estimates");
-            jsonGenerator.writeNumberField(OP_CARDINALITY, opCard);
-            jsonGenerator.writeNumberField(OperatorAnnotations.OP_COST_LOCAL.toLowerCase().replace('_', '-'),
-                    opCostLocal);
-            jsonGenerator.writeNumberField(OperatorAnnotations.OP_COST_TOTAL.toLowerCase().replace('_', '-'),
-                    opCostTotal);
-            jsonGenerator.writeEndObject();
-        } catch (IOException e) {
-            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }
     }
 

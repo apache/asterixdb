@@ -1,20 +1,22 @@
-distribute result [$$paper]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$paper] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 5 offset 5
+    limit 5 offset 5 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$paper])
+      project ([$$paper]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- SORT_MERGE_EXCHANGE [$$15(ASC) ]  |PARTITIONED|
-          limit 10
+          limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STREAM_LIMIT  |PARTITIONED|
-            exchange
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              data-scan []<-[$$15, $$paper] <- test.DBLP1 limit 10
+              data-scan []<-[$$15, $$paper] <- test.DBLP1 limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- DATASOURCE_SCAN  |PARTITIONED|
-                exchange
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  empty-tuple-source
+                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

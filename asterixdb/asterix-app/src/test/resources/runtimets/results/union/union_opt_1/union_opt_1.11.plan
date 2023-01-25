@@ -1,106 +1,108 @@
-distribute result [$$t]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$t] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 4
+    limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      exchange
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        union ($$161, $$188, $$t)
+        union ($$161, $$188, $$t) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- UNION_ALL  |PARTITIONED|
-          exchange
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            union ($$223, $$237, $$161)
+            union ($$223, $$237, $$161) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- UNION_ALL  |PARTITIONED|
-              exchange
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
-                project ([$$223])
+                project ([$$223]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$223] <- [{"two": $$193}]
+                  assign [$$223] <- [{"two": $$193}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
-                    limit 4
+                    limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_LIMIT  |PARTITIONED|
-                      project ([$$193])
+                      project ([$$193]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
-                        assign [$$193] <- [$$onek1.getField(2)]
+                        assign [$$193] <- [$$onek1.getField(2)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ASSIGN  |PARTITIONED|
-                          project ([$$onek1])
+                          project ([$$onek1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_PROJECT  |PARTITIONED|
-                            exchange
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$197, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), 1), le($$onek1.getField(2), 10))) limit 4
+                              data-scan []<-[$$197, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), 1), le($$onek1.getField(2), 10))) limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- DATASOURCE_SCAN  |PARTITIONED|
-                                exchange
+                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  empty-tuple-source
+                                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              exchange
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
-                project ([$$237])
+                project ([$$237]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$237] <- [{"two": $$194}]
+                  assign [$$237] <- [{"two": $$194}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
-                    limit 4
+                    limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_LIMIT  |PARTITIONED|
-                      project ([$$194])
+                      project ([$$194]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
-                        assign [$$194] <- [$$onek2.getField(2)]
+                        assign [$$194] <- [$$onek2.getField(2)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ASSIGN  |PARTITIONED|
-                          project ([$$onek2])
+                          project ([$$onek2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_PROJECT  |PARTITIONED|
-                            exchange
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$198, $$onek2] <- test.onek2 condition (and(ge($$onek2.getField(2), 1), le($$onek2.getField(2), 100))) limit 4
+                              data-scan []<-[$$198, $$onek2] <- test.onek2 condition (and(ge($$onek2.getField(2), 1), le($$onek2.getField(2), 100))) limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- DATASOURCE_SCAN  |PARTITIONED|
-                                exchange
+                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  empty-tuple-source
+                                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-          exchange
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            union ($$355, $$364, $$188)
+            union ($$355, $$364, $$188) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- UNION_ALL  |PARTITIONED|
-              exchange
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
-                project ([$$355])
+                project ([$$355]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$355] <- [{"two": $$195}]
+                  assign [$$355] <- [{"two": $$195}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
-                    limit 4
+                    limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_LIMIT  |PARTITIONED|
-                      project ([$$195])
+                      project ([$$195]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
-                        assign [$$195] <- [$$onek1.getField(2)]
+                        assign [$$195] <- [$$onek1.getField(2)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ASSIGN  |PARTITIONED|
-                          project ([$$onek1])
+                          project ([$$onek1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_PROJECT  |PARTITIONED|
-                            exchange
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$199, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), 1), le($$onek1.getField(2), 1000))) limit 4
+                              data-scan []<-[$$199, $$onek1] <- test.onek1 condition (and(ge($$onek1.getField(2), 1), le($$onek1.getField(2), 1000))) limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- DATASOURCE_SCAN  |PARTITIONED|
-                                exchange
+                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  empty-tuple-source
+                                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              exchange
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
-                project ([$$364])
+                project ([$$364]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$364] <- [{"two": $$196}]
+                  assign [$$364] <- [{"two": $$196}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
-                    limit 4
+                    limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_LIMIT  |PARTITIONED|
-                      project ([$$196])
+                      project ([$$196]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
-                        assign [$$196] <- [$$onek2.getField(2)]
+                        assign [$$196] <- [$$onek2.getField(2)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ASSIGN  |PARTITIONED|
-                          project ([$$onek2])
+                          project ([$$onek2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_PROJECT  |PARTITIONED|
-                            exchange
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$200, $$onek2] <- test.onek2 condition (and(ge($$onek2.getField(2), 1), le($$onek2.getField(2), 10000))) limit 4
+                              data-scan []<-[$$200, $$onek2] <- test.onek2 condition (and(ge($$onek2.getField(2), 1), le($$onek2.getField(2), 10000))) limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- DATASOURCE_SCAN  |PARTITIONED|
-                                exchange
+                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  empty-tuple-source
+                                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
