@@ -47,6 +47,10 @@ public class PhysicalOptimizationConfig {
     private static final String MIN_MEMORY_ALLOCATION = "MIN_MEMORY_ALLOCATION";
     private static final String ARRAY_INDEX = "ARRAY_INDEX";
     private static final String EXTERNAL_SCAN_BUFFER_SIZE = "EXTERNAL_SCAN_BUFFER_SIZE";
+    private static final String CBO = "CBO";
+    private static final String CBO_TEST = "CBO_TEST";
+    private static final String FORCE_JOIN_ORDER = "FORCE_JOIN_ORDER";
+    private static final String QUERY_PLAN_SHAPE = "QUERY_PLAN_SHAPE";
 
     private final Properties properties = new Properties();
 
@@ -239,6 +243,44 @@ public class PhysicalOptimizationConfig {
         return getInt(EXTERNAL_SCAN_BUFFER_SIZE, AlgebricksConfig.EXTERNAL_SCAN_BUFFER_SIZE);
     }
 
+    public boolean getCBOMode() {
+        return getBoolean(CBO, AlgebricksConfig.CBO_DEFAULT);
+    }
+
+    public boolean getCBOTestMode() {
+        return getBoolean(CBO_TEST, AlgebricksConfig.CBO_TEST_DEFAULT);
+    }
+
+    public boolean getForceJoinOrderMode() {
+        return getBoolean(FORCE_JOIN_ORDER, AlgebricksConfig.FORCE_JOIN_ORDER_DEFAULT);
+    }
+
+    public String getQueryPlanShapeMode() {
+        String queryPlanShapeMode = getString(QUERY_PLAN_SHAPE, AlgebricksConfig.QUERY_PLAN_SHAPE_DEFAULT);
+        if (!(queryPlanShapeMode.equals(AlgebricksConfig.QUERY_PLAN_SHAPE_ZIGZAG)
+                || queryPlanShapeMode.equals(AlgebricksConfig.QUERY_PLAN_SHAPE_LEFTDEEP)
+                || queryPlanShapeMode.equals(AlgebricksConfig.QUERY_PLAN_SHAPE_RIGHTDEEP))) {
+            return AlgebricksConfig.QUERY_PLAN_SHAPE_DEFAULT;
+        }
+        return queryPlanShapeMode;
+    }
+
+    public void setCBOMode(boolean cbo) {
+        setBoolean(CBO, cbo);
+    }
+
+    public void setCBOTestMode(boolean cboTest) {
+        setBoolean(CBO_TEST, cboTest);
+    }
+
+    public void setForceJoinOrderMode(boolean forceJoinOrder) {
+        setBoolean(FORCE_JOIN_ORDER, forceJoinOrder);
+    }
+
+    public void setQueryPlanShapeMode(String queryPlanShape) {
+        setString(QUERY_PLAN_SHAPE, queryPlanShape);
+    }
+
     public void setExternalScanBufferSize(int bufferSize) {
         setInt(EXTERNAL_SCAN_BUFFER_SIZE, bufferSize);
     }
@@ -268,5 +310,14 @@ public class PhysicalOptimizationConfig {
     private boolean getBoolean(String property, boolean defaultValue) {
         String value = properties.getProperty(property);
         return value == null ? defaultValue : Boolean.parseBoolean(value);
+    }
+
+    private void setString(String property, String value) {
+        properties.setProperty(property, value);
+    }
+
+    private String getString(String property, String defaultValue) {
+        String value = properties.getProperty(property);
+        return value == null ? defaultValue : value;
     }
 }

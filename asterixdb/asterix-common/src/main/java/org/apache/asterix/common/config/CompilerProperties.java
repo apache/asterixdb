@@ -23,6 +23,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
@@ -103,7 +104,17 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_ARRAYINDEX(
                 BOOLEAN,
                 AlgebricksConfig.ARRAY_INDEX_DEFAULT,
-                "Enable/disable using array-indexes in queries");
+                "Enable/disable using array-indexes in queries"),
+        COMPILER_CBO(BOOLEAN, AlgebricksConfig.CBO_DEFAULT, "Set the mode for cost based optimization"),
+        COMPILER_CBOTEST(BOOLEAN, AlgebricksConfig.CBO_TEST_DEFAULT, "Set the mode for cost based optimization"),
+        COMPILER_FORCEJOINORDER(
+                BOOLEAN,
+                AlgebricksConfig.FORCE_JOIN_ORDER_DEFAULT,
+                "Set the mode for forcing the join order in a query plan"),
+        COMPILER_QUERYPLANSHAPE(
+                STRING,
+                AlgebricksConfig.QUERY_PLAN_SHAPE_DEFAULT,
+                "Set the mode for forcing the shape of the query plan");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -172,6 +183,14 @@ public class CompilerProperties extends AbstractProperties {
     public static final String COMPILER_ARRAYINDEX_KEY = Option.COMPILER_ARRAYINDEX.ini();
 
     public static final String COMPILER_EXTERNALSCANMEMORY_KEY = Option.COMPILER_EXTERNALSCANMEMORY.ini();
+
+    public static final String COMPILER_CBO_KEY = Option.COMPILER_CBO.ini();
+
+    public static final String COMPILER_CBO_TEST_KEY = Option.COMPILER_CBOTEST.ini();
+
+    public static final String COMPILER_FORCE_JOIN_ORDER_KEY = Option.COMPILER_FORCEJOINORDER.ini();
+
+    public static final String COMPILER_QUERY_PLAN_SHAPE_KEY = Option.COMPILER_QUERYPLANSHAPE.ini();
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
@@ -245,5 +264,26 @@ public class CompilerProperties extends AbstractProperties {
 
     public int getExternalScanMemorySize() {
         return accessor.getInt(Option.COMPILER_EXTERNALSCANMEMORY);
+    }
+
+    public boolean getCBOMode() {
+        return accessor.getBoolean(Option.COMPILER_CBO);
+    }
+
+    public boolean getCBOTestMode() {
+        return accessor.getBoolean(Option.COMPILER_CBOTEST);
+    }
+
+    public boolean getForceJoinOrderMode() {
+        return accessor.getBoolean(Option.COMPILER_FORCEJOINORDER);
+    }
+
+    public String getQueryPlanShapeMode() {
+        String queryPlanShapeMode = accessor.getString(Option.COMPILER_QUERYPLANSHAPE);
+        if (!(queryPlanShapeMode.equals(AlgebricksConfig.QUERY_PLAN_SHAPE_ZIGZAG)
+                || queryPlanShapeMode.equals(AlgebricksConfig.QUERY_PLAN_SHAPE_LEFTDEEP)
+                || queryPlanShapeMode.equals(AlgebricksConfig.QUERY_PLAN_SHAPE_RIGHTDEEP)))
+            return AlgebricksConfig.QUERY_PLAN_SHAPE_DEFAULT;
+        return queryPlanShapeMode;
     }
 }

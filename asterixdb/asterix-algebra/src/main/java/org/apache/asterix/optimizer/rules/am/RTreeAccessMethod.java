@@ -381,7 +381,7 @@ public class RTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) {
+    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr, boolean checkApplicableOnly) {
         if (AccessMethodUtils.skipSecondaryIndexRequestedByAnnotation(index, optFuncExpr)) {
             return false;
         }

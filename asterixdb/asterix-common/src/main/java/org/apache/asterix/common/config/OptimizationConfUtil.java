@@ -77,6 +77,14 @@ public class OptimizationConfUtil {
         int externalScanBufferSize = getExternalScanBufferSize(
                 (String) querySpecificConfig.get(CompilerProperties.COMPILER_EXTERNALSCANMEMORY_KEY),
                 compilerProperties.getExternalScanMemorySize(), sourceLoc);
+        boolean cbo =
+                getBoolean(querySpecificConfig, CompilerProperties.COMPILER_CBO_KEY, compilerProperties.getCBOMode());
+        boolean cboTest = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_CBO_TEST_KEY,
+                compilerProperties.getCBOTestMode());
+        boolean forceJoinOrder = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_FORCE_JOIN_ORDER_KEY,
+                compilerProperties.getForceJoinOrderMode());
+        String queryPlanShape = getString(querySpecificConfig, CompilerProperties.COMPILER_QUERY_PLAN_SHAPE_KEY,
+                compilerProperties.getQueryPlanShapeMode());
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -95,6 +103,10 @@ public class OptimizationConfUtil {
         physOptConf.setMinMemoryAllocation(minMemoryAllocation);
         physOptConf.setArrayIndexEnabled(arrayIndex);
         physOptConf.setExternalScanBufferSize(externalScanBufferSize);
+        physOptConf.setCBOMode(cbo);
+        physOptConf.setCBOTestMode(cboTest);
+        physOptConf.setForceJoinOrderMode(forceJoinOrder);
+        physOptConf.setQueryPlanShapeMode(queryPlanShape);
         return physOptConf;
     }
 
@@ -169,6 +181,14 @@ public class OptimizationConfUtil {
         String valueInQuery = (String) queryConfig.get(queryConfigKey);
         if (valueInQuery != null) {
             return OptionTypes.BOOLEAN.parse(valueInQuery);
+        }
+        return defaultValue;
+    }
+
+    private static String getString(Map<String, Object> queryConfig, String queryConfigKey, String defaultValue) {
+        String valueInQuery = (String) queryConfig.get(queryConfigKey);
+        if (valueInQuery != null) {
+            return valueInQuery;
         }
         return defaultValue;
     }

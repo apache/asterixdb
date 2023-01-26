@@ -41,32 +41,27 @@ public interface ILogicalExpression {
     // constraints (e.g., FDs, equivalences)
 
     /**
-     * @param fds
-     *            Output argument: functional dependencies that can be inferred
-     *            from this expression.
-     * @param equivClasses
-     *            Output argument: Equivalence classes that can be inferred from
-     *            this expression.
+     * @param fds          Output argument: functional dependencies that can be inferred
+     *                     from this expression.
+     * @param equivClasses Output argument: Equivalence classes that can be inferred from
+     *                     this expression.
      */
     public void getConstraintsAndEquivClasses(Collection<FunctionalDependency> fds,
             Map<LogicalVariable, EquivalenceClass> equivClasses);
 
     /**
-     * @param fds
-     *            Output argument: functional dependencies that can be inferred
-     *            from this expression.
-     * @param outerVars
-     *            Input argument: variables coming from outer branch(es), e.g.,
-     *            the left branch of a left outer join.
+     * @param fds       Output argument: functional dependencies that can be inferred
+     *                  from this expression.
+     * @param outerVars Input argument: variables coming from outer branch(es), e.g.,
+     *                  the left branch of a left outer join.
      */
     public void getConstraintsForOuterJoin(Collection<FunctionalDependency> fds, Collection<LogicalVariable> outerVars);
 
     /**
-     * @param conjs
-     *            Output argument: a list of expression whose conjunction, in
-     *            any order, can replace the current expression.
+     * @param conjs Output argument: a list of expression whose conjunction, in
+     *              any order, can replace the current expression.
      * @return true if the expression can be broken in at least two conjuncts,
-     *         false otherwise.
+     * false otherwise.
      */
     public boolean splitIntoConjuncts(List<Mutable<ILogicalExpression>> conjs);
 

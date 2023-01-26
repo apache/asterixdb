@@ -29,4 +29,10 @@ public interface OperatorAnnotations {
     // Integer
     public static final String MAX_NUMBER_FRAMES = "MAX_NUMBER_FRAMES"; // -->
     // Integer
+    public static final String OP_INPUT_CARDINALITY = "INPUT_CARDINALITY";
+    public static final String OP_OUTPUT_CARDINALITY = "OUTPUT_CARDINALITY";
+    public static final String OP_COST_TOTAL = "TOTAL_COST";
+    public static final String OP_COST_LOCAL = "OP_COST";
+    public static final String OP_LEFT_EXCHANGE_COST = "LEFT_EXCHANGE_COST";
+    public static final String OP_RIGHT_EXCHANGE_COST = "RIGHT_EXCHANGE_COST";
 }

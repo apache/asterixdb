@@ -35,4 +35,8 @@ public abstract class AbstractDataSourceOperator extends AbstractScanOperator {
     public IDataSource<?> getDataSource() {
         return dataSource;
     }
+
+    public void setDataSource(IDataSource<?> datasource) {
+        this.dataSource = datasource;
+    }
 }

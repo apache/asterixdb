@@ -1020,7 +1020,8 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) throws AlgebricksException {
+    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr, boolean checkApplicableOnly)
+            throws AlgebricksException {
         // If we are optimizing a join, check for the indexed nested-loop join hint.
         if (optFuncExpr.getNumLogicalVars() == 2) {
             if (optFuncExpr.getOperatorSubTree(0) == optFuncExpr.getOperatorSubTree(1)) {
@@ -1033,7 +1034,8 @@ public class BTreeAccessMethod implements IAccessMethod {
                     //And we were unable to determine its type
                     return false;
                 }
-            } else if (!optFuncExpr.getFuncExpr().hasAnnotation(IndexedNLJoinExpressionAnnotation.class)) {
+            } else if (!checkApplicableOnly
+                    && !optFuncExpr.getFuncExpr().hasAnnotation(IndexedNLJoinExpressionAnnotation.class)) {
                 return false;
             }
         }

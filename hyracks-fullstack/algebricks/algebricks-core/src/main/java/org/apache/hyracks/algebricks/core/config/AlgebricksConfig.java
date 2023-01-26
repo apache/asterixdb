@@ -35,6 +35,13 @@ public class AlgebricksConfig {
     public static final boolean SUBPLAN_NESTEDPUSHDOWN_DEFAULT = true;
     public static final boolean MIN_MEMORY_ALLOCATION_DEFAULT = true;
     public static final boolean ARRAY_INDEX_DEFAULT = true;
+    public static final boolean CBO_DEFAULT = true;
+    public static final boolean CBO_TEST_DEFAULT = false;
+    public static final boolean FORCE_JOIN_ORDER_DEFAULT = false;
+    public static final String QUERY_PLAN_SHAPE_ZIGZAG = "zigzag";
+    public static final String QUERY_PLAN_SHAPE_LEFTDEEP = "leftdeep";
+    public static final String QUERY_PLAN_SHAPE_RIGHTDEEP = "rightdeep";
+    public static final String QUERY_PLAN_SHAPE_DEFAULT = QUERY_PLAN_SHAPE_ZIGZAG;
     public static final int EXTERNAL_SCAN_BUFFER_SIZE =
             StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.KILOBYTE);
 }

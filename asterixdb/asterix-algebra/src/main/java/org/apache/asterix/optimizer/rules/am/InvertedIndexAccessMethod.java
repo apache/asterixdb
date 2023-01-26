@@ -949,7 +949,8 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) throws AlgebricksException {
+    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr, boolean checkApplicableOnly)
+            throws AlgebricksException {
         if (AccessMethodUtils.skipSecondaryIndexRequestedByAnnotation(index, optFuncExpr)) {
             return false;
         }

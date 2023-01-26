@@ -47,8 +47,8 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
 
     /**
      * @return A list of function identifiers that are optimizable by this
-     *         access method. Also, the second boolean tells whether that
-     *         function can generate a false-positive result.
+     * access method. Also, the second boolean tells whether that
+     * function can generate a false-positive result.
      */
     public List<Pair<FunctionIdentifier, Boolean>> getOptimizableFunctions();
 
@@ -61,7 +61,7 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
      * OptimizableFunction to analysisCtx.matchedFuncExprs for further analysis.
      *
      * @return true if funcExpr is optimizable by this access method, false
-     *         otherwise
+     * otherwise
      * @throws AlgebricksException
      */
     boolean analyzeFuncExprArgsAndUpdateAnalysisCtx(AbstractFunctionCallExpression funcExpr,
@@ -71,8 +71,8 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
     /**
      * Indicates whether this access method is applicable for the given index type.
      *
-     * @return boolean
      * @param indexType
+     * @return boolean
      */
     public boolean matchIndexType(IndexType indexType);
 
@@ -80,8 +80,8 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
      * Indicates whether all index expressions must be matched in order for this
      * index to be applicable.
      *
-     * @return boolean
      * @param index
+     * @return boolean
      */
     public boolean matchAllIndexExprs(Index index);
 
@@ -89,8 +89,8 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
      * Indicates whether this index is applicable if only a prefix of the index
      * expressions are matched.
      *
-     * @return boolean
      * @param index
+     * @return boolean
      */
     public boolean matchPrefixIndexExprs(Index index);
 
@@ -127,7 +127,8 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
      *
      * @throws AlgebricksException
      */
-    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr) throws AlgebricksException;
+    public boolean exprIsOptimizable(Index index, IOptimizableFuncExpr optFuncExpr, boolean checkApplicableOnly)
+            throws AlgebricksException;
 
     public Collection<String> getSecondaryIndexPreferences(IOptimizableFuncExpr optFuncExpr);
 
@@ -136,12 +137,11 @@ public interface IAccessMethod extends Comparable<IAccessMethod> {
     /**
      * Checks whether the function applied to an indexed field is acceptable by the access method.
      *
-     * @param functionExpr applied function
-     * @param index the index definition
+     * @param functionExpr     applied function
+     * @param index            the index definition
      * @param indexedFieldType the type of the indexed field in the index definition
-     * @param defaultNull true if the candidate index has CAST (DEFAULT NULL) modifier
-     * @param finalStep true if the functionExpr is the final function applied
-     *
+     * @param defaultNull      true if the candidate index has CAST (DEFAULT NULL) modifier
+     * @param finalStep        true if the functionExpr is the final function applied
      * @return true if the access method accepts the argument function. False, otherwise.
      */
     public boolean acceptsFunction(AbstractFunctionCallExpression functionExpr, Index index, IAType indexedFieldType,

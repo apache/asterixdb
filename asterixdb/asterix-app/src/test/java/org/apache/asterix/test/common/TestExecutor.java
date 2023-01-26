@@ -326,7 +326,7 @@ public class TestExecutor {
 
     public void runScriptAndCompareWithResult(File scriptFile, File expectedFile, File actualFile,
             ComparisonEnum compare, Charset actualEncoding, String statement) throws Exception {
-        LOGGER.info("Expected results file: {} ", canonicalize(expectedFile));
+        LOGGER.info("Expected results file: {} ", canonicalize(expectedFile.getAbsolutePath()));
         boolean regex = false;
         if (expectedFile.getName().endsWith(".ignore")) {
             return; //skip the comparison
@@ -404,9 +404,10 @@ public class TestExecutor {
             }
         } catch (Exception e) {
             if (!actualEncoding.equals(UTF_8)) {
-                LOGGER.info("Actual results file: {} encoding: {}", canonicalize(actualFile), actualEncoding);
+                LOGGER.info("Actual results file: {} encoding: {}", canonicalize(actualFile.getAbsolutePath()),
+                        actualEncoding);
             } else {
-                LOGGER.info("Actual results file: {}", canonicalize(actualFile));
+                LOGGER.info("Actual results file: {}", canonicalize(actualFile.getAbsolutePath()));
             }
             throw e;
         }

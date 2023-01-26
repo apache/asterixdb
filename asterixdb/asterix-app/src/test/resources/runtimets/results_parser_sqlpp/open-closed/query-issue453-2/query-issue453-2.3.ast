@@ -1,7 +1,26 @@
 DataverseUse test
 Query:
-SELECT ELEMENT [
-Variable [ Name=$d ]
+SELECT [
+FieldAccessor [
+  Variable [ Name=$d ]
+  Field=int_m
+]
+int_m
+FieldAccessor [
+  Variable [ Name=$d ]
+  Field=int_o
+]
+int_o
+FieldAccessor [
+  Variable [ Name=$d ]
+  Field=string_m
+]
+string_m
+FieldAccessor [
+  Variable [ Name=$d ]
+  Field=string_o
+]
+string_o
 ]
 FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [test.DataOpen]
@@ -11,7 +30,22 @@ FROM [  FunctionCall asterix.dataset@1[
 Orderby
   FieldAccessor [
     Variable [ Name=$d ]
-    Field=id
+    Field=int_m
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=$d ]
+    Field=int_o
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=$d ]
+    Field=string_m
+  ]
+  ASC
+  FieldAccessor [
+    Variable [ Name=$d ]
+    Field=string_o
   ]
   ASC
 

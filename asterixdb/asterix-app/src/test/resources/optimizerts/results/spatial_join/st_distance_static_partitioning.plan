@@ -7,10 +7,10 @@
             -- AGGREGATE  |PARTITIONED|
               -- STREAM_SELECT  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- SPATIAL_JOIN [$$61, $$56] [$$62, $$57]  |PARTITIONED|
+                  -- SPATIAL_JOIN [$$62, $$56] [$$63, $$57]  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- STABLE_SORT [$$61(ASC), $$56(ASC)]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$61]  |PARTITIONED|
+                      -- STABLE_SORT [$$62(ASC), $$56(ASC)]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$62]  |PARTITIONED|
                           -- UNNEST  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
@@ -21,8 +21,8 @@
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- STABLE_SORT [$$62(ASC), $$57(ASC)]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$62]  |PARTITIONED|
+                      -- STABLE_SORT [$$63(ASC), $$57(ASC)]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$63]  |PARTITIONED|
                           -- UNNEST  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
