@@ -407,6 +407,7 @@ public abstract class LicenseMojo extends AbstractMojo {
     protected void gatherProjectDependencies(MavenProject project,
             Map<MavenProject, List<Pair<String, String>>> dependencyLicenseMap,
             Map<String, MavenProject> dependencyGavMap) throws ProjectBuildingException, MojoExecutionException {
+        getLog().debug("+gatherProjectDependencies " + toGav(project));
         final Set<Artifact> dependencyArtifacts = project.getArtifacts();
         if (dependencyArtifacts != null) {
             for (Artifact depArtifact : dependencyArtifacts) {
@@ -440,6 +441,7 @@ public abstract class LicenseMojo extends AbstractMojo {
             Map<String, MavenProject> dependencyGavMap, boolean shadowed) throws ProjectBuildingException {
         if (!excludedScopes.contains(depArtifact.getScope())) {
             MavenProject dep = resolveDependency(depArtifact);
+            getLog().debug("+processArtifact " + toGav(dep));
             if (!depArtifact.isResolved()) {
                 ArtifactResolutionRequest arr = new ArtifactResolutionRequest();
                 arr.setLocalRepository(localRepository);
@@ -476,6 +478,10 @@ public abstract class LicenseMojo extends AbstractMojo {
             } catch (ProjectBuildingException e) {
                 throw new ProjectBuildingException(key, "Error creating dependent artifacts", e);
             }
+            // override the gav in the built dependency with the gavs in depObj
+            depProj.setGroupId(depObj.getGroupId());
+            depProj.setArtifactId(depObj.getArtifactId());
+            depProj.setVersion(depObj.getVersion());
 
             Model supplement = supplementModels
                     .get(SupplementalModelHelper.generateSupplementMapKey(depObj.getGroupId(), depObj.getArtifactId()));

@@ -86,7 +86,7 @@
     <hyracks.version>0.3.8-SNAPSHOT</hyracks.version>
     <hadoop.version>3.3.4</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
-    <log4j.version>2.17.1</log4j.version>
+    <log4j.version>2.19.0</log4j.version>
     <awsjavasdk.version>2.17.218</awsjavasdk.version>
     <parquet.version>1.12.3</parquet.version>
     <hadoop-awsjavasdk.version>1.12.109</hadoop-awsjavasdk.version>
@@ -1254,7 +1254,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
-        <version>1.21</version>
+        <version>1.22</version>
       </dependency>
       <dependency>
         <groupId>commons-logging</groupId>
