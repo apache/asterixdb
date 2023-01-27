@@ -67,14 +67,15 @@ public abstract class AbstractRuleController {
      */
     protected boolean rewriteOperatorRef(Mutable<ILogicalOperator> opRef, IAlgebraicRewriteRule rule)
             throws AlgebricksException {
-        return rewriteOperatorRef(opRef, rule, true, false);
+        return rewriteOperatorRef(opRef, rule, true, false, false);
     }
 
     protected boolean rewriteOperatorRef(Mutable<ILogicalOperator> opRef, IAlgebraicRewriteRule rule,
-            boolean enterNestedPlans, boolean fullDFS) throws AlgebricksException {
+            boolean enterNestedPlans, boolean fullDFS, boolean enteredNestedPlanRoot) throws AlgebricksException {
 
         String preBeforePlan = getPlanString(opRef);
         sanityCheckBeforeRewrite(rule, opRef);
+        rule.enteredNestedPlan(enteredNestedPlanRoot);
         if (rule.rewritePre(opRef, context)) {
             String preAfterPlan = getPlanString(opRef);
             printRuleApplication(rule, "fired", preBeforePlan, preAfterPlan);
@@ -88,7 +89,7 @@ public abstract class AbstractRuleController {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
 
         for (Mutable<ILogicalOperator> inp : op.getInputs()) {
-            if (rewriteOperatorRef(inp, rule, enterNestedPlans, fullDFS)) {
+            if (rewriteOperatorRef(inp, rule, enterNestedPlans, fullDFS, false)) {
                 rewritten = true;
                 if (!fullDFS) {
                     break;
@@ -100,7 +101,7 @@ public abstract class AbstractRuleController {
             AbstractOperatorWithNestedPlans o2 = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : o2.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                    if (rewriteOperatorRef(r, rule, enterNestedPlans, fullDFS)) {
+                    if (rewriteOperatorRef(r, rule, enterNestedPlans, fullDFS, true)) {
                         rewritten = true;
                         if (!fullDFS) {
                             break;
