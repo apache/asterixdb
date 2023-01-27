@@ -72,7 +72,7 @@ public class SequentialFirstRuleCheckFixpointRuleController extends AbstractRule
         do {
             anyChange = false;
             for (int i = 0; i < rules.size(); i++) {
-                boolean ruleFired = rewriteOperatorRef(root, rules.get(i), true, fullDfs);
+                boolean ruleFired = rewriteOperatorRef(root, rules.get(i), true, fullDfs, false);
                 // If the first rule returns false in the first iteration, stops applying the rules at all.
                 if (!firstRuleChecked && i == 0 && !ruleFired) {
                     return ruleFired;

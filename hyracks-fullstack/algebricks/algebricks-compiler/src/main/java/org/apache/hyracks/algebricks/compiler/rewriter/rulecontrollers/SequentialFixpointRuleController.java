@@ -49,7 +49,7 @@ public class SequentialFixpointRuleController extends AbstractRuleController {
         do {
             anyChange = false;
             for (IAlgebraicRewriteRule rule : ruleCollection) {
-                boolean ruleFired = rewriteOperatorRef(root, rule, true, fullDfs);
+                boolean ruleFired = rewriteOperatorRef(root, rule, true, fullDfs, false);
                 if (ruleFired) {
                     anyChange = true;
                     anyRuleFired = true;
