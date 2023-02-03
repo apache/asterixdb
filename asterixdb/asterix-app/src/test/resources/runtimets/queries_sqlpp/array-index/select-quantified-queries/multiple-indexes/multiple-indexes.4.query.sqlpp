@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-USE    Test;
+USE    test;
 
 FROM     KSI k
 WHERE    ( SOME i IN k.uarr_i

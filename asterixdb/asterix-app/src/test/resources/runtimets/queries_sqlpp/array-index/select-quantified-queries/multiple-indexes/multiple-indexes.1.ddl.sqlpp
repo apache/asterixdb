@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-DROP   DATAVERSE Test IF EXISTS;
-CREATE DATAVERSE Test;
-USE    Test;
+DROP   DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE    test;
 
 CREATE TYPE GenericType AS { id: bigint };
 CREATE DATASET KSI (GenericType)

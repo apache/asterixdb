@@ -8,7 +8,7 @@
               -- ASSIGN  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- BTREE_SEARCH (Test.KSI.KSI)  |PARTITIONED|
+                    -- BTREE_SEARCH (test.KSI.KSI)  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- INTERSECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -18,7 +18,7 @@
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- STREAM_PROJECT  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- BTREE_SEARCH (Test.KSI.KS1_array_index1)  |PARTITIONED|
+                                        -- BTREE_SEARCH (test.KSI.KS1_array_index1)  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- ASSIGN  |PARTITIONED|
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
@@ -29,7 +29,7 @@
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- STREAM_PROJECT  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- BTREE_SEARCH (Test.KSI.KS1_array_index2)  |PARTITIONED|
+                                        -- BTREE_SEARCH (test.KSI.KS1_array_index2)  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- ASSIGN  |PARTITIONED|
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
