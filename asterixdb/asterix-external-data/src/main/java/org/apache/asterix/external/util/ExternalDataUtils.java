@@ -21,6 +21,7 @@ package org.apache.asterix.external.util;
 import static com.google.cloud.storage.Storage.BlobListOption;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
+import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_PARAM_VAL;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_REQUIRED;
@@ -54,6 +55,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.Azure.MANAG
 import static org.apache.asterix.external.util.ExternalDataConstants.Azure.RECURSIVE_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.Azure.SHARED_ACCESS_SIGNATURE_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.Azure.TENANT_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.GCS.APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.GCS.JSON_CREDENTIALS_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ADAPTER_NAME_GCS;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
@@ -147,7 +149,7 @@ import com.azure.storage.file.datalake.DataLakeServiceClientBuilder;
 import com.azure.storage.file.datalake.models.ListPathsOptions;
 import com.azure.storage.file.datalake.models.PathItem;
 import com.google.api.gax.paging.Page;
-import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
@@ -1838,17 +1840,44 @@ public class ExternalDataUtils {
          * @throws CompilationException CompilationException
          */
         public static Storage buildClient(Map<String, String> configuration) throws CompilationException {
+            String applicationDefaultCredentials = configuration.get(APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME);
             String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);
+            String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
 
             StorageOptions.Builder builder = StorageOptions.newBuilder();
 
-            // Use credentials if available
+            // default credentials provider
+            if (applicationDefaultCredentials != null) {
+                // only "true" value is allowed
+                if (!applicationDefaultCredentials.equalsIgnoreCase("true")) {
+                    throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE,
+                            APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME, "true");
+                }
+
+                // no other authentication parameters are allowed
+                if (jsonCredentials != null) {
+                    throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, JSON_CREDENTIALS_FIELD_NAME,
+                            APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME);
+                }
+
+                try {
+                    builder.setCredentials(GoogleCredentials.getApplicationDefault());
+                } catch (IOException ex) {
+                    throw CompilationException.create(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                }
+            }
+
+            // json credentials
             if (jsonCredentials != null) {
                 try (InputStream credentialsStream = new ByteArrayInputStream(jsonCredentials.getBytes())) {
-                    builder.setCredentials(ServiceAccountCredentials.fromStream(credentialsStream));
+                    builder.setCredentials(GoogleCredentials.fromStream(credentialsStream));
                 } catch (IOException ex) {
                     throw new CompilationException(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
                 }
+            }
+
+            if (endpoint != null) {
+                builder.setHost(endpoint);
             }
 
             return builder.build().getService();
