@@ -446,6 +446,7 @@ import org.apache.asterix.runtime.evaluators.functions.OrDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.RandomDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.RandomWithSeedDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ReferenceTileDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.SerializedSizeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SleepDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialAreaDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
@@ -1315,6 +1316,7 @@ public final class FunctionCollection implements IFunctionCollection {
         // Other functions
         fc.add(DecodeDataverseNameDescriptor.FACTORY);
         fc.add(RandomWithSeedDescriptor.FACTORY);
+        fc.add(SerializedSizeDescriptor.FACTORY);
 
         ServiceLoader.load(IFunctionRegistrant.class).iterator().forEachRemaining(c -> c.register(fc));
         return fc;

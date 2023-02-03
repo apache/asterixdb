@@ -1,0 +1,5 @@
+{ "serialized_size": 9, "val": 1 }
+{ "serialized_size": 2, "val": true }
+{ "serialized_size": 6, "val": "test" }
+{ "serialized_size": 36, "val": [ 1, 2 ] }
+{ "serialized_size": 88, "val": { "f1": 1, "f2": [ { "n": "str" } ] } }
