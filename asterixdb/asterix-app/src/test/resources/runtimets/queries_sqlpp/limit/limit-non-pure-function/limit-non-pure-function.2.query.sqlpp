@@ -17,14 +17,12 @@
  * under the License.
  */
 
-USE test;
+/*
+ * Description: Make sure that the call to random() (rand) is not inlined
+ */
 
--- Disabled for a simpler plan
-SET `compiler.sort.parallel` "false";
-
-
-SELECT VALUE md.name
-FROM MyDataset md
-LET myObject = {"myUid": uuid()}
-WHERE myObject.myUid != uuid()
-ORDER BY md.id
+EXPLAIN
+WITH rand AS random()
+SELECT A, rand
+FROM [1, 2, 3] AS A
+LIMIT rand

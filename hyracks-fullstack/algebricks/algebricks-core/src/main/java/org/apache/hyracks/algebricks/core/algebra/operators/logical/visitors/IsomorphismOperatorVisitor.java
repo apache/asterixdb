@@ -249,8 +249,8 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         OrderOperator orderOpArg = (OrderOperator) copyAndSubstituteVar(op, arg);
-        boolean isomorphic = compareIOrderAndExpressions(op.getOrderExpressions(), orderOpArg.getOrderExpressions());
-        return isomorphic;
+        return op.getTopK() == orderOpArg.getTopK()
+                && compareIOrderAndExpressions(op.getOrderExpressions(), orderOpArg.getOrderExpressions());
     }
 
     @Override

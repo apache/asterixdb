@@ -22,9 +22,9 @@ USE test;
 -- Disabled for a simpler plan
 SET `compiler.sort.parallel` "false";
 
-
+EXPLAIN
 SELECT VALUE md.name
 FROM MyDataset md
-LET myObject = {"myUid": uuid()}
-WHERE myObject.myUid != uuid()
+LET currentData = {"myDate": current_date()}
+WHERE currentData.myDate != date("1980-09-10")
 ORDER BY md.id

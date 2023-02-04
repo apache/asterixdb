@@ -19,6 +19,10 @@
 
 /*
  * Description: No constant folding of OR with a non functional argument
+ *
+ * Update/note: this should be folded as the non functional argument would short-circuited in runtime. Due to
+ * ASTERIXDB-3103, the constant folding rule doesn't see a non functional argument, but a variable. Hence,
+ * the expression 'get_year(current_date()) < x' is eliminated
  */
 
 explain select value true or get_year(current_date()) < x

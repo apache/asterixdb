@@ -1716,8 +1716,7 @@ abstract class LangExpressionToPlanTranslator
             default:
                 if (expressionNeedsNoNesting(expr)) {
                     Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, topOpRef);
-                    ILogicalExpression exp = ((AssignOperator) p.first).getExpressions().get(0).getValue();
-                    return new Pair<>(exp, p.first.getInputs().get(0));
+                    return inlineAssignIfPossible((AssignOperator) p.first);
                 } else {
                     Mutable<ILogicalOperator> srcRef = new MutableObject<>();
                     Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, srcRef);
@@ -1747,6 +1746,32 @@ abstract class LangExpressionToPlanTranslator
                     }
                 }
         }
+    }
+
+    /**
+     * TODO(wyk) I believe that inlining expressions should be done at the optimization level and not at the translation
+     *  level. By inlining at the translation level, we could possibly miss optimizing inlined expressions in rules
+     *  that do not inspect arguments of a function. I kept inlining all pure (a.k.a functional) functions for now to
+     *  match the previous behavior. For non-pure functions, the assign should be kept as we do not inline them at
+     *  first due to ASTERIXDB-3103
+     *
+     * @see org.apache.hyracks.algebricks.rewriter.rules.InlineVariablesRule
+     */
+    private Pair<ILogicalExpression, Mutable<ILogicalOperator>> inlineAssignIfPossible(AssignOperator assignOp) {
+        ILogicalExpression expr = assignOp.getExpressions().get(0).getValue();
+
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return new Pair<>(expr, assignOp.getInputs().get(0));
+        }
+
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
+        if (funcExpr.isFunctional()) {
+            return new Pair<>(expr, assignOp.getInputs().get(0));
+        }
+
+        //Do not inline non-functional expressions (e.g. uuid()) and keep the assign
+        return new Pair<>(new VariableReferenceExpression(assignOp.getVariables().get(0)),
+                new MutableObject<>(assignOp));
     }
 
     protected Pair<ILogicalOperator, LogicalVariable> aggListifyForSubquery(LogicalVariable var,
@@ -1902,8 +1927,7 @@ abstract class LangExpressionToPlanTranslator
      * Eliminate shared operator references in a query plan. Deep copy a new query
      * plan subtree whenever there is a shared operator reference.
      *
-     * @param plan,
-     *            the query plan.
+     * @param plan, the query plan.
      * @throws CompilationException
      */
     protected void eliminateSharedOperatorReferenceForPlan(ILogicalPlan plan) throws CompilationException {
@@ -1918,12 +1942,10 @@ abstract class LangExpressionToPlanTranslator
      * <code>currentOpRef.getValue()</code>. Deep copy a new query plan subtree
      * whenever there is a shared operator reference.
      *
-     * @param currentOpRef,
-     *            the operator reference to consider
-     * @param opRefSet,
-     *            the set storing seen operator references so far.
+     * @param currentOpRef, the operator reference to consider
+     * @param opRefSet,     the set storing seen operator references so far.
      * @return a mapping that maps old variables to new variables, for the ancestors
-     *         of <code>currentOpRef</code> to replace variables properly.
+     * of <code>currentOpRef</code> to replace variables properly.
      * @throws CompilationException
      */
     private LinkedHashMap<LogicalVariable, LogicalVariable> eliminateSharedOperatorReference(
@@ -2005,14 +2027,11 @@ abstract class LangExpressionToPlanTranslator
     /**
      * Constructs a subplan operator for a branch in a if-else (or case) expression.
      *
-     * @param inputOp,
-     *            the input operator.
-     * @param selectExpr,
-     *            the expression to select tuples that are processed by this branch.
-     * @param branchExpression,
-     *            the expression to be evaluated in this branch.
+     * @param inputOp,          the input operator.
+     * @param selectExpr,       the expression to select tuples that are processed by this branch.
+     * @param branchExpression, the expression to be evaluated in this branch.
      * @return a pair of the constructed subplan operator and the output variable
-     *         for the branch.
+     * for the branch.
      * @throws CompilationException
      */
     protected Pair<ILogicalOperator, LogicalVariable> constructSubplanOperatorForBranch(ILogicalOperator inputOp,

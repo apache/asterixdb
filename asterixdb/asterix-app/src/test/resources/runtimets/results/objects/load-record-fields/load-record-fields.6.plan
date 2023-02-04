@@ -10,7 +10,7 @@ distribute result [$$28]
         -- STREAM_PROJECT  |PARTITIONED|
           exchange
           -- SORT_MERGE_EXCHANGE [$$30(ASC) ]  |PARTITIONED|
-            select (neq(uuid(), uuid()))
+            select (neq(current-date(), date: { 1980-09-10 }))
             -- STREAM_SELECT  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

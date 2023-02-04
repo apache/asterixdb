@@ -17,14 +17,7 @@
  * under the License.
  */
 
-USE test;
-
--- Disabled for a simpler plan
-SET `compiler.sort.parallel` "false";
-
-
-SELECT VALUE md.name
-FROM MyDataset md
-LET myObject = {"myUid": uuid()}
-WHERE myObject.myUid != uuid()
-ORDER BY md.id
+EXPLAIN
+SELECT VALUE A
+FROM [1, 2, 3] AS A
+LIMIT random()
