@@ -209,9 +209,10 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         ILogicalOperator dataScanOp =
                 getDataScanOp(assignOpRef, assignOp, inputOpRef, inputOp, usedInAccess, produced, context);
         if (dataScanOp != null) {
-            // in this case, we don't need to keep pushing the assign op through all the assign operators below it since
-            // this is unnecessary. we just need to try replacing field access by the primary key if it refers to one
-            return rewriteFieldAccessToPK(context, finalAnnot, assignOp, dataScanOp);
+            // this means the assign op is next to the data-scan op (either was moved or already next to data-scan)
+            // we just need to try replacing field access by the primary key if it refers to one
+            boolean assignMoved = inputOp != dataScanOp;
+            return rewriteFieldAccessToPK(context, finalAnnot, assignOp, dataScanOp) || assignMoved;
         }
         produced.clear();
         if (inputOp.getOperatorTag() == LogicalOperatorTag.GROUP) {
@@ -404,6 +405,15 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             // the input to the assign operator is already a data-scan
             return assignInput;
         }
+        ILogicalOperator op = firstInput;
+        // to make the behaviour the same as the recursive call, make sure to add the intermediate assigns to the
+        // already compared set
+        while (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            context.checkAndAddToAlreadyCompared(assignOp, op);
+            op = op.getInputs().get(0).getValue();
+        }
+        // add the data-scan to the already compared set
+        context.checkAndAddToAlreadyCompared(assignOp, assignInput);
         // move the assign op down, place it above the data-scan
         assignOpRef.setValue(firstInput);
         List<Mutable<ILogicalOperator>> assignInputs = assignOp.getInputs();
