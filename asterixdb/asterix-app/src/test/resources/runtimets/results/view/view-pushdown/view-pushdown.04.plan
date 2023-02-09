@@ -1,0 +1,34 @@
+distribute result [$$91]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$91])
+    -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$91] <- [{"id": $$106, "review": $$111}]
+      -- ASSIGN  |UNPARTITIONED|
+        exchange
+        -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+          order (ASC, $$106)
+          -- STABLE_SORT [$$106(ASC)]  |UNPARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+              limit 3
+              -- STREAM_LIMIT  |UNPARTITIONED|
+                exchange
+                -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                  project ([$$111, $$106])
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$106] <- [int64-default-null($$d.getField("id"))]
+                    -- ASSIGN  |PARTITIONED|
+                      limit 3
+                      -- STREAM_LIMIT  |PARTITIONED|
+                        assign [$$111] <- [string-default-null($$d.getField("review"))]
+                        -- ASSIGN  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            data-scan []<-[$$d] <- test.ExternalDataset condition (and(not(is-unknown(int64-default-null($$d.getField("year")))), not(is-unknown(int64-default-null($$d.getField("quarter")))), eq(string-default-null($$d.getField("review")), "good"))) limit 3
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
+                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

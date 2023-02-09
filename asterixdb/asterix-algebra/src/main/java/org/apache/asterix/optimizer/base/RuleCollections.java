@@ -81,9 +81,11 @@ import org.apache.asterix.optimizer.rules.PushSimilarityFunctionsBelowJoin;
 import org.apache.asterix.optimizer.rules.PushValueAccessToExternalDataScanRule;
 import org.apache.asterix.optimizer.rules.RemoveDuplicateFieldsRule;
 import org.apache.asterix.optimizer.rules.RemoveLeftOuterUnnestForLeftOuterJoinRule;
+import org.apache.asterix.optimizer.rules.RemoveOrReplaceDefaultNullCastRule;
 import org.apache.asterix.optimizer.rules.RemoveRedundantListifyRule;
 import org.apache.asterix.optimizer.rules.RemoveRedundantSelectRule;
 import org.apache.asterix.optimizer.rules.RemoveSortInFeedIngestionRule;
+import org.apache.asterix.optimizer.rules.RemoveUnknownCheckForKnownTypeExpressionRule;
 import org.apache.asterix.optimizer.rules.RemoveUnusedOneToOneEquiJoinRule;
 import org.apache.asterix.optimizer.rules.RewriteDistinctAggregateRule;
 import org.apache.asterix.optimizer.rules.SetAsterixMemoryRequirementsRule;
@@ -342,6 +344,12 @@ public final class RuleCollections {
         planCleanupRules.add(new RemoveCartesianProductWithEmptyBranchRule());
         planCleanupRules.add(new InjectTypeCastForFunctionArgumentsRule());
         planCleanupRules.add(new InjectTypeCastForUnionRule());
+        // (1) RemoveOrReplaceDefaultNullCastRule and (2) RemoveUnknownCheckForKnownTypesRule has to run in this order
+        // to ensure removing unknown checks, which requires the removal of null producers by (1)
+        planCleanupRules.add(new RemoveOrReplaceDefaultNullCastRule());
+        planCleanupRules.add(new RemoveUnknownCheckForKnownTypeExpressionRule());
+        // relies on RemoveOrReplaceDefaultNullCastRule AND RemoveUnknownCheckForKnownTypeExpressionRule
+        planCleanupRules.add(new RemoveRedundantSelectRule());
 
         // Needs to invoke ByNameToByIndexFieldAccessRule as the last logical optimization rule because
         // some rules can push a FieldAccessByName to a place where the name it tries to access is in the closed part.
@@ -387,7 +395,7 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new InlineSingleReferenceVariablesRule());
         physicalRewritesAllLevels.add(new RemoveUnusedAssignAndAggregateRule());
         physicalRewritesAllLevels.add(new ConsolidateAssignsRule(true));
-        // After adding projects, we may need need to set physical operators again.
+        // After adding projects, we may need to set physical operators again.
         physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
         // Optimized spatial join's query plan produces more join conditions, so we need to pull out these conditions
         physicalRewritesAllLevels.add(new PullSelectOutOfSpatialJoin());

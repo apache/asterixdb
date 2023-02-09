@@ -1,0 +1,22 @@
+distribute result [$$67]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 3
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      exchange
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        project ([$$67])
+        -- STREAM_PROJECT  |PARTITIONED|
+          assign [$$67] <- [{"id": int64-default-null($$d.getField("id")), "review": string-default-null($$d.getField("review"))}]
+          -- ASSIGN  |PARTITIONED|
+            limit 3
+            -- STREAM_LIMIT  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                data-scan []<-[$$d] <- test.ExternalDataset limit 3
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
