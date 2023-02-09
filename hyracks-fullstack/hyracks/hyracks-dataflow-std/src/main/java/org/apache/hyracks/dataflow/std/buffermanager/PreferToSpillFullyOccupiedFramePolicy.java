@@ -98,4 +98,14 @@ public class PreferToSpillFullyOccupiedFramePolicy {
             }
         };
     }
+
+    public String partitionsStatus() {
+        StringBuilder sb = new StringBuilder();
+        int numPartitions = bufferManager.getNumPartitions();
+        for (int p = 0; p < numPartitions; p++) {
+            sb.append("p:").append(p).append(",#t:").append(bufferManager.getNumTuples(p)).append(",s:")
+                    .append(spilledStatus.get(p)).append(",s:").append(bufferManager.getPhysicalSize(p)).append('\n');
+        }
+        return sb.toString();
+    }
 }
