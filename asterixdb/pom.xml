@@ -89,10 +89,10 @@
     <log4j.version>2.19.0</log4j.version>
     <awsjavasdk.version>2.17.218</awsjavasdk.version>
     <parquet.version>1.12.3</parquet.version>
-    <hadoop-awsjavasdk.version>1.12.109</hadoop-awsjavasdk.version>
+    <hadoop-awsjavasdk.version>1.12.402</hadoop-awsjavasdk.version>
     <azureblobjavasdk.version>12.14.2</azureblobjavasdk.version>
     <azuredatalakejavasdk.version>12.7.2</azuredatalakejavasdk.version>
-    <gcsjavasdk.version>2.9.0</gcsjavasdk.version>
+    <gcsjavasdk.version>2.17.2</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
 
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
@@ -1869,7 +1869,7 @@
       <dependency>
         <groupId>org.apache.tomcat</groupId>
         <artifactId>tomcat-annotations-api</artifactId>
-        <version>10.0.22</version>
+        <version>10.1.5</version>
       </dependency>
       <!-- Google Cloud Storage end -->
       <!-- Azure Data Lake start -->
