@@ -75,6 +75,15 @@ public interface IPartitionedTupleBufferManager {
             throws HyracksDataException;
 
     /**
+     * Returns the number of frames needed to accommodate the tuple.
+     *
+     * @param tupleSize tuple size
+     * @param fieldCount field count. 0 if the tuple size already accounts for fields offsets size.
+     * @return the number of frames needed to accommodate the tuple.
+     */
+    int framesNeeded(int tupleSize, int fieldCount);
+
+    /**
      * Cancels the effect of last insertTuple() operation. i.e. undoes the last insertTuple() operation.
      */
     void cancelInsertTuple(int partition) throws HyracksDataException;

@@ -155,26 +155,23 @@ public class OptimizedHybridHashJoin {
     private void processTupleBuildPhase(int tid, int pid) throws HyracksDataException {
         // insertTuple prevents the tuple to acquire a number of frames that is > the frame limit
         while (!bufferManager.insertTuple(pid, accessorBuild, tid, tempPtr)) {
-            int recordSize = VPartitionTupleBufferManager.calculateActualSize(null, accessorBuild.getTupleLength(tid));
-            double numFrames = (double) recordSize / (double) jobletCtx.getInitialFrameSize();
+            int numFrames = bufferManager.framesNeeded(accessorBuild.getTupleLength(tid), 0);
             int victimPartition;
             int partitionFrameLimit = bufferManager.getConstrain().frameLimit(pid);
             if (numFrames > partitionFrameLimit || (victimPartition = spillPolicy.selectVictimPartition(pid)) < 0) {
                 // insert request can never be satisfied
-                if (numFrames > memSizeInFrames || recordSize < jobletCtx.getInitialFrameSize()) {
-                    // the tuple is greater than the memory budget or although the record is small we could not find
-                    // a frame for it (possibly due to a bug)
-                    String details = String.format(
-                            "partition %s, tuple size %s, needed # frames %s, partition frame limit %s, join "
-                                    + "memory in frames %s, initial frame size %s",
-                            pid, recordSize, numFrames, partitionFrameLimit, memSizeInFrames,
-                            jobletCtx.getInitialFrameSize());
-                    LOGGER.debug("can't insert tuple in join memory. {}", details);
-                    LOGGER.debug("partitions status:\n{}", spillPolicy.partitionsStatus());
+                if (numFrames > memSizeInFrames) {
+                    // the tuple is greater than the memory budget
+                    logTupleInsertionFailure(tid, pid, numFrames, partitionFrameLimit);
                     throw HyracksDataException.create(ErrorCode.INSUFFICIENT_MEMORY);
                 }
+                if (numFrames <= 1) {
+                    // this shouldn't happen. whether the partition is spilled or not, it should be able to get 1 frame
+                    logTupleInsertionFailure(tid, pid, numFrames, partitionFrameLimit);
+                    throw new IllegalStateException("can't insert tuple in join memory");
+                }
                 // Record is large but insertion failed either 1) we could not satisfy the request because of the
-                // frame limit or 2) we could not find a victim anymore (exhaused all victims) and the partition is
+                // frame limit or 2) we could not find a victim anymore (exhausted all victims) and the partition is
                 // memory-resident with no frame.
                 flushBigObjectToDisk(pid, accessorBuild, tid, buildRFWriters, buildRelName);
                 spilledStatus.set(pid);
@@ -622,5 +619,15 @@ public class OptimizedHybridHashJoin {
             throw new IllegalStateException();
         }
         this.isReversed = reversed;
+    }
+
+    private void logTupleInsertionFailure(int tid, int pid, int numFrames, int partitionFrameLimit) {
+        int recordSize = VPartitionTupleBufferManager.calculateActualSize(null, accessorBuild.getTupleLength(tid));
+        String details = String.format(
+                "partition %s, tuple size %s, needed # frames %s, partition frame limit %s, join "
+                        + "memory in frames %s, initial frame size %s",
+                pid, recordSize, numFrames, partitionFrameLimit, memSizeInFrames, jobletCtx.getInitialFrameSize());
+        LOGGER.debug("can't insert tuple in join memory. {}", details);
+        LOGGER.debug("partitions status:\n{}", spillPolicy.partitionsStatus());
     }
 }
