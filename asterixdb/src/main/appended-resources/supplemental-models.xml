@@ -1863,7 +1863,7 @@
       <groupId>com.fasterxml.woodstox</groupId>
       <artifactId>woodstox-core</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>6.2.7</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>6.2.7,6.4.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
