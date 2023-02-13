@@ -408,6 +408,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (leftInput.getOperatorTag() == LogicalOperatorTag.SELECT) {
             addCardCostAnnotations(leftInput, plan);
         }
+        addCardCostAnnotations(findDataSourceScanOperator(leftInput), plan);
     }
 
     private void buildNewTree(PlanNode plan, HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap,

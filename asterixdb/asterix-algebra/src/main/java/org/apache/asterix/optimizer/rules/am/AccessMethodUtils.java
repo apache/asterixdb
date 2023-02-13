@@ -963,6 +963,7 @@ public class AccessMethodUtils {
                     leftOuterMissingValue, context, sourceLoc);
         }
 
+        OperatorManipulationUtil.copyCardCostAnnotations(joinRef.getValue(), finalOp);
         joinRef.setValue(finalOp);
         return true;
     }
@@ -3050,6 +3051,7 @@ public class AccessMethodUtils {
                 if (optFuncExpr != null) {
                     optFuncExpr.setSourceVar(funcVarIndex, ((AssignOperator) op).getVariables().get(assignVarIndex));
                 }
+
                 //add fieldName to the nested fieldName, return
                 if (nestedAccessFieldName != null) {
                     parentFieldNames.first.addAll(nestedAccessFieldName);
