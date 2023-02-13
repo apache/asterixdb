@@ -11,7 +11,6 @@
     "azure.request.timeout" : 120,
     "compiler\.arrayindex" : true,
     "compiler.cbo" : false,
-    "compiler.cbotest" : true,
     "compiler\.external\.field\.pushdown" : true,
     "compiler.forcejoinorder" : false,
     "compiler\.framesize" : 32768,
