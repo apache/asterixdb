@@ -449,10 +449,12 @@ import org.apache.asterix.runtime.evaluators.functions.OrDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.RandomDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.RandomWithSeedDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ReferenceTileDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.SerializedSizeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SleepDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialAreaDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialCellDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SpatialDistanceDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.SpatialIntersectDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringConcatDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringContainsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.StringEndsWithDescriptor;
@@ -1175,6 +1177,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(LineRectanglePolygonAccessor.FACTORY);
         fc.add(ReferenceTileDescriptor.FACTORY);
         fc.add(GetIntersectionDescriptor.FACTORY);
+        fc.add(SpatialIntersectDescriptor.FACTORY);
 
         // full-text function
         fc.add(FullTextContainsFunctionDescriptor.FACTORY);
@@ -1321,6 +1324,7 @@ public final class FunctionCollection implements IFunctionCollection {
         // Other functions
         fc.add(DecodeDataverseNameDescriptor.FACTORY);
         fc.add(RandomWithSeedDescriptor.FACTORY);
+        fc.add(SerializedSizeDescriptor.FACTORY);
 
         ServiceLoader.load(IFunctionRegistrant.class).iterator().forEachRemaining(c -> c.register(fc));
         return fc;

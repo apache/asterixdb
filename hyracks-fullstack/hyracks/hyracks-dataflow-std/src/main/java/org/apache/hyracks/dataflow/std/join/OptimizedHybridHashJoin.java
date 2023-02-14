@@ -50,6 +50,8 @@ import org.apache.hyracks.dataflow.std.buffermanager.VPartitionTupleBufferManage
 import org.apache.hyracks.dataflow.std.structures.ISerializableTable;
 import org.apache.hyracks.dataflow.std.structures.SerializableHashTable;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * This class mainly applies one level of HHJ on a pair of
@@ -57,6 +59,7 @@ import org.apache.hyracks.dataflow.std.structures.TuplePointer;
  */
 public class OptimizedHybridHashJoin {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     // Used for special probe BigObject which can not be held into the Join memory
     private FrameTupleAppender bigFrameAppender;
 
@@ -157,12 +160,19 @@ public class OptimizedHybridHashJoin {
             int recordSize = VPartitionTupleBufferManager.calculateActualSize(null, accessorBuild.getTupleLength(tid));
             double numFrames = (double) recordSize / (double) jobletCtx.getInitialFrameSize();
             int victimPartition;
-            if (numFrames > bufferManager.getConstrain().frameLimit(pid)
-                    || (victimPartition = spillPolicy.selectVictimPartition(pid)) < 0) {
+            int partitionFrameLimit = bufferManager.getConstrain().frameLimit(pid);
+            if (numFrames > partitionFrameLimit || (victimPartition = spillPolicy.selectVictimPartition(pid)) < 0) {
                 // insert request can never be satisfied
                 if (numFrames > memSizeInFrames || recordSize < jobletCtx.getInitialFrameSize()) {
                     // the tuple is greater than the memory budget or although the record is small we could not find
                     // a frame for it (possibly due to a bug)
+                    String details = String.format(
+                            "partition %s, tuple size %s, needed # frames %s, partition frame limit %s, join "
+                                    + "memory in frames %s, initial frame size %s",
+                            pid, recordSize, numFrames, partitionFrameLimit, memSizeInFrames,
+                            jobletCtx.getInitialFrameSize());
+                    LOGGER.debug("can't insert tuple in join memory. {}", details);
+                    LOGGER.debug("partitions status:\n{}", spillPolicy.partitionsStatus());
                     throw HyracksDataException.create(ErrorCode.INSUFFICIENT_MEMORY);
                 }
                 // Record is large but insertion failed either 1) we could not satisfy the request because of the

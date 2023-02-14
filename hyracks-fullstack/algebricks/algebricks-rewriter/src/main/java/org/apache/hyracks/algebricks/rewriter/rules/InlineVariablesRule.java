@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -37,7 +38,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
@@ -80,6 +80,10 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     // set to prevent re-visiting a subtree from the other sides. Operators with multiple outputs are the ones that
     // could be re-visited twice or more (e.g. replicate and split operators)
     private final Map<ILogicalOperator, Boolean> subTreesDone = new HashMap<>();
+    // temporary set to get used variables
+    private final List<LogicalVariable> usedVars = new ArrayList<>();
+    // map of variables and the counts of how many times they were used
+    private final Map<LogicalVariable, MutableInt> usedVariableCounter = new HashMap<>();
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
@@ -108,9 +112,10 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         varAssignRhs.clear();
         inlineVisitor.setContext(context);
         subTreesDone.clear();
+        usedVariableCounter.clear();
     }
 
-    protected boolean performBottomUpAction(AbstractLogicalOperator op) throws AlgebricksException {
+    protected boolean performBottomUpAction(ILogicalOperator op) throws AlgebricksException {
         // Only inline variables in operators that can deal with arbitrary expressions.
         if (!op.requiresVariableReferenceExpressions()) {
             inlineVisitor.setOperator(op);
@@ -125,27 +130,33 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
 
     private boolean inlineVariables(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
+        ILogicalOperator op = opRef.getValue();
 
         // check if you have already visited the subtree rooted at this operator
         if (subTreesDone.containsKey(op)) {
             return subTreesDone.get(op);
         }
+
+        // compute how many times a variable was used
+        computeUsedVariableCount(op);
+
         // Update mapping from variables to expressions during top-down traversal.
         if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
             AssignOperator assignOp = (AssignOperator) op;
             List<LogicalVariable> vars = assignOp.getVariables();
             List<Mutable<ILogicalExpression>> exprs = assignOp.getExpressions();
             for (int i = 0; i < vars.size(); i++) {
+                LogicalVariable variable = vars.get(i);
                 ILogicalExpression expr = exprs.get(i).getValue();
                 // Ignore functions that are either in the doNotInline set or are non-functional
                 if (expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
                     AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
-                    if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier()) || !funcExpr.isFunctional()) {
+                    if (doNotInlineFuncs.contains(funcExpr.getFunctionIdentifier())
+                            || skipNonFunctional(variable, funcExpr)) {
                         continue;
                     }
                 }
-                varAssignRhs.put(vars.get(i), exprs.get(i).getValue());
+                varAssignRhs.put(variable, expr);
             }
         }
 
@@ -198,6 +209,54 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         }
 
         return modified;
+    }
+
+    /**
+     * Skip inlining non-pure functions if they are referenced more than once.
+     *
+     * @param variable assigned to the function
+     * @param expr     of the assigned variable (potentially a non-pure one)
+     * @return true if inlining should be skipped, false if the non-pure functions can be inlined
+     */
+    private boolean skipNonFunctional(LogicalVariable variable, AbstractFunctionCallExpression expr) {
+        return !expr.isFunctional() && usedVariableCounter.containsKey(variable)
+                && usedVariableCounter.get(variable).getValue() > 1;
+    }
+
+    /**
+     * Computes how many times the variables in the plan were used. The variable counts
+     * help to determine if whether we can inline non-pure functions (e.g., current_date()) or not.
+     * Inlining non-pure functions can help unlocking other optimizations. For instance, we can pushdown
+     * limits and selects into data-scans or avoid create_query_uuid().
+     * <p>
+     * Non-pure functions can only be inlined if they were referenced once. For example,
+     * in the following plan, the function current_date() (or variable $$x) can be inlined as it was used
+     * once by select:
+     * <p>
+     * Before:
+     * select (get_year($$x) > 2000)
+     * * assign [$$x] <- [current_date()]
+     * After:
+     * select (get_year(current_date()) > 2000)
+     * <p>
+     * However, the following current_date() (or variable $$x) cannot be inlined as it referenced twice:
+     * select (get_year($$x) > 2000 && get_month($$x) == 11)
+     * * assign [$$x] <- [current_date()]
+     *
+     * @param op the logical operator that potentially uses one or more variables
+     */
+    private void computeUsedVariableCount(ILogicalOperator op) throws AlgebricksException {
+        if (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
+            // to avoid count a variable twice as this routine traverses the subplan
+            return;
+        }
+
+        usedVars.clear();
+        VariableUtilities.getUsedVariables(op, usedVars);
+        for (LogicalVariable variable : usedVars) {
+            MutableInt counter = usedVariableCounter.computeIfAbsent(variable, k -> new MutableInt(0));
+            counter.increment();
+        }
     }
 
     public static class InlineVariablesVisitor extends LogicalExpressionReferenceTransformVisitor

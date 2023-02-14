@@ -1,0 +1,18 @@
+distribute result [$$24]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$24])
+    -- STREAM_PROJECT  |UNPARTITIONED|
+      limit switch-case(gt($$25, 0), true, $$25, 0)
+      -- STREAM_LIMIT  |UNPARTITIONED|
+        project ([$$25, $$24])
+        -- STREAM_PROJECT  |UNPARTITIONED|
+          assign [$$25, $$24] <- [treat-as-integer($$21), {"A": $$A, "rand": $$21}]
+          -- ASSIGN  |UNPARTITIONED|
+            unnest $$A <- scan-collection(array: [ 1, 2, 3 ])
+            -- UNNEST  |UNPARTITIONED|
+              assign [$$21] <- [random()]
+              -- ASSIGN  |UNPARTITIONED|
+                empty-tuple-source
+                -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.asterix.fuzzyjoin;
+package org.apache.asterix.runtime.evaluators.common;
 
 import java.util.Arrays;
 

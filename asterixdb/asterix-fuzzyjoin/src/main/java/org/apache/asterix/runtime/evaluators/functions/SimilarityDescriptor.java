@@ -26,7 +26,6 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeseria
 import org.apache.asterix.dataflow.data.nontagged.serde.AOrderedListSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AUnorderedListSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.fuzzyjoin.IntArray;
 import org.apache.asterix.fuzzyjoin.similarity.PartialIntersect;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityFilters;
 import org.apache.asterix.fuzzyjoin.similarity.SimilarityMetric;
@@ -36,6 +35,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
+import org.apache.asterix.runtime.evaluators.common.IntArray;
 import org.apache.asterix.runtime.evaluators.common.SimilarityFiltersCache;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;

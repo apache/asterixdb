@@ -1709,6 +1709,9 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier DECODE_DATAVERSE_NAME =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "decode-dataverse-name", 1);
 
+    public static final FunctionIdentifier SERIALIZED_SIZE =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "serialized-size", 1);
+
     static {
         // first, take care of Algebricks builtin functions
         addFunction(IS_MISSING, BooleanOnlyTypeComputer.INSTANCE, true);
@@ -2543,6 +2546,7 @@ public class BuiltinFunctions {
         addFunction(DECODE_DATAVERSE_NAME, OrderedListOfAStringTypeComputer.INSTANCE_NULLABLE, true);
 
         addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIALIZED_SIZE, AInt64TypeComputer.INSTANCE, true);
 
         // external lookup
         addPrivateFunction(EXTERNAL_LOOKUP, AnyTypeComputer.INSTANCE, false);

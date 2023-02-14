@@ -37,7 +37,6 @@ import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardPrefixCh
 import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardPrefixDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardSortedCheckDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.SimilarityJaccardSortedDescriptor;
-import org.apache.asterix.runtime.evaluators.functions.SpatialIntersectDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.WordTokensDescriptor;
 
 public class FuzzyJoinFunctionRegistrant implements IFunctionRegistrant {
@@ -47,9 +46,6 @@ public class FuzzyJoinFunctionRegistrant implements IFunctionRegistrant {
         // the number of arguments of the function depend on the first few arguments.
         fc.add(SimilarityJaccardPrefixDescriptor.FACTORY);
         fc.add(SimilarityJaccardPrefixCheckDescriptor.FACTORY);
-
-        // Spatial
-        fc.add(SpatialIntersectDescriptor.FACTORY);
 
         // fuzzyjoin function
         fc.add(PrefixLenJaccardDescriptor.FACTORY);

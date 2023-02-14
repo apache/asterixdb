@@ -942,8 +942,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     }
 
     private void writeBuildSide(AbstractBinaryJoinOperator op) throws IOException {
-        int buildInputIndex = printInputsInReverse(op) ? 0 : 1;
-        jsonGenerator.writeNumberField("build-side", buildInputIndex);
+        if (isHashJoin(op)) {
+            jsonGenerator.writeNumberField("build-side", 0);
+        }
     }
 
     private static boolean printInputsInReverse(AbstractLogicalOperator op) {

@@ -25,6 +25,6 @@ SET `compiler.sort.parallel` "false";
 
 SELECT VALUE md.name
 FROM MyDataset md
-LET currentData = {"myDate": current_date()}
-WHERE currentData.myDate = current_date()
+LET myObject = {"myUid": uuid()}
+WHERE myObject.myUid != uuid()
 ORDER BY md.id

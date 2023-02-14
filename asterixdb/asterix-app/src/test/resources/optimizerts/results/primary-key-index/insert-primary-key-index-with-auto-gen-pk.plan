@@ -6,7 +6,5 @@
           -- ASSIGN  |UNPARTITIONED|
             -- STREAM_PROJECT  |UNPARTITIONED|
               -- ASSIGN  |UNPARTITIONED|
-                -- STREAM_PROJECT  |UNPARTITIONED|
-                  -- ASSIGN  |UNPARTITIONED|
-                    -- ASSIGN  |UNPARTITIONED|
-                      -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                -- ASSIGN  |UNPARTITIONED|
+                  -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

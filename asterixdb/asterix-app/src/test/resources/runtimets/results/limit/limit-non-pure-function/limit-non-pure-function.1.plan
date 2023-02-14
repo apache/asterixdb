@@ -1,0 +1,14 @@
+distribute result [$$A]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$A])
+    -- STREAM_PROJECT  |UNPARTITIONED|
+      limit switch-case(gt($$13, 0), true, $$13, 0)
+      -- STREAM_LIMIT  |UNPARTITIONED|
+        assign [$$13] <- [treat-as-integer(random())]
+        -- ASSIGN  |UNPARTITIONED|
+          unnest $$A <- scan-collection(array: [ 1, 2, 3 ])
+          -- UNNEST  |UNPARTITIONED|
+            empty-tuple-source
+            -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

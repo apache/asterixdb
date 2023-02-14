@@ -27,7 +27,6 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 
 /**
@@ -83,7 +82,7 @@ public class InlineSingleReferenceVariablesRule extends InlineVariablesRule {
     }
 
     @Override
-    protected boolean performBottomUpAction(AbstractLogicalOperator op) throws AlgebricksException {
+    protected boolean performBottomUpAction(ILogicalOperator op) throws AlgebricksException {
         usedVars.clear();
         VariableUtilities.getUsedVariables(op, usedVars);
         for (LogicalVariable var : usedVars) {

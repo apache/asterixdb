@@ -12,7 +12,7 @@ distribute result [$$30] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000
         -- STREAM_PROJECT  |PARTITIONED|
           exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- SORT_MERGE_EXCHANGE [$$32(ASC) ]  |PARTITIONED|
-            select (neq(uuid(), uuid())) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+            select (neq(current-date(), date: { 1980-09-10 })) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_SELECT  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
