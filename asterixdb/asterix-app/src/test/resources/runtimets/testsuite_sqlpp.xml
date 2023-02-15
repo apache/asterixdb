@@ -6647,6 +6647,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="join">
+      <compilation-unit name="hash-join-with-redundant-variable">
+        <output-dir compare="Text">hash-join-with-redundant-variable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
       <compilation-unit name="hash_join_array">
         <output-dir compare="Text">hash_join_array</output-dir>
       </compilation-unit>

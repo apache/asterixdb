@@ -1,0 +1,39 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+ * Similar to hash-join-with-redundant-variable.04.query.sqlpp
+ * But with Index NL. The plan of this test should has two
+ * hash-partition-exchange -- both of which with one variable.
+ * One from 'Supplier' and one from 'Customer'. Nation should not be
+ * partitioned here to join with Customer (already partitioned by its PK)
+ */
+
+USE tpch;
+
+-- Disabled for a simpler plan
+SET `compiler.sort.parallel` "false";
+SET `compiler.parallelism` "0";
+
+EXPLAIN
+SELECT n.n_nationkey, s.s_nationkey, c.c_nationkey
+FROM Supplier s, Nation n, Customer c
+WHERE s.s_nationkey /* +indexnl */ = n.n_nationkey
+  AND c.c_nationkey = n.n_nationkey
+  AND s.s_nationkey = c.c_nationkey
+ORDER BY n.n_nationkey, s.s_nationkey, c.c_nationkey

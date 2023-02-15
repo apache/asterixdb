@@ -23,16 +23,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
-import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -155,7 +152,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         PlanNode cheapestPlanNode = joinEnum.allPlans.get(cheapestPlan);
 
         if (numberOfFromTerms > 1) {
-            checkForMultipleUsesOfVariablesInJoinPreds(cheapestPlanNode, joinLeafInputsHashMap, context);
             buildNewTree(cheapestPlanNode, joinLeafInputsHashMap, joinOps, new MutableInt(0));
             printPlan(pp, (AbstractLogicalOperator) joinOps.get(0), "New Whole Plan after buildNewTree 1");
             ILogicalOperator root = addConstantInternalEdgesAtTheTop(joinOps.get(0), internalEdges);
@@ -222,7 +218,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     /**
      * Check to see if there is only one assign here and nothing below that other than a join.
      * have not seen cases where there is more than one assign in a leafinput.
-    */
+     */
     private boolean onlyOneAssign(ILogicalOperator nextOp) {
         if (nextOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
@@ -529,91 +525,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             ILogicalOperator element = pair.getValue();
             printPlan(pp, (AbstractLogicalOperator) element, "Printing Leaf Input" + i);
             i++;
-        }
-    }
-
-    private boolean allEqualityPreds(ILogicalExpression expr) {
-        List<Mutable<ILogicalExpression>> conjs = new ArrayList<>();
-        // check that the expr is AND(EQ(), EQ(),..)
-        if (expr.splitIntoConjuncts(conjs)) {
-            for (Mutable<ILogicalExpression> conj : conjs) {
-                if (!(((AbstractFunctionCallExpression) conj.getValue()).getFunctionIdentifier()
-                        .equals(AlgebricksBuiltinFunctions.EQ))) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
-    // This routine should not be needed! When the same variable is used multiple times in a join predicate as in
-    // AND(eq($$25, $$27), eq($$25, $$34)), JoinUtils.isHashJoinCondition() returns false which makes no sense.
-    // Tried changing the above routine but it always lead to some failures. Unable to figure out what the problem was,
-    // we just replace the duplicate occurrence of every variable with a new variable following by appropriate assign.
-    // We do this only once just once before we construct the final plan.
-    private void checkForMultipleUsesOfVariablesInJoinPreds(PlanNode plan,
-            HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap, IOptimizationContext context)
-            throws AlgebricksException {
-        List<PlanNode> allPlans = joinEnum.getAllPlans();
-        if (plan.IsJoinNode()) {
-            ILogicalExpression exp = plan.getJoinExpr();
-            if (!allEqualityPreds(exp)) {
-                return;
-            }
-            boolean changes = true;
-            while (changes) {
-                changes = false;
-                List<LogicalVariable> vars = new ArrayList<>();
-                exp.getUsedVariables(vars);
-                Set<LogicalVariable> set = new LinkedHashSet<>(vars);
-                if (set.size() < vars.size()) {
-                    // walk thru vars and find the first instance of the duplicate
-                    for (int i = 0; i < vars.size() - 1; i++) {
-                        for (int j = i + 1; j < vars.size(); j++) {
-                            if (vars.get(i) == vars.get(j)) {
-                                /// find the leafInout that contains this vars(i)
-                                for (Map.Entry<EmptyTupleSourceOperator, ILogicalOperator> mapElement : joinLeafInputsHashMap
-                                        .entrySet()) {
-                                    ILogicalOperator joinLeafInput = mapElement.getValue();
-                                    EmptyTupleSourceOperator ets = mapElement.getKey();
-                                    HashSet<LogicalVariable> vars2 = new HashSet<>();
-                                    VariableUtilities.getLiveVariables(joinLeafInput, vars2);
-                                    if (vars2.contains(vars.get(i))) {
-                                        LogicalVariable newVar = context.newVar();
-                                        // replace one occurrence of vars(i) in exp
-                                        substituteVarOnce(exp, vars.get(i), newVar);
-                                        VariableReferenceExpression oldvarExpr =
-                                                new VariableReferenceExpression(vars.get(i));
-                                        AssignOperator assign =
-                                                new AssignOperator(newVar, new MutableObject<>(oldvarExpr));
-                                        // Now add an assign to the joinLeafInput : newvar <-- oldvar
-                                        assign.getInputs().add(new MutableObject<>(joinLeafInput));
-                                        context.computeAndSetTypeEnvironmentForOperator(assign);
-                                        context.addNotToBeInlinedVar(newVar);
-                                        context.addNotToBeInlinedVar(vars.get(i));
-
-                                        // also update the joinLeafInputsHashMap
-                                        joinLeafInputsHashMap.put(ets, assign);
-                                        changes = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            // now traverse left and right side plans
-            int leftIndex = plan.getLeftPlanIndex();
-            int rightIndex = plan.getRightPlanIndex();
-            PlanNode leftPlan = allPlans.get(leftIndex);
-            PlanNode rightPlan = allPlans.get(rightIndex);
-            if (leftPlan.IsJoinNode()) {
-                checkForMultipleUsesOfVariablesInJoinPreds(leftPlan, joinLeafInputsHashMap, context);
-            }
-            if (rightPlan.IsJoinNode()) {
-                checkForMultipleUsesOfVariablesInJoinPreds(rightPlan, joinLeafInputsHashMap, context);
-            }
         }
     }
 

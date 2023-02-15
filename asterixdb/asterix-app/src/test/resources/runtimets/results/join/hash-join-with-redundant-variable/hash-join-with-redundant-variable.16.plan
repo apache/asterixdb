@@ -1,0 +1,66 @@
+distribute result [$$48]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$48])
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$48] <- [{"n_nationkey": $$56, "s_nationkey": $$53, "c_nationkey": $$52}]
+      -- ASSIGN  |PARTITIONED|
+        exchange
+        -- SORT_MERGE_EXCHANGE [$$56(ASC), $$53(ASC), $$52(ASC) ]  |PARTITIONED|
+          order (ASC, $$56) (ASC, $$53) (ASC, $$52)
+          -- STABLE_SORT [$$56(ASC), $$53(ASC), $$52(ASC)]  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$56, $$53, $$52])
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  join (and(eq($$52, $$56), eq($$53, $$63)))
+                  -- HYBRID_HASH_JOIN [$$56, $$53][$$52, $$63]  |PARTITIONED|
+                    exchange
+                    -- HASH_PARTITION_EXCHANGE [$$56, $$53]  |PARTITIONED|
+                      project ([$$53, $$56])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          unnest-map [$$56, $$n] <- index-search("Nation", 0, "tpch", "Nation", true, true, 1, $$53, 1, $$53, true, true, true)
+                          -- BTREE_SEARCH  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              order (ASC, $$53)
+                              -- STABLE_SORT [$$53(ASC)]  |PARTITIONED|
+                                exchange
+                                -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
+                                  project ([$$53])
+                                  -- STREAM_PROJECT  |PARTITIONED|
+                                    assign [$$53] <- [$$s.getField(3)]
+                                    -- ASSIGN  |PARTITIONED|
+                                      project ([$$s])
+                                      -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          data-scan []<-[$$55, $$s] <- tpch.Supplier
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
+                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
+                    -- HASH_PARTITION_EXCHANGE [$$52, $$63]  |PARTITIONED|
+                      assign [$$63] <- [$$52]
+                      -- ASSIGN  |PARTITIONED|
+                        project ([$$52])
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          assign [$$52] <- [$$c.getField(3)]
+                          -- ASSIGN  |PARTITIONED|
+                            project ([$$c])
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                data-scan []<-[$$57, $$c] <- tpch.Customer
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

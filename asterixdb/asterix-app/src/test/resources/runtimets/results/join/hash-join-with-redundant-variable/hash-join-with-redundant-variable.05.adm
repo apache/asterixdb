@@ -1,0 +1,3 @@
+{ "o_orderkey": 2, "l_orderkey": 2, "l_suppkey": 2 }
+{ "o_orderkey": 5, "l_orderkey": 5, "l_suppkey": 5 }
+{ "o_orderkey": 6, "l_orderkey": 6, "l_suppkey": 6 }

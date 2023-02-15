@@ -1,0 +1,50 @@
+distribute result [$$34]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$34])
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$34] <- [{"o_orderkey": $$41, "l_orderkey": $$42, "l_suppkey": $$40}]
+      -- ASSIGN  |PARTITIONED|
+        exchange
+        -- SORT_MERGE_EXCHANGE [$$41(ASC), $$42(ASC), $$40(ASC) ]  |PARTITIONED|
+          order (ASC, $$41) (ASC, $$42) (ASC, $$40)
+          -- STABLE_SORT [$$41(ASC), $$42(ASC), $$40(ASC)]  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$41, $$42, $$40])
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  join (and(eq($$41, $$42), eq($$47, $$40)))
+                  -- HYBRID_HASH_JOIN [$$41, $$47][$$42, $$40]  |PARTITIONED|
+                    exchange
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      assign [$$47] <- [$$41]
+                      -- ASSIGN  |PARTITIONED|
+                        project ([$$41])
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            data-scan []<-[$$41, $$o] <- tpch.Orders
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
+                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
+                    -- HASH_PARTITION_EXCHANGE [$$42]  |PARTITIONED|
+                      project ([$$42, $$40])
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$40] <- [$$l.getField(2)]
+                        -- ASSIGN  |PARTITIONED|
+                          project ([$$42, $$l])
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              data-scan []<-[$$42, $$43, $$l] <- tpch.LineItem
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
