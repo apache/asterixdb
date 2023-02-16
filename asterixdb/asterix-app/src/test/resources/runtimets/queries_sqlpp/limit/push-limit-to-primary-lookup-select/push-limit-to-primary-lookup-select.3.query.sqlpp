@@ -18,7 +18,7 @@
  */
 
 use test;
-
+SET `compiler.cbo` "true";
 explain select element c
 from  LineItem as c
 where c.l_suppkey < 150 AND l_extendedprice < 10000

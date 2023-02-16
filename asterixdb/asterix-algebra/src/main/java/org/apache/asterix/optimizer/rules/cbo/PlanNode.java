@@ -97,12 +97,32 @@ public class PlanNode {
         return jn;
     }
 
+    public void setJoinNode(JoinNode jn) {
+        this.jn = jn;
+    }
+
     public int getRightPlanIndex() {
         return planIndexes[1];
     }
 
+    public void setRightPlanIndex(int index) {
+        this.planIndexes[1] = index;
+    }
+
     public int getLeftJoinIndex() {
         return jnIndexes[0];
+    }
+
+    public void setLeftPlanIndex(int index) {
+        this.planIndexes[0] = index;
+    }
+
+    public void setLeftJoinIndex(int index) {
+        this.jnIndexes[0] = index;
+    }
+
+    public void setRightJoinIndex(int index) {
+        this.jnIndexes[1] = index;
     }
 
     public int getRightJoinIndex() {
@@ -134,6 +154,10 @@ public class PlanNode {
         return datasetName;
     }
 
+    public void setDatasetName(String dsName) {
+        this.datasetName = dsName;
+    }
+
     public DataSourceScanOperator getDataSourceScanOp() {
         return correspondingDataSourceScanOp; // This applies only to singleDataSetPlans
     }
@@ -142,8 +166,16 @@ public class PlanNode {
         return correspondingEmptyTupleSourceOp; // This applies only to singleDataSetPlans
     }
 
+    public void setEmptyTupleSourceOp(EmptyTupleSourceOperator emptyTupleSourceOp) {
+        this.correspondingEmptyTupleSourceOp = emptyTupleSourceOp; // This applies only to singleDataSetPlans
+    }
+
     public ICost getOpCost() {
         return opCost;
+    }
+
+    public void setOpCost(ICost cost) {
+        this.opCost = cost;
     }
 
     public double computeOpCost() {
@@ -152,6 +184,10 @@ public class PlanNode {
 
     public ICost getTotalCost() {
         return totalCost;
+    }
+
+    public void setTotalCost(ICost tc) {
+        this.totalCost = tc;
     }
 
     public ICost getLeftExchangeCost() {
@@ -168,6 +204,10 @@ public class PlanNode {
 
     public ScanMethod getScanOp() {
         return scanOp;
+    }
+
+    public void setScanMethod(ScanMethod sm) {
+        this.scanOp = sm;
     }
 
     public JoinMethod getJoinOp() {

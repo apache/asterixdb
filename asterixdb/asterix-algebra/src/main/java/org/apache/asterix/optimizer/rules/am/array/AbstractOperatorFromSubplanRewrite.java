@@ -100,20 +100,44 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
         this.context = context;
     }
 
-    protected LogicalVariable getConditioningVariable(ILogicalExpression condition) {
+    protected void gatherBooleanVariables(ILogicalExpression condition, List<VariableReferenceExpression> outputList,
+            List<ILogicalExpression> miscExpressions) {
         List<Mutable<ILogicalExpression>> selectConjuncts = new ArrayList<>();
         if (splitIntoConjuncts(condition, selectConjuncts)) {
             for (Mutable<ILogicalExpression> conjunct : selectConjuncts) {
                 if (conjunct.getValue().getExpressionTag().equals(LogicalExpressionTag.VARIABLE)) {
-                    return ((VariableReferenceExpression) conjunct.getValue()).getVariableReference();
+                    outputList.add(((VariableReferenceExpression) conjunct.getValue()));
+                } else {
+                    miscExpressions.add(conjunct.getValue());
                 }
             }
-
         } else if (condition.getExpressionTag().equals(LogicalExpressionTag.VARIABLE)) {
-            return ((VariableReferenceExpression) condition).getVariableReference();
-
+            outputList.add(((VariableReferenceExpression) condition));
+        } else {
+            miscExpressions.add(condition);
         }
-        return null;
+    }
+
+    protected void gatherSubplanOperators(ILogicalOperator rootOperator, List<SubplanOperator> outputList) {
+        for (Mutable<ILogicalOperator> inputOpRef : rootOperator.getInputs()) {
+            LogicalOperatorTag operatorTag = inputOpRef.getValue().getOperatorTag();
+            switch (operatorTag) {
+                case SUBPLAN:
+                    outputList.add((SubplanOperator) inputOpRef.getValue());
+                    gatherSubplanOperators(inputOpRef.getValue(), outputList);
+                    break;
+
+                case ASSIGN:
+                case UNNEST:
+                case SELECT:
+                    gatherSubplanOperators(inputOpRef.getValue(), outputList);
+                    break;
+
+                default:
+                    // We will break early if we encounter any other operator.
+                    return;
+            }
+        }
     }
 
     protected Pair<SelectOperator, UnnestOperator> traverseSubplanBranch(SubplanOperator subplanOperator,
@@ -132,7 +156,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
         // Ensure that this SELECT represents a predicate for an existential query, and is a query we can optimize.
         ILogicalExpression normalizedSelectCondition =
                 normalizeCondition(workingSubplanRootAsAggregate, optimizableSelect.getCondition().getValue());
-        normalizedSelectCondition = keepOptimizableFunctions(normalizedSelectCondition).cloneExpression();
+        normalizedSelectCondition = keepOptimizableFunctions(normalizedSelectCondition);
 
         // Create a copy of this SELECT, and set this to our rewrite root.
         SelectOperator rewriteRootSelect = new SelectOperator(new MutableObject<>(normalizedSelectCondition),
@@ -156,9 +180,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
             switch (workingOriginalOperator.getOperatorTag()) {
                 case UNNEST:
                     UnnestOperator originalUnnest = (UnnestOperator) workingOriginalOperator;
-                    UnnestOperator newUnnest =
-                            new UnnestOperator(originalUnnest.getVariable(), originalUnnest.getExpressionRef());
-                    newUnnest.setSourceLocation(sourceLocation);
+                    UnnestOperator newUnnest = (UnnestOperator) OperatorManipulationUtil.deepCopy(originalUnnest);
                     workingNewOperator.getInputs().add(new MutableObject<>(newUnnest));
                     workingNewOperator = newUnnest;
                     bottommostNewUnnest = (UnnestOperator) workingNewOperator;
@@ -166,8 +188,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
 
                 case ASSIGN:
                     AssignOperator originalAssign = (AssignOperator) workingOriginalOperator;
-                    AssignOperator newAssign =
-                            new AssignOperator(originalAssign.getVariables(), originalAssign.getExpressions());
+                    AssignOperator newAssign = (AssignOperator) OperatorManipulationUtil.deepCopy(originalAssign);
                     newAssign.setSourceLocation(sourceLocation);
                     workingNewOperator.getInputs().add(new MutableObject<>(newAssign));
                     workingNewOperator = newAssign;
@@ -377,7 +398,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
         return ConstantExpression.TRUE;
     }
 
-    private AggregateOperator getAggregateFromSubplan(SubplanOperator subplanOperator) {
+    protected AggregateOperator getAggregateFromSubplan(SubplanOperator subplanOperator) {
         // We only expect one plan, and one root.
         if (subplanOperator.getNestedPlans().size() > 1
                 || subplanOperator.getNestedPlans().get(0).getRoots().size() > 1) {
@@ -490,6 +511,9 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
 
         } else {
             // We are working with a strict universal quantification query.
+            if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                return expr;
+            }
             ScalarFunctionCallExpression notFunction = (ScalarFunctionCallExpression) expr;
             if (!notFunction.getFunctionIdentifier().equals(BuiltinFunctions.NOT)) {
                 return expr;
@@ -500,7 +524,8 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
             if (!ifMissingOrNullFunction.getFunctionIdentifier().equals(BuiltinFunctions.IF_MISSING_OR_NULL)) {
                 return expr;
             }
-            return ifMissingOrNullFunction.getArguments().get(0).getValue().cloneExpression();
+            return ifMissingOrNullFunction.getArguments().get(0).getValue();
+
         }
     }
 
@@ -512,7 +537,9 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
                 if (splitIntoConjuncts(conjunct.getValue(), innerExprConjuncts)) {
                     conjuncts.addAll(innerExprConjuncts);
                 } else {
-                    conjuncts.add(conjunct);
+
+                    conjuncts.add(new MutableObject<>(conjunct.getValue()));
+
                 }
             }
             return true;

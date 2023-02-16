@@ -119,6 +119,7 @@ public class SqlppNumericIndexRQGTest {
 
     static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     static final ObjectReader OBJECT_READER = OBJECT_MAPPER.readerFor(ObjectNode.class);
+    static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc_no_cbo.conf";
 
     static TestExecutor testExecutor;
 
@@ -127,7 +128,7 @@ public class SqlppNumericIndexRQGTest {
     @BeforeClass
     public static void setUp() throws Exception {
         testExecutor = new TestExecutor();
-        LangExecutionUtil.setUp(SqlppRQGTestBase.TEST_CONFIG_FILE_NAME, testExecutor, false);
+        LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, testExecutor, false);
 
         StringBuilder sb = new StringBuilder(2048);
         addDropDataverse(sb, DATAVERSE_NAME);

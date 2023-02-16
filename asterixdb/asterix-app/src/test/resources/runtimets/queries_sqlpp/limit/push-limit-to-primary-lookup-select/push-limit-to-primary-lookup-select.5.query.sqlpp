@@ -18,7 +18,7 @@
  */
 
 use test;
-
+SET `compiler.cbo` "true";
 explain
 select
   substring(c.l_shipdate, 0, 4) as shipdate,

@@ -44,6 +44,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
@@ -54,6 +55,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCall
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -365,16 +367,97 @@ public class JoinNode {
         }
     }
 
+    private SelectOperator copySelExprsAndSetTrue(List<ILogicalExpression> selExprs, List<SelectOperator> selOpers,
+            ILogicalOperator leafInput) {
+        ILogicalOperator op = leafInput;
+        SelectOperator firstSelOp = null;
+        boolean firstSel = true;
+        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (op.getOperatorTag() == LogicalOperatorTag.SELECT) {
+                SelectOperator selOp = (SelectOperator) op;
+                if (firstSel) {
+                    firstSelOp = selOp;
+                    firstSel = false;
+                }
+                selOpers.add(selOp);
+                selExprs.add(selOp.getCondition().getValue());
+                selOp.getCondition().setValue(ConstantExpression.TRUE); // we will switch these back later
+            }
+            op = op.getInputs().get(0).getValue();
+        }
+        return firstSelOp;
+    }
+
+    private void restoreSelExprs(List<ILogicalExpression> selExprs, List<SelectOperator> selOpers) {
+        for (int i = 0; i < selExprs.size(); i++) {
+            selOpers.get(i).getCondition().setValue(selExprs.get(i));
+        }
+    }
+
+    private ILogicalExpression andAlltheExprs(List<ILogicalExpression> selExprs) {
+        if (selExprs.size() == 1) {
+            return selExprs.get(0);
+        }
+
+        ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
+                BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
+
+        for (ILogicalExpression se : selExprs) {
+            andExpr.getArguments().add(new MutableObject<>(se));
+        }
+        return andExpr;
+    }
+
+    // Look for the pattern select, select, subplan and collapse to select, subplan
+    // This code does not belong in the CBO!!
+    private boolean combineDoubleSelectsBeforeSubPlans(ILogicalOperator op) {
+        boolean changes = false;
+        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (op.getOperatorTag() == LogicalOperatorTag.SELECT) {
+                SelectOperator selOp1 = (SelectOperator) op;
+                if (selOp1.getInputs().get(0).getValue().getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
+                    SelectOperator selOp2 = (SelectOperator) (op.getInputs().get(0).getValue());
+                    ILogicalOperator op2 = selOp2.getInputs().get(0).getValue();
+                    if (op2.getOperatorTag() == LogicalOperatorTag.SUBPLAN) { // found the pattern we are looking for
+                        selOp1.getInputs().get(0).setValue(op2);
+                        ILogicalExpression exp1 = selOp1.getCondition().getValue();
+                        ILogicalExpression exp2 = selOp2.getCondition().getValue();
+                        ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
+                                BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
+                        andExpr.getArguments().add(new MutableObject<>(exp1));
+                        andExpr.getArguments().add(new MutableObject<>(exp2));
+                        selOp1.getCondition().setValue(andExpr);
+                        op = op2.getInputs().get(0).getValue();
+                        changes = true;
+                    }
+                }
+            }
+            op = op.getInputs().get(0).getValue();
+        }
+        return changes;
+    }
+
     public void addIndexAccessPlans(ILogicalOperator leafInput) throws AlgebricksException {
         IntroduceSelectAccessMethodRule tmp = new IntroduceSelectAccessMethodRule();
         List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<>();
-        boolean index_access_possible =
-                tmp.checkApplicable(new MutableObject<>(leafInput), joinEnum.optCtx, chosenIndexes, analyzedAMs);
-        this.chosenIndexes = chosenIndexes;
-        this.analyzedAMs = analyzedAMs;
-        if (index_access_possible) {
-            costAndChooseIndexPlans(leafInput, analyzedAMs);
+
+        while (combineDoubleSelectsBeforeSubPlans(leafInput));
+        List<ILogicalExpression> selExprs = new ArrayList<>();
+        List<SelectOperator> selOpers = new ArrayList<>();
+        SelectOperator firstSelop = copySelExprsAndSetTrue(selExprs, selOpers, leafInput);
+        if (firstSelop != null) { // if there are no selects, then there is no question of index selections either.
+            firstSelop.getCondition().setValue(andAlltheExprs(selExprs));
+            boolean index_access_possible =
+                    tmp.checkApplicable(new MutableObject<>(leafInput), joinEnum.optCtx, chosenIndexes, analyzedAMs);
+            this.chosenIndexes = chosenIndexes;
+            this.analyzedAMs = analyzedAMs;
+            restoreSelExprs(selExprs, selOpers);
+            if (index_access_possible) {
+                costAndChooseIndexPlans(leafInput, analyzedAMs);
+            }
+        } else {
+            restoreSelExprs(selExprs, selOpers);
         }
     }
 
@@ -645,7 +728,7 @@ public class JoinNode {
                 commutativeBcastHjPlan = nljPlan = commutativeNljPlan = cpPlan = commutativeCpPlan = PlanNode.NO_PLAN;
 
         HashJoinExpressionAnnotation hintHashJoin = joinEnum.findHashJoinHint(newJoinConditions);
-        BroadcastExpressionAnnotation hintBroadcastHashJoin = joinEnum.findBroadcastHashJoinHint(newJoinConditions);;
+        BroadcastExpressionAnnotation hintBroadcastHashJoin = joinEnum.findBroadcastHashJoinHint(newJoinConditions);
         IndexedNLJoinExpressionAnnotation hintNLJoin = joinEnum.findNLJoinHint(newJoinConditions);
 
         if (leftJn.cheapestPlanIndex == PlanNode.NO_PLAN || rightJn.cheapestPlanIndex == PlanNode.NO_PLAN) {
@@ -845,7 +928,7 @@ public class JoinNode {
             int k = planIndexesArray.get(j);
             PlanNode pn = allPlans.get(k);
             sb.append("planIndexesArray  [").append(j).append("] is ").append(k).append('\n');
-            sb.append("Printing PlanNode ").append(k).append('\n');;
+            sb.append("Printing PlanNode ").append(k).append('\n');
             if (IsBaseLevelJoinNode()) {
                 sb.append("DATA_SOURCE_SCAN").append('\n');
             } else {
