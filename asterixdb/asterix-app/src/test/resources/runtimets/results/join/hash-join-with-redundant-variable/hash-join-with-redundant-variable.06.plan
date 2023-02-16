@@ -1,50 +1,52 @@
-distribute result [$$34]
+cardinality: 1000000.0
+cost: 6000000.0
+distribute result [$$34] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$34])
+    project ([$$34]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$34] <- [{"o_orderkey": $$41, "l_orderkey": $$42, "l_suppkey": $$40}]
+      assign [$$34] <- [{"o_orderkey": $$41, "l_orderkey": $$42, "l_suppkey": $$40}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
       -- ASSIGN  |PARTITIONED|
-        exchange
+        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
         -- SORT_MERGE_EXCHANGE [$$41(ASC), $$42(ASC), $$40(ASC) ]  |PARTITIONED|
-          order (ASC, $$41) (ASC, $$42) (ASC, $$40)
+          order (ASC, $$41) (ASC, $$42) (ASC, $$40) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
           -- STABLE_SORT [$$41(ASC), $$42(ASC), $$40(ASC)]  |PARTITIONED|
-            exchange
+            exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              project ([$$41, $$42, $$40])
+              project ([$$41, $$42, $$40]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                exchange
+                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  join (and(eq($$41, $$42), eq($$47, $$40)))
+                  join (and(eq($$41, $$42), eq($$47, $$40))) [cardinality: 1000000.0, op-cost: 2000000.0, total-cost: 6000000.0]
                   -- HYBRID_HASH_JOIN [$$41, $$47][$$42, $$40]  |PARTITIONED|
-                    exchange
+                    exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      assign [$$47] <- [$$41]
+                      assign [$$47] <- [$$41] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                       -- ASSIGN  |PARTITIONED|
-                        project ([$$41])
+                        project ([$$41]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                         -- STREAM_PROJECT  |PARTITIONED|
-                          exchange
+                          exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$41, $$o] <- tpch.Orders
+                            data-scan []<-[$$41, $$o] <- tpch.Orders [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                             -- DATASOURCE_SCAN  |PARTITIONED|
-                              exchange
+                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                empty-tuple-source
+                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                    exchange
+                    exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                     -- HASH_PARTITION_EXCHANGE [$$42]  |PARTITIONED|
-                      project ([$$42, $$40])
+                      project ([$$42, $$40]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                       -- STREAM_PROJECT  |PARTITIONED|
-                        assign [$$40] <- [$$l.getField(2)]
+                        assign [$$40] <- [$$l.getField(2)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                         -- ASSIGN  |PARTITIONED|
-                          project ([$$42, $$l])
+                          project ([$$42, $$l]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                           -- STREAM_PROJECT  |PARTITIONED|
-                            exchange
+                            exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$42, $$43, $$l] <- tpch.LineItem
+                              data-scan []<-[$$42, $$43, $$l] <- tpch.LineItem [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                               -- DATASOURCE_SCAN  |PARTITIONED|
-                                exchange
+                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  empty-tuple-source
+                                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

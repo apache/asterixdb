@@ -1,32 +1,34 @@
-distribute result [$$26]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$28] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$26])
+    project ([$$28]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$26] <- [{"display_url": $$urls.getField("display_url")}]
+      assign [$$28] <- [{"display_url": $$urls.getField("display_url")}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
-        project ([$$urls])
+        project ([$$urls]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          exchange
-          -- SORT_MERGE_EXCHANGE [$$29(ASC) ]  |PARTITIONED|
-            order (ASC, $$29)
-            -- STABLE_SORT [$$29(ASC)]  |PARTITIONED|
-              exchange
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- SORT_MERGE_EXCHANGE [$$31(ASC) ]  |PARTITIONED|
+            order (ASC, $$31) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STABLE_SORT [$$31(ASC)]  |PARTITIONED|
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$urls, $$29])
+                project ([$$urls, $$31]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  unnest $$urls <- scan-collection($$28)
+                  unnest $$urls <- scan-collection($$30) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- UNNEST  |PARTITIONED|
-                    project ([$$28, $$29])
+                    project ([$$30, $$31]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_PROJECT  |PARTITIONED|
-                      assign [$$28, $$29] <- [$$p.getField("entities").getField("urls"), $$p.getField("id")]
+                      assign [$$30, $$31] <- [$$p.getField("entities").getField("urls"), $$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ASSIGN  |PARTITIONED|
-                        exchange
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$p] <- test.ParquetDataset project ({entities:{urls:[{display_url:any}]},id:any})
+                          data-scan []<-[$$p] <- test.ParquetDataset project ({entities:{urls:[{display_url:any}]},id:any}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
-                            exchange
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              empty-tuple-source
+                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

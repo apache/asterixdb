@@ -1,26 +1,28 @@
-distribute result [$$21]
+cardinality: 1000000.0
+cost: 1000000.0
+distribute result [$$21] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 10
+    limit 10 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      exchange
+      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        project ([$$21])
+        project ([$$21]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          assign [$$21] <- [{"display_url": get-item($$22, 0).getField("display_url")}]
+          assign [$$21] <- [{"display_url": get-item($$22, 0).getField("display_url")}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ASSIGN  |PARTITIONED|
-            limit 10
+            limit 10 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_LIMIT  |PARTITIONED|
-              project ([$$22])
+              project ([$$22]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$22] <- [$$p.getField("entities").getField("urls")]
+                assign [$$22] <- [$$p.getField("entities").getField("urls")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ASSIGN  |PARTITIONED|
-                  exchange
+                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$p] <- test.ParquetDataset1 condition (gt(sql-count($$p.getField("entities").getField("urls")), 10)) limit 10 project ({entities:{urls:any}})
+                    data-scan []<-[$$p] <- test.ParquetDataset1 condition (gt(sql-count($$p.getField("entities").getField("urls")), 10)) limit 10 project ({entities:{urls:any}}) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                     -- DATASOURCE_SCAN  |PARTITIONED|
-                      exchange
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        empty-tuple-source
+                        empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

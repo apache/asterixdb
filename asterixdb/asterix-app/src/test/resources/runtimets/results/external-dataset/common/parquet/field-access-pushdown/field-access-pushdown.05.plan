@@ -1,22 +1,24 @@
-distribute result [$$p]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$p] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$p])
+    project ([$$p]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      exchange
-      -- SORT_MERGE_EXCHANGE [$$13(ASC) ]  |PARTITIONED|
-        order (ASC, $$13)
-        -- STABLE_SORT [$$13(ASC)]  |PARTITIONED|
-          exchange
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- SORT_MERGE_EXCHANGE [$$14(ASC) ]  |PARTITIONED|
+        order (ASC, $$14) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STABLE_SORT [$$14(ASC)]  |PARTITIONED|
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            assign [$$13] <- [$$p.getField("id")]
+            assign [$$14] <- [$$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ASSIGN  |PARTITIONED|
-              exchange
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                data-scan []<-[$$p] <- test.ParquetDataset
+                data-scan []<-[$$p] <- test.ParquetDataset [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- DATASOURCE_SCAN  |PARTITIONED|
-                  exchange
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    empty-tuple-source
+                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

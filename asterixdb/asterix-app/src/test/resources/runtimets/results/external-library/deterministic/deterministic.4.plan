@@ -1,8 +1,10 @@
-distribute result [$$1]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$1] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$1] <- [{"default": getCapital_default("United States"), "deterministic": getCapital_deterministic("United States"), "not_deterministic": getCapital_not_deterministic("United States")}]
+    assign [$$1] <- [{"default": getCapital_default("United States"), "deterministic": getCapital_deterministic("United States"), "not_deterministic": getCapital_not_deterministic("United States")}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
-      empty-tuple-source
+      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

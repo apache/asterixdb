@@ -1,26 +1,28 @@
-distribute result [$$61]
+cardinality: 1000000.0
+cost: 0.0
+distribute result [$$61] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 3
+    limit 3 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$61])
+      project ([$$61]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
-        assign [$$61] <- [{"id": $$63, "review": $$67}]
+        assign [$$61] <- [{"id": $$63, "review": $$67}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
         -- ASSIGN  |PARTITIONED|
-          exchange
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
           -- SORT_MERGE_EXCHANGE [$$63(ASC) ]  |PARTITIONED|
-            project ([$$63, $$67])
+            project ([$$63, $$67]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_PROJECT  |PARTITIONED|
-              assign [$$67] <- [$$d.getField(1)]
+              assign [$$67] <- [$$d.getField(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
               -- ASSIGN  |PARTITIONED|
-                limit 3
+                limit 3 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_LIMIT  |PARTITIONED|
-                  exchange
+                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$63, $$d] <- test.DatasetWithKnownField limit 3
+                    data-scan []<-[$$63, $$d] <- test.DatasetWithKnownField limit 3 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
                     -- DATASOURCE_SCAN  |PARTITIONED|
-                      exchange
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        empty-tuple-source
+                        empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

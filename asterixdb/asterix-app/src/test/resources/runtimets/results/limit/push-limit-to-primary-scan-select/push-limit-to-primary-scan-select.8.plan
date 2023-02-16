@@ -1,28 +1,30 @@
-distribute result [$$21]
+cardinality: 1000000.0
+cost: 1000000.0
+distribute result [$$21] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 2
+    limit 2 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$21])
+      project ([$$21]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange
+        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
-          limit 2
+          limit 2 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- STREAM_LIMIT  |PARTITIONED|
-            project ([$$24, $$21])
+            project ([$$24, $$21]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_PROJECT  |PARTITIONED|
-              assign [$$21] <- [$$25.getField("lang")]
+              assign [$$21] <- [$$25.getField("lang")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ASSIGN  |PARTITIONED|
-                project ([$$24, $$25])
+                project ([$$24, $$25]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$25] <- [$$t.getField("user")]
+                  assign [$$25] <- [$$t.getField("user")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ASSIGN  |PARTITIONED|
-                    exchange
+                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$24, $$t] <- test.TweetMessages condition (and(ge($$t.getField("user").getField("friends_count"), 0), le($$t.getField("user").getField("friends_count"), 150))) limit 2
+                      data-scan []<-[$$24, $$t] <- test.TweetMessages condition (and(ge($$t.getField("user").getField("friends_count"), 0), le($$t.getField("user").getField("friends_count"), 150))) limit 2 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
-                        exchange
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          empty-tuple-source
+                          empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

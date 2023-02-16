@@ -1,40 +1,42 @@
-distribute result [$$19]
+cardinality: 0.0
+cost: 0.0
+distribute result [$$19] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 5
+    limit 5 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$19])
+      project ([$$19]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- SORT_MERGE_EXCHANGE [$$21(ASC), $$22(ASC) ]  |PARTITIONED|
-          project ([$$21, $$22, $$19])
+          project ([$$21, $$22, $$19]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STREAM_PROJECT  |PARTITIONED|
-            assign [$$19] <- [{"shipdate": substring($$c.getField(10), 0, 4), "suppkey": gt($$20, 0)}]
+            assign [$$19] <- [{"shipdate": substring($$c.getField(10), 0, 4), "suppkey": gt($$20, 0)}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ASSIGN  |PARTITIONED|
-              limit 5
+              limit 5 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_LIMIT  |PARTITIONED|
-                assign [$$20] <- [$$c.getField(2)]
+                assign [$$20] <- [$$c.getField(2)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
-                  exchange
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    unnest-map [$$21, $$22, $$c] <- index-search("LineItem", 0, "test", "LineItem", false, false, 2, $$26, $$27, 2, $$26, $$27, true, true, true) condition (lt($$c.getField(2), 150)) limit 5
+                    unnest-map [$$21, $$22, $$c] <- index-search("LineItem", 0, "test", "LineItem", false, false, 2, $$26, $$27, 2, $$26, $$27, true, true, true) condition (lt($$c.getField(2), 150)) limit 5 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- BTREE_SEARCH  |PARTITIONED|
-                      exchange
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        order (ASC, $$26) (ASC, $$27)
+                        order (ASC, $$26) (ASC, $$27) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STABLE_SORT [$$26(ASC), $$27(ASC)]  |PARTITIONED|
-                          exchange
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            project ([$$26, $$27])
+                            project ([$$26, $$27]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- STREAM_PROJECT  |PARTITIONED|
-                              exchange
+                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                unnest-map [$$25, $$26, $$27] <- index-search("idx_LineItem_suppkey", 0, "test", "LineItem", false, false, 0, 1, $$24, true, false, false)
+                                unnest-map [$$25, $$26, $$27] <- index-search("idx_LineItem_suppkey", 0, "test", "LineItem", false, false, 0, 1, $$24, true, false, false) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- BTREE_SEARCH  |PARTITIONED|
-                                  exchange
+                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    assign [$$24] <- [150]
+                                    assign [$$24] <- [150] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- ASSIGN  |PARTITIONED|
-                                      empty-tuple-source
+                                      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,28 +1,30 @@
-distribute result [$$18]
+cardinality: 1000000.0
+cost: 1000000.0
+distribute result [$$18] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 1
+    limit 1 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$18])
+      project ([$$18]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange
+        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
-          project ([$$20, $$18])
+          project ([$$20, $$18]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- STREAM_PROJECT  |PARTITIONED|
-            assign [$$18] <- [{"$1": substring($$19, 0, 21)}]
+            assign [$$18] <- [{"$1": substring($$19, 0, 21)}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- ASSIGN  |PARTITIONED|
-              limit 1
+              limit 1 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- STREAM_LIMIT  |PARTITIONED|
-                project ([$$20, $$19])
+                project ([$$20, $$19]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$19] <- [$$DBLP1.getField(1)]
+                  assign [$$19] <- [$$DBLP1.getField(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ASSIGN  |PARTITIONED|
-                    exchange
+                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$20, $$DBLP1] <- test.DBLP1 condition (gt($$DBLP1.getField(1), "series")) limit 1
+                      data-scan []<-[$$20, $$DBLP1] <- test.DBLP1 condition (gt($$DBLP1.getField(1), "series")) limit 1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
-                        exchange
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          empty-tuple-source
+                          empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

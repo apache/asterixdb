@@ -1,22 +1,24 @@
-distribute result [$$28]
+cardinality: 1000000.0
+cost: 1000000.0
+distribute result [$$28] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$28])
+    project ([$$28]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$28] <- [$$md.getField("name")]
+      assign [$$28] <- [$$md.getField("name")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- ASSIGN  |PARTITIONED|
-        project ([$$md])
+        project ([$$md]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          exchange
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- SORT_MERGE_EXCHANGE [$$30(ASC) ]  |PARTITIONED|
-            select (neq(uuid(), uuid()))
+            select (neq(uuid(), uuid())) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_SELECT  |PARTITIONED|
-              exchange
+              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                data-scan []<-[$$30, $$md] <- test.MyDataset
+                data-scan []<-[$$30, $$md] <- test.MyDataset [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                 -- DATASOURCE_SCAN  |PARTITIONED|
-                  exchange
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    empty-tuple-source
+                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
