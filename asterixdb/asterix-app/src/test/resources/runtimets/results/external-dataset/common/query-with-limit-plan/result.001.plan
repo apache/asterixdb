@@ -1,6 +1,4 @@
-cardinality: 0.0
-cost: 0.0
-distribute result [$$14] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$13] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -8,9 +6,9 @@ distribute result [$$14] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        project ([$$14]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        project ([$$13]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          assign [$$14] <- [{"test": $$test}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          assign [$$13] <- [{"test": $$test}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ASSIGN  |PARTITIONED|
             limit 3 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_LIMIT  |PARTITIONED|

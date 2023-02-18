@@ -1,5 +1,3 @@
-cardinality: 1.0
-cost: 1.0E7
 distribute result [$$48] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0E7]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0E7]

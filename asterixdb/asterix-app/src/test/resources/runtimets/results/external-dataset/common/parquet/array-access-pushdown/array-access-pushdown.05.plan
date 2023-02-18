@@ -1,24 +1,22 @@
-cardinality: 0.0
-cost: 0.0
-distribute result [$$18] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$17] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$18]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$17]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$18] <- [{"display_url": $$21}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$17] <- [{"display_url": $$20}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
-        project ([$$21]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        project ([$$20]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|
           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-          -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
-            order (ASC, $$20) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-            -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$19(ASC) ]  |PARTITIONED|
+            order (ASC, $$19) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STABLE_SORT [$$19(ASC)]  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$21, $$20]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                project ([$$20, $$19]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$21, $$20] <- [get-item($$p.getField("entities").getField("urls"), 0).getField("display_url"), $$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$20, $$19] <- [get-item($$p.getField("entities").getField("urls"), 0).getField("display_url"), $$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

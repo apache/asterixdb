@@ -1,20 +1,18 @@
-cardinality: 0.0
-cost: 0.0
-distribute result [$$17] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$16] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$17]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$16]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |PARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-      -- SORT_MERGE_EXCHANGE [$$19(ASC) ]  |PARTITIONED|
-        order (ASC, $$19) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-        -- STABLE_SORT [$$19(ASC)]  |PARTITIONED|
+      -- SORT_MERGE_EXCHANGE [$$18(ASC) ]  |PARTITIONED|
+        order (ASC, $$18) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STABLE_SORT [$$18(ASC)]  |PARTITIONED|
           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            project ([$$17, $$19]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            project ([$$16, $$18]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_PROJECT  |PARTITIONED|
-              assign [$$17, $$19] <- [object-concat($$p.getField("coordinates"), $$p.getField("user")).getField("name"), $$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              assign [$$16, $$18] <- [object-concat($$p.getField("coordinates"), $$p.getField("user")).getField("name"), $$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ASSIGN  |PARTITIONED|
                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -35,7 +35,6 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 public abstract class AbstractLogicalOperatorPrettyPrintVisitor<T> implements ILogicalOperatorVisitor<Void, T> {
 
     protected static final String CARDINALITY = "cardinality";
-    protected static final String PLAN_COST = "cost";
     protected static final String OP_COST_LOCAL = "op-cost";
     protected static final String OP_COST_TOTAL = "total-cost";
     protected final ILogicalExpressionVisitor<String, T> exprVisitor;

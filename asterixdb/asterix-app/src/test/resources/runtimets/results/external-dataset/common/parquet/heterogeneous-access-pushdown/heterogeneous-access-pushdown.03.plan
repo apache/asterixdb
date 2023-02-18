@@ -1,26 +1,24 @@
-cardinality: 0.0
-cost: 0.0
-distribute result [$$21] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$20] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$21]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$20]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$21] <- [switch-case(true, is-array($$23), $$25, $$26)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$20] <- [switch-case(true, is-array($$22), $$24, $$25)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
-        project ([$$23, $$25, $$26]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        project ([$$22, $$24, $$25]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|
           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-          -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
-            order (ASC, $$24) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-            -- STABLE_SORT [$$24(ASC)]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$23(ASC) ]  |PARTITIONED|
+            order (ASC, $$23) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STABLE_SORT [$$23(ASC)]  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                assign [$$25, $$26] <- [array-star($$23).getField("text"), $$23.getField("text")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$24, $$25] <- [array-star($$22).getField("text"), $$22.getField("text")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
-                  project ([$$23, $$24]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  project ([$$22, $$23]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    assign [$$23, $$24] <- [$$p.getField("arrayOrObject"), $$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$22, $$23] <- [$$p.getField("arrayOrObject"), $$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

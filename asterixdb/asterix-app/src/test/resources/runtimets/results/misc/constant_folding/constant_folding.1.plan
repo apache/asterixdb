@@ -1,5 +1,3 @@
-cardinality: 0.0
-cost: 0.0
 distribute result [$$5] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]

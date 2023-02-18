@@ -1,5 +1,3 @@
-cardinality: 0.0
-cost: 0.0
 distribute result [$$p] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -7,12 +5,12 @@ distribute result [$$p] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     project ([$$p]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |PARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-      -- SORT_MERGE_EXCHANGE [$$14(ASC) ]  |PARTITIONED|
-        order (ASC, $$14) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-        -- STABLE_SORT [$$14(ASC)]  |PARTITIONED|
+      -- SORT_MERGE_EXCHANGE [$$13(ASC) ]  |PARTITIONED|
+        order (ASC, $$13) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STABLE_SORT [$$13(ASC)]  |PARTITIONED|
           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            assign [$$14] <- [$$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            assign [$$13] <- [$$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ASSIGN  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
