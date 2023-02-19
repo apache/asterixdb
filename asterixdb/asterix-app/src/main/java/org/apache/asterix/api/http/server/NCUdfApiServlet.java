@@ -81,7 +81,7 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
     protected final IReceptionist receptionist;
 
     protected Path workingDir;
-    protected String sysAuthHeader;
+    private String sysAuthHeader;
     private ILibraryManager libraryManager;
     private int timeout;
 
@@ -250,7 +250,7 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
                 }
                 URI downloadURI = createDownloadURI(libraryTempFile);
                 doCreate(dvAndName.getFirst(), dvAndName.getSecond(), language,
-                        ExternalLibraryUtils.digestToHexString(digest), downloadURI, true, sysAuthHeader,
+                        ExternalLibraryUtils.digestToHexString(digest), downloadURI, true, getSysAuthHeader(),
                         requestReference, request);
             } else if (op == LibraryOperation.DELETE) {
                 //DELETE semantics imply ifExists
@@ -279,6 +279,10 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
                 LOGGER.warn("Could not delete temporary file " + libraryTempFile, e);
             }
         }
+    }
+
+    protected String getSysAuthHeader() {
+        return sysAuthHeader;
     }
 
     private void writeException(Exception e, IServletResponse response) {
