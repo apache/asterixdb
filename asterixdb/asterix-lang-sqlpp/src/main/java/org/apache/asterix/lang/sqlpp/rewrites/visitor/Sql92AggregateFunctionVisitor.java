@@ -187,7 +187,8 @@ class Sql92AggregateFunctionVisitor extends AbstractSqlppSimpleExpressionVisitor
                         new FieldAccessor(groupItemVar, new VarIdentifier(groupVarFieldMap.get(usedVar).getValue()));
                 fa.setSourceLocation(usedVar.getSourceLocation());
                 varExprMap.put(usedVar, fa);
-            } else if (outerVars.contains(usedVar)) {
+            } else if (outerVars.contains(usedVar)
+                    || SqlppVariableUtil.isExternalVariableIdentifier(usedVar.getVar())) {
                 // Do nothing
             } else if (preGroupUnmappedVars != null && preGroupUnmappedVars.contains(usedVar)) {
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_USE_OF_IDENTIFIER,

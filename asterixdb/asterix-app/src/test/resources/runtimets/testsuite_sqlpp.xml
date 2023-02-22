@@ -10411,6 +10411,11 @@
         <output-dir compare="Text">query-ASTERIXDB-2413</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="query-ASTERIXDB-3116">
+        <output-dir compare="Text">query-ASTERIXDB-3116</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="string">
     <test-case FilePath="string">
