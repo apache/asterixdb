@@ -1,32 +1,32 @@
-distribute result [$$l] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$l]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$l]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$l])
     -- STREAM_PROJECT  |PARTITIONED|
-      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      exchange
       -- SORT_MERGE_EXCHANGE [$$16(ASC), $$17(ASC) ]  |PARTITIONED|
-        select (eq($$l.getField(10), "1994-01-20")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        select (eq($$l.getField(10), "1994-01-20"))
         -- STREAM_SELECT  |PARTITIONED|
-          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            unnest-map [$$16, $$17, $$l] <- index-search("LineItem", 0, "tpch", "LineItem", false, false, 2, $$24, $$25, 2, $$24, $$25, true, true, true) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            unnest-map [$$16, $$17, $$l] <- index-search("LineItem", 0, "tpch", "LineItem", false, false, 2, $$24, $$25, 2, $$24, $$25, true, true, true)
             -- BTREE_SEARCH  |PARTITIONED|
-              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                order (ASC, $$24) (ASC, $$25) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                order (ASC, $$24) (ASC, $$25)
                 -- STABLE_SORT [$$24(ASC), $$25(ASC)]  |PARTITIONED|
-                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    project ([$$24, $$25]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    project ([$$24, $$25])
                     -- STREAM_PROJECT  |PARTITIONED|
-                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        unnest-map [$$23, $$24, $$25] <- index-search("lineitem_shipdateIx", 0, "tpch", "LineItem", false, false, 1, $$21, 1, $$22, true, true, true) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        unnest-map [$$23, $$24, $$25] <- index-search("lineitem_shipdateIx", 0, "tpch", "LineItem", false, false, 1, $$21, 1, $$22, true, true, true)
                         -- BTREE_SEARCH  |PARTITIONED|
-                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            assign [$$21, $$22] <- ["1994-01-20", "1994-01-20"] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            assign [$$21, $$22] <- ["1994-01-20", "1994-01-20"]
                             -- ASSIGN  |PARTITIONED|
-                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

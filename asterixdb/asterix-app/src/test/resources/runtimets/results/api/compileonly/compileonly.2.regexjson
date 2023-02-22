@@ -4,6 +4,7 @@
 	  "expressions":"R{.*}",
 	  "operatorId":"R{.*}",
 	  "execution-mode":"R{.*}",
+	  "optimizer-estimates":"R{.*}",
 	  "inputs":"R{.*}"
   }
 }
