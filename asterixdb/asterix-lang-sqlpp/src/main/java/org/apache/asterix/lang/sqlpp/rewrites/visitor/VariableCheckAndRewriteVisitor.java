@@ -203,6 +203,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             argList.add(new LiteralExpr(new StringLiteral(datasetName)));
         }
         CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), argList);
+        callExpr.addHints(varExpr.getHints());
         callExpr.setSourceLocation(sourceLoc);
         return callExpr;
     }

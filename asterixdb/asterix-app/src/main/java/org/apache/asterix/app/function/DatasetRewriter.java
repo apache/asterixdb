@@ -21,10 +21,14 @@ package org.apache.asterix.app.function;
 import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.SINGULAR;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+import static org.apache.asterix.external.util.ExternalDataConstants.SUBPATH;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
@@ -102,6 +106,15 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         }
         DataSourceScanOperator scan = new DataSourceScanOperator(variables, dataSource);
         scan.setSourceLocation(unnest.getSourceLocation());
+        if (dataset.getDatasetType() == DatasetConfig.DatasetType.EXTERNAL) {
+            Map<String, Object> unnestAnnotations = unnest.getAnnotations();
+            scan.getAnnotations().putAll(unnestAnnotations);
+            Map<String, Serializable> dataSourceProperties = dataSource.getProperties();
+            Object externalSubpath = unnestAnnotations.get(SUBPATH);
+            if (externalSubpath instanceof String) {
+                dataSourceProperties.put(SUBPATH, (String) externalSubpath);
+            }
+        }
         List<Mutable<ILogicalOperator>> scanInpList = scan.getInputs();
         scanInpList.addAll(unnest.getInputs());
         opRef.setValue(scan);

@@ -64,3 +64,26 @@ CREATE EXTERNAL DATASET test5(test) USING %adapter% (
 ("definition"="json-data/single-line/json-array-of-objects"),
 ("format"="json")
 );
+
+drop dataset test6 if exists;
+CREATE EXTERNAL DATASET test6(test) USING %adapter% (
+%template%,
+("container"="playground"),
+("definition"="json-data/reviews"),
+("format"="json")
+);
+
+drop dataset test7 if exists;
+CREATE EXTERNAL DATASET test7(test) USING %adapter% (
+%template%,
+("container"="playground"),
+("format"="json")
+);
+
+drop dataset test8 if exists;
+CREATE EXTERNAL DATASET test8(test) USING %adapter% (
+%template%,
+("container"="playground"),
+("definition"="json-data"),
+("format"="json")
+);

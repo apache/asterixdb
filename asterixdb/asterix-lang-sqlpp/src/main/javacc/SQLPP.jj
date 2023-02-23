@@ -52,6 +52,7 @@ import org.apache.asterix.common.annotations.AutoDataGen;
 import org.apache.asterix.common.annotations.DateBetweenYearsDataGen;
 import org.apache.asterix.common.annotations.DatetimeAddRandHoursDataGen;
 import org.apache.asterix.common.annotations.DatetimeBetweenYearsDataGen;
+import org.apache.asterix.common.annotations.ExternalSubpathAnnotation;
 import org.apache.asterix.common.annotations.FieldIntervalDataGen;
 import org.apache.asterix.common.annotations.FieldValFileDataGen;
 import org.apache.asterix.common.annotations.FieldValFileSameIndexDataGen;
@@ -4982,7 +4983,16 @@ FromTerm FromTerm() throws ParseException :
   List<AbstractBinaryCorrelateClause> correlateClauses = new ArrayList<AbstractBinaryCorrelateClause>();
 }
 {
-  leftExpr = Expression() ((<AS>)? leftVar = Variable())? (<AT> posVar = Variable())?
+  leftExpr = Expression()
+  {
+    if (leftExpr.getKind() == Expression.Kind.VARIABLE_EXPRESSION) {
+      Token hintToken = fetchHint(token, SqlppHint.SUBPATH_HINT);
+      if (hintToken != null) {
+        String subPath = hintToken.hintParams;
+        ((VariableExpr) leftExpr).addHint(new ExternalSubpathAnnotation(subPath));
+      }
+    }
+  } ((<AS>)? leftVar = Variable())? (<AT> posVar = Variable())?
   (
      (
       correlateClause = JoinOrUnnestClause(JoinType.INNER, UnnestType.INNER)
@@ -5053,7 +5063,16 @@ Triple<Expression, VariableExpr, VariableExpr> JoinClauseRightInput() throws Par
     VariableExpr posVar = null;
 }
 {
-  rightExpr = Expression() ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())?
+  rightExpr = Expression()
+  {
+    if (rightExpr.getKind() == Expression.Kind.VARIABLE_EXPRESSION) {
+        Token hintToken = fetchHint(token, SqlppHint.SUBPATH_HINT);
+        if (hintToken != null) {
+          String subPath = hintToken.hintParams;
+          ((VariableExpr) rightExpr).addHint(new ExternalSubpathAnnotation(subPath));
+        }
+    }
+  } ((<AS>)? rightVar = Variable())? (<AT> posVar = Variable())?
   {
     if (rightVar == null) {
       rightVar = ExpressionToVariableUtil.getGeneratedVariable(rightExpr, true);

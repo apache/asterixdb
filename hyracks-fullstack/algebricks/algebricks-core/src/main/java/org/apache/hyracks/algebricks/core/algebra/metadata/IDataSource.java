@@ -18,7 +18,9 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.metadata;
 
+import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
@@ -37,4 +39,10 @@ public interface IDataSource<T> {
     public boolean isScanAccessPathALeaf();
 
     public INodeDomain getDomain();
+
+    public Map<String, Serializable> getProperties();
+
+    default boolean compareProperties() {
+        return false;
+    }
 }
