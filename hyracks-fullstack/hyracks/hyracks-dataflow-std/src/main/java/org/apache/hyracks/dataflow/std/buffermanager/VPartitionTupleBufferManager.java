@@ -132,15 +132,15 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
     @Override
     public boolean insertTuple(int partition, byte[] byteArray, int[] fieldEndOffsets, int start, int size,
             TuplePointer pointer) throws HyracksDataException {
-        int actualSize = calculateActualSize(fieldEndOffsets, size);
-        int fid = getLastBufferOrCreateNewIfNotExist(partition, actualSize);
+        int fieldCount = fieldEndOffsets == null ? 0 : fieldEndOffsets.length;
+        int fid = getLastBufferOrCreateNewIfNotExist(partition, size, fieldCount);
         if (fid < 0) {
             return false;
         }
         partitionArray[partition].getFrame(fid, tempInfo);
         int tid = appendTupleToBuffer(tempInfo, fieldEndOffsets, byteArray, start, size);
         if (tid < 0) {
-            fid = createNewBuffer(partition, actualSize);
+            fid = createNewBuffer(partition, size, fieldCount);
             if (fid < 0) {
                 return false;
             }
@@ -170,6 +170,12 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         numTuples[partition]--;
     }
 
+    @Override
+    public int framesNeeded(int tupleSize, int fieldCount) {
+        int minFrameSize = framePool.getMinFrameSize();
+        return FrameHelper.calcAlignedFrameSizeToStore(fieldCount, tupleSize, minFrameSize) / minFrameSize;
+    }
+
     public static int calculateActualSize(int[] fieldEndOffsets, int size) {
         if (fieldEndOffsets != null) {
             return FrameHelper.calcRequiredSpace(fieldEndOffsets.length, size);
@@ -189,8 +195,8 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         return externalFrameId / getNumPartitions();
     }
 
-    private int createNewBuffer(int partition, int size) throws HyracksDataException {
-        ByteBuffer newBuffer = requestNewBufferFromPool(size, partition);
+    private int createNewBuffer(int partition, int tupleSize, int fieldCount) throws HyracksDataException {
+        ByteBuffer newBuffer = requestNewBufferFromPool(tupleSize, partition, fieldCount);
         if (newBuffer == null) {
             return -1;
         }
@@ -199,9 +205,11 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         return partitionArray[partition].insertFrame(newBuffer);
     }
 
-    private ByteBuffer requestNewBufferFromPool(int recordSize, int partition) throws HyracksDataException {
-        int frameSize = FrameHelper.calcAlignedFrameSizeToStore(0, recordSize, framePool.getMinFrameSize());
-        if ((double) frameSize / (double) framePool.getMinFrameSize() + getPhysicalSize(partition) > constrain
+    private ByteBuffer requestNewBufferFromPool(int recordSize, int partition, int fieldCount)
+            throws HyracksDataException {
+        int minFrameSize = framePool.getMinFrameSize();
+        int frameSize = FrameHelper.calcAlignedFrameSizeToStore(fieldCount, recordSize, minFrameSize);
+        if ((double) frameSize / (double) minFrameSize + getPhysicalSize(partition) / (double) minFrameSize > constrain
                 .frameLimit(partition)) {
             return null;
         }
@@ -238,10 +246,11 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         }
     }
 
-    private int getLastBufferOrCreateNewIfNotExist(int partition, int actualSize) throws HyracksDataException {
+    private int getLastBufferOrCreateNewIfNotExist(int partition, int tupleSize, int fieldCount)
+            throws HyracksDataException {
         if (partitionArray[partition] == null || partitionArray[partition].getNumFrames() == 0) {
             partitionArray[partition] = new FrameBufferManager();
-            return createNewBuffer(partition, actualSize);
+            return createNewBuffer(partition, tupleSize, fieldCount);
         }
         return getLastBuffer(partition);
     }

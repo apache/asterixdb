@@ -40,7 +40,7 @@ public class SequentialOnceRuleController extends AbstractRuleController {
             throws AlgebricksException {
         boolean fired = false;
         for (IAlgebraicRewriteRule rule : rules) {
-            if (rewriteOperatorRef(root, rule, enterNestedPlans, true)) {
+            if (rewriteOperatorRef(root, rule, enterNestedPlans, true, false)) {
                 fired = true;
             }
         }

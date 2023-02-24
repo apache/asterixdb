@@ -220,10 +220,10 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             boolean changed = constantFoldArgs(expr, arg);
             List<Mutable<ILogicalExpression>> argList = expr.getArguments();
             int argConstantCount = countConstantArgs(argList);
+            FunctionIdentifier fid = expr.getFunctionIdentifier();
             if (argConstantCount != argList.size()) {
-                if (argConstantCount > 0 && expr.getFunctionIdentifier().equals(BuiltinFunctions.OR)
-                        && expr.isFunctional()) {
-                    if (foldOrArgs(expr)) {
+                if (argConstantCount > 0 && (BuiltinFunctions.OR.equals(fid) || BuiltinFunctions.AND.equals(fid))) {
+                    if (foldOrAndArgs(expr)) {
                         ILogicalExpression changedExpr =
                                 expr.getArguments().size() == 1 ? expr.getArguments().get(0).getValue() : expr;
                         return new Pair<>(true, changedExpr);
@@ -237,7 +237,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             }
 
             try {
-                if (expr.getFunctionIdentifier().equals(BuiltinFunctions.FIELD_ACCESS_BY_NAME)) {
+                if (BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fid)) {
                     IAType argType = (IAType) _emptyTypeEnv.getType(expr.getArguments().get(0).getValue());
                     if (argType.getTypeTag() == ATypeTag.OBJECT) {
                         ARecordType rt = (ARecordType) argType;
@@ -249,7 +249,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                         }
                     }
                 }
-                IAObject c = FUNC_ID_TO_CONSTANT.get(expr.getFunctionIdentifier());
+                IAObject c = FUNC_ID_TO_CONSTANT.get(fid);
                 if (c != null) {
                     ConstantExpression constantExpression = new ConstantExpression(new AsterixConstantValue(c));
                     constantExpression.setSourceLocation(expr.getSourceLocation());
@@ -429,7 +429,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             return true;
         }
 
-        private boolean foldOrArgs(ScalarFunctionCallExpression expr) {
+        private boolean foldOrAndArgs(ScalarFunctionCallExpression expr) {
             // or(true,x,y) -> true; or(false,x,y) -> or(x,y)
             boolean changed = false;
             List<Mutable<ILogicalExpression>> argList = expr.getArguments();
@@ -441,15 +441,21 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 if (argExpr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
                     continue;
                 }
+
                 ConstantExpression cExpr = (ConstantExpression) argExpr;
                 IAlgebricksConstantValue cValue = cExpr.getValue();
-                if (cValue.isTrue()) {
+                FunctionIdentifier fid = expr.getFunctionIdentifier();
+
+                if (replaceAndReturn(cValue, fid)) {
                     // or(true,x,y) -> true;
+                    // and(false, x, y) -> false
                     argList.clear();
                     argList.add(argExprRef);
                     return true;
-                } else if (cValue.isFalse()) {
-                    // remove 'false' from arg list, but save the expression.
+                } else if (removeAndContinue(cValue, fid)) {
+                    // or(false, x, y) -> or(x, y)
+                    // and(true, x, y) -> and(x, y)
+                    // remove 'false' (or 'true') from arg list, but save the expression.
                     argFalse = argExprRef;
                     argIter.remove();
                     changed = true;
@@ -459,6 +465,24 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
                 argList.add(argFalse);
             }
             return changed;
+        }
+
+        private boolean replaceAndReturn(IAlgebricksConstantValue cValue, FunctionIdentifier fid) {
+            if (BuiltinFunctions.OR.equals(fid)) {
+                return cValue.isTrue();
+            } else {
+                // BuiltinFunctions.AND
+                return cValue.isFalse();
+            }
+        }
+
+        private boolean removeAndContinue(IAlgebricksConstantValue cValue, FunctionIdentifier fid) {
+            if (BuiltinFunctions.OR.equals(fid)) {
+                return cValue.isFalse();
+            } else {
+                // BuiltinFunctions.AND
+                return cValue.isTrue();
+            }
         }
 
         // IEvaluatorContext

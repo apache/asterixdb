@@ -13598,6 +13598,11 @@
         <expected-error>ASX1050: Cannot find dataset with name v3 in dataverse test1 (in line 24, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="view">
+      <compilation-unit name="view-pushdown">
+        <output-dir compare="Text">view-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="load">
     <test-case FilePath="load">

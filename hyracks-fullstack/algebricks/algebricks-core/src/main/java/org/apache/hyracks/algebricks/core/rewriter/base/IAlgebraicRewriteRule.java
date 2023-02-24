@@ -54,4 +54,13 @@ public interface IAlgebraicRewriteRule {
             throws AlgebricksException {
         return false;
     }
+
+    /**
+     * Called before calling {@link #rewritePre} to designate if the {@code opRef} is a nested plan root.
+     *
+     * @param enteredNestedPlanRoot whether the operator to be rewritten is a nested plan root.
+     */
+    default void enteredNestedPlan(boolean enteredNestedPlanRoot) {
+        // no op
+    }
 }
