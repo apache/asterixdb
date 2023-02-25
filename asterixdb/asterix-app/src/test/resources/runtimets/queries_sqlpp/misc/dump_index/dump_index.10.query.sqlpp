@@ -16,13 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-DROP DATAVERSE test IF EXISTS;
-CREATE  DATAVERSE test;
+SET `import-private-functions` `true`;
 USE test;
-CREATE TYPE t1 AS {id:int, name:string?};
-CREATE TYPE t2 AS {id:int};
-
-CREATE DATASET ds(t1) PRIMARY KEY id;
-CREATE INDEX name_idx ON ds(name);
-
-CREATE DATASET ds2(t2) PRIMARY KEY id;
+SELECT VALUE DUMP_INDEX("test", "ds2", "sample_idx_1_ds2");
