@@ -1,0 +1,12 @@
+{ "cnt": 1 }
+{ "age": null, "cnt": 1 }
+{ "age": 34, "cnt": 1 }
+{ "dept": null, "cnt": 1 }
+{ "age": null, "dept": null, "cnt": 1 }
+{ "age": 34, "dept": null, "cnt": 1 }
+{ "age": null, "dept": "cs", "cnt": 1 }
+{ "age": 20, "dept": "cs", "cnt": 1 }
+{ "age": 34, "dept": "cs", "cnt": 2 }
+{ "dept": "ms", "cnt": 1 }
+{ "age": 20, "dept": "ms", "cnt": 1 }
+{ "age": 34, "dept": "ms", "cnt": 2 }
