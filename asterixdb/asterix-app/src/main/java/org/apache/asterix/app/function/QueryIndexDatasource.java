@@ -56,13 +56,16 @@ public class QueryIndexDatasource extends FunctionDataSource {
     private final Dataset ds;
     private final String indexName;
     private final AlgebricksAbsolutePartitionConstraint storageLocations;
+    private final int numSecKeys;
 
     public QueryIndexDatasource(Dataset ds, String indexName, INodeDomain domain,
-            AlgebricksAbsolutePartitionConstraint storageLocations, ARecordType recType) throws AlgebricksException {
+            AlgebricksAbsolutePartitionConstraint storageLocations, ARecordType recType, int numSecKeys)
+            throws AlgebricksException {
         super(createQueryIndexDataSourceId(ds, indexName), QueryIndexRewriter.QUERY_INDEX, domain, recType);
         this.ds = ds;
         this.indexName = indexName;
         this.storageLocations = storageLocations;
+        this.numSecKeys = numSecKeys;
     }
 
     @Override
@@ -109,12 +112,12 @@ public class QueryIndexDatasource extends FunctionDataSource {
     public IDataSourcePropertiesProvider getPropertiesProvider() {
         return scanVariables -> {
             List<ILocalStructuralProperty> propsLocal = new ArrayList<>(1);
-            int numScanKeys = scanVariables.size();
-            List<OrderColumn> scanKeys = new ArrayList<>(numScanKeys);
-            for (int i = 0; i < numScanKeys; i++) {
-                scanKeys.add(new OrderColumn(scanVariables.get(i), OrderOperator.IOrder.OrderKind.ASC));
+            //TODO(ali): consider primary keys?
+            List<OrderColumn> secKeys = new ArrayList<>(numSecKeys);
+            for (int i = 0; i < numSecKeys; i++) {
+                secKeys.add(new OrderColumn(scanVariables.get(i), OrderOperator.IOrder.OrderKind.ASC));
             }
-            propsLocal.add(new LocalOrderProperty(scanKeys));
+            propsLocal.add(new LocalOrderProperty(secKeys));
             return new StructuralPropertiesVector(new RandomPartitioningProperty(domain), propsLocal);
         };
     }

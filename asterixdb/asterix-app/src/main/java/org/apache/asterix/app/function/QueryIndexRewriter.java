@@ -128,7 +128,8 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
                 (AlgebricksAbsolutePartitionConstraint) secIdxHelper.getSecondaryPartitionConstraint();
         INodeDomain domain = mp.findNodeDomain(ds.getNodeGroupName());
         ARecordType recType = computeRecType(f, mp, null, null, null);
-        return new QueryIndexDatasource(ds, idx.getIndexName(), domain, secPartitionConstraint, recType);
+        int numSecKeys = ((Index.ValueIndexDetails) idx.getIndexDetails()).getKeyFieldNames().size();
+        return new QueryIndexDatasource(ds, idx.getIndexName(), domain, secPartitionConstraint, recType, numSecKeys);
     }
 
     private ARecordType computeRecType(AbstractFunctionCallExpression f, MetadataProvider metadataProvider,
