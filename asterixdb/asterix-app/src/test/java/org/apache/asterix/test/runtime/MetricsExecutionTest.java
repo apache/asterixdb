@@ -35,7 +35,7 @@ import org.junit.runners.Parameterized.Parameters;
  */
 @RunWith(Parameterized.class)
 public class MetricsExecutionTest {
-    protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
+    protected static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc_no_cbo.conf";
 
     @BeforeClass
     public static void setUp() throws Exception {

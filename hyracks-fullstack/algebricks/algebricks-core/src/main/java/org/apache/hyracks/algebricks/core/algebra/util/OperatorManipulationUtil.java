@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
@@ -518,6 +519,27 @@ public class OperatorManipulationUtil {
                 LogicalVariable v = ((VariableReferenceExpression) arg.getValue()).getVariableReference();
                 if (v.equals(var)) {
                     arg.setValue(replacementExpr.cloneExpression());
+                }
+            }
+        }
+    }
+
+    public static void copyCardCostAnnotations(ILogicalOperator sourceOp, ILogicalOperator destOp) {
+        for (Map.Entry<String, Object> anno : sourceOp.getAnnotations().entrySet()) {
+            Object annotationVal = anno.getValue();
+            if (annotationVal != null) {
+                String annotation = anno.getKey();
+                switch (annotation) {
+                    case OperatorAnnotations.OP_COST_LOCAL:
+                    case OperatorAnnotations.OP_COST_TOTAL:
+                    case OperatorAnnotations.OP_INPUT_CARDINALITY:
+                    case OperatorAnnotations.OP_OUTPUT_CARDINALITY:
+                    case OperatorAnnotations.OP_LEFT_EXCHANGE_COST:
+                    case OperatorAnnotations.OP_RIGHT_EXCHANGE_COST:
+                        destOp.getAnnotations().put(annotation, annotationVal);
+                        break;
+                    default:
+                        break;
                 }
             }
         }

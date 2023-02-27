@@ -24,7 +24,11 @@ import java.nio.ByteBuffer;
 
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.CharArrayRecord;
+import org.apache.asterix.om.base.ARecord;
+import org.apache.asterix.om.base.IACollection;
+import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -106,25 +110,64 @@ public class DumpIndexReader extends FunctionReader {
             if (tag == ATypeTag.MISSING) {
                 continue;
             }
-            if (isTemporal(tag)) {
-                JSONUtil.quoteAndEscape(recordBuilder, field.toString());
-            } else {
-                recordBuilder.append(field);
-            }
+            printField(recordBuilder, field);
             recordBuilder.append(",");
         }
         recordBuilder.deleteCharAt(recordBuilder.length() - 1);
         recordBuilder.append("]}");
     }
 
-    private static boolean isTemporal(ATypeTag typeTag) {
+    private void printField(StringBuilder sb, IAObject field) {
+        ATypeTag typeTag = field.getType().getTypeTag();
         switch (typeTag) {
+            case OBJECT:
+                printObject(sb, ((ARecord) field));
+                break;
+            case ARRAY:
+            case MULTISET:
+                printCollection(sb, ((IACollection) field));
+                break;
             case DATE:
             case TIME:
             case DATETIME:
-                return true;
+                JSONUtil.quoteAndEscape(recordBuilder, field.toString());
+                break;
+            case MISSING:
+                break;
             default:
-                return false;
+                sb.append(field);
         }
+    }
+
+    private void printObject(StringBuilder sb, ARecord record) {
+        sb.append("{ ");
+        int num = record.numberOfFields();
+        ARecordType type = record.getType();
+        for (int i = 0; i < num; i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            IAObject value = record.getValueByPos(i);
+            JSONUtil.quoteAndEscape(sb, type.getFieldNames()[i]);
+            sb.append(": ");
+            printField(sb, value);
+        }
+        sb.append(" }");
+    }
+
+    private void printCollection(StringBuilder sb, IACollection collection) {
+        IACursor cursor = collection.getCursor();
+        sb.append("[ ");
+        boolean first = true;
+        while (cursor.next()) {
+            IAObject element = cursor.get();
+            if (first) {
+                first = false;
+            } else {
+                sb.append(", ");
+            }
+            printField(sb, element);
+        }
+        sb.append(" ]");
     }
 }

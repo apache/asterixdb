@@ -453,7 +453,10 @@ public class AccessMethodUtils {
                     dest.addAll(KeyFieldTypeUtil.getArrayBTreeIndexKeyTypes(index, recordType, metaRecordType));
                     break;
                 case BTREE:
-                    dest.addAll(KeyFieldTypeUtil.getBTreeIndexKeyTypes(index, recordType, metaRecordType));
+                    //TODO(ali): check if types should be made nullable/missable
+                    List<Pair<IAType, Boolean>> bTreeIndexKeyTypes =
+                            KeyFieldTypeUtil.getBTreeIndexKeyTypes(index, recordType, metaRecordType);
+                    dest.addAll(bTreeIndexKeyTypes.stream().map(Pair::getFirst).collect(Collectors.toList()));
                     break;
                 case RTREE:
                     dest.addAll(KeyFieldTypeUtil.getRTreeIndexKeyTypes(index, recordType, metaRecordType));
@@ -982,6 +985,7 @@ public class AccessMethodUtils {
                     leftOuterMissingValue, context, sourceLoc);
         }
 
+        OperatorManipulationUtil.copyCardCostAnnotations(joinRef.getValue(), finalOp);
         joinRef.setValue(finalOp);
         return true;
     }

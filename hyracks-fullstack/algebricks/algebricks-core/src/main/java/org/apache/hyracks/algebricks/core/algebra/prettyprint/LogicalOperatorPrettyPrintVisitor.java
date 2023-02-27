@@ -31,7 +31,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
-import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
@@ -124,17 +123,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     private void printOperatorImpl(AbstractLogicalOperator op, int indent, boolean printInputs,
             boolean printOptimizerEstimates) throws AlgebricksException {
-        double planCard, planCost, opCard, opLocalCost, opTotalCost;
-        if (op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT && printOptimizerEstimates) {
-            planCard = getPlanCardinality(op);
-            planCost = getPlanCost(op);
-            buffer.append(CARDINALITY);
-            buffer.append(": ");
-            appendln(buffer, Double.toString(planCard));
-            buffer.append(PLAN_COST);
-            buffer.append(": ");
-            appendln(buffer, Double.toString(planCost));
-        }
+        double opCard, opLocalCost, opTotalCost;
 
         op.accept(this, indent);
         if (printOptimizerEstimates) {

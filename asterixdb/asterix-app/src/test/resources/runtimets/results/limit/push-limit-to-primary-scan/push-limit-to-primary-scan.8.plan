@@ -1,25 +1,23 @@
-cardinality: 0.0
-cost: 0.0
-distribute result [$$80] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$75] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 5 offset 5 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$80]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      project ([$$75]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
-        assign [$$80] <- [get-item($$78, 0)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        assign [$$75] <- [get-item($$73, 0)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ASSIGN  |PARTITIONED|
-          project ([$$78]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          project ([$$73]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STREAM_PROJECT  |PARTITIONED|
             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-            -- SORT_MERGE_EXCHANGE [$$82(ASC) ]  |PARTITIONED|
-              project ([$$78, $$82]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- SORT_MERGE_EXCHANGE [$$77(ASC) ]  |PARTITIONED|
+              project ([$$73, $$77]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_PROJECT  |PARTITIONED|
                 subplan {
-                          aggregate [$$78] <- [listify($$77)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          aggregate [$$73] <- [listify($$72)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- AGGREGATE  |LOCAL|
-                            assign [$$77] <- [object-remove(object-remove(object-remove($$t0, "title"), "authors"), "misc")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            assign [$$72] <- [object-remove(object-remove(object-remove($$t0, "title"), "authors"), "misc")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ASSIGN  |LOCAL|
                               unnest $$t0 <- scan-collection(to-array($$paper)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- UNNEST  |LOCAL|
@@ -31,7 +29,7 @@ distribute result [$$80] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_LIMIT  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$82, $$paper] <- test.DBLP1 limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      data-scan []<-[$$77, $$paper] <- test.DBLP1 limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

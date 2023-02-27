@@ -26,6 +26,7 @@ import org.apache.asterix.app.function.DumpIndexRewriter;
 import org.apache.asterix.app.function.FeedRewriter;
 import org.apache.asterix.app.function.JobSummariesRewriter;
 import org.apache.asterix.app.function.PingRewriter;
+import org.apache.asterix.app.function.QueryIndexRewriter;
 import org.apache.asterix.app.function.StorageComponentsRewriter;
 import org.apache.asterix.app.function.TPCDSAllTablesDataGeneratorRewriter;
 import org.apache.asterix.app.function.TPCDSSingleTableDataGeneratorRewriter;
@@ -95,6 +96,10 @@ public class MetadataBuiltinFunctions {
                 (expression, env, mp) -> RecordUtil.FULLY_OPEN_RECORD_TYPE, true);
         BuiltinFunctions.addUnnestFun(DumpIndexRewriter.DUMP_INDEX, false);
         BuiltinFunctions.addDatasourceFunction(DumpIndexRewriter.DUMP_INDEX, DumpIndexRewriter.INSTANCE);
+        // Query index function
+        BuiltinFunctions.addFunction(QueryIndexRewriter.QUERY_INDEX, QueryIndexRewriter.INSTANCE, true);
+        BuiltinFunctions.addUnnestFun(QueryIndexRewriter.QUERY_INDEX, false);
+        BuiltinFunctions.addDatasourceFunction(QueryIndexRewriter.QUERY_INDEX, QueryIndexRewriter.INSTANCE);
     }
 
     private MetadataBuiltinFunctions() {

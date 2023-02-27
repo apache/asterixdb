@@ -1,0 +1,4 @@
+{ "cnt": 3 }
+{ "cnt": 3, "age": null }
+{ "cnt": 2, "age": 20 }
+{ "cnt": 6, "age": 34 }

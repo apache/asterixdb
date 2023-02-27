@@ -18,7 +18,9 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.metadata;
 
+import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
@@ -34,7 +36,19 @@ public interface IDataSource<T> {
     public void computeFDs(List<LogicalVariable> scanVariables, List<FunctionalDependency> fdList);
 
     // https://issues.apache.org/jira/browse/ASTERIXDB-1619
+
+    /**
+     * Return true if this data source is the start of the job pipeline making its scan op the start of the job pipeline
+     * instead of an ETS op, for example. This flag is used to disable the Hyracks op generation of the input
+     * operators to the data scan (i.e. ETS op that is an input to the data scan will not be generated).
+     */
     public boolean isScanAccessPathALeaf();
 
     public INodeDomain getDomain();
+
+    public Map<String, Serializable> getProperties();
+
+    default boolean compareProperties() {
+        return false;
+    }
 }

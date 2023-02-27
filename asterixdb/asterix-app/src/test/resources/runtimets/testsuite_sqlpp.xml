@@ -6662,6 +6662,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="join">
+      <compilation-unit name="hash-join-with-redundant-variable">
+        <output-dir compare="Text">hash-join-with-redundant-variable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
       <compilation-unit name="hash_join_array">
         <output-dir compare="Text">hash_join_array</output-dir>
       </compilation-unit>
@@ -9730,6 +9735,22 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="query_index">
+    <test-case FilePath="query_index">
+      <compilation-unit name="q01">
+        <output-dir compare="Text">q01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="query_index">
+      <compilation-unit name="negative">
+        <output-dir compare="Text">negative</output-dir>
+        <expected-error>ASX1105: Operation not supported on primary index ds1</expected-error>
+        <expected-error>ASX1026: The given function expression query-index("test", "ds1", "pk_idx") cannot utilize index</expected-error>
+        <expected-error>ASX1026: The given function expression query-index("test", "ds1", "sample_idx_1_ds1") cannot utilize index</expected-error>
+        <expected-error>ASX1026: The given function expression query-index("test", "ds1", "ds1_array_idx") cannot utilize index</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="range-hints">
     <test-case FilePath="range-hints">
       <compilation-unit name="order-by">
@@ -10438,6 +10459,11 @@
     <test-case FilePath="statement-params">
       <compilation-unit name="query-ASTERIXDB-2413">
         <output-dir compare="Text">query-ASTERIXDB-2413</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="query-ASTERIXDB-3116">
+        <output-dir compare="Text">query-ASTERIXDB-3116</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

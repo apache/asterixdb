@@ -1,22 +1,20 @@
-cardinality: 0.0
-cost: 0.0
-distribute result [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$67] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 3 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    limit 3 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        project ([$$69]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        project ([$$67]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          assign [$$69] <- [{"id": int64-default-null($$d.getField("id")), "review": string-default-null($$d.getField("review"))}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          assign [$$67] <- [{"id": int64-default-null($$d.getField("id")), "review": string-default-null($$d.getField("review"))}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
           -- ASSIGN  |PARTITIONED|
-            limit 3 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            limit 3 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_LIMIT  |PARTITIONED|
-              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                data-scan []<-[$$d] <- test.ExternalDataset limit 3 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                data-scan []<-[$$d] <- test.ExternalDataset limit 3 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
                 -- DATASOURCE_SCAN  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -19,8 +19,10 @@
 package org.apache.asterix.metadata.declared;
 
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
+import static org.apache.asterix.external.util.ExternalDataConstants.SUBPATH;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,7 +123,8 @@ public class DatasetDataSource extends DataSource {
             IProjectionInfo<?> projectionInfo) throws AlgebricksException {
         switch (dataset.getDatasetType()) {
             case EXTERNAL:
-                Dataset externalDataset = ((DatasetDataSource) dataSource).getDataset();
+                DatasetDataSource externalDataSource = (DatasetDataSource) dataSource;
+                Dataset externalDataset = externalDataSource.getDataset();
                 String itemTypeName = externalDataset.getItemTypeName();
                 IAType itemType = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
                         externalDataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
@@ -130,6 +133,7 @@ public class DatasetDataSource extends DataSource {
                 PhysicalOptimizationConfig physicalOptimizationConfig = context.getPhysicalOptimizationConfig();
                 int externalScanBufferSize = physicalOptimizationConfig.getExternalScanBufferSize();
                 Map<String, String> properties = addExternalProjectionInfo(projectionInfo, edd.getProperties());
+                properties = addSubPath(externalDataSource.getProperties(), properties);
                 properties.put(KEY_EXTERNAL_SCAN_BUFFER_SIZE, String.valueOf(externalScanBufferSize));
                 ITypedAdapterFactory adapterFactory = metadataProvider.getConfiguredAdapterFactory(externalDataset,
                         edd.getAdapter(), properties, (ARecordType) itemType, null, context.getWarningCollector());
@@ -169,6 +173,16 @@ public class DatasetDataSource extends DataSource {
         return propertiesCopy;
     }
 
+    private Map<String, String> addSubPath(Map<String, Serializable> dataSourceProps, Map<String, String> properties) {
+        Serializable subPath = dataSourceProps.get(SUBPATH);
+        if (!(subPath instanceof String)) {
+            return properties;
+        }
+        Map<String, String> propertiesCopy = new HashMap<>(properties);
+        propertiesCopy.put(SUBPATH, (String) subPath);
+        return propertiesCopy;
+    }
+
     private int[] createFilterIndexes(List<LogicalVariable> filterVars, IOperatorSchema opSchema) {
         if (filterVars != null && !filterVars.isEmpty()) {
             final int size = filterVars.size();
@@ -186,4 +200,8 @@ public class DatasetDataSource extends DataSource {
         return dataset.getDatasetType() == DatasetType.EXTERNAL;
     }
 
+    @Override
+    public boolean compareProperties() {
+        return dataset.getDatasetType() == DatasetType.EXTERNAL;
+    }
 }

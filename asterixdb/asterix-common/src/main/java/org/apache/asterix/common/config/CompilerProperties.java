@@ -152,7 +152,7 @@ public class CompilerProperties extends AbstractProperties {
 
         @Override
         public boolean hidden() {
-            return this == COMPILER_EXTERNALSCANMEMORY;
+            return this == COMPILER_EXTERNALSCANMEMORY || this == COMPILER_CBOTEST;
         }
     }
 

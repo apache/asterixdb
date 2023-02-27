@@ -44,6 +44,7 @@ import org.apache.asterix.optimizer.rules.DisjunctivePredicateToJoinRule;
 import org.apache.asterix.optimizer.rules.ExtractBatchableExternalFunctionCallsRule;
 import org.apache.asterix.optimizer.rules.ExtractDistinctByExpressionsRule;
 import org.apache.asterix.optimizer.rules.ExtractOrderExpressionsRule;
+import org.apache.asterix.optimizer.rules.ExtractRedundantVariablesInJoinRule;
 import org.apache.asterix.optimizer.rules.ExtractWindowExpressionsRule;
 import org.apache.asterix.optimizer.rules.FeedScanCollectionToUnnest;
 import org.apache.asterix.optimizer.rules.FilterRefineSpatialJoinRuleForSTDistanceFunction;
@@ -82,6 +83,7 @@ import org.apache.asterix.optimizer.rules.PushValueAccessToExternalDataScanRule;
 import org.apache.asterix.optimizer.rules.RemoveDuplicateFieldsRule;
 import org.apache.asterix.optimizer.rules.RemoveLeftOuterUnnestForLeftOuterJoinRule;
 import org.apache.asterix.optimizer.rules.RemoveOrReplaceDefaultNullCastRule;
+import org.apache.asterix.optimizer.rules.RemoveRedundantBooleanExpressionsInJoinRule;
 import org.apache.asterix.optimizer.rules.RemoveRedundantListifyRule;
 import org.apache.asterix.optimizer.rules.RemoveRedundantSelectRule;
 import org.apache.asterix.optimizer.rules.RemoveSortInFeedIngestionRule;
@@ -350,6 +352,10 @@ public final class RuleCollections {
         planCleanupRules.add(new RemoveUnknownCheckForKnownTypeExpressionRule());
         // relies on RemoveOrReplaceDefaultNullCastRule AND RemoveUnknownCheckForKnownTypeExpressionRule
         planCleanupRules.add(new RemoveRedundantSelectRule());
+        planCleanupRules.add(new RemoveRedundantBooleanExpressionsInJoinRule());
+        // RemoveRedundantBooleanExpressionsInJoinRule has to run first to probably eliminate the need for
+        // introducing an assign operator in ExtractSimilarVariablesInJoinRule
+        planCleanupRules.add(new ExtractRedundantVariablesInJoinRule());
 
         // Needs to invoke ByNameToByIndexFieldAccessRule as the last logical optimization rule because
         // some rules can push a FieldAccessByName to a place where the name it tries to access is in the closed part.

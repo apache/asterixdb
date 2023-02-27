@@ -1,12 +1,10 @@
-cardinality: 0.0
-cost: 0.0
-distribute result [$$188] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$180] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |LOCAL|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-    aggregate [$$188] <- [agg-sql-sum($$213)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    aggregate [$$180] <- [agg-sql-sum($$205)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- AGGREGATE  |LOCAL|
-      aggregate [$$213] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      aggregate [$$205] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- AGGREGATE  |LOCAL|
         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -19,14 +17,14 @@ distribute result [$$188] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 project ([]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- SORT_MERGE_EXCHANGE [$$128(ASC) ]  |PARTITIONED|
+                  -- SORT_MERGE_EXCHANGE [$$120(ASC) ]  |PARTITIONED|
                     limit 100 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_LIMIT  |PARTITIONED|
-                      project ([$$128]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      project ([$$120]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$128, $$onek1] <- test.onek1 limit 100 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          data-scan []<-[$$120, $$onek1] <- test.onek1 limit 100 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -39,14 +37,14 @@ distribute result [$$188] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 project ([]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- SORT_MERGE_EXCHANGE [$$129(ASC) ]  |PARTITIONED|
+                  -- SORT_MERGE_EXCHANGE [$$121(ASC) ]  |PARTITIONED|
                     limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_LIMIT  |PARTITIONED|
-                      project ([$$129]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      project ([$$121]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$129, $$onek1] <- test.onek1 limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          data-scan []<-[$$121, $$onek1] <- test.onek1 limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

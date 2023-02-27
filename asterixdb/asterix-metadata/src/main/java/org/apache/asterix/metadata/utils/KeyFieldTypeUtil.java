@@ -128,16 +128,16 @@ public class KeyFieldTypeUtil {
      * @return a list of IATypes, one for each corresponding index key field.
      * @throws AlgebricksException
      */
-    public static List<IAType> getBTreeIndexKeyTypes(Index index, ARecordType recordType, ARecordType metaRecordType)
-            throws AlgebricksException {
+    public static List<Pair<IAType, Boolean>> getBTreeIndexKeyTypes(Index index, ARecordType recordType,
+            ARecordType metaRecordType) throws AlgebricksException {
         Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
         List<Integer> keySourceIndicators = indexDetails.getKeyFieldSourceIndicators();
-        List<IAType> indexKeyTypes = new ArrayList<>();
+        List<Pair<IAType, Boolean>> indexKeyTypes = new ArrayList<>();
         for (int i = 0; i < indexDetails.getKeyFieldNames().size(); i++) {
             Pair<IAType, Boolean> keyPairType = Index.getNonNullableOpenFieldType(index,
                     indexDetails.getKeyFieldTypes().get(i), indexDetails.getKeyFieldNames().get(i),
                     chooseSource(keySourceIndicators, i, recordType, metaRecordType));
-            indexKeyTypes.add(keyPairType.first);
+            indexKeyTypes.add(keyPairType);
         }
         return indexKeyTypes;
     }

@@ -437,14 +437,17 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                 // If there exists a composite atomic-array index, our conjuncts will be split across multiple
                 // SELECTs. This rewrite is to be used **solely** for the purpose of changing a DATA-SCAN into a
                 // non-index-only plan branch. No nodes introduced from this rewrite will be used beyond this point.
-                if (!checkApplicableOnly && rewriteLocallyAndTransform(selectRef, context, mergedSelectRewrite)) {
+
+                if (rewriteLocallyAndTransform(selectRef, context, mergedSelectRewrite, checkApplicableOnly,
+                        chosenIndexes, analyzedAMs)) {
                     return true;
                 }
 
                 // If there exists a SUBPLAN in our plan, and we are conditioning on a variable, attempt to rewrite
                 // this subplan to allow an array-index AM to be introduced. Again, this rewrite is to be used
                 // **solely** for the purpose of changing a DATA-SCAN into a non-index-only plan branch.
-                if (!checkApplicableOnly && rewriteLocallyAndTransform(selectRef, context, selectFromSubplanRewrite)) {
+                if (rewriteLocallyAndTransform(selectRef, context, selectFromSubplanRewrite, checkApplicableOnly,
+                        chosenIndexes, analyzedAMs)) {
                     return true;
                 }
             }
@@ -545,15 +548,23 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
     }
 
     private boolean rewriteLocallyAndTransform(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            IIntroduceAccessMethodRuleLocalRewrite<SelectOperator> rewriter) throws AlgebricksException {
+            IIntroduceAccessMethodRuleLocalRewrite<SelectOperator> rewriter, boolean checkApplicableOnly,
+            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
+            throws AlgebricksException {
+
         SelectOperator selectRewrite = rewriter.createOperator(selectOp, context);
         boolean transformationResult = false;
         if (selectRewrite != null) {
             Mutable<ILogicalOperator> selectRuleInput = new MutableObject<>(selectRewrite);
-            List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
-            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = null;
-            transformationResult =
-                    checkAndApplyTheSelectTransformation(selectRuleInput, context, false, chosenIndexes, analyzedAMs);
+            if (checkApplicableOnly) {
+                transformationResult = checkAndApplyTheSelectTransformation(selectRuleInput, context,
+                        checkApplicableOnly, chosenIndexes, analyzedAMs);
+            } else {
+                List<Pair<IAccessMethod, Index>> chosenIndexes2 = new ArrayList<>();
+                Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs2 = null;
+                transformationResult = checkAndApplyTheSelectTransformation(selectRuleInput, context,
+                        checkApplicableOnly, chosenIndexes2, analyzedAMs2);
+            }
         }
 
         // Restore our state, so we can look for more optimizations if this transformation failed.

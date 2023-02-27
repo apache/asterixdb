@@ -53,10 +53,19 @@ public abstract class FunctionDataSource extends DataSource {
 
     protected final FunctionIdentifier functionId;
 
+    public FunctionDataSource(DataSourceId id, FunctionIdentifier functionId, INodeDomain domain, IAType itemType)
+            throws AlgebricksException {
+        super(id, itemType, null, DataSource.Type.FUNCTION, domain);
+        this.functionId = functionId;
+        initSchemaType(itemType);
+    }
+
     public FunctionDataSource(DataSourceId id, FunctionIdentifier functionId, INodeDomain domain)
             throws AlgebricksException {
-        super(id, RecordUtil.FULLY_OPEN_RECORD_TYPE, null, DataSource.Type.FUNCTION, domain);
-        this.functionId = functionId;
+        this(id, functionId, domain, RecordUtil.FULLY_OPEN_RECORD_TYPE);
+    }
+
+    protected void initSchemaType(IAType itemType) {
         schemaTypes = new IAType[] { itemType };
     }
 

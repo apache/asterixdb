@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.EquivalenceClass;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 
 /**
  * Implements constraints in between requirements for the children of the same
@@ -70,20 +71,29 @@ public interface IPartitioningRequirementsCoordinator {
                                 for (LogicalVariable v : set1) {
                                     EquivalenceClass ecFirst = eqmap.get(v);
                                     for (LogicalVariable r : uppreq.getColumnSet()) {
-                                        EquivalenceClass ec = eqmap.get(r);
-                                        if (ecFirst == ec) {
-                                            covered.add(v);
-                                            modifuppreq.add(r);
-                                            break;
+                                        if (!modifuppreq.contains(r)) {
+                                            EquivalenceClass ec = eqmap.get(r);
+                                            if (ecFirst == ec) {
+                                                covered.add(v);
+                                                modifuppreq.add(r);
+                                                break;
+                                            }
                                         }
                                     }
                                 }
 
                                 if (!covered.equals(set1)) {
-                                    throw new AlgebricksException("Could not modify " + rqdpp
-                                            + " to agree with partitioning property " + firstDeliveredPartitioning
-                                            + " delivered by previous input operator.");
+                                    throw new AlgebricksException(ErrorCode.ILLEGAL_STATE,
+                                            "Could not modify " + rqdpp + " to agree with partitioning property "
+                                                    + firstDeliveredPartitioning
+                                                    + " delivered by previous input operator.");
                                 }
+
+                                if (modifuppreq.size() != set1.size()) {
+                                    throw new AlgebricksException(ErrorCode.ILLEGAL_STATE,
+                                            "The number of variables are not equal in both partitioning sides");
+                                }
+
                                 UnorderedPartitionedProperty upp2 =
                                         new UnorderedPartitionedProperty(modifuppreq, rqdpp.getNodeDomain());
                                 return new Pair<Boolean, IPartitioningProperty>(false, upp2);

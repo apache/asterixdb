@@ -297,6 +297,7 @@ public class ExternalDataConstants {
 
     public static final String DEFINITION_FIELD_NAME = "definition";
     public static final String CONTAINER_NAME_FIELD_NAME = "container";
+    public static final String SUBPATH = "subpath";
 
     public static class ParquetOptions {
         private ParquetOptions() {

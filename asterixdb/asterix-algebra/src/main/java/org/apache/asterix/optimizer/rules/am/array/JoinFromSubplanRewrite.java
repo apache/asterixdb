@@ -74,7 +74,7 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
  * |                        (potential) index branch ...
  * |----------------- probe branch ...
  * </pre>
- *
+ * <p>
  * If we are given the pattern (a universal quantification over a cross product):
  * <pre>
  * SELECT_1(some variable AND array is not empty)
@@ -96,7 +96,7 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
  * |                        (potential) index branch ...
  * |----------------- probe branch ...
  * </pre>
- *
+ * <p>
  * In the case of nested-subplans, we return a copy of the innermost SELECT followed by all relevant UNNEST/ASSIGNs.
  */
 public class JoinFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite<AbstractBinaryJoinOperator> {
@@ -123,6 +123,7 @@ public class JoinFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite<A
             return;
         }
 
+        // TODO (GLENN): These assumptions should be relaxed in the future, but for now we'll roll with it.
         // We expect a) the operator immediately above to be a SUBPLAN, and b) the next operator above to be a SELECT.
         Mutable<ILogicalOperator> afterJoinOpRef1 = afterJoinRefs.get(afterJoinRefs.size() - 1);
         Mutable<ILogicalOperator> afterJoinOpRef2 = afterJoinRefs.get(afterJoinRefs.size() - 2);
@@ -136,8 +137,11 @@ public class JoinFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite<A
         }
 
         // Additionally, verify that our SELECT is conditioning on a variable.
+        List<VariableReferenceExpression> booleanVariables = new ArrayList<>();
         joinContext.selectAfterSubplan = (SelectOperator) afterJoinOp2;
-        if (getConditioningVariable(joinContext.selectAfterSubplan.getCondition().getValue()) == null) {
+        gatherBooleanVariables(joinContext.selectAfterSubplan.getCondition().getValue(), booleanVariables,
+                new ArrayList<>());
+        if (booleanVariables.isEmpty()) {
             return;
         }
 
@@ -224,7 +228,7 @@ public class JoinFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite<A
      */
     @Override
     public AbstractBinaryJoinOperator restoreBeforeRewrite(List<Mutable<ILogicalOperator>> afterOperatorRefs,
-            IOptimizationContext context) throws AlgebricksException {
+            IOptimizationContext context) {
         JoinFromSubplanContext joinContext = contextStack.pop();
         if (joinContext.removedAfterJoinOperators != null) {
             afterOperatorRefs.addAll(joinContext.removedAfterJoinOperators);
@@ -265,14 +269,14 @@ public class JoinFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite<A
             VariableUtilities.getUsedVariables(newAssign, usedVarsFromFunc);
             VariableUtilities.getProducedVariablesInDescendantsAndSelf(leftBranchRoot, varsFromLeftBranch);
             VariableUtilities.getProducedVariablesInDescendantsAndSelf(rightBranchRoot, varsFromRightBranch);
-            if (varsFromLeftBranch.containsAll(usedVarsFromFunc)) {
+            if (new HashSet<>(varsFromLeftBranch).containsAll(usedVarsFromFunc)) {
                 newAssign.getInputs().add(new MutableObject<>(leftBranchRoot));
                 context.computeAndSetTypeEnvironmentForOperator(newAssign);
                 joinOp.getInputs().get(0).setValue(newAssign);
                 context.computeAndSetTypeEnvironmentForOperator(joinOp);
                 arg.setValue(newVarRef);
 
-            } else if (varsFromRightBranch.containsAll(usedVarsFromFunc)) {
+            } else if (new HashSet<>(varsFromRightBranch).containsAll(usedVarsFromFunc)) {
                 newAssign.getInputs().add(new MutableObject<>(rightBranchRoot));
                 context.computeAndSetTypeEnvironmentForOperator(newAssign);
                 joinOp.getInputs().get(1).setValue(newAssign);

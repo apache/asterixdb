@@ -23,12 +23,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
+import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -38,6 +37,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
@@ -54,6 +54,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -145,9 +146,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             pushAssignsIntoLeafInputs(joinLeafInputsHashMap, internalEdges);
         }
 
-        printPlan(pp, (AbstractLogicalOperator) op, "Original Whole plan3");
-        int cheapestPlan = joinEnum.enumerateJoins();
-        printPlan(pp, (AbstractLogicalOperator) op, "After join enumeration. Must return same plan??");
+        int cheapestPlan = joinEnum.enumerateJoins(); // MAIN CALL INTO CBO
         if (cheapestPlan == PlanNode.NO_PLAN) {
             return false;
         }
@@ -155,7 +154,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         PlanNode cheapestPlanNode = joinEnum.allPlans.get(cheapestPlan);
 
         if (numberOfFromTerms > 1) {
-            checkForMultipleUsesOfVariablesInJoinPreds(cheapestPlanNode, joinLeafInputsHashMap, context);
             buildNewTree(cheapestPlanNode, joinLeafInputsHashMap, joinOps, new MutableInt(0));
             printPlan(pp, (AbstractLogicalOperator) joinOps.get(0), "New Whole Plan after buildNewTree 1");
             ILogicalOperator root = addConstantInternalEdgesAtTheTop(joinOps.get(0), internalEdges);
@@ -222,7 +220,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     /**
      * Check to see if there is only one assign here and nothing below that other than a join.
      * have not seen cases where there is more than one assign in a leafinput.
-    */
+     */
     private boolean onlyOneAssign(ILogicalOperator nextOp) {
         if (nextOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
             return false;
@@ -231,7 +229,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         return nextOpInputs.get(0).getValue().getOperatorTag() == LogicalOperatorTag.INNERJOIN;
     }
 
-    ILogicalOperator findSelect(ILogicalOperator op) {
+    private ILogicalOperator findSelectOrDataScan(ILogicalOperator op) {
         LogicalOperatorTag tag;
         while (true) {
             if (op.getInputs().size() > 1) {
@@ -281,7 +279,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 DataSourceScanOperator dataSourceOp = etsDataSource.second;
                 emptyTupleAndDataSourceOps.add(new Pair<>(etsOp, dataSourceOp));
                 if (op.getOperatorTag().equals(LogicalOperatorTag.DISTRIBUTE_RESULT)) {// single table query
-                    ILogicalOperator selectOp = findSelect(op);
+                    ILogicalOperator selectOp = findSelectOrDataScan(op);
                     if (selectOp == null) {
                         return false;
                     } else {
@@ -402,14 +400,47 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         return aOp;
     }
 
-    private void buildNewTree(PlanNode plan,
-            HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap) {
-        ILogicalOperator leftInput = joinLeafInputsHashMap.get(plan.getEmptyTupleSourceOp());
-        if (leftInput.getOperatorTag() == LogicalOperatorTag.SELECT) {
-            addCardCostAnnotations(leftInput, plan);
+    private void skipAllIndexes(PlanNode plan, ILogicalOperator leafInput) {
+        if (plan.scanOp == PlanNode.ScanMethod.TABLE_SCAN && leafInput.getOperatorTag() == LogicalOperatorTag.SELECT) {
+            SelectOperator selOper = (SelectOperator) leafInput;
+            ILogicalExpression expr = selOper.getCondition().getValue();
+
+            List<Mutable<ILogicalExpression>> conjs = new ArrayList<>();
+
+            conjs.clear();
+            if (expr.splitIntoConjuncts(conjs)) {
+                conjs.remove(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
+                for (Mutable<ILogicalExpression> conj : conjs) {
+                    if (conj.getValue().getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
+                        AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) conj.getValue();
+                        // remove any annotations that may have been here from other parts of the code. We know we want a datascan.
+                        afce.removeAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class);
+                        afce.putAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX);
+                    }
+                }
+            } else {
+                if ((expr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL))) {
+                    AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) expr;
+                    // remove any annotations that may have been here from other parts of the code. We know we want a datascan.
+                    afce.removeAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class);
+                    afce.putAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX);
+                }
+            }
         }
     }
 
+    // This is for single table queries
+    private void buildNewTree(PlanNode plan,
+            HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap) {
+        ILogicalOperator leftInput = joinLeafInputsHashMap.get(plan.getEmptyTupleSourceOp());
+        skipAllIndexes(plan, leftInput);
+        if (leftInput.getOperatorTag() == LogicalOperatorTag.SELECT) {
+            addCardCostAnnotations(leftInput, plan);
+        }
+        addCardCostAnnotations(findDataSourceScanOperator(leftInput), plan);
+    }
+
+    // This one is for join queries
     private void buildNewTree(PlanNode plan, HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap,
             List<ILogicalOperator> joinOps, MutableInt totalNumberOfJoins) {
         // we have to move the inputs in op around so that they match the tree structure in pn
@@ -461,6 +492,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (leftPlan.IsScanNode()) {
             // leaf
             ILogicalOperator leftInput = joinLeafInputsHashMap.get(leftPlan.getEmptyTupleSourceOp());
+            skipAllIndexes(leftPlan, leftInput);
             if (leftInput.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 addCardCostAnnotations(leftInput, leftPlan);
             }
@@ -477,6 +509,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (rightPlan.IsScanNode()) {
             // leaf
             ILogicalOperator rightInput = joinLeafInputsHashMap.get(rightPlan.getEmptyTupleSourceOp());
+            skipAllIndexes(rightPlan, rightInput);
             if (rightInput.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 addCardCostAnnotations(rightInput, rightPlan);
             }
@@ -528,91 +561,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             ILogicalOperator element = pair.getValue();
             printPlan(pp, (AbstractLogicalOperator) element, "Printing Leaf Input" + i);
             i++;
-        }
-    }
-
-    private boolean allEqualityPreds(ILogicalExpression expr) {
-        List<Mutable<ILogicalExpression>> conjs = new ArrayList<>();
-        // check that the expr is AND(EQ(), EQ(),..)
-        if (expr.splitIntoConjuncts(conjs)) {
-            for (Mutable<ILogicalExpression> conj : conjs) {
-                if (!(((AbstractFunctionCallExpression) conj.getValue()).getFunctionIdentifier()
-                        .equals(AlgebricksBuiltinFunctions.EQ))) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
-    // This routine should not be needed! When the same variable is used multiple times in a join predicate as in
-    // AND(eq($$25, $$27), eq($$25, $$34)), JoinUtils.isHashJoinCondition() returns false which makes no sense.
-    // Tried changing the above routine but it always lead to some failures. Unable to figure out what the problem was,
-    // we just replace the duplicate occurrence of every variable with a new variable following by appropriate assign.
-    // We do this only once just once before we construct the final plan.
-    private void checkForMultipleUsesOfVariablesInJoinPreds(PlanNode plan,
-            HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap, IOptimizationContext context)
-            throws AlgebricksException {
-        List<PlanNode> allPlans = joinEnum.getAllPlans();
-        if (plan.IsJoinNode()) {
-            ILogicalExpression exp = plan.getJoinExpr();
-            if (!allEqualityPreds(exp)) {
-                return;
-            }
-            boolean changes = true;
-            while (changes) {
-                changes = false;
-                List<LogicalVariable> vars = new ArrayList<>();
-                exp.getUsedVariables(vars);
-                Set<LogicalVariable> set = new LinkedHashSet<>(vars);
-                if (set.size() < vars.size()) {
-                    // walk thru vars and find the first instance of the duplicate
-                    for (int i = 0; i < vars.size() - 1; i++) {
-                        for (int j = i + 1; j < vars.size(); j++) {
-                            if (vars.get(i) == vars.get(j)) {
-                                /// find the leafInout that contains this vars(i)
-                                for (Map.Entry<EmptyTupleSourceOperator, ILogicalOperator> mapElement : joinLeafInputsHashMap
-                                        .entrySet()) {
-                                    ILogicalOperator joinLeafInput = mapElement.getValue();
-                                    EmptyTupleSourceOperator ets = mapElement.getKey();
-                                    HashSet<LogicalVariable> vars2 = new HashSet<>();
-                                    VariableUtilities.getLiveVariables(joinLeafInput, vars2);
-                                    if (vars2.contains(vars.get(i))) {
-                                        LogicalVariable newVar = context.newVar();
-                                        // replace one occurrence of vars(i) in exp
-                                        substituteVarOnce(exp, vars.get(i), newVar);
-                                        VariableReferenceExpression oldvarExpr =
-                                                new VariableReferenceExpression(vars.get(i));
-                                        AssignOperator assign =
-                                                new AssignOperator(newVar, new MutableObject<>(oldvarExpr));
-                                        // Now add an assign to the joinLeafInput : newvar <-- oldvar
-                                        assign.getInputs().add(new MutableObject<>(joinLeafInput));
-                                        context.computeAndSetTypeEnvironmentForOperator(assign);
-                                        context.addNotToBeInlinedVar(newVar);
-                                        context.addNotToBeInlinedVar(vars.get(i));
-
-                                        // also update the joinLeafInputsHashMap
-                                        joinLeafInputsHashMap.put(ets, assign);
-                                        changes = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            // now traverse left and right side plans
-            int leftIndex = plan.getLeftPlanIndex();
-            int rightIndex = plan.getRightPlanIndex();
-            PlanNode leftPlan = allPlans.get(leftIndex);
-            PlanNode rightPlan = allPlans.get(rightIndex);
-            if (leftPlan.IsJoinNode()) {
-                checkForMultipleUsesOfVariablesInJoinPreds(leftPlan, joinLeafInputsHashMap, context);
-            }
-            if (rightPlan.IsJoinNode()) {
-                checkForMultipleUsesOfVariablesInJoinPreds(rightPlan, joinLeafInputsHashMap, context);
-            }
         }
     }
 

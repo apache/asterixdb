@@ -49,6 +49,7 @@ public enum SqlppHint {
     GEN_FIELDS_HINT("gen-fields"),
     SINGLE_DATASET_PREDICATE_SELECTIVITY_HINT("selectivity"),
     JOIN_PREDICATE_PRODUCTIVITY_HINT("productivity"),
+    SUBPATH_HINT("subpath"),
 
     // data generator hints
     DGEN_HINT("dgen");

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.translator;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.SUBPATH;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,6 +30,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
+import org.apache.asterix.common.annotations.ExternalSubpathAnnotation;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -326,6 +329,10 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         } else {
             unnestOp = new UnnestOperator(fromVar, new MutableObject<>(pUnnestExpr.first));
         }
+        ExternalSubpathAnnotation hint = ((AbstractExpression) fromExpr).findHint(ExternalSubpathAnnotation.class);
+        if (hint != null) {
+            unnestOp.getAnnotations().put(SUBPATH, hint.getSubPath());
+        }
         unnestOp.getInputs().add(pUnnestExpr.second);
         unnestOp.setSourceLocation(sourceLoc);
 
@@ -576,6 +583,10 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                     ? new LeftOuterUnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first),
                             outerUnnestMissingValue)
                     : new UnnestOperator(rightVar, new MutableObject<>(pUnnestExpr.first));
+        }
+        ExternalSubpathAnnotation hint = ((AbstractExpression) rightExpr).findHint(ExternalSubpathAnnotation.class);
+        if (hint != null) {
+            unnestOp.getAnnotations().put(SUBPATH, hint.getSubPath());
         }
         unnestOp.getInputs().add(pUnnestExpr.second);
         unnestOp.setSourceLocation(binaryCorrelate.getRightVariable().getSourceLocation());

@@ -25,6 +25,10 @@
 use test;
 
 set `compiler.indexonly` "false";
+set `compiler.cbo` "false";
+
+
+
 
 select count(*) from Customers
 where name = "Marvella Loud";

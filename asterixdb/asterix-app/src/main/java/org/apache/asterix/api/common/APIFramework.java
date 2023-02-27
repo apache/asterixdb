@@ -210,16 +210,12 @@ public class APIFramework {
         ILogicalPlan plan =
                 isLoad ? t.translateLoad(statement) : t.translate(query, outputDatasetName, statement, resultMetadata);
 
-        if ((isQuery || isLoad) && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
-                && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
-            generateLogicalPlan(plan, output.config().getPlanFormat(), isExplainOnly);
-        }
         ICcApplicationContext ccAppContext = metadataProvider.getApplicationContext();
         CompilerProperties compilerProperties = ccAppContext.getCompilerProperties();
         Map<String, Object> querySpecificConfig = validateConfig(metadataProvider.getConfig(), sourceLoc);
         final PhysicalOptimizationConfig physOptConf =
                 OptimizationConfUtil.createPhysicalOptimizationConf(compilerProperties, querySpecificConfig, sourceLoc);
-
+        boolean cboMode = physOptConf.getCBOMode() || physOptConf.getCBOTestMode();
         HeuristicCompilerFactoryBuilder builder =
                 new HeuristicCompilerFactoryBuilder(OptimizationContextFactory.INSTANCE);
         builder.setPhysicalOptimizationConfig(physOptConf);
@@ -236,6 +232,11 @@ public class APIFramework {
         builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
         builder.setWarningCollector(warningCollector);
         builder.setMaxWarnings(conf.getMaxWarnings());
+
+        if ((isQuery || isLoad) && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
+                && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
+            generateLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
+        }
 
         int parallelism = getParallelism((String) querySpecificConfig.get(CompilerProperties.COMPILER_PARALLELISM_KEY),
                 compilerProperties.getParallelism());
@@ -270,6 +271,10 @@ public class APIFramework {
                     AlgebricksStringBuilderWriter buf = new AlgebricksStringBuilderWriter(PlanPrettyPrinter.INIT_SIZE);
                     PlanPrettyPrinter.printPhysicalOps(plan, buf, 0, true);
                     output.out().write(buf.toString());
+                } else {
+                    if (isQuery || isLoad) {
+                        generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
+                    }
                 }
             }
         }
@@ -295,7 +300,7 @@ public class APIFramework {
 
         if (!conf.isGenerateJobSpec()) {
             if (isQuery || isLoad) {
-                generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), isExplainOnly);
+                generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
             }
             return null;
         }
@@ -321,7 +326,7 @@ public class APIFramework {
         if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
             if (isQuery || isLoad) {
                 generateOptimizedLogicalPlan(plan, spec.getLogical2PhysicalMap(), output.config().getPlanFormat(),
-                        isExplainOnly);
+                        cboMode);
             }
         }
 

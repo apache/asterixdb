@@ -796,6 +796,7 @@ public class BTreeAccessMethod implements IAccessMethod {
                     metaRecordType, dataset, context);
         }
 
+        OperatorManipulationUtil.copyCardCostAnnotations(dataSourceOp, indexSearchOp);
         return indexSearchOp;
     }
 

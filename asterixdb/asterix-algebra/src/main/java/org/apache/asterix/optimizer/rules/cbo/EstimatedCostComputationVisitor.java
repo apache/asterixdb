@@ -214,7 +214,17 @@ public class EstimatedCostComputationVisitor implements ILogicalOperatorVisitor<
 
     @Override
     public Pair<Double, Double> visitUnnestMapOperator(UnnestMapOperator op, Double arg) throws AlgebricksException {
-        return annotate(this, op, arg);
+        Pair<Double, Double> cardCost = new Pair<>(0.0, 0.0);
+
+        for (Map.Entry<String, Object> anno : op.getAnnotations().entrySet()) {
+            if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_OUTPUT_CARDINALITY)) {
+                cardCost.setFirst((Double) anno.getValue());
+            } else if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_COST_TOTAL)) {
+                cardCost.setSecond((Double) anno.getValue());
+            }
+        }
+
+        return cardCost;
     }
 
     @Override

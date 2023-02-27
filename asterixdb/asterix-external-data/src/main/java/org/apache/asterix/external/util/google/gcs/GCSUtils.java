@@ -19,8 +19,11 @@
 package org.apache.asterix.external.util.google.gcs;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
+import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
+import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
+import static org.apache.asterix.external.util.google.gcs.GCSConstants.APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.ENDPOINT_FIELD_NAME;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE_PATH;
@@ -53,7 +56,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 
 import com.google.api.gax.paging.Page;
-import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.BaseServiceException;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
@@ -73,15 +76,37 @@ public class GCSUtils {
      * @throws CompilationException CompilationException
      */
     public static Storage buildClient(Map<String, String> configuration) throws CompilationException {
+        String applicationDefaultCredentials = configuration.get(APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME);
         String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);
         String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
 
         StorageOptions.Builder builder = StorageOptions.newBuilder();
 
-        // Use credentials if available
+        // default credentials provider
+        if (applicationDefaultCredentials != null) {
+            // only "true" value is allowed
+            if (!applicationDefaultCredentials.equalsIgnoreCase("true")) {
+                throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE,
+                        APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME, "true");
+            }
+
+            // no other authentication parameters are allowed
+            if (jsonCredentials != null) {
+                throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, JSON_CREDENTIALS_FIELD_NAME,
+                        APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME);
+            }
+
+            try {
+                builder.setCredentials(GoogleCredentials.getApplicationDefault());
+            } catch (IOException ex) {
+                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            }
+        }
+
+        // json credentials
         if (jsonCredentials != null) {
             try (InputStream credentialsStream = new ByteArrayInputStream(jsonCredentials.getBytes())) {
-                builder.setCredentials(ServiceAccountCredentials.fromStream(credentialsStream));
+                builder.setCredentials(GoogleCredentials.fromStream(credentialsStream));
             } catch (IOException ex) {
                 throw new CompilationException(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             }

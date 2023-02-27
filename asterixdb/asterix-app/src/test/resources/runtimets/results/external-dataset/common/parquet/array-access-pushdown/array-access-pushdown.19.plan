@@ -1,24 +1,22 @@
-cardinality: 0.0
-cost: 0.0
-distribute result [$$19] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$18] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$19]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$18]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$19] <- [get-item(get-item(get-item($$22, 0), 0), 0)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$18] <- [get-item(get-item(get-item($$21, 0), 0), 0)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
-        project ([$$22]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        project ([$$21]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|
           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-          -- SORT_MERGE_EXCHANGE [$$21(ASC) ]  |PARTITIONED|
-            order (ASC, $$21) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-            -- STABLE_SORT [$$21(ASC)]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
+            order (ASC, $$20) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$22, $$21]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                project ([$$21, $$20]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$22, $$21] <- [$$p.getField("place").getField("bounding_box").getField("coordinates"), $$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$21, $$20] <- [$$p.getField("place").getField("bounding_box").getField("coordinates"), $$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

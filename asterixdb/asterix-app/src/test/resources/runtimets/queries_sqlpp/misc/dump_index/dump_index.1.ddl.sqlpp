@@ -20,5 +20,9 @@ DROP DATAVERSE test IF EXISTS;
 CREATE  DATAVERSE test;
 USE test;
 CREATE TYPE t1 AS {id:int, name:string?};
+CREATE TYPE t2 AS {id:int};
+
 CREATE DATASET ds(t1) PRIMARY KEY id;
 CREATE INDEX name_idx ON ds(name);
+
+CREATE DATASET ds2(t2) PRIMARY KEY id;

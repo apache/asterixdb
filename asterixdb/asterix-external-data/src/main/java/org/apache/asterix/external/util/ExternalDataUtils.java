@@ -18,15 +18,10 @@
  */
 package org.apache.asterix.external.util;
 
-import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_PARAM_VAL;
-import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_NOT_ALLOWED_AT_SAME_TIME;
-import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_REQUIRED;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ADAPTER_NAME_GCS;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_FORMAT;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
@@ -672,10 +667,28 @@ public class ExternalDataUtils {
 
     public static String getPrefix(Map<String, String> configuration, boolean appendSlash) {
         String definition = configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
-        if (definition != null && !definition.isEmpty()) {
+        String subPath = configuration.get(ExternalDataConstants.SUBPATH);
+        boolean hasDefinition = definition != null && !definition.isEmpty();
+        boolean hasSubPath = subPath != null && !subPath.isEmpty();
+        if (hasDefinition && !hasSubPath) {
             return appendSlash ? definition + (!definition.endsWith("/") ? "/" : "") : definition;
         }
-        return "";
+        String fullPath = "";
+        if (hasSubPath) {
+            if (!hasDefinition) {
+                fullPath = subPath.startsWith("/") ? subPath.substring(1) : subPath;
+            } else {
+                // concatenate definition + subPath:
+                if (definition.endsWith("/") && subPath.startsWith("/")) {
+                    subPath = subPath.substring(1);
+                } else if (!definition.endsWith("/") && !subPath.startsWith("/")) {
+                    definition = definition + "/";
+                }
+                fullPath = definition + subPath;
+            }
+            fullPath = appendSlash ? fullPath + (!fullPath.endsWith("/") ? "/" : "") : fullPath;
+        }
+        return fullPath;
     }
 
     /**
