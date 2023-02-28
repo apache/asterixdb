@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.external.input;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.CONTAINER_NAME_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_PARQUET;
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -101,6 +105,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     }
 
     protected void configureHdfsConf(JobConf conf, Map<String, String> configuration) throws AlgebricksException {
+        String formatString = configuration.get(ExternalDataConstants.KEY_FORMAT);
         try {
             confFactory = new ConfFactory(conf);
             clusterLocations = getPartitionConstraint();
@@ -120,7 +125,6 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
             inputSplitsFactory = new InputSplitsFactory(inputSplits);
             read = new boolean[readSchedule.length];
             Arrays.fill(read, false);
-            String formatString = configuration.get(ExternalDataConstants.KEY_FORMAT);
             if (formatString == null || formatString.equals(ExternalDataConstants.FORMAT_HDFS_WRITABLE)) {
                 RecordReader<?, ?> reader = conf.getInputFormat().getRecordReader(inputSplits[0], conf, Reporter.NULL);
                 this.recordClass = reader.createValue().getClass();
@@ -132,7 +136,19 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
                 this.recordClass = char[].class;
             }
         } catch (IOException e) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, e);
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
+        } catch (Exception e) {
+            if (FORMAT_PARQUET.equals(formatString)) {
+                String containerName = configuration.get(CONTAINER_NAME_FIELD_NAME);
+                if (containerName != null && containerName.contains(".")) {
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, e,
+                            getMessageOrToString(e) + " Buckets with '.' in the name can cause issues.");
+                } else {
+                    throw e;
+                }
+            } else {
+                throw e;
+            }
         }
     }
 
