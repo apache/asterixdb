@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.om.base.ARecord;
+import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACollection;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
@@ -131,6 +132,9 @@ public class DumpIndexReader extends FunctionReader {
             case TIME:
             case DATETIME:
                 JSONUtil.quoteAndEscape(recordBuilder, field.toString());
+                break;
+            case STRING:
+                JSONUtil.quoteAndEscape(recordBuilder, ((AString) field).getStringValue());
                 break;
             case MISSING:
                 break;
