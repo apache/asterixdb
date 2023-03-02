@@ -18,9 +18,9 @@
  */
 
 /*
- * Description: test that the sample index is dropped using "analyze dataset drop statistics" statement
+ * Description: test that the sample index is dropped when its source dataset is dropped
  */
 
 use test;
 
-analyze dataset ds1 drop statistics;
+drop dataset ds1;

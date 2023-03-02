@@ -18,10 +18,13 @@
  */
 
 /*
- * Description: check that the sample was dropped
+ * Description: check that the sample was re-created
  */
+
+set `import-private-functions` `true`;
 
 use test;
 
-select count(*) cnt
-from listMetadata(true, false) v;
+select * from
+  listMetadata(false, false) metadata,
+  showSampleStats("ds1", "sample_idx_2_ds1", false) stats;
