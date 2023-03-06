@@ -311,4 +311,15 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         return constrain;
     }
 
+    /**
+     * Update memory budge
+     *
+     * @param desiredSize Desired budget measured in Frames
+     * @return
+     */
+    @Override
+    public boolean updateMemoryBudget(int desiredSize) {
+        return framePool.updateMemoryBudget(desiredSize);
+    }
+
 }

@@ -29,15 +29,19 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class DeallocatableFramePool implements IDeallocatableFramePool {
 
     private final IHyracksFrameMgrContext ctx;
-    private final int memBudget;
+    private int memBudget;
     private int allocated;
     private LinkedList<ByteBuffer> buffers;
+
+    private boolean isDynamic = true;
+    private int desiredMemBudget;
 
     public DeallocatableFramePool(IHyracksFrameMgrContext ctx, int memBudgetInBytes) {
         this.ctx = ctx;
         this.memBudget = memBudgetInBytes;
         this.allocated = 0;
         this.buffers = new LinkedList<>();
+        desiredMemBudget = memBudget;
     }
 
     @Override
@@ -100,13 +104,31 @@ public class DeallocatableFramePool implements IDeallocatableFramePool {
 
     @Override
     public void deAllocateBuffer(ByteBuffer buffer) {
-        if (buffer.capacity() != ctx.getInitialFrameSize()) {
+        if (shouldDeallocate(buffer)) {
             // simply deallocate the Big Object frame
             ctx.deallocateFrames(buffer.capacity());
             allocated -= buffer.capacity();
         } else {
             buffers.add(buffer);
         }
+    }
+
+    /**
+     * Update Memory Budget;
+     *
+     * @param desiredSize Desired Size measured in frames
+     */
+    @Override
+    public boolean updateMemoryBudget(int desiredSize) {
+        desiredMemBudget = isDynamic ? desiredSize * getMinFrameSize() : memBudget;
+        memBudget = memBudget <= desiredMemBudget ? desiredMemBudget : memBudget;
+        return  memBudget == desiredMemBudget;
+    }
+
+    private boolean shouldDeallocate(ByteBuffer buffer){
+        boolean shouldDeallocate = buffer.capacity() != ctx.getInitialFrameSize();
+        shouldDeallocate = shouldDeallocate || isDynamic && desiredMemBudget < memBudget;
+        return shouldDeallocate;
     }
 
     @Override

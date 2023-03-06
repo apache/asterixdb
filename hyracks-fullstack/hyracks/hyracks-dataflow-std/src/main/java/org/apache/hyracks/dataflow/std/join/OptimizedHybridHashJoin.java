@@ -97,6 +97,8 @@ public class OptimizedHybridHashJoin {
     private int[] probePSizeInTups;
     private IOperatorStats stats = null;
 
+
+    private boolean isDynamic = true;
     public OptimizedHybridHashJoin(IHyracksJobletContext jobletCtx, int memSizeInFrames, int numOfPartitions,
             String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
             ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator probePredEval,
@@ -146,6 +148,7 @@ public class OptimizedHybridHashJoin {
         accessorBuild.reset(buffer);
         int tupleCount = accessorBuild.getTupleCount();
         for (int i = 0; i < tupleCount; ++i) {
+            randomlyUpdateMemory(i);
             if (buildPredEval == null || buildPredEval.evaluate(accessorBuild, i)) {
                 int pid = buildHpc.partition(accessorBuild, i, numOfPartitions);
                 processTupleBuildPhase(i, pid);
@@ -497,6 +500,7 @@ public class OptimizedHybridHashJoin {
         inMemJoiner.resetAccessorProbe(accessorProbe);
         if (isBuildRelAllInMemory()) {
             for (int i = 0; i < tupleCount; ++i) {
+                randomlyUpdateMemory(i);
                 // NOTE: probePredEval is guaranteed to be 'null' for outer join and in case of role reversal
                 if (probePredEval == null || probePredEval.evaluate(accessorProbe, i)) {
                     inMemJoiner.join(i, writer);
@@ -504,6 +508,7 @@ public class OptimizedHybridHashJoin {
             }
         } else {
             for (int i = 0; i < tupleCount; ++i) {
+                randomlyUpdateMemory(i);
                 // NOTE: probePredEval is guaranteed to be 'null' for outer join and in case of role reversal
                 if (probePredEval == null || probePredEval.evaluate(accessorProbe, i)) {
                     int pid = probeHpc.partition(accessorProbe, i, numOfPartitions);
@@ -652,5 +657,28 @@ public class OptimizedHybridHashJoin {
 
     public void setOperatorStats(IOperatorStats stats) {
         this.stats = stats;
+    }
+
+    public void updateMemoryBudget(int newDesiredMemory) throws HyracksDataException{
+        if(this.isDynamic){
+            while(!bufferManager.updateMemoryBudget(newDesiredMemory)){
+                int partitionToBeSpilled = spillPolicy.findInMemPartitionWithMaxMemoryUsage();
+                if(partitionToBeSpilled != -1)
+                    spillPartition(partitionToBeSpilled);
+                else{
+                    break;
+                }
+            }
+        }
+    }
+
+    private void randomlyUpdateMemory(int numberOfTuples) throws  HyracksDataException{
+        int updateEvery = 1000;
+        if((numberOfTuples % updateEvery) == 0 && isDynamic){
+            int maxSizeInFrames = 60;
+            int minSizeInFrames = 6;
+            int rand =(int) Math.floor(Math.random() *(maxSizeInFrames - minSizeInFrames + 1) + minSizeInFrames);
+            updateMemoryBudget(rand);
+        }
     }
 }

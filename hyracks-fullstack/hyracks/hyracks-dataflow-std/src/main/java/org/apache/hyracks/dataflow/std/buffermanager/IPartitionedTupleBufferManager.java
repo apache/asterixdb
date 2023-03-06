@@ -131,4 +131,11 @@ public interface IPartitionedTupleBufferManager {
     void clearPartition(int partition) throws HyracksDataException;
 
     IPartitionedMemoryConstrain getConstrain();
+
+    /**
+     * Update memory budge
+     * @param desiredSize Desired budget measured in Frames
+     * @return
+     */
+    boolean updateMemoryBudget(int desiredSize);
 }
