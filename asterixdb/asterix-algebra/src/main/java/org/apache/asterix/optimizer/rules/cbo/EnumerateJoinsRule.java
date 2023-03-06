@@ -434,8 +434,9 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap) {
         ILogicalOperator leftInput = joinLeafInputsHashMap.get(plan.getEmptyTupleSourceOp());
         skipAllIndexes(plan, leftInput);
-        if (leftInput.getOperatorTag() == LogicalOperatorTag.SELECT) {
-            addCardCostAnnotations(leftInput, plan);
+        ILogicalOperator selOp = findSelectOrDataScan(leftInput);
+        if (selOp != null) {
+            addCardCostAnnotations(selOp, plan);
         }
         addCardCostAnnotations(findDataSourceScanOperator(leftInput), plan);
     }
@@ -493,8 +494,9 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             // leaf
             ILogicalOperator leftInput = joinLeafInputsHashMap.get(leftPlan.getEmptyTupleSourceOp());
             skipAllIndexes(leftPlan, leftInput);
-            if (leftInput.getOperatorTag() == LogicalOperatorTag.SELECT) {
-                addCardCostAnnotations(leftInput, leftPlan);
+            ILogicalOperator selOp = findSelectOrDataScan(leftInput);
+            if (selOp != null) {
+                addCardCostAnnotations(selOp, leftPlan);
             }
             joinOp.getInputs().get(0).setValue(leftInput);
             addCardCostAnnotations(findDataSourceScanOperator(leftInput), leftPlan);
@@ -510,8 +512,9 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             // leaf
             ILogicalOperator rightInput = joinLeafInputsHashMap.get(rightPlan.getEmptyTupleSourceOp());
             skipAllIndexes(rightPlan, rightInput);
-            if (rightInput.getOperatorTag() == LogicalOperatorTag.SELECT) {
-                addCardCostAnnotations(rightInput, rightPlan);
+            ILogicalOperator selOp = findSelectOrDataScan(rightInput);
+            if (selOp != null) {
+                addCardCostAnnotations(selOp, rightPlan);
             }
             joinOp.getInputs().get(1).setValue(rightInput);
             addCardCostAnnotations(findDataSourceScanOperator(rightInput), rightPlan);

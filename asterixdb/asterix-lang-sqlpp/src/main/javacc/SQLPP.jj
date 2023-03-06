@@ -690,21 +690,25 @@ class SQLPPParser extends ScopeChecker implements IParser {
       try {
         switch (hintToken.hint) {
           case SINGLE_DATASET_PREDICATE_SELECTIVITY_HINT:
-            selectivity = 1.0; // uninitialized
-            if (hintToken.hintParams != null) {
-            Matcher mat = lessThanOnePat.matcher(hintToken.hintParams);
-            if (mat.find()) {
-                selectivity = Double.parseDouble (mat.group());
-                }
+            if (hintToken.hintParams == null) {
+                throw new SqlppParseException(getSourceLocation(hintToken), "Expected selectivity value");
             }
-
-            return new PredicateCardinalityAnnotation(selectivity);
+            else {
+                selectivity = 1.0; // uninitialized
+                Matcher mat = lessThanOnePat.matcher(hintToken.hintParams);
+                if (mat.find()) {
+                    selectivity = Double.parseDouble (mat.group());
+                }
+                return new PredicateCardinalityAnnotation(selectivity);
+            }
           case JOIN_PREDICATE_PRODUCTIVITY_HINT:
-            productivity = 1.0; // uninitialized
-            String leftSideDataSet = null;
-            if (hintToken.hintParams != null) {
+            if (hintToken.hintParams == null) {
+                throw new SqlppParseException(getSourceLocation(hintToken), "Expected productivity value");
+            }
+            else {
+                productivity = 1.0; // uninitialized
+                String leftSideDataSet = null;
                 Matcher StringNum = stringNumber.matcher(hintToken.hintParams);
-
                 if (StringNum.find()) {
                     String matchedGroup = StringNum.group();
                     Pattern var = Pattern.compile("[a-zA-Z]\\w*"); // any word character [a-zA-Z_0-9]
@@ -715,9 +719,9 @@ class SQLPPParser extends ScopeChecker implements IParser {
                     if (numMat.find())
                         productivity = Double.parseDouble (numMat.group());
                 }
+                // attach hint to global scope
+                return new JoinProductivityAnnotation (productivity, leftSideDataSet);
             }
-            // attach hint to global scope
-            return new JoinProductivityAnnotation (productivity, leftSideDataSet);
           case HASH_BROADCAST_JOIN_HINT:
             if (hintToken.hintParams == null) {
               return new BroadcastExpressionAnnotation(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);
