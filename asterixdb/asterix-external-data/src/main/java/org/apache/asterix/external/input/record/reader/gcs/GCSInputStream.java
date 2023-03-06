@@ -47,7 +47,7 @@ public class GCSInputStream extends AbstractExternalInputStream {
 
     private final Storage client;
     private final String container;
-    private static final int MAX_RETRIES = 5; // We will retry 5 times in case of retryable errors
+    private static final int MAX_ATTEMPTS = 5; // We try a total of 5 times in case of retryable errors
 
     public GCSInputStream(Map<String, String> configuration, List<String> filePaths) throws HyracksDataException {
         super(configuration, filePaths);
@@ -78,10 +78,10 @@ public class GCSInputStream extends AbstractExternalInputStream {
      * @return true
      */
     private boolean doGetInputStream(String fileName) throws RuntimeDataException {
-        int retries = 0;
+        int attempt = 0;
         BlobId blobId = BlobId.of(container, fileName);
 
-        while (retries < MAX_RETRIES) {
+        while (attempt < MAX_ATTEMPTS) {
             try {
                 Blob blob = client.get(blobId);
                 if (blob == null) {
@@ -93,14 +93,14 @@ public class GCSInputStream extends AbstractExternalInputStream {
                 in = new ByteArrayInputStream(blob.getContent());
                 break;
             } catch (BaseServiceException ex) {
-                if (!shouldRetry(retries++) && ex.isRetryable()) {
+                if (!ex.isRetryable() || !shouldRetry(++attempt)) {
                     throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
                 }
-                LOGGER.debug(() -> "Retryable error: " + LogRedactionUtil.userData(ex.getMessage()));
+                LOGGER.debug(() -> "Retryable error: " + getMessageOrToString(ex));
 
-                // Backoff for 1 sec for the first 2 retries, and 2 seconds from there onward
+                // Backoff for 1 sec for the first 3 attempts, and 2 seconds from there onward
                 try {
-                    Thread.sleep(TimeUnit.SECONDS.toMillis(retries < 3 ? 1 : 2));
+                    Thread.sleep(TimeUnit.SECONDS.toMillis(attempt < 3 ? 1 : 2));
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -111,8 +111,8 @@ public class GCSInputStream extends AbstractExternalInputStream {
         return true;
     }
 
-    private boolean shouldRetry(int currentRetry) {
-        return currentRetry < MAX_RETRIES;
+    private boolean shouldRetry(int nextAttempt) {
+        return nextAttempt < MAX_ATTEMPTS;
     }
 
     @Override
