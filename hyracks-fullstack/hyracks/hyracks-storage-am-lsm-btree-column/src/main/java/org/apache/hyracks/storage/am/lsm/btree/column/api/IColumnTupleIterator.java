@@ -75,4 +75,6 @@ public interface IColumnTupleIterator extends ILSMTreeTupleReference, Comparable
      * Calls {@link IBufferCache#unpin(ICachedPage)} for all columns' pages
      */
     void unpinColumnsPages() throws HyracksDataException;
+
+    void close();
 }

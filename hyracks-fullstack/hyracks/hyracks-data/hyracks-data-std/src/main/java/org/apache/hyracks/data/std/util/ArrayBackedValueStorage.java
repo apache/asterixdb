@@ -65,8 +65,12 @@ public class ArrayBackedValueStorage implements IMutableValueStorage, IPointable
     }
 
     public void append(IValueReference value) throws HyracksDataException {
+        append(value.getByteArray(), value.getStartOffset(), value.getLength());
+    }
+
+    public void append(byte[] bytes, int start, int length) throws HyracksDataException {
         try {
-            data.append(value);
+            data.append(bytes, start, length);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

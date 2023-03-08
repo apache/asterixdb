@@ -194,6 +194,7 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
 
     @Override
     public void doClose() throws HyracksDataException {
+        frameTuple.close();
         releasePages();
         page0 = null;
         pred = null;

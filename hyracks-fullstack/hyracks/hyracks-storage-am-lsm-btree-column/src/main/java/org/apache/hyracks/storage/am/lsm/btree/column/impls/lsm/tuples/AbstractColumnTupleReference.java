@@ -29,14 +29,19 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractColumnTupleReference implements IColumnTupleIterator {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String UNSUPPORTED_OPERATION_MSG = "Operation is not supported for column tuples";
     private final int componentIndex;
     private final ColumnBTreeReadLeafFrame frame;
     private final IColumnBufferProvider[] primaryKeyBufferProviders;
     private final IColumnBufferProvider[] buffersProviders;
     private final int numberOfPrimaryKeys;
+    private int totalNumberOfPages;
+    private int numOfSkippedPages;
     protected int tupleIndex;
 
     /**
@@ -68,6 +73,8 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
                 buffersProviders[i] = new ColumnSingleBufferProvider(columnIndex);
             }
         }
+        totalNumberOfPages = 0;
+        numOfSkippedPages = 0;
     }
 
     @Override
@@ -96,7 +103,10 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
                 provider.reset(frame);
                 startColumn(provider, tupleIndex, i, numberOfTuples);
             }
+        } else {
+            numOfSkippedPages++;
         }
+        totalNumberOfPages++;
     }
 
     protected abstract boolean startNewPage(ByteBuffer pageZero, int numberOfColumns, int numberOfTuples);
@@ -134,6 +144,13 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     public final void unpinColumnsPages() throws HyracksDataException {
         for (int i = 0; i < buffersProviders.length; i++) {
             buffersProviders[i].releaseAll();
+        }
+    }
+
+    @Override
+    public final void close() {
+        if (LOGGER.isInfoEnabled()) {
+            LOGGER.info("Skipped {} pages out of {} in total", numOfSkippedPages, totalNumberOfPages);
         }
     }
 

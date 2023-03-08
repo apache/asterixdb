@@ -942,6 +942,7 @@
     <module>asterix-license</module>
     <module>asterix-geo</module>
     <module>asterix-spidersilk</module>
+    <module>asterix-column</module>
   </modules>
 
   <dependencyManagement>
@@ -1380,6 +1381,11 @@
       <dependency>
         <groupId>org.apache.hyracks</groupId>
         <artifactId>hyracks-storage-am-lsm-btree</artifactId>
+        <version>${hyracks.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hyracks</groupId>
+        <artifactId>hyracks-storage-am-lsm-btree-column</artifactId>
         <version>${hyracks.version}</version>
       </dependency>
       <dependency>
@@ -1888,6 +1894,28 @@
       <dependency>
         <groupId>org.apache.parquet</groupId>
         <artifactId>parquet-hadoop</artifactId>
+        <version>${parquet.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.parquet</groupId>
+        <artifactId>parquet-common</artifactId>
+        <version>${parquet.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.parquet</groupId>
+        <artifactId>parquet-encoding</artifactId>
         <version>${parquet.version}</version>
         <exclusions>
           <exclusion>

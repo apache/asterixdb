@@ -221,6 +221,10 @@ public class UTF8StringUtil {
         return VarLenIntEncoderDecoder.decode(b, s);
     }
 
+    public static int getNumBytesToStoreLength(byte[] bytes, int start) {
+        return getNumBytesToStoreLength(getUTFLength(bytes, start));
+    }
+
     public static int getNumBytesToStoreLength(int strlen) {
         return VarLenIntEncoderDecoder.getBytesRequired(strlen);
     }
