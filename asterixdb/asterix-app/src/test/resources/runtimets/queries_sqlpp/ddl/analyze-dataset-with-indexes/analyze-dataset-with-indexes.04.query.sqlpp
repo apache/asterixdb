@@ -19,6 +19,6 @@
 
 USE test;
 
+SELECT t.DatasetName, t.IndexName, t.IndexStructure, t.SampleCardinalityTarget, t.SourceCardinality, t.SourceAvgItemSize, t.IndexStats
 FROM `Metadata`.`Index` t WHERE t.IndexStructure = "SAMPLE"
-SELECT t.* EXCLUDE DataverseName, SearchKey, IsPrimary, Timestamp, PendingOp, SampleSeed
 ORDER BY t.DatasetName, t.IndexName;
