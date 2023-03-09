@@ -17,32 +17,15 @@
  * under the License.
  */
 /*
-* Description  : Test warnings for enhanced hash join hint
+* Description  : Test warnings for cardinality hints
 * Expected Res : Warning, ignore hint
-* Date         : 11/20/2022
+* Date         : 03/09/2023
 */
+// requesttype=application/json
+// param max-warnings:json=10
 
-DROP dataverse tpch IF EXISTS;
-CREATE  dataverse tpch;
+use tpch;
 
-USE tpch;
-
-
-CREATE TYPE OrderType AS {
-  o_orderkey : integer
-};
-
-CREATE TYPE CustomerType AS {
-  c_custkey : integer
-};
-
-CREATE TYPE NationType AS {
-  n_nationkey : integer,
-  n_name : string
-};
-
-CREATE DATASET orders(OrderType) PRIMARY KEY o_orderkey;
-
-CREATE DATASET customer(CustomerType) PRIMARY KEY c_custkey;
-
-CREATE DATASET nation(NationType) PRIMARY KEY n_nationkey;
+SELECT count(*)
+FROM customer c, nation n
+WHERE c.c_nationkey = n.n_nationkey and n.n_name /*+ selectivity 1 */ = 'UNITED STATES';

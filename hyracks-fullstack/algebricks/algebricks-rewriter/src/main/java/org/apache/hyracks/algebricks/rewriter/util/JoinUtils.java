@@ -40,6 +40,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalPropertiesVisitor;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator.JoinPartitioningType;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HybridHashJoinPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.InMemoryHashJoinPOperator;
@@ -57,7 +58,7 @@ public class JoinUtils {
     }
 
     public static void setJoinAlgorithmAndExchangeAlgo(AbstractBinaryJoinOperator op, boolean topLevelOp,
-            IOptimizationContext context) {
+            IOptimizationContext context) throws AlgebricksException {
         if (!topLevelOp) {
             throw new IllegalStateException("Micro operator not implemented for: " + op.getOperatorTag());
         }
@@ -67,9 +68,13 @@ public class JoinUtils {
         List<LogicalVariable> varsRight = op.getInputs().get(1).getValue().getSchema();
         ILogicalExpression conditionExpr = op.getCondition().getValue();
         if (isHashJoinCondition(conditionExpr, varsLeft, varsRight, sideLeft, sideRight)) {
-            BroadcastSide broadcastSide = getBroadcastJoinSide(conditionExpr, varsLeft, varsRight, context);
+            List<LogicalVariable> scanVarsLeft = new LinkedList<>();
+            List<LogicalVariable> scanVarsRight = new LinkedList<>();
+            VariableUtilities.getLiveVariablesInDescendantDataScans(op.getInputs().get(0).getValue(), scanVarsLeft);
+            VariableUtilities.getLiveVariablesInDescendantDataScans(op.getInputs().get(1).getValue(), scanVarsRight);
+            BroadcastSide broadcastSide = getBroadcastJoinSide(conditionExpr, scanVarsLeft, scanVarsRight, context);
             if (broadcastSide == null) {
-                BuildSide buildSide = getHashJoinBuildSide(conditionExpr, varsLeft, varsRight, context);
+                BuildSide buildSide = getHashJoinBuildSide(conditionExpr, scanVarsLeft, scanVarsRight, context);
                 if (buildSide == null) {
                     setHashJoinOp(op, JoinPartitioningType.PAIRWISE, sideLeft, sideRight, context);
                 } else {

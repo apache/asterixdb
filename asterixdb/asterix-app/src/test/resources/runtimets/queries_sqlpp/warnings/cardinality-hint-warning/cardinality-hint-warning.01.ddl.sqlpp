@@ -17,9 +17,9 @@
  * under the License.
  */
 /*
-* Description  : Test warnings for enhanced hash join hint
+* Description  : Test warnings for cardinality hints
 * Expected Res : Warning, ignore hint
-* Date         : 11/20/2022
+* Date         : 03/09/2023
 */
 
 DROP dataverse tpch IF EXISTS;
