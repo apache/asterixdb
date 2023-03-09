@@ -25,15 +25,17 @@ import java.util.LinkedList;
 
 import org.apache.hyracks.api.context.IHyracksFrameMgrContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DeallocatableFramePool implements IDeallocatableFramePool {
-
+    private static final Logger LOGGER = LogManager.getLogger();
     private final IHyracksFrameMgrContext ctx;
     private int memBudget;
     private int allocated;
     private LinkedList<ByteBuffer> buffers;
 
-    private boolean isDynamic = true;
+    private boolean isDynamic = false;
     private int desiredMemBudget;
 
     public DeallocatableFramePool(IHyracksFrameMgrContext ctx, int memBudgetInBytes) {
@@ -42,6 +44,11 @@ public class DeallocatableFramePool implements IDeallocatableFramePool {
         this.allocated = 0;
         this.buffers = new LinkedList<>();
         desiredMemBudget = memBudget;
+    }
+
+    public DeallocatableFramePool(IHyracksFrameMgrContext ctx, int memBudgetInBytes, boolean dynamic) {
+        this(ctx, memBudgetInBytes);
+        this.isDynamic = dynamic;
     }
 
     @Override
@@ -121,13 +128,14 @@ public class DeallocatableFramePool implements IDeallocatableFramePool {
     @Override
     public boolean updateMemoryBudget(int desiredSize) {
         desiredMemBudget = isDynamic ? desiredSize * getMinFrameSize() : memBudget;
-        memBudget = memBudget <= desiredMemBudget ? desiredMemBudget : memBudget;
-        return  memBudget == desiredMemBudget;
+        if (desiredMemBudget >= memBudget || allocated <= desiredMemBudget)
+            memBudget = desiredMemBudget;
+        return memBudget == desiredMemBudget;
     }
 
-    private boolean shouldDeallocate(ByteBuffer buffer){
+    private boolean shouldDeallocate(ByteBuffer buffer) {
         boolean shouldDeallocate = buffer.capacity() != ctx.getInitialFrameSize();
-        shouldDeallocate = shouldDeallocate || isDynamic && desiredMemBudget < memBudget;
+        shouldDeallocate = shouldDeallocate || (isDynamic && allocated > desiredMemBudget);
         return shouldDeallocate;
     }
 

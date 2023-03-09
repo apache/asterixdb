@@ -79,7 +79,7 @@ public class OptimizedHybridHashJoin {
     private final IMissingWriter[] nonMatchWriters;
     private final BitSet spilledStatus; //0=resident, 1=spilled
     private final int numOfPartitions;
-    private final int memSizeInFrames;
+    private int memSizeInFrames;
     private InMemoryHashJoin inMemJoiner; //Used for joining resident partitions
     private IPartitionedTupleBufferManager bufferManager;
     private PreferToSpillFullyOccupiedFramePolicy spillPolicy;
@@ -97,8 +97,8 @@ public class OptimizedHybridHashJoin {
     private int[] probePSizeInTups;
     private IOperatorStats stats = null;
 
-
     private boolean isDynamic = true;
+
     public OptimizedHybridHashJoin(IHyracksJobletContext jobletCtx, int memSizeInFrames, int numOfPartitions,
             String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
             ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator probePredEval,
@@ -132,9 +132,17 @@ public class OptimizedHybridHashJoin {
         }
     }
 
+    public OptimizedHybridHashJoin(IHyracksJobletContext jobletCtx, int memSizeInFrames, int numOfPartitions,
+                                   String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
+                                   ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator probePredEval,
+                                   IPredicateEvaluator buildPredEval, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1,boolean isDynamic){
+        this(jobletCtx,memSizeInFrames,numOfPartitions,probeRelName,buildRelName,probeRd,buildRd,probeHpc,buildHpc,probePredEval,buildPredEval,isLeftOuter,nullWriterFactories1);
+        this.isDynamic = isDynamic;
+    }
+
     public void initBuild() throws HyracksDataException {
         IDeallocatableFramePool framePool =
-                new DeallocatableFramePool(jobletCtx, memSizeInFrames * jobletCtx.getInitialFrameSize());
+                new DeallocatableFramePool(jobletCtx, memSizeInFrames * jobletCtx.getInitialFrameSize(), isDynamic);
         bufferManagerForHashTable = new FramePoolBackedFrameBufferManager(framePool);
         bufferManager = new VPartitionTupleBufferManager(
                 PreferToSpillFullyOccupiedFramePolicy.createAtMostOneFrameForSpilledPartitionConstrain(spilledStatus),
@@ -148,7 +156,6 @@ public class OptimizedHybridHashJoin {
         accessorBuild.reset(buffer);
         int tupleCount = accessorBuild.getTupleCount();
         for (int i = 0; i < tupleCount; ++i) {
-            randomlyUpdateMemory(i);
             if (buildPredEval == null || buildPredEval.evaluate(accessorBuild, i)) {
                 int pid = buildHpc.partition(accessorBuild, i, numOfPartitions);
                 processTupleBuildPhase(i, pid);
@@ -500,7 +507,6 @@ public class OptimizedHybridHashJoin {
         inMemJoiner.resetAccessorProbe(accessorProbe);
         if (isBuildRelAllInMemory()) {
             for (int i = 0; i < tupleCount; ++i) {
-                randomlyUpdateMemory(i);
                 // NOTE: probePredEval is guaranteed to be 'null' for outer join and in case of role reversal
                 if (probePredEval == null || probePredEval.evaluate(accessorProbe, i)) {
                     inMemJoiner.join(i, writer);
@@ -508,7 +514,6 @@ public class OptimizedHybridHashJoin {
             }
         } else {
             for (int i = 0; i < tupleCount; ++i) {
-                randomlyUpdateMemory(i);
                 // NOTE: probePredEval is guaranteed to be 'null' for outer join and in case of role reversal
                 if (probePredEval == null || probePredEval.evaluate(accessorProbe, i)) {
                     int pid = probeHpc.partition(accessorProbe, i, numOfPartitions);
@@ -659,26 +664,36 @@ public class OptimizedHybridHashJoin {
         this.stats = stats;
     }
 
-    public void updateMemoryBudget(int newDesiredMemory) throws HyracksDataException{
-        if(this.isDynamic){
-            while(!bufferManager.updateMemoryBudget(newDesiredMemory)){
+    /**
+     * Update memory budget for this HHJ operation.
+     * This method only takes place if this HHJ {@link #isDynamic}
+     * This method tries to update the {@link #memSizeInFrames},
+     * @param newDesiredMemory
+     * @throws HyracksDataException
+     */
+    public int updateMemoryBudget(int newDesiredMemory) throws HyracksDataException {
+        boolean update = true;
+        if (this.isDynamic) {
+            while (!bufferManager.updateMemoryBudget(newDesiredMemory)) {
                 int partitionToBeSpilled = spillPolicy.findInMemPartitionWithMaxMemoryUsage();
-                if(partitionToBeSpilled != -1)
-                    spillPartition(partitionToBeSpilled);
-                else{
+                if (partitionToBeSpilled != -1) {
+                    LOGGER.info(String.format("Spilling Partition %d due to Memory Contention.", partitionToBeSpilled));
+                    int sizeOfPartitionBeenDeallocated =
+                            bufferManager.getPhysicalSize(partitionToBeSpilled) / jobletCtx.getInitialFrameSize();
+                    memSizeInFrames -= sizeOfPartitionBeenDeallocated;
+                    spillPartition(partitionToBeSpilled);;
+                } else {
+                    update = false;
+                    LOGGER.info("All Partitions are spilled already.");
                     break;
                 }
             }
+            memSizeInFrames = update ? newDesiredMemory : memSizeInFrames;
         }
+        return memSizeInFrames;
     }
 
-    private void randomlyUpdateMemory(int numberOfTuples) throws  HyracksDataException{
-        int updateEvery = 1000;
-        if((numberOfTuples % updateEvery) == 0 && isDynamic){
-            int maxSizeInFrames = 60;
-            int minSizeInFrames = 6;
-            int rand =(int) Math.floor(Math.random() *(maxSizeInFrames - minSizeInFrames + 1) + minSizeInFrames);
-            updateMemoryBudget(rand);
-        }
+    public int randomlyUpdateMemory(int min, int max) throws HyracksDataException {
+           return (int) Math.floor(Math.random() * (max - min + 1) + min);
     }
 }
