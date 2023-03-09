@@ -23,6 +23,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -35,6 +36,11 @@ public class AUUIDPartialBinaryComparatorFactory implements IBinaryComparatorFac
     @Override
     public IBinaryComparator createBinaryComparator() {
         return AUUIDPartialBinaryComparatorFactory::compare;
+    }
+
+    public static int compare(IValueReference valueA, IValueReference valueB) {
+        return compare(valueA.getByteArray(), valueA.getStartOffset(), valueA.getLength(), valueB.getByteArray(),
+                valueB.getStartOffset(), valueB.getLength());
     }
 
     @SuppressWarnings("squid:S1172") // unused parameter

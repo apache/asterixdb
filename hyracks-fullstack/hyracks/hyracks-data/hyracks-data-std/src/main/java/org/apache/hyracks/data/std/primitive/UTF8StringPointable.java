@@ -33,6 +33,7 @@ import org.apache.hyracks.data.std.api.IComparable;
 import org.apache.hyracks.data.std.api.IHashable;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.util.string.UTF8StringUtil;
@@ -108,8 +109,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      * Returns the character at the given byte offset. The caller is responsible for making sure that
      * the provided offset is within bounds and points to the beginning of a valid UTF8 character.
      *
-     * @param offset
-     *            - Byte offset
+     * @param offset - Byte offset
      * @return Character at the given offset.
      */
     public char charAt(int offset) {
@@ -218,13 +218,15 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 pointable2.utf8Length);
     }
 
+    public static int compare(IValueReference valueA, IValueReference valueB) {
+        return UTF8StringUtil.compareTo(valueA.getByteArray(), valueA.getStartOffset(), valueA.getLength(),
+                valueB.getByteArray(), valueB.getStartOffset(), valueB.getLength());
+    }
+
     /**
-     * @param src,
-     *            the source string.
-     * @param pattern,
-     *            the pattern string.
-     * @param ignoreCase,
-     *            to ignore case or not.
+     * @param src,        the source string.
+     * @param pattern,    the pattern string.
+     * @param ignoreCase, to ignore case or not.
      * @return the byte offset of the first character of the matching string. Not including the MetaLength.
      */
     public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
@@ -232,12 +234,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     }
 
     /**
-     * @param src,
-     *            the source string.
-     * @param pattern,
-     *            the pattern string.
-     * @param ignoreCase,
-     *            to ignore case or not.
+     * @param src,        the source string.
+     * @param pattern,    the pattern string.
+     * @param ignoreCase, to ignore case or not.
      * @return the offset in the unit of code point of the first character of the matching string. Not including the MetaLength.
      */
     public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
@@ -245,30 +244,22 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     }
 
     /**
-     * @param src,
-     *            the source string.
-     * @param pattern,
-     *            the pattern string.
-     * @param ignoreCase,
-     *            to ignore case or not.
-     * @param startMatch,
-     *            the start offset.
+     * @param src,        the source string.
+     * @param pattern,    the pattern string.
+     * @param ignoreCase, to ignore case or not.
+     * @param startMatch, the start offset.
      * @return the byte offset of the first character of the matching string after <code>startMatchPos}</code>.
-     *         Not including the MetaLength.
+     * Not including the MetaLength.
      */
     public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch) {
         return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, true);
     }
 
     /**
-     * @param src,
-     *            the source string.
-     * @param pattern,
-     *            the pattern string.
-     * @param ignoreCase,
-     *            to ignore case or not.
-     * @param startMatch,
-     *            the start offset.
+     * @param src,        the source string.
+     * @param pattern,    the pattern string.
+     * @param ignoreCase, to ignore case or not.
+     * @param startMatch, the start offset.
      * @return the offset in the unit of code point of the first character of the matching string. Not including the MetaLength.
      */
     public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase,
@@ -324,7 +315,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             }
 
             // The result is counted in code point instead of bytes
-            if (resultInByte == false) {
+            if (!resultInByte) {
                 char ch = src.charAt(srcStart + startMatchPos);
                 if (Character.isHighSurrogate(ch)) {
                     prevHighSurrogate = true;
@@ -431,9 +422,10 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
 
     /**
      * Return the substring. Note that the offset and length are in the unit of code point.
+     *
      * @return {@code true} if substring was successfully written into given {@code out}, or
-     *         {@code false} if substring could not be obtained ({@code codePointOffset} or {@code codePointLength}
-     *         are less than 0 or starting position is greater than the input length)
+     * {@code false} if substring could not be obtained ({@code codePointOffset} or {@code codePointLength}
+     * are less than 0 or starting position is greater than the input length)
      */
     public boolean substr(int codePointOffset, int codePointLength, UTF8StringBuilder builder, GrowableArray out)
             throws IOException {
@@ -442,9 +434,10 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
 
     /**
      * Return the substring. Note that the offset and length are in the unit of code point.
+     *
      * @return {@code true} if substring was successfully written into given {@code out}, or
-     *         {@code false} if substring could not be obtained ({@code codePointOffset} or {@code codePointLength}
-     *         are less than 0 or starting position is greater than the input length)
+     * {@code false} if substring could not be obtained ({@code codePointOffset} or {@code codePointLength}
+     * are less than 0 or starting position is greater than the input length)
      */
     public static boolean substr(UTF8StringPointable src, int codePointOffset, int codePointLength,
             UTF8StringBuilder builder, GrowableArray out) throws IOException {
@@ -548,12 +541,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     /**
      * Generates a lower case string of an input string.
      *
-     * @param src
-     *            , the input source string.
-     * @param builder
-     *            , a builder for the resulting string.
-     * @param out
-     *            , the storage for a result string.
+     * @param src     , the input source string.
+     * @param builder , a builder for the resulting string.
+     * @param out     , the storage for a result string.
      * @throws IOException
      */
     public static void lowercase(UTF8StringPointable src, UTF8StringBuilder builder, GrowableArray out)
@@ -577,12 +567,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     /**
      * Generates an upper case string of an input string.
      *
-     * @param src
-     *            , the input source string.
-     * @param builder
-     *            , a builder for the resulting string.
-     * @param out
-     *            , the storage for a result string.
+     * @param src     , the input source string.
+     * @param builder , a builder for the resulting string.
+     * @param out     , the storage for a result string.
      * @throws IOException
      */
     public static void uppercase(UTF8StringPointable src, UTF8StringBuilder builder, GrowableArray out)
@@ -607,12 +594,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      * Generates a "title" format string from an input source string, i.e., the first letter of each word
      * is in the upper case while the other letter is in the lower case.
      *
-     * @param src
-     *            , the input source string.
-     * @param builder
-     *            , a builder for the resulting string.
-     * @param out
-     *            , the storage for a result string.
+     * @param src     , the input source string.
+     * @param builder , a builder for the resulting string.
+     * @param out     , the storage for a result string.
      * @throws IOException
      */
     public static void initCap(UTF8StringPointable src, UTF8StringBuilder builder, GrowableArray out)
@@ -642,18 +626,12 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     /**
      * Generates a trimmed string of an input source string.
      *
-     * @param srcPtr
-     *            , the input source string
-     * @param builder
-     *            , the result string builder.
-     * @param out
-     *            , the storage for the output string.
-     * @param left
-     *            , whether to trim the left side.
-     * @param right
-     *            , whether to trim the right side.
-     * @param codePointSet
-     *            , the set of code points that should be trimmed.
+     * @param srcPtr       , the input source string
+     * @param builder      , the result string builder.
+     * @param out          , the storage for the output string.
+     * @param left         , whether to trim the left side.
+     * @param right        , whether to trim the right side.
+     * @param codePointSet , the set of code points that should be trimmed.
      * @throws IOException
      */
     public static void trim(UTF8StringPointable srcPtr, UTF8StringBuilder builder, GrowableArray out, boolean left,
@@ -696,16 +674,11 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     /**
      * Generates a trimmed string from the original string.
      *
-     * @param builder
-     *            , the result string builder.
-     * @param out
-     *            , the storage for the output string.
-     * @param left
-     *            , whether to trim the left side.
-     * @param right
-     *            , whether to trim the right side.
-     * @param codePointSet
-     *            , the set of code points that should be trimmed.
+     * @param builder      , the result string builder.
+     * @param out          , the storage for the output string.
+     * @param left         , whether to trim the left side.
+     * @param right        , whether to trim the right side.
+     * @param codePointSet , the set of code points that should be trimmed.
      * @throws IOException
      */
     public void trim(UTF8StringBuilder builder, GrowableArray out, boolean left, boolean right,
@@ -716,12 +689,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     /**
      * Generates a reversed string from an input source string
      *
-     * @param srcPtr
-     *            , the input source string.
-     * @param builder
-     *            , a builder for the resulting string.
-     * @param out
-     *            , the storage for a result string.
+     * @param srcPtr  , the input source string.
+     * @param builder , a builder for the resulting string.
+     * @param out     , the storage for a result string.
      * @throws IOException
      */
     public static void reverse(UTF8StringPointable srcPtr, UTF8StringBuilder builder, GrowableArray out)
@@ -739,7 +709,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                         cursorIndex--;
                         if (UTF8StringUtil.isCharStart(srcPtr.bytes, cursorIndex)) {
                             ch = UTF8StringUtil.charAt(srcPtr.bytes, cursorIndex);
-                            if (Character.isHighSurrogate(ch) == false) {
+                            if (!Character.isHighSurrogate(ch)) {
                                 throw new IllegalArgumentException(
                                         "Decoding Error: no corresponding high surrogate found for the following low surrogate");
                             }
