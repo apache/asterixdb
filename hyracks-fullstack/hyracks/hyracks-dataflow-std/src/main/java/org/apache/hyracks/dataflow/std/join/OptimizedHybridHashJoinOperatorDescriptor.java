@@ -143,6 +143,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private boolean skipInMemoryHJ = false;
     private boolean forceNLJ = false;
     private boolean forceRoleReversal = false;
+    private boolean isDynamic = true;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -302,7 +303,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             getNumberOfPartitions(state.memForJoin, inputsize0, fudgeFactor, nPartitions);
                     state.hybridHJ = new OptimizedHybridHashJoin(ctx.getJobletContext(), state.memForJoin,
                             state.numOfPartitions, PROBE_REL, BUILD_REL, probeRd, buildRd, probeHpc, buildHpc,
-                            probePredEval, buildPredEval, isLeftOuter, nonMatchWriterFactories);
+                            probePredEval, buildPredEval, isLeftOuter, nonMatchWriterFactories,isDynamic);
                     state.hybridHJ.setOperatorStats(stats);
 
                     state.hybridHJ.initBuild();
@@ -314,6 +315,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                    state.hybridHJ.updateMemoryBudget(state.hybridHJ.randomlyUpdateMemory(60,160));
                     state.hybridHJ.build(buffer);
                 }
 
@@ -421,6 +423,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+                    state.hybridHJ.updateMemoryBudget(state.hybridHJ.randomlyUpdateMemory(60,160));
                     state.hybridHJ.probe(buffer, writer);
                 }
 
