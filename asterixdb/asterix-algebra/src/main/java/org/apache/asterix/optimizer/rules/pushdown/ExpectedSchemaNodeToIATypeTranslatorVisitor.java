@@ -39,6 +39,7 @@ import org.apache.asterix.optimizer.rules.pushdown.schema.RootExpectedSchemaNode
 import org.apache.asterix.optimizer.rules.pushdown.schema.UnionExpectedSchemaNode;
 import org.apache.asterix.runtime.projection.DataProjectionInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
+import org.apache.asterix.runtime.projection.ProjectionFiltrationWarningFactoryProvider;
 
 /**
  * This visitor translates the {@link IExpectedSchemaNode} to {@link IAType} record.
@@ -109,6 +110,7 @@ class ExpectedSchemaNodeToIATypeTranslatorVisitor implements IExpectedSchemaNode
     }
 
     private FunctionCallInformation createFunctionCallInformation(IExpectedSchemaNode node) {
-        return new FunctionCallInformation(node.getFunctionName(), node.getSourceLocation());
+        return new FunctionCallInformation(node.getFunctionName(), node.getSourceLocation(),
+                ProjectionFiltrationWarningFactoryProvider.TYPE_MISMATCH_FACTORY);
     }
 }

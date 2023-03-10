@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.asterix.column.metadata.PathInfoSerializer;
 import org.apache.asterix.column.metadata.schema.primitive.MissingFieldSchemaNode;
+import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
 import org.apache.asterix.column.util.RunLengthIntArray;
 import org.apache.asterix.om.types.ATypeTag;
@@ -122,7 +123,7 @@ public final class UnionSchemaNode extends AbstractSchemaNestedNode {
      * This would return any numeric node
      *
      * @return first numeric node or missing node
-     * @see org.apache.asterix.column.operation.query.SchemaClipperVisitor
+     * @see SchemaClipperVisitor
      */
     public AbstractSchemaNode getNumericChildOrMissing() {
         for (AbstractSchemaNode node : children.values()) {

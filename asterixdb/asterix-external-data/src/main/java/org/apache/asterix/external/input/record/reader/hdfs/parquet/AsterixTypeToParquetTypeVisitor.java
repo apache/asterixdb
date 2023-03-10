@@ -174,7 +174,7 @@ public class AsterixTypeToParquetTypeVisitor implements IATypeVisitor<Type, Type
             //If no warning is created, then it means it has been reported
             Warning warning = null;
             if (actualType != ATypeTag.SYSTEM_NULL) {
-                warning = info.createTypeMismatchWarning(expectedType, actualType);
+                warning = info.createWarning(expectedType, actualType);
             }
             if (warning != null) {
                 //New warning that we saw for the first time. We should report it.

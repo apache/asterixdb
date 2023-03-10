@@ -21,6 +21,7 @@ package org.apache.asterix.column.values;
 import java.io.DataInput;
 import java.io.IOException;
 
+import org.apache.asterix.column.metadata.PathInfoSerializer;
 import org.apache.asterix.om.types.ATypeTag;
 
 public interface IColumnValuesReaderFactory {
@@ -51,6 +52,7 @@ public interface IColumnValuesReaderFactory {
      *
      * @param input column metadata info
      * @return columnar reader
+     * @see PathInfoSerializer#writePathInfo(ATypeTag, int, boolean)  for more information on how the path info is serialized
      */
     IColumnValuesReader createValueReader(DataInput input) throws IOException;
 }
