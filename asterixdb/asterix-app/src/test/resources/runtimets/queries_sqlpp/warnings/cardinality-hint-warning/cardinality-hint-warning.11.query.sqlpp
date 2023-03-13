@@ -28,4 +28,4 @@ use tpch;
 
 SELECT count(*)
 FROM customer c, nation n
-WHERE c.c_nationkey /*+ productivity */ = n.n_nationkey;
+WHERE c.c_nationkey /*+ productivity n 100 */ = n.n_nationkey;

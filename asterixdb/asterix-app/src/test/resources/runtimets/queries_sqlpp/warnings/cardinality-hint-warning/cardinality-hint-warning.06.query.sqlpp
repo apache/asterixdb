@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
-* Description  : Test warnings for enhanced hash join hint
+* Description  : Test warnings for cardinality hints
 * Expected Res : Warning, ignore hint
 * Date         : 03/09/2023
 */
@@ -28,4 +28,4 @@ use tpch;
 
 SELECT count(*)
 FROM customer c, nation n
-WHERE c.c_nationkey /*+ productivity 100.0 */ = n.n_nationkey;
+WHERE c.c_nationkey = n.n_nationkey and n.n_name /*+ selectivity 0.0 */ = 'UNITED STATES';

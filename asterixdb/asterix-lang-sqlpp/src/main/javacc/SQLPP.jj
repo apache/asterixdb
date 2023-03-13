@@ -700,7 +700,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
                  selectivity = Double.parseDouble (mat.group());
                }
                else {
-                 throw new SqlppParseException(getSourceLocation(hintToken), "Selectivity value has to be in decimal format");
+                 throw new SqlppParseException(getSourceLocation(hintToken), "Selectivity has to be a decimal value greater than 0 and less than 1");
                }
                return new PredicateCardinalityAnnotation(selectivity);
              }
@@ -727,7 +727,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
                    productivity = Double.parseDouble (numMat.group());
                  }
                  else {
-                   throw new SqlppParseException(getSourceLocation(hintToken), "Productivity value has to be in decimal format");
+                   throw new SqlppParseException(getSourceLocation(hintToken), "Productivity has to be a decimal value greater than 0");
                  }
                }
                else {

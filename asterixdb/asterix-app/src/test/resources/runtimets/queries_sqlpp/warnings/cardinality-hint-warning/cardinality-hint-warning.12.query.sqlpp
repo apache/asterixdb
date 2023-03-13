@@ -18,7 +18,7 @@
  */
 /*
 * Description  : Test warnings for cardinality hints
-* Expected Res : Warning, ignore hint
+* Expected Res : No warning, honor hint
 * Date         : 03/09/2023
 */
 // requesttype=application/json
@@ -28,4 +28,4 @@ use tpch;
 
 SELECT count(*)
 FROM customer c, nation n
-WHERE c.c_nationkey /*+ productivity */ = n.n_nationkey;
+WHERE c.c_nationkey /*+ productivity n 100.0 */ = n.n_nationkey;

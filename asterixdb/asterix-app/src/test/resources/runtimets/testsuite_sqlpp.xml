@@ -15464,11 +15464,15 @@
       <compilation-unit name="cardinality-hint-warning">
         <output-dir compare="Text">cardinality-hint-warning</output-dir>
         <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Expected selectivity value (in line 31, at column 52)]]></expected-warn>
-        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Selectivity value has to be in decimal format (in line 31, at column 52)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Selectivity has to be a decimal value greater than 0 and less than 1 (in line 31, at column 52)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply selectivity hint: Selectivity specified: 0.0, has to be a decimal value greater than 0 and less than 1 (in line 31, at column 73)</expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Selectivity has to be a decimal value greater than 0 and less than 1 (in line 31, at column 52)]]></expected-warn>
         <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Expected productivity collection name and value (in line 31, at column 23)]]></expected-warn>
         <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
         <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
         <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply productivity hint: Productivity specified: 0.0, has to be a decimal value greater than 0 (in line 31, at column 47)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="warnings" check-warnings="true">
