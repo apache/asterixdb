@@ -1,24 +1,24 @@
-distribute result [$$67] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$67] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 3 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
+    limit 3 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$67]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
+      project ([$$67]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
       -- STREAM_PROJECT  |PARTITIONED|
-        assign [$$67] <- [{"id": $$69, "review": $$73}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
+        assign [$$67] <- [{"id": $$69, "review": $$73}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
         -- ASSIGN  |PARTITIONED|
-          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
           -- SORT_MERGE_EXCHANGE [$$69(ASC) ]  |PARTITIONED|
-            project ([$$69, $$73]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
+            project ([$$69, $$73]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
             -- STREAM_PROJECT  |PARTITIONED|
-              assign [$$73] <- [$$d.getField(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
+              assign [$$73] <- [$$d.getField(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
               -- ASSIGN  |PARTITIONED|
-                limit 3 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
+                limit 3 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
                 -- STREAM_LIMIT  |PARTITIONED|
-                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
+                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$69, $$d] <- test.DatasetWithKnownField limit 3 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 0.0]
+                    data-scan []<-[$$69, $$d] <- test.DatasetWithKnownField limit 3 [cardinality: 1000000.0, op-cost: 2.1, total-cost: 2.1]
                     -- DATASOURCE_SCAN  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

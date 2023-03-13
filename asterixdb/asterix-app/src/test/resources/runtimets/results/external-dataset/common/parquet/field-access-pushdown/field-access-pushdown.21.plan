@@ -1,16 +1,16 @@
-distribute result [$$31] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$31] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    aggregate [$$31] <- [agg-sql-sum($$32)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    aggregate [$$31] <- [agg-sql-sum($$32)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- AGGREGATE  |UNPARTITIONED|
-      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        aggregate [$$32] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        aggregate [$$32] <- [agg-sql-count(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- AGGREGATE  |PARTITIONED|
-          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            data-scan []<-[$$p] <- test.ParquetDataset4 project ({}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            data-scan []<-[$$p] <- test.ParquetDataset4 project ({}) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
             -- DATASOURCE_SCAN  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
