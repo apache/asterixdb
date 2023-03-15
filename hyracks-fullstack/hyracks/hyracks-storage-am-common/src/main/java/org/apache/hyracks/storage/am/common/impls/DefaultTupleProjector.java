@@ -32,10 +32,11 @@ class DefaultTupleProjector implements ITupleProjector {
     }
 
     @Override
-    public void project(ITupleReference tuple, DataOutput dos, ArrayTupleBuilder tb) throws IOException {
+    public ITupleReference project(ITupleReference tuple, DataOutput dos, ArrayTupleBuilder tb) throws IOException {
         for (int i = 0; i < tuple.getFieldCount(); i++) {
             dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
             tb.addFieldEndOffset();
         }
+        return tuple;
     }
 }

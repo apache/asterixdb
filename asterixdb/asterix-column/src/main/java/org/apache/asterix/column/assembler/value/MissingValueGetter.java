@@ -16,14 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.projection;
+package org.apache.asterix.column.assembler.value;
 
-import java.io.DataOutput;
-import java.io.IOException;
+import org.apache.asterix.column.values.IColumnValuesReader;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 
-import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+public class MissingValueGetter implements IValueGetter {
+    public static final IValueGetter INSTANCE = new MissingValueGetter();
+    private static final VoidPointable MISSING;
 
-public interface ITupleProjector {
-    ITupleReference project(ITupleReference tuple, DataOutput dos, ArrayTupleBuilder tb) throws IOException;
+    static {
+        MISSING = new VoidPointable();
+        MISSING.set(new byte[] { ATypeTag.MISSING.serialize() }, 0, 1);
+    }
+
+    private MissingValueGetter() {
+    }
+
+    @Override
+    public IValueReference getValue(IColumnValuesReader reader) {
+        return MISSING;
+    }
 }

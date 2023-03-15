@@ -16,14 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.projection;
+package org.apache.asterix.column.assembler.value;
 
-import java.io.DataOutput;
-import java.io.IOException;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 
-import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+public abstract class AbstractFixedLengthValueGetter implements IValueGetter {
+    protected final VoidPointable value;
 
-public interface ITupleProjector {
-    ITupleReference project(ITupleReference tuple, DataOutput dos, ArrayTupleBuilder tb) throws IOException;
+    AbstractFixedLengthValueGetter(ATypeTag typeTag, int nonTaggedLength) {
+        //+1 for the type tag
+        byte[] storage = new byte[1 + nonTaggedLength];
+        storage[0] = typeTag.serialize();
+        value = new VoidPointable();
+        value.set(storage, 0, storage.length);
+    }
 }

@@ -16,14 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.projection;
+package org.apache.asterix.column.assembler.value;
 
-import java.io.DataOutput;
-import java.io.IOException;
+import org.apache.asterix.column.values.IColumnValuesReader;
+import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.primitive.DoublePointable;
 
-import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+class DoubleValueGetter extends AbstractFixedLengthValueGetter {
+    DoubleValueGetter() {
+        super(ATypeTag.DOUBLE, Double.BYTES);
+    }
 
-public interface ITupleProjector {
-    ITupleReference project(ITupleReference tuple, DataOutput dos, ArrayTupleBuilder tb) throws IOException;
+    @Override
+    public IValueReference getValue(IColumnValuesReader reader) {
+        DoublePointable.setDouble(value.getByteArray(), value.getStartOffset() + 1, reader.getDouble());
+        return value;
+    }
 }

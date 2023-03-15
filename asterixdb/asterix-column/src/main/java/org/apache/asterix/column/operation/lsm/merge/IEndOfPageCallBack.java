@@ -16,14 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.projection;
+package org.apache.asterix.column.operation.lsm.merge;
 
-import java.io.DataOutput;
-import java.io.IOException;
+import org.apache.asterix.column.tuple.MergeColumnTupleReference;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeRangeSearchCursor;
 
-import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
-
-public interface ITupleProjector {
-    ITupleReference project(ITupleReference tuple, DataOutput dos, ArrayTupleBuilder tb) throws IOException;
+/**
+ * An interface to signal {@link MergeColumnTupleWriter} that a component's page has reached the end.
+ */
+@FunctionalInterface
+public interface IEndOfPageCallBack {
+    /**
+     * Call {@link  MergeColumnTupleWriter} to finish the current "vertical" merging batch.
+     * The caller of this method is {@link MergeColumnTupleReference#lastTupleReached()}
+     *
+     * @see ColumnBTreeRangeSearchCursor#doHasNext()
+     */
+    void callEnd(MergeColumnTupleReference columnTuple) throws HyracksDataException;
 }

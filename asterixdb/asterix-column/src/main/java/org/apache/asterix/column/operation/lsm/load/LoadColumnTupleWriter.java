@@ -16,14 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.projection;
+package org.apache.asterix.column.operation.lsm.load;
 
-import java.io.DataOutput;
-import java.io.IOException;
-
-import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
+import org.apache.asterix.column.operation.lsm.flush.FlushColumnTupleWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
-public interface ITupleProjector {
-    ITupleReference project(ITupleReference tuple, DataOutput dos, ArrayTupleBuilder tb) throws IOException;
+public class LoadColumnTupleWriter extends FlushColumnTupleWriter {
+    public LoadColumnTupleWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
+            float tolerance) {
+        super(columnMetadata, pageSize, maxNumberOfTuples, tolerance);
+    }
+
+    @Override
+    public void writeTuple(ITupleReference tuple) throws HyracksDataException {
+        writeRecord(tuple);
+    }
 }

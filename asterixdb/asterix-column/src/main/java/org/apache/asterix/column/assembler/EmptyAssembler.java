@@ -16,14 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.projection;
+package org.apache.asterix.column.assembler;
 
-import java.io.DataOutput;
-import java.io.IOException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 
-import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+public class EmptyAssembler extends AbstractNestedValueAssembler {
 
-public interface ITupleProjector {
-    ITupleReference project(ITupleReference tuple, DataOutput dos, ArrayTupleBuilder tb) throws IOException;
+    EmptyAssembler() {
+        super(-1, new AssemblerInfo());
+    }
+
+    @Override
+    void addValue(AbstractValueAssembler value) throws HyracksDataException {
+        //noOp
+    }
+
+    @Override
+    void addValueToParent() throws HyracksDataException {
+        //noOp
+    }
+
+    @Override
+    void addNull(AbstractValueAssembler value) throws HyracksDataException {
+        //noOp
+    }
+
+    @Override
+    public IValueReference getValue() throws HyracksDataException {
+        return null;
+    }
 }
