@@ -171,7 +171,6 @@ import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.statement.ViewDropStatement;
-import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -913,7 +912,6 @@ Statement SingleStatement() throws ParseException:
     | stmt = CreateStatement()
     | stmt = LoadStatement()
     | stmt = DropStatement()
-    | stmt = WriteStatement()
     | stmt = SetStatement()
     | stmt = InsertStatement()
     | stmt = DeleteStatement()
@@ -2658,24 +2656,6 @@ Statement SetStatement() throws ParseException:
   <SET> { startToken = token; } pn = Identifier() pv = ConstantString()
     {
       SetStatement stmt = new SetStatement(pn, pv);
-      return addSourceLocation(stmt, startToken);
-    }
-}
-
-Statement WriteStatement() throws ParseException:
-{
-  Token startToken = null;
-  String nodeName = null;
-  String fileName = null;
-  Query query;
-  String writerClass = null;
-  Pair<Identifier,Identifier> nameComponents = null;
-}
-{
-  <WRITE> { startToken = token; } <OUTPUT> <TO> nodeName = Identifier() <COLON> fileName = ConstantString()
-    ( <USING> writerClass = ConstantString() )?
-    {
-      WriteStatement stmt = new WriteStatement(new Identifier(nodeName), fileName, writerClass);
       return addSourceLocation(stmt, startToken);
     }
 }

@@ -110,7 +110,6 @@ import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.statement.ViewDropStatement;
-import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
@@ -506,16 +505,6 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
     @Override
     public Void visit(DataverseDecl dv, Integer step) throws CompilationException {
         out.println(skip(step) + "use " + dataverseSymbol + generateDataverseName(dv.getDataverseName()) + ";\n\n");
-        return null;
-    }
-
-    @Override
-    public Void visit(WriteStatement ws, Integer step) throws CompilationException {
-        out.print(skip(step) + "write output to " + ws.getNcName() + ":" + revertStringToQuoted(ws.getFileName()));
-        if (ws.getWriterClassName() != null) {
-            out.print(" using " + ws.getWriterClassName());
-        }
-        out.println();
         return null;
     }
 

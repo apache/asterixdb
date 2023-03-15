@@ -60,7 +60,6 @@ import org.apache.asterix.lang.common.statement.InternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
-import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.visitor.base.AbstractQueryExpressionVisitor;
@@ -416,16 +415,6 @@ public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<V
     @Override
     public Void visit(DataverseDecl dv, Integer step) throws CompilationException {
         out.println(skip(step) + "DataverseUse " + dv.getDataverseName());
-        return null;
-    }
-
-    @Override
-    public Void visit(WriteStatement ws, Integer step) throws CompilationException {
-        out.print(skip(step) + "WriteOutputTo " + ws.getNcName() + ":" + ws.getFileName());
-        if (ws.getWriterClassName() != null) {
-            out.print(" using " + ws.getWriterClassName());
-        }
-        out.println();
         return null;
     }
 

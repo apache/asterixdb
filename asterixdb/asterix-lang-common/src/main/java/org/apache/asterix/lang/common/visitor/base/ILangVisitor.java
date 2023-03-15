@@ -86,7 +86,6 @@ import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.statement.ViewDropStatement;
-import org.apache.asterix.lang.common.statement.WriteStatement;
 
 public interface ILangVisitor<R, T> {
 
@@ -169,8 +168,6 @@ public interface ILangVisitor<R, T> {
     R visit(DataverseDropStatement del, T arg) throws CompilationException;
 
     R visit(TypeDropStatement del, T arg) throws CompilationException;
-
-    R visit(WriteStatement ws, T arg) throws CompilationException;
 
     R visit(SetStatement ss, T arg) throws CompilationException;
 

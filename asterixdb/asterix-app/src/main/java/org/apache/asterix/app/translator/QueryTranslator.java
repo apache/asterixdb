@@ -23,7 +23,6 @@ import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 import static org.apache.asterix.lang.common.statement.CreateFullTextFilterStatement.FIELD_TYPE_STOPWORDS;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.rmi.RemoteException;
@@ -157,7 +156,6 @@ import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.statement.ViewDropStatement;
-import org.apache.asterix.lang.common.statement.WriteStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
@@ -244,7 +242,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
-import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.api.client.IClusterInfoCollector;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -252,7 +249,6 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.io.FileSplit;
-import org.apache.hyracks.api.io.UnmanagedFileSplit;
 import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -510,9 +506,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     case EXTERNAL_DATASET_REFRESH:
                         handleExternalDatasetRefreshStatement(metadataProvider, stmt, hcc);
                         break;
-                    case WRITE:
-                        //Deprecated.
-                        break;
                     case FUNCTION_DECL:
                         handleDeclareFunctionStatement(metadataProvider, stmt);
                         break;
@@ -573,18 +566,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             int varCounter) {
         return new LangRewritingContext(metadataProvider, declaredFunctions, declaredViews, warningCollector,
                 varCounter);
-    }
-
-    protected Pair<IAWriterFactory, FileSplit> handleWriteStatement(Statement stmt)
-            throws InstantiationException, IllegalAccessException, ClassNotFoundException {
-        WriteStatement ws = (WriteStatement) stmt;
-        File f = new File(ws.getFileName());
-        FileSplit outputFile = new UnmanagedFileSplit(ws.getNcName().getValue(), f.getPath());
-        IAWriterFactory writerFactory = null;
-        if (ws.getWriterClassName() != null) {
-            writerFactory = (IAWriterFactory) Class.forName(ws.getWriterClassName()).newInstance();
-        }
-        return new Pair<>(writerFactory, outputFile);
     }
 
     protected Dataverse handleUseDataverseStatement(MetadataProvider metadataProvider, Statement stmt)
@@ -5252,7 +5233,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             case DATAVERSE_DECL:
             case FUNCTION_DECL:
             case SET:
-            case WRITE:
                 return false;
             default:
                 return true;

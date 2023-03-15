@@ -81,7 +81,6 @@ public interface Statement extends ILangExpression {
         SET,
         TYPE_DECL,
         TYPE_DROP,
-        WRITE,
         CREATE_INDEX,
         CREATE_DATAVERSE,
         CREATE_VIEW,
