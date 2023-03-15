@@ -1,0 +1,43 @@
+distribute result [$$80] [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 5 offset 5 [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      project ([$$80]) [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+      -- STREAM_PROJECT  |PARTITIONED|
+        assign [$$80] <- [get-item($$78, 0)] [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+        -- ASSIGN  |PARTITIONED|
+          project ([$$78]) [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+          -- STREAM_PROJECT  |PARTITIONED|
+            exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+            -- SORT_MERGE_EXCHANGE [$$82(ASC) ]  |PARTITIONED|
+              limit 10 [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+              -- STREAM_LIMIT  |PARTITIONED|
+                exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  order (topK: 10) (ASC, $$82) [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                  -- STABLE_SORT [topK: 10] [$$82(ASC)]  |PARTITIONED|
+                    exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      project ([$$78, $$82]) [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        subplan {
+                                  aggregate [$$78] <- [listify($$77)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- AGGREGATE  |LOCAL|
+                                    assign [$$77] <- [object-remove(object-remove(object-remove($$t0, "title"), "authors"), "misc")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- ASSIGN  |LOCAL|
+                                      unnest $$t0 <- scan-collection(to-array($$paper)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- UNNEST  |LOCAL|
+                                        nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                               } [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                        -- SUBPLAN  |PARTITIONED|
+                          exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            data-scan []<-[$$82, $$paper] <- test.DBLP1 [cardinality: 100.0, op-cost: 100.0, total-cost: 100.0]
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

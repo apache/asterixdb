@@ -1,0 +1,8 @@
+{ "DataverseName": "test", "IndexName": "ds1" }
+{ "DataverseName": "test", "IndexName": "exclude_unknown_idx1", "ExcludeUnknownKey": true }
+{ "DataverseName": "test", "IndexName": "exclude_unknown_idx2", "ExcludeUnknownKey": true }
+{ "DataverseName": "test", "IndexName": "idx1", "ExcludeUnknownKey": false }
+{ "DataverseName": "test", "IndexName": "idx2", "ExcludeUnknownKey": false }
+{ "DataverseName": "test", "IndexName": "include_unknown_idx1", "ExcludeUnknownKey": false }
+{ "DataverseName": "test", "IndexName": "include_unknown_idx2", "ExcludeUnknownKey": false }
+{ "DataverseName": "test", "IndexName": "sample_idx_1_ds1" }

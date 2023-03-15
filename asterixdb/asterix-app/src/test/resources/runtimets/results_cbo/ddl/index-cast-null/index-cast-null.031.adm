@@ -1,0 +1,8 @@
+{ "IndexName": "ds4_o_idx_f_d", "Cast": { "Default": null } }
+{ "IndexName": "ds4_o_idx_f_d_fmt", "Cast": { "Default": null, "DataFormat": [ null, "MM/DD/YYYY", null ] } }
+{ "IndexName": "ds4_o_idx_f_dt", "Cast": { "Default": null } }
+{ "IndexName": "ds4_o_idx_f_dt_fmt", "Cast": { "Default": null, "DataFormat": [ "MM/DD/YYYY hh:mm:ss.nnna", null, null ] } }
+{ "IndexName": "ds4_o_idx_f_t", "Cast": { "Default": null } }
+{ "IndexName": "ds4_o_idx_f_t_fmt", "Cast": { "Default": null, "DataFormat": [ null, null, "hh:mm:ss.nnna" ] } }
+{ "IndexName": "ds4_o_idx_invalid_fmt", "Cast": { "Default": null, "DataFormat": [ null, "invalid_format", null ] } }
+{ "IndexName": "sample_idx_1_ds4" }

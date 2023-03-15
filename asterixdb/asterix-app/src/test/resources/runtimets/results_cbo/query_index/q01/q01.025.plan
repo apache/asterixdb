@@ -1,0 +1,20 @@
+distribute result [$$v] [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$v]) [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$v] <- [{"SK0": $$14, "SK1": $$15, "PK0": $$16}] [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+      -- ASSIGN  |PARTITIONED|
+        exchange [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+        -- SORT_MERGE_EXCHANGE [$$16(ASC) ]  |PARTITIONED|
+          order (ASC, $$16) [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+          -- STABLE_SORT [$$16(ASC)]  |PARTITIONED|
+            exchange [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              data-scan []<-[$$14, $$15, $$16] <- test.ds1.ds1_age_dept.query-index [cardinality: 14.0, op-cost: 14.0, total-cost: 14.0]
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,0 +1,38 @@
+distribute result [$$45] [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$45]) [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$45] <- [{"age": $$SK0, "cnt": $$49}] [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+      -- ASSIGN  |PARTITIONED|
+        exchange [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+        -- SORT_MERGE_EXCHANGE [$$SK0(ASC) ]  |PARTITIONED|
+          group by ([$$SK0 := $$51]) decor ([]) {
+                    aggregate [$$49] <- [agg-sql-sum($$50)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- AGGREGATE  |LOCAL|
+                      nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                 } [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+          -- SORT_GROUP_BY[$$51]  |PARTITIONED|
+            exchange [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+            -- HASH_PARTITION_EXCHANGE [$$51]  |PARTITIONED|
+              group by ([$$51 := $$47]) decor ([]) {
+                        aggregate [$$50] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- AGGREGATE  |LOCAL|
+                          nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                     } [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+              -- PRE_CLUSTERED_GROUP_BY[$$47]  |PARTITIONED|
+                exchange [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$47]) [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    exchange [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      data-scan []<-[$$47, $$48] <- test.ds1.ds1_age.query-index [cardinality: 14.0, op-cost: 14.0, total-cost: 14.0]
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

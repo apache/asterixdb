@@ -17,4 +17,6 @@
  * under the License.
  */
 
-SELECT Value v from Metadata.`Index` v WHERE v.DataverseName = "MyDataVerse" ORDER BY v. IndexName;
+FROM Metadata.`Index` v WHERE v.DataverseName = "MyDataVerse"
+SELECT v.* EXCLUDE SampleSeed
+ORDER BY v.IndexName;

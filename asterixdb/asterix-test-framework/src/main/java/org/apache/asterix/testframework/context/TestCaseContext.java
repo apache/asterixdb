@@ -23,9 +23,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.apache.asterix.testframework.template.TemplateHelper;
@@ -35,6 +38,8 @@ import org.apache.asterix.testframework.xml.TestCase.CompilationUnit;
 import org.apache.asterix.testframework.xml.TestGroup;
 import org.apache.asterix.testframework.xml.TestSuite;
 import org.apache.asterix.testframework.xml.TestSuiteParser;
+
+import com.google.common.collect.Sets;
 
 public class TestCaseContext {
 
@@ -139,6 +144,23 @@ public class TestCaseContext {
 
     public List<TestFileContext> getExpectedResultFiles(CompilationUnit cUnit) {
         return getFilesInDir(testSuite.getResultOffsetPath(), cUnit.getOutputDir().getValue(), false);
+    }
+
+    public List<TestFileContext> getExpectedResultsAndDelta(CompilationUnit cUnit, String deltaBasePath) {
+        Comparator<TestFileContext> compOnFileName = Comparator.comparing(o -> o.getFile().getName());
+        Set<TestFileContext> deltaSet = new TreeSet<>(compOnFileName);
+        deltaSet.addAll(getFilesInDir(deltaBasePath, cUnit.getOutputDir().getValue(), false));
+        if (deltaSet.isEmpty()) {
+            return getExpectedResultFiles(cUnit);
+        }
+        Set<TestFileContext> baseSet = new TreeSet<>(compOnFileName);
+        baseSet.addAll(getExpectedResultFiles(cUnit));
+        Set<TestFileContext> diff = Sets.difference(baseSet, deltaSet);
+        List<TestFileContext> expectedWithDelta = new ArrayList<>();
+        expectedWithDelta.addAll(diff);
+        expectedWithDelta.addAll(deltaSet);
+        Collections.sort(expectedWithDelta);
+        return expectedWithDelta;
     }
 
     public File getActualResultFile(CompilationUnit cUnit, File expectedFile, File actualResultsBase) {

@@ -1,0 +1,19 @@
+{ "IndexName": "idx1", "SearchKey": [ [ "s_f1" ] ] }
+{ "IndexName": "idx10", "SearchKey": [ [ "s_f1" ] ], "SearchKeyType": [ "string" ], "Cast": { "Default": null } }
+{ "IndexName": "idx11", "SearchKey": [ [ "s_f1" ] ], "SearchKeyType": [ "int64" ], "Cast": { "Default": null } }
+{ "IndexName": "idx12", "SearchKey": [ [ "s_f2" ] ] }
+{ "IndexName": "idx13", "SearchKey": [ [ "s_f2" ] ], "SearchKeyType": [ "string" ], "Cast": { "Default": null } }
+{ "IndexName": "idx14", "SearchKey": [ [ "s_f2" ] ], "SearchKeyType": [ "int64" ], "Cast": { "Default": null } }
+{ "IndexName": "idx15", "SearchKey": [ [ "i_f" ] ], "SearchKeyType": [ "int64" ], "Cast": { "Default": null } }
+{ "IndexName": "idx16", "SearchKey": [ [ "i_f" ] ], "SearchKeyType": [ "string" ], "Cast": { "Default": null } }
+{ "IndexName": "idx2", "SearchKey": [ [ "s_f1" ] ], "SearchKeyType": [ "string" ], "Cast": { "Default": null } }
+{ "IndexName": "idx3", "SearchKey": [ [ "s_f1" ] ], "SearchKeyType": [ "int64" ], "Cast": { "Default": null } }
+{ "IndexName": "idx4", "SearchKey": [ [ "s_f2" ] ] }
+{ "IndexName": "idx5", "SearchKey": [ [ "s_f2" ] ], "SearchKeyType": [ "string" ], "Cast": { "Default": null } }
+{ "IndexName": "idx6", "SearchKey": [ [ "s_f2" ] ], "SearchKeyType": [ "int64" ], "Cast": { "Default": null } }
+{ "IndexName": "idx7", "SearchKey": [ [ "i_f" ] ], "SearchKeyType": [ "int64" ], "Cast": { "Default": null } }
+{ "IndexName": "idx8", "SearchKey": [ [ "i_f" ] ], "SearchKeyType": [ "string" ], "Cast": { "Default": null } }
+{ "IndexName": "idx9", "SearchKey": [ [ "s_f1" ] ] }
+{ "IndexName": "idx_exc1", "SearchKey": [ [ "s_f2" ] ], "SearchKeyType": [ "int64" ], "Cast": { "Default": null } }
+{ "IndexName": "idx_exc2", "SearchKey": [ [ "s_f2" ] ], "SearchKeyType": [ "int64" ], "Cast": { "Default": null } }
+{ "IndexName": "sample_idx_1_ds5", "SearchKey": [ [ "id" ] ] }

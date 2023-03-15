@@ -196,9 +196,9 @@ public class TestExecutor {
     private static final ObjectReader JSON_NODE_READER = OM.readerFor(JsonNode.class);
     private static final ObjectReader SINGLE_JSON_NODE_READER = JSON_NODE_READER
             .with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS, DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
-    private static final ObjectReader RESULT_NODE_READER =
+    protected static final ObjectReader RESULT_NODE_READER =
             JSON_NODE_READER.with(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT);
-    private static final String SQLPP = "sqlpp";
+    protected static final String SQLPP = "sqlpp";
     private static final String DEFAULT_PLAN_FORMAT = "string";
     // see
     // https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/417184
@@ -275,6 +275,8 @@ public class TestExecutor {
     private Map<File, TestLoop> testLoops = new HashMap<>();
     private double timeoutMultiplier = 1;
     protected int loopIteration;
+
+    protected String deltaPath = null;
 
     public TestExecutor() {
         this(Inet4Address.getLoopbackAddress().getHostAddress(), 19002);
@@ -1827,14 +1829,14 @@ public class TestExecutor {
         return executeUpdateOrDdl(statement, outputFormat, getQueryServiceUri(SQLPP), cUnit);
     }
 
-    private ExtractedResult executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri)
+    protected ExtractedResult executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri)
             throws Exception {
         try (InputStream resultStream = executeQueryService(statement, serviceUri, outputFormat, UTF_8)) {
             return ResultExtractor.extract(resultStream, UTF_8, outputFormat);
         }
     }
 
-    private ExtractedResult executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri,
+    protected ExtractedResult executeUpdateOrDdl(String statement, OutputFormat outputFormat, URI serviceUri,
             CompilationUnit cUnit) throws Exception {
         try (InputStream resultStream = executeQueryService(statement, outputFormat, serviceUri, cUnit.getParameter(),
                 cUnit.getPlaceholder(), false, UTF_8)) {
@@ -2157,7 +2159,9 @@ public class TestExecutor {
                 Assert.fail("No test files found for test: " + testCaseCtx.getTestCase().getFilePath() + "/"
                         + cUnit.getName());
             }
-            List<TestFileContext> expectedResultFileCtxs = testCaseCtx.getExpectedResultFiles(cUnit);
+            List<TestFileContext> expectedResultFileCtxs =
+                    deltaPath != null ? testCaseCtx.getExpectedResultsAndDelta(cUnit, deltaPath)
+                            : testCaseCtx.getExpectedResultFiles(cUnit);
             int[] savedQueryCounts = new int[numOfFiles + testFileCtxs.size()];
             loopIteration = 0;
             for (ListIterator<TestFileContext> iter = testFileCtxs.listIterator(); iter.hasNext();) {
@@ -2869,7 +2873,7 @@ public class TestExecutor {
         return ResultExtractor.extract(inputStream, responseCharset, outputFormat).getResult();
     }
 
-    private URI getQueryServiceUri(String extension) throws URISyntaxException {
+    protected URI getQueryServiceUri(String extension) throws URISyntaxException {
         return getEndpoint(Servlets.QUERY_SERVICE);
     }
 
