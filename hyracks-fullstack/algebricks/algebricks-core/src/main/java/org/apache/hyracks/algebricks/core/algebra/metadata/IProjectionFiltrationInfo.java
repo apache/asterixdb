@@ -18,18 +18,22 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.metadata;
 
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+
 /**
  * Generic interface to include the projection information for
  * {@link org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator}
  */
-public interface IProjectionInfo<T> {
+public interface IProjectionFiltrationInfo<T> {
     /**
      * @return projected values' information
      */
     T getProjectionInfo();
 
+    ILogicalExpression getFilterExpression();
+
     /**
-     * @return a copy of the {@link IProjectionInfo}
+     * @return a copy of the {@link IProjectionFiltrationInfo}
      */
-    IProjectionInfo<T> createCopy();
+    IProjectionFiltrationInfo<T> createCopy();
 }

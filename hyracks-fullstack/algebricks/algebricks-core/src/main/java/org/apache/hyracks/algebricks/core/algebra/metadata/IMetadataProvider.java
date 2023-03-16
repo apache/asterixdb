@@ -43,41 +43,42 @@ import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 
 public interface IMetadataProvider<S, I> {
-    public IDataSource<S> findDataSource(S id) throws AlgebricksException;
+    IDataSource<S> findDataSource(S id) throws AlgebricksException;
 
     /**
      * Obs: A scanner may choose to contribute a null
      * AlgebricksPartitionConstraint and implement
      * contributeSchedulingConstraints instead.
      */
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(IDataSource<S> dataSource,
+    Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(IDataSource<S> dataSource,
             List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars,
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
-            IProjectionInfo<?> projectionInfo) throws AlgebricksException;
+            IProjectionFiltrationInfo<?> projectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo)
+            throws AlgebricksException;
 
-    public Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> getWriteFileRuntime(IDataSink sink,
-            int[] printColumns, IPrinterFactory[] printerFactories, IAWriterFactory writerFactory,
-            RecordDescriptor inputDesc) throws AlgebricksException;
+    Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> getWriteFileRuntime(IDataSink sink, int[] printColumns,
+            IPrinterFactory[] printerFactories, IAWriterFactory writerFactory, RecordDescriptor inputDesc)
+            throws AlgebricksException;
 
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getResultHandleRuntime(IDataSink sink,
-            int[] printColumns, IPrinterFactory[] printerFactories, IAWriterFactory writerFactory,
+    Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getResultHandleRuntime(IDataSink sink, int[] printColumns,
+            IPrinterFactory[] printerFactories, IAWriterFactory writerFactory,
             IResultSerializerFactoryProvider resultSerializerFactoryProvider, RecordDescriptor inputDesc,
             IResultMetadata metadata, JobSpecification spec) throws AlgebricksException;
 
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getWriteResultRuntime(IDataSource<S> dataSource,
+    Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getWriteResultRuntime(IDataSource<S> dataSource,
             IOperatorSchema propagatedSchema, List<LogicalVariable> keys, LogicalVariable payLoadVar,
             List<LogicalVariable> additionalNonKeyFields, JobGenContext context, JobSpecification jobSpec)
             throws AlgebricksException;
 
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertRuntime(IDataSource<S> dataSource,
+    Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getInsertRuntime(IDataSource<S> dataSource,
             IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv, List<LogicalVariable> keys,
             LogicalVariable payLoadVar, List<LogicalVariable> additionalFilterKeyFields,
             List<LogicalVariable> additionalNonFilteringFields, RecordDescriptor inputRecordDesc, JobGenContext context,
             JobSpecification jobSpec, boolean bulkload) throws AlgebricksException;
 
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getDeleteRuntime(IDataSource<S> dataSource,
+    Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getDeleteRuntime(IDataSource<S> dataSource,
             IOperatorSchema propagatedSchema, IVariableTypeEnvironment typeEnv, List<LogicalVariable> keys,
             LogicalVariable payLoadVar, List<LogicalVariable> additionalNonKeyFields,
             List<LogicalVariable> additionalNonFilteringFields, RecordDescriptor inputRecordDesc, JobGenContext context,
@@ -87,42 +88,28 @@ public interface IMetadataProvider<S, I> {
      * Creates the insert runtime of IndexInsertDeletePOperator, which models
      * insert/delete operations into a secondary index.
      *
-     * @param dataSource
-     *            Target secondary index.
-     * @param propagatedSchema
-     *            Output schema of the insert/delete operator to be created.
-     * @param inputSchemas
-     *            Output schemas of the insert/delete operator to be created.
-     * @param typeEnv
-     *            Type environment of the original IndexInsertDeleteOperator operator.
-     * @param primaryKeys
-     *            Variables for the dataset's primary keys that the dataSource secondary index belongs to.
-     * @param secondaryKeys
-     *            Variables for the secondary-index keys.
-     * @param additionalNonKeyFields
-     *            Additional variables that can be passed to the secondary index as payload.
-     *            This can be useful when creating a second filter on a non-primary and non-secondary
-     *            fields for additional pruning power.
-     * @param filterExpr
-     *            Filtering expression to be pushed inside the runtime op.
-     *            Such a filter may, e.g., exclude NULLs from being inserted/deleted.
-     * @param recordDesc
-     *            Output record descriptor of the runtime op to be created.
-     * @param context
-     *            Job generation context.
-     * @param spec
-     *            Target job specification.
-     * @param secondaryKeysPipelines
-     *            Nested plans to extract secondary keys.
-     * @param pipelineTopSchema
-     *            Schema of the primary pipeline for secondary keys.
-     * @return
-     *         A Hyracks IOperatorDescriptor and its partition constraint.
+     * @param dataSource             Target secondary index.
+     * @param propagatedSchema       Output schema of the insert/delete operator to be created.
+     * @param inputSchemas           Output schemas of the insert/delete operator to be created.
+     * @param typeEnv                Type environment of the original IndexInsertDeleteOperator operator.
+     * @param primaryKeys            Variables for the dataset's primary keys that the dataSource secondary index belongs to.
+     * @param secondaryKeys          Variables for the secondary-index keys.
+     * @param additionalNonKeyFields Additional variables that can be passed to the secondary index as payload.
+     *                               This can be useful when creating a second filter on a non-primary and non-secondary
+     *                               fields for additional pruning power.
+     * @param filterExpr             Filtering expression to be pushed inside the runtime op.
+     *                               Such a filter may, e.g., exclude NULLs from being inserted/deleted.
+     * @param recordDesc             Output record descriptor of the runtime op to be created.
+     * @param context                Job generation context.
+     * @param spec                   Target job specification.
+     * @param secondaryKeysPipelines Nested plans to extract secondary keys.
+     * @param pipelineTopSchema      Schema of the primary pipeline for secondary keys.
+     * @return A Hyracks IOperatorDescriptor and its partition constraint.
      * @throws AlgebricksException
      */
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertRuntime(
-            IDataSourceIndex<I, S> dataSource, IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
-            IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
+    Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertRuntime(IDataSourceIndex<I, S> dataSource,
+            IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv,
+            List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalNonKeyFields, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
             JobGenContext context, JobSpecification spec, boolean bulkload,
             List<List<AlgebricksPipeline>> secondaryKeysPipelines, IOperatorSchema pipelineTopSchema)
@@ -132,42 +119,28 @@ public interface IMetadataProvider<S, I> {
      * Creates the delete runtime of IndexInsertDeletePOperator, which models
      * insert/delete operations into a secondary index.
      *
-     * @param dataSource
-     *            Target secondary index.
-     * @param propagatedSchema
-     *            Output schema of the insert/delete operator to be created.
-     * @param inputSchemas
-     *            Output schemas of the insert/delete operator to be created.
-     * @param typeEnv
-     *            Type environment of the original IndexInsertDeleteOperator operator.
-     * @param primaryKeys
-     *            Variables for the dataset's primary keys that the dataSource secondary index belongs to.
-     * @param secondaryKeys
-     *            Variables for the secondary-index keys.
-     * @param additionalNonKeyFields
-     *            Additional variables that can be passed to the secondary index as payload.
-     *            This can be useful when creating a second filter on a non-primary and non-secondary
-     *            fields for additional pruning power.
-     * @param filterExpr
-     *            Filtering expression to be pushed inside the runtime op.
-     *            Such a filter may, e.g., exclude NULLs from being inserted/deleted.
-     * @param recordDesc
-     *            Output record descriptor of the runtime op to be created.
-     * @param context
-     *            Job generation context.
-     * @param spec
-     *            Target job specification.
-     * @param secondaryKeysPipelines
-     *            Nested plan to extract secondary keys.
-     * @param pipelineTopSchema
-     *            Schema of the primary pipeline for secondary keys.
-     * @return
-     *         A Hyracks IOperatorDescriptor and its partition constraint.
+     * @param dataSource             Target secondary index.
+     * @param propagatedSchema       Output schema of the insert/delete operator to be created.
+     * @param inputSchemas           Output schemas of the insert/delete operator to be created.
+     * @param typeEnv                Type environment of the original IndexInsertDeleteOperator operator.
+     * @param primaryKeys            Variables for the dataset's primary keys that the dataSource secondary index belongs to.
+     * @param secondaryKeys          Variables for the secondary-index keys.
+     * @param additionalNonKeyFields Additional variables that can be passed to the secondary index as payload.
+     *                               This can be useful when creating a second filter on a non-primary and non-secondary
+     *                               fields for additional pruning power.
+     * @param filterExpr             Filtering expression to be pushed inside the runtime op.
+     *                               Such a filter may, e.g., exclude NULLs from being inserted/deleted.
+     * @param recordDesc             Output record descriptor of the runtime op to be created.
+     * @param context                Job generation context.
+     * @param spec                   Target job specification.
+     * @param secondaryKeysPipelines Nested plan to extract secondary keys.
+     * @param pipelineTopSchema      Schema of the primary pipeline for secondary keys.
+     * @return A Hyracks IOperatorDescriptor and its partition constraint.
      * @throws AlgebricksException
      */
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexDeleteRuntime(
-            IDataSourceIndex<I, S> dataSource, IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
-            IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
+    Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexDeleteRuntime(IDataSourceIndex<I, S> dataSource,
+            IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv,
+            List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalNonKeyFields, ILogicalExpression filterExpr, RecordDescriptor recordDesc,
             JobGenContext context, JobSpecification spec, List<List<AlgebricksPipeline>> secondaryKeysPipelines,
             IOperatorSchema pipelineTopSchema) throws AlgebricksException;
@@ -177,48 +150,37 @@ public interface IMetadataProvider<S, I> {
      * secondary key into [token, number of token] pair in a length-partitioned index.
      * In case of non length-partitioned index, it tokenizes secondary key into [token].
      *
-     * @param dataSource
-     *            Target secondary index.
-     * @param propagatedSchema
-     *            Output schema of the insert/delete operator to be created.
-     * @param inputSchemas
-     *            Output schemas of the insert/delete operator to be created.
-     * @param typeEnv
-     *            Type environment of the original IndexInsertDeleteOperator operator.
-     * @param primaryKeys
-     *            Variables for the dataset's primary keys that the dataSource secondary index belongs to.
-     * @param secondaryKeys
-     *            Variables for the secondary-index keys.
-     * @param filterExpr
-     *            Filtering expression to be pushed inside the runtime op.
-     *            Such a filter may, e.g., exclude NULLs from being inserted/deleted.
-     * @param recordDesc
-     *            Output record descriptor of the runtime op to be created.
-     * @param context
-     *            Job generation context.
-     * @param spec
-     *            Target job specification.
-     * @return
-     *         A Hyracks IOperatorDescriptor and its partition constraint.
+     * @param dataSource       Target secondary index.
+     * @param propagatedSchema Output schema of the insert/delete operator to be created.
+     * @param inputSchemas     Output schemas of the insert/delete operator to be created.
+     * @param typeEnv          Type environment of the original IndexInsertDeleteOperator operator.
+     * @param primaryKeys      Variables for the dataset's primary keys that the dataSource secondary index belongs to.
+     * @param secondaryKeys    Variables for the secondary-index keys.
+     * @param filterExpr       Filtering expression to be pushed inside the runtime op.
+     *                         Such a filter may, e.g., exclude NULLs from being inserted/deleted.
+     * @param recordDesc       Output record descriptor of the runtime op to be created.
+     * @param context          Job generation context.
+     * @param spec             Target job specification.
+     * @return A Hyracks IOperatorDescriptor and its partition constraint.
      * @throws AlgebricksException
      */
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getTokenizerRuntime(
-            IDataSourceIndex<I, S> dataSource, IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
-            IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
-            ILogicalExpression filterExpr, RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec,
-            boolean bulkload) throws AlgebricksException;
+    Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getTokenizerRuntime(IDataSourceIndex<I, S> dataSource,
+            IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv,
+            List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys, ILogicalExpression filterExpr,
+            RecordDescriptor recordDesc, JobGenContext context, JobSpecification spec, boolean bulkload)
+            throws AlgebricksException;
 
-    public IDataSourceIndex<I, S> findDataSourceIndex(I indexId, S dataSourceId) throws AlgebricksException;
+    IDataSourceIndex<I, S> findDataSourceIndex(I indexId, S dataSourceId) throws AlgebricksException;
 
-    public IFunctionInfo lookupFunction(FunctionIdentifier fid);
+    IFunctionInfo lookupFunction(FunctionIdentifier fid);
 
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getUpsertRuntime(IDataSource<S> dataSource,
+    Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getUpsertRuntime(IDataSource<S> dataSource,
             IOperatorSchema inputSchema, IVariableTypeEnvironment typeEnv, List<LogicalVariable> keys,
             LogicalVariable payLoadVar, List<LogicalVariable> additionalFilterFields,
             List<LogicalVariable> additionalNonFilteringFields, RecordDescriptor recordDesc, JobGenContext context,
             JobSpecification jobSpec) throws AlgebricksException;
 
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexUpsertRuntime(
+    Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexUpsertRuntime(
             IDataSourceIndex<I, S> dataSourceIndex, IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas,
             IVariableTypeEnvironment typeEnv, List<LogicalVariable> primaryKeys, List<LogicalVariable> secondaryKeys,
             List<LogicalVariable> additionalFilteringKeys, ILogicalExpression filterExpr,
@@ -226,12 +188,11 @@ public interface IMetadataProvider<S, I> {
             LogicalVariable prevAdditionalFilteringKeys, RecordDescriptor inputDesc, JobGenContext context,
             JobSpecification spec, List<List<AlgebricksPipeline>> secondaryKeysPipelines) throws AlgebricksException;
 
-    public ITupleFilterFactory createTupleFilterFactory(IOperatorSchema[] inputSchemas,
-            IVariableTypeEnvironment typeEnv, ILogicalExpression filterExpr, JobGenContext context)
-            throws AlgebricksException;
+    ITupleFilterFactory createTupleFilterFactory(IOperatorSchema[] inputSchemas, IVariableTypeEnvironment typeEnv,
+            ILogicalExpression filterExpr, JobGenContext context) throws AlgebricksException;
 
-    public Map<String, Object> getConfig();
+    Map<String, Object> getConfig();
 
-    public boolean isBlockingOperatorDisabled();
+    boolean isBlockingOperatorDisabled();
 
 }

@@ -21,7 +21,9 @@ package org.apache.asterix.optimizer.rules.pushdown;
 import static org.apache.asterix.optimizer.rules.pushdown.ExpressionValueAccessPushdownVisitor.ARRAY_FUNCTIONS;
 import static org.apache.asterix.optimizer.rules.pushdown.ExpressionValueAccessPushdownVisitor.SUPPORTED_FUNCTIONS;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -35,12 +37,15 @@ import org.apache.asterix.optimizer.rules.pushdown.schema.IExpectedSchemaNode;
 import org.apache.asterix.optimizer.rules.pushdown.schema.ObjectExpectedSchemaNode;
 import org.apache.asterix.optimizer.rules.pushdown.schema.RootExpectedSchemaNode;
 import org.apache.asterix.optimizer.rules.pushdown.schema.UnionExpectedSchemaNode;
-import org.apache.asterix.runtime.projection.DataProjectionInfo;
+import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 
@@ -53,31 +58,44 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
  * 2- the output type of getField("hashtags") is ARRAY
  * 3- the output type of getItem(0) is ANY node
  */
-class ExpectedSchemaBuilder {
+public class ExpectedSchemaBuilder {
     //Registered Variables
     private final Map<LogicalVariable, IExpectedSchemaNode> varToNode;
-    private final ExpectedSchemaNodeToIATypeTranslatorVisitor typeBuilder;
+    //Inferred type for expressions
+    private final Map<AbstractFunctionCallExpression, IExpectedSchemaNode> exprToNode;
 
     public ExpectedSchemaBuilder() {
         varToNode = new HashMap<>();
-        typeBuilder = new ExpectedSchemaNodeToIATypeTranslatorVisitor();
+        exprToNode = new HashMap<>();
     }
 
-    public DataProjectionInfo createProjectionInfo(LogicalVariable recordVariable) {
+    public DataProjectionFiltrationInfo createProjectionInfo(LogicalVariable recordVariable) {
+        return createProjectionInfo(recordVariable, Collections.emptyMap(), null, null);
+    }
+
+    public DataProjectionFiltrationInfo createProjectionInfo(LogicalVariable recordVariable,
+            Map<ILogicalExpression, ARecordType> filterPaths, ILogicalExpression filterExpression,
+            Map<String, FunctionCallInformation> sourceInformationMap) {
         IExpectedSchemaNode rootNode = varToNode.get(recordVariable);
-        Map<String, FunctionCallInformation> sourceInformation = new HashMap<>();
-        typeBuilder.reset(sourceInformation);
+
+        ExpectedSchemaNodeToIATypeTranslatorVisitor typeBuilder =
+                new ExpectedSchemaNodeToIATypeTranslatorVisitor(sourceInformationMap);
         ARecordType recordType = (ARecordType) rootNode.accept(typeBuilder, null);
-        return new DataProjectionInfo(recordType, sourceInformation);
+
+        return new DataProjectionFiltrationInfo(recordType, sourceInformationMap, filterPaths, filterExpression);
     }
 
-    public boolean setSchemaFromExpression(AbstractFunctionCallExpression expr, LogicalVariable producedVar) {
+    public boolean setSchemaFromExpression(AbstractFunctionCallExpression expr, LogicalVariable producedVar,
+            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
         //Parent always nested
-        AbstractComplexExpectedSchemaNode parent = (AbstractComplexExpectedSchemaNode) buildNestedNode(expr);
+        AbstractComplexExpectedSchemaNode parent = (AbstractComplexExpectedSchemaNode) buildNestedNode(expr, typeEnv);
         if (parent != null) {
             IExpectedSchemaNode leaf =
                     new AnyExpectedSchemaNode(parent, expr.getSourceLocation(), expr.getFunctionIdentifier().getName());
-            addChild(expr, parent, leaf);
+            addChild(expr, typeEnv, parent, leaf);
+
+            //Associate expression to node
+            exprToNode.put(expr, leaf);
             if (producedVar != null) {
                 //Register the node if a variable is produced
                 varToNode.put(producedVar, leaf);
@@ -86,7 +104,7 @@ class ExpectedSchemaBuilder {
         return parent != null;
     }
 
-    public void registerDataset(LogicalVariable recordVar, RootExpectedSchemaNode rootNode) {
+    public void registerRoot(LogicalVariable recordVar, RootExpectedSchemaNode rootNode) {
         varToNode.put(recordVar, rootNode);
     }
 
@@ -111,10 +129,19 @@ class ExpectedSchemaBuilder {
         return !varToNode.isEmpty();
     }
 
-    private IExpectedSchemaNode buildNestedNode(ILogicalExpression expr) {
+    IExpectedSchemaNode getNode(LogicalVariable variable) {
+        return varToNode.get(variable);
+    }
+
+    IExpectedSchemaNode getNode(AbstractFunctionCallExpression expr) {
+        return exprToNode.get(expr);
+    }
+
+    private IExpectedSchemaNode buildNestedNode(ILogicalExpression expr, IVariableTypeEnvironment typeEnv)
+            throws AlgebricksException {
         //The current node expression
         AbstractFunctionCallExpression myExpr = (AbstractFunctionCallExpression) expr;
-        if (!SUPPORTED_FUNCTIONS.contains(myExpr.getFunctionIdentifier())) {
+        if (!SUPPORTED_FUNCTIONS.contains(myExpr.getFunctionIdentifier()) || noArgsOrFirstArgIsConstant(myExpr)) {
             //Return null if the function is not supported.
             return null;
         }
@@ -128,7 +155,8 @@ class ExpectedSchemaBuilder {
         }
 
         //Recursively create the parent nodes. Parent is always a nested node
-        AbstractComplexExpectedSchemaNode newParent = (AbstractComplexExpectedSchemaNode) buildNestedNode(parentExpr);
+        AbstractComplexExpectedSchemaNode newParent =
+                (AbstractComplexExpectedSchemaNode) buildNestedNode(parentExpr, typeEnv);
         //newParent could be null if the expression is not supported
         if (newParent != null) {
             //Parent expression must be a function call (as parent is a nested node)
@@ -136,16 +164,21 @@ class ExpectedSchemaBuilder {
             //Get 'myType' as we will create the child type of the newParent
             ExpectedSchemaNodeType myType = getExpectedNestedNodeType(myExpr);
             /*
-             * Create 'myNode'. It is a nested node because the function is either getField() or supported array
+             * Create 'myNode'. It is a nested node because the function is either getField() or a supported array
              * function
              */
             AbstractComplexExpectedSchemaNode myNode = AbstractComplexExpectedSchemaNode.createNestedNode(myType,
                     newParent, myExpr.getSourceLocation(), myExpr.getFunctionIdentifier().getName());
             //Add myNode to the parent
-            addChild(parentFuncExpr, newParent, myNode);
+            addChild(parentFuncExpr, typeEnv, newParent, myNode);
             return myNode;
         }
         return null;
+    }
+
+    private boolean noArgsOrFirstArgIsConstant(AbstractFunctionCallExpression myExpr) {
+        List<Mutable<ILogicalExpression>> args = myExpr.getArguments();
+        return args.isEmpty() || args.get(0).getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT;
     }
 
     private IExpectedSchemaNode changeNodeForVariable(LogicalVariable sourceVar,
@@ -166,11 +199,11 @@ class ExpectedSchemaBuilder {
         return newNode;
     }
 
-    private void addChild(AbstractFunctionCallExpression parentExpr, AbstractComplexExpectedSchemaNode parent,
-            IExpectedSchemaNode child) {
+    private void addChild(AbstractFunctionCallExpression parentExpr, IVariableTypeEnvironment typeEnv,
+            AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) throws AlgebricksException {
         switch (parent.getType()) {
             case OBJECT:
-                handleObject(parentExpr, parent, child);
+                handleObject(parentExpr, typeEnv, parent, child);
                 break;
             case ARRAY:
                 handleArray(parent, child);
@@ -184,10 +217,18 @@ class ExpectedSchemaBuilder {
         }
     }
 
-    private void handleObject(AbstractFunctionCallExpression parentExpr, AbstractComplexExpectedSchemaNode parent,
-            IExpectedSchemaNode child) {
-        ObjectExpectedSchemaNode objectNode = (ObjectExpectedSchemaNode) parent;
-        objectNode.addChild(ConstantExpressionUtil.getStringArgument(parentExpr, 1), child);
+    private void handleObject(AbstractFunctionCallExpression parentExpr, IVariableTypeEnvironment typeEnv,
+            AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) throws AlgebricksException {
+        if (BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(parentExpr.getFunctionIdentifier())) {
+            ObjectExpectedSchemaNode objectNode = (ObjectExpectedSchemaNode) parent;
+            objectNode.addChild(ConstantExpressionUtil.getStringArgument(parentExpr, 1), child);
+        } else {
+            //FIELD_ACCESS_BY_INDEX
+            ARecordType recordType = (ARecordType) typeEnv.getType(parentExpr.getArguments().get(0).getValue());
+            ObjectExpectedSchemaNode objectNode = (ObjectExpectedSchemaNode) parent;
+            int fieldIdx = ConstantExpressionUtil.getIntArgument(parentExpr, 1);
+            objectNode.addChild(recordType.getFieldNames()[fieldIdx], child);
+        }
     }
 
     private void handleArray(AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) {
@@ -196,15 +237,15 @@ class ExpectedSchemaBuilder {
     }
 
     private void handleUnion(AbstractFunctionCallExpression parentExpr, AbstractComplexExpectedSchemaNode parent,
-            IExpectedSchemaNode child) {
+            IExpectedSchemaNode child) throws AlgebricksException {
         UnionExpectedSchemaNode unionNode = (UnionExpectedSchemaNode) parent;
         ExpectedSchemaNodeType parentType = getExpectedNestedNodeType(parentExpr);
-        addChild(parentExpr, unionNode.getChild(parentType), child);
+        addChild(parentExpr, null, unionNode.getChild(parentType), child);
     }
 
     private static ExpectedSchemaNodeType getExpectedNestedNodeType(AbstractFunctionCallExpression funcExpr) {
         FunctionIdentifier fid = funcExpr.getFunctionIdentifier();
-        if (BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fid)) {
+        if (BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fid) || BuiltinFunctions.FIELD_ACCESS_BY_INDEX.equals(fid)) {
             return ExpectedSchemaNodeType.OBJECT;
         } else if (ARRAY_FUNCTIONS.contains(fid)) {
             return ExpectedSchemaNodeType.ARRAY;

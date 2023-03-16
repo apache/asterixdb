@@ -158,12 +158,12 @@ public class LSMBTreeLocalResource extends LsmResource {
         json.put("isSecondaryNoIncrementalMaintenance", isSecondaryNoIncrementalMaintenance);
     }
 
-    private static boolean getOrDefaultHasBloomFilter(JsonNode json, boolean isPrimary) {
+    protected static boolean getOrDefaultHasBloomFilter(JsonNode json, boolean isPrimary) {
         // for backward compatibility, only primary indexes have bloom filters
         return getOrDefaultBoolean(json, HAS_BLOOM_FILTER_FIELD, isPrimary);
     }
 
-    private static boolean getOrDefaultBoolean(JsonNode jsonNode, String fieldName, boolean defaultValue) {
+    protected static boolean getOrDefaultBoolean(JsonNode jsonNode, String fieldName, boolean defaultValue) {
         return jsonNode.has(fieldName) ? jsonNode.get(fieldName).asBoolean() : defaultValue;
     }
 

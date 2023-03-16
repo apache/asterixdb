@@ -29,21 +29,23 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 
 class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenceTransform {
-    //Set of supported type-check functions
-    static final Set<FunctionIdentifier> TYPE_CHECK_FUNCTIONS = createSupportedTypeCheckFunctions();
+    //Set of allowed functions that can request a type in its entirety
+    static final Set<FunctionIdentifier> ALLOWED_FUNCTIONS = createAllowedFunctions();
     //Set of supported array functions
     static final Set<FunctionIdentifier> ARRAY_FUNCTIONS = createSupportedArrayFunctions();
-    //Set of supported functions that we can pushdown
+    //Set of supported functions that we can push down
     static final Set<FunctionIdentifier> SUPPORTED_FUNCTIONS = createSupportedFunctions();
 
     private final ExpectedSchemaBuilder builder;
     private List<LogicalVariable> producedVariables;
+    private IVariableTypeEnvironment typeEnv;
     private int producedVariableIndex;
 
     public ExpressionValueAccessPushdownVisitor(ExpectedSchemaBuilder builder) {
@@ -51,8 +53,9 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
         end();
     }
 
-    public void init(List<LogicalVariable> producedVariables) {
+    public void init(List<LogicalVariable> producedVariables, IVariableTypeEnvironment typeEnv) {
         this.producedVariables = producedVariables;
+        this.typeEnv = typeEnv;
         producedVariableIndex = 0;
     }
 
@@ -62,12 +65,13 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
             //This for ensuring that the produced variables (if any) should be set
             throw new IllegalStateException("init must be called first");
         }
-        pushValueAccessExpression(expression, getNextProducedVariable());
+        pushValueAccessExpression(expression, getNextProducedVariable(), typeEnv);
         return false;
     }
 
     public void end() {
         producedVariables = null;
+        typeEnv = null;
         producedVariableIndex = -1;
     }
 
@@ -80,7 +84,8 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
     /**
      * Pushdown field access expressions and array access expressions down
      */
-    private void pushValueAccessExpression(Mutable<ILogicalExpression> exprRef, LogicalVariable producedVar) {
+    private void pushValueAccessExpression(Mutable<ILogicalExpression> exprRef, LogicalVariable producedVar,
+            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
         final ILogicalExpression expr = exprRef.getValue();
         if (skipPushdown(expr)) {
             return;
@@ -88,7 +93,7 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
 
         final AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
 
-        if (isSuccessfullyPushedDown(funcExpr, producedVar)) {
+        if (isSuccessfullyPushedDown(funcExpr, producedVar, typeEnv)) {
             //We successfully pushed down the value access function
             return;
         }
@@ -138,23 +143,24 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
      */
     private boolean isTypeCheckOnVariable(ILogicalExpression expression) {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expression;
-        return TYPE_CHECK_FUNCTIONS.contains(funcExpr.getFunctionIdentifier())
+        return ALLOWED_FUNCTIONS.contains(funcExpr.getFunctionIdentifier())
                 && funcExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE;
     }
 
-    private void pushValueAccessExpressionArg(List<Mutable<ILogicalExpression>> exprList) {
+    private void pushValueAccessExpressionArg(List<Mutable<ILogicalExpression>> exprList) throws AlgebricksException {
         for (Mutable<ILogicalExpression> exprRef : exprList) {
             /*
              * We need to set the produced variable as null here as the produced variable will not correspond to the
              * nested expression.
              */
-            pushValueAccessExpression(exprRef, null);
+            pushValueAccessExpression(exprRef, null, typeEnv);
         }
     }
 
-    private boolean isSuccessfullyPushedDown(AbstractFunctionCallExpression funcExpr, LogicalVariable producedVar) {
+    private boolean isSuccessfullyPushedDown(AbstractFunctionCallExpression funcExpr, LogicalVariable producedVar,
+            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
         return SUPPORTED_FUNCTIONS.contains(funcExpr.getFunctionIdentifier())
-                && builder.setSchemaFromExpression(funcExpr, producedVar);
+                && builder.setSchemaFromExpression(funcExpr, producedVar, typeEnv);
     }
 
     private void unregisterVariableIfNeeded(LogicalVariable variable) {
@@ -169,15 +175,17 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
 
     private static Set<FunctionIdentifier> createSupportedFunctions() {
         Set<FunctionIdentifier> supportedFunctions = new HashSet<>();
-        //For objects, only field-access-by-name is supported
         supportedFunctions.add(BuiltinFunctions.FIELD_ACCESS_BY_NAME);
+        supportedFunctions.add(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
         supportedFunctions.addAll(ARRAY_FUNCTIONS);
         return supportedFunctions;
     }
 
-    private static Set<FunctionIdentifier> createSupportedTypeCheckFunctions() {
+    private static Set<FunctionIdentifier> createAllowedFunctions() {
         return Set.of(BuiltinFunctions.IS_ARRAY, BuiltinFunctions.IS_OBJECT, BuiltinFunctions.IS_ATOMIC,
                 BuiltinFunctions.IS_NUMBER, BuiltinFunctions.IS_BOOLEAN, BuiltinFunctions.IS_STRING,
-                AlgebricksBuiltinFunctions.IS_MISSING, AlgebricksBuiltinFunctions.IS_NULL, BuiltinFunctions.IS_UNKNOWN);
+                AlgebricksBuiltinFunctions.IS_MISSING, AlgebricksBuiltinFunctions.IS_NULL, BuiltinFunctions.IS_UNKNOWN,
+                BuiltinFunctions.LT, BuiltinFunctions.LE, BuiltinFunctions.EQ, BuiltinFunctions.GT, BuiltinFunctions.GE,
+                BuiltinFunctions.SCALAR_SQL_COUNT);
     }
 }

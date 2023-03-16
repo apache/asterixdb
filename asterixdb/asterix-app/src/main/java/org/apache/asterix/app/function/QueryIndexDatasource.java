@@ -37,7 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
@@ -74,9 +74,7 @@ public class QueryIndexDatasource extends FunctionDataSource {
         ARecordType type = (ARecordType) iType;
         IAType[] fieldTypes = type.getFieldTypes();
         schemaTypes = new IAType[fieldTypes.length];
-        for (int i = 0; i < schemaTypes.length; i++) {
-            schemaTypes[i] = fieldTypes[i];
-        }
+        System.arraycopy(fieldTypes, 0, schemaTypes, 0, schemaTypes.length);
     }
 
     @Override
@@ -104,7 +102,8 @@ public class QueryIndexDatasource extends FunctionDataSource {
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars,
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
-            IProjectionInfo<?> projectionInfo) throws AlgebricksException {
+            IProjectionFiltrationInfo<?> projectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo)
+            throws AlgebricksException {
         return metadataProvider.buildBtreeRuntime(jobSpec, opSchema, typeEnv, context, true, false, null, ds, indexName,
                 null, null, true, true, false, null, null, null, tupleFilterFactory, outputLimit, false, false,
                 DefaultTupleProjectorFactory.INSTANCE);

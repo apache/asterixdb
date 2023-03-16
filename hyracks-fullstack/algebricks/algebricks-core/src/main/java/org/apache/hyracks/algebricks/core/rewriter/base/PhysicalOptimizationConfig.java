@@ -52,6 +52,7 @@ public class PhysicalOptimizationConfig {
     private static final String CBO_TEST = "CBO_TEST";
     private static final String FORCE_JOIN_ORDER = "FORCE_JOIN_ORDER";
     private static final String QUERY_PLAN_SHAPE = "QUERY_PLAN_SHAPE";
+    private static final String COLUMN_FILTER = "COLUMN_FILTER";
 
     private final Properties properties = new Properties();
 
@@ -292,6 +293,14 @@ public class PhysicalOptimizationConfig {
 
     public void setExternalScanBufferSize(int bufferSize) {
         setInt(EXTERNAL_SCAN_BUFFER_SIZE, bufferSize);
+    }
+
+    public void setColumnFilter(boolean columnFilter) {
+        setBoolean(COLUMN_FILTER, columnFilter);
+    }
+
+    public boolean isColumnFilterEnabled() {
+        return getBoolean(COLUMN_FILTER, AlgebricksConfig.COLUMN_FILTER_DEFAULT);
     }
 
     private void setInt(String property, int value) {

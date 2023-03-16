@@ -12,6 +12,7 @@
     "compiler\.arrayindex" : true,
     "compiler.batch.lookup" : false,
     "compiler.cbo" : false,
+    "compiler.column.filter" : false,
     "compiler\.external\.field\.pushdown" : true,
     "compiler.forcejoinorder" : false,
     "compiler\.framesize" : 32768,

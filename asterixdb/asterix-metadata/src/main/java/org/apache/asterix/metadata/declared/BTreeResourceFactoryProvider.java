@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.declared;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.column.ColumnManagerFactory;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
@@ -31,8 +32,10 @@ import org.apache.asterix.external.indexing.FilesIndexDescription;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.formats.nontagged.NullIntrospector;
 import org.apache.asterix.metadata.api.IResourceFactoryProvider;
+import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
@@ -45,6 +48,8 @@ import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnManagerFactory;
+import org.apache.hyracks.storage.am.lsm.btree.column.dataflow.LSMColumnBTreeLocalResourceFactory;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeLocalResourceFactory;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyLocalResourceFactory;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeLocalResourceFactory;
@@ -115,13 +120,30 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
 
                 boolean isSecondaryNoIncrementalMaintenance = index.getIndexType() == DatasetConfig.IndexType.SAMPLE;
 
-                return new LSMBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
-                        filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory,
-                        pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
-                        mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
-                        bloomFilterFalsePositiveRate, index.isPrimaryIndex(), btreeFields, compDecompFactory,
-                        hasBloomFilter, typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE,
-                        isSecondaryNoIncrementalMaintenance);
+                DatasetFormatInfo datasetFormatInfo = dataset.getDatasetFormatInfo();
+                if (!index.isPrimaryIndex() || datasetFormatInfo.getFormat() == DatasetConfig.DatasetFormat.ROW) {
+                    return new LSMBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,
+                            filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory,
+                            pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
+                            mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
+                            bloomFilterFalsePositiveRate, index.isPrimaryIndex(), btreeFields, compDecompFactory,
+                            hasBloomFilter, typeTraitProvider.getTypeTrait(BuiltinType.ANULL),
+                            NullIntrospector.INSTANCE, isSecondaryNoIncrementalMaintenance);
+                } else {
+                    //Column
+                    List<Integer> keySourceIndicator =
+                            ((InternalDatasetDetails) dataset.getDatasetDetails()).getKeySourceIndicator();
+                    IColumnManagerFactory columnManagerFactory =
+                            new ColumnManagerFactory(recordType, metaType, dataset.getPrimaryKeys(), keySourceIndicator,
+                                    mdProvider.getStorageProperties().getBufferCachePageSize(),
+                                    datasetFormatInfo.getMaxTupleCount(), datasetFormatInfo.getFreeSpaceTolerance());
+                    return new LSMColumnBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories,
+                            filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory,
+                            pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
+                            mergePolicyFactory, mergePolicyProperties, bloomFilterFields, bloomFilterFalsePositiveRate,
+                            btreeFields, compDecompFactory, typeTraitProvider.getTypeTrait(BuiltinType.ANULL),
+                            NullIntrospector.INSTANCE, isSecondaryNoIncrementalMaintenance, columnManagerFactory);
+                }
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_DATASET_TYPE,
                         dataset.getDatasetType().toString());
@@ -156,9 +178,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
             secondaryTypeTraits[i] = typeTraitProvider.getTypeTrait(keyType);
         }
         // Add serializers and comparators for primary index fields.
-        for (int i = 0; i < numPrimaryKeys; i++) {
-            secondaryTypeTraits[numSecondaryKeys + i] = primaryTypeTraits[i];
-        }
+        System.arraycopy(primaryTypeTraits, 0, secondaryTypeTraits, numSecondaryKeys, numPrimaryKeys);
         return secondaryTypeTraits;
     }
 
@@ -193,9 +213,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
             secondaryCmpFactories[i] = cmpFactoryProvider.getBinaryComparatorFactory(keyType, true);
         }
         // Add serializers and comparators for primary index fields.
-        for (int i = 0; i < numPrimaryKeys; i++) {
-            secondaryCmpFactories[numSecondaryKeys + i] = primaryCmpFactories[i];
-        }
+        System.arraycopy(primaryCmpFactories, 0, secondaryCmpFactories, numSecondaryKeys, numPrimaryKeys);
         return secondaryCmpFactories;
     }
 

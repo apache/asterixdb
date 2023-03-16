@@ -21,14 +21,18 @@ package org.apache.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DataSourceIndex;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.optimizer.rules.am.BTreeJobGenParams;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -45,6 +49,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
@@ -68,6 +73,7 @@ import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeBatchPointSearchCursor;
+import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 
 /**
  * Contributes the runtime operator for an unnest-map representing a BTree search.
@@ -134,6 +140,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         long outputLimit = -1;
         boolean retainMissing = false;
         IMissingWriterFactory nonMatchWriterFactory = null;
+        ITupleProjectorFactory tupleProjectorFactory = DefaultTupleProjectorFactory.INSTANCE;
         switch (unnestMap.getOperatorTag()) {
             case UNNEST_MAP:
                 UnnestMapOperator unnestMapOp = (UnnestMapOperator) unnestMap;
@@ -141,6 +148,15 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                 if (unnestMapOp.getSelectCondition() != null) {
                     tupleFilterFactory = metadataProvider.createTupleFilterFactory(new IOperatorSchema[] { opSchema },
                             typeEnv, unnestMapOp.getSelectCondition().getValue(), context);
+                }
+                DatasetFormatInfo formatInfo = dataset.getDatasetFormatInfo();
+                if (isPrimaryIndex && formatInfo.getFormat() == DatasetConfig.DatasetFormat.COLUMN) {
+                    IProjectionFiltrationInfo<?> projectionInfo = unnestMapOp.getDatasetProjectionInfo();
+                    IProjectionFiltrationInfo<?> metaProjectionInfo = unnestMapOp.getMetaProjectionInfo();
+                    ARecordType datasetType = (ARecordType) metadataProvider.findType(dataset);
+                    ARecordType metaItemType = (ARecordType) metadataProvider.findMetaType(dataset);
+                    tupleProjectorFactory = IndexUtil.createTupleProjectorFactory(formatInfo, projectionInfo,
+                            metaProjectionInfo, datasetType, metaItemType, dataset.getPrimaryKeys().size());
                 }
                 break;
             case LEFT_OUTER_UNNEST_MAP:
@@ -161,8 +177,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                 jobGenParams.isLowKeyInclusive(), jobGenParams.isHighKeyInclusive(), propagateFilter,
                 nonFilterWriterFactory, minFilterFieldIndexes, maxFilterFieldIndexes, tupleFilterFactory, outputLimit,
                 unnestMap.getGenerateCallBackProceedResultVar(),
-                isPrimaryIndexPointSearch(op, context.getPhysicalOptimizationConfig()),
-                DefaultTupleProjectorFactory.INSTANCE);
+                isPrimaryIndexPointSearch(op, context.getPhysicalOptimizationConfig()), tupleProjectorFactory);
         IOperatorDescriptor opDesc = btreeSearch.first;
         opDesc.setSourceLocation(unnestMap.getSourceLocation());
 

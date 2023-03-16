@@ -33,7 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -245,8 +245,13 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         newInputList.addAll(op.getVariables());
         Mutable<ILogicalExpression> newSelectCondition =
                 op.getSelectCondition() != null ? deepCopyExpressionRef(op.getSelectCondition()) : null;
+        IProjectionFiltrationInfo<?> datasetProjectionInfo =
+                op.getDatasetProjectionInfo() != null ? op.getDatasetProjectionInfo().createCopy() : null;
+        IProjectionFiltrationInfo<?> metaProjectionInfo =
+                op.getMetaProjectionInfo() != null ? op.getMetaProjectionInfo().createCopy() : null;
         return new UnnestMapOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()),
-                new ArrayList<>(op.getVariableTypes()), op.propagatesInput(), newSelectCondition, op.getOutputLimit());
+                new ArrayList<>(op.getVariableTypes()), op.propagatesInput(), newSelectCondition, op.getOutputLimit(),
+                datasetProjectionInfo, metaProjectionInfo);
     }
 
     @Override
@@ -264,10 +269,13 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         newInputList.addAll(op.getVariables());
         Mutable<ILogicalExpression> newSelectCondition =
                 op.getSelectCondition() != null ? deepCopyExpressionRef(op.getSelectCondition()) : null;
-        IProjectionInfo<?> projectionInfo = op.getProjectionInfo() != null ? op.getProjectionInfo().createCopy() : null;
+        IProjectionFiltrationInfo<?> datasetProjectionInfo =
+                op.getDatasetProjectionInfo() != null ? op.getDatasetProjectionInfo().createCopy() : null;
+        IProjectionFiltrationInfo<?> metaProjectionInfo =
+                op.getMetaProjectionInfo() != null ? op.getMetaProjectionInfo().createCopy() : null;
 
         return new DataSourceScanOperator(newInputList, op.getDataSource(), newSelectCondition, op.getOutputLimit(),
-                projectionInfo);
+                datasetProjectionInfo, metaProjectionInfo);
     }
 
     @Override
@@ -379,7 +387,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     private void deepCopyExpressionRefs(List<Mutable<ILogicalExpression>> newExprs,
             List<Mutable<ILogicalExpression>> oldExprs) {
         for (Mutable<ILogicalExpression> oldExpr : oldExprs) {
-            newExprs.add(new MutableObject<>(((AbstractLogicalExpression) oldExpr.getValue()).cloneExpression()));
+            newExprs.add(new MutableObject<>(oldExpr.getValue().cloneExpression()));
         }
     }
 

@@ -56,12 +56,14 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_COMPRESSION_BLOCK(STRING, "snappy"),
         STORAGE_DISK_FORCE_BYTES(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(16, MEGABYTE)),
         STORAGE_IO_SCHEDULER(STRING, "greedy"),
-        STORAGE_WRITE_RATE_LIMIT(LONG_BYTE_UNIT, 0l),
+        STORAGE_WRITE_RATE_LIMIT(LONG_BYTE_UNIT, 0L),
         STORAGE_MAX_CONCURRENT_FLUSHES_PER_PARTITION(NONNEGATIVE_INTEGER, 2),
         STORAGE_MAX_SCHEDULED_MERGES_PER_PARTITION(NONNEGATIVE_INTEGER, 8),
         STORAGE_MAX_CONCURRENT_MERGES_PER_PARTITION(NONNEGATIVE_INTEGER, 2),
         STORAGE_GLOBAL_CLEANUP(BOOLEAN, true),
-        STORAGE_GLOBAL_CLEANUP_TIMEOUT(POSITIVE_INTEGER, (int) TimeUnit.MINUTES.toSeconds(10));
+        STORAGE_GLOBAL_CLEANUP_TIMEOUT(POSITIVE_INTEGER, (int) TimeUnit.MINUTES.toSeconds(10)),
+        STORAGE_COLUMN_MAX_TUPLE_COUNT(NONNEGATIVE_INTEGER, 15000),
+        STORAGE_COLUMN_FREE_SPACE_TOLERANCE(DOUBLE, 0.15);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -129,6 +131,11 @@ public class StorageProperties extends AbstractProperties {
                     return "Indicates whether or not global storage cleanup is performed";
                 case STORAGE_GLOBAL_CLEANUP_TIMEOUT:
                     return "The maximum time to wait for nodes to respond to global storage cleanup requests";
+                case STORAGE_COLUMN_MAX_TUPLE_COUNT:
+                    return "The maximum number of tuples to be stored per a mega leaf page";
+                case STORAGE_COLUMN_FREE_SPACE_TOLERANCE:
+                    return "The percentage of the maximum tolerable empty space for a physical mega leaf page (e.g.,"
+                            + " 0.15 means a physical page with 15% or less empty space is tolerable)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -264,5 +271,13 @@ public class StorageProperties extends AbstractProperties {
 
     public int getDiskForcePages() {
         return (int) (accessor.getLong(Option.STORAGE_DISK_FORCE_BYTES) / getBufferCachePageSize());
+    }
+
+    public int getColumnMaxTupleCount() {
+        return accessor.getInt(Option.STORAGE_COLUMN_MAX_TUPLE_COUNT);
+    }
+
+    public float getColumnFreeSpaceTolerance() {
+        return (float) accessor.getDouble(Option.STORAGE_COLUMN_FREE_SPACE_TOLERANCE);
     }
 }

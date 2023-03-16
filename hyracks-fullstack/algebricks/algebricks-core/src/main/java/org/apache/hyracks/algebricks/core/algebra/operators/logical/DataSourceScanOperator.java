@@ -29,7 +29,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSource;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
@@ -50,19 +50,22 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
     // the maximum of number of results output by this operator
     private long outputLimit = -1;
 
-    private IProjectionInfo<?> projectionInfo;
+    private IProjectionFiltrationInfo<?> datasetProjectionInfo;
+    private IProjectionFiltrationInfo<?> metaProjectionInfo;
 
     public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource) {
-        this(variables, dataSource, null, -1, null);
+        this(variables, dataSource, null, -1, null, null);
     }
 
     public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource,
-            Mutable<ILogicalExpression> selectCondition, long outputLimit, IProjectionInfo<?> projectionInfo) {
+            Mutable<ILogicalExpression> selectCondition, long outputLimit,
+            IProjectionFiltrationInfo<?> datasetProjectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo) {
         super(variables, dataSource);
         projectVars = new ArrayList<>();
         this.selectCondition = selectCondition;
         this.outputLimit = outputLimit;
-        this.projectionInfo = projectionInfo;
+        this.datasetProjectionInfo = datasetProjectionInfo;
+        this.metaProjectionInfo = metaProjectionInfo;
     }
 
     @Override
@@ -173,11 +176,19 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
         this.outputLimit = outputLimit;
     }
 
-    public void setProjectionInfo(IProjectionInfo<?> projectionInfo) {
-        this.projectionInfo = projectionInfo;
+    public void setDatasetProjectionInfo(IProjectionFiltrationInfo<?> datasetProjectionInfo) {
+        this.datasetProjectionInfo = datasetProjectionInfo;
     }
 
-    public IProjectionInfo<?> getProjectionInfo() {
-        return projectionInfo;
+    public IProjectionFiltrationInfo<?> getDatasetProjectionInfo() {
+        return datasetProjectionInfo;
+    }
+
+    public void setMetaProjectionInfo(IProjectionFiltrationInfo<?> metaProjectionInfo) {
+        this.metaProjectionInfo = metaProjectionInfo;
+    }
+
+    public IProjectionFiltrationInfo<?> getMetaProjectionInfo() {
+        return metaProjectionInfo;
     }
 }

@@ -243,12 +243,6 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             cursor.next();
             matchingTupleCount++;
             ITupleReference tuple = cursor.getTuple();
-            if (tupleFilter != null) {
-                referenceFilterTuple.reset(tuple);
-                if (!tupleFilter.accept(referenceFilterTuple)) {
-                    continue;
-                }
-            }
             tb.reset();
 
             if (retainInput) {
@@ -258,7 +252,17 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                     tb.addFieldEndOffset();
                 }
             }
-            writeTupleToOutput(tuple);
+
+            // tuple must be written first before the filter is applied to
+            // assemble columnar tuples
+            tuple = writeTupleToOutput(tuple);
+            if (tupleFilter != null) {
+                referenceFilterTuple.reset(tuple);
+                if (!tupleFilter.accept(referenceFilterTuple)) {
+                    continue;
+                }
+            }
+
             if (appendSearchCallbackProceedResult) {
                 writeSearchCallbackProceedResult(tb,
                         ((ILSMIndexCursor) cursor).getSearchOperationCallbackProceedResult());
@@ -355,9 +359,9 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         }
     }
 
-    protected void writeTupleToOutput(ITupleReference tuple) throws IOException {
+    protected ITupleReference writeTupleToOutput(ITupleReference tuple) throws IOException {
         try {
-            tupleProjector.project(tuple, dos, tb);
+            return tupleProjector.project(tuple, dos, tb);
         } catch (Exception e) {
             throw e;
         }

@@ -55,6 +55,7 @@ import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.declared.ArrayBTreeResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.BTreeResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -157,6 +158,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     private int pendingOp;
     private final String compressionScheme;
     private final DatasetFullyQualifiedName datasetFullyQualifiedName;
+    private final DatasetFormatInfo datasetFormatInfo;
 
     public Dataset(DataverseName dataverseName, String datasetName, DataverseName recordTypeDataverseName,
             String recordTypeName, String nodeGroupName, String compactionPolicy,
@@ -164,17 +166,17 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             DatasetType datasetType, int datasetId, int pendingOp) {
         this(dataverseName, datasetName, recordTypeDataverseName, recordTypeName, /*metaTypeDataverseName*/null,
                 /*metaTypeName*/null, nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails,
-                hints, datasetType, datasetId, pendingOp, CompressionManager.NONE);
+                hints, datasetType, datasetId, pendingOp, CompressionManager.NONE, DatasetFormatInfo.DEFAULT);
     }
 
     public Dataset(DataverseName dataverseName, String datasetName, DataverseName itemTypeDataverseName,
             String itemTypeName, DataverseName metaItemTypeDataverseName, String metaItemTypeName, String nodeGroupName,
             String compactionPolicy, Map<String, String> compactionPolicyProperties, IDatasetDetails datasetDetails,
-            Map<String, String> hints, DatasetType datasetType, int datasetId, int pendingOp,
-            String compressionScheme) {
+            Map<String, String> hints, DatasetType datasetType, int datasetId, int pendingOp, String compressionScheme,
+            DatasetFormatInfo datasetFormatInfo) {
         this(dataverseName, datasetName, itemTypeDataverseName, itemTypeName, metaItemTypeDataverseName,
                 metaItemTypeName, nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails, hints,
-                datasetType, datasetId, pendingOp, 0L, compressionScheme);
+                datasetType, datasetId, pendingOp, 0L, compressionScheme, datasetFormatInfo);
     }
 
     public Dataset(Dataset dataset) {
@@ -182,14 +184,14 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                 dataset.metaTypeDataverseName, dataset.metaTypeName, dataset.nodeGroupName,
                 dataset.compactionPolicyFactory, dataset.compactionPolicyProperties, dataset.datasetDetails,
                 dataset.hints, dataset.datasetType, dataset.datasetId, dataset.pendingOp, dataset.rebalanceCount,
-                dataset.compressionScheme);
+                dataset.compressionScheme, dataset.datasetFormatInfo);
     }
 
     public Dataset(DataverseName dataverseName, String datasetName, DataverseName itemTypeDataverseName,
             String itemTypeName, DataverseName metaItemTypeDataverseName, String metaItemTypeName, String nodeGroupName,
             String compactionPolicy, Map<String, String> compactionPolicyProperties, IDatasetDetails datasetDetails,
             Map<String, String> hints, DatasetType datasetType, int datasetId, int pendingOp, long rebalanceCount,
-            String compressionScheme) {
+            String compressionScheme, DatasetFormatInfo datasetFormatInfo) {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.recordTypeName = itemTypeName;
@@ -207,6 +209,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         this.rebalanceCount = rebalanceCount;
         this.compressionScheme = compressionScheme;
         datasetFullyQualifiedName = new DatasetFullyQualifiedName(dataverseName, datasetName);
+        this.datasetFormatInfo = datasetFormatInfo;
     }
 
     @Override
@@ -332,21 +335,14 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /**
      * Drop this dataset
      *
-     * @param metadataProvider
-     *            metadata provider that can be used to get metadata info and runtimes
-     * @param mdTxnCtx
-     *            the transaction context
-     * @param jobsToExecute
-     *            a list of jobs to be executed as part of the drop operation
-     * @param bActiveTxn
-     *            whether the metadata transaction is ongoing
-     * @param progress
-     *            a mutable progress state used for error handling during the drop operation
-     * @param hcc
-     *            a client connection to hyracks master for job execution
+     * @param metadataProvider metadata provider that can be used to get metadata info and runtimes
+     * @param mdTxnCtx         the transaction context
+     * @param jobsToExecute    a list of jobs to be executed as part of the drop operation
+     * @param bActiveTxn       whether the metadata transaction is ongoing
+     * @param progress         a mutable progress state used for error handling during the drop operation
+     * @param hcc              a client connection to hyracks master for job execution
      * @param sourceLoc
-     * @throws Exception
-     *             if an error occur during the drop process or if the dataset can't be dropped for any reason
+     * @throws Exception if an error occur during the drop process or if the dataset can't be dropped for any reason
      */
     public void drop(MetadataProvider metadataProvider, MutableObject<MetadataTransactionContext> mdTxnCtx,
             List<JobSpecification> jobsToExecute, MutableBoolean bActiveTxn, MutableObject<ProgressState> progress,
@@ -370,7 +366,8 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                     new Dataset(dataverseName, datasetName, getItemTypeDataverseName(), getItemTypeName(),
                             getMetaItemTypeDataverseName(), getMetaItemTypeName(), getNodeGroupName(),
                             getCompactionPolicy(), getCompactionPolicyProperties(), getDatasetDetails(), getHints(),
-                            getDatasetType(), getDatasetId(), MetadataUtil.PENDING_DROP_OP, getCompressionScheme()));
+                            getDatasetType(), getDatasetId(), MetadataUtil.PENDING_DROP_OP, getCompressionScheme(),
+                            getDatasetFormatInfo()));
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
             bActiveTxn.setValue(false);
@@ -450,22 +447,15 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /**
      * Create the index dataflow helper factory for a particular index on the dataset
      *
-     * @param mdProvider
-     *            metadata provider to get metadata information, components, and runtimes
-     * @param index
-     *            the index to get the dataflow helper factory for
-     * @param recordType
-     *            the record type for the dataset
-     * @param metaType
-     *            the meta type for the dataset
-     * @param mergePolicyFactory
-     *            the merge policy factory of the dataset
-     * @param mergePolicyProperties
-     *            the merge policy properties for the dataset
+     * @param mdProvider            metadata provider to get metadata information, components, and runtimes
+     * @param index                 the index to get the dataflow helper factory for
+     * @param recordType            the record type for the dataset
+     * @param metaType              the meta type for the dataset
+     * @param mergePolicyFactory    the merge policy factory of the dataset
+     * @param mergePolicyProperties the merge policy properties for the dataset
      * @return indexDataflowHelperFactory
-     *         an instance of {@link org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory}
-     * @throws AlgebricksException
-     *             if dataflow helper factory could not be created
+     * an instance of {@link org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory}
+     * @throws AlgebricksException if dataflow helper factory could not be created
      */
     public IResourceFactory getResourceFactory(MetadataProvider mdProvider, Index index, ARecordType recordType,
             ARecordType metaType, ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties)
@@ -511,13 +501,11 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /**
      * Get the IO Operation callback factory for the index which belongs to this dataset
      *
-     * @param index
-     *            the index
+     * @param index the index
      * @return ioOperationCallbackFactory
-     *         an instance of {@link org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory}
-     *         to be used with IO operations
-     * @throws AlgebricksException
-     *             if the factory could not be created for the index/dataset combination
+     * an instance of {@link org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory}
+     * to be used with IO operations
+     * @throws AlgebricksException if the factory could not be created for the index/dataset combination
      */
     @SuppressWarnings("squid:S1172")
     public ILSMIOOperationCallbackFactory getIoOperationCallbackFactory(Index index) throws AlgebricksException {
@@ -531,8 +519,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /**
      * get the IndexOperationTrackerFactory for a particular index on the dataset
      *
-     * @param index
-     *            the index
+     * @param index the index
      * @return an instance of {@link org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory}
      */
     public ILSMOperationTrackerFactory getIndexOperationTrackerFactory(Index index) {
@@ -551,22 +538,14 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /**
      * Get search callback factory for this dataset with the passed index and operation
      *
-     * @param storageComponentProvider
-     *            storage component provider
-     * @param index
-     *            the index
-     * @param op
-     *            the operation this search is part of
-     * @param primaryKeyFields
-     *            the primary key fields indexes for locking purposes
-     * @param primaryKeyFieldsInSecondaryIndex
-     *            the primary key fields indexes in the given secondary index (used for index-only plan)
-     * @param proceedIndexOnlyPlan
-     *            the given plan is an index-only plan? (used for index-only plan)
-     * @return
-     *         an instance of {@link org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory}
-     * @throws AlgebricksException
-     *             if the callback factory could not be created
+     * @param storageComponentProvider         storage component provider
+     * @param index                            the index
+     * @param op                               the operation this search is part of
+     * @param primaryKeyFields                 the primary key fields indexes for locking purposes
+     * @param primaryKeyFieldsInSecondaryIndex the primary key fields indexes in the given secondary index (used for index-only plan)
+     * @param proceedIndexOnlyPlan             the given plan is an index-only plan? (used for index-only plan)
+     * @return an instance of {@link org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory}
+     * @throws AlgebricksException if the callback factory could not be created
      */
     public ISearchOperationCallbackFactory getSearchCallbackFactory(IStorageComponentProvider storageComponentProvider,
             Index index, IndexOperation op, int[] primaryKeyFields, int[] primaryKeyFieldsInSecondaryIndex,
@@ -599,18 +578,12 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /**
      * Get search callback factory for this dataset with the passed index and operation
      *
-     * @param storageComponentProvider
-     *            storage component provider
-     * @param index
-     *            the index
-     * @param op
-     *            the operation this search is part of
-     * @param primaryKeyFields
-     *            the primary key fields indexes for locking purposes
-     * @return
-     *         an instance of {@link org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory}
-     * @throws AlgebricksException
-     *             if the callback factory could not be created
+     * @param storageComponentProvider storage component provider
+     * @param index                    the index
+     * @param op                       the operation this search is part of
+     * @param primaryKeyFields         the primary key fields indexes for locking purposes
+     * @return an instance of {@link org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory}
+     * @throws AlgebricksException if the callback factory could not be created
      */
     public ISearchOperationCallbackFactory getSearchCallbackFactory(IStorageComponentProvider storageComponentProvider,
             Index index, IndexOperation op, int[] primaryKeyFields) throws AlgebricksException {
@@ -620,16 +593,11 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /**
      * Get the modification callback factory associated with this dataset, the passed index, and operation.
      *
-     * @param index
-     *            the index
-     * @param op
-     *            the operation performed for this callback
-     * @param primaryKeyFields
-     *            the indexes of the primary keys (used for lock operations)
-     * @return
-     *         an instance of {@link org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory}
-     * @throws AlgebricksException
-     *             If the callback factory could not be created
+     * @param index            the index
+     * @param op               the operation performed for this callback
+     * @param primaryKeyFields the indexes of the primary keys (used for lock operations)
+     * @return an instance of {@link org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory}
+     * @throws AlgebricksException If the callback factory could not be created
      */
     public IModificationOperationCallbackFactory getModificationCallbackFactory(
             IStorageComponentProvider componentProvider, Index index, IndexOperation op, int[] primaryKeyFields)
@@ -680,6 +648,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         tree.put("pendingOp", MetadataUtil.pendingOpToString(pendingOp));
         tree.put("rebalanceCount", rebalanceCount);
         tree.put("compressionScheme", compressionScheme);
+        tree.put("datasetFormatInfo", datasetFormatInfo.toString());
         return tree;
     }
 
@@ -691,12 +660,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /**
      * Gets the commit runtime factory for inserting/upserting/deleting operations on this dataset.
      *
-     * @param metadataProvider,
-     *            the metadata provider.
-     * @param primaryKeyFieldPermutation,
-     *            the primary key field permutation according to the input.
-     * @param isSink,
-     *            whether this commit runtime is the last operator in the pipeline.
+     * @param metadataProvider,           the metadata provider.
+     * @param primaryKeyFieldPermutation, the primary key field permutation according to the input.
+     * @param isSink,                     whether this commit runtime is the last operator in the pipeline.
      * @return the commit runtime factory for inserting/upserting/deleting operations on this dataset.
      * @throws AlgebricksException
      */
@@ -724,10 +690,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     }
 
     /**
-     @return the array of type traits that contains the following type traits in order
-      1) the primary keys,
-      2) the query record type,
-      3) the metadata type trait if the dataset has metadata
+     * @return the array of type traits that contains the following type traits in order
+     * 1) the primary keys,
+     * 2) the query record type,
+     * 3) the metadata type trait if the dataset has metadata
      */
     // ToDo: returning such an array can be confusing because it may contain the metadata type or not.
     // instead of returning an array, create a new class that contains 1) a type trait array for the primary keys,
@@ -760,8 +726,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /**
      * Gets the record descriptor for primary records of this dataset.
      *
-     * @param metadataProvider,
-     *            the metadata provider.
+     * @param metadataProvider, the metadata provider.
      * @return the record descriptor for primary records of this dataset.
      * @throws AlgebricksException
      */
@@ -805,8 +770,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /**
      * Gets the comparator factories for the primary key fields of this dataset.
      *
-     * @param metadataProvider,
-     *            the metadata provider.
+     * @param metadataProvider, the metadata provider.
      * @return the comparator factories for the primary key fields of this dataset.
      * @throws AlgebricksException
      */
@@ -834,8 +798,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /**
      * Gets the hash function factories for the primary key fields of this dataset.
      *
-     * @param metadataProvider,
-     *            the metadata provider.
+     * @param metadataProvider, the metadata provider.
      * @return the hash function factories for the primary key fields of this dataset.
      * @throws AlgebricksException
      */
@@ -873,7 +836,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
                 this.metaTypeDataverseName, this.metaTypeName, targetNodeGroupName, this.compactionPolicyFactory,
                 this.compactionPolicyProperties, this.datasetDetails, this.hints, this.datasetType,
                 DatasetIdFactory.generateAlternatingDatasetId(this.datasetId), this.pendingOp, this.rebalanceCount + 1,
-                this.compressionScheme);
+                this.compressionScheme, this.datasetFormatInfo);
     }
 
     // Gets an array of partition numbers for this dataset.
@@ -895,4 +858,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         return datasetFullyQualifiedName;
     }
 
+    public DatasetFormatInfo getDatasetFormatInfo() {
+        return datasetFormatInfo;
+    }
 }

@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
@@ -55,7 +56,8 @@ public class DatasetTupleTranslatorTest {
             Dataset dataset = new Dataset(DataverseName.createSinglePartName("test"), "log",
                     DataverseName.createSinglePartName("foo"), "LogType", DataverseName.createSinglePartName("CB"),
                     "MetaType", "DEFAULT_NG_ALL_NODES", "prefix", compactionPolicyProperties, details,
-                    Collections.emptyMap(), DatasetType.INTERNAL, 115, 0, CompressionManager.NONE);
+                    Collections.emptyMap(), DatasetType.INTERNAL, 115, 0, CompressionManager.NONE,
+                    DatasetFormatInfo.DEFAULT);
             DatasetTupleTranslator dtTranslator = new DatasetTupleTranslator(true);
             ITupleReference tuple = dtTranslator.getTupleFromMetadataEntity(dataset);
             Dataset deserializedDataset = dtTranslator.getMetadataEntityFromTuple(tuple);
@@ -63,7 +65,7 @@ public class DatasetTupleTranslatorTest {
                     deserializedDataset.getMetaItemTypeDataverseName());
             Assert.assertEquals(dataset.getMetaItemTypeName(), deserializedDataset.getMetaItemTypeName());
             if (indicator == null) {
-                Assert.assertEquals(Collections.singletonList(new Integer(0)),
+                Assert.assertEquals(Collections.singletonList(Integer.valueOf(0)),
                         ((InternalDatasetDetails) deserializedDataset.getDatasetDetails()).getKeySourceIndicator());
             } else {
                 Assert.assertEquals(((InternalDatasetDetails) dataset.getDatasetDetails()).getKeySourceIndicator(),

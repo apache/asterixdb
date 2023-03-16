@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
@@ -37,9 +39,8 @@ public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode 
         return children.entrySet();
     }
 
-    public IExpectedSchemaNode addChild(String fieldName, IExpectedSchemaNode child) {
+    public void addChild(String fieldName, IExpectedSchemaNode child) {
         children.put(fieldName, child);
-        return child;
     }
 
     @Override
@@ -54,9 +55,22 @@ public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode 
 
     @Override
     public void replaceChild(IExpectedSchemaNode oldNode, IExpectedSchemaNode newNode) {
+        String fieldName = getChildFieldName(oldNode);
+        children.replace(fieldName, newNode);
+    }
+
+    protected IAType getType(IAType childType, IExpectedSchemaNode childNode, String typeName) {
+        String key = getChildFieldName(childNode);
+        IAType[] fieldTypes = { childType };
+        String[] fieldNames = { key };
+
+        return new ARecordType("typeName", fieldNames, fieldTypes, false);
+    }
+
+    protected String getChildFieldName(IExpectedSchemaNode requestedChild) {
         String key = null;
         for (Map.Entry<String, IExpectedSchemaNode> child : children.entrySet()) {
-            if (child.getValue() == oldNode) {
+            if (child.getValue() == requestedChild) {
                 key = child.getKey();
                 break;
             }
@@ -64,8 +78,8 @@ public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode 
 
         if (key == null) {
             //this should not happen
-            throw new IllegalStateException("Node " + oldNode.getType() + " is not a child");
+            throw new IllegalStateException("Node " + requestedChild.getType() + " is not a child");
         }
-        children.replace(key, newNode);
+        return key;
     }
 }

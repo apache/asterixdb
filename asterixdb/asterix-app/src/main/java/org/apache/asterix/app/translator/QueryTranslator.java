@@ -75,6 +75,7 @@ import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.config.DatasetConfig.TransactionState;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -165,6 +166,7 @@ import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
+import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetNodegroupCardinalityHint;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -654,7 +656,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected static void validateCompactionPolicy(String compactionPolicy,
             Map<String, String> compactionPolicyProperties, MetadataTransactionContext mdTxnCtx,
-            boolean isExternalDataset, SourceLocation sourceLoc) throws CompilationException, Exception {
+            boolean isExternalDataset, SourceLocation sourceLoc) throws Exception {
         CompactionPolicy compactionPolicyEntity = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx,
                 MetadataConstants.METADATA_DATAVERSE_NAME, compactionPolicy);
         if (compactionPolicyEntity == null) {
@@ -755,6 +757,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         Dataset dataset = null;
         Datatype itemTypeEntity = null, metaItemTypeEntity = null;
         boolean itemTypeAdded = false, metaItemTypeAdded = false;
+
+        StorageProperties storageProperties = metadataProvider.getStorageProperties();
+        DatasetFormatInfo datasetFormatInfo = dd.getDatasetFormatInfo(storageProperties.getColumnMaxTupleCount(),
+                storageProperties.getColumnFreeSpaceTolerance());
         try {
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
@@ -861,7 +867,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             dataset = new Dataset(dataverseName, datasetName, itemTypeDataverseName, itemTypeName,
                     metaItemTypeDataverseName, metaItemTypeName, ngName, compactionPolicy, compactionPolicyProperties,
                     datasetDetails, dd.getHints(), dsType, DatasetIdFactory.generateDatasetId(),
-                    MetadataUtil.PENDING_ADD_OP, compressionScheme);
+                    MetadataUtil.PENDING_ADD_OP, compressionScheme, datasetFormatInfo);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
 
             if (itemTypeIsInline) {
@@ -1443,15 +1449,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     "full-text filter type is null");
         }
 
-        switch (filterType) {
-            case FIELD_TYPE_STOPWORDS: {
-                filterDescriptor = new StopwordsFullTextFilterDescriptor(dataverseName,
-                        stmtCreateFilter.getFilterName(), stmtCreateFilter.getStopwordsList());
-                break;
-            }
-            default:
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, stmtCreateFilter.getSourceLocation(),
-                        "Unexpected full-text filter type: " + filterType);
+        if (FIELD_TYPE_STOPWORDS.equals(filterType)) {
+            filterDescriptor = new StopwordsFullTextFilterDescriptor(dataverseName, stmtCreateFilter.getFilterName(),
+                    stmtCreateFilter.getStopwordsList());
+        } else {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, stmtCreateFilter.getSourceLocation(),
+                    "Unexpected full-text filter type: " + filterType);
         }
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -1525,8 +1528,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
-            ImmutableList.Builder<IFullTextFilterDescriptor> filterDescriptorsBuilder =
-                    ImmutableList.<IFullTextFilterDescriptor> builder();
+            ImmutableList.Builder<IFullTextFilterDescriptor> filterDescriptorsBuilder = ImmutableList.builder();
             for (String filterName : filterNames) {
                 FullTextFilterMetadataEntity filterMetadataEntity =
                         MetadataManager.INSTANCE.getFullTextFilter(mdTxnCtx, dataverseName, filterName);
@@ -3966,9 +3968,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         ActiveEntityEventsListener listener =
                 (ActiveEntityEventsListener) activeNotificationHandler.getListener(feedId);
         if (listener != null && listener.getState() != ActivityState.STOPPED) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    "Feed " + feedId + " is currently active and connected to the following " + dataset(PLURAL) + "\n"
-                            + listener.toString());
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Feed " + feedId
+                    + " is currently active and connected to the following " + dataset(PLURAL) + "\n" + listener);
         } else if (listener != null) {
             listener.unregister();
         }

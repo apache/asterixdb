@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.asterix.column.ColumnManagerFactory;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.context.DatasetInfoProvider;
@@ -103,6 +104,7 @@ import org.apache.hyracks.data.std.primitive.VarLengthTypeTrait;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.storage.am.common.data.PointablePrimitiveValueProviderFactory;
 import org.apache.hyracks.storage.am.common.freepage.AppendOnlyLinkedMetadataPageManagerFactory;
+import org.apache.hyracks.storage.am.lsm.btree.column.dataflow.LSMColumnBTreeLocalResource;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeLocalResource;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyLocalResource;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeLocalResource;
@@ -162,6 +164,7 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         registeredClasses.put("ExternalBTreeLocalResource", ExternalBTreeLocalResource.class);
         registeredClasses.put("ExternalBTreeWithBuddyLocalResource", ExternalBTreeWithBuddyLocalResource.class);
         registeredClasses.put("ExternalRTreeLocalResource", ExternalRTreeLocalResource.class);
+        registeredClasses.put("LSMColumnBTreeLocalResource", LSMColumnBTreeLocalResource.class);
 
         // ILSMMergePolicyFactory
         registeredClasses.put("NoMergePolicyFactory", NoMergePolicyFactory.class);
@@ -305,6 +308,9 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
 
         //External Libraries
         registeredClasses.put("LibraryDescriptor", LibraryDescriptor.class);
+
+        //IColumnManagerFactory
+        registeredClasses.put("ColumnManagerFactory", ColumnManagerFactory.class);
     }
 
     @Override

@@ -32,6 +32,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataNode;
+import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Index;
@@ -69,7 +70,7 @@ public class IndexTupleTranslatorTest {
             DataverseName dvCB = DataverseName.createSinglePartName("CB");
             Dataset dataset = new Dataset(dvTest, "d1", dvFoo, "LogType", dvCB, "MetaType", "DEFAULT_NG_ALL_NODES",
                     "prefix", compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0,
-                    CompressionManager.NONE);
+                    CompressionManager.NONE, DatasetFormatInfo.DEFAULT);
 
             Index index = new Index(dvTest, "d1", "i1", IndexType.BTREE,
                     Collections.singletonList(Collections.singletonList("row_id")),

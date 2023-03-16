@@ -196,6 +196,10 @@ public final class MetadataRecordTypes {
             "BlockLevelStorageCompression";
     public static final String DATASET_ARECORD_DATASET_COMPRESSION_SCHEME_FIELD_NAME = "DatasetCompressionScheme";
     public static final String DATASET_ARECORD_REBALANCE_FIELD_NAME = "rebalanceCount";
+    public static final String DATASET_ARECORD_DATASET_FORMAT_FIELD_NAME = "DatasetFormat";
+    public static final String DATASET_ARECORD_DATASET_FORMAT_FORMAT_FIELD_NAME = "Format";
+    public static final String DATASET_ARECORD_DATASET_MAX_TUPLE_COUNT_FIELD_NAME = "MaxTupleCount";
+    public static final String DATASET_ARECORD_DATASET_FREE_SPACE_TOLERANCE_FIELD_NAME = "FreeSpaceTolerance";
     public static final ARecordType DATASET_RECORDTYPE = createRecordType(
             // RecordTypeName
             RECORD_NAME_DATASET,
@@ -574,7 +578,7 @@ public final class MetadataRecordTypes {
         return recordType;
     }
 
-    public static final ARecordType createPropertiesRecordType() {
+    public static ARecordType createPropertiesRecordType() {
         return createRecordType(
                 // RecordTypeName
                 null,

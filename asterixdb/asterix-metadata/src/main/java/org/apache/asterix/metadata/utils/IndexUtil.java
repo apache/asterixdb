@@ -20,31 +20,43 @@ package org.apache.asterix.metadata.utils;
 
 import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.column.operation.query.QueryColumnTupleProjectorFactory;
+import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluatorFactory;
+import org.apache.asterix.column.values.reader.filter.evaluator.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
+import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
+import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
+import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 import org.apache.hyracks.util.OptionalBoolean;
 
 public class IndexUtil {
@@ -179,10 +191,8 @@ public class IndexUtil {
     /**
      * Binds a job event listener to the job specification.
      *
-     * @param spec,
-     *            the job specification.
-     * @param metadataProvider,
-     *            the metadata provider.
+     * @param spec,             the job specification.
+     * @param metadataProvider, the metadata provider.
      * @return the AsterixDB job id for transaction management.
      */
     public static void bindJobEventListener(JobSpecification spec, MetadataProvider metadataProvider)
@@ -253,4 +263,38 @@ public class IndexUtil {
         return new Pair<>(MetadataConstants.SAMPLE_INDEX_1_PREFIX + datasetName,
                 MetadataConstants.SAMPLE_INDEX_2_PREFIX + datasetName);
     }
+
+    public static ITupleProjectorFactory createTupleProjectorFactory(DatasetFormatInfo datasetFormatInfo,
+            IProjectionFiltrationInfo<?> projectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo,
+            ARecordType datasetType, ARecordType metaItemType, int numberOfPrimaryKeys) {
+        if (datasetFormatInfo.getFormat() == DatasetConfig.DatasetFormat.ROW) {
+            return DefaultTupleProjectorFactory.INSTANCE;
+        }
+        DataProjectionFiltrationInfo dataProjectionInfo = (DataProjectionFiltrationInfo) projectionInfo;
+        if (dataProjectionInfo == null) {
+            // projecting pushdown is disabled
+            ARecordType metaType = metaItemType == null ? null : DataProjectionFiltrationInfo.ALL_FIELDS_TYPE;
+            return new QueryColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys,
+                    DataProjectionFiltrationInfo.ALL_FIELDS_TYPE, Collections.emptyMap(), metaType,
+                    Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE);
+        }
+
+        DataProjectionFiltrationInfo metaDataProjectionInfo = (DataProjectionFiltrationInfo) metaProjectionInfo;
+
+        ARecordType datasetRequestedType = dataProjectionInfo.getProjectionInfo();
+        Map<String, FunctionCallInformation> datasetFunctionCallInfo = dataProjectionInfo.getFunctionCallInfoMap();
+
+        ARecordType metaRequestedType =
+                metaDataProjectionInfo == null ? null : metaDataProjectionInfo.getProjectionInfo();
+        Map<String, FunctionCallInformation> metaFunctionCallInfo =
+                metaProjectionInfo == null ? null : metaDataProjectionInfo.getFunctionCallInfoMap();
+
+        ColumnFilterBuilder columnFilterBuilder = new ColumnFilterBuilder(dataProjectionInfo);
+        IColumnFilterEvaluatorFactory filterEvaluator = columnFilterBuilder.build();
+
+        return new QueryColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys,
+                datasetRequestedType, datasetFunctionCallInfo, metaRequestedType, metaFunctionCallInfo,
+                filterEvaluator);
+    }
+
 }

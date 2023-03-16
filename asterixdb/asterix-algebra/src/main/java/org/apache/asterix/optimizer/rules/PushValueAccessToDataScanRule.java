@@ -63,7 +63,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
  * The resulting record $$r will be {"personalInfo":{"age": *AGE*}, "salary": *SALARY*}
  * and other fields will not be included in $$r.
  */
-public class PushValueAccessToExternalDataScanRule implements IAlgebraicRewriteRule {
+public class PushValueAccessToDataScanRule implements IAlgebraicRewriteRule {
     //Initially, assume we need to run the rule
     private boolean run = true;
 
@@ -76,7 +76,7 @@ public class PushValueAccessToExternalDataScanRule implements IAlgebraicRewriteR
         }
 
         /*
-         * Only run the rewrite rule once and only if the plan contains a data-scan on an external dataset that
+         * Only run the rewrite rule once and only if the plan contains a data-scan on a dataset that
          * support value access pushdown.
          */
         run = shouldRun(context);
@@ -92,7 +92,7 @@ public class PushValueAccessToExternalDataScanRule implements IAlgebraicRewriteR
     }
 
     /**
-     * Check whether the plan contains an external dataset that supports pushdown
+     * Check whether the plan contains a dataset that supports pushdown
      *
      * @param context optimization context
      * @return true if the plan contains such dataset, false otherwise
@@ -117,7 +117,8 @@ public class PushValueAccessToExternalDataScanRule implements IAlgebraicRewriteR
         String datasetName = dataSource.getId().getDatasourceName();
         Dataset dataset = metadataProvider.findDataset(dataverse, datasetName);
 
-        return dataset != null && dataset.getDatasetType() == DatasetConfig.DatasetType.EXTERNAL && ExternalDataUtils
-                .supportsPushdown(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
+        return dataset != null && ((dataset.getDatasetType() == DatasetConfig.DatasetType.EXTERNAL && ExternalDataUtils
+                .supportsPushdown(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties()))
+                || dataset.getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.COLUMN);
     }
 }

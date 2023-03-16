@@ -28,15 +28,6 @@ public class ProjectionFiltrationWarningFactoryProvider {
     private ProjectionFiltrationWarningFactoryProvider() {
     }
 
-    public static IProjectionFiltrationWarningFactory getWarningFactory(int errorCode) {
-        if (errorCode == ErrorCode.TYPE_MISMATCH_FUNCTION.intValue()) {
-            return TYPE_MISMATCH_FACTORY;
-        } else if (errorCode == ErrorCode.INCOMPARABLE_TYPES.intValue()) {
-            return INCOMPARABLE_TYPES_FACTORY;
-        }
-        throw new UnsupportedOperationException("Unsupported error code " + errorCode);
-    }
-
     public static final IProjectionFiltrationWarningFactory TYPE_MISMATCH_FACTORY =
             new IProjectionFiltrationWarningFactory() {
                 private static final long serialVersionUID = 4263556611813387010L;
@@ -54,7 +45,11 @@ public class ProjectionFiltrationWarningFactoryProvider {
                 }
             };
 
-    public static final IProjectionFiltrationWarningFactory INCOMPARABLE_TYPES_FACTORY =
+    public static IProjectionFiltrationWarningFactory getIncomparableTypesFactory(boolean leftConstant) {
+        return leftConstant ? LEFT_CONSTANT_INCOMPARABLE_TYPES_FACTORY : RIGHT_CONSTANT_INCOMPARABLE_TYPES_FACTORY;
+    }
+
+    private static final IProjectionFiltrationWarningFactory LEFT_CONSTANT_INCOMPARABLE_TYPES_FACTORY =
             new IProjectionFiltrationWarningFactory() {
                 private static final long serialVersionUID = -7447187099851545763L;
 
@@ -62,6 +57,22 @@ public class ProjectionFiltrationWarningFactoryProvider {
                 public Warning createWarning(SourceLocation sourceLocation, String functionName, String position,
                         ATypeTag expectedType, ATypeTag actualType) {
                     return Warning.of(sourceLocation, ErrorCode.INCOMPARABLE_TYPES, expectedType, actualType);
+                }
+
+                @Override
+                public ErrorCode getErrorCode() {
+                    return ErrorCode.INCOMPARABLE_TYPES;
+                }
+            };
+
+    private static final IProjectionFiltrationWarningFactory RIGHT_CONSTANT_INCOMPARABLE_TYPES_FACTORY =
+            new IProjectionFiltrationWarningFactory() {
+                private static final long serialVersionUID = 2818081955008928378L;
+
+                @Override
+                public Warning createWarning(SourceLocation sourceLocation, String functionName, String position,
+                        ATypeTag expectedType, ATypeTag actualType) {
+                    return Warning.of(sourceLocation, ErrorCode.INCOMPARABLE_TYPES, actualType, expectedType);
                 }
 
                 @Override

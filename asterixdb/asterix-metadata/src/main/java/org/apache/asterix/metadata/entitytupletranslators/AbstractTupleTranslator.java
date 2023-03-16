@@ -35,6 +35,7 @@ import org.apache.asterix.metadata.api.IMetadataEntityTupleTranslator;
 import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableString;
@@ -77,6 +78,9 @@ public abstract class AbstractTupleTranslator<T> implements IMetadataEntityTuple
     @SuppressWarnings("unchecked")
     protected final ISerializerDeserializer<AInt64> int64Serde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
+    @SuppressWarnings("unchecked")
+    protected final ISerializerDeserializer<ADouble> doubleSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ADOUBLE);
 
     protected final ISerializerDeserializer<ARecord> recordSerDes;
 

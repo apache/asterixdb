@@ -118,7 +118,11 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_QUERYPLANSHAPE(
                 STRING,
                 AlgebricksConfig.QUERY_PLAN_SHAPE_DEFAULT,
-                "Set the mode for forcing the shape of the query plan");
+                "Set the mode for forcing the shape of the query plan"),
+        COMPILER_COLUMN_FILTER(
+                BOOLEAN,
+                AlgebricksConfig.COLUMN_FILTER_DEFAULT,
+                "Enable/disable the use of column min/max filters");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -197,6 +201,8 @@ public class CompilerProperties extends AbstractProperties {
     public static final String COMPILER_FORCE_JOIN_ORDER_KEY = Option.COMPILER_FORCEJOINORDER.ini();
 
     public static final String COMPILER_QUERY_PLAN_SHAPE_KEY = Option.COMPILER_QUERYPLANSHAPE.ini();
+
+    public static final String COMPILER_COLUMN_FILTER_KEY = Option.COMPILER_COLUMN_FILTER.ini();
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
@@ -295,5 +301,9 @@ public class CompilerProperties extends AbstractProperties {
                 || queryPlanShapeMode.equals(AlgebricksConfig.QUERY_PLAN_SHAPE_RIGHTDEEP)))
             return AlgebricksConfig.QUERY_PLAN_SHAPE_DEFAULT;
         return queryPlanShapeMode;
+    }
+
+    public boolean isColumnFilter() {
+        return accessor.getBoolean(Option.COMPILER_COLUMN_FILTER);
     }
 }

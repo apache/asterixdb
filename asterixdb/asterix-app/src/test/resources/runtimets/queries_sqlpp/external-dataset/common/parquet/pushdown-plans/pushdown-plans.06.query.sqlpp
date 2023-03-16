@@ -17,7 +17,7 @@
  * under the License.
  */
 /*
-* Description  : Pushdown "p.entities.urls"
+* Description  : Pushdown "p.entities.urls[*].display_url"
 * Expected Res : Success
 * Date         : July 23th 2021
 */

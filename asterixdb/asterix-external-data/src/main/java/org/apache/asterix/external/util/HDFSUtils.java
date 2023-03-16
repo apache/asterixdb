@@ -42,7 +42,7 @@ import org.apache.asterix.external.input.record.reader.hdfs.parquet.ParquetReadS
 import org.apache.asterix.external.input.stream.HDFSInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.runtime.projection.DataProjectionInfo;
+import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
@@ -242,7 +242,7 @@ public class HDFSUtils {
         String requestedValues = configuration.get(ExternalDataConstants.KEY_REQUESTED_FIELDS);
         if (requestedValues == null) {
             //No value is requested, return the entire record
-            requestedValues = DataProjectionInfo.ALL_FIELDS_TYPE.getTypeName();
+            requestedValues = DataProjectionFiltrationInfo.ALL_FIELDS_TYPE.getTypeName();
         } else {
             //Subset of the values were requested, set the functionCallInformation
             conf.set(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION,
@@ -284,18 +284,18 @@ public class HDFSUtils {
 
     public static ARecordType getExpectedType(Configuration configuration) throws IOException {
         String encoded = configuration.get(ExternalDataConstants.KEY_REQUESTED_FIELDS, "");
-        if (encoded.isEmpty() || encoded.equals(DataProjectionInfo.ALL_FIELDS_TYPE.getTypeName())) {
+        if (encoded.isEmpty() || encoded.equals(DataProjectionFiltrationInfo.ALL_FIELDS_TYPE.getTypeName())) {
             //By default, return the entire records
-            return DataProjectionInfo.ALL_FIELDS_TYPE;
-        } else if (encoded.equals(DataProjectionInfo.EMPTY_TYPE.getTypeName())) {
+            return DataProjectionFiltrationInfo.ALL_FIELDS_TYPE;
+        } else if (encoded.equals(DataProjectionFiltrationInfo.EMPTY_TYPE.getTypeName())) {
             //No fields were requested
-            return DataProjectionInfo.EMPTY_TYPE;
+            return DataProjectionFiltrationInfo.EMPTY_TYPE;
         }
         //A subset of the fields was requested
         Base64.Decoder decoder = Base64.getDecoder();
         byte[] typeBytes = decoder.decode(encoded);
         DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(typeBytes));
-        return DataProjectionInfo.createTypeField(dataInputStream);
+        return DataProjectionFiltrationInfo.createTypeField(dataInputStream);
     }
 
     public static void setFunctionCallInformationMap(Map<String, FunctionCallInformation> funcCallInfoMap,
@@ -311,7 +311,7 @@ public class HDFSUtils {
             Base64.Decoder decoder = Base64.getDecoder();
             byte[] functionCallInfoMapBytes = decoder.decode(encoded);
             DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(functionCallInfoMapBytes));
-            return DataProjectionInfo.createFunctionCallInformationMap(dataInputStream);
+            return DataProjectionFiltrationInfo.createFunctionCallInformationMap(dataInputStream);
         }
         return null;
     }

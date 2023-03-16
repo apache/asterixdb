@@ -162,6 +162,22 @@ public class AdmObjectNode implements IAdmNode {
         return ((AdmStringNode) node).get();
     }
 
+    public int getOptionalInt(String field, int defaultValue) {
+        final IAdmNode node = get(field);
+        if (node == null) {
+            return defaultValue;
+        }
+        return (int) ((AdmBigIntNode) node).get();
+    }
+
+    public float getOptionalFloat(String field, float defaultValue) {
+        final IAdmNode node = get(field);
+        if (node == null) {
+            return defaultValue;
+        }
+        return (float) ((AdmDoubleNode) node).get();
+    }
+
     public static String getString(AdmObjectNode openFields, String field) throws HyracksDataException {
         IAdmNode node = openFields.get(field);
         if (node == null) {

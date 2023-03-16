@@ -80,7 +80,6 @@ public class FunctionCallInformation implements Serializable {
         output.writeUTF(functionName);
         SourceLocation.writeFields(sourceLocation, output);
         output.writeInt(typeMismatches.size());
-        output.writeInt(warningFactory.getErrorCode().intValue());
         for (ATypeTag typeTag : typeMismatches) {
             output.write(typeTag.serialize());
         }
@@ -90,13 +89,13 @@ public class FunctionCallInformation implements Serializable {
         String functionName = in.readUTF();
         SourceLocation sourceLocation = SourceLocation.create(in);
         int typeMismatchesLength = in.readInt();
-        Set<ATypeTag> typeMismatches = EnumSet.noneOf(ATypeTag.class);
+        Set<ATypeTag> warnings = EnumSet.noneOf(ATypeTag.class);
         IProjectionFiltrationWarningFactory warningFactory =
-                ProjectionFiltrationWarningFactoryProvider.getWarningFactory(in.readInt());
+                ProjectionFiltrationWarningFactoryProvider.TYPE_MISMATCH_FACTORY;
         for (int i = 0; i < typeMismatchesLength; i++) {
-            typeMismatches.add(ATypeTag.VALUE_TYPE_MAPPING[in.readByte()]);
+            warnings.add(ATypeTag.VALUE_TYPE_MAPPING[in.readByte()]);
         }
-        return new FunctionCallInformation(functionName, sourceLocation, typeMismatches, warningFactory);
+        return new FunctionCallInformation(functionName, sourceLocation, warnings, warningFactory);
     }
 
     @Override

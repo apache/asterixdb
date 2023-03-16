@@ -40,8 +40,8 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     private final IColumnBufferProvider[] primaryKeyBufferProviders;
     private final IColumnBufferProvider[] buffersProviders;
     private final int numberOfPrimaryKeys;
-    private int totalNumberOfPages;
-    private int numOfSkippedPages;
+    private int totalNumberOfMegaLeafNodes;
+    private int numOfSkippedMegaLeafNodes;
     protected int tupleIndex;
 
     /**
@@ -73,8 +73,8 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
                 buffersProviders[i] = new ColumnSingleBufferProvider(columnIndex);
             }
         }
-        totalNumberOfPages = 0;
-        numOfSkippedPages = 0;
+        totalNumberOfMegaLeafNodes = 0;
+        numOfSkippedMegaLeafNodes = 0;
     }
 
     @Override
@@ -104,9 +104,9 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
                 startColumn(provider, tupleIndex, i, numberOfTuples);
             }
         } else {
-            numOfSkippedPages++;
+            numOfSkippedMegaLeafNodes++;
         }
-        totalNumberOfPages++;
+        totalNumberOfMegaLeafNodes++;
     }
 
     protected abstract boolean startNewPage(ByteBuffer pageZero, int numberOfColumns, int numberOfTuples);
@@ -149,8 +149,9 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
 
     @Override
     public final void close() {
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Skipped {} pages out of {} in total", numOfSkippedPages, totalNumberOfPages);
+        if (LOGGER.isInfoEnabled() && numOfSkippedMegaLeafNodes > 0) {
+            LOGGER.info("Filtered {} disk mega-leaf nodes out of {} in total", numOfSkippedMegaLeafNodes,
+                    totalNumberOfMegaLeafNodes);
         }
     }
 

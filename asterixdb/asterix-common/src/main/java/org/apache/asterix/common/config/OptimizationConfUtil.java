@@ -87,6 +87,8 @@ public class OptimizationConfUtil {
                 compilerProperties.getForceJoinOrderMode());
         String queryPlanShape = getString(querySpecificConfig, CompilerProperties.COMPILER_QUERY_PLAN_SHAPE_KEY,
                 compilerProperties.getQueryPlanShapeMode());
+        boolean columnFilter = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_COLUMN_FILTER_KEY,
+                compilerProperties.isColumnFilter());
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -110,6 +112,7 @@ public class OptimizationConfUtil {
         physOptConf.setCBOTestMode(cboTest);
         physOptConf.setForceJoinOrderMode(forceJoinOrder);
         physOptConf.setQueryPlanShapeMode(queryPlanShape);
+        physOptConf.setColumnFilter(columnFilter);
         return physOptConf;
     }
 

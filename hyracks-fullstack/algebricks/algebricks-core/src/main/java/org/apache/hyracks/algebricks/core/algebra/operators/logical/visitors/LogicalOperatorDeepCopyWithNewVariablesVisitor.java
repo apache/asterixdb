@@ -37,7 +37,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.IVariableContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
@@ -104,22 +104,17 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     private final boolean reuseFreeVars;
 
     /**
-     * @param varContext
-     *            , the variable context.
-     * @param typeContext
-     *            the type context.
+     * @param varContext  , the variable context.
+     * @param typeContext the type context.
      */
     public LogicalOperatorDeepCopyWithNewVariablesVisitor(IVariableContext varContext, ITypingContext typeContext) {
         this(varContext, typeContext, new LinkedHashMap<>(), false);
     }
 
     /**
-     * @param varContext
-     *            , the variable context.
-     * @param typeContext
-     *            the type context.
-     * @param reuseFreeVars
-     *            whether free variables in the given plan tree should be reused.
+     * @param varContext    , the variable context.
+     * @param typeContext   the type context.
+     * @param reuseFreeVars whether free variables in the given plan tree should be reused.
      */
     public LogicalOperatorDeepCopyWithNewVariablesVisitor(IVariableContext varContext, ITypingContext typeContext,
             boolean reuseFreeVars) {
@@ -127,16 +122,12 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     }
 
     /**
-     * @param varContext
-     *            , the variable context.
-     * @param typeContext
-     *            the type context.
-     * @param inVarMapping
-     *            Variable mapping keyed by variables in the original plan.
-     *            Those variables are replaced by their corresponding value in
-     *            the map in the copied plan.
-     * @param reuseFreeVars
-     *            whether free variables in the given plan tree should be reused.
+     * @param varContext    , the variable context.
+     * @param typeContext   the type context.
+     * @param inVarMapping  Variable mapping keyed by variables in the original plan.
+     *                      Those variables are replaced by their corresponding value in
+     *                      the map in the copied plan.
+     * @param reuseFreeVars whether free variables in the given plan tree should be reused.
      */
     public LogicalOperatorDeepCopyWithNewVariablesVisitor(IVariableContext varContext, ITypingContext typeContext,
             LinkedHashMap<LogicalVariable, LogicalVariable> inVarMapping, boolean reuseFreeVars) {
@@ -326,9 +317,12 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         Mutable<ILogicalExpression> newSelectCondition = op.getSelectCondition() != null
                 ? exprDeepCopyVisitor.deepCopyExpressionReference(op.getSelectCondition()) : null;
-        IProjectionInfo<?> projectionInfo = op.getProjectionInfo() != null ? op.getProjectionInfo().createCopy() : null;
+        IProjectionFiltrationInfo<?> datasetProjectionInfo =
+                op.getDatasetProjectionInfo() != null ? op.getDatasetProjectionInfo().createCopy() : null;
+        IProjectionFiltrationInfo<?> metaProjectionInfo =
+                op.getMetaProjectionInfo() != null ? op.getMetaProjectionInfo().createCopy() : null;
         DataSourceScanOperator opCopy = new DataSourceScanOperator(deepCopyVariableList(op.getVariables()),
-                op.getDataSource(), newSelectCondition, op.getOutputLimit(), projectionInfo);
+                op.getDataSource(), newSelectCondition, op.getOutputLimit(), datasetProjectionInfo, metaProjectionInfo);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
@@ -540,9 +534,14 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         Mutable<ILogicalExpression> newSelectCondition = op.getSelectCondition() != null
                 ? exprDeepCopyVisitor.deepCopyExpressionReference(op.getSelectCondition()) : null;
+        IProjectionFiltrationInfo<?> datasetProjectionInfo =
+                op.getDatasetProjectionInfo() != null ? op.getDatasetProjectionInfo().createCopy() : null;
+        IProjectionFiltrationInfo<?> metaProjectionInfo =
+                op.getMetaProjectionInfo() != null ? op.getMetaProjectionInfo().createCopy() : null;
         UnnestMapOperator opCopy = new UnnestMapOperator(deepCopyVariableList(op.getVariables()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()), op.getVariableTypes(),
-                op.propagatesInput(), newSelectCondition, op.getOutputLimit());
+                op.propagatesInput(), newSelectCondition, op.getOutputLimit(), datasetProjectionInfo,
+                metaProjectionInfo);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

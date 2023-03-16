@@ -29,9 +29,10 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.visitor.SimpleStringBuilderForIATypeVisitor;
 import org.apache.commons.lang3.SerializationUtils;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionInfo;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 
-public class DataProjectionInfo implements IProjectionInfo<ARecordType> {
+public class DataProjectionFiltrationInfo implements IProjectionFiltrationInfo<ARecordType> {
     //Default open record type when requesting the entire fields
     public static final ARecordType ALL_FIELDS_TYPE = createType("");
     //Default open record type when requesting none of the fields
@@ -39,13 +40,18 @@ public class DataProjectionInfo implements IProjectionInfo<ARecordType> {
 
     private final ARecordType root;
     private final Map<String, FunctionCallInformation> functionCallInfoMap;
+    private final Map<ILogicalExpression, ARecordType> expressionToPath;
+    private final ILogicalExpression filterExpression;
 
-    public DataProjectionInfo(ARecordType root, Map<String, FunctionCallInformation> sourceInformationMap) {
+    public DataProjectionFiltrationInfo(ARecordType root, Map<String, FunctionCallInformation> sourceInformationMap,
+            Map<ILogicalExpression, ARecordType> expressionToPath, ILogicalExpression filterExpression) {
         this.root = root;
         this.functionCallInfoMap = sourceInformationMap;
+        this.expressionToPath = expressionToPath;
+        this.filterExpression = filterExpression;
     }
 
-    private DataProjectionInfo(DataProjectionInfo other) {
+    private DataProjectionFiltrationInfo(DataProjectionFiltrationInfo other) {
         if (other.root == ALL_FIELDS_TYPE) {
             root = ALL_FIELDS_TYPE;
         } else if (other.root == EMPTY_TYPE) {
@@ -54,6 +60,8 @@ public class DataProjectionInfo implements IProjectionInfo<ARecordType> {
             root = other.root.deepCopy(other.root);
         }
         functionCallInfoMap = new HashMap<>(other.functionCallInfoMap);
+        expressionToPath = new HashMap<>(other.expressionToPath);
+        filterExpression = other.filterExpression;
     }
 
     @Override
@@ -62,12 +70,21 @@ public class DataProjectionInfo implements IProjectionInfo<ARecordType> {
     }
 
     @Override
-    public DataProjectionInfo createCopy() {
-        return new DataProjectionInfo(this);
+    public DataProjectionFiltrationInfo createCopy() {
+        return new DataProjectionFiltrationInfo(this);
+    }
+
+    @Override
+    public ILogicalExpression getFilterExpression() {
+        return filterExpression;
     }
 
     public Map<String, FunctionCallInformation> getFunctionCallInfoMap() {
         return functionCallInfoMap;
+    }
+
+    public Map<ILogicalExpression, ARecordType> getExpressionToPath() {
+        return expressionToPath;
     }
 
     @Override
@@ -78,8 +95,10 @@ public class DataProjectionInfo implements IProjectionInfo<ARecordType> {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        DataProjectionInfo otherInfo = (DataProjectionInfo) o;
-        return root.deepEqual(otherInfo.root) && Objects.equals(functionCallInfoMap, otherInfo.functionCallInfoMap);
+        DataProjectionFiltrationInfo otherInfo = (DataProjectionFiltrationInfo) o;
+        return root.deepEqual(otherInfo.root) && Objects.equals(functionCallInfoMap, otherInfo.functionCallInfoMap)
+                && Objects.equals(filterExpression, otherInfo.filterExpression)
+                && Objects.equals(expressionToPath, otherInfo.expressionToPath);
     }
 
     @Override

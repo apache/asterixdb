@@ -79,7 +79,7 @@ import org.apache.asterix.optimizer.rules.PushLimitIntoOrderByRule;
 import org.apache.asterix.optimizer.rules.PushLimitIntoPrimarySearchRule;
 import org.apache.asterix.optimizer.rules.PushProperJoinThroughProduct;
 import org.apache.asterix.optimizer.rules.PushSimilarityFunctionsBelowJoin;
-import org.apache.asterix.optimizer.rules.PushValueAccessToExternalDataScanRule;
+import org.apache.asterix.optimizer.rules.PushValueAccessToDataScanRule;
 import org.apache.asterix.optimizer.rules.RemoveDuplicateFieldsRule;
 import org.apache.asterix.optimizer.rules.RemoveLeftOuterUnnestForLeftOuterJoinRule;
 import org.apache.asterix.optimizer.rules.RemoveOrReplaceDefaultNullCastRule;
@@ -172,7 +172,7 @@ public final class RuleCollections {
         return translationRules;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildTypeInferenceRuleCollection() {
+    public static List<IAlgebraicRewriteRule> buildTypeInferenceRuleCollection() {
         List<IAlgebraicRewriteRule> typeInfer = new LinkedList<>();
         typeInfer.add(new InlineUnnestFunctionRule());
         typeInfer.add(new InferTypesRule());
@@ -180,17 +180,17 @@ public final class RuleCollections {
         return typeInfer;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildAutogenerateIDRuleCollection() {
+    public static List<IAlgebraicRewriteRule> buildAutogenerateIDRuleCollection() {
         List<IAlgebraicRewriteRule> autogen = new LinkedList<>();
         autogen.add(new IntroduceAutogenerateIDRule());
         return autogen;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildFulltextContainsRuleCollection() {
+    public static List<IAlgebraicRewriteRule> buildFulltextContainsRuleCollection() {
         return Collections.singletonList(new FullTextContainsParameterCheckAndSetRule());
     }
 
-    public static final List<IAlgebraicRewriteRule> buildNormalizationRuleCollection(ICcApplicationContext appCtx) {
+    public static List<IAlgebraicRewriteRule> buildNormalizationRuleCollection(ICcApplicationContext appCtx) {
         List<IAlgebraicRewriteRule> normalization = new LinkedList<>();
         normalization.add(new CheckInsertUpsertReturningRule());
         normalization.add(new IntroduceUnnestForCollectionToSequenceRule());
@@ -228,7 +228,7 @@ public final class RuleCollections {
         return normalization;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildCondPushDownAndJoinInferenceRuleCollection() {
+    public static List<IAlgebraicRewriteRule> buildCondPushDownAndJoinInferenceRuleCollection() {
         List<IAlgebraicRewriteRule> condPushDownAndJoinInference = new LinkedList<>();
 
         condPushDownAndJoinInference.add(new PushSelectDownRule());
@@ -271,7 +271,7 @@ public final class RuleCollections {
         return condPushDownAndJoinInference;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildLoadFieldsRuleCollection(ICcApplicationContext appCtx) {
+    public static List<IAlgebraicRewriteRule> buildLoadFieldsRuleCollection(ICcApplicationContext appCtx) {
         List<IAlgebraicRewriteRule> fieldLoads = new LinkedList<>();
         fieldLoads.add(new LoadRecordFieldsRule());
         fieldLoads.add(new PushFieldAccessRule());
@@ -292,7 +292,7 @@ public final class RuleCollections {
         return fieldLoads;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildConsolidationRuleCollection() {
+    public static List<IAlgebraicRewriteRule> buildConsolidationRuleCollection() {
         List<IAlgebraicRewriteRule> consolidation = new LinkedList<>();
         consolidation.add(new ConsolidateSelectsRule());
         consolidation.add(new ConsolidateAssignsRule(false));
@@ -317,7 +317,7 @@ public final class RuleCollections {
         return consolidation;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildAccessMethodRuleCollection() {
+    public static List<IAlgebraicRewriteRule> buildAccessMethodRuleCollection() {
         List<IAlgebraicRewriteRule> accessMethod = new LinkedList<>();
         accessMethod.add(new IntroduceSelectAccessMethodRule());
         accessMethod.add(new IntroduceJoinAccessMethodRule());
@@ -330,7 +330,7 @@ public final class RuleCollections {
         return accessMethod;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildPlanCleanupRuleCollection() {
+    public static List<IAlgebraicRewriteRule> buildPlanCleanupRuleCollection() {
         List<IAlgebraicRewriteRule> planCleanupRules = new LinkedList<>();
         planCleanupRules.add(new SwitchInnerJoinBranchRule());
         planCleanupRules.add(new AsterixPushMapOperatorThroughUnionRule(LogicalOperatorTag.ASSIGN));
@@ -364,14 +364,14 @@ public final class RuleCollections {
         return planCleanupRules;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildDataExchangeRuleCollection() {
+    public static List<IAlgebraicRewriteRule> buildDataExchangeRuleCollection() {
         List<IAlgebraicRewriteRule> dataExchange = new LinkedList<>();
         dataExchange.add(new SetExecutionModeRule());
         dataExchange.add(new FindDataSourcesRule());
         return dataExchange;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildCBORuleCollection() {
+    public static List<IAlgebraicRewriteRule> buildCBORuleCollection() {
         List<IAlgebraicRewriteRule> cbo = new LinkedList<>();
         cbo.add(new ConsolidateSelectsRule());
         cbo.add(new EnumerateJoinsRule(new JoinEnum()));
@@ -380,7 +380,7 @@ public final class RuleCollections {
         return cbo;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildPhysicalRewritesAllLevelsRuleCollection() {
+    public static List<IAlgebraicRewriteRule> buildPhysicalRewritesAllLevelsRuleCollection() {
         List<IAlgebraicRewriteRule> physicalRewritesAllLevels = new LinkedList<>();
         physicalRewritesAllLevels.add(new PullSelectOutOfEqJoin());
         physicalRewritesAllLevels.add(new ExtractBatchableExternalFunctionCallsRule());
@@ -408,7 +408,7 @@ public final class RuleCollections {
         return physicalRewritesAllLevels;
     }
 
-    public static final List<IAlgebraicRewriteRule> buildPhysicalRewritesTopLevelRuleCollection(
+    public static List<IAlgebraicRewriteRule> buildPhysicalRewritesTopLevelRuleCollection(
             ICcApplicationContext appCtx) {
         List<IAlgebraicRewriteRule> physicalRewritesTopLevel = new LinkedList<>();
         physicalRewritesTopLevel.add(new PushNestedOrderByUnderPreSortedGroupByRule());
@@ -418,11 +418,17 @@ public final class RuleCollections {
         physicalRewritesTopLevel.add(new ConstantFoldingRule(appCtx));
         physicalRewritesTopLevel.add(new PushLimitIntoOrderByRule());
         //Must run before PushLimitIntoPrimarySearchRule to ensure the select condition is inspected
-        physicalRewritesTopLevel.add(new PushValueAccessToExternalDataScanRule());
         physicalRewritesTopLevel.add(new PushLimitIntoPrimarySearchRule());
         // remove assigns that could become unused after PushLimitIntoPrimarySearchRule
         physicalRewritesTopLevel.add(new RemoveUnusedAssignAndAggregateRule());
         physicalRewritesTopLevel.add(new IntroduceProjectsRule());
+        //Infer the types for the pushed down condition
+        physicalRewritesTopLevel.add(new InferTypesRule());
+        /*
+         * Must run IntroduceProjectsRule before PushValueAccessToDataScanRule to ensure that no entire records are
+         * returned if they are projected out
+         */
+        physicalRewritesTopLevel.add(new PushValueAccessToDataScanRule());
         physicalRewritesTopLevel.add(new SetAsterixPhysicalOperatorsRule());
         physicalRewritesTopLevel.add(new IntroduceRapidFrameFlushProjectAssignRule());
         physicalRewritesTopLevel.add(new SetExecutionModeRule());
@@ -430,7 +436,7 @@ public final class RuleCollections {
         return physicalRewritesTopLevel;
     }
 
-    public static final List<IAlgebraicRewriteRule> prepareForJobGenRuleCollection() {
+    public static List<IAlgebraicRewriteRule> prepareForJobGenRuleCollection() {
         List<IAlgebraicRewriteRule> prepareForJobGenRewrites = new LinkedList<>();
         prepareForJobGenRewrites.add(new InsertProjectBeforeUnionRule());
         prepareForJobGenRewrites.add(new SetAsterixPhysicalOperatorsRule());
