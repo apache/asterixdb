@@ -17,6 +17,10 @@
  * under the License.
  */
 
+/*
+ * Description: test that the sample index is dropped using "analyze dataset drop statistics" statement
+ */
+
 use test;
 
-analyze dataset ds1;
+analyze dataset ds1 drop statistics;

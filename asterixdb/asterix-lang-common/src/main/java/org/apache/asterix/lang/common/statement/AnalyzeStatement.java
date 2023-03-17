@@ -19,14 +19,18 @@
 
 package org.apache.asterix.lang.common.statement;
 
+import java.util.List;
 import java.util.Locale;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
+import org.apache.asterix.lang.common.base.Expression;
+import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.util.ExpressionUtils;
+import org.apache.asterix.lang.common.util.LangRecordParseUtil;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.object.base.AdmBigIntNode;
 import org.apache.asterix.object.base.AdmDoubleNode;
@@ -57,20 +61,32 @@ public class AnalyzeStatement extends AbstractStatement {
             throws CompilationException {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
-        this.options = options == null ? null : validateOptions(ExpressionUtils.toNode(options));
+        this.options = options == null ? null : validateOptions(options);
     }
 
-    private static AdmObjectNode validateOptions(AdmObjectNode options) throws CompilationException {
-        for (String fieldName : options.getFieldNames()) {
-            switch (fieldName) {
+    private static AdmObjectNode validateOptions(RecordConstructor options) throws CompilationException {
+        final List<FieldBinding> fbList = options.getFbList();
+        for (int i = 0; i < fbList.size(); i++) {
+            FieldBinding binding = fbList.get(i);
+            String key = LangRecordParseUtil.exprToStringLiteral(binding.getLeftExpr()).getStringValue();
+            Expression value = binding.getRightExpr();
+            switch (key) {
                 case SAMPLE_FIELD_NAME:
+                    if (value.getKind() != Expression.Kind.LITERAL_EXPRESSION) {
+                        throw new CompilationException(ErrorCode.INVALID_SAMPLE_SIZE);
+                    }
+                    break;
                 case SAMPLE_SEED_FIELD_NAME:
+                    if (value.getKind() != Expression.Kind.LITERAL_EXPRESSION
+                            && value.getKind() != Expression.Kind.UNARY_EXPRESSION) {
+                        throw new CompilationException(ErrorCode.INVALID_SAMPLE_SEED);
+                    }
                     break;
                 default:
-                    throw new CompilationException(ErrorCode.INVALID_PARAM, fieldName);
+                    throw new CompilationException(ErrorCode.INVALID_PARAM, key);
             }
         }
-        return options;
+        return (ExpressionUtils.toNode(options));
     }
 
     @Override
@@ -102,18 +118,20 @@ public class AnalyzeStatement extends AbstractStatement {
                     case SAMPLE_HIGH:
                         return SAMPLE_HIGH_SIZE;
                     default:
-                        throw new CompilationException(ErrorCode.INVALID_PROPERTY_FORMAT, SAMPLE_FIELD_NAME);
+                        throw new CompilationException(ErrorCode.INVALID_SAMPLE_SIZE);
                 }
             case BIGINT:
                 int v = (int) ((AdmBigIntNode) n).get();
                 if (!isValidSampleSize(v)) {
-                    throw new CompilationException(ErrorCode.INVALID_PROPERTY_FORMAT, SAMPLE_FIELD_NAME);
+                    throw new CompilationException(ErrorCode.OUT_OF_RANGE_SAMPLE_SIZE, SAMPLE_LOW_SIZE,
+                            SAMPLE_HIGH_SIZE);
                 }
                 return v;
             case DOUBLE:
                 v = (int) ((AdmDoubleNode) n).get();
                 if (!isValidSampleSize(v)) {
-                    throw new CompilationException(ErrorCode.INVALID_PROPERTY_FORMAT, SAMPLE_FIELD_NAME);
+                    throw new CompilationException(ErrorCode.OUT_OF_RANGE_SAMPLE_SIZE, SAMPLE_LOW_SIZE,
+                            SAMPLE_HIGH_SIZE);
                 }
                 return v;
             default:
@@ -138,7 +156,7 @@ public class AnalyzeStatement extends AbstractStatement {
                 try {
                     return Long.parseLong(s);
                 } catch (NumberFormatException e) {
-                    throw new CompilationException(ErrorCode.INVALID_PROPERTY_FORMAT, SAMPLE_SEED_FIELD_NAME);
+                    throw new CompilationException(ErrorCode.INVALID_SAMPLE_SEED);
                 }
             default:
                 throw new CompilationException(ErrorCode.WITH_FIELD_MUST_BE_OF_TYPE, SAMPLE_SEED_FIELD_NAME,

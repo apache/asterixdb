@@ -37,7 +37,6 @@ import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.dataset.adapter.FeedAdapter;
 import org.apache.asterix.external.dataset.adapter.GenericAdapter;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.external.parser.factory.ADMDataParserFactory;
 import org.apache.asterix.external.provider.DataflowControllerProvider;
 import org.apache.asterix.external.provider.DatasourceFactoryProvider;
 import org.apache.asterix.external.provider.ParserFactoryProvider;
@@ -47,7 +46,6 @@ import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCServiceContext;
@@ -209,18 +207,18 @@ public class GenericAdapterFactory implements IIndexingAdapterFactory, ITypedAda
     }
 
     /**
-     * Use pre-configured datasource factory
-     * For function datasources
+     * Use pre-configured datasource factory For function datasources
      *
      * @param dataSourceFactory
-     *            the function datasource factory
+     *         the function datasource factory
+     * @param dataParserFactory
+     *         the function data parser factory
      * @throws AlgebricksException
      */
-    public void configure(IExternalDataSourceFactory dataSourceFactory) throws AlgebricksException {
+    public void configure(IExternalDataSourceFactory dataSourceFactory, IDataParserFactory dataParserFactory)
+            throws AlgebricksException {
         this.dataSourceFactory = dataSourceFactory;
-        dataParserFactory = new ADMDataParserFactory();
-        dataParserFactory.setRecordType(RecordUtil.FULLY_OPEN_RECORD_TYPE);
-        dataParserFactory.configure(Collections.emptyMap());
+        this.dataParserFactory = dataParserFactory;
         configuration = Collections.emptyMap();
     }
 

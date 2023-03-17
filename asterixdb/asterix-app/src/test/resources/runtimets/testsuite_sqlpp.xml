@@ -4145,6 +4145,11 @@
         <output-dir compare="Text">analyze-dataset-1</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="analyze-dataset-with-indexes">
+        <output-dir compare="Text">analyze-dataset-with-indexes</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="ddl/create-index">
       <compilation-unit name="create-index-1">
         <output-dir compare="Text">create-index-1</output-dir>
@@ -15492,6 +15497,21 @@
         <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>prob<< Encountered <EOF> at column 4.  (in line 36, at column 22)]]></expected-warn>
         <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>probe ()<< Encountered ")" at column 8.  (in line 36, at column 22)]]></expected-warn>
         <expected-warn>HYR10006: Could not apply hash join hint: probe with cn (in line 36, at column 47)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="cardinality-hint-warning">
+        <output-dir compare="Text">cardinality-hint-warning</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Expected selectivity value (in line 31, at column 52)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Selectivity has to be a decimal value greater than 0 and less than 1 (in line 31, at column 52)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply selectivity hint: Selectivity specified: 0.0, has to be a decimal value greater than 0 and less than 1 (in line 31, at column 73)</expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Selectivity has to be a decimal value greater than 0 and less than 1 (in line 31, at column 52)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Expected productivity collection name and value (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply productivity hint: Productivity specified: 0.0, has to be a decimal value greater than 0 (in line 31, at column 47)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="warnings" check-warnings="true">

@@ -138,6 +138,10 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         this.pendingOp = pendingOp;
     }
 
+    public boolean isSampleIndex() {
+        return indexType == IndexType.SAMPLE;
+    }
+
     public boolean isSecondaryIndex() {
         return !isPrimaryIndex();
     }

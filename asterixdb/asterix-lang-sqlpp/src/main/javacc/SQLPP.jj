@@ -688,35 +688,53 @@ class SQLPPParser extends ScopeChecker implements IParser {
       Pattern lessThanOnePat = Pattern.compile("0\\.\\d+");
       try {
         switch (hintToken.hint) {
-          case SINGLE_DATASET_PREDICATE_SELECTIVITY_HINT:
-            selectivity = 1.0; // uninitialized
-            if (hintToken.hintParams != null) {
-            Matcher mat = lessThanOnePat.matcher(hintToken.hintParams);
-            if (mat.find()) {
-                selectivity = Double.parseDouble (mat.group());
-                }
-            }
-
-            return new PredicateCardinalityAnnotation(selectivity);
-          case JOIN_PREDICATE_PRODUCTIVITY_HINT:
-            productivity = 1.0; // uninitialized
-            String leftSideDataSet = null;
-            if (hintToken.hintParams != null) {
-                Matcher StringNum = stringNumber.matcher(hintToken.hintParams);
-
-                if (StringNum.find()) {
-                    String matchedGroup = StringNum.group();
-                    Pattern var = Pattern.compile("[a-zA-Z]\\w*"); // any word character [a-zA-Z_0-9]
-                    Matcher matVar = var.matcher(matchedGroup);
-                    if (matVar.find())
-                        leftSideDataSet = matVar.group();
-                    Matcher numMat = number.matcher(matchedGroup);
-                    if (numMat.find())
-                        productivity = Double.parseDouble (numMat.group());
-                }
-            }
-            // attach hint to global scope
-            return new JoinProductivityAnnotation (productivity, leftSideDataSet);
+           case SINGLE_DATASET_PREDICATE_SELECTIVITY_HINT:
+             if (hintToken.hintParams == null) {
+               throw new SqlppParseException(getSourceLocation(hintToken), "Expected selectivity value");
+             }
+             else {
+               selectivity = 1.0; // uninitialized
+               Matcher mat = lessThanOnePat.matcher(hintToken.hintParams);
+               if (mat.find()) {
+                 selectivity = Double.parseDouble (mat.group());
+               }
+               else {
+                 throw new SqlppParseException(getSourceLocation(hintToken), "Selectivity has to be a decimal value greater than 0 and less than 1");
+               }
+               return new PredicateCardinalityAnnotation(selectivity);
+             }
+           case JOIN_PREDICATE_PRODUCTIVITY_HINT:
+             if (hintToken.hintParams == null) {
+               throw new SqlppParseException(getSourceLocation(hintToken), "Expected productivity collection name and value");
+             }
+             else {
+               productivity = 1.0; // uninitialized
+               String leftSideDataSet = null;
+               Matcher StringNum = stringNumber.matcher(hintToken.hintParams);
+               if (StringNum.find()) {
+                 String matchedGroup = StringNum.group();
+                 Pattern var = Pattern.compile("[a-zA-Z]\\w*"); // any word character [a-zA-Z_0-9]
+                 Matcher matVar = var.matcher(matchedGroup);
+                 if (matVar.find()) {
+                   leftSideDataSet = matVar.group();
+                 }
+                 else {
+                    throw new SqlppParseException(getSourceLocation(hintToken), "Expected productivity collection name");
+                 }
+                 Matcher numMat = number.matcher(matchedGroup);
+                 if (numMat.find()) {
+                   productivity = Double.parseDouble (numMat.group());
+                 }
+                 else {
+                   throw new SqlppParseException(getSourceLocation(hintToken), "Productivity has to be a decimal value greater than 0");
+                 }
+               }
+               else {
+                 throw new SqlppParseException(getSourceLocation(hintToken), "Invalid format for productivity values");
+               }
+               // attach hint to global scope
+               return new JoinProductivityAnnotation (productivity, leftSideDataSet);
+             }
           case HASH_BROADCAST_JOIN_HINT:
             if (hintToken.hintParams == null) {
               return new BroadcastExpressionAnnotation(BroadcastExpressionAnnotation.BroadcastSide.RIGHT);

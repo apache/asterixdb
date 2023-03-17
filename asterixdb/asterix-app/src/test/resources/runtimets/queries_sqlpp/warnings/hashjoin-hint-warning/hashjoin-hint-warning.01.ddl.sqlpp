@@ -37,7 +37,8 @@ CREATE TYPE CustomerType AS {
 };
 
 CREATE TYPE NationType AS {
-  n_nationkey : integer
+  n_nationkey : integer,
+  n_name : string
 };
 
 CREATE DATASET orders(OrderType) PRIMARY KEY o_orderkey;

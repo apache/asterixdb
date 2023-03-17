@@ -28,6 +28,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.asterix.active.IActiveEntityEventsListener;
@@ -371,10 +372,19 @@ public class RebalanceUtil {
     // Creates and loads all secondary indexes for the rebalance target dataset.
     private static void createAndLoadSecondaryIndexesForTarget(Dataset source, Dataset target,
             MetadataProvider metadataProvider, IHyracksClientConnection hcc) throws Exception {
-        for (Index index : metadataProvider.getDatasetIndexes(source.getDataverseName(), source.getDatasetName())) {
-            if (!index.isSecondaryIndex()) {
-                continue;
-            }
+        List<Index> indexes = metadataProvider.getDatasetIndexes(source.getDataverseName(), source.getDatasetName());
+        List<Index> secondaryIndexes = indexes.stream().filter(Index::isSecondaryIndex).collect(Collectors.toList());
+        List<Index> nonSampleIndexes =
+                secondaryIndexes.stream().filter(idx -> !idx.isSampleIndex()).collect(Collectors.toList());
+        List<Index> sampleIndexes = secondaryIndexes.stream().filter(Index::isSampleIndex).collect(Collectors.toList());
+        // must create all non samples secondary indexes first since samples need the stats of secondary indexes
+        createAndLoadIndexes(target, metadataProvider, hcc, nonSampleIndexes);
+        createAndLoadIndexes(target, metadataProvider, hcc, sampleIndexes);
+    }
+
+    private static void createAndLoadIndexes(Dataset target, MetadataProvider metadataProvider,
+            IHyracksClientConnection hcc, List<Index> indexes) throws Exception {
+        for (Index index : indexes) {
             // Creates the secondary index.
             JobSpecification indexCreationJobSpec =
                     IndexUtil.buildSecondaryIndexCreationJobSpec(target, index, metadataProvider, null);

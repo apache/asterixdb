@@ -42,6 +42,7 @@ import org.apache.asterix.lang.common.expression.FieldBinding;
 import org.apache.asterix.lang.common.expression.ListConstructor;
 import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
+import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.literal.DoubleLiteral;
 import org.apache.asterix.lang.common.literal.FloatLiteral;
 import org.apache.asterix.lang.common.literal.IntegerLiteral;
@@ -50,6 +51,7 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.ViewDecl;
+import org.apache.asterix.lang.common.struct.UnaryExprType;
 import org.apache.asterix.lang.common.visitor.GatherFunctionCallsVisitor;
 import org.apache.asterix.object.base.AdmArrayNode;
 import org.apache.asterix.object.base.AdmBigIntNode;
@@ -80,6 +82,26 @@ public class ExpressionUtils {
                 return toNode((LiteralExpr) expr);
             case RECORD_CONSTRUCTOR_EXPRESSION:
                 return toNode((RecordConstructor) expr);
+            case UNARY_EXPRESSION:
+                UnaryExpr unaryExpr = (UnaryExpr) expr;
+                UnaryExprType unaryExprType = unaryExpr.getExprType();
+                if (unaryExprType == UnaryExprType.POSITIVE || unaryExprType == UnaryExprType.NEGATIVE) {
+                    Expression uexpr = unaryExpr.getExpr();
+                    if (uexpr.getKind() == Expression.Kind.LITERAL_EXPRESSION) {
+                        if (unaryExprType == UnaryExprType.POSITIVE) {
+                            return toNode(uexpr);
+                        } else {
+                            Literal lit = ((LiteralExpr) uexpr).getValue();
+                            return toNode(new LiteralExpr(reverseSign(lit)));
+                        }
+                    } else {
+                        throw new CompilationException(ErrorCode.LITERAL_TYPE_NOT_SUPPORTED_IN_CONSTANT_RECORD,
+                                uexpr.getKind());
+                    }
+                } else {
+                    throw new CompilationException(ErrorCode.EXPRESSION_NOT_SUPPORTED_IN_CONSTANT_RECORD,
+                            unaryExprType);
+                }
             default:
                 throw new CompilationException(ErrorCode.EXPRESSION_NOT_SUPPORTED_IN_CONSTANT_RECORD, expr.getKind());
         }

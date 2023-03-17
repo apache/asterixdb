@@ -18,5 +18,6 @@
  */
 USE test;
 INSERT INTO ds ([{"id":1, "name": "name1"}, {"id":2, "name": "name2"}]);
-UPSERT INTO ds2 ([{"id": 1,"age":30, "a1": {"b": [{"x": [1,2]}, {"x": [1,2]}]}, "a2": [{"x": [1,2]}, {"x": [1,2]}] }]);
+UPSERT INTO ds2 ([{"id": 1,"age":"t\\'s", "a1": {"b": [{"x": [1,2]}, {"x": [1,2]}]}, "a2": [{"x": [1,2]}, {"x": [1,2]}]
+}]);
 ANALYZE DATASET ds2;

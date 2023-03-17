@@ -1,18 +1,18 @@
-distribute result [$$75] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$75] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 5 offset 5 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    limit 5 offset 5 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$75]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      project ([$$75]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_PROJECT  |PARTITIONED|
-        assign [$$75] <- [get-item($$73, 0)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        assign [$$75] <- [get-item($$73, 0)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- ASSIGN  |PARTITIONED|
-          project ([$$73]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          project ([$$73]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- STREAM_PROJECT  |PARTITIONED|
-            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- SORT_MERGE_EXCHANGE [$$77(ASC) ]  |PARTITIONED|
-              project ([$$73, $$77]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              project ([$$73, $$77]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- STREAM_PROJECT  |PARTITIONED|
                 subplan {
                           aggregate [$$73] <- [listify($$72)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -23,13 +23,13 @@ distribute result [$$75] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- UNNEST  |LOCAL|
                                 nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                       } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                       } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- SUBPLAN  |PARTITIONED|
-                  limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  limit 10 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- STREAM_LIMIT  |PARTITIONED|
-                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$77, $$paper] <- test.DBLP1 limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      data-scan []<-[$$77, $$paper] <- test.DBLP1 limit 10 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

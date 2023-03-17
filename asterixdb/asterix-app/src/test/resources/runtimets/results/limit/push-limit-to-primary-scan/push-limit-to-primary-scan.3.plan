@@ -1,18 +1,18 @@
-distribute result [$$paper] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$paper] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 5 offset 5 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    limit 5 offset 5 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$paper]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      project ([$$paper]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_PROJECT  |PARTITIONED|
-        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- SORT_MERGE_EXCHANGE [$$12(ASC) ]  |PARTITIONED|
-          limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          limit 10 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- STREAM_LIMIT  |PARTITIONED|
-            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              data-scan []<-[$$12, $$paper] <- test.DBLP1 limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              data-scan []<-[$$12, $$paper] <- test.DBLP1 limit 10 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
               -- DATASOURCE_SCAN  |PARTITIONED|
                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

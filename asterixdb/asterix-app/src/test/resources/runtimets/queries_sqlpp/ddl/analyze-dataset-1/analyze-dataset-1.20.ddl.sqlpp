@@ -18,9 +18,10 @@
  */
 
 /*
- * Description: test that the sample index is dropped using "analyze dataset drop statistics" statement
+ * Description: analyze dataset with sample=high
+ * Note, there are more tuples in the dataset that the target sample size
  */
 
 use test;
 
-analyze dataset ds1 drop statistics;
+analyze dataset ds1 with { "sample": "high", "sample-seed": -10 };

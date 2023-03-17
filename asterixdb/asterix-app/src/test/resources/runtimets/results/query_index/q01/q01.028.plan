@@ -1,36 +1,36 @@
-distribute result [$$42] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$42] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$42]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$42]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$42] <- [{"age": $$SK0, "cnt": $$46}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$42] <- [{"age": $$SK0, "cnt": $$46}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- SORT_MERGE_EXCHANGE [$$SK0(ASC) ]  |PARTITIONED|
           group by ([$$SK0 := $$48]) decor ([]) {
                     aggregate [$$46] <- [agg-sql-sum($$47)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                 } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- SORT_GROUP_BY[$$48]  |PARTITIONED|
-            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- HASH_PARTITION_EXCHANGE [$$48]  |PARTITIONED|
               group by ([$$48 := $$44]) decor ([]) {
                         aggregate [$$47] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                     } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- PRE_CLUSTERED_GROUP_BY[$$44]  |PARTITIONED|
-                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  project ([$$44]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  project ([$$44]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$44, $$45] <- test.ds1.ds1_age.query-index [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      data-scan []<-[$$44, $$45] <- test.ds1.ds1_age.query-index [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

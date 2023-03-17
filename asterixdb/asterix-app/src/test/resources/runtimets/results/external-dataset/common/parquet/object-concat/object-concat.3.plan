@@ -1,22 +1,22 @@
-distribute result [$$16] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$16] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$16]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$16]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- SORT_MERGE_EXCHANGE [$$18(ASC) ]  |PARTITIONED|
-        order (ASC, $$18) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        order (ASC, $$18) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STABLE_SORT [$$18(ASC)]  |PARTITIONED|
-          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            project ([$$16, $$18]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            project ([$$16, $$18]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_PROJECT  |PARTITIONED|
-              assign [$$16, $$18] <- [object-concat($$p.getField("coordinates"), $$p.getField("user")).getField("name"), $$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              assign [$$16, $$18] <- [object-concat($$p.getField("coordinates"), $$p.getField("user")).getField("name"), $$p.getField("id")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ASSIGN  |PARTITIONED|
-                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  data-scan []<-[$$p] <- test.ParquetDataset project ({coordinates:any,id:any,user:any}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  data-scan []<-[$$p] <- test.ParquetDataset project ({coordinates:any,id:any,user:any}) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                   -- DATASOURCE_SCAN  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
