@@ -1,0 +1,22 @@
+distribute result [$$21] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$21]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$21] <- [switch-case(true, is-array($$23), array-star($$23).getField("text"), $$23.getField("text"))] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      -- ASSIGN  |PARTITIONED|
+        project ([$$23]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        -- STREAM_PROJECT  |PARTITIONED|
+          assign [$$23] <- [$$p.getField("arrayOrObject")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+          -- ASSIGN  |PARTITIONED|
+            project ([$$p]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+              -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
+                data-scan []<-[$$24, $$p] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

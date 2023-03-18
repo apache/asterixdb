@@ -1,0 +1,48 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+#000-arrayOfInt
+#001-arrayObject
+#002-arrayObject2
+#100-addFields
+#101-nestedAddFields
+#200-unionPrimitive
+#201-unionPrimitiveObject
+#202-unionPrimitiveArray
+#203-unionNestedNested
+#204-unionArrayPrimitiveItems
+#205-unionArrayPrimitiveObjectItems
+#206-unionArrayPrimitiveObjectArrayItems
+#207-unionArrayNullItems0
+#208-unionArrayNullItems1
+#209-unionArrayNullItems2
+#210-unionArrayNullItems3
+#301-null-primitive
+#310-null-object0
+#311-null-object1
+#312-null-object2
+#313-null-object3
+#320-null-array0
+#321-null-array1
+#322-null-array2
+#323-null-array3
+#324-null-array4
+#325-null-array5
+#326-null-array6
+#327-null-array7
+#900-dummy-tweet

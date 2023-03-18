@@ -1,0 +1,12 @@
+root
+|-- a: object <level: 1>
+|    |-- b: object <level: 2>
+|    |    |-- c: bigint <level: 3, index: 0>
+|    |    |    |-- Def size: 4 [(3,4)]
+|    |    |-- d: bigint <level: 3, index: 1>
+|    |    |    |-- Def size: 4 [(2,1),(3,1),(2,2)]
+|    |-- x: object <level: 2>
+|    |    |-- y: bigint <level: 3, index: 2>
+|    |    |    |-- Def size: 4 [(1,1),(3,1),(2,1),(1,1)]
+|    |    |-- z: bigint <level: 3, index: 3>
+|    |    |    |-- Def size: 4 [(1,1),(2,1),(3,1),(1,1)]

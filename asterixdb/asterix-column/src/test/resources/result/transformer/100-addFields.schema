@@ -1,0 +1,7 @@
+root
+|-- a: bigint <level: 1, index: 0>
+|    |-- Def size: 4 [(1,4)]
+|-- b: bigint <level: 1, index: 1>
+|    |-- Def size: 4 [(0,1),(1,1),(0,1),(1,1)]
+|-- c: bigint <level: 1, index: 2>
+|    |-- Def size: 4 [(0,2),(1,2)]

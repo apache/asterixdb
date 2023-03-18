@@ -1,0 +1,8 @@
+root
+|-- a: union <level: 1>
+|    |-- bigint: bigint <level: 1, index: 1>
+|    |    |-- Def size: 4 [(0,1),(1,1),(0,2)]
+|    |-- double: double <level: 1, index: 0>
+|    |    |-- Def size: 4 [(1,1),(0,2),(1,1)]
+|    |-- string: string <level: 1, index: 2>
+|    |    |-- Def size: 4 [(0,2),(1,1),(0,1)]

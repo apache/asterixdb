@@ -67,7 +67,7 @@ public class DatasetDeclParametersUtil {
      * Dataset Format Type
      * ***********************************************
      */
-    public static final String DATASET_FORMAT_PARAMETER_NAME = "dataset-format";
+    public static final String DATASET_FORMAT_PARAMETER_NAME = "storage-format";
     public static final String DATASET_FORMAT_FORMAT_PARAMETER_NAME = "format";
     public static final String DATASET_FORMAT_MAX_TUPLE_COUNT_PARAMETER_NAME = "max-tuple-count";
     public static final String DATASET_FORMAT_FREE_SPACE_TOLERANCE_PARAMETER_NAME = "free-space-tolerance";

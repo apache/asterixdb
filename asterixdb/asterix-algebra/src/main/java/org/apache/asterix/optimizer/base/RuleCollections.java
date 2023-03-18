@@ -417,7 +417,6 @@ public final class RuleCollections {
         // We are going to apply a constant folding rule again for this case.
         physicalRewritesTopLevel.add(new ConstantFoldingRule(appCtx));
         physicalRewritesTopLevel.add(new PushLimitIntoOrderByRule());
-        //Must run before PushLimitIntoPrimarySearchRule to ensure the select condition is inspected
         physicalRewritesTopLevel.add(new PushLimitIntoPrimarySearchRule());
         // remove assigns that could become unused after PushLimitIntoPrimarySearchRule
         physicalRewritesTopLevel.add(new RemoveUnusedAssignAndAggregateRule());

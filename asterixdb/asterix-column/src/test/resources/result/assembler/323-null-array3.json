@@ -1,0 +1,4 @@
+{ "a": [ null, 1, null ] }
+{ "a": [ null ] }
+{ "a": [ null, null ] }
+{ "a": [ 3, null, 4 ] }

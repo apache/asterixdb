@@ -16042,4 +16042,119 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="column">
+    <test-case FilePath="column">
+      <compilation-unit name="assembly">
+        <output-dir compare="Text">assembly</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="delete/001">
+        <output-dir compare="Text">delete/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="delete/002">
+        <output-dir compare="Text">delete/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="meta/meta_after_gby">
+        <output-dir compare="Text">meta/meta_after_gby</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="meta/meta_in_with_clause">
+        <output-dir compare="Text">meta/meta_in_with_clause</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="meta/resolving_pk_with_meta">
+        <output-dir compare="Text">meta/resolving_pk_with_meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/001">
+        <output-dir compare="Text">missing-null-values/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/002">
+        <output-dir compare="Text">missing-null-values/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/003">
+        <output-dir compare="Text">missing-null-values/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/003">
+        <output-dir compare="Text">missing-null-values/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/005">
+        <output-dir compare="Text">missing-null-values/005</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/006">
+        <output-dir compare="Text">missing-null-values/006</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/array-access-pushdown">
+        <output-dir compare="Text">pushdown/array-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/field-access-pushdown">
+        <output-dir compare="Text">pushdown/field-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/heterogeneous-access-pushdown">
+        <output-dir compare="Text">pushdown/heterogeneous-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/other-pushdowns">
+        <output-dir compare="Text">pushdown/other-pushdowns</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="select-count-one-field">
+        <output-dir compare="Text">select-count-one-field</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="upsert">
+        <output-dir compare="Text">upsert</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column" check-warnings="true">
+      <compilation-unit name="filter/001">
+        <output-dir compare="Text">filter/001</output-dir>
+        <expected-warn>ASX0051: Incomparable input types: string and bigint (in line 30, at column 23)</expected-warn>
+        <expected-warn>ASX0051: Incomparable input types: bigint and string (in line 29, at column 38)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column" check-warnings="true">
+      <compilation-unit name="filter/002">
+        <output-dir compare="Text">filter/002</output-dir>
+        <expected-warn>ASX0051: Incomparable input types: string and bigint (in line 29, at column 23)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/003">
+        <output-dir compare="Text">filter/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="big-object">
+        <output-dir compare="Text">big-object</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

@@ -1,0 +1,7 @@
+root
+|-- a: array <level: 1>
+|    |-- item: union <level: 2>
+|    |    |-- bigint: bigint <level: 2, index: 0>
+|    |    |    |-- Def size: 6 [(5,1),(0,1),(2,1),(0,1),(1,1),(0,1)]
+|    |    |-- string: string <level: 2, index: 1>
+|    |    |    |-- Def size: 6 [(1,1),(0,1),(1,1),(0,1),(2,1),(0,1)]

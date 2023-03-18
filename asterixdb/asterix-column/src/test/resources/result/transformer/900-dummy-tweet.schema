@@ -1,0 +1,290 @@
+root
+|-- coordinates: object <level: 1>
+|    |-- coordinates: array <level: 2>
+|    |    |-- item: double <level: 3, index: 0>
+|    |    |    |-- Def size: 4 [(3,1),(1,1),(3,1),(1,1)]
+|    |-- type: string <level: 2, index: 1>
+|    |    |-- Def size: 2 [(2,2)]
+|-- created_at: string <level: 1, index: 2>
+|    |-- Def size: 2 [(1,2)]
+|-- entities: object <level: 1>
+|    |-- urls: array <level: 2>
+|    |    |-- item: object <level: 3>
+|    |    |    |-- display_url: string <level: 4, index: 3>
+|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |-- expanded_url: string <level: 4, index: 4>
+|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |-- indices: array <level: 4>
+|    |    |    |    |-- item: bigint <level: 5, index: 5>
+|    |    |    |    |    |-- Def size: 4 [(5,1),(3,1),(1,1),(0,1)]
+|    |    |    |-- url: string <level: 4, index: 6>
+|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |-- user_mentions: array <level: 2>
+|    |    |-- item: object <level: 3>
+|    |    |    |-- id: bigint <level: 4, index: 7>
+|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |-- id_str: string <level: 4, index: 8>
+|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |-- indices: array <level: 4>
+|    |    |    |    |-- item: bigint <level: 5, index: 9>
+|    |    |    |    |    |-- Def size: 4 [(5,1),(3,1),(1,1),(0,1)]
+|    |    |    |-- name: string <level: 4, index: 10>
+|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |-- screen_name: string <level: 4, index: 11>
+|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|-- favorite_count: bigint <level: 1, index: 12>
+|    |-- Def size: 2 [(1,2)]
+|-- favorited: boolean <level: 1, index: 13>
+|    |-- Def size: 2 [(1,2)]
+|-- filter_level: string <level: 1, index: 14>
+|    |-- Def size: 2 [(1,2)]
+|-- geo: object <level: 1>
+|    |-- coordinates: array <level: 2>
+|    |    |-- item: double <level: 3, index: 15>
+|    |    |    |-- Def size: 4 [(3,1),(1,1),(3,1),(1,1)]
+|    |-- type: string <level: 2, index: 16>
+|    |    |-- Def size: 2 [(2,2)]
+|-- id: string <level: 1, index: 17>
+|    |-- Def size: 2 [(1,2)]
+|-- id_str: string <level: 1, index: 18>
+|    |-- Def size: 2 [(1,2)]
+|-- in_reply_to_screen_name: string <level: 1, index: 19>
+|    |-- Def size: 2 [(1,2)]
+|-- in_reply_to_status_id: bigint <level: 1, index: 20>
+|    |-- Def size: 2 [(1,2)]
+|-- in_reply_to_status_id_str: string <level: 1, index: 21>
+|    |-- Def size: 2 [(1,2)]
+|-- in_reply_to_user_id: bigint <level: 1, index: 22>
+|    |-- Def size: 2 [(1,2)]
+|-- in_reply_to_user_id_str: string <level: 1, index: 23>
+|    |-- Def size: 2 [(1,2)]
+|-- is_quote_status: boolean <level: 1, index: 24>
+|    |-- Def size: 2 [(1,2)]
+|-- lang: string <level: 1, index: 25>
+|    |-- Def size: 2 [(1,2)]
+|-- place: object <level: 1>
+|    |-- bounding_box: object <level: 2>
+|    |    |-- coordinates: array <level: 3>
+|    |    |    |-- item: array <level: 4>
+|    |    |    |    |-- item: array <level: 5>
+|    |    |    |    |    |-- item: double <level: 6, index: 26>
+|    |    |    |    |    |    |-- Def size: 8 [(6,1),(4,1),(3,1),(2,1),(6,1),(4,1),(3,1),(2,1)]
+|    |    |-- type: string <level: 3, index: 27>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |-- country: string <level: 2, index: 28>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- country_code: string <level: 2, index: 29>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- full_name: string <level: 2, index: 30>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- id: string <level: 2, index: 31>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- name: string <level: 2, index: 32>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- place_type: string <level: 2, index: 33>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- url: string <level: 2, index: 34>
+|    |    |-- Def size: 2 [(2,2)]
+|-- possibly_sensitive: boolean <level: 1, index: 35>
+|    |-- Def size: 2 [(1,2)]
+|-- quoted_status: object <level: 1>
+|    |-- created_at: string <level: 2, index: 36>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- entities: object <level: 2>
+|    |    |-- user_mentions: array <level: 3>
+|    |    |    |-- item: object <level: 4>
+|    |    |    |    |-- id: bigint <level: 5, index: 37>
+|    |    |    |    |    |-- Def size: 4 [(5,1),(2,1),(5,1),(2,1)]
+|    |    |    |    |-- id_str: string <level: 5, index: 38>
+|    |    |    |    |    |-- Def size: 4 [(5,1),(2,1),(5,1),(2,1)]
+|    |    |    |    |-- indices: array <level: 5>
+|    |    |    |    |    |-- item: bigint <level: 6, index: 39>
+|    |    |    |    |    |    |-- Def size: 6 [(6,1),(4,1),(2,1),(6,1),(4,1),(2,1)]
+|    |    |    |    |-- name: string <level: 5, index: 40>
+|    |    |    |    |    |-- Def size: 4 [(5,1),(2,1),(5,1),(2,1)]
+|    |    |    |    |-- screen_name: string <level: 5, index: 41>
+|    |    |    |    |    |-- Def size: 4 [(5,1),(2,1),(5,1),(2,1)]
+|    |-- favorite_count: bigint <level: 2, index: 42>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- favorited: boolean <level: 2, index: 43>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- filter_level: string <level: 2, index: 44>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- id: bigint <level: 2, index: 45>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- id_str: string <level: 2, index: 46>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- in_reply_to_screen_name: string <level: 2, index: 47>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- in_reply_to_status_id: bigint <level: 2, index: 48>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- in_reply_to_status_id_str: string <level: 2, index: 49>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- in_reply_to_user_id: bigint <level: 2, index: 50>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- in_reply_to_user_id_str: string <level: 2, index: 51>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- is_quote_status: boolean <level: 2, index: 52>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- lang: string <level: 2, index: 53>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- retweet_count: bigint <level: 2, index: 54>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- retweeted: boolean <level: 2, index: 55>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- source: string <level: 2, index: 56>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- text: string <level: 2, index: 57>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- truncated: boolean <level: 2, index: 58>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- user: object <level: 2>
+|    |    |-- contributors_enabled: boolean <level: 3, index: 59>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- created_at: string <level: 3, index: 60>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- default_profile: boolean <level: 3, index: 61>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- default_profile_image: boolean <level: 3, index: 62>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- description: string <level: 3, index: 63>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- favourites_count: bigint <level: 3, index: 64>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- followers_count: bigint <level: 3, index: 65>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- friends_count: bigint <level: 3, index: 66>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- geo_enabled: boolean <level: 3, index: 67>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- id: bigint <level: 3, index: 68>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- id_str: string <level: 3, index: 69>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- is_translator: boolean <level: 3, index: 70>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- lang: string <level: 3, index: 71>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- listed_count: bigint <level: 3, index: 72>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- name: string <level: 3, index: 73>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_background_color: string <level: 3, index: 74>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_background_image_url: string <level: 3, index: 75>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_background_image_url_https: string <level: 3, index: 76>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_background_tile: boolean <level: 3, index: 77>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_banner_url: string <level: 3, index: 78>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_image_url: string <level: 3, index: 79>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_image_url_https: string <level: 3, index: 80>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_link_color: string <level: 3, index: 81>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_sidebar_border_color: string <level: 3, index: 82>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_sidebar_fill_color: string <level: 3, index: 83>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_text_color: string <level: 3, index: 84>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- profile_use_background_image: boolean <level: 3, index: 85>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- protected: boolean <level: 3, index: 86>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- screen_name: string <level: 3, index: 87>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- statuses_count: bigint <level: 3, index: 88>
+|    |    |    |-- Def size: 2 [(3,2)]
+|    |    |-- verified: boolean <level: 3, index: 89>
+|    |    |    |-- Def size: 2 [(3,2)]
+|-- quoted_status_id: bigint <level: 1, index: 90>
+|    |-- Def size: 2 [(1,2)]
+|-- quoted_status_id_str: string <level: 1, index: 91>
+|    |-- Def size: 2 [(1,2)]
+|-- retweet_count: bigint <level: 1, index: 92>
+|    |-- Def size: 2 [(1,2)]
+|-- retweeted: boolean <level: 1, index: 93>
+|    |-- Def size: 2 [(1,2)]
+|-- source: string <level: 1, index: 94>
+|    |-- Def size: 2 [(1,2)]
+|-- text: string <level: 1, index: 95>
+|    |-- Def size: 2 [(1,2)]
+|-- timestamp_ms: string <level: 1, index: 96>
+|    |-- Def size: 2 [(1,2)]
+|-- truncated: boolean <level: 1, index: 97>
+|    |-- Def size: 2 [(1,2)]
+|-- user: object <level: 1>
+|    |-- contributors_enabled: boolean <level: 2, index: 98>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- created_at: string <level: 2, index: 99>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- default_profile: boolean <level: 2, index: 100>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- default_profile_image: boolean <level: 2, index: 101>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- description: string <level: 2, index: 102>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- favourites_count: bigint <level: 2, index: 103>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- followers_count: bigint <level: 2, index: 104>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- friends_count: bigint <level: 2, index: 105>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- geo_enabled: boolean <level: 2, index: 106>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- id: bigint <level: 2, index: 107>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- id_str: string <level: 2, index: 108>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- is_translator: boolean <level: 2, index: 109>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- lang: string <level: 2, index: 110>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- listed_count: bigint <level: 2, index: 111>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- location: string <level: 2, index: 112>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- name: string <level: 2, index: 113>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_background_color: string <level: 2, index: 114>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_background_image_url: string <level: 2, index: 115>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_background_image_url_https: string <level: 2, index: 116>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_background_tile: boolean <level: 2, index: 117>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_banner_url: string <level: 2, index: 118>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_image_url: string <level: 2, index: 119>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_image_url_https: string <level: 2, index: 120>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_link_color: string <level: 2, index: 121>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_sidebar_border_color: string <level: 2, index: 122>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_sidebar_fill_color: string <level: 2, index: 123>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_text_color: string <level: 2, index: 124>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- profile_use_background_image: boolean <level: 2, index: 125>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- protected: boolean <level: 2, index: 126>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- screen_name: string <level: 2, index: 127>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- statuses_count: bigint <level: 2, index: 128>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- time_zone: string <level: 2, index: 129>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- url: string <level: 2, index: 130>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- utc_offset: bigint <level: 2, index: 131>
+|    |    |-- Def size: 2 [(2,2)]
+|    |-- verified: boolean <level: 2, index: 132>
+|    |    |-- Def size: 2 [(2,2)]
