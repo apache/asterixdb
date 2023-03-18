@@ -255,9 +255,9 @@ public class JoinFromSubplanRewrite extends AbstractOperatorFromSubplanRewrite<A
             LogicalVariable newVar = context.newVar();
             VariableReferenceExpression newVarRef = new VariableReferenceExpression(newVar);
             newVarRef.setSourceLocation(joinOp.getSourceLocation());
-            AssignOperator newAssign =
-                    new AssignOperator(newVar, new MutableObject<>(arg.getValue().cloneExpression()));
-            newAssign.setSourceLocation(arg.getValue().getSourceLocation());
+            Mutable<ILogicalExpression> clonedArgRef = new MutableObject<>(arg.getValue().cloneExpression());
+            AssignOperator newAssign = new AssignOperator(newVar, clonedArgRef);
+            newAssign.setSourceLocation(clonedArgRef.getValue().getSourceLocation());
             newAssign.setExecutionMode(joinOp.getExecutionMode());
 
             // Place the new ASSIGN in the appropriate join branch.
