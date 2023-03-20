@@ -1515,6 +1515,9 @@ public class BuiltinFunctions {
     // Temporal functions
     public static final FunctionIdentifier UNIX_TIME_FROM_DATE_IN_DAYS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-date-in-days", 1);
+
+    public static final FunctionIdentifier UNIX_TIME_FROM_DATE_IN_MS =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-date-in-ms", 1);
     public final static FunctionIdentifier UNIX_TIME_FROM_TIME_IN_MS =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "unix-time-from-time-in-ms", 1);
     public final static FunctionIdentifier UNIX_TIME_FROM_DATETIME_IN_MS =
@@ -2468,6 +2471,7 @@ public class BuiltinFunctions {
 
         // temporal functions
         addFunction(UNIX_TIME_FROM_DATE_IN_DAYS, AInt64TypeComputer.INSTANCE, true);
+        addFunction(UNIX_TIME_FROM_DATE_IN_MS, AInt64TypeComputer.INSTANCE, true);
         addFunction(UNIX_TIME_FROM_TIME_IN_MS, AInt64TypeComputer.INSTANCE, true);
         addFunction(UNIX_TIME_FROM_DATETIME_IN_MS, AInt64TypeComputer.INSTANCE, true);
         addFunction(UNIX_TIME_FROM_DATETIME_IN_MS_WITH_TZ, AInt64TypeComputer.INSTANCE, false);

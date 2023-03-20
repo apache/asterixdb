@@ -28,6 +28,7 @@ set `import-private-functions` `true`;
 , 'date4' : (test.`date-from-unix-time-in-days`(15600) + test.duration('-P2Y1M90DT30H'))
 , 'date5' : (test.`get-date-from-datetime`(test.datetime('1327-12-02T23:35:49.938Z')) + test.duration('P300Y900MT360000M'))
 , 'unix1' : test.`unix-time-from-date-in-days`(test.`date-from-unix-time-in-days`(15600))
+, 'unix2' : test.`unix-time-from-date-in-ms`(test.`date-from-unix-time-in-days`(15600))
 , 'duration1' : ((test.`get-date-from-datetime`(test.datetime('1327-12-02T23:35:49.938Z')) + test.duration('P300Y900MT360000M')) - test.`get-date-from-datetime`(test.datetime('1327-12-02T23:35:49.938Z')))
 , 'duration2' : ((test.`date-from-unix-time-in-days`(15600) + test.duration('-P2Y1M90DT30H')) - test.`date-from-unix-time-in-days`(15600))
 , 'c1' : (test.`date-from-unix-time-in-days`(15600) = ((test.`date-from-unix-time-in-days`(15600) + test.duration('-P2Y1M90DT30H')) + (test.`date-from-unix-time-in-days`(15600) - (test.`date-from-unix-time-in-days`(15600) + test.duration('-P2Y1M90DT30H')))))

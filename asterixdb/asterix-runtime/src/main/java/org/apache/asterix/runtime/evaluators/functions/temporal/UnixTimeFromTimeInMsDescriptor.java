@@ -45,6 +45,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 @MissingNullInOutFunction
 public class UnixTimeFromTimeInMsDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    //TODO: make this extend AbstractUnixTimeEval to avoid duplication
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = UnixTimeFromTimeInMsDescriptor::new;
 

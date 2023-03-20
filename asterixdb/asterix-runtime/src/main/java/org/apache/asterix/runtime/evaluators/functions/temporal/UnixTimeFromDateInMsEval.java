@@ -19,22 +19,20 @@
 
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
-abstract class AbstractUnixTimeFromDatetimeEval extends AbstractUnixTimeEval {
+final class UnixTimeFromDateInMsEval extends AbstractUnixTimeFromDateEval {
 
-    AbstractUnixTimeFromDatetimeEval(IScalarEvaluator arg0, SourceLocation sourceLoc,
-            FunctionIdentifier functionIdentifier) {
-        this(arg0, null, sourceLoc, functionIdentifier);
+    public static final long MS_IN_DAY = 86400000l;
+
+    UnixTimeFromDateInMsEval(IScalarEvaluator arg0, SourceLocation sourceLoc, FunctionIdentifier functionIdentifier) {
+        super(arg0, sourceLoc, functionIdentifier);
     }
 
-    AbstractUnixTimeFromDatetimeEval(IScalarEvaluator arg0, IScalarEvaluator arg1, SourceLocation sourceLoc,
-            FunctionIdentifier fid) {
-        super(arg0, arg1, sourceLoc, fid);
-        this.tag = ATypeTag.DATETIME;
+    @Override
+    long chrononToUnixTime(long chronon) {
+        return chronon * MS_IN_DAY;
     }
-
 }

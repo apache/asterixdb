@@ -65,6 +65,15 @@ RecordConstructor [
     ]
   )
   (
+    LiteralExpr [STRING] [unix2]
+    :
+    FunctionCall asterix.unix-time-from-date-in-ms@1[
+      FunctionCall asterix.date-from-unix-time-in-days@1[
+        LiteralExpr [LONG] [15600]
+      ]
+    ]
+  )
+  (
     LiteralExpr [STRING] [duration1]
     :
     OperatorExpr [

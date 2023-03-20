@@ -608,6 +608,7 @@ import org.apache.asterix.runtime.evaluators.functions.temporal.QuarterOfYearDes
 import org.apache.asterix.runtime.evaluators.functions.temporal.TimeFromDatetimeDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.TimeFromUnixTimeInMsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDateInDaysDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDateInMsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDatetimeInMsDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDatetimeInMsWithTzDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.temporal.UnixTimeFromDatetimeInSecsDescriptor;
@@ -1221,6 +1222,7 @@ public final class FunctionCollection implements IFunctionCollection {
 
         // Temporal functions
         fc.add(UnixTimeFromDateInDaysDescriptor.FACTORY);
+        fc.add(UnixTimeFromDateInMsDescriptor.FACTORY);
         fc.add(UnixTimeFromTimeInMsDescriptor.FACTORY);
         fc.add(UnixTimeFromDatetimeInMsDescriptor.FACTORY);
         fc.add(UnixTimeFromDatetimeInMsWithTzDescriptor.FACTORY);

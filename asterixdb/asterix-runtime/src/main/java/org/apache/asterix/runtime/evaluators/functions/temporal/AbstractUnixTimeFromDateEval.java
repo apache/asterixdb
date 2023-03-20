@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.runtime.evaluators.functions.temporal;
 
 import org.apache.asterix.om.types.ATypeTag;
@@ -24,17 +23,16 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
-abstract class AbstractUnixTimeFromDatetimeEval extends AbstractUnixTimeEval {
+public abstract class AbstractUnixTimeFromDateEval extends AbstractUnixTimeEval {
 
-    AbstractUnixTimeFromDatetimeEval(IScalarEvaluator arg0, SourceLocation sourceLoc,
+    AbstractUnixTimeFromDateEval(IScalarEvaluator arg0, SourceLocation sourceLoc,
             FunctionIdentifier functionIdentifier) {
         this(arg0, null, sourceLoc, functionIdentifier);
     }
 
-    AbstractUnixTimeFromDatetimeEval(IScalarEvaluator arg0, IScalarEvaluator arg1, SourceLocation sourceLoc,
+    AbstractUnixTimeFromDateEval(IScalarEvaluator arg0, IScalarEvaluator arg1, SourceLocation sourceLoc,
             FunctionIdentifier fid) {
         super(arg0, arg1, sourceLoc, fid);
-        this.tag = ATypeTag.DATETIME;
+        this.tag = ATypeTag.DATE;
     }
-
 }
