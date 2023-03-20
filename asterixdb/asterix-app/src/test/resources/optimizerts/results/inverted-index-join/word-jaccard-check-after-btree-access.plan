@@ -4,8 +4,8 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- HYBRID_HASH_JOIN [$$66][$$53]  |PARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            -- HYBRID_HASH_JOIN [$$69][$$56]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$69]  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ASSIGN  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
@@ -17,7 +17,7 @@
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- ASSIGN  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$56]  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- STREAM_SELECT  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
@@ -26,7 +26,7 @@
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- STABLE_SORT [$$71(ASC)]  |PARTITIONED|
+                                -- STABLE_SORT [$$74(ASC)]  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.TweetMessages.msgTextIx)  |PARTITIONED|
                                       -- BROADCAST_EXCHANGE  |PARTITIONED|

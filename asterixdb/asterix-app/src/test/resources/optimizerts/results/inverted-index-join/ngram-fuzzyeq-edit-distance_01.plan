@@ -4,12 +4,12 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- HYBRID_HASH_JOIN [$$40][$$32]  |PARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            -- HYBRID_HASH_JOIN [$$42][$$34]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$42]  |PARTITIONED|
                 -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$32]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
                 -- UNION_ALL  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
@@ -18,7 +18,7 @@
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- BTREE_SEARCH (test.CSX.CSX)  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- STABLE_SORT [$$45(ASC)]  |PARTITIONED|
+                                -- STABLE_SORT [$$47(ASC)]  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.CSX.ngram_index)  |PARTITIONED|
                                       -- BROADCAST_EXCHANGE  |PARTITIONED|

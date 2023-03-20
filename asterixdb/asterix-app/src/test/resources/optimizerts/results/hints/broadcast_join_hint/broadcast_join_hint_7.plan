@@ -28,7 +28,7 @@
                                       -- DATASOURCE_SCAN (tpch.customer)  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              -- HASH_PARTITION_EXCHANGE [$$81]  |PARTITIONED|
                                 -- DATASOURCE_SCAN (tpch.nation)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

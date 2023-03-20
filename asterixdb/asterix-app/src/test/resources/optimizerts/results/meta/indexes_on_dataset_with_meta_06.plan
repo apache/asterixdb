@@ -3,15 +3,17 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SORT_MERGE_EXCHANGE [$$33(ASC) ]  |PARTITIONED|
-            -- STABLE_SORT [$$33(ASC)]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$35(ASC) ]  |PARTITIONED|
+            -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- BTREE_SEARCH (test.DS1.DS1)  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- STREAM_PROJECT  |PARTITIONED|
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (test.DS2)  |PARTITIONED|
+                        -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
+                          -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
+                            -- STREAM_PROJECT  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                -- DATASOURCE_SCAN (test.DS2)  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -21,7 +21,7 @@ distribute result [$$31] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000
                     join (eq($$33, $$34)) [cardinality: 1000000.0, op-cost: 2000000.0, total-cost: 6000000.0]
                     -- HYBRID_HASH_JOIN [$$33][$$34]  |PARTITIONED|
                       exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      -- HASH_PARTITION_EXCHANGE [$$33]  |PARTITIONED|
                         project ([$$38, $$33]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                         -- STREAM_PROJECT  |PARTITIONED|
                           assign [$$38] <- [$$p1.getField("age")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
@@ -35,7 +35,7 @@ distribute result [$$31] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000
                                   empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                       exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
                         project ([$$39, $$34]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                         -- STREAM_PROJECT  |PARTITIONED|
                           assign [$$39] <- [$$p2.getField("name")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]

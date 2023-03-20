@@ -34,5 +34,5 @@ SELECT state,
                    )[0]
                 )
        )[0]  / (COUNT(*) * 1.0 ) AS risk
-ORDER BY risk DESC
+ORDER BY state ASC, risk DESC
 LIMIT 5;

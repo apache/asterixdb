@@ -109,7 +109,7 @@ public class IndexInsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
             scanVariables.add(new LogicalVariable(-1));
         }
         IPhysicalPropertiesVector r =
-                dataSourceIndex.getDataSource().getPropertiesProvider().computePropertiesVector(scanVariables);
+                dataSourceIndex.getDataSource().getPropertiesProvider().computeRequiredProperties(scanVariables);
         r.getLocalProperties().clear();
         IPhysicalPropertiesVector[] requirements = new IPhysicalPropertiesVector[1];
         requirements[0] = r;

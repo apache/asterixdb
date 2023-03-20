@@ -4,28 +4,28 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- STABLE_SORT [$$50(ASC), $$51(ASC)]  |PARTITIONED|
-              -- RANGE_PARTITION_EXCHANGE [$$50(ASC), $$51(ASC)]  |PARTITIONED|
+            -- STABLE_SORT [$$53(ASC), $$54(ASC)]  |PARTITIONED|
+              -- RANGE_PARTITION_EXCHANGE [$$53(ASC), $$54(ASC)]  |PARTITIONED|
                 -- FORWARD  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- REPLICATE  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- HYBRID_HASH_JOIN [$$50][$$54]  |PARTITIONED|
-                              -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
+                            -- HYBRID_HASH_JOIN [$$53][$$57]  |PARTITIONED|
+                              -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- HYBRID_HASH_JOIN [$$51, $$50][$$53, $$52]  |PARTITIONED|
-                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    -- HYBRID_HASH_JOIN [$$54, $$53][$$56, $$55]  |PARTITIONED|
+                                      -- HASH_PARTITION_EXCHANGE [$$54, $$53]  |PARTITIONED|
                                         -- DATASOURCE_SCAN (tpcds.catalog_sales)  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      -- HASH_PARTITION_EXCHANGE [$$56, $$55]  |PARTITIONED|
                                         -- DATASOURCE_SCAN (tpcds.catalog_returns)  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
                                 -- DATASOURCE_SCAN (tpcds.item)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
@@ -39,20 +39,20 @@
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- HYBRID_HASH_JOIN [$$50][$$54]  |PARTITIONED|
-                                        -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
+                                      -- HYBRID_HASH_JOIN [$$53][$$57]  |PARTITIONED|
+                                        -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- HYBRID_HASH_JOIN [$$51, $$50][$$53, $$52]  |PARTITIONED|
-                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              -- HYBRID_HASH_JOIN [$$54, $$53][$$56, $$55]  |PARTITIONED|
+                                                -- HASH_PARTITION_EXCHANGE [$$54, $$53]  |PARTITIONED|
                                                   -- DATASOURCE_SCAN (tpcds.catalog_sales)  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                -- HASH_PARTITION_EXCHANGE [$$56, $$55]  |PARTITIONED|
                                                   -- DATASOURCE_SCAN (tpcds.catalog_returns)  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
                                           -- DATASOURCE_SCAN (tpcds.item)  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

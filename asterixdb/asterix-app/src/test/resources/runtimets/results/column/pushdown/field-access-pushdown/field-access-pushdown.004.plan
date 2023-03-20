@@ -6,9 +6,13 @@ distribute result [$$p] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 10000
     -- STREAM_PROJECT  |PARTITIONED|
       exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- SORT_MERGE_EXCHANGE [$$14(ASC) ]  |PARTITIONED|
-        data-scan []<-[$$14, $$p] <- test.ColumnDataset1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
-        -- DATASOURCE_SCAN  |PARTITIONED|
-          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        order (ASC, $$14) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        -- STABLE_SORT [$$14(ASC)]  |PARTITIONED|
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            data-scan []<-[$$14, $$p] <- test.ColumnDataset1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

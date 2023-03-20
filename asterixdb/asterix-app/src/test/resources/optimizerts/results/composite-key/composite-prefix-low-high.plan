@@ -2,8 +2,10 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$25(ASC), $$26(ASC) ]  |PARTITIONED|
-          -- BTREE_SEARCH (test.Points.Points)  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$26(ASC), $$27(ASC) ]  |PARTITIONED|
+          -- STABLE_SORT [$$26(ASC), $$27(ASC)]  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- ASSIGN  |PARTITIONED|
-                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              -- BTREE_SEARCH (test.Points.Points)  |PARTITIONED|
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  -- ASSIGN  |PARTITIONED|
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

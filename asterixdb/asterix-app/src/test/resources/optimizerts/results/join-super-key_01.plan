@@ -4,8 +4,8 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- HYBRID_HASH_JOIN [$$37, $$42, $$44][$$39, $$43, $$40]  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$37, $$44]  |PARTITIONED|
+            -- HYBRID_HASH_JOIN [$$39, $$44, $$46][$$41, $$45, $$42]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$39, $$44, $$46]  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ASSIGN  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
@@ -13,7 +13,7 @@
                         -- DATASOURCE_SCAN (`join-super-key_1`.LineItems)  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$41, $$45, $$42]  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ASSIGN  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -24,4 +24,4 @@ select
   c.l_suppkey > 0 as suppkey
 from LineItem as c
 where c.l_suppkey < 150
-limit 5;
+order by c.l_orderkey,c.l_linenumber limit 5;

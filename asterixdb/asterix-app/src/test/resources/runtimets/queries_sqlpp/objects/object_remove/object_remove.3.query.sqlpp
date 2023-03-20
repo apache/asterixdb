@@ -59,6 +59,6 @@ use TinySocial;
   "t8": (
     select value object_remove(object_remove( object_remove(u, "lang"), "friends_count"), "statuses_count")
     from TwitterUsers u
-    limit 1
+    order by u.`screen-name` limit 1
   )
 };

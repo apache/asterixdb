@@ -91,7 +91,7 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
         scanVariables.addAll(primaryKeys);
         scanVariables.add(new LogicalVariable(-1));
         IPhysicalPropertiesVector physicalProps =
-                dataSourceIndex.getDataSource().getPropertiesProvider().computePropertiesVector(scanVariables);
+                dataSourceIndex.getDataSource().getPropertiesProvider().computeRequiredProperties(scanVariables);
         List<ILocalStructuralProperty> localProperties = new ArrayList<>();
         List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
         // Data needs to be sorted based on the [token, number of token, PK]

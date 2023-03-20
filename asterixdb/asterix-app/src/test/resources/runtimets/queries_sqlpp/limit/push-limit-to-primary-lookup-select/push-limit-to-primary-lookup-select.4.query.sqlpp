@@ -23,4 +23,4 @@ use test;
 select element c
 from  LineItem as c
 where c.l_suppkey < 150 AND l_extendedprice < 10000
-limit 5 offset 5;
+order by c.l_orderkey,c.l_linenumber limit 5 offset 5;

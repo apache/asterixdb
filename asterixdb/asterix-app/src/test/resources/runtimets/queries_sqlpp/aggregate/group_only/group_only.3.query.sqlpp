@@ -24,7 +24,7 @@ USE dblp;
 SELECT d.authors AS author, d.title AS title
 FROM (SELECT VALUE t
                FROM DBLP t
-               LIMIT 5) AS d
+               ORDER BY id LIMIT 5) AS d
 GROUP BY d.authors, d.title
 ORDER BY d.authors;
 

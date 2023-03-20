@@ -14,9 +14,13 @@ distribute result [$$21] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000
             -- STREAM_PROJECT  |PARTITIONED|
               exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
-                data-scan []<-[$$24, $$p] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
-                -- DATASOURCE_SCAN  |PARTITIONED|
-                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                order (ASC, $$24) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                -- STABLE_SORT [$$24(ASC)]  |PARTITIONED|
+                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    data-scan []<-[$$24, $$p] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

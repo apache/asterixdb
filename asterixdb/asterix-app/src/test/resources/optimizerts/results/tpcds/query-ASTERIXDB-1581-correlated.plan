@@ -16,19 +16,19 @@
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                             }
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- STREAM_PROJECT  |PARTITIONED|
+                        -- STABLE_SORT [$$180(ASC)]  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- HYBRID_HASH_JOIN [$$180][$$222]  |PARTITIONED|
+                            -- STREAM_PROJECT  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- PRE_CLUSTERED_GROUP_BY[$$164]  |PARTITIONED|
-                                        {
-                                          -- AGGREGATE  |LOCAL|
-                                            -- AGGREGATE  |LOCAL|
-                                              -- STREAM_SELECT  |LOCAL|
-                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
+                                -- HYBRID_HASH_JOIN [$$180][$$222]  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- STABLE_SORT [$$164(ASC)]  |PARTITIONED|
+                                    -- PRE_CLUSTERED_GROUP_BY[$$164]  |PARTITIONED|
+                                            {
+                                              -- AGGREGATE  |LOCAL|
+                                                -- AGGREGATE  |LOCAL|
+                                                  -- STREAM_SELECT  |LOCAL|
+                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                            }
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- STREAM_PROJECT  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -42,37 +42,41 @@
                                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                         }
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                    -- STABLE_SORT [$$144(ASC)]  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        -- HYBRID_HASH_JOIN [$$144][$$154]  |PARTITIONED|
+                                                        -- STREAM_PROJECT  |PARTITIONED|
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            -- STREAM_PROJECT  |PARTITIONED|
-                                                              -- ASSIGN  |PARTITIONED|
-                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                  -- REPLICATE  |PARTITIONED|
-                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      -- BTREE_SEARCH (tpcds.item.item)  |PARTITIONED|
+                                                            -- HYBRID_HASH_JOIN [$$144][$$154]  |PARTITIONED|
+                                                              -- HASH_PARTITION_EXCHANGE [$$144]  |PARTITIONED|
+                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                      -- ASSIGN  |PARTITIONED|
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                          -- ASSIGN  |PARTITIONED|
-                                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            -- STREAM_PROJECT  |PARTITIONED|
-                                                              -- ASSIGN  |PARTITIONED|
-                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                  -- REPLICATE  |PARTITIONED|
-                                                                    -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
-                                                                      -- STREAM_PROJECT  |PARTITIONED|
-                                                                        -- ASSIGN  |PARTITIONED|
+                                                                          -- REPLICATE  |PARTITIONED|
+                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                              -- BTREE_SEARCH (tpcds.item.item)  |PARTITIONED|
+                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                  -- ASSIGN  |PARTITIONED|
+                                                                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                  -- ASSIGN  |PARTITIONED|
+                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                      -- REPLICATE  |PARTITIONED|
+                                                                        -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
                                                                           -- STREAM_PROJECT  |PARTITIONED|
                                                                             -- ASSIGN  |PARTITIONED|
-                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                -- REPLICATE  |PARTITIONED|
+                                                                              -- STREAM_PROJECT  |PARTITIONED|
+                                                                                -- ASSIGN  |PARTITIONED|
                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                                    -- REPLICATE  |PARTITIONED|
                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                        -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                                        -- STREAM_PROJECT  |PARTITIONED|
                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                            -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                               -- HASH_PARTITION_EXCHANGE [$$178]  |PARTITIONED|
                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                   -- ASSIGN  |PARTITIONED|
@@ -118,34 +122,36 @@
                                                                                                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                               }
                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                          -- STABLE_SORT [$$206(ASC)]  |PARTITIONED|
                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                              -- HYBRID_HASH_JOIN [$$206][$$207]  |PARTITIONED|
+                                                                                                              -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                  -- REPLICATE  |PARTITIONED|
-                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                      -- BTREE_SEARCH (tpcds.item.item)  |PARTITIONED|
+                                                                                                                  -- HYBRID_HASH_JOIN [$$206][$$207]  |PARTITIONED|
+                                                                                                                    -- HASH_PARTITION_EXCHANGE [$$206]  |PARTITIONED|
+                                                                                                                      -- REPLICATE  |PARTITIONED|
                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                          -- ASSIGN  |PARTITIONED|
-                                                                                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                  -- STREAM_PROJECT  |PARTITIONED|
-                                                                                                                    -- ASSIGN  |PARTITIONED|
-                                                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                        -- REPLICATE  |PARTITIONED|
-                                                                                                                          -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
-                                                                                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                          -- BTREE_SEARCH (tpcds.item.item)  |PARTITIONED|
+                                                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                               -- ASSIGN  |PARTITIONED|
+                                                                                                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                      -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                        -- ASSIGN  |PARTITIONED|
+                                                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                            -- REPLICATE  |PARTITIONED|
+                                                                                                                              -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
                                                                                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                   -- ASSIGN  |PARTITIONED|
-                                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                      -- REPLICATE  |PARTITIONED|
+                                                                                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                                      -- ASSIGN  |PARTITIONED|
                                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                                          -- REPLICATE  |PARTITIONED|
                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                              -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                                                                                              -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                                                                  -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                           -- HASH_PARTITION_EXCHANGE [$$156]  |PARTITIONED|
                                                                             -- STREAM_PROJECT  |PARTITIONED|
                                                                               -- ASSIGN  |PARTITIONED|
@@ -157,47 +163,45 @@
                                                                                           -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                              -- HASH_PARTITION_EXCHANGE [$$222]  |PARTITIONED|
-                                -- STREAM_PROJECT  |PARTITIONED|
-                                  -- ASSIGN  |PARTITIONED|
+                                  -- HASH_PARTITION_EXCHANGE [$$222]  |PARTITIONED|
                                     -- STREAM_PROJECT  |PARTITIONED|
-                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- SORT_GROUP_BY[$$233, $$234]  |PARTITIONED|
-                                                {
-                                                  -- AGGREGATE  |LOCAL|
-                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                }
-                                          -- HASH_PARTITION_EXCHANGE [$$233, $$234]  |PARTITIONED|
-                                            -- PRE_CLUSTERED_GROUP_BY[$$181, $$184]  |PARTITIONED|
+                                      -- ASSIGN  |PARTITIONED|
+                                        -- STREAM_PROJECT  |PARTITIONED|
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            -- SORT_GROUP_BY[$$233, $$234]  |PARTITIONED|
                                                     {
                                                       -- AGGREGATE  |LOCAL|
-                                                        -- STREAM_SELECT  |LOCAL|
-                                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                     }
-                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- STABLE_SORT [$$181(ASC), $$184(ASC)]  |PARTITIONED|
+                                              -- HASH_PARTITION_EXCHANGE [$$233, $$234]  |PARTITIONED|
+                                                -- PRE_CLUSTERED_GROUP_BY[$$181, $$184]  |PARTITIONED|
+                                                        {
+                                                          -- AGGREGATE  |LOCAL|
+                                                            -- STREAM_SELECT  |LOCAL|
+                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                        }
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                    -- STABLE_SORT [$$181(ASC), $$184(ASC)]  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        -- HYBRID_HASH_JOIN [$$159][$$158]  |PARTITIONED|
-                                                          -- HASH_PARTITION_EXCHANGE [$$159]  |PARTITIONED|
-                                                            -- RUNNING_AGGREGATE  |PARTITIONED|
-                                                              -- STREAM_PROJECT  |PARTITIONED|
-                                                                -- ASSIGN  |PARTITIONED|
+                                                        -- STREAM_PROJECT  |PARTITIONED|
+                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            -- HYBRID_HASH_JOIN [$$159][$$158]  |PARTITIONED|
+                                                              -- HASH_PARTITION_EXCHANGE [$$159]  |PARTITIONED|
+                                                                -- RUNNING_AGGREGATE  |PARTITIONED|
                                                                   -- STREAM_PROJECT  |PARTITIONED|
-                                                                    -- STREAM_SELECT  |PARTITIONED|
+                                                                    -- ASSIGN  |PARTITIONED|
                                                                       -- STREAM_PROJECT  |PARTITIONED|
-                                                                        -- ASSIGN  |PARTITIONED|
-                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                            -- PRE_CLUSTERED_GROUP_BY[$$185]  |PARTITIONED|
-                                                                                    {
-                                                                                      -- AGGREGATE  |LOCAL|
-                                                                                        -- AGGREGATE  |LOCAL|
-                                                                                          -- STREAM_SELECT  |LOCAL|
-                                                                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                                                    }
+                                                                        -- STREAM_SELECT  |PARTITIONED|
+                                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                                            -- ASSIGN  |PARTITIONED|
                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                -- STABLE_SORT [$$185(ASC)]  |PARTITIONED|
+                                                                                -- PRE_CLUSTERED_GROUP_BY[$$185]  |PARTITIONED|
+                                                                                        {
+                                                                                          -- AGGREGATE  |LOCAL|
+                                                                                            -- AGGREGATE  |LOCAL|
+                                                                                              -- STREAM_SELECT  |LOCAL|
+                                                                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                        }
                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                     -- STREAM_PROJECT  |PARTITIONED|
                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -216,34 +220,36 @@
                                                                                                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                               }
                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                          -- STABLE_SORT [$$206(ASC)]  |PARTITIONED|
                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                              -- HYBRID_HASH_JOIN [$$206][$$207]  |PARTITIONED|
+                                                                                                              -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                  -- REPLICATE  |PARTITIONED|
-                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                      -- BTREE_SEARCH (tpcds.item.item)  |PARTITIONED|
+                                                                                                                  -- HYBRID_HASH_JOIN [$$206][$$207]  |PARTITIONED|
+                                                                                                                    -- HASH_PARTITION_EXCHANGE [$$206]  |PARTITIONED|
+                                                                                                                      -- REPLICATE  |PARTITIONED|
                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                          -- ASSIGN  |PARTITIONED|
-                                                                                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                  -- STREAM_PROJECT  |PARTITIONED|
-                                                                                                                    -- ASSIGN  |PARTITIONED|
-                                                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                        -- REPLICATE  |PARTITIONED|
-                                                                                                                          -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
-                                                                                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                          -- BTREE_SEARCH (tpcds.item.item)  |PARTITIONED|
+                                                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                               -- ASSIGN  |PARTITIONED|
+                                                                                                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                      -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                        -- ASSIGN  |PARTITIONED|
+                                                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                            -- REPLICATE  |PARTITIONED|
+                                                                                                                              -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
                                                                                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                   -- ASSIGN  |PARTITIONED|
-                                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                      -- REPLICATE  |PARTITIONED|
+                                                                                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                                      -- ASSIGN  |PARTITIONED|
                                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                                          -- REPLICATE  |PARTITIONED|
                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                              -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                                                                                              -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                                                                  -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                           -- HASH_PARTITION_EXCHANGE [$$188]  |PARTITIONED|
                                                                                             -- ASSIGN  |PARTITIONED|
                                                                                               -- STREAM_PROJECT  |PARTITIONED|
@@ -285,34 +291,36 @@
                                                                                                                                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                                                                   }
                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                              -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                                              -- STABLE_SORT [$$206(ASC)]  |PARTITIONED|
                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                  -- HYBRID_HASH_JOIN [$$206][$$207]  |PARTITIONED|
+                                                                                                                                                  -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                      -- REPLICATE  |PARTITIONED|
-                                                                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                          -- BTREE_SEARCH (tpcds.item.item)  |PARTITIONED|
+                                                                                                                                                      -- HYBRID_HASH_JOIN [$$206][$$207]  |PARTITIONED|
+                                                                                                                                                        -- HASH_PARTITION_EXCHANGE [$$206]  |PARTITIONED|
+                                                                                                                                                          -- REPLICATE  |PARTITIONED|
                                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                              -- ASSIGN  |PARTITIONED|
-                                                                                                                                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                      -- STREAM_PROJECT  |PARTITIONED|
-                                                                                                                                                        -- ASSIGN  |PARTITIONED|
-                                                                                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                            -- REPLICATE  |PARTITIONED|
-                                                                                                                                                              -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
-                                                                                                                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                                                              -- BTREE_SEARCH (tpcds.item.item)  |PARTITIONED|
+                                                                                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                                                                   -- ASSIGN  |PARTITIONED|
+                                                                                                                                                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                                                            -- ASSIGN  |PARTITIONED|
+                                                                                                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                                                                -- REPLICATE  |PARTITIONED|
+                                                                                                                                                                  -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
                                                                                                                                                                     -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                       -- ASSIGN  |PARTITIONED|
-                                                                                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                          -- REPLICATE  |PARTITIONED|
+                                                                                                                                                                        -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                                                                          -- ASSIGN  |PARTITIONED|
                                                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                              -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                                                                                              -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                  -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                                                                                                                                  -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                                                                                                      -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                                                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                                                                                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                       -- REPLICATE  |PARTITIONED|
                                                                                                                         -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
@@ -328,16 +336,16 @@
                                                                                                                                             -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
                                                                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                          -- HASH_PARTITION_EXCHANGE [$$158]  |PARTITIONED|
-                                                            -- STREAM_PROJECT  |PARTITIONED|
-                                                              -- ASSIGN  |PARTITIONED|
+                                                              -- HASH_PARTITION_EXCHANGE [$$158]  |PARTITIONED|
                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                   -- ASSIGN  |PARTITIONED|
-                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      -- REPLICATE  |PARTITIONED|
+                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                      -- ASSIGN  |PARTITIONED|
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                                          -- REPLICATE  |PARTITIONED|
                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                              -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                              -- STREAM_PROJECT  |PARTITIONED|
                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                  -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

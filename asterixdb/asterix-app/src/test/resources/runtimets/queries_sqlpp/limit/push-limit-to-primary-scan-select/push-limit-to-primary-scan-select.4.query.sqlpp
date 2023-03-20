@@ -23,4 +23,4 @@ use test;
 select element paper
 from  DBLP1 as paper
 where contains(dblpid, 'kimL89')
-limit 5 offset 5;
+order by id limit 5 offset 5;

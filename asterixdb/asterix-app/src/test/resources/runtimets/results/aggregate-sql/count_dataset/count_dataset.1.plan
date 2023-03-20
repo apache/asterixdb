@@ -1,26 +1,30 @@
-distribute result [$$25] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$26] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    aggregate [$$25] <- [agg-sql-sum($$28)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    aggregate [$$26] <- [agg-sql-sum($$29)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- AGGREGATE  |UNPARTITIONED|
-      aggregate [$$28] <- [agg-sql-count(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      aggregate [$$29] <- [agg-sql-count(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- AGGREGATE  |PARTITIONED|
         exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
-        -- SORT_MERGE_EXCHANGE [$$26(ASC) ]  |PARTITIONED|
-          project ([$$26]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
-          -- STREAM_PROJECT  |PARTITIONED|
-            select (and(ge($$24, 1), le($$24, 10))) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
-            -- STREAM_SELECT  |PARTITIONED|
-              project ([$$26, $$24]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        -- SORT_MERGE_EXCHANGE [$$27(ASC) ]  |PARTITIONED|
+          order (ASC, $$27) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+          -- STABLE_SORT [$$27(ASC)]  |PARTITIONED|
+            exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$27]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$24] <- [$$Tweet.getField(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
-                -- ASSIGN  |PARTITIONED|
-                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$26, $$Tweet] <- Twitter.Tweet [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
-                    -- DATASOURCE_SCAN  |PARTITIONED|
-                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                select (and(ge($$25, 1), le($$25, 10))) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                -- STREAM_SELECT  |PARTITIONED|
+                  project ([$$27, $$25]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$25] <- [$$Tweet.getField(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                    -- ASSIGN  |PARTITIONED|
+                      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        data-scan []<-[$$27, $$Tweet] <- Twitter.Tweet [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

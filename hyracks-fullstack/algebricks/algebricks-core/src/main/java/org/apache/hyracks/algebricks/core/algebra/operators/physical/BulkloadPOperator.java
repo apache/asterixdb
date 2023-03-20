@@ -77,7 +77,7 @@ public class BulkloadPOperator extends AbstractPhysicalOperator {
         scanVariables.addAll(primaryKeys);
         scanVariables.add(new LogicalVariable(-1));
         IPhysicalPropertiesVector physicalProps =
-                dataSource.getPropertiesProvider().computePropertiesVector(scanVariables);
+                dataSource.getPropertiesProvider().computeRequiredProperties(scanVariables);
         StructuralPropertiesVector spv = new StructuralPropertiesVector(physicalProps.getPartitioningProperty(),
                 physicalProps.getLocalProperties());
         return new PhysicalRequirements(new IPhysicalPropertiesVector[] { spv },

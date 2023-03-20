@@ -4,10 +4,10 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- PRE_CLUSTERED_GROUP_BY[$$66]  |PARTITIONED|
+            -- PRE_CLUSTERED_GROUP_BY[$$71]  |PARTITIONED|
                     {
                       -- AGGREGATE  |LOCAL|
-                        -- MICRO_PRE_CLUSTERED_GROUP_BY[$$67]  |LOCAL|
+                        -- MICRO_PRE_CLUSTERED_GROUP_BY[$$72]  |LOCAL|
                                 {
                                   -- AGGREGATE  |LOCAL|
                                     -- STREAM_SELECT  |LOCAL|
@@ -17,24 +17,24 @@
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                     }
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [$$66(ASC), $$67(ASC)]  |PARTITIONED|
-                  -- HASH_PARTITION_EXCHANGE [$$66]  |PARTITIONED|
+                -- STABLE_SORT [$$71(ASC), $$72(ASC)]  |PARTITIONED|
+                  -- HASH_PARTITION_EXCHANGE [$$71]  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- HYBRID_HASH_JOIN [$$67][$$68]  |PARTITIONED|
-                          -- HASH_PARTITION_EXCHANGE [$$67]  |PARTITIONED|
-                            -- HYBRID_HASH_JOIN [$$66][$$70]  |PARTITIONED|
-                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        -- HYBRID_HASH_JOIN [$$72][$$73]  |PARTITIONED|
+                          -- HASH_PARTITION_EXCHANGE [$$72]  |PARTITIONED|
+                            -- HYBRID_HASH_JOIN [$$71][$$75]  |PARTITIONED|
+                              -- HASH_PARTITION_EXCHANGE [$$71]  |PARTITIONED|
                                 -- DATASOURCE_SCAN (tpch.Customers)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                              -- HASH_PARTITION_EXCHANGE [$$70]  |PARTITIONED|
+                              -- HASH_PARTITION_EXCHANGE [$$75]  |PARTITIONED|
                                 -- ASSIGN  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- DATASOURCE_SCAN (tpch.Orders)  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                          -- HASH_PARTITION_EXCHANGE [$$68]  |PARTITIONED|
+                          -- HASH_PARTITION_EXCHANGE [$$73]  |PARTITIONED|
                             -- ASSIGN  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -6,27 +6,31 @@ distribute result [$$l]
     -- STREAM_PROJECT  |PARTITIONED|
       exchange
       -- SORT_MERGE_EXCHANGE [$$17(ASC), $$18(ASC) ]  |PARTITIONED|
-        select (eq($$l.getField(10), "1994-01-20"))
-        -- STREAM_SELECT  |PARTITIONED|
+        order (ASC, $$17) (ASC, $$18)
+        -- STABLE_SORT [$$17(ASC), $$18(ASC)]  |PARTITIONED|
           exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            unnest-map [$$17, $$18, $$l] <- index-search("LineItem", 0, "tpch", "LineItem", false, false, 2, $$25, $$26, 2, $$25, $$26, true, true, true)
-            -- BTREE_SEARCH  |PARTITIONED|
+            select (eq($$l.getField(10), "1994-01-20"))
+            -- STREAM_SELECT  |PARTITIONED|
               exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                order (ASC, $$25) (ASC, $$26)
-                -- STABLE_SORT [$$25(ASC), $$26(ASC)]  |PARTITIONED|
+                unnest-map [$$17, $$18, $$l] <- index-search("LineItem", 0, "tpch", "LineItem", false, false, 2, $$25, $$26, 2, $$25, $$26, true, true, true)
+                -- BTREE_SEARCH  |PARTITIONED|
                   exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    project ([$$25, $$26])
-                    -- STREAM_PROJECT  |PARTITIONED|
+                    order (ASC, $$25) (ASC, $$26)
+                    -- STABLE_SORT [$$25(ASC), $$26(ASC)]  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        unnest-map [$$24, $$25, $$26] <- index-search("lineitem_shipdateIx", 0, "tpch", "LineItem", false, false, 1, $$22, 1, $$23, true, true, true)
-                        -- BTREE_SEARCH  |PARTITIONED|
+                        project ([$$25, $$26])
+                        -- STREAM_PROJECT  |PARTITIONED|
                           exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            assign [$$22, $$23] <- ["1994-01-20", "1994-01-20"]
-                            -- ASSIGN  |PARTITIONED|
-                              empty-tuple-source
-                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                            unnest-map [$$24, $$25, $$26] <- index-search("lineitem_shipdateIx", 0, "tpch", "LineItem", false, false, 1, $$22, 1, $$23, true, true, true)
+                            -- BTREE_SEARCH  |PARTITIONED|
+                              exchange
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                assign [$$22, $$23] <- ["1994-01-20", "1994-01-20"]
+                                -- ASSIGN  |PARTITIONED|
+                                  empty-tuple-source
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

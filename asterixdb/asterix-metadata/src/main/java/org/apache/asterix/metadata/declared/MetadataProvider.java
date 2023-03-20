@@ -419,10 +419,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throws AlgebricksException {
         DataSource source = findDataSource(dataSourceId);
         Dataset dataset = ((DatasetDataSource) source).getDataset();
-        Index secondaryIndex = getIndex(dataset.getDataverseName(), dataset.getDatasetName(), indexId);
-        return (secondaryIndex != null)
-                ? new DataSourceIndex(secondaryIndex, dataset.getDataverseName(), dataset.getDatasetName(), this)
-                : null;
+        // index could be a primary index or secondary index
+        DataverseName dataverseName = dataset.getDataverseName();
+        String datasetName = dataset.getDatasetName();
+        Index index = getIndex(dataverseName, datasetName, indexId);
+        return index != null ? new DataSourceIndex(index, dataverseName, datasetName, this) : null;
     }
 
     public Index getIndex(DataverseName dataverseName, String datasetName, String indexName)

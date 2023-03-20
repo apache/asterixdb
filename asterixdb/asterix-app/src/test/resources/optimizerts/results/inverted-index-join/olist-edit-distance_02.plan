@@ -4,12 +4,12 @@
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- HYBRID_HASH_JOIN [$$41][$$33]  |PARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            -- HYBRID_HASH_JOIN [$$43][$$35]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$43]  |PARTITIONED|
                 -- DATASOURCE_SCAN (test.Customers)  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$33]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
                 -- UNION_ALL  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
@@ -18,7 +18,7 @@
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- BTREE_SEARCH (test.Customers2.Customers2)  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- STABLE_SORT [$$46(ASC)]  |PARTITIONED|
+                                -- STABLE_SORT [$$48(ASC)]  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.Customers2.interests_index)  |PARTITIONED|
                                       -- BROADCAST_EXCHANGE  |PARTITIONED|

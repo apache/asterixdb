@@ -42,6 +42,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSch
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
+import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.properties.RandomPartitioningProperty;
@@ -111,15 +112,23 @@ public class QueryIndexDatasource extends FunctionDataSource {
 
     @Override
     public IDataSourcePropertiesProvider getPropertiesProvider() {
-        return scanVariables -> {
-            List<ILocalStructuralProperty> propsLocal = new ArrayList<>(1);
-            //TODO(ali): consider primary keys?
-            List<OrderColumn> secKeys = new ArrayList<>(numSecKeys);
-            for (int i = 0; i < numSecKeys; i++) {
-                secKeys.add(new OrderColumn(scanVariables.get(i), OrderOperator.IOrder.OrderKind.ASC));
+        return new IDataSourcePropertiesProvider() {
+            @Override
+            public IPhysicalPropertiesVector computeRequiredProperties(List<LogicalVariable> scanVariables) {
+                return StructuralPropertiesVector.EMPTY_PROPERTIES_VECTOR;
             }
-            propsLocal.add(new LocalOrderProperty(secKeys));
-            return new StructuralPropertiesVector(new RandomPartitioningProperty(domain), propsLocal);
+
+            @Override
+            public IPhysicalPropertiesVector computeDeliveredProperties(List<LogicalVariable> scanVariables) {
+                List<ILocalStructuralProperty> propsLocal = new ArrayList<>(1);
+                //TODO(ali): consider primary keys?
+                List<OrderColumn> secKeys = new ArrayList<>(numSecKeys);
+                for (int i = 0; i < numSecKeys; i++) {
+                    secKeys.add(new OrderColumn(scanVariables.get(i), OrderOperator.IOrder.OrderKind.ASC));
+                }
+                propsLocal.add(new LocalOrderProperty(secKeys));
+                return new StructuralPropertiesVector(new RandomPartitioningProperty(domain), propsLocal);
+            }
         };
     }
 

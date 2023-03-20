@@ -1,11 +1,11 @@
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  -- SORT_MERGE_EXCHANGE [$$42(ASC) ]  |PARTITIONED|
-    -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+  -- SORT_MERGE_EXCHANGE [$$45(ASC) ]  |PARTITIONED|
+    -- STABLE_SORT [$$45(ASC)]  |PARTITIONED|
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- HYBRID_HASH_JOIN [$$43][$$44]  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$43]  |PARTITIONED|
+            -- HYBRID_HASH_JOIN [$$46][$$47]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ASSIGN  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
@@ -13,10 +13,12 @@
                         -- DATASOURCE_SCAN (fuzzyjoin.TOKENSRANKEDADM)  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$42(ASC)] HASH:[$$44]  |PARTITIONED|
+              -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$45(ASC)] HASH:[$$47]  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ASSIGN  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (fuzzyjoin.TOKENSRANKEDADM)  |PARTITIONED|
+                      -- STABLE_SORT [$$45(ASC)]  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          -- DATASOURCE_SCAN (fuzzyjoin.TOKENSRANKEDADM)  |PARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

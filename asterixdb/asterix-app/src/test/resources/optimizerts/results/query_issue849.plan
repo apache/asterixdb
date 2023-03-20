@@ -25,7 +25,7 @@
                 -- ASSIGN  |UNPARTITIONED|
                   -- UNNEST  |UNPARTITIONED|
                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- DATASOURCE_SCAN (test.s)  |PARTITIONED|

@@ -78,7 +78,7 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
         // partitioning properties
         DataSourceScanOperator dssOp = (DataSourceScanOperator) op;
         IDataSourcePropertiesProvider dspp = dataSource.getPropertiesProvider();
-        deliveredProperties = dspp.computePropertiesVector(dssOp.getVariables());
+        deliveredProperties = dspp.computeDeliveredProperties(dssOp.getVariables());
     }
 
     @Override

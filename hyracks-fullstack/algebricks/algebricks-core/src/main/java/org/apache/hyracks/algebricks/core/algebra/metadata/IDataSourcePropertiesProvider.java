@@ -24,5 +24,17 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 
 public interface IDataSourcePropertiesProvider {
-    public IPhysicalPropertiesVector computePropertiesVector(List<LogicalVariable> scanVariables);
+    /**
+     *
+     * @param scanVariables
+     * @return
+     */
+    IPhysicalPropertiesVector computeRequiredProperties(List<LogicalVariable> scanVariables);
+
+    /**
+     *
+     * @param scanVariables
+     * @return
+     */
+    IPhysicalPropertiesVector computeDeliveredProperties(List<LogicalVariable> scanVariables);
 }

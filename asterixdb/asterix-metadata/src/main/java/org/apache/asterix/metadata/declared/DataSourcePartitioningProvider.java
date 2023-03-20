@@ -47,7 +47,7 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
     }
 
     @Override
-    public IPhysicalPropertiesVector computePropertiesVector(List<LogicalVariable> scanVariables) {
+    public IPhysicalPropertiesVector computeRequiredProperties(List<LogicalVariable> scanVariables) {
         IPhysicalPropertiesVector propsVector;
         IPartitioningProperty pp;
         List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
@@ -71,6 +71,17 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
         }
         propsVector = new StructuralPropertiesVector(pp, propsLocal);
         return propsVector;
+    }
+
+    @Override
+    public IPhysicalPropertiesVector computeDeliveredProperties(List<LogicalVariable> scanVariables) {
+        if (ds.getDatasourceType() == DataSource.Type.INTERNAL_DATASET) {
+            IPartitioningProperty pp = new RandomPartitioningProperty(domain);
+            List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
+            ds.computeLocalStructuralProperties(propsLocal, scanVariables);
+            return new StructuralPropertiesVector(pp, propsLocal);
+        }
+        return computeRequiredProperties(scanVariables);
     }
 
     private static List<OrderColumn> getOrderColumns(Set<LogicalVariable> pvars) {

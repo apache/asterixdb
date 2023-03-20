@@ -27,6 +27,6 @@ FROM (
     WHERE v.review = "good"
       AND year IS NOT UNKNOWN
       AND quarter IS NOT UNKNOWN
-    LIMIT 3
+    ORDER BY v.id LIMIT 3
 ) x
 ORDER BY x.id

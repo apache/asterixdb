@@ -5,11 +5,11 @@
         -- STREAM_PROJECT  |PARTITIONED|
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             -- HYBRID_HASH_JOIN [$$36][$$37]  |PARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$36]  |PARTITIONED|
                 -- DATASOURCE_SCAN (Facebook.Friendship)  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$37]  |PARTITIONED|
                 -- DATASOURCE_SCAN (Facebook.Friendship)  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

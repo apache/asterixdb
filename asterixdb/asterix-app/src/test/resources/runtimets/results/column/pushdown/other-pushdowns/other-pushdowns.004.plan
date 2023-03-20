@@ -23,7 +23,7 @@ distribute result [$$61] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000
                       join (eq($$63, $$62)) [cardinality: 1000000.0, op-cost: 2000000.0, total-cost: 6000000.0]
                       -- HYBRID_HASH_JOIN [$$62][$$63]  |PARTITIONED|
                         exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$62]  |PARTITIONED|
                           data-scan []<-[$$62, $$p1] <- test.ColumnDataset [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -31,7 +31,7 @@ distribute result [$$61] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000
                               empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                         exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$63]  |PARTITIONED|
                           data-scan []<-[$$63, $$p2] <- test.RowDataset [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]

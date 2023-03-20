@@ -112,7 +112,7 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
                 dataset.getDatasetDetails(), context.getComputationNodeDomain());
         IDataSourcePropertiesProvider dspp = ds.getPropertiesProvider();
         AbstractScanOperator as = (AbstractScanOperator) op;
-        deliveredProperties = dspp.computePropertiesVector(as.getVariables());
+        deliveredProperties = dspp.computeDeliveredProperties(as.getVariables());
     }
 
     @Override
