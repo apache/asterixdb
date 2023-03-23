@@ -36,11 +36,11 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 /**
- * Runs the SQL++ with Batched point-lookups enabled.
+ * Runs the SQL++ with Batched point-lookups disabled.
  */
 @RunWith(Parameterized.class)
-public class SqlppBatchPointLookupExecutionTest {
-    protected static final String TEST_CONFIG_FILE_NAME = "src/test/resources/cc-batch-lookup.conf";
+public class SqlppSinglePointLookupExecutionTest {
+    protected static final String TEST_CONFIG_FILE_NAME = "src/test/resources/cc-single-lookup.conf";
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -54,14 +54,14 @@ public class SqlppBatchPointLookupExecutionTest {
         LangExecutionUtil.tearDown();
     }
 
-    @Parameters(name = "SqlppBatchPointLookupExecutionTest {index}: {0}")
+    @Parameters(name = "SqlppSinglePointLookupExecutionTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        return LangExecutionUtil.tests("only_batch_lookup.xml", "testsuite_sqlpp_batch_lookup.xml");
+        return LangExecutionUtil.tests("only_single_lookup.xml", "testsuite_sqlpp_single_lookup.xml");
     }
 
     protected TestCaseContext tcCtx;
 
-    public SqlppBatchPointLookupExecutionTest(TestCaseContext tcCtx) {
+    public SqlppSinglePointLookupExecutionTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
     }
 
