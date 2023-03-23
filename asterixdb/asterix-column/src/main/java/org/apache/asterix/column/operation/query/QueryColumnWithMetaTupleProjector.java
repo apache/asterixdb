@@ -35,12 +35,12 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 
-class QueryColumnWithMetaTupleProjector extends QueryColumnTupleProjector {
+public class QueryColumnWithMetaTupleProjector extends QueryColumnTupleProjector {
     private final ARecordType metaType;
     private final ARecordType requestedMetaType;
     private final Map<String, FunctionCallInformation> metaFunctionCallInfoMap;
 
-    QueryColumnWithMetaTupleProjector(ARecordType datasetType, ARecordType metaType, int numberOfPrimaryKeys,
+    public QueryColumnWithMetaTupleProjector(ARecordType datasetType, ARecordType metaType, int numberOfPrimaryKeys,
             ARecordType requestedType, Map<String, FunctionCallInformation> functionCallInfoMap,
             ARecordType requestedMetaType, Map<String, FunctionCallInformation> metaFunctionCallInfoMap,
             IColumnFilterEvaluatorFactory filterEvaluator, IWarningCollector warningCollector) {

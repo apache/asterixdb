@@ -47,8 +47,10 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.rebalance.IDatasetRebalanceCallback;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
+import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -63,6 +65,7 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
 import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
+import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -80,16 +83,11 @@ public class RebalanceUtil {
     /**
      * Rebalances an existing dataset to a list of target nodes.
      *
-     * @param dataverseName,
-     *            the dataverse name.
-     * @param datasetName,
-     *            the dataset name.
-     * @param targetNcNames,
-     *            the list of target nodes.
-     * @param metadataProvider,
-     *            the metadata provider.
-     * @param hcc,
-     *            the reusable hyracks connection.
+     * @param dataverseName,    the dataverse name.
+     * @param datasetName,      the dataset name.
+     * @param targetNcNames,    the list of target nodes.
+     * @param metadataProvider, the metadata provider.
+     * @param hcc,              the reusable hyracks connection.
      * @throws Exception
      */
     public static void rebalance(DataverseName dataverseName, String datasetName, Set<String> targetNcNames,
@@ -301,8 +299,12 @@ public class RebalanceUtil {
         // The pipeline starter.
         IOperatorDescriptor starter = DatasetUtil.createDummyKeyProviderOp(spec, source, metadataProvider);
 
+        // Tuple projector
+        // TODO is there a way to avoid assembling the records for columnar datasets?
+        ITupleProjectorFactory projectorFactory = createTupleProjectorFactory(source, metadataProvider);
         // Creates primary index scan op.
-        IOperatorDescriptor primaryScanOp = DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, source);
+        IOperatorDescriptor primaryScanOp =
+                DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, source, projectorFactory);
 
         // Creates secondary BTree upsert op.
         IOperatorDescriptor upsertOp = createPrimaryIndexUpsertOp(spec, metadataProvider, source, target);
@@ -325,6 +327,20 @@ public class RebalanceUtil {
 
         // Executes the job.
         JobUtils.runJob(hcc, spec, true);
+    }
+
+    private static ITupleProjectorFactory createTupleProjectorFactory(Dataset source, MetadataProvider metadataProvider)
+            throws AlgebricksException {
+        ARecordType itemType =
+                (ARecordType) metadataProvider.findType(source.getItemTypeDataverseName(), source.getItemTypeName());
+        ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, source);
+        int numberOfPrimaryKeys = source.getPrimaryKeys().size();
+
+        // This could be expensive if record structure is "complex"
+        ARecordType requestedType = DataProjectionFiltrationInfo.ALL_FIELDS_TYPE;
+
+        return IndexUtil.createPrimaryIndexScanTupleProjectorFactory(source.getDatasetFormatInfo(), requestedType,
+                itemType, metaType, numberOfPrimaryKeys);
     }
 
     // Creates the primary index upsert operator for populating the target dataset.

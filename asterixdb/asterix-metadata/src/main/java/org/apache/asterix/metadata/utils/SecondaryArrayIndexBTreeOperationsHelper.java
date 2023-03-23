@@ -76,6 +76,7 @@ import org.apache.hyracks.dataflow.std.group.AbstractAggregatorDescriptorFactory
 import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
+import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 
 public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndexOperationsHelper {
     private final int numAtomicSecondaryKeys, numArraySecondaryKeys, numTotalSecondaryKeys;
@@ -263,7 +264,12 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
 
             // Start the job spec. Create a key provider and connect this to a primary index scan.
             IOperatorDescriptor sourceOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);
-            IOperatorDescriptor targetOp = DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, dataset);
+            // if format == column, then project only the indexed fields
+            ITupleProjectorFactory projectorFactory =
+                    IndexUtil.createPrimaryIndexScanTupleProjectorFactory(dataset.getDatasetFormatInfo(),
+                            arrayIndexDetails.getIndexExpectedType(), itemType, metaType, numPrimaryKeys);
+            IOperatorDescriptor targetOp =
+                    DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, dataset, projectorFactory);
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
             sourceOp = targetOp;

@@ -20,6 +20,7 @@ package org.apache.asterix.column;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnTupleReaderWriterFactory;
 import org.apache.asterix.column.operation.lsm.load.LoadColumnTupleReaderWriterFactory;
@@ -53,7 +54,7 @@ public final class ColumnManagerFactory implements IColumnManagerFactory {
         this.tolerance = tolerance;
 
         this.datasetType = datasetType;
-        if (keySourceIndicator.size() != 1) {
+        if (containsSplitKeys(keySourceIndicator)) {
             throw new UnsupportedOperationException(
                     "Primary keys split between meta-type and datasetType is not supported");
         }
@@ -128,7 +129,7 @@ public final class ColumnManagerFactory implements IColumnManagerFactory {
             List<String> primaryKey = new ArrayList<>();
             ArrayNode primaryKeyNode = (ArrayNode) primaryKeysNode.get(i);
             for (int j = 0; j < primaryKeyNode.size(); j++) {
-                primaryKey.add(primaryKeyNode.get(i).asText());
+                primaryKey.add(primaryKeyNode.get(j).asText());
             }
             primaryKeys.add(primaryKey);
         }
@@ -141,6 +142,19 @@ public final class ColumnManagerFactory implements IColumnManagerFactory {
 
         return new ColumnManagerFactory(datasetType, metaType, primaryKeys, keySourceIndicator, pageSize, maxTupleCount,
                 tolerance);
+    }
+
+    private static boolean containsSplitKeys(List<Integer> keySourceIndicator) {
+        if (keySourceIndicator.size() == 1) {
+            return false;
+        }
+        Integer value = keySourceIndicator.get(0);
+        for (int i = 1; i < keySourceIndicator.size(); i++) {
+            if (!Objects.equals(value, keySourceIndicator.get(i))) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

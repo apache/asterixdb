@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.column.operation.lsm.secondary.create.PrimaryScanColumnTupleProjectorFactory;
+import org.apache.asterix.column.operation.lsm.secondary.upsert.UpsertPreviousColumnTupleProjectorFactory;
 import org.apache.asterix.column.operation.query.QueryColumnTupleProjectorFactory;
 import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluatorFactory;
 import org.apache.asterix.column.values.reader.filter.evaluator.NoOpColumnFilterEvaluatorFactory;
@@ -56,6 +58,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
+import org.apache.hyracks.storage.am.common.impls.NoOpTupleProjectorFactory;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 import org.apache.hyracks.util.OptionalBoolean;
 
@@ -295,6 +298,28 @@ public class IndexUtil {
         return new QueryColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys,
                 datasetRequestedType, datasetFunctionCallInfo, metaRequestedType, metaFunctionCallInfo,
                 filterEvaluator);
+    }
+
+    public static ITupleProjectorFactory createUpsertTupleProjectorFactory(DatasetFormatInfo datasetFormatInfo,
+            ARecordType datasetRequestedType, ARecordType datasetType, ARecordType metaItemType,
+            int numberOfPrimaryKeys) {
+        if (datasetFormatInfo.getFormat() == DatasetConfig.DatasetFormat.ROW) {
+            return NoOpTupleProjectorFactory.INSTANCE;
+        }
+
+        return new UpsertPreviousColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys,
+                datasetRequestedType);
+    }
+
+    public static ITupleProjectorFactory createPrimaryIndexScanTupleProjectorFactory(
+            DatasetFormatInfo datasetFormatInfo, ARecordType datasetRequestedType, ARecordType datasetType,
+            ARecordType metaItemType, int numberOfPrimaryKeys) {
+        if (datasetFormatInfo.getFormat() == DatasetConfig.DatasetFormat.ROW) {
+            return DefaultTupleProjectorFactory.INSTANCE;
+        }
+
+        return new PrimaryScanColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys,
+                datasetRequestedType);
     }
 
 }

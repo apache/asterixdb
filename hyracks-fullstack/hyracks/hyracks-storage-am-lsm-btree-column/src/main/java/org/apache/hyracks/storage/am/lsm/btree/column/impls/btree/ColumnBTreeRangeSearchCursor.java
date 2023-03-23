@@ -152,21 +152,26 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
     }
 
     protected void advanceTupleToLowKey() throws HyracksDataException {
-        if (highKey != null && isLessOrEqual(highKey, frame.getLeftmostTuple(), !pred.isHighKeyInclusive())) {
+        if (highKey != null && isLessOrEqual(highKey, frame.getLeftmostTuple(), !pred.isHighKeyInclusive())
+                || lowKey != null && isLessOrEqual(frame.getRightmostTuple(), lowKey, !pred.isLowKeyInclusive())) {
             /*
-             * Lowest key from the frame is greater than the requested highKey. No tuple will satisfy the search
-             * key. Consume the frameTuple to stop the search
+             * If
+             * - The Lowest key from the frame is greater than the requested highKey
+             * OR
+             * - The highest key from the frame is less than the requested lowKey
+             * Then:
+             * No tuple will satisfy the search key. Consume the frameTuple to stop the search.
              */
             firstNextCall = false;
             frameTuple.consume();
             return;
         } else if (lowKey == null) {
-            //No range was specified.
+            // no lowKey was specified, start from tupleIndex = 0
             frameTuple.next();
             return;
         }
 
-        //The lowKey is somewhere within the frame tuples
+        //The requested key is somewhere within the frame tuples
         boolean stop = false;
         int counter = 0;
         while (!stop && !frameTuple.isConsumed()) {
@@ -174,8 +179,10 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
             stop = isLessOrEqual(lowKey, frameTuple, pred.isLowKeyInclusive());
             counter++;
         }
-        //Advance all columns to the proper position
-        frameTuple.skip(counter - 1);
+        //Advance all columns to the proper position if needed
+        if (counter - 1 > 0) {
+            frameTuple.skip(counter - 1);
+        }
     }
 
     protected void releasePages() throws HyracksDataException {
@@ -189,7 +196,7 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
     private boolean isLessOrEqual(ITupleReference left, ITupleReference right, boolean inclusive)
             throws HyracksDataException {
         int cmp = originalKeyCmp.compare(left, right);
-        return cmp < 0 || cmp == 0 && inclusive;
+        return cmp < 0 || inclusive && cmp == 0;
     }
 
     @Override

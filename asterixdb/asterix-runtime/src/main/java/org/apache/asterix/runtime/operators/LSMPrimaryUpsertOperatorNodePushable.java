@@ -45,6 +45,7 @@ import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -72,6 +73,8 @@ import org.apache.hyracks.storage.am.lsm.common.impls.LSMTreeIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.storage.common.projection.ITupleProjector;
+import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.ITracer.Scope;
 import org.apache.hyracks.util.trace.TraceUtils;
@@ -116,6 +119,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     protected LSMTreeIndexAccessor lsmAccessor;
     private final ITracer tracer;
     private final long traceCategory;
+    private final ITupleProjector tupleProjector;
     private long lastRecordInTimeStamp = 0L;
 
     public LSMPrimaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
@@ -123,7 +127,8 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             IModificationOperationCallbackFactory modCallbackFactory,
             ISearchOperationCallbackFactory searchCallbackFactory, int numOfPrimaryKeys, Integer filterSourceIndicator,
             ARecordType filterItemType, int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory,
-            IMissingWriterFactory missingWriterFactory, final boolean hasSecondaries) throws HyracksDataException {
+            IMissingWriterFactory missingWriterFactory, boolean hasSecondaries, ITupleProjectorFactory projectorFactory)
+            throws HyracksDataException {
         super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, IndexOperation.UPSERT,
                 modCallbackFactory, null);
         this.key = new PermutingFrameTupleReference();
@@ -132,9 +137,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         this.frameOpCallbackFactory = frameOpCallbackFactory;
         missingWriter = missingWriterFactory.createMissingWriter();
         int[] searchKeyPermutations = new int[numOfPrimaryKeys];
-        for (int i = 0; i < searchKeyPermutations.length; i++) {
-            searchKeyPermutations[i] = fieldPermutation[i];
-        }
+        System.arraycopy(fieldPermutation, 0, searchKeyPermutations, 0, searchKeyPermutations.length);
         key.setFieldPermutation(searchKeyPermutations);
         hasMeta = (fieldPermutation.length > numOfPrimaryKeys + 1) && (filterFieldIndex < 0
                 || (filterFieldIndex >= 0 && (fieldPermutation.length > numOfPrimaryKeys + 2)));
@@ -152,6 +155,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         processor = createTupleProcessor(hasSecondaries);
         tracer = ctx.getJobletContext().getServiceContext().getTracer();
         traceCategory = tracer.getRegistry().get(TraceUtils.LATENCY);
+        tupleProjector = projectorFactory.createTupleProjector(ctx);
     }
 
     protected void beforeModification(ITupleReference tuple) {
@@ -174,7 +178,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                         try {
                             if (cursor.hasNext()) {
                                 cursor.next();
-                                prevTuple = cursor.getTuple();
+                                prevTuple = tupleProjector.project(cursor.getTuple(), dos, tb);
                                 appendOperationIndicator(!isDelete, true);
                                 appendFilterToPrevTuple();
                                 appendPrevRecord();
@@ -268,6 +272,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             searchCallback = (LockThenSearchOperationCallback) searchCallbackFactory
                     .createSearchOperationCallback(indexHelper.getResource().getId(), ctx, this);
             IIndexAccessParameters iap = new IndexAccessParameters(abstractModCallback, searchCallback);
+            iap.getParameters().put(HyracksConstants.TUPLE_PROJECTOR, tupleProjector);
             indexAccessor = index.createAccessor(iap);
             lsmAccessor = (LSMTreeIndexAccessor) indexAccessor;
             cursor = indexAccessor.createSearchCursor(false);
@@ -277,7 +282,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) index,
                     appCtx.getTransactionSubsystem().getLogManager());
             frameOpCallback = new IFrameOperationCallback() {
-                IFrameOperationCallback callback =
+                final IFrameOperationCallback callback =
                         frameOpCallbackFactory.createFrameOperationCallback(ctx, (ILSMIndexAccessor) indexAccessor);
 
                 @Override

@@ -47,6 +47,7 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleReader;
+import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -172,7 +173,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
 
         if (LOGGER.isInfoEnabled() && filterEvaluator != TrueColumnFilterEvaluator.INSTANCE) {
             String filterString = filterEvaluator == FalseColumnFilterEvaluator.INSTANCE ? "SKIP_ALL"
-                    : filterEvaluatorFactory.toString();
+                    : LogRedactionUtil.userData(filterEvaluatorFactory.toString());
             LOGGER.info("Filter: {}", filterString);
         }
 

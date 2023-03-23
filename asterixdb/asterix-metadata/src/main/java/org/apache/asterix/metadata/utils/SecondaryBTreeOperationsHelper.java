@@ -53,6 +53,7 @@ import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
+import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 
 public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperationsHelper {
 
@@ -126,9 +127,14 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
             // key provider -> primary idx scan -> cast assign -> (select)? -> (sort)? -> bulk load -> sink
             IndexUtil.bindJobEventListener(spec, metadataProvider);
 
+            // if format == column, then project only the indexed fields
+            ITupleProjectorFactory projectorFactory =
+                    IndexUtil.createPrimaryIndexScanTupleProjectorFactory(dataset.getDatasetFormatInfo(),
+                            indexDetails.getIndexExpectedType(), itemType, metaType, numPrimaryKeys);
             // dummy key provider ----> primary index scan
             IOperatorDescriptor sourceOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);
-            IOperatorDescriptor targetOp = DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, dataset);
+            IOperatorDescriptor targetOp =
+                    DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, dataset, projectorFactory);
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
             sourceOp = targetOp;
@@ -178,21 +184,21 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
     }
 
     /**
-     *      ======
-     *     |  SK  |             Bloom filter
-     *      ======
-     *      ====== ======
-     *     |  SK  |  PK  |      comparators, type traits
-     *      ====== ======
-     *      ====== ........
-     *     |  SK  | Filter |    field access evaluators
-     *      ====== ........
-     *      ====== ====== ........
-     *     |  SK  |  PK  | Filter |   record fields
-     *      ====== ====== ........
-     *      ====== ========= ........ ........
-     *     |  PK  | Payload |  Meta  | Filter | enforced record
-     *      ====== ========= ........ ........
+     * ======
+     * |  SK  |             Bloom filter
+     * ======
+     * ====== ======
+     * |  SK  |  PK  |      comparators, type traits
+     * ====== ======
+     * ====== ........
+     * |  SK  | Filter |    field access evaluators
+     * ====== ........
+     * ====== ====== ........
+     * |  SK  |  PK  | Filter |   record fields
+     * ====== ====== ........
+     * ====== ========= ........ ........
+     * |  PK  | Payload |  Meta  | Filter | enforced record
+     * ====== ========= ........ ........
      */
     @Override
     protected void setSecondaryRecDescAndComparators() throws AlgebricksException {

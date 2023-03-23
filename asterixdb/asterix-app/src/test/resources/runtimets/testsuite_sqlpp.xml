@@ -16134,8 +16134,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
-      <compilation-unit name="upsert">
-        <output-dir compare="Text">upsert</output-dir>
+      <compilation-unit name="upsert/001">
+        <output-dir compare="Text">upsert/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="upsert/002">
+        <output-dir compare="Text">upsert/002</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="column" check-warnings="true">
@@ -16159,6 +16164,61 @@
     <test-case FilePath="column">
       <compilation-unit name="big-object">
         <output-dir compare="Text">big-object</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-1">
+        <output-dir compare="Text">secondary-index/array-index/use-case-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-2">
+        <output-dir compare="Text">secondary-index/array-index/use-case-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-3">
+        <output-dir compare="Text">secondary-index/array-index/use-case-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-4">
+        <output-dir compare="Text">secondary-index/array-index/use-case-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/with-additional-atomic-index">
+        <output-dir compare="Text">secondary-index/array-index/with-additional-atomic-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/with-composite-sk">
+        <output-dir compare="Text">secondary-index/array-index/with-composite-sk</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/index-with-meta">
+        <output-dir compare="Text">secondary-index/index-with-meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/create-index/after-bulkload">
+        <output-dir compare="Text">secondary-index/create-index/after-bulkload</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/create-index/after-insert">
+        <output-dir compare="Text">secondary-index/create-index/after-insert</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/create-index/after-upsert-with-meta">
+        <output-dir compare="Text">secondary-index/create-index/after-upsert-with-meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="rebalance">
+        <output-dir compare="Text">rebalance</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

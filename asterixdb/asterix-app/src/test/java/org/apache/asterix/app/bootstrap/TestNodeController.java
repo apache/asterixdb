@@ -104,6 +104,7 @@ import org.apache.hyracks.storage.am.common.build.IndexBuilderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
+import org.apache.hyracks.storage.am.common.impls.NoOpTupleProjectorFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
@@ -718,7 +719,7 @@ public class TestNodeController {
                 Integer indicator = primaryKeyIndicators.get(i);
                 String[] fieldNames =
                         indicator == Index.RECORD_INDICATOR ? recordType.getFieldNames() : metaType.getFieldNames();
-                keyFieldNames.add(Arrays.asList(fieldNames[primaryKeyIndexes[i]]));
+                keyFieldNames.add(Collections.singletonList(fieldNames[primaryKeyIndexes[i]]));
             }
             index = Index.createPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName(), keyFieldNames,
                     primaryKeyIndicators, keyFieldTypes, MetadataUtil.PENDING_NO_OP);
@@ -809,10 +810,10 @@ public class TestNodeController {
                 new LSMPrimaryUpsertOperatorNodePushable(ctx, ctx.getTaskAttemptId().getTaskId().getPartition(),
                         indexHelperFactory, primaryIndexInfo.primaryIndexInsertFieldsPermutations,
                         recordDescProvider.getInputRecordDescriptor(new ActivityId(new OperatorDescriptorId(0), 0), 0),
-                        modificationCallbackFactory, searchCallbackFactory, keyIndexes.length,
-                        0, recordType, -1, frameOpCallbackFactory == null
-                                ? dataset.getFrameOpCallbackFactory(mdProvider) : frameOpCallbackFactory,
-                        MissingWriterFactory.INSTANCE, hasSecondaries);
+                        modificationCallbackFactory, searchCallbackFactory, keyIndexes.length, 0, recordType, -1,
+                        frameOpCallbackFactory == null ? dataset.getFrameOpCallbackFactory(mdProvider)
+                                : frameOpCallbackFactory,
+                        MissingWriterFactory.INSTANCE, hasSecondaries, NoOpTupleProjectorFactory.INSTANCE);
         RecordDescriptor upsertOutRecDesc = getUpsertOutRecDesc(primaryIndexInfo.rDesc, dataset,
                 filterFields == null ? 0 : filterFields.length, recordType, metaType);
         // fix pk fields

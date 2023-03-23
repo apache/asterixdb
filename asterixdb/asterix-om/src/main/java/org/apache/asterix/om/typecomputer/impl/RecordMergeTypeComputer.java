@@ -43,6 +43,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.util.LogRedactionUtil;
 
 public class RecordMergeTypeComputer implements IResultTypeComputer {
+    private static final SourceLocation DUMMY_LOCATION = new SourceLocation(0, 0);
 
     public static final RecordMergeTypeComputer INSTANCE = new RecordMergeTypeComputer(false);
     public static final RecordMergeTypeComputer INSTANCE_IGNORE_DUPLICATES = new RecordMergeTypeComputer(true);
@@ -72,10 +73,18 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
             throw new TypeMismatchException(f.getSourceLocation(), funcId, 1, t1.getTypeTag(), ATypeTag.OBJECT);
         }
 
+        return merge(recType0, recType1, isIgnoreDuplicates, unknownable, f.getSourceLocation());
+    }
+
+    public static IAType merge(ARecordType recType0, ARecordType recType1) throws AlgebricksException {
+        return merge(recType0, recType1, true, false, DUMMY_LOCATION);
+    }
+
+    private static IAType merge(ARecordType recType0, ARecordType recType1, boolean isIgnoreDuplicates,
+            boolean unknownable, SourceLocation sourceLocation) throws AlgebricksException {
+
         List<String> resultFieldNames = new ArrayList<>();
-        for (String fieldName : recType0.getFieldNames()) {
-            resultFieldNames.add(fieldName);
-        }
+        Collections.addAll(resultFieldNames, recType0.getFieldNames());
         Collections.sort(resultFieldNames);
 
         List<IAType> resultFieldTypes = new ArrayList<>();
@@ -109,17 +118,17 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
                     if (isIgnoreDuplicates) {
                         continue;
                     }
-                    // If the ignore duplicates flag is not set, we throw a duplicate field exception
+                    // If ignore duplicates flag is not set, we throw a duplicate field exception
                     else {
-                        throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME,
-                                f.getSourceLocation(), LogRedactionUtil.userData(fieldNames[i]));
+                        throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, sourceLocation,
+                                LogRedactionUtil.userData(fieldNames[i]));
                     }
                 }
 
                 // This is for fields with matching names, matching types, type ARecord, do nested merge
                 if (fieldTypes[i].getTypeTag() == ATypeTag.OBJECT) {
                     resultFieldTypes.set(pos,
-                            mergedNestedType(fieldNames[i], fieldTypes[i], resultFieldType, f.getSourceLocation()));
+                            mergedNestedType(fieldNames[i], fieldTypes[i], resultFieldType, sourceLocation));
                 }
             } else {
                 // If no field was found with a matching name, we simply add the field to be merged
@@ -142,8 +151,8 @@ public class RecordMergeTypeComputer implements IResultTypeComputer {
         return resultType;
     }
 
-    private IAType mergedNestedType(String fieldName, IAType fieldType1, IAType fieldType0, SourceLocation sourceLoc)
-            throws AlgebricksException {
+    private static IAType mergedNestedType(String fieldName, IAType fieldType1, IAType fieldType0,
+            SourceLocation sourceLoc) throws AlgebricksException {
         if (fieldType1.getTypeTag() != ATypeTag.OBJECT || fieldType0.getTypeTag() != ATypeTag.OBJECT) {
             throw new CompilationException(ErrorCode.COMPILATION_DUPLICATE_FIELD_NAME, sourceLoc,
                     LogRedactionUtil.userData(fieldName));

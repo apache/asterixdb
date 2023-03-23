@@ -37,7 +37,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnTupleProjector;
 
-class QueryColumnTupleProjector implements IColumnTupleProjector {
+public class QueryColumnTupleProjector implements IColumnTupleProjector {
     protected final ARecordType datasetType;
     protected final ARecordType requestedType;
     protected final int numberOfPrimaryKeys;
@@ -46,7 +46,7 @@ class QueryColumnTupleProjector implements IColumnTupleProjector {
     protected final IColumnFilterEvaluatorFactory filterEvaluator;
     private final AssembledTupleReference assembledTupleReference;
 
-    QueryColumnTupleProjector(ARecordType datasetType, int numberOfPrimaryKeys, ARecordType requestedType,
+    public QueryColumnTupleProjector(ARecordType datasetType, int numberOfPrimaryKeys, ARecordType requestedType,
             Map<String, FunctionCallInformation> functionCallInfoMap, IColumnFilterEvaluatorFactory filterEvaluator,
             IWarningCollector warningCollector) {
         this.datasetType = datasetType;

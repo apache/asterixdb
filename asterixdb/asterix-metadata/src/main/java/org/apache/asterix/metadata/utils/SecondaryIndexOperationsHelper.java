@@ -193,12 +193,16 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         return indexOperationsHelper;
     }
 
+    @Override
     public abstract JobSpecification buildCreationJobSpec() throws AlgebricksException;
 
+    @Override
     public abstract JobSpecification buildLoadingJobSpec() throws AlgebricksException;
 
+    @Override
     public abstract JobSpecification buildCompactJobSpec() throws AlgebricksException;
 
+    @Override
     public abstract JobSpecification buildDropJobSpec(Set<DropOption> options) throws AlgebricksException;
 
     protected abstract void setSecondaryRecDescAndComparators() throws AlgebricksException;
@@ -369,9 +373,7 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         }
 
         IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[secondaryFieldAccessEvalFactories.length];
-        for (int i = 0; i < secondaryFieldAccessEvalFactories.length; ++i) {
-            sefs[i] = secondaryFieldAccessEvalFactories[i];
-        }
+        System.arraycopy(secondaryFieldAccessEvalFactories, 0, sefs, 0, secondaryFieldAccessEvalFactories.length);
         AssignRuntimeFactory assign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
         assign.setSourceLocation(sourceLoc);
         AlgebricksMetaOperatorDescriptor asterixAssignOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 1,
@@ -557,9 +559,7 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         }
 
         IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[secondaryFieldAccessEvalFactories.length];
-        for (int i = 0; i < secondaryFieldAccessEvalFactories.length; ++i) {
-            sefs[i] = secondaryFieldAccessEvalFactories[i];
-        }
+        System.arraycopy(secondaryFieldAccessEvalFactories, 0, sefs, 0, secondaryFieldAccessEvalFactories.length);
         //add External RIDs to the projection list
         for (int i = 0; i < numPrimaryKeys; i++) {
             projectionList[numSecondaryKeys + i] = i + 1;
@@ -601,18 +601,22 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         this.externalFiles = externalFiles;
     }
 
+    @Override
     public RecordDescriptor getSecondaryRecDesc() {
         return secondaryRecDesc;
     }
 
+    @Override
     public IBinaryComparatorFactory[] getSecondaryComparatorFactories() {
         return secondaryComparatorFactories;
     }
 
+    @Override
     public IFileSplitProvider getSecondaryFileSplitProvider() {
         return secondaryFileSplitProvider;
     }
 
+    @Override
     public AlgebricksPartitionConstraint getSecondaryPartitionConstraint() {
         return secondaryPartitionConstraint;
     }

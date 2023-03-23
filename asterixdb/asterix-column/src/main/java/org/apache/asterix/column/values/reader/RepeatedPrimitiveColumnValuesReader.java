@@ -129,4 +129,16 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
         }
         delimiterIndex = levelToDelimiterMap[level];
     }
+
+    @Override
+    public void skip(int count) throws HyracksDataException {
+        for (int i = 0; i < count; i++) {
+            next();
+            if (isRepeatedValue()) {
+                while (!isLastDelimiter()) {
+                    next();
+                }
+            }
+        }
+    }
 }

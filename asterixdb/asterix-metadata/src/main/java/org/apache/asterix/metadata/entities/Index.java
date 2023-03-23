@@ -20,11 +20,13 @@
 package org.apache.asterix.metadata.entities;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.asterix.column.util.ColumnSecondaryIndexSchemaUtil;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -223,10 +225,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         if (!datasetName.equals(otherIndex.getDatasetName())) {
             return false;
         }
-        if (!dataverseName.equals(otherIndex.getDataverseName())) {
-            return false;
-        }
-        return true;
+        return dataverseName.equals(otherIndex.getDataverseName());
     }
 
     @Override
@@ -415,6 +414,10 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         public boolean isOverridingKeyFieldTypes() {
             return overrideKeyFieldTypes;
         }
+
+        public ARecordType getIndexExpectedType() throws AlgebricksException {
+            return ColumnSecondaryIndexSchemaUtil.getRecordType(getKeyFieldNames());
+        }
     }
 
     public static final class TextIndexDetails extends AbstractIndexDetails {
@@ -503,6 +506,15 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         @Override
         public boolean isOverridingKeyFieldTypes() {
             return overrideKeyFieldTypes;
+        }
+
+        public ARecordType getIndexExpectedType() throws AlgebricksException {
+            List<ARecordType> types = new ArrayList<>();
+            for (Index.ArrayIndexElement element : elementList) {
+                types.add(ColumnSecondaryIndexSchemaUtil.getRecordType(element.getUnnestList(),
+                        element.getProjectList()));
+            }
+            return ColumnSecondaryIndexSchemaUtil.merge(types);
         }
     }
 
