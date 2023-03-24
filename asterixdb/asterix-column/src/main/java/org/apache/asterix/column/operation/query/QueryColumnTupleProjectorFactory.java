@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluatorFactory;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -58,16 +57,12 @@ public class QueryColumnTupleProjectorFactory implements ITupleProjectorFactory 
     @Override
     public ITupleProjector createTupleProjector(IHyracksTaskContext context) throws HyracksDataException {
         IWarningCollector warningCollector = context.getWarningCollector();
-        if (requestedMetaType == null
-                || DataProjectionFiltrationInfo.EMPTY_TYPE.getTypeName().equals(requestedMetaType.getTypeName())) {
-            /*
-             * Either the dataset does not contain meta record or none of the meta columns were requested. Thus,
-             * ignore reading the meta columns (if exist)
-             */
+        if (requestedMetaType == null) {
+            // The dataset does not contain a meta part
             return new QueryColumnTupleProjector(datasetType, numberOfPrimaryKeys, requestedType, functionCallInfo,
                     filterEvaluator, warningCollector);
         }
-        //The query requested some or all of the meta columns
+        // The dataset has a meta part
         return new QueryColumnWithMetaTupleProjector(datasetType, metaType, numberOfPrimaryKeys, requestedType,
                 functionCallInfo, requestedMetaType, metaFunctionCallInfo, filterEvaluator, warningCollector);
     }
