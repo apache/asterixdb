@@ -26,15 +26,10 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.external.indexing.IndexingConstants;
-import org.apache.asterix.external.operators.ExternalIndexBulkLoadOperatorDescriptor;
-import org.apache.asterix.external.operators.ExternalIndexBulkModifyOperatorDescriptor;
-import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
@@ -44,7 +39,6 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
-import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.AbstractFunctionDescriptor;
@@ -84,7 +78,6 @@ import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
-import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 
 @SuppressWarnings("rawtypes")
@@ -459,17 +452,6 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         return treeIndexBulkLoadOp;
     }
 
-    protected TreeIndexBulkLoadOperatorDescriptor createExternalIndexBulkLoadOp(JobSpecification spec,
-            int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor) {
-        ExternalIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new ExternalIndexBulkLoadOperatorDescriptor(spec,
-                secondaryRecDesc, fieldPermutation, fillFactor, false, numElementsHint, false, dataflowHelperFactory,
-                ExternalDatasetsRegistry.INSTANCE.getAndLockDatasetVersion(dataset, metadataProvider), null);
-        treeIndexBulkLoadOp.setSourceLocation(sourceLoc);
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
-                secondaryPartitionConstraint);
-        return treeIndexBulkLoadOp;
-    }
-
     public AlgebricksMetaOperatorDescriptor createFilterAllUnknownsSelectOp(JobSpecification spec,
             int numSecondaryKeyFields, RecordDescriptor secondaryRecDesc) throws AlgebricksException {
         return createFilterSelectOp(spec, numSecondaryKeyFields, secondaryRecDesc, OrDescriptor::new);
@@ -516,39 +498,6 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         return asterixSelectOp;
     }
 
-    // This method creates a source indexing operator for external data
-    protected ExternalScanOperatorDescriptor createExternalIndexingOp(JobSpecification spec)
-            throws AlgebricksException {
-        // A record + primary keys
-        ISerializerDeserializer[] serdes = new ISerializerDeserializer[1 + numPrimaryKeys];
-        ITypeTraits[] typeTraits = new ITypeTraits[1 + numPrimaryKeys];
-        // payload serde and type traits for the record slot
-        serdes[0] = payloadSerde;
-        typeTraits[0] = TypeTraitProvider.INSTANCE.getTypeTrait(itemType);
-        //  serdes and type traits for rid fields
-        for (int i = 1; i < serdes.length; i++) {
-            serdes[i] = IndexingConstants.getSerializerDeserializer(i - 1);
-            typeTraits[i] = IndexingConstants.getTypeTraits(i - 1);
-        }
-        // output record desc
-        RecordDescriptor indexerDesc = new RecordDescriptor(serdes, typeTraits);
-
-        // Create the operator and its partition constraits
-        Pair<ExternalScanOperatorDescriptor, AlgebricksPartitionConstraint> indexingOpAndConstraints;
-        try {
-            indexingOpAndConstraints = ExternalIndexingOperations.createExternalIndexingOp(spec, metadataProvider,
-                    dataset, itemType, indexerDesc, externalFiles, sourceLoc);
-        } catch (Exception e) {
-            throw new AlgebricksException(e);
-        }
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexingOpAndConstraints.first,
-                indexingOpAndConstraints.second);
-
-        // Set the primary partition constraints to this partition constraints
-        primaryPartitionConstraint = indexingOpAndConstraints.second;
-        return indexingOpAndConstraints.first;
-    }
-
     protected AlgebricksMetaOperatorDescriptor createExternalAssignOp(JobSpecification spec, int numSecondaryKeys,
             RecordDescriptor secondaryRecDesc) {
         int[] outColumns = new int[numSecondaryKeys];
@@ -568,33 +517,6 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         AssignRuntimeFactory assign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
         return new AlgebricksMetaOperatorDescriptor(spec, 1, 1, new IPushRuntimeFactory[] { assign },
                 new RecordDescriptor[] { secondaryRecDesc });
-    }
-
-    protected ExternalIndexBulkModifyOperatorDescriptor createExternalIndexBulkModifyOp(JobSpecification spec,
-            int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor) {
-        // create a list of file ids
-        int numOfDeletedFiles = 0;
-        for (ExternalFile file : externalFiles) {
-            if (file.getPendingOp() == ExternalFilePendingOp.DROP_OP) {
-                numOfDeletedFiles++;
-            }
-        }
-        int[] deletedFiles = new int[numOfDeletedFiles];
-        int i = 0;
-        for (ExternalFile file : externalFiles) {
-            if (file.getPendingOp() == ExternalFilePendingOp.DROP_OP) {
-                deletedFiles[i] = file.getFileNumber();
-            }
-        }
-        ExternalIndexBulkModifyOperatorDescriptor treeIndexBulkLoadOp = new ExternalIndexBulkModifyOperatorDescriptor(
-                spec, dataflowHelperFactory, deletedFiles, fieldPermutation, fillFactor, false, numElementsHint, null);
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
-                secondaryPartitionConstraint);
-        return treeIndexBulkLoadOp;
-    }
-
-    public List<ExternalFile> getExternalFiles() {
-        return externalFiles;
     }
 
     public void setExternalFiles(List<ExternalFile> externalFiles) {

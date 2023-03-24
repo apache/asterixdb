@@ -152,42 +152,6 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         }
     }
 
-    // The constructor used by external indexes
-    public AbstractLSMIndex(IIOManager ioManager, IBufferCache diskBufferCache, ILSMIndexFileManager fileManager,
-            double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker,
-            ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
-            ILSMPageWriteCallbackFactory pageWriteCallbackFactory, ILSMDiskComponentFactory componentFactory,
-            ILSMDiskComponentFactory bulkLoadComponentFactory, boolean durable, ITracer tracer)
-            throws HyracksDataException {
-        this.ioManager = ioManager;
-        this.diskBufferCache = diskBufferCache;
-        this.fileManager = fileManager;
-        this.bloomFilterFalsePositiveRate = bloomFilterFalsePositiveRate;
-        this.ioOpCallback = ioOpCallbackFactory.createIoOpCallback(this);
-        this.pageWriteCallbackFactory = pageWriteCallbackFactory;
-        this.componentFactory = componentFactory;
-        this.bulkLoadComponentFactory = bulkLoadComponentFactory;
-        this.durable = durable;
-        this.tracer = tracer;
-        lsmHarness = new ExternalIndexHarness(this, ioScheduler, mergePolicy, opTracker,
-                diskBufferCache.isReplicationEnabled());
-        isActive = false;
-        diskComponents = new ArrayList<>();
-        this.inactiveDiskComponents = new ArrayList<>();
-        this.inactiveMemoryComponents = new ArrayList<>();
-        // Memory related objects are nulled
-        virtualBufferCaches = null;
-        memoryComponents = null;
-        currentMutableComponentId = null;
-        flushRequests = null;
-        filterHelper = null;
-        filterFrameFactory = null;
-        filterManager = null;
-        treeFields = null;
-        filterFields = null;
-        fileManager.initLastUsedSeq(ioOpCallback.getLastValidSequence());
-    }
-
     @Override
     public synchronized void create() throws HyracksDataException {
         if (isActive) {

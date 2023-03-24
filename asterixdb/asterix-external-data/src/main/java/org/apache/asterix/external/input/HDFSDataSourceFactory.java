@@ -37,13 +37,11 @@ import org.apache.asterix.external.api.IIndexibleExternalDataSource;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.external.indexing.IndexingScheduler;
 import org.apache.asterix.external.input.record.reader.IndexingStreamRecordReader;
 import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.ParquetFileRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
-import org.apache.asterix.external.provider.ExternalIndexerProvider;
 import org.apache.asterix.external.provider.StreamRecordReaderProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -77,7 +75,6 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     protected ConfFactory confFactory;
     protected boolean configured = false;
     protected static Scheduler hdfsScheduler;
-    protected static IndexingScheduler indexingScheduler;
     protected static Boolean initialized = false;
     protected static Object initLock = new Object();
     protected List<ExternalFile> files;
@@ -117,11 +114,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
             } else {
                 inputSplits = HDFSUtils.getSplits(conf, files);
             }
-            if (indexingOp) {
-                readSchedule = indexingScheduler.getLocationConstraints(inputSplits);
-            } else {
-                readSchedule = hdfsScheduler.getLocationConstraints(inputSplits);
-            }
+            readSchedule = hdfsScheduler.getLocationConstraints(inputSplits);
             inputSplitsFactory = new InputSplitsFactory(inputSplits);
             read = new boolean[readSchedule.length];
             Arrays.fill(read, false);
@@ -214,7 +207,6 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
             synchronized (initLock) {
                 if (!initialized) {
                     hdfsScheduler = HDFSUtils.initializeHDFSScheduler(serviceCtx);
-                    indexingScheduler = HDFSUtils.initializeIndexingHDFSScheduler(serviceCtx);
                     initialized = true;
                 }
             }
@@ -243,7 +235,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     public IRecordReader<? extends Object> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         try {
-            IExternalIndexer indexer = files == null ? null : ExternalIndexerProvider.getIndexer(configuration);
+            IExternalIndexer indexer = null;
             if (recordReaderClazz != null) {
                 StreamRecordReader streamReader = (StreamRecordReader) recordReaderClazz.getConstructor().newInstance();
                 streamReader.configure(ctx, createInputStream(ctx, partition, indexer), configuration);

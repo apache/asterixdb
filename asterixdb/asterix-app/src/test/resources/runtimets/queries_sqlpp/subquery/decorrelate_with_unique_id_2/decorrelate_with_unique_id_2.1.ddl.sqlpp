@@ -47,9 +47,3 @@ create type test.TweetMessageType as
 
 create external  dataset TweetMessages(TweetMessageType) using `hdfs`((`hdfs`=`hdfs://127.0.0.1:31888`),(`path`=`/asterix/tw_for_indexleftouterjoin.adm`),(`input-format`=`text-input-format`),(`format`=`adm`));
 
-create  index IdIx  on TweetMessages (tweetid) type btree;
-
-create  index msgCountAIx  on TweetMessages (countA) type btree;
-
-create  index msgCountBIx  on TweetMessages (countB) type btree;
-

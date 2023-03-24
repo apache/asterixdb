@@ -3103,28 +3103,6 @@
         </compilation-unit>
       </test-case>
     </test-group>
-    <test-group name="open-index-enforced/external-indexing">
-      <test-case FilePath="open-index-enforced/external-indexing">
-        <compilation-unit name="adm-format">
-          <output-dir compare="AST">adm-format</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="open-index-enforced/external-indexing">
-        <compilation-unit name="rtree-index">
-          <output-dir compare="AST">rtree-index</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="open-index-enforced/external-indexing">
-        <compilation-unit name="leftouterjoin">
-          <output-dir compare="AST">leftouterjoin</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="open-index-enforced/external-indexing">
-        <compilation-unit name="leftouterjoin-rtree">
-          <output-dir compare="AST">leftouterjoin-rtree</output-dir>
-        </compilation-unit>
-      </test-case>
-    </test-group>
   </test-group>
   <test-group name="nested-open-index">
     <test-group FilePath="nested-open-index/index-join">
@@ -3275,28 +3253,6 @@
       <test-case FilePath="nested-open-index/index-selection">
         <compilation-unit name="rtree-secondary-index">
           <output-dir compare="AST">rtree-secondary-index</output-dir>
-        </compilation-unit>
-      </test-case>
-    </test-group>
-    <test-group name="nested-open-index/external-indexing">
-      <test-case FilePath="nested-open-index/external-indexing">
-        <compilation-unit name="adm-format">
-          <output-dir compare="AST">adm-format</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-open-index/external-indexing">
-        <compilation-unit name="rtree-index">
-          <output-dir compare="AST">rtree-index</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-open-index/external-indexing">
-        <compilation-unit name="leftouterjoin">
-          <output-dir compare="AST">leftouterjoin</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-open-index/external-indexing">
-        <compilation-unit name="leftouterjoin-rtree">
-          <output-dir compare="AST">leftouterjoin-rtree</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>
@@ -3527,28 +3483,6 @@
       <test-case FilePath="nested-index/index-selection">
         <compilation-unit name="rtree-secondary-index-open">
           <output-dir compare="AST">rtree-secondary-index-open</output-dir>
-        </compilation-unit>
-      </test-case>
-    </test-group>
-    <test-group name="nested-index/external-indexing">
-      <test-case FilePath="nested-index/external-indexing">
-        <compilation-unit name="adm-format">
-          <output-dir compare="AST">adm-format</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-index/external-indexing">
-        <compilation-unit name="rtree-index">
-          <output-dir compare="AST">rtree-index</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-index/external-indexing">
-        <compilation-unit name="leftouterjoin">
-          <output-dir compare="AST">leftouterjoin</output-dir>
-        </compilation-unit>
-      </test-case>
-      <test-case FilePath="nested-index/external-indexing">
-        <compilation-unit name="leftouterjoin-rtree">
-          <output-dir compare="AST">leftouterjoin-rtree</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>
@@ -6143,38 +6077,6 @@
     <test-case FilePath="big-object">
       <compilation-unit name="big_object_join">
         <output-dir compare="AST">big_object_join</output-dir>
-      </compilation-unit>
-    </test-case>
-  </test-group>
-  <test-group name="external-indexing">
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="text-format">
-        <output-dir compare="AST">text-format</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="sequence-format">
-        <output-dir compare="AST">sequence-format</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="rc-format">
-        <output-dir compare="AST">rc-format</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="rtree-index">
-        <output-dir compare="AST">rtree-index</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="leftouterjoin">
-        <output-dir compare="AST">leftouterjoin</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-indexing">
-      <compilation-unit name="leftouterjoin-rtree">
-        <output-dir compare="AST">leftouterjoin-rtree</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

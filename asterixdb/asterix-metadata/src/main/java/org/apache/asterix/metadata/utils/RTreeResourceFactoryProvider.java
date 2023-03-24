@@ -27,7 +27,6 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.formats.nontagged.NullIntrospector;
 import org.apache.asterix.metadata.api.IResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -54,7 +53,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProv
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
-import org.apache.hyracks.storage.am.lsm.rtree.dataflow.ExternalRTreeLocalResourceFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.dataflow.LSMRTreeWithAntiMatterLocalResourceFactory;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.common.IResourceFactory;
@@ -130,8 +128,8 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
 
         }
         for (int i = 0; i < numPrimaryKeys; i++) {
-            secondaryTypeTraits[numNestedSecondaryKeyFields + i] = (dataset.getDatasetType() == DatasetType.INTERNAL)
-                    ? primaryTypeTraits[i] : IndexingConstants.getTypeTraits(i);
+            secondaryTypeTraits[numNestedSecondaryKeyFields + i] =
+                    (dataset.getDatasetType() == DatasetType.INTERNAL) ? primaryTypeTraits[i] : null;
         }
         int[] rtreeFields = null;
         if (filterTypeTraits != null && filterTypeTraits.length > 0) {
@@ -154,10 +152,9 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
         IBinaryComparatorFactory[] rtreeCmpFactories = getCmpFactories(mdProvider, index, recordType, metaType);
         int[] secondaryFilterFields = (filterTypeTraits != null && filterTypeTraits.length > 0)
                 ? new int[] { numNestedSecondaryKeyFields + numPrimaryKeys } : null;
-        IBinaryComparatorFactory[] btreeCompFactories =
-                dataset.getDatasetType() == DatasetType.EXTERNAL ? IndexingConstants.getBuddyBtreeComparatorFactories()
-                        : getComparatorFactoriesForDeletedKeyBTree(secondaryTypeTraits, primaryComparatorFactories,
-                                secondaryComparatorFactories);
+        IBinaryComparatorFactory[] btreeCompFactories = dataset.getDatasetType() == DatasetType.EXTERNAL ? null
+                : getComparatorFactoriesForDeletedKeyBTree(secondaryTypeTraits, primaryComparatorFactories,
+                        secondaryComparatorFactories);
         ITypeTraitProvider typeTraitProvider = mdProvider.getDataFormat().getTypeTraitProvider();
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             AsterixVirtualBufferCacheProvider vbcProvider =
@@ -169,13 +166,7 @@ public class RTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     linearizeCmpFactory, rtreeFields, isPointMBR, btreeCompFactories,
                     typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE);
         } else {
-            return new ExternalRTreeLocalResourceFactory(storageManager, typeTraits, rtreeCmpFactories,
-                    filterTypeTraits, filterCmpFactories, secondaryFilterFields, opTrackerFactory, ioOpCallbackFactory,
-                    pageWriteCallbackFactory, metadataPageManagerFactory, ioSchedulerProvider, mergePolicyFactory,
-                    mergePolicyProperties, true, btreeCompFactories, valueProviderFactories, rTreePolicyType,
-                    linearizeCmpFactory, rtreeFields, new int[] { numNestedSecondaryKeyFields }, isPointMBR,
-                    mdProvider.getStorageProperties().getBloomFilterFalsePositiveRate(),
-                    typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE);
+            return null;
         }
     }
 

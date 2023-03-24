@@ -25,7 +25,6 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.IStorageComponentProvider;
-import org.apache.asterix.external.indexing.FilesIndexDescription;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.metadata.api.IResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -96,7 +95,7 @@ public class TestLsmBTreeResourceFactoryProvider implements IResourceFactoryProv
             return primaryTypeTraits;
         } else if (dataset.getDatasetType() == DatasetType.EXTERNAL
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
-            return FilesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS;
+            return null;
         }
         Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
@@ -131,7 +130,7 @@ public class TestLsmBTreeResourceFactoryProvider implements IResourceFactoryProv
             return dataset.getPrimaryComparatorFactories(metadataProvider, recordType, metaType);
         } else if (dataset.getDatasetType() == DatasetType.EXTERNAL
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
-            return FilesIndexDescription.FILES_INDEX_COMP_FACTORIES;
+            return null;
         }
         Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
@@ -166,7 +165,7 @@ public class TestLsmBTreeResourceFactoryProvider implements IResourceFactoryProv
             return dataset.getPrimaryBloomFilterFields();
         } else if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             if (index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
-                return FilesIndexDescription.BLOOM_FILTER_FIELDS;
+                return null;
             } else {
                 return new int[] { ((Index.ValueIndexDetails) index.getIndexDetails()).getKeyFieldNames().size() };
             }

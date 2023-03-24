@@ -35,8 +35,6 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.external.indexing.IndexingScheduler;
-import org.apache.asterix.external.indexing.RecordId.RecordIdType;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.MapredParquetInputFormat;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.ParquetReadSupport;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
@@ -56,7 +54,6 @@ import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.application.ICCServiceContext;
-import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.context.ICCContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
@@ -79,19 +76,6 @@ public class HDFSUtils {
             scheduler = new Scheduler(ccContext.getClusterControllerInfo().getClientNetAddress(),
                     ccContext.getClusterControllerInfo().getClientNetPort(),
                     networkSecurityManager.getSocketChannelFactory());
-        } catch (HyracksException e) {
-            throw new RuntimeDataException(ErrorCode.UTIL_HDFS_UTILS_CANNOT_OBTAIN_HDFS_SCHEDULER);
-        }
-        return scheduler;
-    }
-
-    public static IndexingScheduler initializeIndexingHDFSScheduler(ICCServiceContext serviceCtx)
-            throws HyracksDataException {
-        IndexingScheduler scheduler = null;
-        try {
-            ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
-            IHyracksClientConnection hcc = appCtx.getHcc();
-            scheduler = new IndexingScheduler(hcc.getNodeControllerInfos());
         } catch (HyracksException e) {
             throw new RuntimeDataException(ErrorCode.UTIL_HDFS_UTILS_CANNOT_OBTAIN_HDFS_SCHEDULER);
         }
@@ -269,17 +253,6 @@ public class HDFSUtils {
         }
         return clusterLocations;
 
-    }
-
-    public static RecordIdType getRecordIdType(Map<String, String> configuration) {
-        String inputFormatParameter = configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT).trim();
-        switch (inputFormatParameter) {
-            case ExternalDataConstants.INPUT_FORMAT_TEXT:
-            case ExternalDataConstants.INPUT_FORMAT_SEQUENCE:
-                return RecordIdType.OFFSET;
-            default:
-                return null;
-        }
     }
 
     public static ARecordType getExpectedType(Configuration configuration) throws IOException {

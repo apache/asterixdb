@@ -19,6 +19,7 @@
 
 package org.apache.asterix.metadata.entities;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,6 @@ import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
-import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
@@ -59,9 +59,7 @@ import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.declared.ArrayBTreeResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.BTreeResourceFactoryProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
-import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
 import org.apache.asterix.metadata.utils.DatasetUtil;
-import org.apache.asterix.metadata.utils.ExternalIndexingOperations;
 import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.InvertedIndexResourceFactoryProvider;
 import org.apache.asterix.metadata.utils.MetadataUtil;
@@ -387,42 +385,6 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             bActiveTxn.setValue(true);
             metadataProvider.setMetadataTxnContext(mdTxnCtx.getValue());
         } else if (getDatasetType() == DatasetType.EXTERNAL) {
-            // External dataset
-            ExternalDatasetsRegistry.INSTANCE.removeDatasetInfo(this);
-            // #. prepare jobs to drop the datatset and the indexes in NC
-            List<Index> indexes =
-                    MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx.getValue(), dataverseName, datasetName);
-            for (int j = 0; j < indexes.size(); j++) {
-                if (ExternalIndexingOperations.isFileIndex(indexes.get(j))) {
-                    jobsToExecute
-                            .add(IndexUtil.buildDropIndexJobSpec(indexes.get(j), metadataProvider, this, sourceLoc));
-                } else {
-                    jobsToExecute.add(DatasetUtil.buildDropFilesIndexJobSpec(metadataProvider, this));
-                }
-            }
-
-            // #. mark the existing dataset as PendingDropOp
-            MetadataManager.INSTANCE.dropDataset(mdTxnCtx.getValue(), dataverseName, datasetName, force);
-            MetadataManager.INSTANCE.addDataset(mdTxnCtx.getValue(),
-                    new Dataset(dataverseName, datasetName, getItemTypeDataverseName(), getItemTypeName(),
-                            getNodeGroupName(), getCompactionPolicy(), getCompactionPolicyProperties(),
-                            getDatasetDetails(), getHints(), getDatasetType(), getDatasetId(),
-                            MetadataUtil.PENDING_DROP_OP));
-
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
-            bActiveTxn.setValue(false);
-            progress.setValue(ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA);
-
-            // #. run the jobs
-            for (JobSpecification jobSpec : jobsToExecute) {
-                JobUtils.runJob(hcc, jobSpec, true);
-            }
-            if (!indexes.isEmpty()) {
-                ExternalDatasetsRegistry.INSTANCE.removeDatasetInfo(this);
-            }
-            mdTxnCtx.setValue(MetadataManager.INSTANCE.beginTransaction());
-            bActiveTxn.setValue(true);
-            metadataProvider.setMetadataTxnContext(mdTxnCtx.getValue());
         }
 
         // #. finally, delete the dataset.
@@ -684,7 +646,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     @Override
     public List<List<String>> getPrimaryKeys() {
         if (getDatasetType() == DatasetType.EXTERNAL) {
-            return IndexingConstants.getRIDKeys(((ExternalDatasetDetails) getDatasetDetails()).getProperties());
+            return Collections.emptyList();
         }
         return ((InternalDatasetDetails) getDatasetDetails()).getPartitioningKey();
     }
@@ -710,7 +672,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             indicators = ((InternalDatasetDetails) getDatasetDetails()).getKeySourceIndicator();
         }
         for (int i = 0; i < numPrimaryKeys; i++) {
-            IAType keyType = datasetType == DatasetType.EXTERNAL ? IndexingConstants.getFieldType(i)
+            IAType keyType = datasetType == DatasetType.EXTERNAL ? null
                     : (indicators == null || indicators.get(i) == 0)
                             ? recordType.getSubFieldType(partitioningKeys.get(i))
                             : metaType.getSubFieldType(partitioningKeys.get(i));
@@ -747,7 +709,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         // Set the serde/traits for primary keys
         for (int i = 0; i < numPrimaryKeys; i++) {
             IAType keyType =
-                    datasetType == DatasetType.EXTERNAL ? IndexingConstants.getFieldType(i)
+                    datasetType == DatasetType.EXTERNAL ? null
                             : (indicators == null || indicators.get(i) == 0)
                                     ? itemType.getSubFieldType(partitioningKeys.get(i))
                                     : metaType.getSubFieldType(partitioningKeys.get(i));
@@ -786,7 +748,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             indicators = ((InternalDatasetDetails) getDatasetDetails()).getKeySourceIndicator();
         }
         for (int i = 0; i < numPrimaryKeys; i++) {
-            IAType keyType = datasetType == DatasetType.EXTERNAL ? IndexingConstants.getFieldType(i)
+            IAType keyType = datasetType == DatasetType.EXTERNAL ? null
                     : (indicators == null || indicators.get(i) == 0)
                             ? recordType.getSubFieldType(partitioningKeys.get(i))
                             : metaType.getSubFieldType(partitioningKeys.get(i));
@@ -814,7 +776,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             indicators = ((InternalDatasetDetails) getDatasetDetails()).getKeySourceIndicator();
         }
         for (int i = 0; i < numPrimaryKeys; i++) {
-            IAType keyType = datasetType == DatasetType.EXTERNAL ? IndexingConstants.getFieldType(i)
+            IAType keyType = datasetType == DatasetType.EXTERNAL ? null
                     : (indicators == null || indicators.get(i) == 0)
                             ? recordType.getSubFieldType(partitioningKeys.get(i))
                             : metaType.getSubFieldType(partitioningKeys.get(i));

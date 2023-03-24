@@ -53,7 +53,6 @@ import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.ComponentFilterHelper;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFilterManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
-import org.apache.hyracks.storage.am.lsm.rtree.impls.ExternalRTree;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTree;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTreeDiskComponentFactory;
 import org.apache.hyracks.storage.am.lsm.rtree.impls.LSMRTreeFileManager;
@@ -74,7 +73,6 @@ import org.apache.hyracks.storage.am.rtree.linearize.ZCurveDoubleComparatorFacto
 import org.apache.hyracks.storage.am.rtree.linearize.ZCurveIntComparatorFactory;
 import org.apache.hyracks.storage.am.rtree.tuples.RTreeTypeAwareTupleWriterFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.util.trace.ITracer;
 
 public class LSMRTreeUtils {
     public static LSMRTree createLSMTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
@@ -245,64 +243,6 @@ public class LSMRTreeUtils {
                 filterManager, typeTraits.length, rtreeCmpFactories, btreeComparatorFactories, linearizerCmpFactory,
                 comparatorFields, linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory,
                 pageWriteCallbackFactory, rtreeFields, filterFields, durable, isPointMBR);
-    }
-
-    public static ExternalRTree createExternalRTree(IIOManager ioManager, FileReference file,
-            IBufferCache diskBufferCache, ITypeTraits[] typeTraits, IBinaryComparatorFactory[] rtreeCmpFactories,
-            IBinaryComparatorFactory[] btreeCmpFactories, IPrimitiveValueProviderFactory[] valueProviderFactories,
-            RTreePolicyType rtreePolicyType, double bloomFilterFalsePositiveRate, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
-            ILinearizeComparatorFactory linearizeCmpFactory, int[] buddyBTreeFields, boolean durable,
-            boolean isPointMBR, IMetadataPageManagerFactory freePageManagerFactory, ITracer tracer,
-            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector) throws HyracksDataException {
-
-        int keyFieldCount = rtreeCmpFactories.length;
-        int valueFieldCount = typeTraits.length - keyFieldCount;
-        ITypeTraits[] btreeTypeTraits = new ITypeTraits[valueFieldCount];
-        for (int i = 0; i < buddyBTreeFields.length; i++) {
-            btreeTypeTraits[i] = typeTraits[buddyBTreeFields[i]];
-        }
-        RTreeTypeAwareTupleWriterFactory rtreeInteriorFrameTupleWriterFactory =
-                new RTreeTypeAwareTupleWriterFactory(typeTraits, nullTypeTraits, nullIntrospector);
-        RTreeTypeAwareTupleWriterFactory rtreeLeafFrameTupleWriterFactory = null;
-        if (isPointMBR) {
-            rtreeLeafFrameTupleWriterFactory = new LSMRTreeTupleWriterFactoryForPointMBR(typeTraits, keyFieldCount,
-                    valueFieldCount, false, false, nullTypeTraits, nullIntrospector);
-        } else {
-            rtreeLeafFrameTupleWriterFactory = rtreeInteriorFrameTupleWriterFactory;
-        }
-        BTreeTypeAwareTupleWriterFactory btreeTupleWriterFactory =
-                new BTreeTypeAwareTupleWriterFactory(btreeTypeTraits, false, nullTypeTraits, nullIntrospector);
-        RTreeFrameFactory rtreeInteriorFrameFactory = new RTreeNSMInteriorFrameFactory(
-                rtreeInteriorFrameTupleWriterFactory, valueProviderFactories, rtreePolicyType, isPointMBR);
-        RTreeFrameFactory rtreeLeafFrameFactory = new RTreeNSMLeafFrameFactory(rtreeLeafFrameTupleWriterFactory,
-                valueProviderFactories, rtreePolicyType, isPointMBR);
-        ITreeIndexFrameFactory btreeInteriorFrameFactory = new BTreeNSMInteriorFrameFactory(btreeTupleWriterFactory);
-        ITreeIndexFrameFactory btreeLeafFrameFactory = new BTreeNSMLeafFrameFactory(btreeTupleWriterFactory);
-        TreeIndexFactory<RTree> diskRTreeFactory = new RTreeFactory(ioManager, diskBufferCache, freePageManagerFactory,
-                rtreeInteriorFrameFactory, rtreeLeafFrameFactory, rtreeCmpFactories, typeTraits.length, isPointMBR);
-        TreeIndexFactory<BTree> diskBTreeFactory = new BTreeFactory(ioManager, diskBufferCache, freePageManagerFactory,
-                btreeInteriorFrameFactory, btreeLeafFrameFactory, btreeCmpFactories, btreeTypeTraits.length);
-        int[] comparatorFields = { 0 };
-        IBinaryComparatorFactory[] linearizerArray = { linearizeCmpFactory };
-
-        int[] bloomFilterKeyFields = new int[btreeCmpFactories.length];
-        for (int i = 0; i < btreeCmpFactories.length; i++) {
-            bloomFilterKeyFields[i] = i;
-        }
-        BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, bloomFilterKeyFields);
-
-        ILSMIndexFileManager fileNameManager =
-                new LSMRTreeFileManager(ioManager, file, diskRTreeFactory, diskBTreeFactory);
-        ILSMDiskComponentFactory componentFactory =
-                new LSMRTreeDiskComponentFactory(diskRTreeFactory, diskBTreeFactory, bloomFilterFactory, null);
-
-        return new ExternalRTree(ioManager, rtreeInteriorFrameFactory, rtreeLeafFrameFactory, btreeInteriorFrameFactory,
-                btreeLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory, bloomFilterFalsePositiveRate,
-                typeTraits.length, rtreeCmpFactories, btreeCmpFactories, linearizeCmpFactory, comparatorFields,
-                linearizerArray, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory,
-                buddyBTreeFields, durable, isPointMBR, tracer);
     }
 
     public static ILinearizeComparatorFactory proposeBestLinearizer(ITypeTraits[] typeTraits, int numKeyFields)

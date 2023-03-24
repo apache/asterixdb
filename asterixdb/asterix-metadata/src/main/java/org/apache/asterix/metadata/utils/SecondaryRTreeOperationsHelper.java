@@ -24,7 +24,6 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.external.indexing.IndexingConstants;
-import org.apache.asterix.external.operators.ExternalScanOperatorDescriptor;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
@@ -50,8 +49,6 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
-import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.IPrimitiveValueProviderFactory;
@@ -254,63 +251,6 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
             spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
         } else {
             // External dataset
-            /*
-             * In case of external data, this method is used to build loading jobs for both
-             * initial load on index creation
-             * and transaction load on dataset referesh
-             */
-            // Create external indexing scan operator
-            ExternalScanOperatorDescriptor primaryScanOp = createExternalIndexingOp(spec);
-            AbstractOperatorDescriptor sourceOp = primaryScanOp;
-            if (isOverridingKeyFieldTypes && !enforcedItemType.equals(itemType)) {
-                sourceOp = createCastOp(spec, dataset.getDatasetType(), index.isEnforced());
-                spec.connect(new OneToOneConnectorDescriptor(spec), primaryScanOp, 0, sourceOp, 0);
-            }
-            // Assign op.
-            AlgebricksMetaOperatorDescriptor asterixAssignOp = createExternalAssignOp(spec,
-                    numNestedSecondaryKeFieldsConsideringPointMBR, secondaryRecDescConsideringPointMBR);
-
-            // If any of the secondary fields are nullable, then add a select op that filters nulls.
-            AlgebricksMetaOperatorDescriptor selectOp = null;
-            if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
-                selectOp = createFilterAnyUnknownSelectOp(spec, numNestedSecondaryKeFieldsConsideringPointMBR,
-                        secondaryRecDescConsideringPointMBR);
-            }
-
-            // Sort by secondary keys.
-            ExternalSortOperatorDescriptor sortOp = createSortOp(spec,
-                    new IBinaryComparatorFactory[] {
-                            MetadataProvider.proposeLinearizer(keyType, secondaryComparatorFactories.length) },
-                    isPointMBR ? secondaryRecDescForPointMBR : secondaryRecDesc);
-            // Create secondary RTree bulk load op.
-            IOperatorDescriptor root;
-            AbstractSingleActivityOperatorDescriptor secondaryBulkLoadOp;
-            if (externalFiles != null) {
-                // Transaction load
-                secondaryBulkLoadOp = createExternalIndexBulkModifyOp(spec, fieldPermutation,
-                        indexDataflowHelperFactory, StorageConstants.DEFAULT_TREE_FILL_FACTOR);
-            } else {
-                // Initial load
-                secondaryBulkLoadOp = createExternalIndexBulkLoadOp(spec, fieldPermutation, indexDataflowHelperFactory,
-                        StorageConstants.DEFAULT_TREE_FILL_FACTOR);
-            }
-            SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
-            sinkRuntimeFactory.setSourceLocation(sourceLoc);
-            AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,
-                    new IPushRuntimeFactory[] { sinkRuntimeFactory }, new RecordDescriptor[] { secondaryRecDesc });
-            metaOp.setSourceLocation(sourceLoc);
-            spec.connect(new OneToOneConnectorDescriptor(spec), secondaryBulkLoadOp, 0, metaOp, 0);
-            root = metaOp;
-            spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, asterixAssignOp, 0);
-            if (anySecondaryKeyIsNullable || isOverridingKeyFieldTypes) {
-                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, selectOp, 0);
-                spec.connect(new OneToOneConnectorDescriptor(spec), selectOp, 0, sortOp, 0);
-            } else {
-                spec.connect(new OneToOneConnectorDescriptor(spec), asterixAssignOp, 0, sortOp, 0);
-            }
-            spec.connect(new OneToOneConnectorDescriptor(spec), sortOp, 0, secondaryBulkLoadOp, 0);
-            spec.addRoot(root);
-            spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
         }
         return spec;
     }

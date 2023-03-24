@@ -123,25 +123,6 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
         this.hasBloomFilter = hasBloomFilter;
     }
 
-    // Without memory components
-    public LSMBTree(IIOManager ioManager, ITreeIndexFrameFactory insertLeafFrameFactory,
-            ITreeIndexFrameFactory deleteLeafFrameFactory, IBufferCache bufferCache, ILSMIndexFileManager fileManager,
-            ILSMDiskComponentFactory componentFactory, ILSMDiskComponentFactory bulkLoadComponentFactory,
-            double bloomFilterFalsePositiveRate, IBinaryComparatorFactory[] cmpFactories, ILSMMergePolicy mergePolicy,
-            ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
-            ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
-            boolean needKeyDupCheck, boolean durable, ITracer tracer) throws HyracksDataException {
-        super(ioManager, bufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
-                ioOpCallbackFactory, pageWriteCallbackFactory, componentFactory, bulkLoadComponentFactory, durable,
-                tracer);
-        this.insertLeafFrameFactory = insertLeafFrameFactory;
-        this.deleteLeafFrameFactory = deleteLeafFrameFactory;
-        this.cmpFactories = cmpFactories;
-        this.needKeyDupCheck = needKeyDupCheck;
-        this.hasBloomFilter = true;
-        this.updateAware = false;
-    }
-
     @Override
     public boolean isPrimaryIndex() {
         return needKeyDupCheck;

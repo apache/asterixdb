@@ -28,7 +28,6 @@ import org.apache.asterix.common.context.AsterixVirtualBufferCacheProvider;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.external.indexing.FilesIndexDescription;
 import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.formats.nontagged.NullIntrospector;
 import org.apache.asterix.metadata.api.IResourceFactoryProvider;
@@ -50,8 +49,6 @@ import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnManagerFactory;
 import org.apache.hyracks.storage.am.lsm.btree.column.dataflow.LSMColumnBTreeLocalResourceFactory;
-import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeLocalResourceFactory;
-import org.apache.hyracks.storage.am.lsm.btree.dataflow.ExternalBTreeWithBuddyLocalResourceFactory;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeLocalResourceFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProvider;
@@ -93,19 +90,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
         ITypeTraitProvider typeTraitProvider = mdProvider.getDataFormat().getTypeTraitProvider();
         switch (dataset.getDatasetType()) {
             case EXTERNAL:
-                return index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))
-                        ? new ExternalBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories,
-                                filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory,
-                                ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
-                                ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
-                                bloomFilterFalsePositiveRate, btreeFields, hasBloomFilter,
-                                typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE)
-                        : new ExternalBTreeWithBuddyLocalResourceFactory(storageManager, typeTraits, cmpFactories,
-                                filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory,
-                                ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
-                                ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
-                                bloomFilterFalsePositiveRate, btreeFields, hasBloomFilter,
-                                typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE);
+                return null;
             case INTERNAL:
                 AsterixVirtualBufferCacheProvider vbcProvider =
                         new AsterixVirtualBufferCacheProvider(dataset.getDatasetId());
@@ -157,7 +142,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
             return primaryTypeTraits;
         } else if (dataset.getDatasetType() == DatasetType.EXTERNAL
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
-            return FilesIndexDescription.EXTERNAL_FILE_INDEX_TYPE_TRAITS;
+            return null;
         }
         Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
@@ -190,7 +175,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
             return dataset.getPrimaryComparatorFactories(metadataProvider, recordType, metaType);
         } else if (dataset.getDatasetType() == DatasetType.EXTERNAL
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
-            return FilesIndexDescription.FILES_INDEX_COMP_FACTORIES;
+            return null;
         }
         Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
@@ -225,7 +210,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL
                 && index.getIndexType() != DatasetConfig.IndexType.SAMPLE) {
             if (index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
-                return FilesIndexDescription.BLOOM_FILTER_FIELDS;
+                return null;
             } else {
                 Index.ValueIndexDetails indexDetails = ((Index.ValueIndexDetails) index.getIndexDetails());
                 return new int[] { indexDetails.getKeyFieldNames().size() };
