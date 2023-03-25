@@ -85,11 +85,6 @@ public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntry> {
     }
 
     @Override
-    public boolean isIndexible() {
-        return false;
-    }
-
-    @Override
     public IRecordReader<? extends SyndEntry> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         try {

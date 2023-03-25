@@ -92,11 +92,6 @@ public class TwitterFirehoseStreamFactory implements IInputStreamFactory {
     }
 
     @Override
-    public boolean isIndexible() {
-        return false;
-    }
-
-    @Override
     public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition) throws HyracksDataException {
         try {
             return new TwitterFirehoseInputStream(configuration, partition);

@@ -162,7 +162,6 @@ import org.apache.asterix.lang.common.statement.LoadStatement;
 import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.lang.common.statement.NodegroupDecl;
 import org.apache.asterix.lang.common.statement.Query;
-import org.apache.asterix.lang.common.statement.RefreshExternalDatasetStatement;
 import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.SynonymDropStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
@@ -939,7 +938,6 @@ Statement SingleStatement() throws ParseException:
     | stmt = CompactStatement()
     | stmt = AnalyzeStatement()
     | stmt = Query()
-    | stmt = RefreshExternalDatasetStatement()
   )
   {
     return stmt;
@@ -1261,22 +1259,6 @@ void DatasetRecordField(RecordTypeDefinition recType) throws ParseException:
   type = TypeReference() ( <NOT> <UNKNOWN> { nullable = false; missable = false; } )?
   {
     recType.addField(fieldName, type, nullable, missable);
-  }
-}
-
-RefreshExternalDatasetStatement RefreshExternalDatasetStatement() throws ParseException:
-{
-  Token startToken = null;
-  Pair<DataverseName,Identifier> nameComponents = null;
-  String datasetName = null;
-}
-{
-  <REFRESH> { startToken = token; } <EXTERNAL> Dataset() nameComponents = QualifiedName()
-  {
-    RefreshExternalDatasetStatement stmt = new RefreshExternalDatasetStatement();
-    stmt.setDataverseName(nameComponents.first);
-    stmt.setDatasetName(nameComponents.second);
-    return addSourceLocation(stmt, startToken);
   }
 }
 
@@ -5638,7 +5620,6 @@ TOKEN [IGNORE_CASE]:
   | <PRESORTED : "pre-sorted">
   | <PRIMARY : "primary">
   | <RAW : "raw">
-  | <REFRESH : "refresh">
   | <RETURN : "return">
   | <RETURNING : "returning">
   | <RIGHT : "right">

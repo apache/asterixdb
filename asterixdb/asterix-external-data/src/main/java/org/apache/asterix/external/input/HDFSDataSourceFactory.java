@@ -32,12 +32,9 @@ import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.api.AsterixInputStream;
-import org.apache.asterix.external.api.IExternalIndexer;
-import org.apache.asterix.external.api.IIndexibleExternalDataSource;
+import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
-import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.asterix.external.input.record.reader.IndexingStreamRecordReader;
 import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.ParquetFileRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
@@ -62,7 +59,7 @@ import org.apache.hyracks.hdfs.dataflow.ConfFactory;
 import org.apache.hyracks.hdfs.dataflow.InputSplitsFactory;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
 
-public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IIndexibleExternalDataSource {
+public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExternalDataSourceFactory {
 
     private static final long serialVersionUID = 1L;
     private static final List<String> recordReaderNames = Collections.singletonList("hdfs");
@@ -77,7 +74,6 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     protected static Scheduler hdfsScheduler;
     protected static Boolean initialized = false;
     protected static Object initLock = new Object();
-    protected List<ExternalFile> files;
     protected Map<String, String> configuration;
     protected Class<?> recordClass;
     protected boolean indexingOp = false;
@@ -107,19 +103,14 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
             confFactory = new ConfFactory(conf);
             clusterLocations = getPartitionConstraint();
             int numPartitions = clusterLocations.getLocations().length;
-            // if files list was set, we restrict the splits to the list
-            InputSplit[] inputSplits;
-            if (files == null) {
-                inputSplits = getInputSplits(conf, numPartitions);
-            } else {
-                inputSplits = HDFSUtils.getSplits(conf, files);
-            }
-            readSchedule = hdfsScheduler.getLocationConstraints(inputSplits);
-            inputSplitsFactory = new InputSplitsFactory(inputSplits);
+            InputSplit[] configInputSplits = getInputSplits(conf, numPartitions);
+            readSchedule = hdfsScheduler.getLocationConstraints(configInputSplits);
+            inputSplitsFactory = new InputSplitsFactory(configInputSplits);
             read = new boolean[readSchedule.length];
             Arrays.fill(read, false);
             if (formatString == null || formatString.equals(ExternalDataConstants.FORMAT_HDFS_WRITABLE)) {
-                RecordReader<?, ?> reader = conf.getInputFormat().getRecordReader(inputSplits[0], conf, Reporter.NULL);
+                RecordReader<?, ?> reader =
+                        conf.getInputFormat().getRecordReader(configInputSplits[0], conf, Reporter.NULL);
                 this.recordClass = reader.createValue().getClass();
                 reader.close();
             } else if (formatString.equals(ExternalDataConstants.FORMAT_PARQUET)) {
@@ -152,24 +143,15 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
         return conf.getInputFormat().getSplits(conf, numPartitions);
     }
 
-    // Used to tell the factory to restrict the splits to the intersection between this list a
-    // actual files on hde
-    @Override
-    public void setSnapshot(List<ExternalFile> files, boolean indexingOp) {
-        this.files = files;
-        this.indexingOp = indexingOp;
-    }
-
     /*
      * The method below was modified to take care of the following
      * 1. when target files are not null, it generates a file aware input stream that validate
      * against the files
      * 2. if the data is binary, it returns a generic reader */
-    public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition, IExternalIndexer indexer)
-            throws HyracksDataException {
+    public AsterixInputStream createInputStream(IHyracksTaskContext ctx) throws HyracksDataException {
         try {
             restoreConfig(ctx);
-            return new HDFSInputStream(read, inputSplits, readSchedule, nodeName, conf, configuration, files, indexer);
+            return new HDFSInputStream(read, inputSplits, readSchedule, nodeName, conf, configuration);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -213,10 +195,6 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
         }
     }
 
-    public JobConf getJobConf() throws HyracksDataException {
-        return confFactory.getConf();
-    }
-
     @Override
     public DataSourceType getDataSourceType() {
         return ExternalDataUtils.getDataSourceType(configuration);
@@ -235,15 +213,10 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     public IRecordReader<? extends Object> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         try {
-            IExternalIndexer indexer = null;
             if (recordReaderClazz != null) {
                 StreamRecordReader streamReader = (StreamRecordReader) recordReaderClazz.getConstructor().newInstance();
-                streamReader.configure(ctx, createInputStream(ctx, partition, indexer), configuration);
-                if (indexer != null) {
-                    return new IndexingStreamRecordReader(streamReader, indexer);
-                } else {
-                    return streamReader;
-                }
+                streamReader.configure(ctx, createInputStream(ctx), configuration);
+                return streamReader;
             }
             restoreConfig(ctx);
             JobConf readerConf = conf;
@@ -257,8 +230,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
                  */
                 readerConf = confFactory.getConf();
             }
-            return createRecordReader(configuration, read, inputSplits, readSchedule, nodeName, readerConf, files,
-                    indexer, ctx.getWarningCollector());
+            return createRecordReader(configuration, read, inputSplits, readSchedule, nodeName, readerConf,
+                    ctx.getWarningCollector());
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -270,28 +243,18 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IInd
     }
 
     @Override
-    public boolean isIndexible() {
-        return true;
-    }
-
-    @Override
-    public boolean isIndexingOp() {
-        return ((files != null) && indexingOp);
-    }
-
-    @Override
     public List<String> getRecordReaderNames() {
         return recordReaderNames;
     }
 
     private static IRecordReader<? extends Object> createRecordReader(Map<String, String> configuration, boolean[] read,
-            InputSplit[] inputSplits, String[] readSchedule, String nodeName, JobConf conf, List<ExternalFile> files,
-            IExternalIndexer indexer, IWarningCollector warningCollector) throws IOException {
+            InputSplit[] inputSplits, String[] readSchedule, String nodeName, JobConf conf,
+            IWarningCollector warningCollector) {
         if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT.trim())
                 .equals(ExternalDataConstants.INPUT_FORMAT_PARQUET)) {
             return new ParquetFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, warningCollector);
         } else {
-            return new HDFSRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, files, indexer);
+            return new HDFSRecordReader<>(read, inputSplits, readSchedule, nodeName, conf);
         }
     }
 }

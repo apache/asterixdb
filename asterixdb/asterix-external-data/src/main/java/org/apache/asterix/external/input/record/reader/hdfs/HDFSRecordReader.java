@@ -19,35 +19,18 @@
 package org.apache.asterix.external.input.record.reader.hdfs;
 
 import java.io.IOException;
-import java.util.List;
 
-import org.apache.asterix.external.api.IExternalIndexer;
-import org.apache.asterix.external.api.IIndexingDatasource;
-import org.apache.asterix.external.indexing.ExternalFile;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class HDFSRecordReader<K, V extends Writable> extends AbstractHDFSRecordReader<K, V>
-        implements IIndexingDatasource {
-    // Indexing variables
-    private final IExternalIndexer indexer;
-    private final List<ExternalFile> snapshot;
-    private final FileSystem hdfs;
+public class HDFSRecordReader<K, V extends Writable> extends AbstractHDFSRecordReader<K, V> {
 
     public HDFSRecordReader(boolean[] read, InputSplit[] inputSplits, String[] readSchedule, String nodeName,
-            JobConf conf, List<ExternalFile> snapshot, IExternalIndexer indexer) throws IOException {
+            JobConf conf) {
         super(read, inputSplits, readSchedule, nodeName, conf);
-        this.indexer = indexer;
-        this.snapshot = snapshot;
-        this.hdfs = FileSystem.get(conf);
     }
 
     @SuppressWarnings("unchecked")
@@ -58,47 +41,17 @@ public class HDFSRecordReader<K, V extends Writable> extends AbstractHDFSRecordR
             key = reader.createKey();
             value = reader.createValue();
         }
-        if (indexer != null) {
-            try {
-                indexer.reset(this);
-            } catch (Exception e) {
-                throw HyracksDataException.create(e);
-            }
-        }
         return reader;
     }
 
     @Override
-    protected boolean onNextInputSplit() throws IOException {
-        if (snapshot != null) {
-            String fileName = ((FileSplit) (inputSplits[currentSplitIndex])).getPath().toUri().getPath();
-            FileStatus fileStatus = hdfs.getFileStatus(new Path(fileName));
-            // Skip if not the same file stored in the files snapshot
-            if (fileStatus.getModificationTime() != snapshot.get(currentSplitIndex).getLastModefiedTime().getTime()) {
-                return true;
-            }
-        }
+    protected boolean onNextInputSplit() {
         return false;
     }
 
     @Override
     public boolean stop() {
         return false;
-    }
-
-    @Override
-    public IExternalIndexer getIndexer() {
-        return indexer;
-    }
-
-    @Override
-    public List<ExternalFile> getSnapshot() {
-        return snapshot;
-    }
-
-    @Override
-    public int getCurrentSplitIndex() {
-        return currentSplitIndex;
     }
 
     @Override

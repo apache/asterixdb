@@ -125,11 +125,6 @@ public class TwitterRecordReaderFactory implements IRecordReaderFactory<char[]> 
     }
 
     @Override
-    public boolean isIndexible() {
-        return false;
-    }
-
-    @Override
     public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         IRecordReader<? extends char[]> recordReader;

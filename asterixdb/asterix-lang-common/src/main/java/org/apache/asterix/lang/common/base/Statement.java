@@ -109,7 +109,6 @@ public interface Statement extends ILangExpression {
         ANALYZE,
         ANALYZE_DROP,
         COMPACT,
-        EXTERNAL_DATASET_REFRESH,
         SUBSCRIBE_FEED,
         EXTENSION,
     }

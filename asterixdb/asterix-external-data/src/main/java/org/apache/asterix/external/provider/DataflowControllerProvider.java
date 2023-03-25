@@ -28,7 +28,6 @@ import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
-import org.apache.asterix.external.api.IIndexingDatasource;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
@@ -43,7 +42,6 @@ import org.apache.asterix.external.dataflow.ChangeFeedWithMetaDataFlowController
 import org.apache.asterix.external.dataflow.FeedRecordDataFlowController;
 import org.apache.asterix.external.dataflow.FeedStreamDataFlowController;
 import org.apache.asterix.external.dataflow.FeedWithMetaDataFlowController;
-import org.apache.asterix.external.dataflow.IndexingDataFlowController;
 import org.apache.asterix.external.dataflow.RecordDataFlowController;
 import org.apache.asterix.external.dataflow.StreamDataFlowController;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -61,7 +59,7 @@ public class DataflowControllerProvider {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static IDataFlowController getDataflowController(ARecordType recordType, IHyracksTaskContext ctx,
             int partition, IExternalDataSourceFactory dataSourceFactory, IDataParserFactory dataParserFactory,
-            Map<String, String> configuration, boolean indexingOp, boolean isFeed, FeedLogManager feedLogManager)
+            Map<String, String> configuration, boolean isFeed, FeedLogManager feedLogManager)
             throws HyracksDataException {
         try {
             switch (dataSourceFactory.getDataSourceType()) {
@@ -72,10 +70,7 @@ public class DataflowControllerProvider {
                     IRecordDataParser<?> dataParser = recordParserFactory.createRecordParser(ctx);
                     // TODO(ali): revisit to think about passing data source name via setter or via createRecordParser
                     dataParser.configure(recordReader.getDataSourceName(), recordReader.getLineNumber());
-                    if (indexingOp) {
-                        return new IndexingDataFlowController(ctx, dataParser, recordReader,
-                                ((IIndexingDatasource) recordReader).getIndexer());
-                    } else if (isFeed) {
+                    if (isFeed) {
                         boolean isChangeFeed = ExternalDataUtils.isChangeFeed(configuration);
                         boolean isRecordWithMeta = ExternalDataUtils.isRecordWithMeta(configuration);
                         if (isRecordWithMeta) {

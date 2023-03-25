@@ -83,9 +83,4 @@ public class SocketServerInputStreamFactory implements IInputStreamFactory {
     public DataSourceType getDataSourceType() {
         return DataSourceType.STREAM;
     }
-
-    @Override
-    public boolean isIndexible() {
-        return false;
-    }
 }

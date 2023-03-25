@@ -49,11 +49,6 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
     }
 
     @Override
-    public boolean isIndexible() {
-        return false;
-    }
-
-    @Override
     public abstract AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException;
 

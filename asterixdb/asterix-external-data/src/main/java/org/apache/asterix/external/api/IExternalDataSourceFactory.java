@@ -68,15 +68,6 @@ public interface IExternalDataSourceFactory extends Serializable {
             throws AlgebricksException, HyracksDataException;
 
     /**
-     * Specify whether the external data source can be indexed
-     *
-     * @return
-     */
-    default boolean isIndexible() {
-        return false;
-    }
-
-    /**
      * returns the passed partition constraints if not null, otherwise returns round robin absolute partition
      * constraints that matches the count.
      *

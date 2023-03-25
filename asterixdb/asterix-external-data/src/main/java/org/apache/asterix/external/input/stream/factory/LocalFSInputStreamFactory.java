@@ -86,11 +86,6 @@ public class LocalFSInputStreamFactory implements IInputStreamFactory {
     }
 
     @Override
-    public boolean isIndexible() {
-        return false;
-    }
-
-    @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
             IWarningCollector warningCollector) throws AsterixException {
         this.configuration = configuration;

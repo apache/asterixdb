@@ -94,7 +94,6 @@ import org.apache.asterix.common.utils.JobUtils.ProgressState;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
-import org.apache.asterix.external.indexing.IndexingConstants;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -187,7 +186,6 @@ import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
-import org.apache.asterix.metadata.lock.ExternalDatasetsRegistry;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
@@ -498,9 +496,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         break;
                     case COMPACT:
                         handleCompactStatement(metadataProvider, stmt, hcc);
-                        break;
-                    case EXTERNAL_DATASET_REFRESH:
-                        handleExternalDatasetRefreshStatement(metadataProvider, stmt, hcc);
                         break;
                     case FUNCTION_DECL:
                         handleDeclareFunctionStatement(metadataProvider, stmt);
@@ -1549,9 +1544,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Index index, EnumSet<JobFlag> jobFlags, SourceLocation sourceLoc) throws Exception {
         ProgressState progress = ProgressState.NO_PROGRESS;
         boolean bActiveTxn = true;
-        Index filesIndex = null;
-        boolean firstExternalDatasetIndex = false;
-        boolean datasetLocked = false;
         MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
         JobSpecification spec;
         try {
@@ -1559,7 +1551,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 validateDatasetState(metadataProvider, ds, sourceLoc);
             } else if (ds.getDatasetType() == DatasetType.EXTERNAL) {
-                // External dataset
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, dataset() + " using "
                         + ((ExternalDatasetDetails) ds.getDatasetDetails()).getAdapter() + " adapter can't be indexed");
             }
@@ -1666,17 +1657,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     index.getDatasetName(), index.getIndexName());
             index.setPendingOp(MetadataUtil.PENDING_NO_OP);
             MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), index);
-            // add another new files index with PendingNoOp after deleting the index with
-            // PendingAddOp
-            if (firstExternalDatasetIndex) {
-                MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), index.getDataverseName(),
-                        index.getDatasetName(), filesIndex.getIndexName());
-                filesIndex.setPendingOp(MetadataUtil.PENDING_NO_OP);
-                MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), filesIndex);
-                // update transaction timestamp
-                ((ExternalDatasetDetails) ds.getDatasetDetails()).setRefreshTimestamp(new Date());
-                MetadataManager.INSTANCE.updateDataset(mdTxnCtx, ds);
-            }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             if (bActiveTxn) {
@@ -1701,38 +1681,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
                 }
 
-                if (firstExternalDatasetIndex) {
-                    mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-                    metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                    try {
-                        // Drop External Files from metadata
-                        MetadataManager.INSTANCE.dropDatasetExternalFiles(mdTxnCtx, ds);
-                        MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                    } catch (Exception e2) {
-                        e.addSuppressed(e2);
-                        abort(e, e2, mdTxnCtx);
-                        throw new IllegalStateException(
-                                "System is inconsistent state: pending files for(" + index.getDataverseName() + "."
-                                        + index.getDatasetName() + ") couldn't be removed from the metadata",
-                                e);
-                    }
-                    mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-                    metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                    try {
-                        // Drop the files index from metadata
-                        MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(),
-                                index.getDataverseName(), index.getDatasetName(),
-                                IndexingConstants.getFilesIndexName(index.getDatasetName()));
-                        MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-                    } catch (Exception e2) {
-                        e.addSuppressed(e2);
-                        abort(e, e2, mdTxnCtx);
-                        throw new IllegalStateException("System is inconsistent state: pending index("
-                                + index.getDataverseName() + "." + index.getDatasetName() + "."
-                                + IndexingConstants.getFilesIndexName(index.getDatasetName())
-                                + ") couldn't be removed from the metadata", e);
-                    }
-                }
                 // remove the record from the metadata.
                 mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -1749,10 +1697,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
             throw e;
-        } finally {
-            if (datasetLocked) {
-                ExternalDatasetsRegistry.INSTANCE.buildIndexEnd(ds, firstExternalDatasetIndex);
-            }
         }
     }
 
@@ -1843,7 +1787,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             doDropDataverse(stmtDropDataverse, metadataProvider, hcc, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
-            ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
         }
     }
 
@@ -1856,7 +1799,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         List<FeedEventsListener> feedsToStop = new ArrayList<>();
-        List<Dataset> externalDatasetsToDeregister = new ArrayList<>();
         List<JobSpecification> jobsToExecute = new ArrayList<>();
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
@@ -1906,13 +1848,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         }
                         break;
                     case EXTERNAL:
-                        indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
-                        for (Index index : indexes) {
-                            jobsToExecute
-                                    .add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset, sourceLoc));
-                        }
-                        externalDatasetsToDeregister.add(dataset);
-                        break;
                     case VIEW:
                         break;
                 }
@@ -1938,10 +1873,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
-
-            for (Dataset externalDataset : externalDatasetsToDeregister) {
-                ExternalDatasetsRegistry.INSTANCE.removeDatasetInfo(externalDataset);
-            }
 
             for (FeedEventsListener feedListener : feedsToStop) {
                 if (feedListener.getState() != ActivityState.STOPPED) {
@@ -2045,7 +1976,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     requestParameters, true, sourceLoc);
         } finally {
             metadataProvider.getLocks().unlock();
-            ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
         }
     }
 
@@ -2154,7 +2084,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             doDropIndex(metadataProvider, stmtIndexDrop, dataverseName, datasetName, hcc, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
-            ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
         }
     }
 
@@ -2165,8 +2094,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String indexName = stmtIndexDrop.getIndexName().getValue();
         ProgressState progress = ProgressState.NO_PROGRESS;
         List<JobSpecification> jobsToExecute = new ArrayList<>();
-        // For external index
-        boolean dropFilesIndex = false;
 
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -2208,8 +2135,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
                 // #. finally, delete the existing index
                 MetadataManager.INSTANCE.dropIndex(mdTxnCtx, dataverseName, datasetName, indexName);
-            } else {
-                // External dataset
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
@@ -2236,10 +2161,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 try {
                     MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
                             datasetName, indexName);
-                    if (dropFilesIndex) {
-                        MetadataManager.INSTANCE.dropIndex(metadataProvider.getMetadataTxnContext(), dataverseName,
-                                datasetName, IndexingConstants.getFilesIndexName(datasetName));
-                    }
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 } catch (Exception e2) {
                     e.addSuppressed(e2);
@@ -2648,7 +2569,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             doDropView(metadataProvider, stmtDrop, dataverseName, viewName);
         } finally {
             metadataProvider.getLocks().unlock();
-            ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
         }
     }
 
@@ -4479,7 +4399,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw e;
         } finally {
             metadataProvider.getLocks().unlock();
-            ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
         }
     }
 
@@ -4520,8 +4439,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             @Override
             public void unlock() {
                 metadataProvider.getLocks().unlock();
-                // release external datasets' locks acquired during compilation of the query
-                ExternalDatasetsRegistry.INSTANCE.releaseAcquiredLocks(metadataProvider);
                 compilationLock.readLock().unlock();
             }
         };
@@ -4743,11 +4660,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         } finally {
             metadataProvider.getLocks().unlock();
         }
-    }
-
-    protected void handleExternalDatasetRefreshStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
-        // no op
     }
 
     @Override

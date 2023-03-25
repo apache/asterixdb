@@ -174,9 +174,6 @@ public class IndexUtil {
             secondaryIndexHelper = SecondaryTreeIndexOperationsHelper.createIndexOperationsHelper(dataset, index,
                     metadataProvider, sourceLoc);
         }
-        if (files != null) {
-            ((SecondaryIndexOperationsHelper) secondaryIndexHelper).setExternalFiles(files);
-        }
         return secondaryIndexHelper.buildLoadingJobSpec();
     }
 

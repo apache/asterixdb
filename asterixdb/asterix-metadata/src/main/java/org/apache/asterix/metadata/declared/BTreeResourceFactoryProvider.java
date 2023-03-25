@@ -142,7 +142,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
             return primaryTypeTraits;
         } else if (dataset.getDatasetType() == DatasetType.EXTERNAL
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
-            return null;
+            return new ITypeTraits[0];
         }
         Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
@@ -175,7 +175,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
             return dataset.getPrimaryComparatorFactories(metadataProvider, recordType, metaType);
         } else if (dataset.getDatasetType() == DatasetType.EXTERNAL
                 && index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
-            return null;
+            return new IBinaryComparatorFactory[0];
         }
         Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
@@ -210,7 +210,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
         if (dataset.getDatasetType() == DatasetType.EXTERNAL
                 && index.getIndexType() != DatasetConfig.IndexType.SAMPLE) {
             if (index.getIndexName().equals(IndexingConstants.getFilesIndexName(dataset.getDatasetName()))) {
-                return null;
+                return new int[0];
             } else {
                 Index.ValueIndexDetails indexDetails = ((Index.ValueIndexDetails) index.getIndexDetails());
                 return new int[] { indexDetails.getKeyFieldNames().size() };

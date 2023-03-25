@@ -19,30 +19,20 @@
 package org.apache.asterix.external.input.stream;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.AsterixInputStream;
-import org.apache.asterix.external.api.IExternalIndexer;
-import org.apache.asterix.external.api.IIndexingDatasource;
-import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.external.input.record.reader.hdfs.EmptyRecordReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class HDFSInputStream extends AsterixInputStream implements IIndexingDatasource {
+public class HDFSInputStream extends AsterixInputStream {
 
     private RecordReader<Object, Text> reader;
     private Text value = null;
@@ -54,16 +44,11 @@ public class HDFSInputStream extends AsterixInputStream implements IIndexingData
     private String[] readSchedule;
     private String nodeName;
     private JobConf conf;
-    // Indexing variables
-    private final IExternalIndexer indexer;
-    private final List<ExternalFile> snapshot;
-    private final FileSystem hdfs;
     private int pos = 0;
 
     @SuppressWarnings("unchecked")
     public HDFSInputStream(boolean read[], InputSplit[] inputSplits, String[] readSchedule, String nodeName,
-            JobConf conf, Map<String, String> configuration, List<ExternalFile> snapshot, IExternalIndexer indexer)
-            throws IOException, AsterixException {
+            JobConf conf, Map<String, String> configuration) throws IOException, AsterixException {
         this.read = read;
         this.inputSplits = inputSplits;
         this.readSchedule = readSchedule;
@@ -71,16 +56,8 @@ public class HDFSInputStream extends AsterixInputStream implements IIndexingData
         this.conf = conf;
         this.inputFormat = conf.getInputFormat();
         this.reader = new EmptyRecordReader<Object, Text>();
-        this.snapshot = snapshot;
-        this.hdfs = FileSystem.get(conf);
-        this.indexer = indexer;
         nextInputSplit();
         this.value = new Text();
-        if (snapshot != null) {
-            if (currentSplitIndex < snapshot.size()) {
-                indexer.reset(this);
-            }
-        }
     }
 
     @Override
@@ -177,16 +154,6 @@ public class HDFSInputStream extends AsterixInputStream implements IIndexingData
                         continue;
                     }
                 }
-                if (snapshot != null) {
-                    String fileName = ((FileSplit) (inputSplits[currentSplitIndex])).getPath().toUri().getPath();
-                    FileStatus fileStatus = hdfs.getFileStatus(new Path(fileName));
-                    // Skip if not the same file stored in the files snapshot
-                    if (fileStatus.getModificationTime() != snapshot.get(currentSplitIndex).getLastModefiedTime()
-                            .getTime()) {
-                        continue;
-                    }
-                }
-
                 reader.close();
                 reader = getRecordReader(currentSplitIndex);
                 return true;
@@ -202,33 +169,6 @@ public class HDFSInputStream extends AsterixInputStream implements IIndexingData
             key = reader.createKey();
             value = reader.createValue();
         }
-        if (indexer != null) {
-            try {
-                indexer.reset(this);
-            } catch (Exception e) {
-                throw HyracksDataException.create(e);
-            }
-        }
-        return reader;
-    }
-
-    @Override
-    public IExternalIndexer getIndexer() {
-        return indexer;
-    }
-
-    @Override
-    public List<ExternalFile> getSnapshot() {
-        return snapshot;
-    }
-
-    @Override
-    public int getCurrentSplitIndex() {
-        return currentSplitIndex;
-    }
-
-    @Override
-    public RecordReader<?, ? extends Writable> getReader() {
         return reader;
     }
 }

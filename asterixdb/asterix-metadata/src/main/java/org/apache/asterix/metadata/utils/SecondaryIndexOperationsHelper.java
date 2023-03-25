@@ -29,7 +29,6 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
@@ -119,7 +118,6 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
     protected int[] primaryFilterFields;
     protected int[] primaryBTreeFields;
     protected int[] secondaryBTreeFields;
-    protected List<ExternalFile> externalFiles;
     protected int numPrimaryKeys;
     protected final SourceLocation sourceLoc;
     protected final int sortNumFrames;
@@ -517,10 +515,6 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         AssignRuntimeFactory assign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
         return new AlgebricksMetaOperatorDescriptor(spec, 1, 1, new IPushRuntimeFactory[] { assign },
                 new RecordDescriptor[] { secondaryRecDesc });
-    }
-
-    public void setExternalFiles(List<ExternalFile> externalFiles) {
-        this.externalFiles = externalFiles;
     }
 
     @Override
