@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.btree.dataflow;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -34,7 +35,7 @@ import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 
 public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     protected final int[] lowKeyFields;
     protected final int[] highKeyFields;
@@ -55,6 +56,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
     protected final ITupleFilterFactory tupleFilterFactory;
     protected final long outputLimit;
     protected final ITupleProjectorFactory tupleProjectorFactory;
+    protected final ITuplePartitionerFactory tuplePartitionerFactory;
+    protected final int[][] map;
 
     public BTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
@@ -65,7 +68,7 @@ public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
         this(spec, outRecDesc, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory,
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, minFilterFieldIndexes,
                 maxFilterFieldIndexes, appendIndexFilter, nonFilterWriterFactory, null, -1, false, null, null,
-                DefaultTupleProjectorFactory.INSTANCE);
+                DefaultTupleProjectorFactory.INSTANCE, null, null);
     }
 
     public BTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
@@ -75,7 +78,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, boolean appendIndexFilter,
             IMissingWriterFactory nonFilterWriterFactory, ITupleFilterFactory tupleFilterFactory, long outputLimit,
             boolean appendOpCallbackProceedResult, byte[] searchCallbackProceedResultFalseValue,
-            byte[] searchCallbackProceedResultTrueValue, ITupleProjectorFactory tupleProjectorFactory) {
+            byte[] searchCallbackProceedResultTrueValue, ITupleProjectorFactory tupleProjectorFactory,
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] map) {
         super(spec, 1, 1);
         this.indexHelperFactory = indexHelperFactory;
         this.retainInput = retainInput;
@@ -97,6 +101,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
         this.searchCallbackProceedResultFalseValue = searchCallbackProceedResultFalseValue;
         this.searchCallbackProceedResultTrueValue = searchCallbackProceedResultTrueValue;
         this.tupleProjectorFactory = tupleProjectorFactory;
+        this.tuplePartitionerFactory = tuplePartitionerFactory;
+        this.map = map;
     }
 
     @Override
@@ -107,7 +113,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
                 lowKeyInclusive, highKeyInclusive, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, appendIndexFilter,
                 nonFilterWriterFactory, tupleFilterFactory, outputLimit, appendOpCallbackProceedResult,
-                searchCallbackProceedResultFalseValue, searchCallbackProceedResultTrueValue, tupleProjectorFactory);
+                searchCallbackProceedResultFalseValue, searchCallbackProceedResultTrueValue, tupleProjectorFactory,
+                tuplePartitionerFactory, map);
     }
 
     @Override

@@ -21,25 +21,29 @@ package org.apache.hyracks.dataflow.common.data.partition;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
-import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
-import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitioner;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 
-public class FieldHashPartitionComputerFactory implements ITuplePartitionComputerFactory {
+public class FieldHashPartitionerFactory implements ITuplePartitionerFactory {
+
     private static final long serialVersionUID = 1L;
     private final int[] hashFields;
     private final IBinaryHashFunctionFactory[] hashFunctionFactories;
+    private final int numPartitions;
 
-    public FieldHashPartitionComputerFactory(int[] hashFields, IBinaryHashFunctionFactory[] hashFunctionFactories) {
+    public FieldHashPartitionerFactory(int[] hashFields, IBinaryHashFunctionFactory[] hashFunctionFactories,
+            int numPartitions) {
         this.hashFields = hashFields;
         this.hashFunctionFactories = hashFunctionFactories;
+        this.numPartitions = numPartitions;
     }
 
     @Override
-    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext ctx) {
+    public ITuplePartitioner createPartitioner(IHyracksTaskContext ctx) {
         final IBinaryHashFunction[] hashFunctions = new IBinaryHashFunction[hashFunctionFactories.length];
         for (int i = 0; i < hashFunctionFactories.length; ++i) {
             hashFunctions[i] = hashFunctionFactories[i].createBinaryHashFunction();
         }
-        return new FieldHashPartitionComputer(hashFields, hashFunctions);
+        return new FieldHashPartitioner(hashFields, hashFunctions, numPartitions);
     }
 }

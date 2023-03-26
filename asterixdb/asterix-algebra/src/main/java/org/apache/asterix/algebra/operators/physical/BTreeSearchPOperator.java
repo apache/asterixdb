@@ -84,7 +84,6 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
     private final List<LogicalVariable> highKeyVarList;
     private final boolean isPrimaryIndex;
     private final boolean isEqCondition;
-    private Object implConfig;
 
     public BTreeSearchPOperator(IDataSourceIndex<String, DataSourceId> idx, INodeDomain domain,
             boolean requiresBroadcast, boolean isPrimaryIndex, boolean isEqCondition,
@@ -94,14 +93,6 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         this.isEqCondition = isEqCondition;
         this.lowKeyVarList = lowKeyVarList;
         this.highKeyVarList = highKeyVarList;
-    }
-
-    public void setImplConfig(Object implConfig) {
-        this.implConfig = implConfig;
-    }
-
-    public Object getImplConfig() {
-        return implConfig;
     }
 
     @Override
@@ -177,7 +168,8 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                 jobGenParams.isLowKeyInclusive(), jobGenParams.isHighKeyInclusive(), propagateFilter,
                 nonFilterWriterFactory, minFilterFieldIndexes, maxFilterFieldIndexes, tupleFilterFactory, outputLimit,
                 unnestMap.getGenerateCallBackProceedResultVar(),
-                isPrimaryIndexPointSearch(op, context.getPhysicalOptimizationConfig()), tupleProjectorFactory);
+                useBatchPointSearch(op, context.getPhysicalOptimizationConfig()), tupleProjectorFactory,
+                isPrimaryIndexPointSearch());
         IOperatorDescriptor opDesc = btreeSearch.first;
         opDesc.setSourceLocation(unnestMap.getSourceLocation());
 
@@ -188,18 +180,20 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         builder.contributeGraphEdge(srcExchange, 0, unnestMap, 0);
     }
 
-    /**
-     * Check whether we can use {@link LSMBTreeBatchPointSearchCursor} to perform point-lookups on the primary index
-     */
-    private boolean isPrimaryIndexPointSearch(ILogicalOperator op, PhysicalOptimizationConfig config) {
-        if (!config.isBatchLookupEnabled() || !isEqCondition || !isPrimaryIndex
-                || !lowKeyVarList.equals(highKeyVarList)) {
+    private boolean isPrimaryIndexPointSearch() {
+        if (!isEqCondition || !isPrimaryIndex || !lowKeyVarList.equals(highKeyVarList)) {
             return false;
         }
         Index searchIndex = ((DataSourceIndex) idx).getIndex();
         int numberOfKeyFields = ((Index.ValueIndexDetails) searchIndex.getIndexDetails()).getKeyFieldNames().size();
+        return lowKeyVarList.size() == numberOfKeyFields && highKeyVarList.size() == numberOfKeyFields;
+    }
 
-        if (lowKeyVarList.size() != numberOfKeyFields || highKeyVarList.size() != numberOfKeyFields) {
+    /**
+     * Check whether we can use {@link LSMBTreeBatchPointSearchCursor} to perform point-lookups on the primary index
+     */
+    private boolean useBatchPointSearch(ILogicalOperator op, PhysicalOptimizationConfig config) {
+        if (!config.isBatchLookupEnabled() || !isPrimaryIndexPointSearch()) {
             return false;
         }
 

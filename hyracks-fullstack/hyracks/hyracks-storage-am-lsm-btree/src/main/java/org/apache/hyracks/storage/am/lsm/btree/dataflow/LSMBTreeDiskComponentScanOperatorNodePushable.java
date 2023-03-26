@@ -27,7 +27,9 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexSearchOperatorNodePushable;
+import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 
@@ -37,21 +39,23 @@ public class LSMBTreeDiskComponentScanOperatorNodePushable extends IndexSearchOp
             RecordDescriptor inputRecDesc, IIndexDataflowHelperFactory indexHelperFactory,
             ISearchOperationCallbackFactory searchCallbackFactory) throws HyracksDataException {
         super(ctx, inputRecDesc, partition, null, null, indexHelperFactory, false, false, null, searchCallbackFactory,
-                false, null);
+                false, null, null, -1, false, null, null, DefaultTupleProjectorFactory.INSTANCE, null, null);
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         try {
-            ((ILSMIndexAccessor) indexAccessor).scanDiskComponents(cursor);
-            writeSearchResults(0);
+            for (int p = 0; p < partitions.length; p++) {
+                ((ILSMIndexAccessor) indexAccessors[p]).scanDiskComponents(cursors[p]);
+                writeSearchResults(0, cursors[p]);
+            }
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
     }
 
     @Override
-    protected ISearchPredicate createSearchPredicate() {
+    protected ISearchPredicate createSearchPredicate(IIndex index) {
         // do nothing
         // no need to create search predicate for disk component scan operation
         return null;
@@ -63,7 +67,7 @@ public class LSMBTreeDiskComponentScanOperatorNodePushable extends IndexSearchOp
     }
 
     @Override
-    protected int getFieldCount() {
+    protected int getFieldCount(IIndex index) {
         return ((ITreeIndex) index).getFieldCount() + 2;
     }
 

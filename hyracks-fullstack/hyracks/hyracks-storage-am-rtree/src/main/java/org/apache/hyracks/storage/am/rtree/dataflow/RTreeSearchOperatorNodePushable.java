@@ -31,23 +31,15 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexSearchOperatorNodePush
 import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
 import org.apache.hyracks.storage.am.rtree.impls.SearchPredicate;
 import org.apache.hyracks.storage.am.rtree.util.RTreeUtils;
+import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.MultiComparator;
 
 public class RTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePushable {
+
     protected PermutingFrameTupleReference searchKey;
     protected MultiComparator cmp;
-
-    public RTreeSearchOperatorNodePushable(IHyracksTaskContext ctx, int partition, RecordDescriptor inputRecDesc,
-            int[] keyFields, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
-            IIndexDataflowHelperFactory indexHelperFactory, boolean retainInput, boolean retainMissing,
-            IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
-            boolean appendIndexFilter, IMissingWriterFactory nonFilterWriterFactory) throws HyracksDataException {
-        this(ctx, partition, inputRecDesc, keyFields, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
-                retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, appendIndexFilter,
-                nonFilterWriterFactory, false, null, null);
-    }
 
     public RTreeSearchOperatorNodePushable(IHyracksTaskContext ctx, int partition, RecordDescriptor inputRecDesc,
             int[] keyFields, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes,
@@ -60,7 +52,7 @@ public class RTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
         super(ctx, inputRecDesc, partition, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, appendIndexFilter,
                 nonFilterWriterFactory, null, -1, appendOpCallbackProceedResult, searchCallbackProceedResultFalseValue,
-                searchCallbackProceedResultTrueValue, DefaultTupleProjectorFactory.INSTANCE);
+                searchCallbackProceedResultTrueValue, DefaultTupleProjectorFactory.INSTANCE, null, null);
         if (keyFields != null && keyFields.length > 0) {
             searchKey = new PermutingFrameTupleReference();
             searchKey.setFieldPermutation(keyFields);
@@ -68,7 +60,7 @@ public class RTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     }
 
     @Override
-    protected ISearchPredicate createSearchPredicate() {
+    protected ISearchPredicate createSearchPredicate(IIndex index) {
         ITreeIndex treeIndex = (ITreeIndex) index;
         cmp = RTreeUtils.getSearchMultiComparator(treeIndex.getComparatorFactories(), searchKey);
         return new SearchPredicate(searchKey, cmp, minFilterKey, maxFilterKey);
@@ -88,7 +80,7 @@ public class RTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
     }
 
     @Override
-    protected int getFieldCount() {
+    protected int getFieldCount(IIndex index) {
         return ((ITreeIndex) index).getFieldCount();
     }
 

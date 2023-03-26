@@ -107,7 +107,7 @@ public class QueryIndexDatasource extends FunctionDataSource {
             throws AlgebricksException {
         return metadataProvider.buildBtreeRuntime(jobSpec, opSchema, typeEnv, context, true, false, null, ds, indexName,
                 null, null, true, true, false, null, null, null, tupleFilterFactory, outputLimit, false, false,
-                DefaultTupleProjectorFactory.INSTANCE);
+                DefaultTupleProjectorFactory.INSTANCE, false);
     }
 
     @Override

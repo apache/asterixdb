@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.btree.dataflow;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -39,11 +40,12 @@ public class LSMBTreeBatchPointSearchOperatorDescriptor extends BTreeSearchOpera
             IIndexDataflowHelperFactory indexHelperFactory, boolean retainInput, boolean retainMissing,
             IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, ITupleFilterFactory tupleFilterFactory,
-            long outputLimit, ITupleProjectorFactory tupleProjectorFactory) {
+            long outputLimit, ITupleProjectorFactory tupleProjectorFactory,
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] map) {
         super(spec, outRecDesc, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory,
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, minFilterFieldIndexes,
                 maxFilterFieldIndexes, false, null, tupleFilterFactory, outputLimit, false, null, null,
-                tupleProjectorFactory);
+                tupleProjectorFactory, tuplePartitionerFactory, map);
     }
 
     @Override
@@ -53,7 +55,7 @@ public class LSMBTreeBatchPointSearchOperatorDescriptor extends BTreeSearchOpera
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), lowKeyFields, highKeyFields,
                 lowKeyInclusive, highKeyInclusive, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, tupleFilterFactory,
-                outputLimit, tupleProjectorFactory);
+                outputLimit, tupleProjectorFactory, tuplePartitionerFactory, map);
     }
 
 }

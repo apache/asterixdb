@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -37,6 +38,8 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeBatchPointSearchCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
@@ -50,23 +53,23 @@ public class LSMBTreeBatchPointSearchOperatorNodePushable extends BTreeSearchOpe
             boolean highKeyInclusive, int[] minFilterKeyFields, int[] maxFilterKeyFields,
             IIndexDataflowHelperFactory indexHelperFactory, boolean retainInput, boolean retainMissing,
             IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
-            ITupleFilterFactory tupleFilterFactory, long outputLimit, ITupleProjectorFactory tupleProjectorFactory)
-            throws HyracksDataException {
+            ITupleFilterFactory tupleFilterFactory, long outputLimit, ITupleProjectorFactory tupleProjectorFactory,
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] map) throws HyracksDataException {
         super(ctx, partition, inputRecDesc, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive,
                 minFilterKeyFields, maxFilterKeyFields, indexHelperFactory, retainInput, retainMissing,
                 missingWriterFactory, searchCallbackFactory, false, null, tupleFilterFactory, outputLimit, false, null,
-                null, tupleProjectorFactory);
+                null, tupleProjectorFactory, tuplePartitionerFactory, map);
         this.keyFields = lowKeyFields;
     }
 
     @Override
-    protected IIndexCursor createCursor() throws HyracksDataException {
-        ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) indexAccessor;
-        return ((LSMBTree) index).createBatchPointSearchCursor(lsmAccessor.getOpContext());
+    protected IIndexCursor createCursor(IIndex idx, IIndexAccessor idxAccessor) throws HyracksDataException {
+        ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) idxAccessor;
+        return ((LSMBTree) idx).createBatchPointSearchCursor(lsmAccessor.getOpContext());
     }
 
     @Override
-    protected ISearchPredicate createSearchPredicate() {
+    protected ISearchPredicate createSearchPredicate(IIndex index) {
         ITreeIndex treeIndex = (ITreeIndex) index;
         lowKeySearchCmp =
                 highKeySearchCmp = BTreeUtils.getSearchMultiComparator(treeIndex.getComparatorFactories(), lowKey);
@@ -78,19 +81,21 @@ public class LSMBTreeBatchPointSearchOperatorNodePushable extends BTreeSearchOpe
         accessor.reset(buffer);
         if (accessor.getTupleCount() > 0) {
             BatchPredicate batchPred = (BatchPredicate) searchPred;
-            batchPred.reset(accessor);
-            try {
-                indexAccessor.search(cursor, batchPred);
-                writeSearchResults();
-            } catch (IOException e) {
-                throw HyracksDataException.create(e);
-            } finally {
-                cursor.close();
+            for (int p = 0; p < partitions.length; p++) {
+                batchPred.reset(accessor);
+                try {
+                    indexAccessors[p].search(cursors[p], batchPred);
+                    writeSearchResults(cursors[p]);
+                } catch (IOException e) {
+                    throw HyracksDataException.create(e);
+                } finally {
+                    cursors[p].close();
+                }
             }
         }
     }
 
-    protected void writeSearchResults() throws IOException {
+    protected void writeSearchResults(IIndexCursor cursor) throws IOException {
         long matchingTupleCount = 0;
         LSMBTreeBatchPointSearchCursor batchCursor = (LSMBTreeBatchPointSearchCursor) cursor;
         int tupleIndex = 0;
@@ -127,7 +132,6 @@ public class LSMBTreeBatchPointSearchOperatorNodePushable extends BTreeSearchOpe
             }
         }
         stats.getInputTupleCounter().update(matchingTupleCount);
-
     }
 
     private void appendMissingTuple(int start, int end) throws HyracksDataException {

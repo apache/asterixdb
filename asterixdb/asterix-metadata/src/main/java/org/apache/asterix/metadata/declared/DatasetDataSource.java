@@ -166,7 +166,7 @@ public class DatasetDataSource extends DataSource {
                 return metadataProvider.buildBtreeRuntime(jobSpec, opSchema, typeEnv, context, true, false, null,
                         ((DatasetDataSource) dataSource).getDataset(), primaryIndex.getIndexName(), null, null, true,
                         true, false, null, minFilterFieldIndexes, maxFilterFieldIndexes, tupleFilterFactory,
-                        outputLimit, false, false, tupleProjectorFactory);
+                        outputLimit, false, false, tupleProjectorFactory, false);
             default:
                 throw new AlgebricksException("Unknown datasource type");
         }

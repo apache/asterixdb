@@ -33,12 +33,14 @@ import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexSearchOperatorNodePushable;
+import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexSearchModifier;
 import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.IFullTextConfigEvaluator;
 import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.IFullTextConfigEvaluatorFactory;
 import org.apache.hyracks.storage.am.lsm.invertedindex.search.InvertedIndexSearchPredicate;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizer;
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
+import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 
@@ -66,7 +68,7 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
             IMissingWriterFactory nonFilterWriterFactory, int frameLimit) throws HyracksDataException {
         super(ctx, inputRecDesc, partition, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, appendIndexFilter,
-                nonFilterWriterFactory);
+                nonFilterWriterFactory, null, -1, false, null, null, DefaultTupleProjectorFactory.INSTANCE, null, null);
         this.searchModifier = searchModifier;
         this.binaryTokenizerFactory = binaryTokenizerFactory;
         this.fullTextConfigEvaluatorFactory = fullTextConfigEvaluatorFactory;
@@ -85,7 +87,7 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
     }
 
     @Override
-    protected ISearchPredicate createSearchPredicate() {
+    protected ISearchPredicate createSearchPredicate(IIndex index) {
         IBinaryTokenizer tokenizer = binaryTokenizerFactory.createTokenizer();
         IFullTextConfigEvaluator fullTextConfigEvaluator =
                 fullTextConfigEvaluatorFactory.createFullTextConfigEvaluator();
@@ -110,7 +112,7 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
     }
 
     @Override
-    protected int getFieldCount() {
+    protected int getFieldCount(IIndex index) {
         return numOfFields;
     }
 

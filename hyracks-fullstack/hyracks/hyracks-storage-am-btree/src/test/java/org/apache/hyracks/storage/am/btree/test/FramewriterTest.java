@@ -230,7 +230,7 @@ public class FramewriterTest {
         }
         System.out.println("Number of passed tests: " + successes);
         System.out.println("Number of failed tests: " + failures);
-        Assert.assertEquals(failures, 0);
+        Assert.assertEquals(0, failures);
     }
 
     private void testBTreeSearchOperatorNodePushable() throws Exception {

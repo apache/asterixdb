@@ -64,7 +64,7 @@ public class SampleDataSource extends DataSource {
             throws AlgebricksException {
         return metadataProvider.buildBtreeRuntime(jobSpec, opSchema, typeEnv, context, true, false, null, dataset,
                 sampleIndexName, null, null, true, true, false, null, null, null, tupleFilterFactory, outputLimit,
-                false, false, DefaultTupleProjectorFactory.INSTANCE);
+                false, false, DefaultTupleProjectorFactory.INSTANCE, false);
     }
 
     @Override
