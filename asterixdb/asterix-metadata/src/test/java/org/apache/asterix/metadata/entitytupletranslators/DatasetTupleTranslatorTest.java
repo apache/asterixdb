@@ -57,7 +57,7 @@ public class DatasetTupleTranslatorTest {
                     DataverseName.createSinglePartName("foo"), "LogType", DataverseName.createSinglePartName("CB"),
                     "MetaType", "DEFAULT_NG_ALL_NODES", "prefix", compactionPolicyProperties, details,
                     Collections.emptyMap(), DatasetType.INTERNAL, 115, 0, CompressionManager.NONE,
-                    DatasetFormatInfo.DEFAULT);
+                    DatasetFormatInfo.SYSTEM_DEFAULT);
             DatasetTupleTranslator dtTranslator = new DatasetTupleTranslator(true);
             ITupleReference tuple = dtTranslator.getTupleFromMetadataEntity(dataset);
             Dataset deserializedDataset = dtTranslator.getMetadataEntityFromTuple(tuple);

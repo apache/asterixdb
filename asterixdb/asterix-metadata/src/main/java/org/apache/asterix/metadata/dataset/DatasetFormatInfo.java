@@ -20,11 +20,15 @@ package org.apache.asterix.metadata.dataset;
 
 import java.io.Serializable;
 
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetFormat;
 
 public class DatasetFormatInfo implements Serializable {
     private static final long serialVersionUID = 7656132322813253435L;
-    public static final DatasetFormatInfo DEFAULT = new DatasetFormatInfo();
+    /**
+     * System's default format for non-{@link DatasetConfig.DatasetType#INTERNAL} datasets
+     */
+    public static final DatasetFormatInfo SYSTEM_DEFAULT = new DatasetFormatInfo();
     private final DatasetFormat format;
     private final int maxTupleCount;
     private final float freeSpaceTolerance;

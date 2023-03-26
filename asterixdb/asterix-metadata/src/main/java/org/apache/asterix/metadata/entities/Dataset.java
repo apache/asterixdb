@@ -164,7 +164,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             DatasetType datasetType, int datasetId, int pendingOp) {
         this(dataverseName, datasetName, recordTypeDataverseName, recordTypeName, /*metaTypeDataverseName*/null,
                 /*metaTypeName*/null, nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails,
-                hints, datasetType, datasetId, pendingOp, CompressionManager.NONE, DatasetFormatInfo.DEFAULT);
+                hints, datasetType, datasetId, pendingOp, CompressionManager.NONE, DatasetFormatInfo.SYSTEM_DEFAULT);
     }
 
     public Dataset(DataverseName dataverseName, String datasetName, DataverseName itemTypeDataverseName,

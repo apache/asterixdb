@@ -70,7 +70,7 @@ public class IndexTupleTranslatorTest {
             DataverseName dvCB = DataverseName.createSinglePartName("CB");
             Dataset dataset = new Dataset(dvTest, "d1", dvFoo, "LogType", dvCB, "MetaType", "DEFAULT_NG_ALL_NODES",
                     "prefix", compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0,
-                    CompressionManager.NONE, DatasetFormatInfo.DEFAULT);
+                    CompressionManager.NONE, DatasetFormatInfo.SYSTEM_DEFAULT);
 
             Index index = new Index(dvTest, "d1", "i1", IndexType.BTREE,
                     Collections.singletonList(Collections.singletonList("row_id")),

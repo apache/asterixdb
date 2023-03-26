@@ -134,14 +134,21 @@ public class DatasetDecl extends AbstractStatement {
                 .getOptionalString(DatasetDeclParametersUtil.STORAGE_BLOCK_COMPRESSION_SCHEME_PARAMETER_NAME);
     }
 
-    public DatasetFormatInfo getDatasetFormatInfo(int defaultMaxTupleCount, float defaultFreeSpaceTolerance) {
-        final AdmObjectNode datasetFormatNode =
-                (AdmObjectNode) withObjectNode.get(DatasetDeclParametersUtil.DATASET_FORMAT_PARAMETER_NAME);
-        if (datasetType != DatasetType.INTERNAL || datasetFormatNode == null) {
-            return DatasetFormatInfo.DEFAULT;
+    public DatasetFormatInfo getDatasetFormatInfo(String defaultFormat, int defaultMaxTupleCount,
+            float defaultFreeSpaceTolerance) {
+        if (datasetType != DatasetType.INTERNAL) {
+            return DatasetFormatInfo.SYSTEM_DEFAULT;
         }
-        DatasetConfig.DatasetFormat datasetFormat = DatasetConfig.DatasetFormat.getFormat(
-                datasetFormatNode.getOptionalString(DatasetDeclParametersUtil.DATASET_FORMAT_FORMAT_PARAMETER_NAME));
+
+        AdmObjectNode datasetFormatNode = (AdmObjectNode) withObjectNode
+                .getOrDefault(DatasetDeclParametersUtil.DATASET_FORMAT_PARAMETER_NAME, AdmObjectNode.EMPTY);
+        DatasetConfig.DatasetFormat datasetFormat = DatasetConfig.DatasetFormat.getFormat(datasetFormatNode
+                .getOptionalString(DatasetDeclParametersUtil.DATASET_FORMAT_FORMAT_PARAMETER_NAME, defaultFormat));
+
+        if (datasetFormat == DatasetConfig.DatasetFormat.ROW) {
+            return DatasetFormatInfo.SYSTEM_DEFAULT;
+        }
+
         int maxTupleCount = datasetFormatNode.getOptionalInt(
                 DatasetDeclParametersUtil.DATASET_FORMAT_MAX_TUPLE_COUNT_PARAMETER_NAME, defaultMaxTupleCount);
         float freeSpaceTolerance = datasetFormatNode.getOptionalFloat(

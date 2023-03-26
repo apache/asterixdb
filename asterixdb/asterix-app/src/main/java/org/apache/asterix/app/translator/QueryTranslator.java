@@ -748,8 +748,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         boolean itemTypeAdded = false, metaItemTypeAdded = false;
 
         StorageProperties storageProperties = metadataProvider.getStorageProperties();
-        DatasetFormatInfo datasetFormatInfo = dd.getDatasetFormatInfo(storageProperties.getColumnMaxTupleCount(),
-                storageProperties.getColumnFreeSpaceTolerance());
+        DatasetFormatInfo datasetFormatInfo = dd.getDatasetFormatInfo(storageProperties.getStorageFormat(),
+                storageProperties.getColumnMaxTupleCount(), storageProperties.getColumnFreeSpaceTolerance());
         try {
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);

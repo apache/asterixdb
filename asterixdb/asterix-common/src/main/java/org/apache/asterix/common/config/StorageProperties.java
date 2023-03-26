@@ -63,7 +63,8 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_GLOBAL_CLEANUP(BOOLEAN, true),
         STORAGE_GLOBAL_CLEANUP_TIMEOUT(POSITIVE_INTEGER, (int) TimeUnit.MINUTES.toSeconds(10)),
         STORAGE_COLUMN_MAX_TUPLE_COUNT(NONNEGATIVE_INTEGER, 15000),
-        STORAGE_COLUMN_FREE_SPACE_TOLERANCE(DOUBLE, 0.15);
+        STORAGE_COLUMN_FREE_SPACE_TOLERANCE(DOUBLE, 0.15),
+        STORAGE_FORMAT(STRING, "row");
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -136,6 +137,8 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_COLUMN_FREE_SPACE_TOLERANCE:
                     return "The percentage of the maximum tolerable empty space for a physical mega leaf page (e.g.,"
                             + " 0.15 means a physical page with 15% or less empty space is tolerable)";
+                case STORAGE_FORMAT:
+                    return "The default storage format (either row or column)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -279,5 +282,9 @@ public class StorageProperties extends AbstractProperties {
 
     public float getColumnFreeSpaceTolerance() {
         return (float) accessor.getDouble(Option.STORAGE_COLUMN_FREE_SPACE_TOLERANCE);
+    }
+
+    public String getStorageFormat() {
+        return accessor.getString(Option.STORAGE_FORMAT);
     }
 }

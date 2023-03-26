@@ -433,7 +433,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         int datasetFormatIndex =
                 datasetType.getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_DATASET_FORMAT_FIELD_NAME);
         if (datasetFormatIndex < 0) {
-            return DatasetFormatInfo.DEFAULT;
+            return DatasetFormatInfo.SYSTEM_DEFAULT;
         }
 
         ARecordType datasetFormatType = (ARecordType) datasetType.getFieldTypes()[datasetFormatIndex];
@@ -676,7 +676,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
     private void writeDatasetFormatInfo(Dataset dataset) throws HyracksDataException {
         DatasetFormatInfo info = dataset.getDatasetFormatInfo();
-        if (DatasetFormatInfo.DEFAULT == info) {
+        if (DatasetFormatInfo.SYSTEM_DEFAULT == info) {
             return;
         }
 
