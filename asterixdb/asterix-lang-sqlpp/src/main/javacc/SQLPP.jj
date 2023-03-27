@@ -5757,6 +5757,8 @@ TOKEN :
         | <EscapeNl>
         | <EscapeCr>
         | <EscapeTab>
+        | <EscapeBTickWithBslash>
+        | <EscapeBtickWithBtick>
         | ~["`","\\"])* "`">
   | <STRING_LITERAL : ( ("E")? "\"" (
           <EscapeQuot>
@@ -5765,6 +5767,7 @@ TOKEN :
         | <EscapeBspace>
         | <EscapeFormf>
         | <EscapeNl>
+        | <EscapeBTickWithBslash>
         | <EscapeCr>
         | <EscapeTab>
         | ~["\"","\\"])* "\"")
@@ -5775,9 +5778,12 @@ TOKEN :
         | <EscapeBspace>
         | <EscapeFormf>
         | <EscapeNl>
+        | <EscapeBTickWithBslash>
         | <EscapeCr>
         | <EscapeTab>
         | ~["\'","\\"])* "\'")>
+  | < #EscapeBTickWithBslash: "\\`" >
+  | < #EscapeBtickWithBtick: "``" >
   | < #EscapeQuot: "\\\"" >
   | < #EscapeApos: "\\\'" >
   | < #EscapeBslash: "\\\\" >

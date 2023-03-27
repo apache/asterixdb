@@ -9989,6 +9989,17 @@
         <output-dir compare="Text">var_star_2</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="escaping/success">
+        <output-dir compare="Text">escaping</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="escaping/failure">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1001: Syntax error</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="select-exclude">
     <test-case FilePath="select-exclude">

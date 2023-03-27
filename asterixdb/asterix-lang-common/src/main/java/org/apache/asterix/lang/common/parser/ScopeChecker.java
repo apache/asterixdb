@@ -258,50 +258,65 @@ public class ScopeChecker {
     }
 
     public static String removeQuotesAndEscapes(String s) {
-        char q = s.charAt(0); // simple or double quote
-        String stripped = s.substring(1, s.length() - 1);
-        int pos = stripped.indexOf('\\');
-        if (pos < 0) {
-            return stripped;
+
+        // It will not pass through lexer, but adding IllegalStateException Condition , if something went wrong with lexer
+        if (s.length() < 2) {
+            throw new IllegalStateException("Should have been caught by the lexer");
         }
+
         StringBuilder res = new StringBuilder();
-        int start = 0;
-        while (pos >= 0) {
-            res.append(stripped.substring(start, pos));
-            char c = stripped.charAt(pos + 1);
-            switch (c) {
-                case '/':
-                case '\\':
-                    res.append(c);
-                    break;
-                case 'b':
-                    res.append('\b');
-                    break;
-                case 'f':
-                    res.append('\f');
-                    break;
-                case 'n':
-                    res.append('\n');
-                    break;
-                case 'r':
-                    res.append('\r');
-                    break;
-                case 't':
-                    res.append('\t');
-                    break;
-                case '\'':
-                case '"':
-                    if (c == q) {
+        char[] cray = s.toCharArray();
+
+        for (int pos = 1; pos < cray.length - 1;) {
+            char c = cray[pos];
+            pos++;
+            if (c == '\\') {
+                c = cray[pos];
+                pos++;
+                switch (c) {
+                    case 'b':
+                        res.append('\b');
+                        break;
+                    case 'f':
+                        res.append('\f');
+                        break;
+                    case 'n':
+                        res.append('\n');
+                        break;
+                    case 'r':
+                        res.append('\r');
+                        break;
+                    case 't':
+                        res.append('\t');
+                        break;
+                    case '/':
+                    case '\\':
+                    case '"':
+                    case '\'':
+                    case '`':
                         res.append(c);
+                        break;
+                    default:
+                        throw new IllegalStateException("'\\" + c + "' should have been caught by the lexer");
+                }
+            } else {
+                res.append(c);
+                if (cray[0] == '\'' && c == '\'') { // if single quoted, allow '' as an escaped single quote
+                    if (pos >= cray.length - 1 || cray[pos] != '\'') {
+                        throw new IllegalStateException("'" + c + "' should have been caught by the lexer");
                     }
-                    break;
-                default:
-                    throw new IllegalStateException("'\\" + c + "' should have been caught by the lexer");
+                    pos++;
+                } else if (cray[0] == '`' && c == '`') { // similar behavior for ` (backtick)
+                    if (pos >= cray.length - 1 || cray[pos] != '`') {
+                        throw new IllegalStateException("`" + c + "' should have been caught by the lexer");
+                    }
+                    pos++;
+                } else if (cray[0] == c) { // Illegal Character
+                    throw new IllegalStateException("should have been caught by lexer");
+                }
             }
-            start = pos + 2;
-            pos = stripped.indexOf('\\', start);
         }
-        res.append(stripped.substring(start));
+
         return res.toString();
     }
 
