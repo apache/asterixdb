@@ -26,11 +26,15 @@ import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -68,11 +72,11 @@ public class IOManager implements IIOManager {
     private final BlockingQueue<IoRequest> freeRequests;
     private final List<IODeviceHandle> ioDevices;
     private final List<IODeviceHandle> workspaces;
+    private final IFileDeviceResolver deviceComputer;
     /*
      * Mutables
      */
     private int workspaceIndex;
-    private final IFileDeviceResolver deviceComputer;
 
     public IOManager(List<IODeviceHandle> devices, IFileDeviceResolver deviceComputer, int ioParallelism, int queueSize)
             throws HyracksDataException {
@@ -94,6 +98,20 @@ public class IOManager implements IIOManager {
         }
         workspaceIndex = 0;
         this.deviceComputer = deviceComputer;
+        submittedRequests = new ArrayBlockingQueue<>(queueSize);
+        freeRequests = new ArrayBlockingQueue<>(queueSize);
+        int numIoThreads = ioDevices.size() * ioParallelism;
+        executor = Executors.newFixedThreadPool(numIoThreads);
+        for (int i = 0; i < numIoThreads; i++) {
+            executor.execute(new IoRequestHandler(i, submittedRequests));
+        }
+    }
+
+    protected IOManager(IOManager ioManager, int queueSize, int ioParallelism) {
+        this.ioDevices = ioManager.ioDevices;
+        workspaces = ioManager.workspaces;
+        workspaceIndex = 0;
+        this.deviceComputer = ioManager.deviceComputer;
         submittedRequests = new ArrayBlockingQueue<>(queueSize);
         freeRequests = new ArrayBlockingQueue<>(queueSize);
         int numIoThreads = ioDevices.size() * ioParallelism;
@@ -242,7 +260,7 @@ public class IOManager implements IIOManager {
      * @param offset
      * @param data
      * @return The number of bytes read, possibly zero, or -1 if the given offset is greater than or equal to the file's
-     *         current size
+     * current size
      * @throws HyracksDataException
      */
     @Override
@@ -472,5 +490,111 @@ public class IOManager implements IIOManager {
                 IOManager.this.close(fh);
             }
         };
+    }
+
+    @Override
+    public void delete(FileReference fileRef) throws HyracksDataException {
+        if (fileRef.getFile().exists()) {
+            IoUtil.delete(fileRef);
+        }
+    }
+
+    @Override
+    public Set<FileReference> list(FileReference dir) throws HyracksDataException {
+        return list(dir, IoUtil.NO_OP_FILTER);
+    }
+
+    @Override
+    public Set<FileReference> list(FileReference dir, FilenameFilter filter) throws HyracksDataException {
+        /*
+         * Throws an error if this abstract pathname does not denote a directory, or if an I/O error occurs.
+         * Returns an empty set if the file does not exist, otherwise, returns the files in the specified directory
+         */
+        Set<FileReference> listedFiles = new HashSet<>();
+        if (!dir.getFile().exists()) {
+            return listedFiles;
+        }
+
+        String[] files = dir.getFile().list(filter);
+        if (files == null) {
+            if (!dir.getFile().canRead()) {
+                throw HyracksDataException.create(ErrorCode.CANNOT_READ_FILE, dir);
+            } else if (!dir.getFile().isDirectory()) {
+                throw HyracksDataException.create(ErrorCode.FILE_IS_NOT_DIRECTORY, dir);
+            }
+            throw HyracksDataException.create(ErrorCode.UNIDENTIFIED_IO_ERROR_READING_FILE, dir);
+        }
+
+        for (String file : files) {
+            listedFiles.add(dir.getChild(file));
+        }
+        return listedFiles;
+    }
+
+    @Override
+    public void overwrite(FileReference fileRef, byte[] bytes) throws ClosedByInterruptException, HyracksDataException {
+        File file = fileRef.getFile();
+        try {
+            if (file.exists()) {
+                delete(fileRef);
+            } else {
+                FileUtils.createParentDirectories(file);
+            }
+            FileUtil.writeAndForce(file.toPath(), bytes);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    @Override
+    public byte[] readAllBytes(FileReference fileRef) throws HyracksDataException {
+        if (!fileRef.getFile().exists()) {
+            return null;
+        }
+        try {
+            return Files.readAllBytes(fileRef.getFile().toPath());
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    @Override
+    public void deleteDirectory(FileReference root) throws HyracksDataException {
+        try {
+            FileUtils.deleteDirectory(root.getFile());
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    @Override
+    public Collection<FileReference> getMatchingFiles(FileReference root, FilenameFilter filter)
+            throws HyracksDataException {
+        Collection<File> files = IoUtil.getMatchingFiles(root.getFile().toPath(), filter);
+        Set<FileReference> fileReferences = new HashSet<>();
+        for (File file : files) {
+            fileReferences.add(resolveAbsolutePath(file.getAbsolutePath()));
+        }
+
+        return fileReferences;
+    }
+
+    @Override
+    public boolean exists(FileReference fileRef) {
+        return fileRef.getFile().exists();
+    }
+
+    @Override
+    public void create(FileReference fileRef) throws HyracksDataException {
+        IoUtil.create(fileRef);
+    }
+
+    @Override
+    public void copyDirectory(FileReference srcFileRef, FileReference destFileRef) throws HyracksDataException {
+        try {
+            FileUtils.copyDirectory(srcFileRef.getFile(), destFileRef.getFile());
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 }

@@ -46,6 +46,7 @@ import org.apache.logging.log4j.Logger;
 public class IoUtil {
 
     public static final String FILE_NOT_FOUND_MSG = "Deleting non-existing file!";
+    public static final FilenameFilter NO_OP_FILTER = (dir, name) -> true;
     private static final Logger LOGGER = LogManager.getLogger();
 
     private IoUtil() {
@@ -188,5 +189,9 @@ public class IoUtil {
                 }
             }
         }
+    }
+
+    public static String getFileNameFromPath(String path) {
+        return path.substring(path.lastIndexOf('/') + 1);
     }
 }

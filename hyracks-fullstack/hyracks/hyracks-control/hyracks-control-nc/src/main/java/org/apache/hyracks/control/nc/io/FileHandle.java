@@ -30,7 +30,7 @@ import org.apache.hyracks.api.io.IIOManager;
 
 public class FileHandle implements IFileHandle {
 
-    private final FileReference fileRef;
+    protected final FileReference fileRef;
     private RandomAccessFile raf;
     private String mode;
 
