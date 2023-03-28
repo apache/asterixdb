@@ -34,4 +34,4 @@ from
     ) as gen0,
     gen0.i as j at p
 where p < 4
-order by partkey, shipdate;
+order by partkey, shipdate, pid;
