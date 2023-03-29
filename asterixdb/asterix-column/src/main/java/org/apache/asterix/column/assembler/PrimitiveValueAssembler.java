@@ -31,7 +31,7 @@ public class PrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
     @Override
     public int next() throws HyracksDataException {
         if (!reader.next()) {
-            throw new IllegalAccessError("no more values");
+            throw new IllegalAccessError("no more values, column index: " + getColumnIndex());
         } else if (reader.isNull() && (isDelegate() || reader.getLevel() + 1 == level)) {
             addNullToAncestor(reader.getLevel());
         } else if (reader.isValue()) {

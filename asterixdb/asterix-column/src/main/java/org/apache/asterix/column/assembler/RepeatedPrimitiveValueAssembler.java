@@ -41,7 +41,7 @@ class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
     @Override
     public int next() throws HyracksDataException {
         if (!reader.next()) {
-            throw new IllegalStateException("No more values");
+            throw new IllegalAccessError("no more values, column index: " + getColumnIndex());
         } else if (reader.isNull() && (!arrays.isEmpty() || reader.getLevel() + 1 == level)) {
             /*
              * There are two cases here for where the null belongs to:

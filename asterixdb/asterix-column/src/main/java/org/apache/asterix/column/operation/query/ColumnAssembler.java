@@ -92,6 +92,7 @@ public final class ColumnAssembler {
     }
 
     public void skip(int count) throws HyracksDataException {
+        tupleIndex += count;
         for (int i = 0; i < assemblers.size(); i++) {
             assemblers.get(i).skip(count);
         }

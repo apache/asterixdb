@@ -33,6 +33,17 @@ public class ColumnBTreePointSearchCursor extends ColumnBTreeRangeSearchCursor
     }
 
     @Override
+    public boolean doHasNext() {
+        // If we found the exact key, return true
+        return yieldFirstCall;
+    }
+
+    @Override
+    protected boolean shouldYieldFirstCall() throws HyracksDataException {
+        return pred.getLowKeyComparator().compare(lowKey, frameTuple) == 0;
+    }
+
+    @Override
     public void doClose() throws HyracksDataException {
         pageId = IBufferCache.INVALID_PAGEID;
         super.doClose();
