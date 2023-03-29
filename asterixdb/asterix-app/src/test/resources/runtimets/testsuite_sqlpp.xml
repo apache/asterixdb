@@ -6245,6 +6245,11 @@
   </test-group>
   <test-group name="index-selection">
     <test-case FilePath="index-selection">
+      <compilation-unit name="batch-lookup">
+        <output-dir compare="Text">batch-lookup</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-composite-key">
         <output-dir compare="Text">btree-index-composite-key</output-dir>
       </compilation-unit>

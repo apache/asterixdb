@@ -192,7 +192,7 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_EXTERNALSCANMEMORY_KEY = Option.COMPILER_EXTERNALSCANMEMORY.ini();
 
-    public static final String COMPILER_BATCHED_LOOKUP_KEY = Option.COMPILER_BATCH_LOOKUP.ini();
+    public static final String COMPILER_BATCH_LOOKUP_KEY = Option.COMPILER_BATCH_LOOKUP.ini();
 
     public static final String COMPILER_CBO_KEY = Option.COMPILER_CBO.ini();
 
