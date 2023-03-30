@@ -510,7 +510,7 @@
       <dependency>
         <groupId>com.typesafe.akka</groupId>
         <artifactId>akka-http-core_2.12</artifactId>
-        <version>10.1.0</version>
+        <version>10.1.4</version>
         <scope>test</scope>
       </dependency>
     </dependencies>
