@@ -25,6 +25,7 @@ import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -41,9 +42,10 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorDescriptor extends LSMSecon
             int[] fieldPermutation, IIndexDataflowHelperFactory indexHelperFactory,
             IModificationOperationCallbackFactory modCallbackFactory, int operationFieldIndex,
             IBinaryIntegerInspectorFactory operationInspectorFactory, List<AlgebricksPipeline> secondaryKeysPipeline,
-            List<AlgebricksPipeline> prevSecondaryKeysPipeline) {
+            List<AlgebricksPipeline> prevSecondaryKeysPipeline, ITuplePartitionerFactory tuplePartitionerFactory,
+            int[][] partitionsMap) {
         super(spec, outRecDesc, fieldPermutation, indexHelperFactory, null, null, modCallbackFactory,
-                operationFieldIndex, operationInspectorFactory, null);
+                operationFieldIndex, operationInspectorFactory, null, tuplePartitionerFactory, partitionsMap);
         this.secondaryKeysPipeline = secondaryKeysPipeline;
         this.prevSecondaryKeysPipeline = prevSecondaryKeysPipeline;
     }
@@ -54,6 +56,6 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorDescriptor extends LSMSecon
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new LSMSecondaryUpsertWithNestedPlanOperatorNodePushable(ctx, partition, indexHelperFactory,
                 modCallbackFactory, fieldPermutation, inputRecDesc, operationFieldIndex, operationInspectorFactory,
-                secondaryKeysPipeline, prevSecondaryKeysPipeline);
+                secondaryKeysPipeline, prevSecondaryKeysPipeline, tuplePartitionerFactory, partitionsMap);
     }
 }

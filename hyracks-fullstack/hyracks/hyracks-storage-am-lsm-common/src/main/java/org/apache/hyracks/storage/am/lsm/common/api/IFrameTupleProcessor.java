@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public interface IFrameTupleProcessor {
@@ -37,7 +38,7 @@ public interface IFrameTupleProcessor {
      *            the index of the tuple in the frame
      * @throws HyracksDataException
      */
-    void process(ITupleReference tuple, int index) throws HyracksDataException;
+    void process(FrameTupleAccessor accessor, ITupleReference tuple, int index) throws HyracksDataException;
 
     /**
      * Called once per batch before ending the batch process

@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
@@ -711,12 +712,13 @@ public class LSMHarness implements ILSMHarness {
 
     @Override
     public void batchOperate(ILSMIndexOperationContext ctx, FrameTupleAccessor accessor, FrameTupleReference tuple,
-            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback) throws HyracksDataException {
+            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback, Set<Integer> tuples)
+            throws HyracksDataException {
         processor.start();
         enter(ctx);
         try {
             try {
-                processFrame(accessor, tuple, processor);
+                processFrame(accessor, tuple, processor, tuples);
                 frameOpCallback.frameCompleted();
             } catch (Throwable th) {
                 processor.fail(th);
@@ -860,13 +862,14 @@ public class LSMHarness implements ILSMHarness {
     }
 
     private static void processFrame(FrameTupleAccessor accessor, FrameTupleReference tuple,
-            IFrameTupleProcessor processor) throws HyracksDataException {
+            IFrameTupleProcessor processor, Set<Integer> tuples) throws HyracksDataException {
         int tupleCount = accessor.getTupleCount();
-        int i = 0;
-        while (i < tupleCount) {
+        for (int i = 0; i < tupleCount; i++) {
+            if (!tuples.contains(i)) {
+                continue;
+            }
             tuple.reset(accessor, i);
-            processor.process(tuple, i);
-            i++;
+            processor.process(accessor, tuple, i);
         }
     }
 

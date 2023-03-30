@@ -33,7 +33,7 @@ import org.apache.http.impl.client.HttpClients;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-class TestUtil {
+public class TestUtil {
 
     private static final String HOST = "127.0.0.1";
     private static final int PORT = 16001;
@@ -67,5 +67,13 @@ class TestUtil {
 
     static ObjectNode httpGetAsObject(URI uri) throws URISyntaxException, IOException {
         return getResultAsJson(httpGetAsString(uri));
+    }
+
+    public static int[][] getPartitionsMap(int numPartitions) {
+        int[][] map = new int[numPartitions][1];
+        for (int i = 0; i < numPartitions; i++) {
+            map[i] = new int[] { i };
+        }
+        return map;
     }
 }

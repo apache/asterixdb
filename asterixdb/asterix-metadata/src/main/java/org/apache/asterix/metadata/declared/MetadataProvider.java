@@ -606,12 +606,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(storageManager, spPc.first);
         BTreeSearchOperatorDescriptor btreeSearchOp;
 
-        int numPartitions;
-        if (spPc.second.getPartitionConstraintType() == AlgebricksPartitionConstraint.PartitionConstraintType.COUNT) {
-            numPartitions = ((AlgebricksCountPartitionConstraint) spPc.second).getCount();
-        } else {
-            numPartitions = ((AlgebricksAbsolutePartitionConstraint) spPc.second).getLocations().length;
-        }
+        int numPartitions = getNumPartitions(spPc.second);
         int[][] partitionsMap = getPartitionsMap(numPartitions);
         ITuplePartitionerFactory tuplePartitionerFactory = null;
         if (partitionInputTuples) {
@@ -638,7 +633,15 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return new Pair<>(btreeSearchOp, spPc.second);
     }
 
-    private static int[][] getPartitionsMap(int numPartitions) {
+    public static int getNumPartitions(AlgebricksPartitionConstraint constraint) {
+        if (constraint.getPartitionConstraintType() == AlgebricksPartitionConstraint.PartitionConstraintType.COUNT) {
+            return ((AlgebricksCountPartitionConstraint) constraint).getCount();
+        } else {
+            return ((AlgebricksAbsolutePartitionConstraint) constraint).getLocations().length;
+        }
+    }
+
+    public static int[][] getPartitionsMap(int numPartitions) {
         int[][] map = new int[numPartitions][1];
         for (int i = 0; i < numPartitions; i++) {
             map[i] = new int[] { i };
@@ -1060,9 +1063,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         int[] fieldPermutation = new int[numKeys + 1 + numFilterFields
                 + (additionalNonFilteringFields == null ? 0 : additionalNonFilteringFields.size())];
         int[] bloomFilterKeyFields = new int[numKeys];
+        int[] pkFields = new int[numKeys];
         int i = 0;
         for (LogicalVariable varKey : keys) {
             int idx = propagatedSchema.findVariable(varKey);
+            pkFields[i] = idx;
             fieldPermutation[i] = idx;
             bloomFilterKeyFields[i] = i;
             i++;
@@ -1097,6 +1102,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 .getModificationCallbackFactory(storageComponentProvider, primaryIndex, indexOp, primaryKeyFields);
         IIndexDataflowHelperFactory idfh =
                 new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
+
+        int numPartitions = getNumPartitions(splitsAndConstraint.second);
+        int[][] partitionsMap = getPartitionsMap(numPartitions);
+        IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(this);
+        ITuplePartitionerFactory tuplePartitionerFactory =
+                new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
+
         IOperatorDescriptor op;
         if (bulkload) {
             long numElementsHint = getCardinalityPerPartitionHint(dataset);
@@ -1119,11 +1131,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                             primaryKeySplitsAndConstraint.first);
                 }
                 op = createLSMPrimaryInsertOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, idfh, pkidfh,
-                        modificationCallbackFactory, searchCallbackFactory, numKeys, filterFields);
+                        modificationCallbackFactory, searchCallbackFactory, numKeys, filterFields,
+                        tuplePartitionerFactory, partitionsMap);
 
             } else {
                 op = createLSMTreeInsertDeleteOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, indexOp, idfh,
-                        null, true, modificationCallbackFactory);
+                        null, true, modificationCallbackFactory, tuplePartitionerFactory, partitionsMap);
             }
         }
         return new Pair<>(op, splitsAndConstraint.second);
@@ -1132,18 +1145,21 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     protected LSMPrimaryInsertOperatorDescriptor createLSMPrimaryInsertOperatorDescriptor(JobSpecification spec,
             RecordDescriptor inputRecordDesc, int[] fieldPermutation, IIndexDataflowHelperFactory idfh,
             IIndexDataflowHelperFactory pkidfh, IModificationOperationCallbackFactory modificationCallbackFactory,
-            ISearchOperationCallbackFactory searchCallbackFactory, int numKeys, int[] filterFields) {
+            ISearchOperationCallbackFactory searchCallbackFactory, int numKeys, int[] filterFields,
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) {
         // this can be used by extensions to pick up their own operators
         return new LSMPrimaryInsertOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, idfh, pkidfh,
-                modificationCallbackFactory, searchCallbackFactory, numKeys, filterFields);
+                modificationCallbackFactory, searchCallbackFactory, numKeys, filterFields, tuplePartitionerFactory,
+                partitionsMap);
     }
 
     protected LSMTreeInsertDeleteOperatorDescriptor createLSMTreeInsertDeleteOperatorDescriptor(
             IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc, int[] fieldPermutation, IndexOperation op,
             IIndexDataflowHelperFactory indexHelperFactory, ITupleFilterFactory tupleFilterFactory, boolean isPrimary,
-            IModificationOperationCallbackFactory modCallbackFactory) {
+            IModificationOperationCallbackFactory modCallbackFactory, ITuplePartitionerFactory tuplePartitionerFactory,
+            int[][] partitionsMap) {
         return new LSMTreeInsertDeleteOperatorDescriptor(spec, outRecDesc, fieldPermutation, op, indexHelperFactory,
-                tupleFilterFactory, isPrimary, modCallbackFactory);
+                tupleFilterFactory, isPrimary, modCallbackFactory, tuplePartitionerFactory, partitionsMap);
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexInsertOrDeleteOrUpsertRuntime(
@@ -1234,6 +1250,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         // generate field permutations
         int[] fieldPermutation = new int[numKeys + numFilterFields];
         int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
+        int[] pkFields = new int[primaryKeys.size()];
         int i = 0;
         int j = 0;
         for (LogicalVariable varKey : secondaryKeys) {
@@ -1244,6 +1261,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         for (LogicalVariable varKey : primaryKeys) {
             int idx = propagatedSchema.findVariable(varKey);
             fieldPermutation[i] = idx;
+            pkFields[j] = idx;
             modificationCallbackPrimaryKeyFields[j] = i;
             i++;
             j++;
@@ -1286,6 +1304,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     storageComponentProvider, secondaryIndex, indexOp, modificationCallbackPrimaryKeyFields);
             IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(
                     storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
+
+            int numPartitions = getNumPartitions(splitsAndConstraint.second);
+            int[][] partitionsMap = getPartitionsMap(numPartitions);
+            IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(this);
+            ITuplePartitionerFactory tuplePartitionerFactory =
+                    new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
+
             IOperatorDescriptor op;
             if (bulkload) {
                 long numElementsHint = getCardinalityPerPartitionHint(dataset);
@@ -1296,10 +1321,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 int operationFieldIndex = propagatedSchema.findVariable(operationVar);
                 op = new LSMSecondaryUpsertOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, idfh,
                         filterFactory, prevFilterFactory, modificationCallbackFactory, operationFieldIndex,
-                        BinaryIntegerInspector.FACTORY, prevFieldPermutation);
+                        BinaryIntegerInspector.FACTORY, prevFieldPermutation, tuplePartitionerFactory, partitionsMap);
             } else {
                 op = new LSMTreeInsertDeleteOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, indexOp, idfh,
-                        filterFactory, false, modificationCallbackFactory);
+                        filterFactory, false, modificationCallbackFactory, tuplePartitionerFactory, partitionsMap);
             }
             return new Pair<>(op, splitsAndConstraint.second);
         } catch (Exception e) {
@@ -1320,11 +1345,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         // Generate field permutations (this only includes primary keys and filter fields).
         int[] fieldPermutation = new int[numPrimaryKeys + numFilterFields];
         int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
+        int[] pkFields = new int[primaryKeys.size()];
         int i = 0;
         int j = 0;
         for (LogicalVariable varKey : primaryKeys) {
             int idx = propagatedSchema.findVariable(varKey);
             fieldPermutation[i] = idx;
+            pkFields[j] = idx;
             modificationCallbackPrimaryKeyFields[j] = i;
             i++;
             j++;
@@ -1345,15 +1372,24 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     storageComponentProvider, secondaryIndex, indexOp, modificationCallbackPrimaryKeyFields);
             IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(
                     storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
+
+            int numPartitions = getNumPartitions(splitsAndConstraint.second);
+            int[][] partitionsMap = getPartitionsMap(numPartitions);
+            IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(this);
+            ITuplePartitionerFactory tuplePartitionerFactory =
+                    new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
+
             IOperatorDescriptor op;
             if (indexOp == IndexOperation.UPSERT) {
                 int operationFieldIndex = propagatedSchema.findVariable(operationVar);
                 op = new LSMSecondaryUpsertWithNestedPlanOperatorDescriptor(spec, inputRecordDesc, fieldPermutation,
                         idfh, modificationCallbackFactory, operationFieldIndex, BinaryIntegerInspector.FACTORY,
-                        secondaryKeysPipelines.get(0), secondaryKeysPipelines.get(1));
+                        secondaryKeysPipelines.get(0), secondaryKeysPipelines.get(1), tuplePartitionerFactory,
+                        partitionsMap);
             } else {
                 op = new LSMSecondaryInsertDeleteWithNestedPlanOperatorDescriptor(spec, inputRecordDesc,
-                        fieldPermutation, indexOp, idfh, modificationCallbackFactory, secondaryKeysPipelines.get(0));
+                        fieldPermutation, indexOp, idfh, modificationCallbackFactory, secondaryKeysPipelines.get(0),
+                        tuplePartitionerFactory, partitionsMap);
             }
             return new Pair<>(op, splitsAndConstraint.second);
         } catch (Exception e) {
@@ -1390,6 +1426,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
         int[] fieldPermutation = new int[numKeys + numFilterFields];
         int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
+        int[] pkFields = new int[primaryKeys.size()];
         int i = 0;
         int j = 0;
 
@@ -1401,6 +1438,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         for (LogicalVariable varKey : primaryKeys) {
             int idx = propagatedSchema.findVariable(varKey);
             fieldPermutation[i] = idx;
+            pkFields[j] = idx;
             modificationCallbackPrimaryKeyFields[j] = i;
             i++;
             j++;
@@ -1441,6 +1479,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 storageComponentProvider, secondaryIndex, indexOp, modificationCallbackPrimaryKeyFields);
         IIndexDataflowHelperFactory indexDataflowHelperFactory =
                 new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
+
+        int numPartitions = getNumPartitions(splitsAndConstraint.second);
+        int[][] partitionsMap = getPartitionsMap(numPartitions);
+        IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(this);
+        ITuplePartitionerFactory tuplePartitionerFactory =
+                new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
+
         IOperatorDescriptor op;
         if (bulkload) {
             long numElementsHint = getCardinalityPerPartitionHint(dataset);
@@ -1451,10 +1496,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             int operationFieldIndex = propagatedSchema.findVariable(operationVar);
             op = new LSMSecondaryUpsertOperatorDescriptor(spec, recordDesc, fieldPermutation,
                     indexDataflowHelperFactory, filterFactory, prevFilterFactory, modificationCallbackFactory,
-                    operationFieldIndex, BinaryIntegerInspector.FACTORY, prevFieldPermutation);
+                    operationFieldIndex, BinaryIntegerInspector.FACTORY, prevFieldPermutation, tuplePartitionerFactory,
+                    partitionsMap);
         } else {
             op = new LSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc, fieldPermutation, indexOp,
-                    indexDataflowHelperFactory, filterFactory, false, modificationCallbackFactory);
+                    indexDataflowHelperFactory, filterFactory, false, modificationCallbackFactory,
+                    tuplePartitionerFactory, partitionsMap);
         }
         return new Pair<>(op, splitsAndConstraint.second);
     }
@@ -1492,6 +1539,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         // generate field permutations
         int[] fieldPermutation = new int[numKeys + numFilterFields];
         int[] modificationCallbackPrimaryKeyFields = new int[primaryKeys.size()];
+        int[] pkFields = new int[primaryKeys.size()];
         int i = 0;
         int j = 0;
 
@@ -1505,6 +1553,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         for (LogicalVariable varKey : primaryKeys) {
             int idx = propagatedSchema.findVariable(varKey);
             fieldPermutation[i] = idx;
+            pkFields[j] = idx;
             modificationCallbackPrimaryKeyFields[j] = i;
             i++;
             j++;
@@ -1550,6 +1599,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     storageComponentProvider, secondaryIndex, indexOp, modificationCallbackPrimaryKeyFields);
             IIndexDataflowHelperFactory indexDataFlowFactory = new IndexDataflowHelperFactory(
                     storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
+
+            int numPartitions = getNumPartitions(splitsAndConstraint.second);
+            int[][] partitionsMap = getPartitionsMap(numPartitions);
+            IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(this);
+            ITuplePartitionerFactory tuplePartitionerFactory =
+                    new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
+
             IOperatorDescriptor op;
             if (bulkload) {
                 long numElementsHint = getCardinalityPerPartitionHint(dataset);
@@ -1560,10 +1616,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 int upsertOperationFieldIndex = propagatedSchema.findVariable(operationVar);
                 op = new LSMSecondaryUpsertOperatorDescriptor(spec, recordDesc, fieldPermutation, indexDataFlowFactory,
                         filterFactory, prevFilterFactory, modificationCallbackFactory, upsertOperationFieldIndex,
-                        BinaryIntegerInspector.FACTORY, prevFieldPermutation);
+                        BinaryIntegerInspector.FACTORY, prevFieldPermutation, tuplePartitionerFactory, partitionsMap);
             } else {
                 op = new LSMTreeInsertDeleteOperatorDescriptor(spec, recordDesc, fieldPermutation, indexOp,
-                        indexDataFlowFactory, filterFactory, false, modificationCallbackFactory);
+                        indexDataFlowFactory, filterFactory, false, modificationCallbackFactory,
+                        tuplePartitionerFactory, partitionsMap);
             }
             return new Pair<>(op, splitsAndConstraint.second);
         } catch (Exception e) {

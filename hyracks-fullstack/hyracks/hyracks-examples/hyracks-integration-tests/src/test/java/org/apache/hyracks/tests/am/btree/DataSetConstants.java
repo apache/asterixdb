@@ -20,9 +20,11 @@
 package org.apache.hyracks.tests.am.btree;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
@@ -45,6 +47,7 @@ public class DataSetConstants {
 
     // field, type and key declarations for primary index
     public static int[] primaryFieldPermutation = { 0, 1, 2, 4, 5, 7 };
+    public static int[] primaryKeyFieldPermutation = new int[] { 0 };
     public static final int[] primaryFilterFields = new int[] { 0 };
     public static final int[] primaryBtreeFields = new int[] { 0, 1, 2, 3, 4, 5 };
 
@@ -58,6 +61,8 @@ public class DataSetConstants {
 
     public static final IBinaryComparatorFactory[] primaryComparatorFactories =
             new IBinaryComparatorFactory[] { UTF8StringBinaryComparatorFactory.INSTANCE };
+    public static final IBinaryHashFunctionFactory[] primaryHashFunFactories =
+            new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) };
     public static final int primaryKeyFieldCount = primaryComparatorFactories.length;
 
     public static final int[] primaryBloomFilterKeyFields = new int[] { 0 };
@@ -78,6 +83,7 @@ public class DataSetConstants {
     public static final int secondaryKeyFieldCount = 2;
     public static final int[] secondaryFieldPermutationA = { 3, 0 };
     public static final int[] secondaryFieldPermutationB = { 4, 0 };
+    public static final int[] secondaryPKFieldPermutationB = { 1 };
     public static final int[] secondaryFilterFields = new int[] { 1 };
     public static final int[] secondaryBtreeFields = new int[] { 0, 1 };
     public static final int[] secondaryBloomFilterKeyFields = new int[] { 0, 1 };

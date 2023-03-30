@@ -25,33 +25,36 @@ import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.PrimaryIndexLogMarkerCallback;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
+import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDeleteOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
+import org.apache.hyracks.storage.common.LocalResource;
 
 public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
-    public static final String KEY_INDEX = "Index";
     protected final boolean isPrimary;
     protected final SourceLocation sourceLoc;
-    // This class has both lsmIndex and index (in super class) pointing to the same object
-    private AbstractLSMIndex lsmIndex;
     protected int i = 0;
 
     /**
@@ -71,9 +74,10 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
     public LSMInsertDeleteOperatorNodePushable(IHyracksTaskContext ctx, int partition, int[] fieldPermutation,
             RecordDescriptor inputRecDesc, IndexOperation op, boolean isPrimary,
             IIndexDataflowHelperFactory indexHelperFactory, IModificationOperationCallbackFactory modCallbackFactory,
-            ITupleFilterFactory tupleFilterFactory, SourceLocation sourceLoc) throws HyracksDataException {
+            ITupleFilterFactory tupleFilterFactory, SourceLocation sourceLoc,
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) throws HyracksDataException {
         super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, op, modCallbackFactory,
-                tupleFilterFactory);
+                tupleFilterFactory, tuplePartitionerFactory, partitionsMap);
         this.isPrimary = isPrimary;
         this.sourceLoc = sourceLoc;
     }
@@ -87,25 +91,32 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
         accessor = new FrameTupleAccessor(inputRecDesc);
         writeBuffer = new VSizeFrame(ctx);
         appender = new FrameTupleAppender(writeBuffer);
-        indexHelper.open();
-        lsmIndex = (AbstractLSMIndex) indexHelper.getIndexInstance();
         try {
+            INcApplicationContext runtimeCtx =
+                    (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
+
+            for (int i = 0; i < indexHelpers.length; i++) {
+                IIndexDataflowHelper indexHelper = indexHelpers[i];
+                indexHelper.open();
+                indexes[i] = indexHelper.getIndexInstance();
+                LocalResource resource = indexHelper.getResource();
+                modCallbacks[i] = modOpCallbackFactory.createModificationOperationCallback(resource, ctx, this);
+                IIndexAccessParameters iap = new IndexAccessParameters(modCallbacks[i], NoOpOperationCallback.INSTANCE);
+                indexAccessors[i] = indexes[i].createAccessor(iap);
+                LSMIndexUtil.checkAndSetFirstLSN((AbstractLSMIndex) indexes[i],
+                        runtimeCtx.getTransactionSubsystem().getLogManager());
+            }
+
             if (isPrimary && ctx.getSharedObject() != null) {
-                PrimaryIndexLogMarkerCallback callback = new PrimaryIndexLogMarkerCallback(lsmIndex);
+                PrimaryIndexLogMarkerCallback callback = new PrimaryIndexLogMarkerCallback((ILSMIndex) indexes[0]);
                 TaskUtil.put(ILogMarkerCallback.KEY_MARKER_CALLBACK, callback, ctx);
             }
             writer.open();
-            modCallback =
-                    modOpCallbackFactory.createModificationOperationCallback(indexHelper.getResource(), ctx, this);
-            IIndexAccessParameters iap = new IndexAccessParameters(modCallback, NoOpOperationCallback.INSTANCE);
-            indexAccessor = lsmIndex.createAccessor(iap);
+            writerOpen = true;
             if (tupleFilterFactory != null) {
                 tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
                 frameTuple = new FrameTupleReference();
             }
-            INcApplicationContext runtimeCtx =
-                    (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
-            LSMIndexUtil.checkAndSetFirstLSN(lsmIndex, runtimeCtx.getTransactionSubsystem().getLogManager());
         } catch (Throwable th) {
             throw HyracksDataException.create(th);
         }
@@ -114,7 +125,6 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
-        ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) indexAccessor;
         int tupleCount = accessor.getTupleCount();
         try {
             for (; i < tupleCount; i++, currentTupleIdx++) {
@@ -125,6 +135,9 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
                     }
                 }
                 tuple.reset(accessor, i);
+                int storagePartition = tuplePartitioner.partition(accessor, i);
+                int storageIdx = storagePartitionId2Index.get(storagePartition);
+                ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) indexAccessors[storageIdx];
                 switch (op) {
                     case INSERT:
                         if (i == 0 && isPrimary) {
@@ -188,18 +201,25 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
 
     @Override
     public void close() throws HyracksDataException {
-        if (lsmIndex != null) {
+        Throwable failure = null;
+        for (IIndexDataflowHelper indexHelper : indexHelpers) {
+            failure = ResourceReleaseUtils.close(indexHelper, failure);
+        }
+        if (writerOpen) {
             try {
-                indexHelper.close();
-            } finally {
                 writer.close();
+            } catch (Throwable th) {
+                failure = ExceptionUtils.suppress(failure, th);
             }
+        }
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
         }
     }
 
     @Override
     public void fail() throws HyracksDataException {
-        if (lsmIndex != null) {
+        if (writerOpen) {
             writer.fail();
         }
     }

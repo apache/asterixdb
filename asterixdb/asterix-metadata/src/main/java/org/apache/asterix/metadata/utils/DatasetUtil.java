@@ -73,8 +73,10 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -83,6 +85,7 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionerFactory;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.misc.ConstantTupleSourceOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
@@ -439,8 +442,10 @@ public class DatasetUtil {
 
         // prepare callback
         int[] primaryKeyFields = new int[numKeys];
+        int[] pkFields = new int[numKeys];
         for (int i = 0; i < numKeys; i++) {
             primaryKeyFields[i] = i;
+            pkFields[i] = fieldPermutation[i];
         }
         boolean hasSecondaries =
                 metadataProvider.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName()).size() > 1;
@@ -506,10 +511,16 @@ public class DatasetUtil {
         ITupleProjectorFactory projectorFactory = IndexUtil.createUpsertTupleProjectorFactory(
                 dataset.getDatasetFormatInfo(), requestedType, itemType, metaItemType, numKeys);
 
+        int numPartitions = MetadataProvider.getNumPartitions(splitsAndConstraint.second);
+        int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
+        IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(metadataProvider);
+        ITuplePartitionerFactory tuplePartitionerFactory =
+                new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
+
         op = new LSMPrimaryUpsertOperatorDescriptor(spec, outputRecordDesc, fieldPermutation, idfh,
                 missingWriterFactory, modificationCallbackFactory, searchCallbackFactory,
                 dataset.getFrameOpCallbackFactory(metadataProvider), numKeys, filterSourceIndicator, filterItemType,
-                fieldIdx, hasSecondaries, projectorFactory);
+                fieldIdx, hasSecondaries, projectorFactory, tuplePartitionerFactory, partitionsMap);
         return new Pair<>(op, splitsAndConstraint.second);
     }
 

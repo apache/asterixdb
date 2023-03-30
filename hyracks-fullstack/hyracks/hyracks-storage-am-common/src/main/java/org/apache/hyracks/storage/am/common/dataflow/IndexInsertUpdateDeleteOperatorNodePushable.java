@@ -23,6 +23,8 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitioner;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -38,53 +40,76 @@ import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.LocalResource;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+
 public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
     protected final IHyracksTaskContext ctx;
-    protected final IIndexDataflowHelper indexHelper;
     protected final RecordDescriptor inputRecDesc;
     protected final IndexOperation op;
     protected final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
     protected FrameTupleAccessor accessor;
     protected FrameTupleReference frameTuple;
     protected IFrame writeBuffer;
-    protected IIndexAccessor indexAccessor;
     protected ITupleFilter tupleFilter;
-    protected IModificationOperationCallback modCallback;
-    protected IIndex index;
+    protected final IIndex[] indexes;
+    protected final IIndexAccessor[] indexAccessors;
+    protected final IIndexDataflowHelper[] indexHelpers;
+    protected final IModificationOperationCallback[] modCallbacks;
     protected final IModificationOperationCallbackFactory modOpCallbackFactory;
     protected final ITupleFilterFactory tupleFilterFactory;
+    protected final ITuplePartitioner tuplePartitioner;
+    protected final int[] partitions;
+    protected final Int2IntMap storagePartitionId2Index;
+    protected boolean writerOpen;
 
     public IndexInsertUpdateDeleteOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
             IndexOperation op, IModificationOperationCallbackFactory modOpCallbackFactory,
-            ITupleFilterFactory tupleFilterFactory) throws HyracksDataException {
+            ITupleFilterFactory tupleFilterFactory, ITuplePartitionerFactory tuplePartitionerFactory,
+            int[][] partitionsMap) throws HyracksDataException {
         this.ctx = ctx;
-        this.indexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
+        this.partitions = partitionsMap != null ? partitionsMap[partition] : new int[] { partition };
+        this.indexes = new IIndex[partitions.length];
+        this.indexAccessors = new IIndexAccessor[partitions.length];
+        this.modCallbacks = new IModificationOperationCallback[partitions.length];
+        this.storagePartitionId2Index = new Int2IntOpenHashMap();
+        this.indexHelpers = new IIndexDataflowHelper[partitions.length];
+        for (int i = 0; i < partitions.length; i++) {
+            storagePartitionId2Index.put(partitions[i], i);
+            indexHelpers[i] = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partitions[i]);
+        }
         this.modOpCallbackFactory = modOpCallbackFactory;
         this.tupleFilterFactory = tupleFilterFactory;
         this.inputRecDesc = inputRecDesc;
         this.op = op;
         this.tuple.setFieldPermutation(fieldPermutation);
+        this.tuplePartitioner = tuplePartitionerFactory.createPartitioner(ctx);
     }
 
     @Override
     public void open() throws HyracksDataException {
         accessor = new FrameTupleAccessor(inputRecDesc);
         writeBuffer = new VSizeFrame(ctx);
-        indexHelper.open();
-        index = indexHelper.getIndexInstance();
         try {
+            for (int i = 0; i < indexHelpers.length; i++) {
+                IIndexDataflowHelper indexHelper = indexHelpers[i];
+                indexHelper.open();
+                indexes[i] = indexHelper.getIndexInstance();
+                LocalResource resource = indexHelper.getResource();
+                modCallbacks[i] = modOpCallbackFactory.createModificationOperationCallback(resource, ctx, this);
+                IIndexAccessParameters iap = new IndexAccessParameters(modCallbacks[i], NoOpOperationCallback.INSTANCE);
+                indexAccessors[i] = indexes[i].createAccessor(iap);
+            }
             writer.open();
-            LocalResource resource = indexHelper.getResource();
-            modCallback = modOpCallbackFactory.createModificationOperationCallback(resource, ctx, this);
-            IIndexAccessParameters iap = new IndexAccessParameters(modCallback, NoOpOperationCallback.INSTANCE);
-            indexAccessor = index.createAccessor(iap);
+            writerOpen = true;
             if (tupleFilterFactory != null) {
                 tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
                 frameTuple = new FrameTupleReference();
@@ -108,6 +133,9 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
                 }
                 tuple.reset(accessor, i);
 
+                int storagePartition = tuplePartitioner.partition(accessor, i);
+                int storageIdx = storagePartitionId2Index.get(storagePartition);
+                IIndexAccessor indexAccessor = indexAccessors[storageIdx];
                 switch (op) {
                     case INSERT: {
                         try {
@@ -158,18 +186,24 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
 
     @Override
     public void close() throws HyracksDataException {
-        if (index != null) {
-            try {
+        Throwable failure = null;
+        try {
+            if (writerOpen) {
                 writer.close();
-            } finally {
-                indexHelper.close();
             }
+        } finally {
+            for (IIndexDataflowHelper indexHelper : indexHelpers) {
+                failure = ResourceReleaseUtils.close(indexHelper, failure);
+            }
+        }
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
         }
     }
 
     @Override
     public void fail() throws HyracksDataException {
-        if (index != null) {
+        if (writerOpen) {
             writer.fail();
         }
     }

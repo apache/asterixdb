@@ -23,6 +23,7 @@ import org.apache.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -43,9 +44,10 @@ public class LSMSecondaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpe
             int[] fieldPermutation, IIndexDataflowHelperFactory indexHelperFactory,
             ITupleFilterFactory tupleFilterFactory, ITupleFilterFactory prevTupleFilterFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory, int operationFieldIndex,
-            IBinaryIntegerInspectorFactory operationInspectorFactory, int[] prevValuePermutation) {
+            IBinaryIntegerInspectorFactory operationInspectorFactory, int[] prevValuePermutation,
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) {
         super(spec, outRecDesc, fieldPermutation, IndexOperation.UPSERT, indexHelperFactory, tupleFilterFactory, false,
-                modificationOpCallbackFactory);
+                modificationOpCallbackFactory, tuplePartitionerFactory, partitionsMap);
         this.prevValuePermutation = prevValuePermutation;
         this.operationFieldIndex = operationFieldIndex;
         this.operationInspectorFactory = operationInspectorFactory;
@@ -58,6 +60,6 @@ public class LSMSecondaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpe
         RecordDescriptor intputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new LSMSecondaryUpsertOperatorNodePushable(ctx, partition, indexHelperFactory, modCallbackFactory,
                 tupleFilterFactory, prevTupleFilterFactory, fieldPermutation, intputRecDesc, operationFieldIndex,
-                operationInspectorFactory, prevValuePermutation);
+                operationInspectorFactory, prevValuePermutation, tuplePartitionerFactory, partitionsMap);
     }
 }

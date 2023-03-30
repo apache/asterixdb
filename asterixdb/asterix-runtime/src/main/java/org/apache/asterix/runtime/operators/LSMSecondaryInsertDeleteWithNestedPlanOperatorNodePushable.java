@@ -29,6 +29,7 @@ import org.apache.hyracks.algebricks.runtime.operators.meta.PipelineAssembler;
 import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory.NestedTupleSourceRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -49,8 +50,10 @@ public class LSMSecondaryInsertDeleteWithNestedPlanOperatorNodePushable
     public LSMSecondaryInsertDeleteWithNestedPlanOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             int[] fieldPermutation, RecordDescriptor inputRecDesc, IndexOperation op,
             IIndexDataflowHelperFactory indexHelperFactory, IModificationOperationCallbackFactory modCallbackFactory,
-            List<AlgebricksPipeline> secondaryKeysPipeline) throws HyracksDataException {
-        super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, op, modCallbackFactory, null);
+            List<AlgebricksPipeline> secondaryKeysPipeline, ITuplePartitionerFactory tuplePartitionerFactory,
+            int[][] partitionsMap) throws HyracksDataException {
+        super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, op, modCallbackFactory, null,
+                tuplePartitionerFactory, partitionsMap);
         this.numberOfPrimaryKeyAndFilterFields = fieldPermutation.length;
 
         // Build our pipeline.
@@ -138,8 +141,6 @@ public class LSMSecondaryInsertDeleteWithNestedPlanOperatorNodePushable
 
         @Override
         public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-            ILSMIndexAccessor workingLSMAccessor = (ILSMIndexAccessor) indexAccessor;
-
             endOfPipelineTupleAccessor.reset(buffer);
             int nTuple = endOfPipelineTupleAccessor.getTupleCount();
             for (int t = 0; t < nTuple; t++) {
@@ -152,6 +153,9 @@ public class LSMSecondaryInsertDeleteWithNestedPlanOperatorNodePushable
                 // Add the primary keys and filter fields.
                 endTupleReference.addTuple(tuple);
 
+                int storagePartition = tuplePartitioner.partition(tuple.getFrameTupleAccessor(), tuple.getTupleIndex());
+                int storageIdx = storagePartitionId2Index.get(storagePartition);
+                ILSMIndexAccessor workingLSMAccessor = (ILSMIndexAccessor) indexAccessors[storageIdx];
                 // Pass the tuple to our accessor. There are only two operations: insert or delete.
                 if (op.equals(IndexOperation.INSERT)) {
                     try {
@@ -161,7 +165,6 @@ public class LSMSecondaryInsertDeleteWithNestedPlanOperatorNodePushable
                             throw e;
                         }
                     }
-
                 } else {
                     try {
                         workingLSMAccessor.forceDelete(endTupleReference);

@@ -24,6 +24,7 @@ import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -39,8 +40,10 @@ public class LSMSecondaryInsertDeleteWithNestedPlanOperatorDescriptor
 
     public LSMSecondaryInsertDeleteWithNestedPlanOperatorDescriptor(JobSpecification spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, IndexOperation op, IIndexDataflowHelperFactory indexHelperFactory,
-            IModificationOperationCallbackFactory modCallbackFactory, List<AlgebricksPipeline> secondaryKeysPipeline) {
-        super(spec, outRecDesc, indexHelperFactory, fieldPermutation, op, modCallbackFactory, null);
+            IModificationOperationCallbackFactory modCallbackFactory, List<AlgebricksPipeline> secondaryKeysPipeline,
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) {
+        super(spec, outRecDesc, indexHelperFactory, fieldPermutation, op, modCallbackFactory, null,
+                tuplePartitionerFactory, partitionsMap);
         this.secondaryKeysPipeline = secondaryKeysPipeline;
     }
 
@@ -49,6 +52,7 @@ public class LSMSecondaryInsertDeleteWithNestedPlanOperatorDescriptor
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new LSMSecondaryInsertDeleteWithNestedPlanOperatorNodePushable(ctx, partition, fieldPermutation,
-                inputRecDesc, op, indexHelperFactory, modCallbackFactory, secondaryKeysPipeline);
+                inputRecDesc, op, indexHelperFactory, modCallbackFactory, secondaryKeysPipeline,
+                tuplePartitionerFactory, partitionsMap);
     }
 }

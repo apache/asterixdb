@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.common.dataflow;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -32,17 +33,19 @@ import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 
 public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final IIndexDataflowHelperFactory indexHelperFactory;
     private final IndexOperation op;
     private final int[] fieldPermutation;
     private final IModificationOperationCallbackFactory modificationOpCallbackFactory;
     private final ITupleFilterFactory tupleFilterFactory;
+    protected final ITuplePartitionerFactory tuplePartitionerFactory;
+    protected final int[][] partitionsMap;
 
     public TreeIndexInsertUpdateDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, IndexOperation op, IIndexDataflowHelperFactory indexHelperFactory,
-            ITupleFilterFactory tupleFilterFactory,
-            IModificationOperationCallbackFactory modificationOpCallbackFactory) {
+            ITupleFilterFactory tupleFilterFactory, IModificationOperationCallbackFactory modificationOpCallbackFactory,
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) {
         super(spec, 1, 1);
         this.indexHelperFactory = indexHelperFactory;
         this.fieldPermutation = fieldPermutation;
@@ -50,6 +53,8 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractSingl
         this.modificationOpCallbackFactory = modificationOpCallbackFactory;
         this.tupleFilterFactory = tupleFilterFactory;
         this.outRecDescs[0] = outRecDesc;
+        this.tuplePartitionerFactory = tuplePartitionerFactory;
+        this.partitionsMap = partitionsMap;
     }
 
     @Override
@@ -57,6 +62,6 @@ public class TreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractSingl
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new IndexInsertUpdateDeleteOperatorNodePushable(ctx, partition, indexHelperFactory, fieldPermutation,
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), op, modificationOpCallbackFactory,
-                tupleFilterFactory);
+                tupleFilterFactory, tuplePartitionerFactory, partitionsMap);
     }
 }

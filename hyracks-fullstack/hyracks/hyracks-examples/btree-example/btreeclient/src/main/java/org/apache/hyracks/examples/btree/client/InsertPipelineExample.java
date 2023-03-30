@@ -25,6 +25,7 @@ import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobId;
@@ -37,6 +38,7 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionComputerFactory;
+import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionerFactory;
 import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
@@ -148,10 +150,16 @@ public class InsertPipelineExample {
         IIndexDataflowHelperFactory primaryHelperFactory =
                 new IndexDataflowHelperFactory(storageManager, primarySplitProvider);
 
+        int[][] partitionsMap = getPartitionsMap(splitNCs.length);
+        int[] pkFields = new int[] { primaryFieldPermutation[0] };
+        IBinaryHashFunctionFactory[] pkHashFunFactories =
+                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) };
+        ITuplePartitionerFactory tuplePartitionerFactory =
+                new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, splitNCs.length);
         // create operator descriptor
-        TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert =
-                new TreeIndexInsertUpdateDeleteOperatorDescriptor(spec, recDesc, primaryFieldPermutation,
-                        IndexOperation.INSERT, primaryHelperFactory, null, NoOpOperationCallbackFactory.INSTANCE);
+        TreeIndexInsertUpdateDeleteOperatorDescriptor primaryInsert = new TreeIndexInsertUpdateDeleteOperatorDescriptor(
+                spec, recDesc, primaryFieldPermutation, IndexOperation.INSERT, primaryHelperFactory, null,
+                NoOpOperationCallbackFactory.INSTANCE, tuplePartitionerFactory, partitionsMap);
         JobHelper.createPartitionConstraint(spec, primaryInsert, splitNCs);
 
         // prepare insertion into secondary index
@@ -174,9 +182,15 @@ public class InsertPipelineExample {
         IIndexDataflowHelperFactory secondaryHelperFactory =
                 new IndexDataflowHelperFactory(storageManager, secondarySplitProvider);
         // create operator descriptor
+        int[] pkFields2 = new int[] { secondaryFieldPermutation[1] };
+        IBinaryHashFunctionFactory[] pkHashFunFactories2 =
+                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) };
+        ITuplePartitionerFactory tuplePartitionerFactory2 =
+                new FieldHashPartitionerFactory(pkFields2, pkHashFunFactories2, splitNCs.length);
         TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsert =
                 new TreeIndexInsertUpdateDeleteOperatorDescriptor(spec, recDesc, secondaryFieldPermutation,
-                        IndexOperation.INSERT, secondaryHelperFactory, null, NoOpOperationCallbackFactory.INSTANCE);
+                        IndexOperation.INSERT, secondaryHelperFactory, null, NoOpOperationCallbackFactory.INSTANCE,
+                        tuplePartitionerFactory2, partitionsMap);
         JobHelper.createPartitionConstraint(spec, secondaryInsert, splitNCs);
 
         // end the insert pipeline at this sink operator
@@ -201,5 +215,13 @@ public class InsertPipelineExample {
         spec.addRoot(nullSink);
 
         return spec;
+    }
+
+    public static int[][] getPartitionsMap(int numPartitions) {
+        int[][] map = new int[numPartitions][1];
+        for (int i = 0; i < numPartitions; i++) {
+            map[i] = new int[] { i };
+        }
+        return map;
     }
 }

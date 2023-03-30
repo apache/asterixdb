@@ -106,6 +106,25 @@ public class CleanupUtils {
      * Close the AutoCloseable and suppress any Throwable thrown by the close call.
      * This method must NEVER throw any Throwable
      *
+     * @param closables
+     *            the resource to close
+     * @param root
+     *            the first exception encountered during release of resources
+     * @return the root Throwable if not null or a new Throwable if any was thrown, otherwise, it returns null
+     */
+    public static Throwable close(AutoCloseable[] closables, Throwable root) {
+        if (closables != null) {
+            for (AutoCloseable closable : closables) {
+                root = close(closable, root);
+            }
+        }
+        return root;
+    }
+
+    /**
+     * Close the AutoCloseable and suppress any Throwable thrown by the close call.
+     * This method must NEVER throw any Throwable
+     *
      * @param closable
      *            the resource to close
      * @param root

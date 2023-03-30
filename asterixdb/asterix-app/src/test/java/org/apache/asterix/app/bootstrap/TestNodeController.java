@@ -40,6 +40,7 @@ import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
 import org.apache.asterix.file.StorageComponentProvider;
+import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.MetadataManager;
@@ -83,8 +84,10 @@ import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataflow.TaskId;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -92,6 +95,7 @@ import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.util.HyracksConstants;
+import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionerFactory;
 import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
@@ -253,10 +257,17 @@ public class TestNodeController {
                         pkIndexInfo.fileSplitProvider);
             }
 
+            int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
+            int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
+            IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
+            ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(
+                    primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
+
             LSMPrimaryInsertOperatorNodePushable insertOp = new LSMPrimaryInsertOperatorNodePushable(ctx,
                     ctx.getTaskAttemptId().getTaskId().getPartition(), indexHelperFactory, pkIndexHelperFactory,
                     primaryIndexInfo.primaryIndexInsertFieldsPermutations, recordDesc, modOpCallbackFactory,
-                    searchOpCallbackFactory, primaryKeyIndexes.length, filterFields, null);
+                    searchOpCallbackFactory, primaryKeyIndexes.length, filterFields, null, tuplePartitionerFactory,
+                    partitionsMap);
             // For now, this assumes a single secondary index. recordDesc is always <pk-record-meta>
             // for the index, we will have to create an assign operator that extract the sk
             // then the secondary LSMInsertDeleteOperatorNodePushable
@@ -304,10 +315,12 @@ public class TestNodeController {
                         dataset.getModificationCallbackFactory(storageComponentProvider, secondaryIndex,
                                 IndexOperation.INSERT, primaryKeyIndexes);
 
+                ITuplePartitionerFactory tuplePartitionerFactory2 = new FieldHashPartitionerFactory(
+                        secondaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
                 LSMInsertDeleteOperatorNodePushable secondaryInsertOp = new LSMInsertDeleteOperatorNodePushable(ctx,
                         ctx.getTaskAttemptId().getTaskId().getPartition(), secondaryIndexInfo.insertFieldsPermutations,
                         secondaryIndexInfo.rDesc, IndexOperation.INSERT, false, secondaryIndexHelperFactory,
-                        secondaryModCallbackFactory, null, null);
+                        secondaryModCallbackFactory, null, null, tuplePartitionerFactory2, partitionsMap);
                 assignOp.setOutputFrameWriter(0, secondaryInsertOp, secondaryIndexInfo.rDesc);
 
                 IPushRuntime commitOp =
@@ -353,10 +366,15 @@ public class TestNodeController {
                     recordDescProvider.getInputRecordDescriptor(new ActivityId(new OperatorDescriptorId(0), 0), 0);
             IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                     storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
-            LSMInsertDeleteOperatorNodePushable deleteOp =
-                    new LSMInsertDeleteOperatorNodePushable(ctx, ctx.getTaskAttemptId().getTaskId().getPartition(),
-                            primaryIndexInfo.primaryIndexInsertFieldsPermutations, recordDesc, IndexOperation.DELETE,
-                            true, indexHelperFactory, modOpCallbackFactory, null, null);
+            int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
+            int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
+            IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
+            ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(
+                    primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
+            LSMInsertDeleteOperatorNodePushable deleteOp = new LSMInsertDeleteOperatorNodePushable(ctx,
+                    ctx.getTaskAttemptId().getTaskId().getPartition(),
+                    primaryIndexInfo.primaryIndexInsertFieldsPermutations, recordDesc, IndexOperation.DELETE, true,
+                    indexHelperFactory, modOpCallbackFactory, null, null, tuplePartitionerFactory, partitionsMap);
             // For now, this assumes a single secondary index. recordDesc is always <pk-record-meta>
             // for the index, we will have to create an assign operator that extract the sk
             // then the secondary LSMInsertDeleteOperatorNodePushable
@@ -404,10 +422,12 @@ public class TestNodeController {
                         dataset.getModificationCallbackFactory(storageComponentProvider, secondaryIndex,
                                 IndexOperation.INSERT, primaryKeyIndexes);
 
+                ITuplePartitionerFactory tuplePartitionerFactory2 = new FieldHashPartitionerFactory(
+                        secondaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
                 LSMInsertDeleteOperatorNodePushable secondaryInsertOp = new LSMInsertDeleteOperatorNodePushable(ctx,
                         ctx.getTaskAttemptId().getTaskId().getPartition(), secondaryIndexInfo.insertFieldsPermutations,
                         secondaryIndexInfo.rDesc, IndexOperation.DELETE, false, secondaryIndexHelperFactory,
-                        secondaryModCallbackFactory, null, null);
+                        secondaryModCallbackFactory, null, null, tuplePartitionerFactory2, partitionsMap);
                 assignOp.setOutputFrameWriter(0, secondaryInsertOp, secondaryIndexInfo.rDesc);
 
                 IPushRuntime commitOp =
@@ -684,6 +704,7 @@ public class TestNodeController {
         private final Map<String, String> mergePolicyProperties;
         private final int primaryIndexNumOfTupleFields;
         private final ITypeTraits[] primaryIndexTypeTraits;
+        private final IBinaryHashFunctionFactory[] hashFuncFactories;
         private final ISerializerDeserializer<?>[] primaryIndexSerdes;
         private final ConstantFileSplitProvider fileSplitProvider;
         private final RecordDescriptor rDesc;
@@ -706,6 +727,11 @@ public class TestNodeController {
                     + (filterFields != null ? filterFields.length : 0);
             primaryIndexTypeTraits =
                     createPrimaryIndexTypeTraits(primaryIndexNumOfTupleFields, primaryKeyTypes, recordType, metaType);
+            hashFuncFactories = new IBinaryHashFunctionFactory[primaryKeyTypes.length];
+            for (int i = 0; i < primaryKeyTypes.length; i++) {
+                hashFuncFactories[i] =
+                        BinaryHashFunctionFactoryProvider.INSTANCE.getBinaryHashFunctionFactory(primaryKeyTypes[i]);
+            }
             primaryIndexSerdes =
                     createPrimaryIndexSerdes(primaryIndexNumOfTupleFields, primaryKeyTypes, recordType, metaType);
             rDesc = new RecordDescriptor(primaryIndexSerdes, primaryIndexTypeTraits);
@@ -806,6 +832,11 @@ public class TestNodeController {
         IRecordDescriptorProvider recordDescProvider = primaryIndexInfo.getInsertRecordDescriptorProvider();
         IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                 storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
+        int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
+        int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
+        IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
+        ITuplePartitionerFactory tuplePartitionerFactory =
+                new FieldHashPartitionerFactory(primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
         LSMPrimaryUpsertOperatorNodePushable insertOp =
                 new LSMPrimaryUpsertOperatorNodePushable(ctx, ctx.getTaskAttemptId().getTaskId().getPartition(),
                         indexHelperFactory, primaryIndexInfo.primaryIndexInsertFieldsPermutations,
@@ -813,7 +844,8 @@ public class TestNodeController {
                         modificationCallbackFactory, searchCallbackFactory, keyIndexes.length, 0, recordType, -1,
                         frameOpCallbackFactory == null ? dataset.getFrameOpCallbackFactory(mdProvider)
                                 : frameOpCallbackFactory,
-                        MissingWriterFactory.INSTANCE, hasSecondaries, NoOpTupleProjectorFactory.INSTANCE);
+                        MissingWriterFactory.INSTANCE, hasSecondaries, NoOpTupleProjectorFactory.INSTANCE,
+                        tuplePartitionerFactory, partitionsMap);
         RecordDescriptor upsertOutRecDesc = getUpsertOutRecDesc(primaryIndexInfo.rDesc, dataset,
                 filterFields == null ? 0 : filterFields.length, recordType, metaType);
         // fix pk fields

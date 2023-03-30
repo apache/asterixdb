@@ -22,10 +22,13 @@ package org.apache.hyracks.tests.am.btree;
 import static org.apache.hyracks.tests.am.btree.DataSetConstants.inputParserFactories;
 import static org.apache.hyracks.tests.am.btree.DataSetConstants.inputRecordDesc;
 import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryFieldPermutation;
+import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryHashFunFactories;
 import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryKeyFieldCount;
+import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryKeyFieldPermutation;
 import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryRecDesc;
 import static org.apache.hyracks.tests.am.btree.DataSetConstants.secondaryFieldPermutationA;
 import static org.apache.hyracks.tests.am.btree.DataSetConstants.secondaryFieldPermutationB;
+import static org.apache.hyracks.tests.am.btree.DataSetConstants.secondaryPKFieldPermutationB;
 import static org.apache.hyracks.tests.am.btree.DataSetConstants.secondaryRecDesc;
 
 import java.io.DataOutput;
@@ -33,6 +36,7 @@ import java.io.File;
 
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileSplit;
@@ -41,6 +45,7 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionerFactory;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
@@ -69,6 +74,7 @@ import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.am.common.TreeOperatorTestHelper;
 import org.apache.hyracks.tests.integration.AbstractIntegrationTest;
+import org.apache.hyracks.tests.integration.TestUtil;
 import org.junit.After;
 import org.junit.Before;
 
@@ -226,17 +232,26 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
                 new DelimitedDataTupleParserFactory(inputParserFactories, '|'), ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
+        int[][] partitionsMap = TestUtil.getPartitionsMap(ordersSplits.length);
+        ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(primaryKeyFieldPermutation,
+                primaryHashFunFactories, ordersSplits.length);
+
         // insert into primary index
         TreeIndexInsertUpdateDeleteOperatorDescriptor primaryBtreeInsertOp =
                 new TreeIndexInsertUpdateDeleteOperatorDescriptor(spec, ordersDesc, primaryFieldPermutation,
-                        pipelineOperation, primaryHelperFactory, null, NoOpOperationCallbackFactory.INSTANCE);
+                        pipelineOperation, primaryHelperFactory, null, NoOpOperationCallbackFactory.INSTANCE,
+                        tuplePartitionerFactory, partitionsMap);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeInsertOp, NC1_ID);
 
         // first secondary index
         int[] fieldPermutationB = secondaryFieldPermutationB;
+        ITuplePartitionerFactory tuplePartitionerFactory2 = new FieldHashPartitionerFactory(
+                secondaryPKFieldPermutationB, primaryHashFunFactories, ordersSplits.length);
+
         TreeIndexInsertUpdateDeleteOperatorDescriptor secondaryInsertOp =
                 new TreeIndexInsertUpdateDeleteOperatorDescriptor(spec, ordersDesc, fieldPermutationB,
-                        pipelineOperation, secondaryHelperFactory, null, NoOpOperationCallbackFactory.INSTANCE);
+                        pipelineOperation, secondaryHelperFactory, null, NoOpOperationCallbackFactory.INSTANCE,
+                        tuplePartitionerFactory2, partitionsMap);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryInsertOp, NC1_ID);
 
         NullSinkOperatorDescriptor nullSink = new NullSinkOperatorDescriptor(spec);

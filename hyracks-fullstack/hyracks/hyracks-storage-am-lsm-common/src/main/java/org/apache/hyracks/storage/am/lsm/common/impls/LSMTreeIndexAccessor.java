@@ -20,6 +20,7 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -210,8 +211,8 @@ public class LSMTreeIndexAccessor implements ILSMIndexAccessor {
     }
 
     public void batchOperate(FrameTupleAccessor accessor, FrameTupleReference tuple, IFrameTupleProcessor processor,
-            IFrameOperationCallback frameOpCallback) throws HyracksDataException {
-        lsmHarness.batchOperate(ctx, accessor, tuple, processor, frameOpCallback);
+            IFrameOperationCallback frameOpCallback, Set<Integer> tuples) throws HyracksDataException {
+        lsmHarness.batchOperate(ctx, accessor, tuple, processor, frameOpCallback, tuples);
     }
 
     @Override

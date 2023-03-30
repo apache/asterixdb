@@ -24,6 +24,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -54,9 +55,10 @@ public class LSMPrimaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
             ISearchOperationCallbackFactory searchOpCallbackFactory,
             IFrameOperationCallbackFactory frameOpCallbackFactory, int numPrimaryKeys, Integer filterSourceIndicator,
             ARecordType filterItemType, int filterIndex, boolean hasSecondaries,
-            ITupleProjectorFactory projectorFactory) {
+            ITupleProjectorFactory projectorFactory, ITuplePartitionerFactory partitionerFactory,
+            int[][] partitionsMap) {
         super(spec, outRecDesc, fieldPermutation, IndexOperation.UPSERT, indexHelperFactory, null, true,
-                modificationOpCallbackFactory);
+                modificationOpCallbackFactory, partitionerFactory, partitionsMap);
         this.frameOpCallbackFactory = frameOpCallbackFactory;
         this.searchOpCallbackFactory = searchOpCallbackFactory;
         this.numPrimaryKeys = numPrimaryKeys;
@@ -75,6 +77,6 @@ public class LSMPrimaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
         return new LSMPrimaryUpsertOperatorNodePushable(ctx, partition, indexHelperFactory, fieldPermutation,
                 intputRecDesc, modCallbackFactory, searchOpCallbackFactory, numPrimaryKeys, filterSourceIndicator,
                 filterItemType, filterIndex, frameOpCallbackFactory, missingWriterFactory, hasSecondaries,
-                projectorFactory);
+                projectorFactory, tuplePartitionerFactory, partitionsMap);
     }
 }

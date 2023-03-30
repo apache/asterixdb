@@ -21,6 +21,7 @@ package org.apache.asterix.common.dataflow;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -38,8 +39,10 @@ public class LSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexInsertUpd
     public LSMTreeInsertDeleteOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, IndexOperation op, IIndexDataflowHelperFactory indexHelperFactory,
             ITupleFilterFactory tupleFilterFactory, boolean isPrimary,
-            IModificationOperationCallbackFactory modCallbackFactory) {
-        super(spec, outRecDesc, indexHelperFactory, fieldPermutation, op, modCallbackFactory, tupleFilterFactory);
+            IModificationOperationCallbackFactory modCallbackFactory, ITuplePartitionerFactory tuplePartitionerFactory,
+            int[][] partitionsMap) {
+        super(spec, outRecDesc, indexHelperFactory, fieldPermutation, op, modCallbackFactory, tupleFilterFactory,
+                tuplePartitionerFactory, partitionsMap);
         this.isPrimary = isPrimary;
     }
 
@@ -48,7 +51,8 @@ public class LSMTreeInsertDeleteOperatorDescriptor extends LSMTreeIndexInsertUpd
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         RecordDescriptor inputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new LSMInsertDeleteOperatorNodePushable(ctx, partition, fieldPermutation, inputRecDesc, op, isPrimary,
-                indexHelperFactory, modCallbackFactory, tupleFilterFactory, sourceLoc);
+                indexHelperFactory, modCallbackFactory, tupleFilterFactory, sourceLoc, tuplePartitionerFactory,
+                partitionsMap);
     }
 
     public boolean isPrimary() {

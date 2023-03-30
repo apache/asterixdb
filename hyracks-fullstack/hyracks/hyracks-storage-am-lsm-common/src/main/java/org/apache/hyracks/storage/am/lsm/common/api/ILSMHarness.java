@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -39,7 +40,6 @@ public interface ILSMHarness {
      * @param tuple
      *            the operation tuple
      * @throws HyracksDataException
-     * @throws IndexException
      */
     void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException;
 
@@ -54,7 +54,6 @@ public interface ILSMHarness {
      *            the operation tuple
      * @return
      * @throws HyracksDataException
-     * @throws IndexException
      */
     boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple)
             throws HyracksDataException;
@@ -69,7 +68,6 @@ public interface ILSMHarness {
      * @param pred
      *            the search predicate
      * @throws HyracksDataException
-     * @throws IndexException
      */
     void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred) throws HyracksDataException;
 
@@ -104,9 +102,7 @@ public interface ILSMHarness {
      * Schedule a merge
      *
      * @param ctx
-     * @param callback
      * @throws HyracksDataException
-     * @throws IndexException
      */
     ILSMIOOperation scheduleMerge(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
@@ -114,9 +110,7 @@ public interface ILSMHarness {
      * Schedule full merge
      *
      * @param ctx
-     * @param callback
      * @throws HyracksDataException
-     * @throws IndexException
      */
     ILSMIOOperation scheduleFullMerge(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
@@ -125,7 +119,6 @@ public interface ILSMHarness {
      *
      * @param operation
      * @throws HyracksDataException
-     * @throws IndexException
      */
     void merge(ILSMIOOperation operation) throws HyracksDataException;
 
@@ -133,7 +126,6 @@ public interface ILSMHarness {
      * Schedule a flush
      *
      * @param ctx
-     * @param callback
      * @throws HyracksDataException
      */
     ILSMIOOperation scheduleFlush(ILSMIndexOperationContext ctx) throws HyracksDataException;
@@ -143,7 +135,6 @@ public interface ILSMHarness {
      *
      * @param operation
      * @throws HyracksDataException
-     * @throws IndexException
      */
     void flush(ILSMIOOperation operation) throws HyracksDataException;
 
@@ -153,7 +144,6 @@ public interface ILSMHarness {
      * @param ioOperation
      *            the io operation that added the new component
      * @throws HyracksDataException
-     * @throws IndexException
      */
     void addBulkLoadedComponent(ILSMIOOperation ioOperation) throws HyracksDataException;
 
@@ -235,10 +225,13 @@ public interface ILSMHarness {
      *            the tuple processor
      * @param frameOpCallback
      *            the callback at the end of the frame
+     * @param tuples
+     *            the indexes of tuples to process
      * @throws HyracksDataException
      */
     void batchOperate(ILSMIndexOperationContext ctx, FrameTupleAccessor accessor, FrameTupleReference tuple,
-            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback) throws HyracksDataException;
+            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback, Set<Integer> tuples)
+            throws HyracksDataException;
 
     /**
      * Rollback components that match the passed predicate

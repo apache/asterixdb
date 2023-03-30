@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.dataflow;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -47,15 +48,15 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
     public LSMIndexInsertUpdateDeleteOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
             IndexOperation op, IModificationOperationCallbackFactory modCallbackFactory,
-            ITupleFilterFactory tupleFilterFactory) throws HyracksDataException {
+            ITupleFilterFactory tupleFilterFactory, ITuplePartitionerFactory tuplePartitionerFactory,
+            int[][] partitionsMap) throws HyracksDataException {
         super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, op, modCallbackFactory,
-                tupleFilterFactory);
+                tupleFilterFactory, tuplePartitionerFactory, partitionsMap);
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         accessor.reset(buffer);
-        ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) indexAccessor;
         int nextFlushTupleIndex = 0;
         int tupleCount = accessor.getTupleCount();
         for (int i = 0; i < tupleCount; i++) {
@@ -68,6 +69,9 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
                 }
                 tuple.reset(accessor, i);
 
+                int storagePartition = tuplePartitioner.partition(accessor, i);
+                int storageIdx = storagePartitionId2Index.get(storagePartition);
+                ILSMIndexAccessor lsmAccessor = (ILSMIndexAccessor) indexAccessors[storageIdx];
                 switch (op) {
                     case INSERT: {
                         if (!lsmAccessor.tryInsert(tuple)) {

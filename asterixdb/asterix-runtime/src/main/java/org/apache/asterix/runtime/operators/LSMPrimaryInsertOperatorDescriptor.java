@@ -22,6 +22,7 @@ import org.apache.asterix.common.dataflow.LSMTreeInsertDeleteOperatorDescriptor;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -43,9 +44,10 @@ public class LSMPrimaryInsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
             int[] fieldPermutation, IIndexDataflowHelperFactory indexHelperFactory,
             IIndexDataflowHelperFactory keyIndexHelperFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory,
-            ISearchOperationCallbackFactory searchOpCallbackFactory, int numOfPrimaryKeys, int[] filterFields) {
+            ISearchOperationCallbackFactory searchOpCallbackFactory, int numOfPrimaryKeys, int[] filterFields,
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) {
         super(spec, outRecDesc, fieldPermutation, IndexOperation.UPSERT, indexHelperFactory, null, true,
-                modificationOpCallbackFactory);
+                modificationOpCallbackFactory, tuplePartitionerFactory, partitionsMap);
         this.keyIndexHelperFactory = keyIndexHelperFactory;
         this.searchOpCallbackFactory = searchOpCallbackFactory;
         this.numOfPrimaryKeys = numOfPrimaryKeys;
@@ -58,6 +60,6 @@ public class LSMPrimaryInsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
         RecordDescriptor intputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new LSMPrimaryInsertOperatorNodePushable(ctx, partition, indexHelperFactory, keyIndexHelperFactory,
                 fieldPermutation, intputRecDesc, modCallbackFactory, searchOpCallbackFactory, numOfPrimaryKeys,
-                filterFields, sourceLoc);
+                filterFields, sourceLoc, tuplePartitionerFactory, partitionsMap);
     }
 }
