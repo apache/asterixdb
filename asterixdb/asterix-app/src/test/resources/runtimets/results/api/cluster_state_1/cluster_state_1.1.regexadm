@@ -9,6 +9,7 @@
     "active\.stop\.timeout" : 3600,
     "active\.suspend\.timeout" : 3600,
     "azure.request.timeout" : 120,
+    "cloud.deployment" : false,
     "compiler\.arrayindex" : true,
     "compiler.batch.lookup" : true,
     "compiler.cbo" : false,
