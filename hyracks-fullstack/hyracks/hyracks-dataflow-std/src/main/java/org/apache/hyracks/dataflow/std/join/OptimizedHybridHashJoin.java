@@ -133,10 +133,12 @@ public class OptimizedHybridHashJoin {
     }
 
     public OptimizedHybridHashJoin(IHyracksJobletContext jobletCtx, int memSizeInFrames, int numOfPartitions,
-                                   String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
-                                   ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator probePredEval,
-                                   IPredicateEvaluator buildPredEval, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1,boolean isDynamic){
-        this(jobletCtx,memSizeInFrames,numOfPartitions,probeRelName,buildRelName,probeRd,buildRd,probeHpc,buildHpc,probePredEval,buildPredEval,isLeftOuter,nullWriterFactories1);
+            String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
+            ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator probePredEval,
+            IPredicateEvaluator buildPredEval, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1,
+            boolean isDynamic) {
+        this(jobletCtx, memSizeInFrames, numOfPartitions, probeRelName, buildRelName, probeRd, buildRd, probeHpc,
+                buildHpc, probePredEval, buildPredEval, isLeftOuter, nullWriterFactories1);
         this.isDynamic = isDynamic;
     }
 
@@ -203,11 +205,11 @@ public class OptimizedHybridHashJoin {
     private void spillPartition(int pid) throws HyracksDataException {
         RunFileWriter writer = getSpillWriterOrCreateNewOneIfNotExist(buildRFWriters, buildRelName, pid);
         int spilt = bufferManager.flushPartition(pid, writer);
-        if (stats != null) {
+        if (stats != null)
             stats.getBytesWritten().update(spilt);
-        }
         bufferManager.clearPartition(pid);
         spilledStatus.set(pid);
+        LOGGER.debug(String.format("Spill:{partition:%d,bytes:%d}", pid, spilt));
     }
 
     private void closeBuildPartition(int pid) throws HyracksDataException {
@@ -694,6 +696,6 @@ public class OptimizedHybridHashJoin {
     }
 
     public int randomlyUpdateMemory(int min, int max) throws HyracksDataException {
-           return (int) Math.floor(Math.random() * (max - min + 1) + min);
+        return (int) Math.floor(Math.random() * (max - min + 1) + min);
     }
 }

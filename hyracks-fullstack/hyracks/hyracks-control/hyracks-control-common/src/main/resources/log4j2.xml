@@ -31,10 +31,14 @@
     <Console name="TracerLog" target="SYSTEM_OUT">
       <PatternLayout pattern="%m%n"/>
     </Console>
+    <File name="FileLog" fileName="logs/trace.log" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-mm-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    </File>
   </Appenders>
   <Loggers>
     <Root level="WARN">
       <AppenderRef ref="Console"/>
+      <AppenderRef ref="FileLog"/>
     </Root>
     <Logger name="org.apache.hyracks.control.nc.service" level="INFO"/>
     <Logger name="org.apache.hyracks.http.server.CLFLogger" level="ACCESS" additivity="false">
