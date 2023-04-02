@@ -23,13 +23,15 @@ import org.apache.asterix.common.api.IJobEventListenerFactory;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractPushRuntimeFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
 
 public class CommitRuntimeFactory extends AbstractPushRuntimeFactory {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
+    protected final ITuplePartitionerFactory partitionerFactory;
     protected final int datasetId;
     protected final int[] primaryKeyFields;
     protected final boolean isWriteTransaction;
@@ -37,7 +39,8 @@ public class CommitRuntimeFactory extends AbstractPushRuntimeFactory {
     protected final boolean isSink;
 
     public CommitRuntimeFactory(int datasetId, int[] primaryKeyFields, boolean isWriteTransaction,
-            int[] datasetPartitions, boolean isSink) {
+            int[] datasetPartitions, boolean isSink, ITuplePartitionerFactory partitionerFactory) {
+        this.partitionerFactory = partitionerFactory;
         this.datasetId = datasetId;
         this.primaryKeyFields = primaryKeyFields;
         this.isWriteTransaction = isWriteTransaction;
@@ -55,6 +58,7 @@ public class CommitRuntimeFactory extends AbstractPushRuntimeFactory {
         IJobletEventListenerFactory fact = ctx.getJobletContext().getJobletEventListenerFactory();
         return new IPushRuntime[] { new CommitRuntime(ctx, ((IJobEventListenerFactory) fact).getTxnId(datasetId),
                 datasetId, primaryKeyFields, isWriteTransaction,
-                datasetPartitions[ctx.getTaskAttemptId().getTaskId().getPartition()], isSink) };
+                datasetPartitions[ctx.getTaskAttemptId().getTaskId().getPartition()], isSink, partitionerFactory,
+                datasetPartitions) };
     }
 }

@@ -99,11 +99,13 @@ import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionerFactory;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
@@ -631,8 +633,11 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public IPushRuntimeFactory getCommitRuntimeFactory(MetadataProvider metadataProvider,
             int[] primaryKeyFieldPermutation, boolean isSink) throws AlgebricksException {
         int[] datasetPartitions = getDatasetPartitions(metadataProvider);
+        IBinaryHashFunctionFactory[] pkHashFunFactories = getPrimaryHashFunctionFactories(metadataProvider);
+        ITuplePartitionerFactory partitionerFactory = new FieldHashPartitionerFactory(primaryKeyFieldPermutation,
+                pkHashFunFactories, datasetPartitions.length);
         return new CommitRuntimeFactory(datasetId, primaryKeyFieldPermutation, metadataProvider.isWriteTransaction(),
-                datasetPartitions, isSink);
+                datasetPartitions, isSink, partitionerFactory);
     }
 
     public IFrameOperationCallbackFactory getFrameOpCallbackFactory(MetadataProvider mdProvider) {

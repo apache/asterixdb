@@ -855,7 +855,7 @@ public class TestNodeController {
             pkFieldsInCommitOp[i] = start++;
         }
         CommitRuntime commitOp = new CommitRuntime(ctx, getTxnJobId(ctx), dataset.getDatasetId(), pkFieldsInCommitOp,
-                true, ctx.getTaskAttemptId().getTaskId().getPartition(), true);
+                true, ctx.getTaskAttemptId().getTaskId().getPartition(), true, null, null);
         insertOp.setOutputFrameWriter(0, commitOp, upsertOutRecDesc);
         commitOp.setInputRecordDescriptor(0, upsertOutRecDesc);
         return Pair.of(insertOp, commitOp);

@@ -34,6 +34,8 @@ import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneOutputOneFramePushRuntime;
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitioner;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
@@ -56,14 +58,18 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
     protected final boolean isWriteTransaction;
     protected final long[] longHashes;
     protected final IHyracksTaskContext ctx;
+    private final int[] datasetPartitions;
+    private final ITuplePartitioner partitioner;
     protected final int resourcePartition;
     protected ITransactionContext transactionContext;
     protected LogRecord logRecord;
     protected final boolean isSink;
 
     public CommitRuntime(IHyracksTaskContext ctx, TxnId txnId, int datasetId, int[] primaryKeyFields,
-            boolean isWriteTransaction, int resourcePartition, boolean isSink) {
+            boolean isWriteTransaction, int resourcePartition, boolean isSink,
+            ITuplePartitionerFactory partitionerFactory, int[] datasetPartitions) {
         this.ctx = ctx;
+        this.datasetPartitions = datasetPartitions;
         INcApplicationContext appCtx =
                 (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
         this.transactionManager = appCtx.getTransactionSubsystem().getTransactionManager();
@@ -75,6 +81,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
         this.isWriteTransaction = isWriteTransaction;
         this.resourcePartition = resourcePartition;
         this.isSink = isSink;
+        this.partitioner = partitionerFactory != null ? partitionerFactory.createPartitioner(ctx) : null;
         longHashes = new long[2];
     }
 
@@ -102,7 +109,7 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
         for (int t = 0; t < nTuple; t++) {
             tRef.reset(tAccess, t);
             try {
-                formLogRecord(buffer, t);
+                formLogRecord(tAccess, t);
                 logMgr.log(logRecord);
                 if (!isSink) {
                     appendTupleToFrame(t);
@@ -130,15 +137,20 @@ public class CommitRuntime extends AbstractOneInputOneOutputOneFramePushRuntime 
         TransactionUtil.formMarkerLogRecord(logRecord, transactionContext, datasetId, resourcePartition, marker);
     }
 
-    protected void formLogRecord(ByteBuffer buffer, int t) {
+    protected void formLogRecord(FrameTupleAccessor accessor, int t) throws HyracksDataException {
         int pkHash = computePrimaryKeyHashValue(tRef, primaryKeyFields);
+        int resource = getResourcePartition(accessor, t);
         TransactionUtil.formEntityCommitLogRecord(logRecord, transactionContext, datasetId, pkHash, tRef,
-                primaryKeyFields, resourcePartition, LogType.ENTITY_COMMIT);
+                primaryKeyFields, resource, LogType.ENTITY_COMMIT);
     }
 
     protected int computePrimaryKeyHashValue(ITupleReference tuple, int[] primaryKeyFields) {
         MurmurHash128Bit.hash3_x64_128(tuple, primaryKeyFields, SEED, longHashes);
         return Math.abs((int) longHashes[0]);
+    }
+
+    protected int getResourcePartition(FrameTupleAccessor tupleAccessor, int tuple) throws HyracksDataException {
+        return partitioner != null ? datasetPartitions[partitioner.partition(tupleAccessor, tuple)] : resourcePartition;
     }
 
     @Override
