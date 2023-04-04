@@ -1822,18 +1822,6 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-storage</artifactId>
         <version>${gcsjavasdk.version}</version>
-        <exclusions>
-          <!-- substitute org.apache.tomcat:tomcat-annotations-api, as it has a nicer license -->
-          <exclusion>
-            <groupId>javax.annotation</groupId>
-            <artifactId>javax.annotation-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.tomcat</groupId>
-        <artifactId>tomcat-annotations-api</artifactId>
-        <version>10.1.5</version>
       </dependency>
       <!-- Google Cloud Storage end -->
       <!-- Azure Data Lake start -->
