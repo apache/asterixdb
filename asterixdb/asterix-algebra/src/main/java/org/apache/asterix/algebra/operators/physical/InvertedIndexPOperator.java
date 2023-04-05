@@ -186,14 +186,17 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), secondarySplitsAndConstraint.first);
 
-        LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp = new LSMInvertedIndexSearchOperatorDescriptor(
-                jobSpec, outputRecDesc, queryField, dataflowHelperFactory, queryTokenizerFactory,
-                fullTextConfigEvaluatorFactory, searchModifierFactory, retainInput, retainMissing,
-                nonMatchWriterFactory,
-                dataset.getSearchCallbackFactory(metadataProvider.getStorageComponentProvider(), secondaryIndex,
-                        IndexOperation.SEARCH, null),
-                minFilterFieldIndexes, maxFilterFieldIndexes, isFullTextSearchQuery, numPrimaryKeys,
-                propagateIndexFilter, nonFilterWriterFactory, frameLimit);
+        int numPartitions = MetadataProvider.getNumPartitions(secondarySplitsAndConstraint.second);
+        int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
+
+        LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp =
+                new LSMInvertedIndexSearchOperatorDescriptor(jobSpec, outputRecDesc, queryField, dataflowHelperFactory,
+                        queryTokenizerFactory, fullTextConfigEvaluatorFactory, searchModifierFactory, retainInput,
+                        retainMissing, nonMatchWriterFactory,
+                        dataset.getSearchCallbackFactory(metadataProvider.getStorageComponentProvider(), secondaryIndex,
+                                IndexOperation.SEARCH, null),
+                        minFilterFieldIndexes, maxFilterFieldIndexes, isFullTextSearchQuery, numPrimaryKeys,
+                        propagateIndexFilter, nonFilterWriterFactory, frameLimit, partitionsMap);
         return new Pair<>(invIndexSearchOp, secondarySplitsAndConstraint.second);
     }
 }

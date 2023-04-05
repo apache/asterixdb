@@ -65,10 +65,12 @@ public class LSMInvertedIndexSearchOperatorNodePushable extends IndexSearchOpera
             IInvertedIndexSearchModifier searchModifier, IBinaryTokenizerFactory binaryTokenizerFactory,
             IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory, int queryFieldIndex,
             boolean isFullTextSearchQuery, int numOfFields, boolean appendIndexFilter,
-            IMissingWriterFactory nonFilterWriterFactory, int frameLimit) throws HyracksDataException {
+            IMissingWriterFactory nonFilterWriterFactory, int frameLimit, int[][] partitionsMap)
+            throws HyracksDataException {
         super(ctx, inputRecDesc, partition, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, appendIndexFilter,
-                nonFilterWriterFactory, null, -1, false, null, null, DefaultTupleProjectorFactory.INSTANCE, null, null);
+                nonFilterWriterFactory, null, -1, false, null, null, DefaultTupleProjectorFactory.INSTANCE, null,
+                partitionsMap);
         this.searchModifier = searchModifier;
         this.binaryTokenizerFactory = binaryTokenizerFactory;
         this.fullTextConfigEvaluatorFactory = fullTextConfigEvaluatorFactory;

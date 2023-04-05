@@ -41,11 +41,11 @@ public class LSMBTreeBatchPointSearchOperatorDescriptor extends BTreeSearchOpera
             IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, ITupleFilterFactory tupleFilterFactory,
             long outputLimit, ITupleProjectorFactory tupleProjectorFactory,
-            ITuplePartitionerFactory tuplePartitionerFactory, int[][] map) {
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) {
         super(spec, outRecDesc, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory,
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, minFilterFieldIndexes,
                 maxFilterFieldIndexes, false, null, tupleFilterFactory, outputLimit, false, null, null,
-                tupleProjectorFactory, tuplePartitionerFactory, map);
+                tupleProjectorFactory, tuplePartitionerFactory, partitionsMap);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class LSMBTreeBatchPointSearchOperatorDescriptor extends BTreeSearchOpera
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), lowKeyFields, highKeyFields,
                 lowKeyInclusive, highKeyInclusive, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, tupleFilterFactory,
-                outputLimit, tupleProjectorFactory, tuplePartitionerFactory, map);
+                outputLimit, tupleProjectorFactory, tuplePartitionerFactory, partitionsMap);
     }
 
 }

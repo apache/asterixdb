@@ -57,7 +57,7 @@ public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
     protected final long outputLimit;
     protected final ITupleProjectorFactory tupleProjectorFactory;
     protected final ITuplePartitionerFactory tuplePartitionerFactory;
-    protected final int[][] map;
+    protected final int[][] partitionsMap;
 
     public BTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
@@ -79,7 +79,7 @@ public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
             IMissingWriterFactory nonFilterWriterFactory, ITupleFilterFactory tupleFilterFactory, long outputLimit,
             boolean appendOpCallbackProceedResult, byte[] searchCallbackProceedResultFalseValue,
             byte[] searchCallbackProceedResultTrueValue, ITupleProjectorFactory tupleProjectorFactory,
-            ITuplePartitionerFactory tuplePartitionerFactory, int[][] map) {
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) {
         super(spec, 1, 1);
         this.indexHelperFactory = indexHelperFactory;
         this.retainInput = retainInput;
@@ -102,7 +102,7 @@ public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
         this.searchCallbackProceedResultTrueValue = searchCallbackProceedResultTrueValue;
         this.tupleProjectorFactory = tupleProjectorFactory;
         this.tuplePartitionerFactory = tuplePartitionerFactory;
-        this.map = map;
+        this.partitionsMap = partitionsMap;
     }
 
     @Override
@@ -114,7 +114,7 @@ public class BTreeSearchOperatorDescriptor extends AbstractSingleActivityOperato
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, appendIndexFilter,
                 nonFilterWriterFactory, tupleFilterFactory, outputLimit, appendOpCallbackProceedResult,
                 searchCallbackProceedResultFalseValue, searchCallbackProceedResultTrueValue, tupleProjectorFactory,
-                tuplePartitionerFactory, map);
+                tuplePartitionerFactory, partitionsMap);
     }
 
     @Override

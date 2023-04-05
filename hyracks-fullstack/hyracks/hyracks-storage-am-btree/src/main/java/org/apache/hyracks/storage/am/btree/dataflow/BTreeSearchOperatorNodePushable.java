@@ -68,12 +68,12 @@ public class BTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
             IMissingWriterFactory nonFilterWriterFactory, ITupleFilterFactory tupleFilterFactory, long outputLimit,
             boolean appendOpCallbackProceedResult, byte[] searchCallbackProceedResultFalseValue,
             byte[] searchCallbackProceedResultTrueValue, ITupleProjectorFactory projectorFactory,
-            ITuplePartitionerFactory tuplePartitionerFactory, int[][] map) throws HyracksDataException {
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) throws HyracksDataException {
         super(ctx, inputRecDesc, partition, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
                 retainInput, retainMissing, nonMatchWriterFactory, searchCallbackFactory, appendIndexFilter,
                 nonFilterWriterFactory, tupleFilterFactory, outputLimit, appendOpCallbackProceedResult,
                 searchCallbackProceedResultFalseValue, searchCallbackProceedResultTrueValue, projectorFactory,
-                tuplePartitionerFactory, map);
+                tuplePartitionerFactory, partitionsMap);
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
         if (lowKeyFields != null && lowKeyFields.length > 0) {

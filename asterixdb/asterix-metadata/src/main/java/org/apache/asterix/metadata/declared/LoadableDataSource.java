@@ -147,7 +147,7 @@ public class LoadableDataSource extends DataSource {
         ITypedAdapterFactory adapterFactory = metadataProvider.getConfiguredAdapterFactory(alds.getTargetDataset(),
                 alds.getAdapter(), alds.getAdapterProperties(), itemType, null, context.getWarningCollector());
         RecordDescriptor rDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
-        return metadataProvider.buildLoadableDatasetScan(jobSpec, adapterFactory, rDesc);
+        return metadataProvider.getLoadableDatasetScanRuntime(jobSpec, adapterFactory, rDesc);
     }
 
     @Override

@@ -54,11 +54,11 @@ public class LSMBTreeBatchPointSearchOperatorNodePushable extends BTreeSearchOpe
             IIndexDataflowHelperFactory indexHelperFactory, boolean retainInput, boolean retainMissing,
             IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
             ITupleFilterFactory tupleFilterFactory, long outputLimit, ITupleProjectorFactory tupleProjectorFactory,
-            ITuplePartitionerFactory tuplePartitionerFactory, int[][] map) throws HyracksDataException {
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) throws HyracksDataException {
         super(ctx, partition, inputRecDesc, lowKeyFields, highKeyFields, lowKeyInclusive, highKeyInclusive,
                 minFilterKeyFields, maxFilterKeyFields, indexHelperFactory, retainInput, retainMissing,
                 missingWriterFactory, searchCallbackFactory, false, null, tupleFilterFactory, outputLimit, false, null,
-                null, tupleProjectorFactory, tuplePartitionerFactory, map);
+                null, tupleProjectorFactory, tuplePartitionerFactory, partitionsMap);
         this.keyFields = lowKeyFields;
     }
 

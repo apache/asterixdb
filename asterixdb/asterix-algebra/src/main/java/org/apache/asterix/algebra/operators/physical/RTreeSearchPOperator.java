@@ -106,7 +106,7 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
         }
 
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> rtreeSearch =
-                mp.buildRtreeRuntime(builder.getJobSpec(), outputVars, opSchema, typeEnv, context,
+                mp.getRtreeSearchRuntime(builder.getJobSpec(), outputVars, opSchema, typeEnv, context,
                         jobGenParams.getRetainInput(), retainMissing, nonMatchWriterFactory, dataset,
                         jobGenParams.getIndexName(), keyIndexes, propagateIndexFilter, nonFilterWriterFactory,
                         minFilterFieldIndexes, maxFilterFieldIndexes, unnestMap.getGenerateCallBackProceedResultVar());

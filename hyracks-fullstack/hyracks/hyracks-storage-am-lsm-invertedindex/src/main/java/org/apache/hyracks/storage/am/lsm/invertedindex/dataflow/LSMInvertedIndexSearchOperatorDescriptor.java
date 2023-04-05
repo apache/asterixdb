@@ -35,7 +35,7 @@ import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.IFullTextConfigE
 import org.apache.hyracks.storage.am.lsm.invertedindex.tokenizers.IBinaryTokenizerFactory;
 
 public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final int queryField;
     private final IInvertedIndexSearchModifierFactory searchModifierFactory;
@@ -54,6 +54,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActi
     private final int numOfFields;
     // the maximum number of frames that this inverted-index-search can use
     private final int frameLimit;
+    private final int[][] partitionsMap;
 
     public LSMInvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int queryField, IIndexDataflowHelperFactory indexHelperFactory,
@@ -62,7 +63,8 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActi
             IInvertedIndexSearchModifierFactory searchModifierFactory, boolean retainInput, boolean retainMissing,
             IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, boolean isFullTextSearchQuery, int numOfFields,
-            boolean appendIndexFilter, IMissingWriterFactory nonFilterWriterFactory, int frameLimit) {
+            boolean appendIndexFilter, IMissingWriterFactory nonFilterWriterFactory, int frameLimit,
+            int[][] partitionsMap) {
         super(spec, 1, 1);
         this.indexHelperFactory = indexHelperFactory;
         this.queryTokenizerFactory = queryTokenizerFactory;
@@ -79,6 +81,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActi
         this.appendIndexFilter = appendIndexFilter;
         this.nonFilterWriterFactory = nonFilterWriterFactory;
         this.numOfFields = numOfFields;
+        this.partitionsMap = partitionsMap;
         this.outRecDescs[0] = outRecDesc;
         this.frameLimit = frameLimit;
     }
@@ -91,6 +94,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractSingleActi
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), partition, minFilterFieldIndexes,
                 maxFilterFieldIndexes, indexHelperFactory, retainInput, retainMissing, missingWriterFactory,
                 searchCallbackFactory, searchModifier, queryTokenizerFactory, fullTextConfigEvaluatorFactory,
-                queryField, isFullTextSearchQuery, numOfFields, appendIndexFilter, nonFilterWriterFactory, frameLimit);
+                queryField, isFullTextSearchQuery, numOfFields, appendIndexFilter, nonFilterWriterFactory, frameLimit,
+                partitionsMap);
     }
 }
