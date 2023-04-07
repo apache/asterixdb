@@ -140,6 +140,34 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private boolean isDynamic = true;
     private static final Logger LOGGER = LogManager.getLogger();
 
+    /**
+     * Log information about the Optimized Hybrid Hash Join State
+     * @param state 0: Build Started 1: Build Finished, 2: Probe Started, 3: Probe Finished
+     * @param numberOfPartitions Number of partitions been used for the HHJ
+     * @param memSize Memory Allocated for the operation
+     */
+    private void logState(int state, int numberOfPartitions, int memSize) {
+        String message = "Optimize Hybrid Hash Join starting Build Phase | Number of partitions: %d | Size: %d";
+        switch (state) {
+            case 1: //Build Finished.
+                message = "Optimize Hybrid Hash Join finished Build Phase";
+                break;
+            case 2: //Probe Started.
+                message = message.replace("Build", "Probe");
+                break;
+            case 3:
+                message = "Optimize Hybrid Hash Join finished Probe Phase";
+                break;
+            default:
+                break;
+        }
+        if(this.isDynamic)
+            message = message.replace("Optimize", "Memory Adaptive");
+        message = String.format(message, numberOfPartitions, memSize);
+        LOGGER.debug(message);
+
+    }
+
     public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memSizeInFrames,
             int inputsize0, double factor, int[] keys0, int[] keys1,
             IBinaryHashFunctionFamily[] propHashFunctionFactories,
@@ -290,11 +318,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             probePredEval, buildPredEval, isLeftOuter, nonMatchWriterFactories, isDynamic);
                     state.hybridHJ.setOperatorStats(stats);
                     state.hybridHJ.initBuild();
-                    LOGGER.trace(
-                            String.format(
-                                    "OptimizedHybridHashJoin is starting the build phase with %d "
-                                            + "partitions using frames for memory.",
-                                    state.numOfPartitions, state.memForJoin));
+                    logState(0, state.numOfPartitions, state.memForJoin);
                 }
 
                 @Override
@@ -308,7 +332,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     if (state.hybridHJ != null && !failed) {
                         state.hybridHJ.closeBuild();
                         ctx.setStateObject(state);
-                        LOGGER.trace("OptimizedHybridHashJoin closed its build phase");
+                        logState(1, state.numOfPartitions, state.memForJoin);
                     } else {
                         state.hybridHJ.clearBuildTempFiles();
                     }
@@ -390,7 +414,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     writer.open();
                     state.hybridHJ.initProbe(probComp);
                     state.hybridHJ.setOperatorStats(stats);
-                    LOGGER.debug("OptimizedHybridHashJoin is starting the probe phase.");
+                    logState(2, state.numOfPartitions, state.memForJoin);
                 }
 
                 @Override
@@ -417,7 +441,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         } finally {
                             writer.close(); // writer should always be closed.
                         }
-                        logProbeComplete();
+                        logState(3, state.numOfPartitions, state.memForJoin);
                         return;
                     }
                     try {
@@ -459,7 +483,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         throw e;
                     } finally {
                         try {
-                            logProbeComplete();
+                            logState(3, state.numOfPartitions, state.memForJoin);
                         } finally {
                             writer.close();
                         }
@@ -469,11 +493,6 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 @Override
                 public void setOperatorStats(IOperatorStats stats) {
                     this.stats = stats;
-                }
-
-                private void logProbeComplete() {
-                    if (LOGGER.isDebugEnabled())
-                        LOGGER.debug("OptimizedHybridHashJoin closed its probe phase");
                 }
 
                 //The buildSideReader should be always the original buildSideReader, so should the probeSideReader
