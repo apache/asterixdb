@@ -219,8 +219,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
     }
 
     public static int compare(IValueReference valueA, IValueReference valueB) {
-        return UTF8StringUtil.compareTo(valueA.getByteArray(), valueA.getStartOffset(), valueA.getLength(),
-                valueB.getByteArray(), valueB.getStartOffset(), valueB.getLength());
+        return UTF8StringUtil.compareTo(valueA.getByteArray(), valueA.getStartOffset(), valueB.getByteArray(),
+                valueB.getStartOffset());
     }
 
     /**
