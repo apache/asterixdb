@@ -46,7 +46,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressio
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.HashJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
-import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
@@ -95,8 +94,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         // If cboMode is true, then all datasets need to have samples, otherwise the check in doAllDataSourcesHaveSamples()
         // further below will return false.
         ILogicalOperator op = opRef.getValue();
-        if (!((op.getOperatorTag() == LogicalOperatorTag.INNERJOIN)
-                || ((op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT)))) {
+        if (!(joinClause(op) || ((op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT)))) {
             return false;
         }
 
@@ -106,17 +104,16 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         }
 
         List<ILogicalOperator> joinOps = new ArrayList<>();
-        List<ILogicalOperator> internalEdges = new ArrayList<>();
         HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap = new HashMap<>();
         // The data scan operators. Will be in the order of the from clause.
         // Important for position ordering when assigning bits to join expressions.
         List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps = new ArrayList<>();
-        HashMap<DataSourceScanOperator, EmptyTupleSourceOperator> dataSourceEmptyTupleHashMap = new HashMap<>();
+        List<AssignOperator> assignOps = new ArrayList<>();
 
         IPlanPrettyPrinter pp = context.getPrettyPrinter();
         printPlan(pp, (AbstractLogicalOperator) op, "Original Whole plan1");
-        boolean canTransform = getJoinOpsAndLeafInputs(op, emptyTupleAndDataSourceOps, joinLeafInputsHashMap,
-                dataSourceEmptyTupleHashMap, internalEdges, joinOps);
+        boolean canTransform =
+                getJoinOpsAndLeafInputs(op, emptyTupleAndDataSourceOps, joinLeafInputsHashMap, joinOps, assignOps);
 
         if (!canTransform) {
             return false;
@@ -133,8 +130,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         int numberOfFromTerms = emptyTupleAndDataSourceOps.size();
 
         joinEnum.initEnum((AbstractLogicalOperator) op, cboMode, cboTestMode, numberOfFromTerms,
-                emptyTupleAndDataSourceOps, joinLeafInputsHashMap, dataSourceEmptyTupleHashMap, internalEdges, joinOps,
-                context);
+                emptyTupleAndDataSourceOps, joinLeafInputsHashMap, joinOps, assignOps, context);
 
         if (cboMode) {
             if (!doAllDataSourcesHaveSamples(emptyTupleAndDataSourceOps, context)) {
@@ -142,8 +138,18 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             }
         }
 
-        if (internalEdges.size() > 0) {
-            pushAssignsIntoLeafInputs(joinLeafInputsHashMap, internalEdges);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("---------------------------- Printing Leaf Inputs1");
+            printLeafPlans(pp, joinLeafInputsHashMap);
+        }
+
+        if (assignOps.size() > 0) {
+            pushAssignsIntoLeafInputs(pp, joinLeafInputsHashMap, assignOps);
+        }
+
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("---------------------------- Printing Leaf Inputs2");
+            printLeafPlans(pp, joinLeafInputsHashMap);
         }
 
         int cheapestPlan = joinEnum.enumerateJoins(); // MAIN CALL INTO CBO
@@ -156,7 +162,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         if (numberOfFromTerms > 1) {
             buildNewTree(cheapestPlanNode, joinLeafInputsHashMap, joinOps, new MutableInt(0));
             printPlan(pp, (AbstractLogicalOperator) joinOps.get(0), "New Whole Plan after buildNewTree 1");
-            ILogicalOperator root = addConstantInternalEdgesAtTheTop(joinOps.get(0), internalEdges);
+            ILogicalOperator root = addRemainingAssignsAtTheTop(joinOps.get(0), assignOps);
             printPlan(pp, (AbstractLogicalOperator) joinOps.get(0), "New Whole Plan after buildNewTree 2");
             printPlan(pp, (AbstractLogicalOperator) root, "New Whole Plan after buildNewTree");
             // this will be the new root
@@ -182,6 +188,14 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         }
 
         return true;
+    }
+
+    private boolean joinClause(ILogicalOperator op) {
+        if (op.getOperatorTag() == LogicalOperatorTag.INNERJOIN)
+            return true;
+        //if (op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN)
+        //return true;
+        return false;
     }
 
     private boolean getCBOMode(IOptimizationContext context) {
@@ -221,12 +235,51 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
      * Check to see if there is only one assign here and nothing below that other than a join.
      * have not seen cases where there is more than one assign in a leafinput.
      */
-    private boolean onlyOneAssign(ILogicalOperator nextOp) {
-        if (nextOp.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
-            return false;
+    private boolean onlyOneAssign(ILogicalOperator op, List<AssignOperator> assignOps) {
+        if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            AssignOperator aOp = (AssignOperator) op;
+            assignOps.add(aOp);
+            op = op.getInputs().get(0).getValue();
         }
-        List<Mutable<ILogicalOperator>> nextOpInputs = nextOp.getInputs();
-        return nextOpInputs.get(0).getValue().getOperatorTag() == LogicalOperatorTag.INNERJOIN;
+        return (joinClause(op));
+    }
+
+    // An internal edge must contain only assigns followed by an inner join
+    private int numVarRefExprs(AssignOperator aOp) {
+        List<Mutable<ILogicalExpression>> exprs = aOp.getExpressions();
+        int count = 0;
+        for (Mutable<ILogicalExpression> exp : exprs) {
+            if (exp.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) exp.getValue();
+                for (Mutable<ILogicalExpression> arg : afcExpr.getArguments()) {
+                    if (arg.getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                        count++;
+                    }
+                }
+            }
+        }
+
+        return count;
+    }
+
+    private boolean onlyAssigns(ILogicalOperator op, List<AssignOperator> assignOps) {
+        while (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            AssignOperator aOp = (AssignOperator) op;
+            int count = numVarRefExprs(aOp);
+            if (count > 1) {
+                return false;
+            }
+            assignOps.add(aOp);
+            op = op.getInputs().get(0).getValue();
+        }
+        return (joinClause(op));
+    }
+
+    private ILogicalOperator skipPastAssigns(ILogicalOperator nextOp) {
+        while (nextOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            nextOp = nextOp.getInputs().get(0).getValue();
+        }
+        return nextOp;
     }
 
     private ILogicalOperator findSelectOrDataScan(ILogicalOperator op) {
@@ -254,20 +307,19 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
      */
     private boolean getJoinOpsAndLeafInputs(ILogicalOperator op,
             List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps,
-            HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap,
-            HashMap<DataSourceScanOperator, EmptyTupleSourceOperator> dataSourceEmptyTupleHashMap,
-            List<ILogicalOperator> internalEdges, List<ILogicalOperator> joinOps) {
+            HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap, List<ILogicalOperator> joinOps,
+            List<AssignOperator> assignOps) {
 
         if (op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) {
             return false;
         }
 
-        if (op.getOperatorTag() == LogicalOperatorTag.INNERJOIN) {
+        if (joinClause(op)) {
             joinOps.add(op);
             for (int i = 0; i < 2; i++) {
                 ILogicalOperator nextOp = op.getInputs().get(i).getValue();
                 boolean canTransform = getJoinOpsAndLeafInputs(nextOp, emptyTupleAndDataSourceOps,
-                        joinLeafInputsHashMap, dataSourceEmptyTupleHashMap, internalEdges, joinOps);
+                        joinLeafInputsHashMap, joinOps, assignOps);
                 if (!canTransform) {
                     return false;
                 }
@@ -288,20 +340,18 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 } else {
                     joinLeafInputsHashMap.put(etsOp, op);
                 }
-                dataSourceEmptyTupleHashMap.put(dataSourceOp, etsOp);
             } else { // This must be an internal edge
-                if (onlyOneAssign(op)) {
+                if (onlyAssigns(op, assignOps)) {
+                    //if (onlyOneAssign(op, assignOps)) {
                     // currently, will handle only assign statement and nothing else in an internal Edge.
                     // we can lift this restriction later if the need arises. This just makes some code easier.
-                    internalEdges.add(op);
-                    boolean canTransform =
-                            getJoinOpsAndLeafInputs(op.getInputs().get(0).getValue(), emptyTupleAndDataSourceOps,
-                                    joinLeafInputsHashMap, dataSourceEmptyTupleHashMap, internalEdges, joinOps);
+
+                    ILogicalOperator skipAssisgnsOp = skipPastAssigns(op);
+                    boolean canTransform = getJoinOpsAndLeafInputs(skipAssisgnsOp, emptyTupleAndDataSourceOps,
+                            joinLeafInputsHashMap, joinOps, assignOps);
                     if (!canTransform) {
                         return false;
                     }
-
-                    //internalEdges.add(op); // better to store the parent; do this soon.
                 } else {
                     return false;
                 }
@@ -370,16 +420,12 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         }
     }
 
-    //Internal edges are assign statements. The RHS has a variable in it.
-    // We need to find the internal edge that has a variable coming from this leaf leafInput.
-    private int findInternalEdge(ILogicalOperator leafInput, List<ILogicalOperator> internalEdges)
-            throws AlgebricksException {
+    private int findAssignOp(ILogicalOperator leafInput, List<AssignOperator> assignOps) throws AlgebricksException {
         int i = -1;
 
-        for (ILogicalOperator ie : internalEdges) {
+        for (AssignOperator aOp : assignOps) {
             i++;
             // this will be an Assign, so no need to check
-            AssignOperator aOp = (AssignOperator) ie;
             List<LogicalVariable> vars = new ArrayList<>();
             aOp.getExpressions().get(0).getValue().getUsedVariables(vars);
             HashSet<LogicalVariable> vars2 = new HashSet<>();
@@ -392,11 +438,9 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         return -1;
     }
 
-    private ILogicalOperator addAssignToLeafInput(ILogicalOperator leafInput, ILogicalOperator internalEdge) {
-        ILogicalOperator root = leafInput;
+    private ILogicalOperator addAssignToLeafInput(ILogicalOperator leafInput, AssignOperator aOp) {
         // this will be an Assign, so no need to check
-        AssignOperator aOp = (AssignOperator) internalEdge;
-        aOp.getInputs().get(0).setValue(root);
+        aOp.getInputs().get(0).setValue(leafInput);
         return aOp;
     }
 
@@ -530,15 +574,11 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     // in some very rare cases, there is an internal edge that has an assign statement such as $$var = 20 but this variable
     // is not used anywhere in the current join graph but is used outside the current join graph. So we add this assign to the top of
     // our plan, so the rest of the code will be happy. Strange that this assign appears in the join graph.
-    private ILogicalOperator addConstantInternalEdgesAtTheTop(ILogicalOperator op,
-            List<ILogicalOperator> internalEdges) {
-        if (internalEdges.size() == 0) {
-            return op;
-        }
+
+    private ILogicalOperator addRemainingAssignsAtTheTop(ILogicalOperator op, List<AssignOperator> assignOps) {
+
         ILogicalOperator root = op;
-        for (ILogicalOperator ie : internalEdges) {
-            // this will be an Assign, so no need to check
-            AssignOperator aOp = (AssignOperator) ie;
+        for (AssignOperator aOp : assignOps) {
             aOp.getInputs().get(0).setValue(root);
             root = aOp;
         }
@@ -569,43 +609,23 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     // for every internal edge assign (again assuming only 1 for now), find the corresponding leafInput and place the assign
     // on top of that LeafInput. Modify the joinLeafInputsHashMap as well.
-    private void pushAssignsIntoLeafInputs(HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap,
-            List<ILogicalOperator> internalEdges) throws AlgebricksException {
+    private void pushAssignsIntoLeafInputs(IPlanPrettyPrinter pp,
+            HashMap<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap, List<AssignOperator> assignOps)
+            throws AlgebricksException {
 
         for (Map.Entry<EmptyTupleSourceOperator, ILogicalOperator> mapElement : joinLeafInputsHashMap.entrySet()) {
             ILogicalOperator joinLeafInput = mapElement.getValue();
+            printPlan(pp, (AbstractLogicalOperator) joinLeafInput, "Incoming leaf Input");
             EmptyTupleSourceOperator ets = mapElement.getKey();
-            int internalEdgeNumber = findInternalEdge(joinLeafInput, internalEdges);
-            if (internalEdgeNumber != -1) {
-                joinLeafInput = addAssignToLeafInput(joinLeafInput, internalEdges.get(internalEdgeNumber));
+            int assignNumber = findAssignOp(joinLeafInput, assignOps);
+            if (assignNumber != -1) {
+                joinLeafInput = addAssignToLeafInput(joinLeafInput, assignOps.get(assignNumber));
+                printPlan(pp, (AbstractLogicalOperator) joinLeafInput, "Modified leaf Input");
                 joinLeafInputsHashMap.put(ets, joinLeafInput);
-                internalEdges.remove(internalEdgeNumber); // no longer needed
+                assignOps.remove(assignNumber);
             }
         }
 
-    }
-
-    private boolean substituteVarOnce(ILogicalExpression exp, LogicalVariable oldVar, LogicalVariable newVar) {
-        switch (exp.getExpressionTag()) {
-            case FUNCTION_CALL:
-                AbstractFunctionCallExpression fun = (AbstractFunctionCallExpression) exp;
-                for (int i = 0; i < fun.getArguments().size(); i++) {
-                    ILogicalExpression arg = fun.getArguments().get(i).getValue();
-                    if (substituteVarOnce(arg, oldVar, newVar)) {
-                        return true;
-                    }
-                }
-                return false;
-            case VARIABLE:
-                VariableReferenceExpression varExpr = (VariableReferenceExpression) exp;
-                if (varExpr.getVariableReference().equals(oldVar)) {
-                    varExpr.setVariable(newVar);
-                    return true;
-                }
-                return false;
-            default:
-                return false;
-        }
     }
 
     // check to see if every dataset has a sample. If not, CBO code cannot run. A warning message must be issued as well.

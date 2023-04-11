@@ -81,9 +81,8 @@ public class JoinEnum {
     protected int jnArraySize;
     protected List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps;
     protected Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap;
-    protected Map<DataSourceScanOperator, EmptyTupleSourceOperator> dataSourceEmptyTupleHashMap;
     protected List<ILogicalExpression> singleDatasetPreds;
-    protected List<ILogicalOperator> internalEdges;
+    protected List<AssignOperator> assignOps;
     protected List<ILogicalOperator> joinOps;
     protected ILogicalOperator localJoinOp; // used in nestedLoopsApplicable code.
     protected IOptimizationContext optCtx;
@@ -104,12 +103,11 @@ public class JoinEnum {
 
     public void initEnum(AbstractLogicalOperator op, boolean cboMode, boolean cboTestMode, int numberOfFromTerms,
             List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps,
-            Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap,
-            Map<DataSourceScanOperator, EmptyTupleSourceOperator> dataSourceEmptyTupleHashMap,
-            List<ILogicalOperator> internalEdges, List<ILogicalOperator> joinOps, IOptimizationContext context) {
+            Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap, List<ILogicalOperator> joinOps,
+            List<AssignOperator> assignOps, IOptimizationContext context) {
         this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
-        this.internalEdges = new ArrayList<>();
+        this.assignOps = new ArrayList<>();
         this.allPlans = new ArrayList<>();
         this.numberOfTerms = numberOfFromTerms;
         this.cboMode = cboMode;
@@ -119,8 +117,7 @@ public class JoinEnum {
         this.physOptConfig = context.getPhysicalOptimizationConfig();
         this.emptyTupleAndDataSourceOps = emptyTupleAndDataSourceOps;
         this.joinLeafInputsHashMap = joinLeafInputsHashMap;
-        this.dataSourceEmptyTupleHashMap = dataSourceEmptyTupleHashMap;
-        this.internalEdges = internalEdges;
+        this.assignOps = assignOps;
         this.joinOps = joinOps;
         this.op = op;
         this.forceJoinOrderMode = getForceJoinOrderMode(context);
@@ -166,10 +163,6 @@ public class JoinEnum {
 
     public Map<EmptyTupleSourceOperator, ILogicalOperator> getJoinLeafInputsHashMap() {
         return joinLeafInputsHashMap;
-    }
-
-    public Map<DataSourceScanOperator, EmptyTupleSourceOperator> getDataSourceEmptyTupleHashMap() {
-        return dataSourceEmptyTupleHashMap;
     }
 
     public ILogicalOperator findLeafInput(List<LogicalVariable> logicalVars) throws AlgebricksException {
@@ -339,16 +332,14 @@ public class JoinEnum {
         }
 
         // so this variable must be in an internal edge in an assign statement. Find the RHS variables there
-        for (ILogicalOperator op : this.internalEdges) {
-            if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-                List<LogicalVariable> vars2 = new ArrayList<>();
-                VariableUtilities.getUsedVariables(op, vars2);
-                int bits = 0;
-                for (LogicalVariable lv2 : vars2) {
-                    bits |= findBits(lv2);
-                }
-                return bits;
+        for (AssignOperator op : this.assignOps) {
+            List<LogicalVariable> vars2 = new ArrayList<>();
+            VariableUtilities.getUsedVariables(op, vars2);
+            int bits = 0;
+            for (LogicalVariable lv2 : vars2) {
+                bits |= findBits(lv2);
             }
+            return bits;
         }
         // should never reach this because every variable must exist in some leaf input.
         return JoinNode.NO_JN;
@@ -387,8 +378,7 @@ public class JoinEnum {
             usedVars.clear();
             ILogicalExpression expr = jc.joinCondition;
             expr.getUsedVariables(usedVars);
-            for (ILogicalOperator ie : internalEdges) {
-                AssignOperator aOp = (AssignOperator) ie;
+            for (AssignOperator aOp : assignOps) {
                 for (int i = 0; i < aOp.getVariables().size(); i++) {
                     if (usedVars.contains(aOp.getVariables().get(i))) {
                         OperatorManipulationUtil.replaceVarWithExpr((AbstractFunctionCallExpression) expr,
