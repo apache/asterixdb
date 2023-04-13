@@ -37,6 +37,7 @@ import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -78,6 +79,9 @@ public class RecordFieldsUtil {
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ABOOLEAN);
 
     private final static ARecordType openType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
+    private final static AOrderedListType openOrderedListType = DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE;
+    private final static AUnorderedListType openUnOrderedListType =
+            DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
 
     public void processRecord(ARecordPointable recordAccessor, ARecordType recType, DataOutput out, int level)
             throws IOException {
@@ -91,7 +95,7 @@ public class RecordFieldsUtil {
         OrderedListBuilder orderedListBuilder = getOrderedListBuilder();
         orderedListBuilder.reset(listType);
         IARecordBuilder fieldRecordBuilder = getRecordBuilder();
-        fieldRecordBuilder.reset(null);
+        fieldRecordBuilder.reset(openType);
 
         int schemeFieldCount = recordAccessor.getSchemeFieldCount(recType);
         for (int i = 0; i < schemeFieldCount; ++i) {
@@ -119,7 +123,7 @@ public class RecordFieldsUtil {
                     tmpValue.reset();
                     recordAccessor.getClosedFieldValue(recType, i, tmpValue.getDataOutput());
                     if (tag == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                        addNestedField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
+                        addRecordField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
                     } else {
                         addListField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
                     }
@@ -151,14 +155,15 @@ public class RecordFieldsUtil {
             // write nested or list types
             if (tag == ATypeTag.SERIALIZED_RECORD_TYPE_TAG || tag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                     || tag == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                IAType fieldType = null;
                 ArrayBackedValueStorage tmpValue = getTempBuffer();
                 tmpValue.reset();
                 recordAccessor.getOpenFieldValue(recType, i, tmpValue.getDataOutput());
                 if (tag == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
-                    addNestedField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
+                    addRecordField(tmpValue, openType, fieldRecordBuilder, level + 1);
+                } else if (tag == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                    addListField(tmpValue, openOrderedListType, fieldRecordBuilder, level + 1);
                 } else {
-                    addListField(tmpValue, fieldType, fieldRecordBuilder, level + 1);
+                    addListField(tmpValue, openUnOrderedListType, fieldRecordBuilder, level + 1);
                 }
             }
 
@@ -226,7 +231,7 @@ public class RecordFieldsUtil {
         fieldRecordBuilder.addField(fieldAbvs, valueAbvs);
     }
 
-    public void addNestedField(IValueReference recordArg, IAType fieldType, IARecordBuilder fieldRecordBuilder,
+    public void addRecordField(IValueReference recordArg, IAType fieldType, IARecordBuilder fieldRecordBuilder,
             int level) throws IOException {
         ArrayBackedValueStorage fieldAbvs = getTempBuffer();
         ArrayBackedValueStorage valueAbvs = getTempBuffer();
@@ -236,31 +241,26 @@ public class RecordFieldsUtil {
         stringSerde.serialize(nestedName, fieldAbvs.getDataOutput());
         // Value
         valueAbvs.reset();
-        ARecordType newType;
-        if (fieldType == null) {
-            newType = openType;
-        } else {
-            newType = (ARecordType) fieldType;
-        }
+        ARecordType newType = (ARecordType) fieldType;
         ARecordPointable recordP = getRecordPointable();
         recordP.set(recordArg);
         processRecord(recordP, newType, valueAbvs.getDataOutput(), level);
         fieldRecordBuilder.addField(fieldAbvs, valueAbvs);
     }
 
-    public void processListValue(IValueReference listArg, IAType fieldType, DataOutput out, int level)
+    public void processListValue(IValueReference listArg, IAType listType, DataOutput out, int level)
             throws IOException {
         ArrayBackedValueStorage itemValue = getTempBuffer();
         IARecordBuilder listRecordBuilder = getRecordBuilder();
 
-        AListPointable list = getListPointable(fieldType.getTypeTag());
+        AListPointable list = getListPointable(listType.getTypeTag());
         list.set(listArg);
 
         OrderedListBuilder innerListBuilder = getOrderedListBuilder();
-        innerListBuilder.reset(listType);
+        innerListBuilder.reset(RecordFieldsUtil.listType);
 
-        listRecordBuilder.reset(null);
-        AbstractCollectionType act = (AbstractCollectionType) fieldType;
+        listRecordBuilder.reset(openType);
+        AbstractCollectionType act = (AbstractCollectionType) listType;
         int itemCount = list.getItemCount();
         for (int l = 0; l < itemCount; l++) {
             itemValue.reset();
@@ -269,11 +269,24 @@ public class RecordFieldsUtil {
             byte tagId = list.getItemTag(act, l);
             addFieldType(tagId, listRecordBuilder);
 
-            if (tagId == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+            if (tagId == ATypeTag.SERIALIZED_RECORD_TYPE_TAG || tagId == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
+                    || tagId == ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
                 ArrayBackedValueStorage tmpAbvs = getTempBuffer();
                 tmpAbvs.reset();
                 list.getItemValue(act, l, tmpAbvs.getDataOutput());
-                addNestedField(tmpAbvs, act.getItemType(), listRecordBuilder, level + 1);
+                IAType itemType;
+
+                if (tagId == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
+                    itemType = act.getItemType().getTypeTag() != ATypeTag.ANY ? act.getItemType() : openType;
+                    addRecordField(tmpAbvs, itemType, listRecordBuilder, level + 1);
+                } else if (tagId == ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG) {
+                    itemType = act.getItemType().getTypeTag() != ATypeTag.ANY ? act.getItemType() : openOrderedListType;
+                    addListField(tmpAbvs, itemType, listRecordBuilder, level + 1);
+                } else {
+                    itemType =
+                            act.getItemType().getTypeTag() != ATypeTag.ANY ? act.getItemType() : openUnOrderedListType;
+                    addListField(tmpAbvs, itemType, listRecordBuilder, level + 1);
+                }
             }
 
             listRecordBuilder.write(itemValue.getDataOutput(), true);

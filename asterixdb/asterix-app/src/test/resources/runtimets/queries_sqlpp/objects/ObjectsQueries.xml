@@ -82,6 +82,11 @@
       <output-dir compare="Text">missing-fields</output-dir>
     </compilation-unit>
   </test-case>
+  <test-case FilePath="objects/get-object-fields">
+    <compilation-unit name="open-list-type">
+      <output-dir compare="Text">open-list-type</output-dir>
+    </compilation-unit>
+  </test-case>
   <test-case FilePath="objects/get-object-field-value">
     <compilation-unit name="documentation-example">
       <output-dir compare="Text">documentation-example</output-dir>

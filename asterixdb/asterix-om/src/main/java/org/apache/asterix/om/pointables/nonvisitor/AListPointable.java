@@ -190,7 +190,7 @@ public class AListPointable extends AbstractPointable {
         if (isFixedType(inputType)) {
             return getFixedLength(inputType);
         } else {
-            int nextOffset = (getItemCount() > index + 1) ? getItemOffset(inputType, index + 1) : getLength();
+            int nextOffset = (getItemCount() > index + 1) ? getItemOffset(inputType, index + 1) : getLength() - 1;
             return nextOffset - getItemOffset(inputType, index);
         }
     }
