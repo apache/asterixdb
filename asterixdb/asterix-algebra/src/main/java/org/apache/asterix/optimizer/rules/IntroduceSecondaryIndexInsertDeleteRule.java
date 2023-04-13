@@ -190,6 +190,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         if (dataset.hasMetaPart()) {
             metaType = (ARecordType) mp.findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         }
+        recType = (ARecordType) mp.findTypeForDatasetWithoutType(recType, metaType, dataset);
+
         List<Index> indexes = mp.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
         Stream<Index> indexStream = indexes.stream();
         indexStream = indexStream.filter(index -> index.getIndexType() != IndexType.SAMPLE);

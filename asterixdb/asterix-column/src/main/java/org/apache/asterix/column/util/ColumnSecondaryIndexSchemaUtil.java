@@ -49,6 +49,18 @@ public class ColumnSecondaryIndexSchemaUtil {
         return new ARecordType("root", result.getFieldNames(), result.getFieldTypes(), true);
     }
 
+    public static ARecordType getRecordTypeWithFieldTypes(List<List<String>> paths, List<IAType> types)
+            throws AlgebricksException {
+        ARecordType result = DataProjectionFiltrationInfo.EMPTY_TYPE;
+        for (int i = 0; i < paths.size(); i++) {
+            List<String> path = paths.get(i);
+            ARecordType type = getRecordType(path, "root", 0, types.get(i));
+            result = (ARecordType) RecordMergeTypeComputer.merge(result, type);
+        }
+
+        return new ARecordType("root", result.getFieldNames(), result.getFieldTypes(), true);
+    }
+
     /**
      * Get the expected type for an array index
      *

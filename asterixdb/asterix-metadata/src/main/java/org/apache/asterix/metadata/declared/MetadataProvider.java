@@ -365,6 +365,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return MetadataManagerUtil.findTypeEntity(mdTxnCtx, dataverseName, typeName);
     }
 
+    public IAType findTypeForDatasetWithoutType(IAType recordType, IAType metaRecordType, Dataset dataset)
+            throws AlgebricksException {
+        return MetadataManagerUtil.findTypeForDatasetWithoutType(recordType, metaRecordType, dataset);
+    }
+
     public IAType findType(DataverseName dataverseName, String typeName) throws AlgebricksException {
         return MetadataManagerUtil.findType(mdTxnCtx, dataverseName, typeName);
     }

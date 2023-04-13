@@ -42,6 +42,7 @@ import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
+import org.apache.asterix.metadata.declared.MetadataManagerUtil;
 import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -333,6 +334,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 metaDt = (ARecordType) metadataNode.getDatatype(txnId, metatypeDataverseName, metatypeName)
                         .getDatatype();
             }
+            recordDt = (ARecordType) MetadataManagerUtil.findTypeForDatasetWithoutType(recordDt, metaDt, dataset);
             searchKeyType = new ArrayList<>(searchElementCount);
             for (int i = 0; i < searchElementCount; i++) {
                 Pair<List<List<String>>, List<List<String>>> searchElement = searchElements.get(i);

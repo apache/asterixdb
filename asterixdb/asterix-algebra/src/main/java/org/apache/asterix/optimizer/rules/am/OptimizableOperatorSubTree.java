@@ -335,6 +335,8 @@ public class OptimizableOperatorSubTree {
             ARecordType metaItemType = (ARecordType) metadataProvider.findType(ds.getMetaItemTypeDataverseName(),
                     ds.getMetaItemTypeName());
 
+            rType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(rType, metaItemType, ds);
+
             // First index is always the primary datasource in this subtree.
             if (i == 0) {
                 setDataset(ds);

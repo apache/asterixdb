@@ -232,6 +232,9 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             ARecordType recordType = (ARecordType) ((MetadataProvider) context.getMetadataProvider()).findType(dataset);
             ARecordType metaRecordType =
                     (ARecordType) ((MetadataProvider) context.getMetadataProvider()).findMetaType(dataset);
+            recordType = (ARecordType) ((MetadataProvider) context.getMetadataProvider())
+                    .findTypeForDatasetWithoutType(recordType, metaRecordType, dataset);
+
             // create the operator that will replace the dataset scan/search
             AbstractUnnestMapOperator primaryIndexUnnestOperator =
                     (AbstractUnnestMapOperator) AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,

@@ -334,6 +334,7 @@ public class RebalanceUtil {
         ARecordType itemType =
                 (ARecordType) metadataProvider.findType(source.getItemTypeDataverseName(), source.getItemTypeName());
         ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, source);
+        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaType, source);
         int numberOfPrimaryKeys = source.getPrimaryKeys().size();
 
         // This could be expensive if record structure is "complex"

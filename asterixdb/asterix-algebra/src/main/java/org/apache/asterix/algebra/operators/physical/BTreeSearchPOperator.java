@@ -146,6 +146,8 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                     IProjectionFiltrationInfo<?> metaProjectionInfo = unnestMapOp.getMetaProjectionInfo();
                     ARecordType datasetType = (ARecordType) metadataProvider.findType(dataset);
                     ARecordType metaItemType = (ARecordType) metadataProvider.findMetaType(dataset);
+                    datasetType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(datasetType,
+                            metaItemType, dataset);
                     tupleProjectorFactory = IndexUtil.createTupleProjectorFactory(formatInfo, projectionInfo,
                             metaProjectionInfo, datasetType, metaItemType, dataset.getPrimaryKeys().size());
                 }

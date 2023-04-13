@@ -23,6 +23,7 @@ import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.column.util.ColumnSecondaryIndexSchemaUtil;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -39,6 +40,7 @@ import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.FullTextConfigMetadataEntity;
 import org.apache.asterix.metadata.entities.FullTextFilterMetadataEntity;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.utils.MetadataConstants;
@@ -60,6 +62,33 @@ public class MetadataManagerUtil {
             throws AlgebricksException {
         Datatype type = findTypeEntity(mdTxnCtx, dataverseName, typeName);
         return type != null ? type.getDatatype() : null;
+    }
+
+    /**
+     * Checks if a dataset is created without type specification and has no meta part. For such datasets,
+     * creates and returns a record type based on the primary key and primary key types information included in the
+     * internal details.
+     *
+     * @param itemType record type of the dataset
+     * @param metaItemType record type of the meta part of the dataset
+     * @param dataset the actual dataset
+     * @return type computed from primary keys if dataset without type spec, otherwise the original itemType itself
+     * @throws AlgebricksException
+     */
+    public static IAType findTypeForDatasetWithoutType(IAType itemType, IAType metaItemType, Dataset dataset)
+            throws AlgebricksException {
+        ARecordType recordType = (ARecordType) itemType;
+        if (recordType.getFieldNames().length == 0 && metaItemType == null
+                && dataset.getDatasetType() == DatasetConfig.DatasetType.INTERNAL) {
+            InternalDatasetDetails dsDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
+            return findType(dsDetails.getPrimaryKey(), dsDetails.getPrimaryKeyType());
+        }
+        return itemType;
+    }
+
+    private static IAType findType(List<List<String>> primaryKeys, List<IAType> primaryKeyTypes)
+            throws AlgebricksException {
+        return ColumnSecondaryIndexSchemaUtil.getRecordTypeWithFieldTypes(primaryKeys, primaryKeyTypes);
     }
 
     public static Datatype findTypeEntity(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
@@ -210,6 +239,8 @@ public class MetadataManagerUtil {
 
         IAType itemType = findType(mdTxnCtx, dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType = findType(mdTxnCtx, dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+        itemType = findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
+
         INodeDomain domain = findNodeDomain(clusterStateManager, mdTxnCtx, dataset.getNodeGroupName());
         return new DatasetDataSource(id, dataset, itemType, metaItemType, datasourceType, dataset.getDatasetDetails(),
                 domain);
