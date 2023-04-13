@@ -27,7 +27,7 @@ import org.apache.hyracks.data.std.api.IValueReference;
 
 public abstract class AbstractValueReader implements Comparable<AbstractValueReader> {
 
-    public abstract void resetValue(AbstractBytesInputStream in) throws IOException;
+    public abstract void init(AbstractBytesInputStream in, int tupleCount) throws IOException;
 
     public abstract void nextValue() throws HyracksDataException;
 

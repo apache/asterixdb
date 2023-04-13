@@ -33,7 +33,7 @@ public final class LongValueReader extends AbstractValueReader {
     }
 
     @Override
-    public void resetValue(AbstractBytesInputStream in) throws IOException {
+    public void init(AbstractBytesInputStream in, int tupleCount) throws IOException {
         longReader.initFromPage(in);
     }
 

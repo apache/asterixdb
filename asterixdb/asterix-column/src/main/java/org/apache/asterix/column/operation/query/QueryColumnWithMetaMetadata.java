@@ -30,8 +30,8 @@ import org.apache.asterix.column.metadata.FieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
-import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.IColumnValuesReaderFactory;
+import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
 import org.apache.asterix.column.values.reader.filter.FilterAccessorProvider;
 import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluator;
 import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluatorFactory;
@@ -51,7 +51,7 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
     private final ColumnAssembler metaAssembler;
 
     private QueryColumnWithMetaMetadata(ARecordType datasetType, ARecordType metaType,
-            IColumnValuesReader[] primaryKeyReaders, IValueReference serializedMetadata,
+            PrimitiveColumnValuesReader[] primaryKeyReaders, IValueReference serializedMetadata,
             FieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, ObjectSchemaNode metaRoot,
             IColumnValuesReaderFactory readerFactory, IValueGetterFactory valueGetterFactory,
             IColumnFilterEvaluator filterEvaluator, List<IColumnFilterValueAccessor> filterValueAccessors)
@@ -141,7 +141,8 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
         IColumnFilterEvaluator filterEvaluator = filterEvaluatorFactory.create(filterAccessorProvider);
         List<IColumnFilterValueAccessor> filterValueAccessors = filterAccessorProvider.getFilterAccessors();
 
-        IColumnValuesReader[] primaryKeyReaders = createPrimaryKeyReaders(input, readerFactory, numberOfPrimaryKeys);
+        PrimitiveColumnValuesReader[] primaryKeyReaders =
+                createPrimaryKeyReaders(input, readerFactory, numberOfPrimaryKeys);
 
         return new QueryColumnWithMetaMetadata(datasetType, metaType, primaryKeyReaders, serializedMetadata,
                 fieldNamesDictionary, clippedRoot, metaClippedRoot, readerFactory, valueGetterFactory, filterEvaluator,

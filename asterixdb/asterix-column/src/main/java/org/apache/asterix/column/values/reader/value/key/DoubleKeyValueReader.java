@@ -16,37 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.values.reader.value;
+package org.apache.asterix.column.values.reader.value.key;
 
-import java.io.IOException;
-
-import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
+import org.apache.asterix.column.values.reader.value.AbstractValueReader;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.DoublePointable;
 
-public class NoOpValueReader extends AbstractValueReader {
-    public static final AbstractValueReader INSTANCE = new NoOpValueReader();
-
-    private NoOpValueReader() {
-    }
-
-    @Override
-    public void init(AbstractBytesInputStream in, int tupleCount) throws IOException {
-        throw new UnsupportedOperationException(getClass().getName());
-    }
-
-    @Override
-    public void nextValue() throws HyracksDataException {
-        throw new UnsupportedOperationException(getClass().getName());
-    }
-
+public final class DoubleKeyValueReader extends AbstractFixedLengthColumnKeyValueReader {
     @Override
     public ATypeTag getTypeTag() {
-        throw new UnsupportedOperationException(getClass().getName());
+        return ATypeTag.DOUBLE;
+    }
+
+    @Override
+    protected int getValueLength() {
+        return Double.BYTES;
+    }
+
+    @Override
+    public double getDouble() {
+        return DoublePointable.getDouble(value.getByteArray(), value.getStartOffset());
     }
 
     @Override
     public int compareTo(AbstractValueReader o) {
-        throw new UnsupportedOperationException(getClass().getName());
+        return Double.compare(getDouble(), o.getDouble());
     }
 }

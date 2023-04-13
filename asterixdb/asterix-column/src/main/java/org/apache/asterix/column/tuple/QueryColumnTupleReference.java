@@ -24,7 +24,7 @@ import java.util.List;
 import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.column.operation.query.ColumnAssembler;
 import org.apache.asterix.column.operation.query.QueryColumnMetadata;
-import org.apache.asterix.column.values.IColumnValuesReader;
+import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
 import org.apache.asterix.column.values.reader.filter.FilterAccessorProvider;
 import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluator;
 import org.apache.asterix.column.values.reader.filter.IColumnFilterValueAccessor;
@@ -50,7 +50,7 @@ public final class QueryColumnTupleReference extends AbstractAsterixColumnTupleR
     }
 
     @Override
-    protected IColumnValuesReader[] getPrimaryKeyReaders(IColumnProjectionInfo info) {
+    protected PrimitiveColumnValuesReader[] getPrimaryKeyReaders(IColumnProjectionInfo info) {
         return ((QueryColumnMetadata) info).getPrimaryKeyReaders();
     }
 
@@ -69,11 +69,11 @@ public final class QueryColumnTupleReference extends AbstractAsterixColumnTupleR
     }
 
     @Override
-    protected void startColumn(IColumnBufferProvider buffersProvider, int startIndex, int ordinal, int numberOfTuples)
+    protected void startColumn(IColumnBufferProvider buffersProvider, int ordinal, int numberOfTuples)
             throws HyracksDataException {
         AbstractBytesInputStream columnStream = columnStreams[ordinal];
         columnStream.reset(buffersProvider);
-        assembler.resetColumn(columnStream, startIndex, ordinal);
+        assembler.resetColumn(columnStream, ordinal);
     }
 
     @Override

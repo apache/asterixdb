@@ -61,6 +61,10 @@ public abstract class AbstractBytesInputStream extends InputStream {
     @Override
     public abstract int available();
 
+    public ByteBuffer getBuffer() {
+        throw new UnsupportedOperationException("Getting buffer is not supported");
+    }
+
     public final void skipFully(long n) throws IOException {
         long skipped = skip(n);
         if (skipped < n) {

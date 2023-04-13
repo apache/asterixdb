@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.column.values.writer;
 
+import org.apache.asterix.column.bytes.encoder.ParquetPlainFixedLengthValuesWriter;
 import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
 import org.apache.asterix.column.values.writer.filters.UUIDColumnFilterWriter;
 import org.apache.asterix.om.types.ATypeTag;
@@ -28,7 +29,8 @@ final class UUIDColumnValuesWriter extends StringColumnValuesWriter {
 
     public UUIDColumnValuesWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int columnIndex, int level,
             boolean collection, boolean filtered) {
-        super(multiPageOpRef, columnIndex, level, collection, filtered, false);
+        // UUID is always written without encoding
+        super(columnIndex, level, collection, filtered, false, new ParquetPlainFixedLengthValuesWriter(multiPageOpRef));
     }
 
     @Override

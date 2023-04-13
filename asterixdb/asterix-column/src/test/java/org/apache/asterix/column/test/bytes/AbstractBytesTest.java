@@ -271,7 +271,7 @@ public abstract class AbstractBytesTest extends TestBase {
                 LOGGER.info("READ PageZero {}", pageNumber++);
                 assembler.reset(prepareRead(pageZero, providers, streams));
                 for (int i = 0; i < streams.length; i++) {
-                    assembler.resetColumn(streams[i], 0, i);
+                    assembler.resetColumn(streams[i], i);
                 }
                 writeForPageZero(ps, assembler);
             }

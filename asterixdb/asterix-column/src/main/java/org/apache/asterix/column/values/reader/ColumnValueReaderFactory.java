@@ -30,17 +30,21 @@ import org.apache.asterix.column.values.reader.value.LongValueReader;
 import org.apache.asterix.column.values.reader.value.NoOpValueReader;
 import org.apache.asterix.column.values.reader.value.StringValueReader;
 import org.apache.asterix.column.values.reader.value.UUIDValueReader;
+import org.apache.asterix.column.values.reader.value.key.DoubleKeyValueReader;
+import org.apache.asterix.column.values.reader.value.key.LongKeyValueReader;
+import org.apache.asterix.column.values.reader.value.key.StringKeyValueReader;
+import org.apache.asterix.column.values.reader.value.key.UUIDKeyValueReader;
 import org.apache.asterix.om.types.ATypeTag;
 
 public class ColumnValueReaderFactory implements IColumnValuesReaderFactory {
     @Override
     public IColumnValuesReader createValueReader(ATypeTag typeTag, int columnIndex, int maxLevel, boolean primaryKey) {
-        return new PrimitiveColumnValuesReader(createReader(typeTag), columnIndex, maxLevel, primaryKey);
+        return new PrimitiveColumnValuesReader(createReader(typeTag, primaryKey), columnIndex, maxLevel, primaryKey);
     }
 
     @Override
     public IColumnValuesReader createValueReader(ATypeTag typeTag, int columnIndex, int maxLevel, int[] delimiters) {
-        return new RepeatedPrimitiveColumnValuesReader(createReader(typeTag), columnIndex, maxLevel, delimiters);
+        return new RepeatedPrimitiveColumnValuesReader(createReader(typeTag, false), columnIndex, maxLevel, delimiters);
     }
 
     @Override
@@ -60,7 +64,7 @@ public class ColumnValueReaderFactory implements IColumnValuesReaderFactory {
         return createValueReader(typeTag, columnIndex, maxLevel, primaryKey);
     }
 
-    private AbstractValueReader createReader(ATypeTag typeTag) {
+    private AbstractValueReader createReader(ATypeTag typeTag, boolean primaryKey) {
         switch (typeTag) {
             case MISSING:
             case NULL:
@@ -68,13 +72,13 @@ public class ColumnValueReaderFactory implements IColumnValuesReaderFactory {
             case BOOLEAN:
                 return new BooleanValueReader();
             case BIGINT:
-                return new LongValueReader();
+                return primaryKey ? new LongKeyValueReader() : new LongValueReader();
             case DOUBLE:
-                return new DoubleValueReader();
+                return primaryKey ? new DoubleKeyValueReader() : new DoubleValueReader();
             case STRING:
-                return new StringValueReader();
+                return primaryKey ? new StringKeyValueReader() : new StringValueReader();
             case UUID:
-                return new UUIDValueReader();
+                return primaryKey ? new UUIDKeyValueReader() : new UUIDValueReader();
             default:
                 throw new UnsupportedOperationException(typeTag + " is not supported");
         }

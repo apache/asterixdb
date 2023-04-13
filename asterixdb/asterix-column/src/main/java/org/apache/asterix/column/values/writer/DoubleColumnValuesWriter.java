@@ -20,7 +20,7 @@ package org.apache.asterix.column.values.writer;
 
 import java.io.IOException;
 
-import org.apache.asterix.column.bytes.encoder.ParquetPlainValuesWriter;
+import org.apache.asterix.column.bytes.encoder.ParquetPlainFixedLengthValuesWriter;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
 import org.apache.asterix.column.values.writer.filters.DoubleColumnFilterWriter;
@@ -37,12 +37,12 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageO
 import org.apache.parquet.bytes.BytesInput;
 
 public final class DoubleColumnValuesWriter extends AbstractColumnValuesWriter {
-    private final ParquetPlainValuesWriter doubleWriter;
+    private final ParquetPlainFixedLengthValuesWriter doubleWriter;
 
     public DoubleColumnValuesWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int columnIndex, int level,
             boolean collection, boolean filtered) {
         super(columnIndex, level, collection, filtered);
-        doubleWriter = new ParquetPlainValuesWriter(multiPageOpRef);
+        doubleWriter = new ParquetPlainFixedLengthValuesWriter(multiPageOpRef);
     }
 
     @Override

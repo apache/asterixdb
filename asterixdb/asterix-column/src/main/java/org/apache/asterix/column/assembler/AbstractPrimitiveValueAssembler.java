@@ -39,10 +39,8 @@ public abstract class AbstractPrimitiveValueAssembler extends AbstractValueAssem
         this.reader = reader;
     }
 
-    public final void reset(AbstractBytesInputStream in, int startIndex, int numberOfTuples)
-            throws HyracksDataException {
+    public final void reset(AbstractBytesInputStream in, int numberOfTuples) throws HyracksDataException {
         reader.reset(in, numberOfTuples);
-        reader.skip(startIndex);
     }
 
     @Override

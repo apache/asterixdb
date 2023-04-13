@@ -19,31 +19,46 @@
 package org.apache.asterix.column.bytes.encoder;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import org.apache.asterix.column.bytes.stream.out.AbstractBytesOutputStream;
 import org.apache.asterix.column.bytes.stream.out.MultiTemporaryBufferBytesOutputStream;
+import org.apache.asterix.column.bytes.stream.out.ValueOutputStream;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.parquet.bytes.BytesInput;
-import org.apache.parquet.bytes.LittleEndianDataOutputStream;
 import org.apache.parquet.column.values.plain.PlainValuesWriter;
 import org.apache.parquet.io.ParquetEncodingException;
 
 /**
  * Re-implementation of {@link PlainValuesWriter}
  */
-public class ParquetPlainValuesWriter extends AbstractParquetValuesWriter {
-    public static final Charset CHARSET = StandardCharsets.UTF_8;
-
+public class ParquetPlainFixedLengthValuesWriter extends AbstractParquetValuesWriter {
     private final AbstractBytesOutputStream outputStream;
-    private final LittleEndianDataOutputStream out;
+    private final ValueOutputStream out;
 
-    public ParquetPlainValuesWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef) {
+    public ParquetPlainFixedLengthValuesWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef) {
         outputStream = new MultiTemporaryBufferBytesOutputStream(multiPageOpRef);
-        out = new LittleEndianDataOutputStream(outputStream);
+        out = new ValueOutputStream(outputStream);
+    }
+
+    @Override
+    public void writeInteger(int v) {
+        try {
+            out.writeInt(v);
+        } catch (IOException e) {
+            throw new ParquetEncodingException("could not write int", e);
+        }
+    }
+
+    @Override
+    public void writeLong(long v) {
+        try {
+            out.writeLong(v);
+        } catch (IOException e) {
+            throw new ParquetEncodingException("could not write long", e);
+        }
     }
 
     @Override
@@ -52,6 +67,21 @@ public class ParquetPlainValuesWriter extends AbstractParquetValuesWriter {
             out.writeDouble(v);
         } catch (IOException e) {
             throw new ParquetEncodingException("could not write double", e);
+        }
+    }
+
+    /**
+     * Should only be used for UUID
+     *
+     * @param v               the value to encode
+     * @param skipLengthBytes ignored
+     */
+    @Override
+    public void writeBytes(IValueReference v, boolean skipLengthBytes) {
+        try {
+            out.write(v.getByteArray(), v.getStartOffset(), v.getLength());
+        } catch (IOException e) {
+            throw new ParquetEncodingException("could not write bytes", e);
         }
     }
 

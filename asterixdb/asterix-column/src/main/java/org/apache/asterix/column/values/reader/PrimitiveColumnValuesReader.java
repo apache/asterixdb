@@ -20,14 +20,16 @@ package org.apache.asterix.column.values.reader;
 
 import java.io.IOException;
 
+import org.apache.asterix.column.values.IColumnKeyValueReader;
 import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.asterix.column.values.reader.value.AbstractValueReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 
 /**
  * Reader for a non-repeated primitive value
  */
-public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReader {
+public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReader implements IColumnKeyValueReader {
     /**
      * A primary key value is always present. Anti-matter can be determined by checking whether the definition level
      * indicates that the tuple's values are missing (i.e., by calling {@link #isMissing()}).
@@ -49,7 +51,6 @@ public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReade
         if (valueIndex == valueCount) {
             return false;
         }
-        valueIndex++;
 
         try {
             nextLevel();
@@ -90,6 +91,20 @@ public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReade
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             }
+        }
+    }
+
+    @Override
+    public IValueReference getValue(int index) {
+        return ((IColumnKeyValueReader) valueReader).getValue(index);
+    }
+
+    @Override
+    public void reset(int startIndex, int skipCount) throws HyracksDataException {
+        ((IColumnKeyValueReader) valueReader).reset(startIndex, skipCount);
+        nextLevel();
+        for (int i = 1; i < skipCount; i++) {
+            nextLevel();
         }
     }
 }

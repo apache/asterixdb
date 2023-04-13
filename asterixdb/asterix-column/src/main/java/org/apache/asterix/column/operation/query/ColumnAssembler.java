@@ -51,8 +51,8 @@ public final class ColumnAssembler {
         tupleIndex = 0;
     }
 
-    public void resetColumn(AbstractBytesInputStream stream, int startIndex, int ordinal) throws HyracksDataException {
-        assemblers.get(ordinal).reset(stream, startIndex, numberOfTuples);
+    public void resetColumn(AbstractBytesInputStream stream, int ordinal) throws HyracksDataException {
+        assemblers.get(ordinal).reset(stream, numberOfTuples);
     }
 
     public int getColumnIndex(int ordinal) {

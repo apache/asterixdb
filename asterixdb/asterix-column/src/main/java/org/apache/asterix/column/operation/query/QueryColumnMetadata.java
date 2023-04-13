@@ -31,8 +31,8 @@ import org.apache.asterix.column.metadata.FieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
-import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.IColumnValuesReaderFactory;
+import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
 import org.apache.asterix.column.values.reader.filter.FilterAccessorProvider;
 import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluator;
 import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluatorFactory;
@@ -57,14 +57,14 @@ import org.apache.logging.log4j.Logger;
 public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
     private static final Logger LOGGER = LogManager.getLogger();
     private final FieldNamesDictionary fieldNamesDictionary;
-    private final IColumnValuesReader[] primaryKeyReaders;
+    private final PrimitiveColumnValuesReader[] primaryKeyReaders;
     private final IColumnFilterEvaluator filterEvaluator;
     private final List<IColumnFilterValueAccessor> filterValueAccessors;
 
     protected final ColumnAssembler assembler;
 
     protected QueryColumnMetadata(ARecordType datasetType, ARecordType metaType,
-            IColumnValuesReader[] primaryKeyReaders, IValueReference serializedMetadata,
+            PrimitiveColumnValuesReader[] primaryKeyReaders, IValueReference serializedMetadata,
             FieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, IColumnValuesReaderFactory readerFactory,
             IValueGetterFactory valueGetterFactory, IColumnFilterEvaluator filterEvaluator,
             List<IColumnFilterValueAccessor> filterValueAccessors) throws HyracksDataException {
@@ -84,7 +84,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         return fieldNamesDictionary;
     }
 
-    public final IColumnValuesReader[] getPrimaryKeyReaders() {
+    public final PrimitiveColumnValuesReader[] getPrimaryKeyReaders() {
         return primaryKeyReaders;
     }
 
@@ -169,7 +169,8 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         IColumnFilterEvaluator filterEvaluator = filterEvaluatorFactory.create(filterAccessorProvider);
         List<IColumnFilterValueAccessor> filterValueAccessors = filterAccessorProvider.getFilterAccessors();
 
-        IColumnValuesReader[] primaryKeyReaders = createPrimaryKeyReaders(input, readerFactory, numberOfPrimaryKeys);
+        PrimitiveColumnValuesReader[] primaryKeyReaders =
+                createPrimaryKeyReaders(input, readerFactory, numberOfPrimaryKeys);
 
         if (LOGGER.isInfoEnabled() && filterEvaluator != TrueColumnFilterEvaluator.INSTANCE) {
             String filterString = filterEvaluator == FalseColumnFilterEvaluator.INSTANCE ? "SKIP_ALL"
@@ -192,14 +193,14 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         return clippedRoot;
     }
 
-    protected static IColumnValuesReader[] createPrimaryKeyReaders(DataInput input,
+    protected static PrimitiveColumnValuesReader[] createPrimaryKeyReaders(DataInput input,
             IColumnValuesReaderFactory readerFactory, int numberOfPrimaryKeys) throws IOException {
         //skip number of columns
         input.readInt();
 
-        IColumnValuesReader[] primaryKeyReaders = new IColumnValuesReader[numberOfPrimaryKeys];
+        PrimitiveColumnValuesReader[] primaryKeyReaders = new PrimitiveColumnValuesReader[numberOfPrimaryKeys];
         for (int i = 0; i < numberOfPrimaryKeys; i++) {
-            primaryKeyReaders[i] = readerFactory.createValueReader(input);
+            primaryKeyReaders[i] = (PrimitiveColumnValuesReader) readerFactory.createValueReader(input);
         }
         return primaryKeyReaders;
     }

@@ -59,6 +59,8 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
         if (allMissing) {
             return;
         }
+
+        valueIndex++;
         try {
             int actualLevel = definitionLevels.readInt();
             //Check whether the level is for a null value
@@ -90,7 +92,7 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
             valuesStream.resetAt(defLevelsSize, in);
             int valueLength = BytesUtils.readZigZagVarInt(valuesStream);
             if (valueLength > 0) {
-                valueReader.resetValue(valuesStream);
+                valueReader.init(valuesStream, tupleCount);
             }
         } catch (IOException e) {
             throw HyracksDataException.create(e);

@@ -42,6 +42,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     private final int numberOfPrimaryKeys;
     private int totalNumberOfMegaLeafNodes;
     private int numOfSkippedMegaLeafNodes;
+    private int endIndex;
     protected int tupleIndex;
 
     /**
@@ -78,46 +79,71 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     }
 
     @Override
-    public final void reset(int startIndex) throws HyracksDataException {
-        tupleIndex = startIndex;
+    public final void newPage() throws HyracksDataException {
+        tupleIndex = 0;
         ByteBuffer pageZero = frame.getBuffer();
         pageZero.clear();
         pageZero.position(HEADER_SIZE);
 
         int numberOfTuples = frame.getTupleCount();
-        //Start new page and check whether we should skip reading non-key columns or not
-        boolean readColumnPages = startNewPage(pageZero, frame.getNumberOfColumns(), numberOfTuples);
 
         //Start primary keys
         for (int i = 0; i < numberOfPrimaryKeys; i++) {
             IColumnBufferProvider provider = primaryKeyBufferProviders[i];
             provider.reset(frame);
-            startPrimaryKey(provider, tupleIndex, i, numberOfTuples);
+            startPrimaryKey(provider, i, numberOfTuples);
         }
+    }
 
+    @Override
+    public final void reset(int startIndex, int endIndex) throws HyracksDataException {
+        tupleIndex = startIndex;
+        this.endIndex = endIndex;
+        ByteBuffer pageZero = frame.getBuffer();
+        int numberOfTuples = frame.getTupleCount();
+        //Start new page and check whether we should skip reading non-key columns or not
+        boolean readColumnPages = startNewPage(pageZero, frame.getNumberOfColumns(), numberOfTuples);
+        setPrimaryKeysAt(startIndex, startIndex);
         if (readColumnPages) {
             for (int i = 0; i < buffersProviders.length; i++) {
                 IColumnBufferProvider provider = buffersProviders[i];
                 //Release previous pinned pages if any
                 provider.releaseAll();
                 provider.reset(frame);
-                startColumn(provider, tupleIndex, i, numberOfTuples);
+                startColumn(provider, i, numberOfTuples);
             }
+            // Skip until before startIndex (i.e. stop at startIndex - 1)
+            skip(startIndex);
         } else {
             numOfSkippedMegaLeafNodes++;
         }
         totalNumberOfMegaLeafNodes++;
     }
 
+    @Override
+    public final void setAt(int startIndex) throws HyracksDataException {
+        int skipCount = startIndex - tupleIndex;
+        tupleIndex = startIndex;
+        setPrimaryKeysAt(startIndex, skipCount);
+        // -1 because next would be called for all columns
+        skip(skipCount - 1);
+    }
+
+    protected abstract void setPrimaryKeysAt(int index, int skipCount) throws HyracksDataException;
+
     protected abstract boolean startNewPage(ByteBuffer pageZero, int numberOfColumns, int numberOfTuples);
 
-    protected abstract void startPrimaryKey(IColumnBufferProvider bufferProvider, int startIndex, int ordinal,
-            int numberOfTuples) throws HyracksDataException;
+    protected abstract void startPrimaryKey(IColumnBufferProvider bufferProvider, int ordinal, int numberOfTuples)
+            throws HyracksDataException;
 
-    protected abstract void startColumn(IColumnBufferProvider buffersProvider, int startIndex, int ordinal,
-            int numberOfTuples) throws HyracksDataException;
+    protected abstract void startColumn(IColumnBufferProvider buffersProvider, int ordinal, int numberOfTuples)
+            throws HyracksDataException;
 
     protected abstract void onNext() throws HyracksDataException;
+
+    protected final int getTupleCount() {
+        return frame.getTupleCount();
+    }
 
     @Override
     public final void next() throws HyracksDataException {
@@ -132,7 +158,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
 
     @Override
     public final boolean isConsumed() {
-        return tupleIndex >= frame.getTupleCount();
+        return tupleIndex >= endIndex;
     }
 
     @Override

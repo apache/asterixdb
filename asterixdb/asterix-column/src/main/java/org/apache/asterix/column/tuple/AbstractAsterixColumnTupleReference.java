@@ -18,25 +18,33 @@
  */
 package org.apache.asterix.column.tuple;
 
+import static org.apache.hyracks.storage.am.common.frames.AbstractSlotManager.ERROR_INDICATOR;
+import static org.apache.hyracks.storage.am.common.frames.AbstractSlotManager.GREATEST_KEY_INDICATOR;
+
 import org.apache.asterix.column.assembler.value.IValueGetter;
 import org.apache.asterix.column.assembler.value.ValueGetterFactory;
 import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.column.bytes.stream.in.ByteBufferInputStream;
 import org.apache.asterix.column.bytes.stream.in.MultiByteBufferInputStream;
 import org.apache.asterix.column.values.IColumnValuesReader;
+import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
+import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.tuples.AbstractColumnTupleReference;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public abstract class AbstractAsterixColumnTupleReference extends AbstractColumnTupleReference {
     private final IValueGetter[] primaryKeysValueGetters;
     protected final ByteBufferInputStream[] primaryKeyStreams;
-    protected final IColumnValuesReader[] primaryKeyReaders;
+    protected final PrimitiveColumnValuesReader[] primaryKeyReaders;
     protected final VoidPointable[] primaryKeys;
     protected final AbstractBytesInputStream[] columnStreams;
 
@@ -67,16 +75,24 @@ public abstract class AbstractAsterixColumnTupleReference extends AbstractColumn
         }
     }
 
-    protected abstract IColumnValuesReader[] getPrimaryKeyReaders(IColumnProjectionInfo info);
+    protected abstract PrimitiveColumnValuesReader[] getPrimaryKeyReaders(IColumnProjectionInfo info);
 
     @Override
-    protected final void startPrimaryKey(IColumnBufferProvider provider, int startIndex, int ordinal,
-            int numberOfTuples) throws HyracksDataException {
+    protected void setPrimaryKeysAt(int index, int skipCount) throws HyracksDataException {
+        for (int i = 0; i < primaryKeyReaders.length; i++) {
+            PrimitiveColumnValuesReader reader = primaryKeyReaders[i];
+            reader.reset(index, skipCount);
+            primaryKeys[i].set(primaryKeysValueGetters[i].getValue(reader));
+        }
+    }
+
+    @Override
+    protected final void startPrimaryKey(IColumnBufferProvider provider, int ordinal, int numberOfTuples)
+            throws HyracksDataException {
         ByteBufferInputStream primaryKeyStream = primaryKeyStreams[ordinal];
         primaryKeyStream.reset(provider);
         IColumnValuesReader reader = primaryKeyReaders[ordinal];
         reader.reset(primaryKeyStream, numberOfTuples);
-        reader.skip(startIndex);
     }
 
     @Override
@@ -136,5 +152,80 @@ public abstract class AbstractAsterixColumnTupleReference extends AbstractColumn
             compare = primaryKeyReaders[i].compareTo(other.primaryKeyReaders[i]);
         }
         return compare;
+    }
+
+    @Override
+    public int findTupleIndex(ITupleReference searchKey, MultiComparator comparator, FindTupleMode mode,
+            FindTupleNoExactMatchPolicy matchPolicy) throws HyracksDataException {
+        int tupleCount = getTupleCount();
+        if (tupleCount <= 0) {
+            return GREATEST_KEY_INDICATOR;
+        }
+
+        int mid;
+        int begin = tupleIndex;
+        int end = tupleCount - 1;
+
+        while (begin <= end) {
+            mid = (begin + end) / 2;
+
+            setKeyAt(mid);
+            int cmp = comparator.compare(searchKey, this);
+            if (cmp < 0) {
+                end = mid - 1;
+            } else if (cmp > 0) {
+                begin = mid + 1;
+            } else {
+                if (mode == FindTupleMode.EXCLUSIVE) {
+                    if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY) {
+                        begin = mid + 1;
+                    } else {
+                        end = mid - 1;
+                    }
+                } else {
+                    if (mode == FindTupleMode.EXCLUSIVE_ERROR_IF_EXISTS) {
+                        return ERROR_INDICATOR;
+                    } else {
+                        return mid;
+                    }
+                }
+            }
+        }
+
+        if (mode == FindTupleMode.EXACT) {
+            return ERROR_INDICATOR;
+        }
+
+        if (matchPolicy == FindTupleNoExactMatchPolicy.HIGHER_KEY) {
+            if (begin > tupleCount - 1) {
+                return GREATEST_KEY_INDICATOR;
+            }
+
+            setKeyAt(begin);
+            if (comparator.compare(searchKey, this) < 0) {
+                return begin;
+            } else {
+                return GREATEST_KEY_INDICATOR;
+            }
+        } else {
+            if (end < 0) {
+                return GREATEST_KEY_INDICATOR;
+            }
+
+            setKeyAt(end);
+            if (comparator.compare(searchKey, this) > 0) {
+                return end;
+            } else {
+                return GREATEST_KEY_INDICATOR;
+            }
+        }
+    }
+
+    protected void setKeyAt(int index) {
+        for (int i = 0; i < primaryKeyReaders.length; i++) {
+            PrimitiveColumnValuesReader reader = primaryKeyReaders[i];
+            reader.getValue(index);
+            primaryKeys[i].set(primaryKeysValueGetters[i].getValue(reader));
+        }
     }
 }

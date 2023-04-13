@@ -103,12 +103,6 @@ public class LSMBTreeBatchPointSearchOperatorNodePushable extends BTreeSearchOpe
             cursor.next();
             matchingTupleCount++;
             ITupleReference tuple = cursor.getTuple();
-            if (tupleFilter != null) {
-                referenceFilterTuple.reset(tuple);
-                if (!tupleFilter.accept(referenceFilterTuple)) {
-                    continue;
-                }
-            }
             tb.reset();
 
             if (retainInput && retainMissing) {
@@ -124,7 +118,13 @@ public class LSMBTreeBatchPointSearchOperatorNodePushable extends BTreeSearchOpe
                     tb.addFieldEndOffset();
                 }
             }
-            writeTupleToOutput(tuple);
+            ITupleReference projectedTuple = writeTupleToOutput(tuple);
+            if (tupleFilter != null) {
+                referenceFilterTuple.reset(projectedTuple);
+                if (!tupleFilter.accept(referenceFilterTuple)) {
+                    continue;
+                }
+            }
             FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
             if (outputLimit >= 0 && ++outputCount >= outputLimit) {
                 finished = true;

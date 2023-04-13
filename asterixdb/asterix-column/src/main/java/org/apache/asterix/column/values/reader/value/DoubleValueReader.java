@@ -20,20 +20,20 @@ package org.apache.asterix.column.values.reader.value;
 
 import java.io.IOException;
 
-import org.apache.asterix.column.bytes.decoder.ParquetDoublePlainValuesReader;
+import org.apache.asterix.column.bytes.decoder.ParquetPlainFixedLengthValuesReader;
 import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.om.types.ATypeTag;
 
 public final class DoubleValueReader extends AbstractValueReader {
-    private final ParquetDoublePlainValuesReader doubleReader;
+    private final ParquetPlainFixedLengthValuesReader doubleReader;
     private double nextValue;
 
     public DoubleValueReader() {
-        doubleReader = new ParquetDoublePlainValuesReader();
+        doubleReader = new ParquetPlainFixedLengthValuesReader(Double.BYTES);
     }
 
     @Override
-    public void resetValue(AbstractBytesInputStream in) throws IOException {
+    public void init(AbstractBytesInputStream in, int tupleCount) throws IOException {
         doubleReader.initFromPage(in);
     }
 

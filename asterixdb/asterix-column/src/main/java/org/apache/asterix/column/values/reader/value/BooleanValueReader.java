@@ -34,7 +34,7 @@ public final class BooleanValueReader extends AbstractValueReader {
     }
 
     @Override
-    public void resetValue(AbstractBytesInputStream in) {
+    public void init(AbstractBytesInputStream in, int tupleCount) {
         booleanReader.reset(in);
     }
 

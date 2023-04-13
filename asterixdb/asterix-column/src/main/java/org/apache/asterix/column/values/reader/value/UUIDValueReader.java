@@ -20,22 +20,24 @@ package org.apache.asterix.column.values.reader.value;
 
 import java.io.IOException;
 
-import org.apache.asterix.column.bytes.decoder.ParquetDeltaByteArrayReader;
+import org.apache.asterix.column.bytes.decoder.ParquetPlainFixedLengthValuesReader;
 import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public final class UUIDValueReader extends AbstractValueReader {
-    private final ParquetDeltaByteArrayReader uuidReader;
+    private final ParquetPlainFixedLengthValuesReader uuidReader;
     private IValueReference nextValue;
 
     public UUIDValueReader() {
-        uuidReader = new ParquetDeltaByteArrayReader(false);
+        ArrayBackedValueStorage storage = new ArrayBackedValueStorage(16);
+        uuidReader = new ParquetPlainFixedLengthValuesReader(storage);
     }
 
     @Override
-    public void resetValue(AbstractBytesInputStream in) throws IOException {
+    public void init(AbstractBytesInputStream in, int tupleCount) throws IOException {
         uuidReader.initFromPage(in);
     }
 

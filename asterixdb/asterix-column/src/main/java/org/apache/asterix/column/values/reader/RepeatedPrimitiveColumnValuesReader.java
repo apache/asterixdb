@@ -66,7 +66,6 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
         if (level == maxLevel) {
             valueReader.nextValue();
         }
-        valueIndex++;
         return true;
     }
 

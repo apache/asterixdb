@@ -125,7 +125,7 @@ public class AssemblerTest extends AbstractDummyTest {
             Pair<PrintStream, ATypeTag> pair = new Pair<>(ps, ATypeTag.OBJECT);
             assembler.reset(numberOfTuples);
             for (int i = 0; i < columnMetadata.getNumberOfColumns(); i++) {
-                assembler.resetColumn(streams[i], 0, i);
+                assembler.resetColumn(streams[i], i);
             }
             while (assembler.hasNext()) {
                 IValueReference record = assembler.nextValue();

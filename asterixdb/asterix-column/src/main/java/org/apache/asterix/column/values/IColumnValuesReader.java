@@ -104,7 +104,7 @@ public interface IColumnValuesReader extends Comparable<IColumnValuesReader> {
     IValueReference getBytes();
 
     /* ***********************
-     * Write function
+     * Write functions
      * ***********************
      */
 

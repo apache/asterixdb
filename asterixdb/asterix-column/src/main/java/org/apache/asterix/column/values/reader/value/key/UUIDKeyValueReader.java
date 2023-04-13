@@ -16,37 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.values.reader.value;
+package org.apache.asterix.column.values.reader.value.key;
 
-import java.io.IOException;
-
-import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
+import org.apache.asterix.column.values.reader.value.AbstractValueReader;
+import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 
-public class NoOpValueReader extends AbstractValueReader {
-    public static final AbstractValueReader INSTANCE = new NoOpValueReader();
-
-    private NoOpValueReader() {
-    }
-
-    @Override
-    public void init(AbstractBytesInputStream in, int tupleCount) throws IOException {
-        throw new UnsupportedOperationException(getClass().getName());
-    }
-
-    @Override
-    public void nextValue() throws HyracksDataException {
-        throw new UnsupportedOperationException(getClass().getName());
-    }
-
+public final class UUIDKeyValueReader extends AbstractFixedLengthColumnKeyValueReader {
     @Override
     public ATypeTag getTypeTag() {
-        throw new UnsupportedOperationException(getClass().getName());
+        return ATypeTag.UUID;
+    }
+
+    @Override
+    protected int getValueLength() {
+        return 16;
+    }
+
+    @Override
+    public IValueReference getBytes() {
+        return value;
     }
 
     @Override
     public int compareTo(AbstractValueReader o) {
-        throw new UnsupportedOperationException(getClass().getName());
+        return AUUIDPartialBinaryComparatorFactory.compare(getBytes(), o.getBytes());
     }
 }

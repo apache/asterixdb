@@ -19,9 +19,13 @@
 package org.apache.hyracks.storage.am.lsm.btree.column.api;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ILSMIndexCursor;
+import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
+import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTreeTupleReference;
+import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
@@ -31,11 +35,38 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
  */
 public interface IColumnTupleIterator extends ILSMTreeTupleReference, Comparable<IColumnTupleIterator> {
     /**
+     * Indicates a new page was set to prepare the iterator
+     */
+    void newPage() throws HyracksDataException;
+
+    /**
      * Reset the iterator starting at the provided index
      *
      * @param startIndex start from the tuple at this index
+     * @param endIndex   stop at this index (exclusive)
      */
-    void reset(int startIndex) throws HyracksDataException;
+    void reset(int startIndex, int endIndex) throws HyracksDataException;
+
+    /**
+     * Set the iterator at a new position
+     * NOTE:
+     * the new start index has to be greater than the current tuple index
+     *
+     * @param startIndex the new index to start from
+     */
+    void setAt(int startIndex) throws HyracksDataException;
+
+    /**
+     * Finds the tuple index given the search key
+     *
+     * @param searchKey search key
+     * @param cmp       comparator
+     * @param ftm       find tuple mode
+     * @param ftp       find tuple policy
+     * @return index of the tuple
+     */
+    int findTupleIndex(ITupleReference searchKey, MultiComparator cmp, FindTupleMode ftm,
+            FindTupleNoExactMatchPolicy ftp) throws HyracksDataException;
 
     /**
      * Mark {@link IColumnTupleIterator} as consumed

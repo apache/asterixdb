@@ -20,7 +20,9 @@ package org.apache.asterix.column.values.writer;
 
 import java.io.IOException;
 
+import org.apache.asterix.column.bytes.encoder.AbstractParquetValuesWriter;
 import org.apache.asterix.column.bytes.encoder.ParquetDeltaByteArrayWriter;
+import org.apache.asterix.column.bytes.encoder.ParquetPlainVariableLengthValuesWriter;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
 import org.apache.asterix.column.values.writer.filters.StringColumnFilterWriter;
@@ -32,18 +34,19 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageO
 import org.apache.parquet.bytes.BytesInput;
 
 public class StringColumnValuesWriter extends AbstractColumnValuesWriter {
-    private final ParquetDeltaByteArrayWriter stringWriter;
+    private final AbstractParquetValuesWriter stringWriter;
     private final boolean skipLengthBytes;
 
     public StringColumnValuesWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int columnIndex, int level,
             boolean collection, boolean filtered) {
-        this(multiPageOpRef, columnIndex, level, collection, filtered, true);
+        this(columnIndex, level, collection, filtered, true, filtered ? new ParquetDeltaByteArrayWriter(multiPageOpRef)
+                : new ParquetPlainVariableLengthValuesWriter(multiPageOpRef));
     }
 
-    protected StringColumnValuesWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int columnIndex, int level,
-            boolean collection, boolean filtered, boolean skipLengthBytes) {
+    protected StringColumnValuesWriter(int columnIndex, int level, boolean collection, boolean filtered,
+            boolean skipLengthBytes, AbstractParquetValuesWriter stringWriter) {
         super(columnIndex, level, collection, filtered);
-        stringWriter = new ParquetDeltaByteArrayWriter(multiPageOpRef);
+        this.stringWriter = stringWriter;
         this.skipLengthBytes = skipLengthBytes;
     }
 
@@ -94,4 +97,5 @@ public class StringColumnValuesWriter extends AbstractColumnValuesWriter {
     protected ATypeTag getTypeTag() {
         return ATypeTag.STRING;
     }
+
 }

@@ -91,6 +91,8 @@ public class ParquetDeltaByteArrayWriter extends AbstractParquetValuesWriter {
         int start = value.getStartOffset();
         int length = value.getLength();
         if (skipLengthBytes) {
+            // Length bytes are skipped so the prefix encoding works properly (e.g., "123", "1234")
+            // the prefix "123" is a common substring between the two; however, their lengths are not
             int lengthBytes = UTF8StringUtil.getNumBytesToStoreLength(bytes, start);
             start += lengthBytes;
             length -= lengthBytes;

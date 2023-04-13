@@ -20,7 +20,9 @@ package org.apache.asterix.column.values.writer;
 
 import java.io.IOException;
 
+import org.apache.asterix.column.bytes.encoder.AbstractParquetValuesWriter;
 import org.apache.asterix.column.bytes.encoder.ParquetDeltaBinaryPackingValuesWriterForLong;
+import org.apache.asterix.column.bytes.encoder.ParquetPlainFixedLengthValuesWriter;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
 import org.apache.asterix.column.values.writer.filters.LongColumnFilterWriter;
@@ -35,12 +37,13 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageO
 import org.apache.parquet.bytes.BytesInput;
 
 final class LongColumnValuesWriter extends AbstractColumnValuesWriter {
-    private final ParquetDeltaBinaryPackingValuesWriterForLong longWriter;
+    private final AbstractParquetValuesWriter longWriter;
 
     public LongColumnValuesWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int columnIndex, int level,
             boolean collection, boolean filtered) {
         super(columnIndex, level, collection, filtered);
-        longWriter = new ParquetDeltaBinaryPackingValuesWriterForLong(multiPageOpRef);
+        longWriter = !filtered ? new ParquetPlainFixedLengthValuesWriter(multiPageOpRef)
+                : new ParquetDeltaBinaryPackingValuesWriterForLong(multiPageOpRef);
     }
 
     @Override

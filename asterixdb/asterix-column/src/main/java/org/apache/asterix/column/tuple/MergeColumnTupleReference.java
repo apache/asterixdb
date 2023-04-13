@@ -24,6 +24,7 @@ import org.apache.asterix.column.bytes.stream.in.MultiByteBufferInputStream;
 import org.apache.asterix.column.operation.lsm.merge.IEndOfPageCallBack;
 import org.apache.asterix.column.operation.lsm.merge.MergeColumnReadMetadata;
 import org.apache.asterix.column.values.IColumnValuesReader;
+import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
 import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
@@ -43,11 +44,14 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
     }
 
     @Override
-    protected IColumnValuesReader[] getPrimaryKeyReaders(IColumnProjectionInfo info) {
+    protected PrimitiveColumnValuesReader[] getPrimaryKeyReaders(IColumnProjectionInfo info) {
         MergeColumnReadMetadata columnMetadata = (MergeColumnReadMetadata) info;
         int numberOfPrimaryKeys = columnMetadata.getNumberOfPrimaryKeys();
-        IColumnValuesReader[] primaryKeyReaders = new IColumnValuesReader[numberOfPrimaryKeys];
-        System.arraycopy(columnMetadata.getColumnReaders(), 0, primaryKeyReaders, 0, numberOfPrimaryKeys);
+        PrimitiveColumnValuesReader[] primaryKeyReaders = new PrimitiveColumnValuesReader[numberOfPrimaryKeys];
+        IColumnValuesReader[] readers = columnMetadata.getColumnReaders();
+        for (int i = 0; i < numberOfPrimaryKeys; i++) {
+            primaryKeyReaders[i] = (PrimitiveColumnValuesReader) readers[i];
+        }
         return primaryKeyReaders;
     }
 
@@ -55,14 +59,15 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
     protected boolean startNewPage(ByteBuffer pageZero, int numberOfColumns, int numberOfTuples) {
         //Skip filters
         pageZero.position(pageZero.position() + numberOfColumns * AbstractColumnFilterWriter.FILTER_SIZE);
-        skipCount = 0;
+        // skip count is always start from zero as no "search" is conducted during a merge
+        this.skipCount = 0;
         return true;
     }
 
     @Override
-    protected void startColumn(IColumnBufferProvider buffersProvider, int startIndex, int ordinal, int numberOfTuples)
+    protected void startColumn(IColumnBufferProvider buffersProvider, int ordinal, int numberOfTuples)
             throws HyracksDataException {
-        int numberOfPrimaryKeys = primaryKeys.length;
+        int numberOfPrimaryKeys = primaryKeyStreams.length;
         if (ordinal < numberOfPrimaryKeys) {
             //Skip primary key
             return;
@@ -71,7 +76,6 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
         columnStream.reset(buffersProvider);
         IColumnValuesReader reader = columnReaders[ordinal];
         reader.reset(columnStream, numberOfTuples);
-        reader.skip(startIndex);
     }
 
     @Override

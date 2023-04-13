@@ -166,4 +166,9 @@ public final class ByteBufferInputStream extends AbstractBytesInputStream {
     public int available() {
         return buffer.remaining();
     }
+
+    @Override
+    public ByteBuffer getBuffer() {
+        return buffer;
+    }
 }
