@@ -22,7 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourcePropertiesProvider;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator.IOrder.OrderKind;
@@ -47,7 +50,8 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
     }
 
     @Override
-    public IPhysicalPropertiesVector computeRequiredProperties(List<LogicalVariable> scanVariables) {
+    public IPhysicalPropertiesVector computeRequiredProperties(List<LogicalVariable> scanVariables,
+            IOptimizationContext ctx) throws AlgebricksException {
         IPhysicalPropertiesVector propsVector;
         IPartitioningProperty pp;
         List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
@@ -58,12 +62,23 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
                 ds.computeLocalStructuralProperties(propsLocal, scanVariables);
                 break;
             case DataSource.Type.FEED:
-                pp = getFeedPartitioningProperty(ds, domain, scanVariables);
+                String dsName = ((FeedDataSource) ds).getTargetDataset();
+                Dataset feedDs = ((MetadataProvider) ctx.getMetadataProvider())
+                        .findDataset(ds.getId().getDataverseName(), dsName);
+                int[][] partitionsMap1 = ((MetadataProvider) ctx.getMetadataProvider()).getPartitionsMap(feedDs);
+                pp = getFeedDatasetPartitioningProperty(ds, domain, scanVariables, partitionsMap1);
                 break;
             case DataSource.Type.INTERNAL_DATASET:
             case DataSource.Type.SAMPLE:
                 Set<LogicalVariable> pvars = new ListSet<>();
-                pp = getInternalDatasetPartitioningProperty(ds, domain, scanVariables, pvars);
+                Dataset dataset;
+                if (ds.getDatasourceType() == DataSource.Type.INTERNAL_DATASET) {
+                    dataset = ((DatasetDataSource) ds).getDataset();
+                } else {
+                    dataset = ((SampleDataSource) ds).getDataset();
+                }
+                int[][] partitionsMap = ((MetadataProvider) ctx.getMetadataProvider()).getPartitionsMap(dataset);
+                pp = getInternalDatasetPartitioningProperty(ds, domain, scanVariables, pvars, partitionsMap);
                 propsLocal.add(new LocalOrderProperty(getOrderColumns(pvars)));
                 break;
             default:
@@ -74,14 +89,22 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
     }
 
     @Override
-    public IPhysicalPropertiesVector computeDeliveredProperties(List<LogicalVariable> scanVariables) {
-        if (ds.getDatasourceType() == DataSource.Type.INTERNAL_DATASET) {
-            IPartitioningProperty pp = new RandomPartitioningProperty(domain);
-            List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
-            ds.computeLocalStructuralProperties(propsLocal, scanVariables);
-            return new StructuralPropertiesVector(pp, propsLocal);
+    public IPhysicalPropertiesVector computeDeliveredProperties(List<LogicalVariable> scanVariables,
+            IOptimizationContext ctx) throws AlgebricksException {
+        switch (ds.getDatasourceType()) {
+            case DataSource.Type.INTERNAL_DATASET: {
+                IPartitioningProperty pp = new RandomPartitioningProperty(domain);
+                List<ILocalStructuralProperty> propsLocal = new ArrayList<>();
+                ds.computeLocalStructuralProperties(propsLocal, scanVariables);
+                return new StructuralPropertiesVector(pp, propsLocal);
+            }
+            case DataSource.Type.FEED: {
+                IPartitioningProperty pp = getFeedPartitioningProperty(ds, domain, scanVariables);
+                return new StructuralPropertiesVector(pp, new ArrayList<>());
+            }
+            default:
+                return computeRequiredProperties(scanVariables, ctx);
         }
-        return computeRequiredProperties(scanVariables);
     }
 
     private static List<OrderColumn> getOrderColumns(Set<LogicalVariable> pvars) {
@@ -93,13 +116,26 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
     }
 
     private static IPartitioningProperty getInternalDatasetPartitioningProperty(DataSource ds, INodeDomain domain,
-            List<LogicalVariable> scanVariables, Set<LogicalVariable> pvars) {
+            List<LogicalVariable> scanVariables, Set<LogicalVariable> pvars, int[][] partitionsMap) {
         IPartitioningProperty pp;
         if (scanVariables.size() < 2) {
             pp = new RandomPartitioningProperty(domain);
         } else {
             pvars.addAll(ds.getPrimaryKeyVariables(scanVariables));
-            pp = new UnorderedPartitionedProperty(pvars, domain);
+            pp = UnorderedPartitionedProperty.ofPartitionsMap(pvars, domain, partitionsMap);
+        }
+        return pp;
+    }
+
+    public static IPartitioningProperty getFeedDatasetPartitioningProperty(DataSource ds, INodeDomain domain,
+            List<LogicalVariable> scanVariables, int[][] partitionsMap) {
+        IPartitioningProperty pp;
+        if (scanVariables.size() < 2) {
+            pp = new RandomPartitioningProperty(domain);
+        } else {
+            Set<LogicalVariable> pvars = new ListSet<>();
+            pvars.addAll(ds.getPrimaryKeyVariables(scanVariables));
+            pp = UnorderedPartitionedProperty.ofPartitionsMap(pvars, domain, partitionsMap);
         }
         return pp;
     }
@@ -112,7 +148,7 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
         } else {
             Set<LogicalVariable> pvars = new ListSet<>();
             pvars.addAll(ds.getPrimaryKeyVariables(scanVariables));
-            pp = new UnorderedPartitionedProperty(pvars, domain);
+            pp = UnorderedPartitionedProperty.of(pvars, domain);
         }
         return pp;
     }

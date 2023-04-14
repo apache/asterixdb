@@ -84,14 +84,14 @@ public class IndexBulkloadPOperator extends AbstractPhysicalOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) throws AlgebricksException {
         //skVarMap is used to remove duplicated variable references for order operator
         Map<Integer, Object> skVarMap = new HashMap<Integer, Object>();
         List<LogicalVariable> scanVariables = new ArrayList<>();
         scanVariables.addAll(primaryKeys);
         scanVariables.add(new LogicalVariable(-1));
-        IPhysicalPropertiesVector physicalProps =
-                dataSourceIndex.getDataSource().getPropertiesProvider().computeRequiredProperties(scanVariables);
+        IPhysicalPropertiesVector physicalProps = dataSourceIndex.getDataSource().getPropertiesProvider()
+                .computeRequiredProperties(scanVariables, context);
         List<ILocalStructuralProperty> localProperties = new ArrayList<>();
         List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
         // Data needs to be sorted based on the [token, number of token, PK]

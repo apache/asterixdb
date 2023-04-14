@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSourceId;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -65,11 +66,12 @@ public abstract class IndexSearchPOperator extends AbstractScanPOperator {
     }
 
     @Override
-    public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
+    public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context)
+            throws AlgebricksException {
         IDataSource<?> ds = idx.getDataSource();
         IDataSourcePropertiesProvider dspp = ds.getPropertiesProvider();
         AbstractScanOperator as = (AbstractScanOperator) op;
-        deliveredProperties = dspp.computeDeliveredProperties(as.getScanVariables());
+        deliveredProperties = dspp.computeDeliveredProperties(as.getScanVariables(), context);
     }
 
     protected int[] getKeyIndexes(List<LogicalVariable> keyVarList, IOperatorSchema[] inputSchemas) {
@@ -85,7 +87,7 @@ public abstract class IndexSearchPOperator extends AbstractScanPOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) throws AlgebricksException {
         if (requiresBroadcast) {
             StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
             pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(domain), null);

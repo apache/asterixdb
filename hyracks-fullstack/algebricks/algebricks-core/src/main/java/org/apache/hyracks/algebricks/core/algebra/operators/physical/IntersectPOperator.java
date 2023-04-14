@@ -38,6 +38,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSch
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IntersectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
+import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningRequirementsCoordinator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -79,7 +80,11 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
             IPartitioningProperty pp = null;
             if (intersectOp.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
                 Set<LogicalVariable> partitioningVariables = new HashSet<>(intersectOp.getInputCompareVariables(i));
-                pp = new UnorderedPartitionedProperty(partitioningVariables, null);
+                INodeDomain nodeDomain = context.getComputationNodeDomain();
+                int[][] partitionsMap = intersectOp.getPartitionsMap();
+                pp = partitionsMap != null
+                        ? UnorderedPartitionedProperty.ofPartitionsMap(partitioningVariables, nodeDomain, partitionsMap)
+                        : UnorderedPartitionedProperty.of(partitioningVariables, nodeDomain);
             }
             pv[i] = new StructuralPropertiesVector(pp, localProps);
         }
@@ -172,5 +177,13 @@ public class IntersectPOperator extends AbstractPhysicalOperator {
     @Override
     public boolean expensiveThanMaterialization() {
         return false;
+    }
+
+    public static int[][] getPartitionsMap(int numPartitions) {
+        int[][] map = new int[numPartitions][1];
+        for (int i = 0; i < numPartitions; i++) {
+            map[i] = new int[] { i };
+        }
+        return map;
     }
 }

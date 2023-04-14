@@ -112,7 +112,7 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
                 dataset.getDatasetDetails(), context.getComputationNodeDomain());
         IDataSourcePropertiesProvider dspp = ds.getPropertiesProvider();
         AbstractScanOperator as = (AbstractScanOperator) op;
-        deliveredProperties = dspp.computeDeliveredProperties(as.getVariables());
+        deliveredProperties = dspp.computeDeliveredProperties(as.getVariables(), context);
     }
 
     @Override
@@ -156,7 +156,7 @@ public class ExternalDataLookupPOperator extends AbstractScanPOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) throws AlgebricksException {
         if (requiresBroadcast) {
             StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
             pv[0] = new StructuralPropertiesVector(new BroadcastPartitioningProperty(null), null);

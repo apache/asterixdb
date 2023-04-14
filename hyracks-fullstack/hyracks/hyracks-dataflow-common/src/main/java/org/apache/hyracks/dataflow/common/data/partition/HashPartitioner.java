@@ -22,14 +22,18 @@ import org.apache.hyracks.api.comm.IFrameTupleAccessor;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+
 class HashPartitioner {
 
     private final int[] hashFields;
     private final IBinaryHashFunction[] hashFunctions;
+    private final Int2IntMap storagePartition2Compute;
 
-    public HashPartitioner(int[] hashFields, IBinaryHashFunction[] hashFunctions) {
+    public HashPartitioner(int[] hashFields, IBinaryHashFunction[] hashFunctions, Int2IntMap storagePartition2Compute) {
         this.hashFields = hashFields;
         this.hashFunctions = hashFunctions;
+        this.storagePartition2Compute = storagePartition2Compute;
     }
 
     protected int partition(IFrameTupleAccessor accessor, int tIndex, int nParts) throws HyracksDataException {
@@ -50,6 +54,15 @@ class HashPartitioner {
         if (h < 0) {
             h = -(h + 1);
         }
-        return h % nParts;
+        if (storagePartition2Compute == null) {
+            return h % nParts;
+        } else {
+            int storagePartition = h % storagePartition2Compute.size();
+            int computePartition = storagePartition2Compute.getOrDefault(storagePartition, Integer.MIN_VALUE);
+            if (computePartition < 0 || computePartition >= nParts) {
+                throw new IllegalStateException("couldn't resolve storage partition to compute partition");
+            }
+            return computePartition;
+        }
     }
 }

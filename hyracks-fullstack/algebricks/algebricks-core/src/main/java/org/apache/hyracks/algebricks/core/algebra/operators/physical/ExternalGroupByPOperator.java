@@ -108,8 +108,9 @@ public class ExternalGroupByPOperator extends AbstractGroupByPOperator {
         AbstractLogicalOperator aop = (AbstractLogicalOperator) op;
         if (aop.getExecutionMode() == ExecutionMode.PARTITIONED) {
             StructuralPropertiesVector[] pv = new StructuralPropertiesVector[1];
-            pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(
-                    new ListSet<LogicalVariable>(columnList), context.getComputationNodeDomain()), null);
+            pv[0] = new StructuralPropertiesVector(
+                    UnorderedPartitionedProperty.of(new ListSet<>(columnList), context.getComputationNodeDomain()),
+                    null);
             return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
         } else {
             return emptyUnaryRequirements();

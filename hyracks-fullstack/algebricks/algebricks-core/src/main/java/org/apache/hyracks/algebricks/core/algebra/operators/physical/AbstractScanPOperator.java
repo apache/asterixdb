@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.physical;
 
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -27,7 +28,7 @@ public abstract class AbstractScanPOperator extends AbstractPhysicalOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) throws AlgebricksException {
         return emptyUnaryRequirements();
     }
 

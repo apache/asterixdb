@@ -80,14 +80,15 @@ public class InsertDeleteUpsertPOperator extends AbstractPhysicalOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) throws AlgebricksException {
         List<LogicalVariable> scanVariables = new ArrayList<LogicalVariable>();
         scanVariables.addAll(keys);
         scanVariables.add(payload);
         if (additionalNonFilteringFields != null) {
             scanVariables.addAll(additionalNonFilteringFields);
         }
-        IPhysicalPropertiesVector r = dataSource.getPropertiesProvider().computeRequiredProperties(scanVariables);
+        IPhysicalPropertiesVector r =
+                dataSource.getPropertiesProvider().computeRequiredProperties(scanVariables, context);
         r.getLocalProperties().clear();
         IPhysicalPropertiesVector[] requirements = new IPhysicalPropertiesVector[1];
         requirements[0] = r;

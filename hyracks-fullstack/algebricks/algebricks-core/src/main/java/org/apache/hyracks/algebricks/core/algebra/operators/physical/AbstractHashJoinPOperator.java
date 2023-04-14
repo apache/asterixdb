@@ -94,21 +94,19 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext ctx) {
         // In a cost-based optimizer, we would also try to propagate the
         // parent's partitioning requirements.
         IPartitioningProperty pp1;
         IPartitioningProperty pp2;
         switch (partitioningType) {
             case PAIRWISE:
-                pp1 = new UnorderedPartitionedProperty(new ListSet<>(keysLeftBranch),
-                        context.getComputationNodeDomain());
-                pp2 = new UnorderedPartitionedProperty(new ListSet<>(keysRightBranch),
-                        context.getComputationNodeDomain());
+                pp1 = UnorderedPartitionedProperty.of(new ListSet<>(keysLeftBranch), ctx.getComputationNodeDomain());
+                pp2 = UnorderedPartitionedProperty.of(new ListSet<>(keysRightBranch), ctx.getComputationNodeDomain());
                 break;
             case BROADCAST:
-                pp1 = new RandomPartitioningProperty(context.getComputationNodeDomain());
-                pp2 = new BroadcastPartitioningProperty(context.getComputationNodeDomain());
+                pp1 = new RandomPartitioningProperty(ctx.getComputationNodeDomain());
+                pp2 = new BroadcastPartitioningProperty(ctx.getComputationNodeDomain());
                 break;
             default:
                 throw new IllegalStateException();
@@ -141,9 +139,9 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                             (UnorderedPartitionedProperty) firstDeliveredPartitioning;
                                     Set<LogicalVariable> set1 = upp1.getColumnSet();
                                     UnorderedPartitionedProperty uppreq = (UnorderedPartitionedProperty) requirements;
-                                    Set<LogicalVariable> modifuppreq = new ListSet<LogicalVariable>();
+                                    Set<LogicalVariable> modifuppreq = new ListSet<>();
                                     Map<LogicalVariable, EquivalenceClass> eqmap = context.getEquivalenceClassMap(op);
-                                    Set<LogicalVariable> covered = new ListSet<LogicalVariable>();
+                                    Set<LogicalVariable> covered = new ListSet<>();
                                     Set<LogicalVariable> keysCurrent = uppreq.getColumnSet();
                                     List<LogicalVariable> keysFirst = (keysRightBranch.containsAll(keysCurrent))
                                             ? keysRightBranch : keysLeftBranch;
@@ -182,8 +180,14 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                                 + " to agree with partitioning property " + firstDeliveredPartitioning
                                                 + " delivered by previous input operator.");
                                     }
-                                    UnorderedPartitionedProperty upp2 =
-                                            new UnorderedPartitionedProperty(modifuppreq, requirements.getNodeDomain());
+                                    UnorderedPartitionedProperty upp2;
+                                    UnorderedPartitionedProperty rqd = (UnorderedPartitionedProperty) requirements;
+                                    if (rqd.usesPartitionsMap()) {
+                                        upp2 = UnorderedPartitionedProperty.ofPartitionsMap(modifuppreq,
+                                                rqd.getNodeDomain(), rqd.getPartitionsMap());
+                                    } else {
+                                        upp2 = UnorderedPartitionedProperty.of(modifuppreq, rqd.getNodeDomain());
+                                    }
                                     return new Pair<>(false, upp2);
                                 }
                                 case ORDERED_PARTITIONED: {

@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -523,8 +524,12 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
                 inputExtraVarsCopy.add(deepCopyVariableList(op.getInputExtraVariables(i)));
             }
         }
+        int[][] partitionsMap = op.getPartitionsMap();
+        int[][] partitionsMapCopy =
+                partitionsMap == null ? null : Arrays.stream(partitionsMap).map(int[]::clone).toArray(int[][]::new);
+
         IntersectOperator opCopy = new IntersectOperator(outputCompareVarsCopy, outputExtraVarsCopy,
-                inputCompareVarsCopy, inputExtraVarsCopy);
+                inputCompareVarsCopy, inputExtraVarsCopy, partitionsMapCopy);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

@@ -23,10 +23,13 @@ import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+
 public class FieldHashPartitionComputer extends HashPartitioner implements ITuplePartitionComputer {
 
-    public FieldHashPartitionComputer(int[] hashFields, IBinaryHashFunction[] hashFunctions) {
-        super(hashFields, hashFunctions);
+    public FieldHashPartitionComputer(int[] hashFields, IBinaryHashFunction[] hashFunctions,
+            Int2IntMap storagePartition2Compute) {
+        super(hashFields, hashFunctions, storagePartition2Compute);
     }
 
     @Override

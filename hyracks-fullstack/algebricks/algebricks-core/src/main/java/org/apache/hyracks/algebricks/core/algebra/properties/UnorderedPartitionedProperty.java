@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.properties;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -30,10 +31,22 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 public final class UnorderedPartitionedProperty extends AbstractGroupingProperty implements IPartitioningProperty {
 
     private INodeDomain domain;
+    private final int[][] partitionsMap;
 
-    public UnorderedPartitionedProperty(Set<LogicalVariable> partitioningVariables, INodeDomain domain) {
+    private UnorderedPartitionedProperty(Set<LogicalVariable> partitioningVariables, INodeDomain domain,
+            int[][] partitionsMap) {
         super(partitioningVariables);
         this.domain = domain;
+        this.partitionsMap = partitionsMap;
+    }
+
+    public static UnorderedPartitionedProperty of(Set<LogicalVariable> partitioningVariables, INodeDomain domain) {
+        return new UnorderedPartitionedProperty(partitioningVariables, domain, null);
+    }
+
+    public static UnorderedPartitionedProperty ofPartitionsMap(Set<LogicalVariable> partitioningVariables,
+            INodeDomain domain, int[][] partitionsMap) {
+        return new UnorderedPartitionedProperty(partitioningVariables, domain, partitionsMap);
     }
 
     @Override
@@ -46,7 +59,7 @@ public final class UnorderedPartitionedProperty extends AbstractGroupingProperty
             List<FunctionalDependency> fds) {
         Set<LogicalVariable> normalizedColumnSet =
                 normalizeAndReduceGroupingColumns(columnSet, equivalenceClasses, fds);
-        return new UnorderedPartitionedProperty(normalizedColumnSet, domain);
+        return new UnorderedPartitionedProperty(normalizedColumnSet, domain, partitionsMap);
     }
 
     @Override
@@ -79,12 +92,23 @@ public final class UnorderedPartitionedProperty extends AbstractGroupingProperty
                 applied = true;
             }
         }
-        return applied ? new UnorderedPartitionedProperty(newColumnSet, domain) : this;
+        return applied ? new UnorderedPartitionedProperty(newColumnSet, domain, partitionsMap) : this;
     }
 
     @Override
     public IPartitioningProperty clonePartitioningProperty() {
-        return new UnorderedPartitionedProperty(new ListSet<>(columnSet), domain);
+        return new UnorderedPartitionedProperty(new ListSet<>(columnSet), domain, partitionsMap);
     }
 
+    public int[][] getPartitionsMap() {
+        return partitionsMap;
+    }
+
+    public boolean usesPartitionsMap() {
+        return partitionsMap != null;
+    }
+
+    public boolean samePartitioningScheme(UnorderedPartitionedProperty another) {
+        return Arrays.deepEquals(partitionsMap, another.partitionsMap);
+    }
 }

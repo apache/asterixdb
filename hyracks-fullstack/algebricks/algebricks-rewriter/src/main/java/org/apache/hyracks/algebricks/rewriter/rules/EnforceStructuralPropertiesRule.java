@@ -654,31 +654,24 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
     private IPhysicalOperator createHashConnector(IOptimizationContext ctx, IPhysicalPropertiesVector deliveredByChild,
             INodeDomain domain, IPhysicalPropertiesVector requiredAtChild, IPartitioningProperty rqdPartitioning,
             int childIndex, ILogicalOperator parentOp) {
-        IPhysicalOperator hashConnector;
-        List<LogicalVariable> vars = new ArrayList<>(((UnorderedPartitionedProperty) rqdPartitioning).getColumnSet());
+        UnorderedPartitionedProperty rqd = (UnorderedPartitionedProperty) rqdPartitioning;
+        List<LogicalVariable> vars = new ArrayList<>(rqd.getColumnSet());
         String hashMergeHint = (String) ctx.getMetadataProvider().getConfig().get(HASH_MERGE);
         if (hashMergeHint == null || !hashMergeHint.equalsIgnoreCase(TRUE_CONSTANT)) {
-            hashConnector = new HashPartitionExchangePOperator(vars, domain);
-            return hashConnector;
+            return new HashPartitionExchangePOperator(vars, domain, rqd.getPartitionsMap());
         }
         List<ILocalStructuralProperty> cldLocals = deliveredByChild.getLocalProperties();
         List<ILocalStructuralProperty> reqdLocals = requiredAtChild.getLocalProperties();
-        boolean propWasSet = false;
-        hashConnector = null;
         if (reqdLocals != null && cldLocals != null && allAreOrderProps(cldLocals)) {
             AbstractLogicalOperator c = (AbstractLogicalOperator) parentOp.getInputs().get(childIndex).getValue();
             Map<LogicalVariable, EquivalenceClass> ecs = ctx.getEquivalenceClassMap(c);
             List<FunctionalDependency> fds = ctx.getFDList(c);
             if (PropertiesUtil.matchLocalProperties(reqdLocals, cldLocals, ecs, fds)) {
                 List<OrderColumn> orderColumns = getOrderColumnsFromGroupingProperties(reqdLocals, cldLocals);
-                hashConnector = new HashPartitionMergeExchangePOperator(orderColumns, vars, domain);
-                propWasSet = true;
+                return new HashPartitionMergeExchangePOperator(orderColumns, vars, domain, rqd.getPartitionsMap());
             }
         }
-        if (!propWasSet) {
-            hashConnector = new HashPartitionExchangePOperator(vars, domain);
-        }
-        return hashConnector;
+        return new HashPartitionExchangePOperator(vars, domain, rqd.getPartitionsMap());
     }
 
     /**

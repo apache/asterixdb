@@ -20,21 +20,25 @@ package org.apache.hyracks.algebricks.core.algebra.metadata;
 
 import java.util.List;
 
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 
 public interface IDataSourcePropertiesProvider {
     /**
-     *
      * @param scanVariables
+     * @param ctx
      * @return
      */
-    IPhysicalPropertiesVector computeRequiredProperties(List<LogicalVariable> scanVariables);
+    IPhysicalPropertiesVector computeRequiredProperties(List<LogicalVariable> scanVariables, IOptimizationContext ctx)
+            throws AlgebricksException;
 
     /**
-     *
      * @param scanVariables
+     * @param ctx
      * @return
      */
-    IPhysicalPropertiesVector computeDeliveredProperties(List<LogicalVariable> scanVariables);
+    IPhysicalPropertiesVector computeDeliveredProperties(List<LogicalVariable> scanVariables, IOptimizationContext ctx)
+            throws AlgebricksException;
 }

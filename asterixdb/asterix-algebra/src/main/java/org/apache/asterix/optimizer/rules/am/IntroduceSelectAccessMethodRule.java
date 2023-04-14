@@ -284,7 +284,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             subRoots.add(subRoot);
         }
         // Connect each secondary index utilization plan to a common intersect operator.
-        ILogicalOperator primaryUnnestOp = connectAll2ndarySearchPlanWithIntersect(subRoots, context);
+        Index idx = chosenIndexes.get(0).getSecond();
+        ILogicalOperator primaryUnnestOp = connectAll2ndarySearchPlanWithIntersect(subRoots, context, idx);
 
         subTree.getDataSourceRef().setValue(primaryUnnestOp);
         return primaryUnnestOp != null;
@@ -312,7 +313,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
      * Connect each secondary index utilization plan to a common INTERSECT operator.
      */
     private ILogicalOperator connectAll2ndarySearchPlanWithIntersect(List<ILogicalOperator> subRoots,
-            IOptimizationContext context) throws AlgebricksException {
+            IOptimizationContext context, Index idx) throws AlgebricksException {
         ILogicalOperator lop = subRoots.get(0);
         List<List<LogicalVariable>> inputVars = new ArrayList<>(subRoots.size());
         for (int i = 0; i < subRoots.size(); i++) {
@@ -360,7 +361,8 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             VariableUtilities.substituteVariables(lop, inputVar, outputVar, context);
         }
 
-        IntersectOperator intersect = new IntersectOperator(outputVars, inputVars);
+        int[][] partitionsMap = metadataProvider.getPartitionsMap(idx);
+        IntersectOperator intersect = new IntersectOperator(outputVars, inputVars, partitionsMap);
         intersect.setSourceLocation(lop.getSourceLocation());
         for (ILogicalOperator secondarySearch : subRoots) {
             intersect.getInputs().add(secondarySearch.getInputs().get(0));

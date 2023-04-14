@@ -44,15 +44,16 @@ public class IntersectOperator extends AbstractLogicalOperator {
 
     private final List<LogicalVariable> outputExtraVars;
     private final List<List<LogicalVariable>> inputExtraVars;
+    private final int[][] partitionsMap;
 
-    public IntersectOperator(List<LogicalVariable> outputCompareVars, List<List<LogicalVariable>> inputCompareVars)
-            throws AlgebricksException {
-        this(outputCompareVars, Collections.emptyList(), inputCompareVars, Collections.emptyList());
+    public IntersectOperator(List<LogicalVariable> outputCompareVars, List<List<LogicalVariable>> inputCompareVars,
+            int[][] partitionsMap) throws AlgebricksException {
+        this(outputCompareVars, Collections.emptyList(), inputCompareVars, Collections.emptyList(), partitionsMap);
     }
 
     public IntersectOperator(List<LogicalVariable> outputCompareVars, List<LogicalVariable> outputExtraVars,
-            List<List<LogicalVariable>> inputCompareVars, List<List<LogicalVariable>> inputExtraVars)
-            throws AlgebricksException {
+            List<List<LogicalVariable>> inputCompareVars, List<List<LogicalVariable>> inputExtraVars,
+            int[][] partitionsMap) throws AlgebricksException {
         int numCompareVars = outputCompareVars.size();
         for (List<LogicalVariable> vars : inputCompareVars) {
             if (vars.size() != numCompareVars) {
@@ -75,6 +76,7 @@ public class IntersectOperator extends AbstractLogicalOperator {
             }
         }
 
+        this.partitionsMap = partitionsMap;
         this.outputCompareVars = new ArrayList<>(outputCompareVars);
         this.inputCompareVars = new ArrayList<>(inputCompareVars);
         this.outputExtraVars = new ArrayList<>();
@@ -172,6 +174,10 @@ public class IntersectOperator extends AbstractLogicalOperator {
 
     public List<LogicalVariable> getOutputExtraVariables() {
         return outputExtraVars;
+    }
+
+    public int[][] getPartitionsMap() {
+        return partitionsMap;
     }
 
     private List<LogicalVariable> concatOutputVariables() {

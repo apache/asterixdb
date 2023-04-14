@@ -63,12 +63,14 @@ public class HashPartitionMergeExchangePOperator extends AbstractExchangePOperat
     private final List<OrderColumn> orderColumns;
     private final List<LogicalVariable> partitionFields;
     private final INodeDomain domain;
+    private final int[][] partitionsMap;
 
     public HashPartitionMergeExchangePOperator(List<OrderColumn> orderColumns, List<LogicalVariable> partitionFields,
-            INodeDomain domain) {
+            INodeDomain domain, int[][] partitionsMap) {
         this.orderColumns = orderColumns;
         this.partitionFields = partitionFields;
         this.domain = domain;
+        this.partitionsMap = partitionsMap;
     }
 
     @Override
@@ -82,11 +84,15 @@ public class HashPartitionMergeExchangePOperator extends AbstractExchangePOperat
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        IPartitioningProperty p =
-                new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(partitionFields), domain);
+        IPartitioningProperty p;
+        if (partitionsMap != null) {
+            p = UnorderedPartitionedProperty.ofPartitionsMap(new ListSet<>(partitionFields), domain, partitionsMap);
+        } else {
+            p = UnorderedPartitionedProperty.of(new ListSet<>(partitionFields), domain);
+        }
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
         List<ILocalStructuralProperty> op2Locals = op2.getDeliveredPhysicalProperties().getLocalProperties();
-        List<ILocalStructuralProperty> locals = new ArrayList<ILocalStructuralProperty>();
+        List<ILocalStructuralProperty> locals = new ArrayList<>();
         for (ILocalStructuralProperty prop : op2Locals) {
             if (prop.getPropertyType() == PropertyType.LOCAL_ORDER_PROPERTY) {
                 locals.add(prop);
@@ -133,7 +139,8 @@ public class HashPartitionMergeExchangePOperator extends AbstractExchangePOperat
                 ++i;
             }
         }
-        ITuplePartitionComputerFactory tpcf = new FieldHashPartitionComputerFactory(keys, hashFunctionFactories);
+        ITuplePartitionComputerFactory tpcf =
+                new FieldHashPartitionComputerFactory(keys, hashFunctionFactories, partitionsMap);
 
         int n = orderColumns.size();
         int[] sortFields = new int[n];

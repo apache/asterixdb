@@ -216,7 +216,7 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) throws AlgebricksException {
         if (requiresBroadcast) {
             // For primary indexes optimizing an equality condition we can reduce the broadcast requirement to hash partitioning.
             if (isPrimaryIndex && isEqCondition) {
@@ -239,7 +239,11 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                         orderColumns.add(new OrderColumn(orderVar, OrderKind.ASC));
                     }
                     propsLocal.add(new LocalOrderProperty(orderColumns));
-                    pv[0] = new StructuralPropertiesVector(new UnorderedPartitionedProperty(searchKeyVars, domain),
+                    MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
+                    Dataset dataset = mp.findDataset(searchIndex.getDataverseName(), searchIndex.getDatasetName());
+                    int[][] partitionsMap = mp.getPartitionsMap(dataset);
+                    pv[0] = new StructuralPropertiesVector(
+                            UnorderedPartitionedProperty.ofPartitionsMap(searchKeyVars, domain, partitionsMap),
                             propsLocal);
                     return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
                 }

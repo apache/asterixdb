@@ -43,7 +43,7 @@ public interface IPartitioningRequirementsCoordinator {
         @Override
         public Pair<Boolean, IPartitioningProperty> coordinateRequirements(IPartitioningProperty requirements,
                 IPartitioningProperty firstDeliveredPartitioning, ILogicalOperator op, IOptimizationContext context) {
-            return new Pair<Boolean, IPartitioningProperty>(true, requirements);
+            return new Pair<>(true, requirements);
         }
     };
 
@@ -62,9 +62,9 @@ public interface IPartitioningRequirementsCoordinator {
                                         (UnorderedPartitionedProperty) firstDeliveredPartitioning;
                                 Set<LogicalVariable> set1 = upp1.getColumnSet();
                                 UnorderedPartitionedProperty uppreq = (UnorderedPartitionedProperty) rqdpp;
-                                Set<LogicalVariable> modifuppreq = new ListSet<LogicalVariable>();
+                                Set<LogicalVariable> modifuppreq = new ListSet<>();
                                 Map<LogicalVariable, EquivalenceClass> eqmap = context.getEquivalenceClassMap(op);
-                                Set<LogicalVariable> covered = new ListSet<LogicalVariable>();
+                                Set<LogicalVariable> covered = new ListSet<>();
 
                                 // coordinate from an existing partition property
                                 // (firstDeliveredPartitioning)
@@ -94,16 +94,22 @@ public interface IPartitioningRequirementsCoordinator {
                                             "The number of variables are not equal in both partitioning sides");
                                 }
 
-                                UnorderedPartitionedProperty upp2 =
-                                        new UnorderedPartitionedProperty(modifuppreq, rqdpp.getNodeDomain());
-                                return new Pair<Boolean, IPartitioningProperty>(false, upp2);
+                                UnorderedPartitionedProperty upp2;
+                                UnorderedPartitionedProperty rqd = (UnorderedPartitionedProperty) rqdpp;
+                                if (rqd.usesPartitionsMap()) {
+                                    upp2 = UnorderedPartitionedProperty.ofPartitionsMap(modifuppreq,
+                                            rqd.getNodeDomain(), rqd.getPartitionsMap());
+                                } else {
+                                    upp2 = UnorderedPartitionedProperty.of(modifuppreq, rqd.getNodeDomain());
+                                }
+                                return new Pair<>(false, upp2);
                             }
                             case ORDERED_PARTITIONED: {
                                 throw new NotImplementedException();
                             }
                         }
                     }
-                    return new Pair<Boolean, IPartitioningProperty>(true, rqdpp);
+                    return new Pair<>(true, rqdpp);
                 }
 
             };

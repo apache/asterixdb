@@ -340,7 +340,7 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
             inputCompareVars.add(new ArrayList<>(intersect.getInputCompareVariables(i)));
         }
         IntersectOperator intersectWithFilter = new IntersectOperator(intersect.getOutputCompareVariables(),
-                outputFilterVars, inputCompareVars, filterVars);
+                outputFilterVars, inputCompareVars, filterVars, intersect.getPartitionsMap());
         intersectWithFilter.setSourceLocation(intersect.getSourceLocation());
         intersectWithFilter.getInputs().addAll(intersect.getInputs());
         return intersectWithFilter;

@@ -136,6 +136,9 @@ public class PropertiesUtil {
                     case UNORDERED_PARTITIONED: {
                         UnorderedPartitionedProperty ur = (UnorderedPartitionedProperty) reqd;
                         UnorderedPartitionedProperty ud = (UnorderedPartitionedProperty) dlvd;
+                        if (!ur.samePartitioningScheme(ud)) {
+                            return false;
+                        }
                         if (mayExpandProperties) {
                             return (!ud.getColumnSet().isEmpty() && ur.getColumnSet().containsAll(ud.getColumnSet()));
                         } else {

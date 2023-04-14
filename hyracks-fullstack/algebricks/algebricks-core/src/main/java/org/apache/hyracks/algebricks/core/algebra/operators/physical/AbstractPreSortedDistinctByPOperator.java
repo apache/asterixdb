@@ -65,7 +65,7 @@ public abstract class AbstractPreSortedDistinctByPOperator extends AbstractDisti
         IPartitioningProperty pp = null;
         AbstractLogicalOperator aop = (AbstractLogicalOperator) op;
         if (aop.getExecutionMode() == AbstractLogicalOperator.ExecutionMode.PARTITIONED) {
-            pp = new UnorderedPartitionedProperty(new ListSet<>(columnList), context.getComputationNodeDomain());
+            pp = UnorderedPartitionedProperty.of(new ListSet<>(columnList), context.getComputationNodeDomain());
         }
         pv[0] = new StructuralPropertiesVector(pp, localProps);
         return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);

@@ -28,7 +28,7 @@ public class FieldHashPartitioner extends HashPartitioner implements ITupleParti
     private final int numPartitions;
 
     public FieldHashPartitioner(int[] hashFields, IBinaryHashFunction[] hashFunctions, int numPartitions) {
-        super(hashFields, hashFunctions);
+        super(hashFields, hashFunctions, null);
         this.numPartitions = numPartitions;
     }
 

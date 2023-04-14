@@ -1887,6 +1887,18 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         validateDatabaseObjectNameImpl(objectName, sourceLoc);
     }
 
+    public int[][] getPartitionsMap(Dataset dataset) throws AlgebricksException {
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc = getSplitProviderAndConstraints(dataset);
+        return getPartitionsMap(getNumPartitions(spPc.second));
+    }
+
+    public int[][] getPartitionsMap(Index idx) throws AlgebricksException {
+        Dataset ds = findDataset(idx.getDataverseName(), idx.getDatasetName());
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spPc =
+                getSplitProviderAndConstraints(ds, idx.getIndexName());
+        return getPartitionsMap(getNumPartitions(spPc.second));
+    }
+
     public static int getNumPartitions(AlgebricksPartitionConstraint constraint) {
         if (constraint.getPartitionConstraintType() == AlgebricksPartitionConstraint.PartitionConstraintType.COUNT) {
             return ((AlgebricksCountPartitionConstraint) constraint).getCount();

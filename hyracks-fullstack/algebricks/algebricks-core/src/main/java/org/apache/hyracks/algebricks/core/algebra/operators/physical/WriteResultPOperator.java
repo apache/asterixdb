@@ -80,11 +80,12 @@ public class WriteResultPOperator extends AbstractPhysicalOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) throws AlgebricksException {
         List<LogicalVariable> scanVariables = new ArrayList<LogicalVariable>();
         scanVariables.addAll(keys);
         scanVariables.add(new LogicalVariable(-1));
-        IPhysicalPropertiesVector r = dataSource.getPropertiesProvider().computeRequiredProperties(scanVariables);
+        IPhysicalPropertiesVector r =
+                dataSource.getPropertiesProvider().computeRequiredProperties(scanVariables, context);
         IPhysicalPropertiesVector[] requirements = new IPhysicalPropertiesVector[1];
         requirements[0] = r;
         return new PhysicalRequirements(requirements, IPartitioningRequirementsCoordinator.NO_COORDINATION);

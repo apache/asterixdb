@@ -51,7 +51,7 @@ public class RequiredCapacityVisitorTest {
         // Constructs a parallel group-by query plan.
         GroupByOperator globalGby = makeGroupByOperator(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
         ExchangeOperator exchange = new ExchangeOperator();
-        exchange.setPhysicalOperator(new HashPartitionExchangePOperator(Collections.emptyList(), null));
+        exchange.setPhysicalOperator(new HashPartitionExchangePOperator(Collections.emptyList(), null, null));
         GroupByOperator localGby = makeGroupByOperator(AbstractLogicalOperator.ExecutionMode.LOCAL);
         globalGby.getInputs().add(new MutableObject<>(exchange));
         exchange.getInputs().add(new MutableObject<>(localGby));
@@ -94,7 +94,7 @@ public class RequiredCapacityVisitorTest {
         // Left child plan of the join.
         ExchangeOperator leftChildExchange = new ExchangeOperator();
         leftChildExchange.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
-        leftChildExchange.setPhysicalOperator(new HashPartitionExchangePOperator(Collections.emptyList(), null));
+        leftChildExchange.setPhysicalOperator(new HashPartitionExchangePOperator(Collections.emptyList(), null, null));
         InnerJoinOperator leftChild = makeJoinOperator(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
         join.getInputs().add(new MutableObject<>(leftChildExchange));
         leftChildExchange.getInputs().add(new MutableObject<>(leftChild));
@@ -106,7 +106,7 @@ public class RequiredCapacityVisitorTest {
         // Right child plan of the join.
         ExchangeOperator rightChildExchange = new ExchangeOperator();
         rightChildExchange.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
-        rightChildExchange.setPhysicalOperator(new HashPartitionExchangePOperator(Collections.emptyList(), null));
+        rightChildExchange.setPhysicalOperator(new HashPartitionExchangePOperator(Collections.emptyList(), null, null));
         GroupByOperator rightChild = makeGroupByOperator(AbstractLogicalOperator.ExecutionMode.LOCAL);
         join.getInputs().add(new MutableObject<>(rightChildExchange));
         rightChildExchange.getInputs().add(new MutableObject<>(rightChild));

@@ -193,7 +193,7 @@ public class PlanStagesGeneratorTest {
 
         ExchangeOperator exchangeOperator1 = new ExchangeOperator();
         exchangeOperator1.setExecutionMode(PARTITIONED);
-        exchangeOperator1.setPhysicalOperator(new HashPartitionExchangePOperator(Collections.emptyList(), null));
+        exchangeOperator1.setPhysicalOperator(new HashPartitionExchangePOperator(Collections.emptyList(), null, null));
         exchangeOperator1.getInputs().add(new MutableObject<>(firstJoin));
 
         EmptyTupleSourceOperator ets3 = new EmptyTupleSourceOperator();
@@ -207,7 +207,7 @@ public class PlanStagesGeneratorTest {
 
         ExchangeOperator exchangeOperator2 = new ExchangeOperator();
         exchangeOperator2.setExecutionMode(PARTITIONED);
-        exchangeOperator2.setPhysicalOperator(new HashPartitionExchangePOperator(Collections.emptyList(), null));
+        exchangeOperator2.setPhysicalOperator(new HashPartitionExchangePOperator(Collections.emptyList(), null, null));
         exchangeOperator2.getInputs().add(new MutableObject<>(groupByOperator));
 
         LeftOuterJoinOperator secondJoin = new LeftOuterJoinOperator(new MutableObject<>(ConstantExpression.TRUE),

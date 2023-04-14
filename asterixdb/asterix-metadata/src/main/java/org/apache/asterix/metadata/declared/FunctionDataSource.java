@@ -36,6 +36,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -86,12 +87,14 @@ public abstract class FunctionDataSource extends DataSource {
         // Unordered Random partitioning on all nodes
         return new IDataSourcePropertiesProvider() {
             @Override
-            public IPhysicalPropertiesVector computeRequiredProperties(List<LogicalVariable> scanVariables) {
+            public IPhysicalPropertiesVector computeRequiredProperties(List<LogicalVariable> scanVariables,
+                    IOptimizationContext ctx) {
                 return StructuralPropertiesVector.EMPTY_PROPERTIES_VECTOR;
             }
 
             @Override
-            public IPhysicalPropertiesVector computeDeliveredProperties(List<LogicalVariable> scanVariables) {
+            public IPhysicalPropertiesVector computeDeliveredProperties(List<LogicalVariable> scanVariables,
+                    IOptimizationContext ctx) {
                 return new StructuralPropertiesVector(new RandomPartitioningProperty(domain), Collections.emptyList());
             }
         };

@@ -121,9 +121,9 @@ public class SpatialJoinPOperator extends AbstractJoinPOperator {
         keysLeftBranchTileId.add(keysLeftBranch.get(0));
         List<LogicalVariable> keysRightBranchTileId = new ArrayList<>();
         keysRightBranchTileId.add(keysRightBranch.get(0));
-        IPartitioningProperty pp1 = new UnorderedPartitionedProperty(new ListSet<>(keysLeftBranchTileId),
+        IPartitioningProperty pp1 = UnorderedPartitionedProperty.of(new ListSet<>(keysLeftBranchTileId),
                 context.getComputationNodeDomain());
-        IPartitioningProperty pp2 = new UnorderedPartitionedProperty(new ListSet<>(keysRightBranchTileId),
+        IPartitioningProperty pp2 = UnorderedPartitionedProperty.of(new ListSet<>(keysRightBranchTileId),
                 context.getComputationNodeDomain());
 
         List<ILocalStructuralProperty> localProperties1 = new ArrayList<>();

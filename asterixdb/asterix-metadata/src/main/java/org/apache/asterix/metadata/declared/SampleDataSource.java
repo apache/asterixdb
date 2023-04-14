@@ -72,6 +72,10 @@ public class SampleDataSource extends DataSource {
         return false;
     }
 
+    public Dataset getDataset() {
+        return dataset;
+    }
+
     private static DataSourceId createSampleDataSourceId(Dataset dataset, String sampleIndexName) {
         return new DataSourceId(dataset.getDataverseName(), dataset.getDatasetName(), new String[] { sampleIndexName });
     }

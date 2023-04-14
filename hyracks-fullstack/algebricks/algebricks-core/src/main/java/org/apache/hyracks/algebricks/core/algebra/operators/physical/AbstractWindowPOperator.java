@@ -79,7 +79,7 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
         IPartitioningProperty pp;
         switch (op.getExecutionMode()) {
             case PARTITIONED:
-                pp = new UnorderedPartitionedProperty(new ListSet<>(partitionColumns),
+                pp = UnorderedPartitionedProperty.of(new ListSet<>(partitionColumns),
                         context.getComputationNodeDomain());
                 break;
             case UNPARTITIONED:

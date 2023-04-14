@@ -94,23 +94,24 @@ public class RemoveUnnecessarySortMergeExchange implements IAlgebraicRewriteRule
         // If yes, we use HashMergeExchange; otherwise, we use HashExchange.
         SortMergeExchangePOperator sme = (SortMergeExchangePOperator) currentOp.getPhysicalOperator();
         HashPartitionExchangePOperator hpe = (HashPartitionExchangePOperator) op1.getPhysicalOperator();
-        Set<LogicalVariable> liveVars = new HashSet<LogicalVariable>();
+        Set<LogicalVariable> liveVars = new HashSet<>();
         VariableUtilities.getLiveVariables(op1, liveVars);
         boolean usingHashMergeExchange = true;
         for (OrderColumn oc : sme.getSortColumns()) {
             if (!liveVars.contains(oc.getColumn())) {
                 usingHashMergeExchange = false;
+                break;
             }
         }
 
         if (usingHashMergeExchange) {
             // Add sort columns from the SortMergeExchange into a new HashMergeExchange.
-            List<OrderColumn> ocList = new ArrayList<OrderColumn>();
+            List<OrderColumn> ocList = new ArrayList<>();
             for (OrderColumn oc : sme.getSortColumns()) {
                 ocList.add(oc);
             }
-            HashPartitionMergeExchangePOperator hpme =
-                    new HashPartitionMergeExchangePOperator(ocList, hpe.getHashFields(), hpe.getDomain());
+            HashPartitionMergeExchangePOperator hpme = new HashPartitionMergeExchangePOperator(ocList,
+                    hpe.getHashFields(), hpe.getDomain(), hpe.getPartitionsMap());
             op1.setPhysicalOperator(hpme);
         }
 

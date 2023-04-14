@@ -20,6 +20,7 @@
 package org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -230,7 +231,11 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
                 newInputExtraVars.add(new ArrayList<>(op.getInputExtraVariables(i)));
             }
         }
-        return new IntersectOperator(newOutputCompareVars, newOutputExtraVars, newInputCompareVars, newInputExtraVars);
+        int[][] partitionsMap = op.getPartitionsMap();
+        int[][] partitionsMapCopy =
+                partitionsMap == null ? null : Arrays.stream(partitionsMap).map(int[]::clone).toArray(int[][]::new);
+        return new IntersectOperator(newOutputCompareVars, newOutputExtraVars, newInputCompareVars, newInputExtraVars,
+                partitionsMapCopy);
     }
 
     @Override

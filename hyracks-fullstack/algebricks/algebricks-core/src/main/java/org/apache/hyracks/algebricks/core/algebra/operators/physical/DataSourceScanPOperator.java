@@ -74,11 +74,12 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
     }
 
     @Override
-    public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
+    public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context)
+            throws AlgebricksException {
         // partitioning properties
         DataSourceScanOperator dssOp = (DataSourceScanOperator) op;
         IDataSourcePropertiesProvider dspp = dataSource.getPropertiesProvider();
-        deliveredProperties = dspp.computeDeliveredProperties(dssOp.getVariables());
+        deliveredProperties = dspp.computeDeliveredProperties(dssOp.getVariables(), context);
     }
 
     @Override

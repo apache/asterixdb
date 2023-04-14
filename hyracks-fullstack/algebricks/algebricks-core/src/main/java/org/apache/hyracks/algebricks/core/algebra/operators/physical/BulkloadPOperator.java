@@ -72,12 +72,12 @@ public class BulkloadPOperator extends AbstractPhysicalOperator {
 
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
-            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
+            IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) throws AlgebricksException {
         List<LogicalVariable> scanVariables = new ArrayList<>();
         scanVariables.addAll(primaryKeys);
         scanVariables.add(new LogicalVariable(-1));
         IPhysicalPropertiesVector physicalProps =
-                dataSource.getPropertiesProvider().computeRequiredProperties(scanVariables);
+                dataSource.getPropertiesProvider().computeRequiredProperties(scanVariables, context);
         StructuralPropertiesVector spv = new StructuralPropertiesVector(physicalProps.getPartitioningProperty(),
                 physicalProps.getLocalProperties());
         return new PhysicalRequirements(new IPhysicalPropertiesVector[] { spv },

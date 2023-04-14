@@ -24,14 +24,27 @@ import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputerFactory;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+
 public class FieldHashPartitionComputerFactory implements ITuplePartitionComputerFactory {
-    private static final long serialVersionUID = 1L;
+
+    private static final long serialVersionUID = 2L;
     private final int[] hashFields;
     private final IBinaryHashFunctionFactory[] hashFunctionFactories;
+    private final int[][] partitionsMap;
 
     public FieldHashPartitionComputerFactory(int[] hashFields, IBinaryHashFunctionFactory[] hashFunctionFactories) {
         this.hashFields = hashFields;
         this.hashFunctionFactories = hashFunctionFactories;
+        this.partitionsMap = null;
+    }
+
+    public FieldHashPartitionComputerFactory(int[] hashFields, IBinaryHashFunctionFactory[] hashFunctionFactories,
+            int[][] partitionsMap) {
+        this.hashFields = hashFields;
+        this.hashFunctionFactories = hashFunctionFactories;
+        this.partitionsMap = partitionsMap;
     }
 
     @Override
@@ -40,6 +53,16 @@ public class FieldHashPartitionComputerFactory implements ITuplePartitionCompute
         for (int i = 0; i < hashFunctionFactories.length; ++i) {
             hashFunctions[i] = hashFunctionFactories[i].createBinaryHashFunction();
         }
-        return new FieldHashPartitionComputer(hashFields, hashFunctions);
+        if (partitionsMap == null) {
+            return new FieldHashPartitionComputer(hashFields, hashFunctions, null);
+        } else {
+            Int2IntMap storagePartition2Compute = new Int2IntOpenHashMap();
+            for (int i = 0; i < partitionsMap.length; i++) {
+                for (int storagePartition : partitionsMap[i]) {
+                    storagePartition2Compute.put(storagePartition, i);
+                }
+            }
+            return new FieldHashPartitionComputer(hashFields, hashFunctions, storagePartition2Compute);
+        }
     }
 }

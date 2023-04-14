@@ -47,12 +47,14 @@ import org.apache.hyracks.dataflow.std.connectors.MToNPartitioningConnectorDescr
 
 public class HashPartitionExchangePOperator extends AbstractExchangePOperator {
 
-    private List<LogicalVariable> hashFields;
-    private INodeDomain domain;
+    private final List<LogicalVariable> hashFields;
+    private final INodeDomain domain;
+    private final int[][] partitionsMap;
 
-    public HashPartitionExchangePOperator(List<LogicalVariable> hashFields, INodeDomain domain) {
+    public HashPartitionExchangePOperator(List<LogicalVariable> hashFields, INodeDomain domain, int[][] partitionsMap) {
         this.hashFields = hashFields;
         this.domain = domain;
+        this.partitionsMap = partitionsMap;
     }
 
     @Override
@@ -70,7 +72,12 @@ public class HashPartitionExchangePOperator extends AbstractExchangePOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        IPartitioningProperty p = new UnorderedPartitionedProperty(new ListSet<LogicalVariable>(hashFields), domain);
+        IPartitioningProperty p;
+        if (partitionsMap != null) {
+            p = UnorderedPartitionedProperty.ofPartitionsMap(new ListSet<>(hashFields), domain, partitionsMap);
+        } else {
+            p = UnorderedPartitionedProperty.of(new ListSet<>(hashFields), domain);
+        }
         this.deliveredProperties = new StructuralPropertiesVector(p, null);
     }
 
@@ -98,9 +105,13 @@ public class HashPartitionExchangePOperator extends AbstractExchangePOperator {
             hashFunctionFactories[i] = hashFunProvider.getBinaryHashFunctionFactory(env.getVarType(v));
             ++i;
         }
-        ITuplePartitionComputerFactory tpcf = new FieldHashPartitionComputerFactory(keys, hashFunctionFactories);
+        ITuplePartitionComputerFactory tpcf =
+                new FieldHashPartitionComputerFactory(keys, hashFunctionFactories, partitionsMap);
         IConnectorDescriptor conn = new MToNPartitioningConnectorDescriptor(spec, tpcf);
         return new Pair<>(conn, null);
     }
 
+    public int[][] getPartitionsMap() {
+        return partitionsMap;
+    }
 }
