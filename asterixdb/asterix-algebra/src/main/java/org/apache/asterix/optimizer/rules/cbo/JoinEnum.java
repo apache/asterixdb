@@ -22,6 +22,7 @@ package org.apache.asterix.optimizer.rules.cbo;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.HashJoinExpressionAnnotation;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -68,6 +70,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -76,6 +79,7 @@ public class JoinEnum {
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected List<JoinCondition> joinConditions; // "global" list of join conditions
+    protected Map<IExpressionAnnotation, Warning> joinHints;
     protected List<PlanNode> allPlans; // list of all plans
     protected JoinNode[] jnArray; // array of all join nodes
     protected int jnArraySize;
@@ -108,6 +112,7 @@ public class JoinEnum {
         this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
         this.assignOps = new ArrayList<>();
+        this.joinHints = new HashMap<>();
         this.allPlans = new ArrayList<>();
         this.numberOfTerms = numberOfFromTerms;
         this.cboMode = cboMode;

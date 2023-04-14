@@ -58,6 +58,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -159,6 +161,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
         PlanNode cheapestPlanNode = joinEnum.allPlans.get(cheapestPlan);
 
+        generateHintWarnings();
+
         if (numberOfFromTerms > 1) {
             buildNewTree(cheapestPlanNode, joinLeafInputsHashMap, joinOps, new MutableInt(0));
             printPlan(pp, (AbstractLogicalOperator) joinOps.get(0), "New Whole Plan after buildNewTree 1");
@@ -196,6 +200,19 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         //if (op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN)
         //return true;
         return false;
+    }
+
+    private void generateHintWarnings() {
+        for (Map.Entry<IExpressionAnnotation, Warning> mapElement : joinEnum.joinHints.entrySet()) {
+            IExpressionAnnotation annotation = mapElement.getKey();
+            Warning warning = mapElement.getValue();
+            if (warning != null) {
+                IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
+                if (warningCollector.shouldWarn()) {
+                    warningCollector.warn(warning);
+                }
+            }
+        }
     }
 
     private boolean getCBOMode(IOptimizationContext context) {
