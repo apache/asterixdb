@@ -35,6 +35,7 @@ import java.util.Set;
 
 import org.apache.asterix.app.nc.task.BindMetadataNodeTask;
 import org.apache.asterix.app.nc.task.CheckpointTask;
+import org.apache.asterix.app.nc.task.CloudToLocalStorageCachingTask;
 import org.apache.asterix.app.nc.task.ExportMetadataNodeTask;
 import org.apache.asterix.app.nc.task.LocalRecoveryTask;
 import org.apache.asterix.app.nc.task.LocalStorageCleanupTask;
@@ -51,6 +52,7 @@ import org.apache.asterix.app.replication.message.RegistrationTasksResponseMessa
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.cluster.IClusterStateManager;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
@@ -83,8 +85,10 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     private final boolean replicationEnabled;
     private final IGatekeeper gatekeeper;
     Map<String, Map<String, Object>> nodeSecretsMap;
+    private ICCServiceContext serviceContext;
 
     public NcLifecycleCoordinator(ICCServiceContext serviceCtx, boolean replicationEnabled) {
+        this.serviceContext = serviceCtx;
         this.messageBroker = (ICCMessageBroker) serviceCtx.getMessageBroker();
         this.replicationEnabled = replicationEnabled;
         this.gatekeeper =
@@ -218,6 +222,11 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING, nodeActivePartitions));
         int metadataPartitionId = clusterManager.getMetadataPartition().getPartitionId();
         tasks.add(new LocalStorageCleanupTask(metadataPartitionId));
+
+        if (((ICcApplicationContext) (serviceContext.getControllerService()).getApplicationContext())
+                .isCloudDeployment()) {
+            tasks.add(new CloudToLocalStorageCachingTask(activePartitions));
+        }
         if (state == SystemState.CORRUPTED) {
             // need to perform local recovery for node active partitions
             LocalRecoveryTask rt = new LocalRecoveryTask(nodeActivePartitions);

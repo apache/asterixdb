@@ -134,10 +134,11 @@ public interface IIOManager extends Closeable {
 
     void deleteDirectory(FileReference root) throws HyracksDataException;
 
-    // TODO: Remove and use list
     Collection<FileReference> getMatchingFiles(FileReference root, FilenameFilter filter) throws HyracksDataException;
 
     boolean exists(FileReference fileRef);
 
     void create(FileReference fileRef) throws HyracksDataException;
+
+    void syncFiles(Set<Integer> activePartitions) throws HyracksDataException;
 }

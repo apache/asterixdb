@@ -575,6 +575,21 @@
       </properties>
     </project>
   </supplement>
+
+  <!-- software.amazon.eventstream is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
+  <!-- license override not needed, ALv2 is specified in its pom.xml -->
+  <!-- see https://github.com/aws/aws-sdk-java -->
+  <supplement>
+    <project>
+      <groupId>software.amazon.awssdk.crt</groupId>
+      <artifactId>aws-crt</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>0.21.10</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.21.10</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>0.21.10</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
   <!-- AWS SDK end -->
 
   <!-- AWS Hadoop SDK start -->

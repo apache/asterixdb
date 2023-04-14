@@ -124,7 +124,7 @@ public class AwsS3ExternalDatasetTest {
 
     // Service endpoint
     private static final int MOCK_SERVER_PORT = 8001;
-    private static final String MOCK_SERVER_HOSTNAME = "http://localhost:" + MOCK_SERVER_PORT;
+    private static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;
 
     // Region, bucket and definitions
     private static final String MOCK_SERVER_REGION = "us-west-2";
@@ -376,7 +376,12 @@ public class AwsS3ExternalDatasetTest {
         // Starting S3 mock server to be used instead of real S3 server
         LOGGER.info("Starting S3 mock server");
         s3MockServer = new S3Mock.Builder().withPort(MOCK_SERVER_PORT).withInMemoryBackend().build();
-        s3MockServer.start();
+        try {
+            s3MockServer.start();
+        } catch (Exception ex) {
+            // it might already be started, do nothing
+        }
+
         LOGGER.info("S3 mock server started successfully");
 
         // Create a client and add some files to the S3 mock server

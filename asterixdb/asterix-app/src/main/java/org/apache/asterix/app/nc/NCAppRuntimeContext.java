@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.nc;
 
+import static org.apache.hyracks.control.common.controllers.ControllerConfig.Option.CLOUD_DEPLOYMENT;
+
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -28,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 
 import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.app.result.ResultReader;
+import org.apache.asterix.cloud.CloudIOManager;
 import org.apache.asterix.common.api.IConfigValidator;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.ICoordinationService;
@@ -91,6 +94,7 @@ import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.client.result.ResultSet;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.ipc.impl.HyracksConnection;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
@@ -143,6 +147,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private ILSMIOOperationScheduler lsmIOScheduler;
     private PersistentLocalResourceRepository localResourceRepository;
     private IIOManager ioManager;
+    private IIOManager cloudIoManager;
     private boolean isShuttingdown;
     private ActiveManager activeManager;
     private IReplicationChannel replicationChannel;
@@ -185,6 +190,9 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             IConfigValidatorFactory configValidatorFactory, IReplicationStrategyFactory replicationStrategyFactory,
             boolean initialRun) throws IOException {
         ioManager = getServiceContext().getIoManager();
+        if (isCloudDeployment()) {
+            cloudIoManager = new CloudIOManager((IOManager) ioManager);
+        }
         int ioQueueLen = getServiceContext().getAppConfig().getInt(NCConfig.Option.IO_QUEUE_SIZE);
         threadExecutor =
                 MaintainedThreadNameExecutorService.newCachedThreadPool(getServiceContext().getThreadFactory());
@@ -238,6 +246,9 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         receptionist = receptionistFactory.create();
 
         if (replicationProperties.isReplicationEnabled()) {
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Replication is enabled");
+            }
             replicationManager = new ReplicationManager(this, replicationStrategyFactory, replicationProperties);
 
             //pass replication manager to replication required object
@@ -250,11 +261,11 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             //initialize replication channel
             replicationChannel = new ReplicationChannel(this);
 
-            bufferCache = new BufferCache(ioManager, prs, pcp, new FileMapManager(),
+            bufferCache = new BufferCache(getLocalOrCloudIoManager(), prs, pcp, new FileMapManager(),
                     storageProperties.getBufferCacheMaxOpenFiles(), ioQueueLen, getServiceContext().getThreadFactory(),
                     replicationManager);
         } else {
-            bufferCache = new BufferCache(ioManager, prs, pcp, new FileMapManager(),
+            bufferCache = new BufferCache(getLocalOrCloudIoManager(), prs, pcp, new FileMapManager(),
                     storageProperties.getBufferCacheMaxOpenFiles(), ioQueueLen, getServiceContext().getThreadFactory());
         }
 
@@ -356,6 +367,15 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IIOManager getIoManager() {
         return ioManager;
+    }
+
+    @Override
+    public IIOManager getCloudIoManager() {
+        return cloudIoManager;
+    }
+
+    private IIOManager getLocalOrCloudIoManager() {
+        return isCloudDeployment() ? cloudIoManager : ioManager;
     }
 
     @Override
@@ -637,5 +657,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IDiskWriteRateLimiterProvider getDiskWriteRateLimiterProvider() {
         return diskWriteRateLimiterProvider;
+    }
+
+    @Override
+    public boolean isCloudDeployment() {
+        return ncServiceContext.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
     }
 }

@@ -49,6 +49,8 @@ public interface INcApplicationContext extends IApplicationContext {
 
     IIOManager getIoManager();
 
+    IIOManager getCloudIoManager();
+
     Executor getThreadExecutor();
 
     ITransactionSubsystem getTransactionSubsystem();

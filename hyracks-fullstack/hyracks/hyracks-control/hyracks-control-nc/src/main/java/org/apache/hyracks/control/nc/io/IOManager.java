@@ -67,6 +67,8 @@ public class IOManager implements IIOManager {
     /*
      * Finals
      */
+    private final int queueSize;
+    private final int ioParallelism;
     private final ExecutorService executor;
     private final BlockingQueue<IoRequest> submittedRequests;
     private final BlockingQueue<IoRequest> freeRequests;
@@ -81,6 +83,8 @@ public class IOManager implements IIOManager {
     public IOManager(List<IODeviceHandle> devices, IFileDeviceResolver deviceComputer, int ioParallelism, int queueSize)
             throws HyracksDataException {
         this.ioDevices = Collections.unmodifiableList(devices);
+        this.queueSize = queueSize;
+        this.ioParallelism = ioParallelism;
         checkDeviceValidity(devices);
         workspaces = new ArrayList<>();
         for (IODeviceHandle d : ioDevices) {
@@ -98,27 +102,29 @@ public class IOManager implements IIOManager {
         }
         workspaceIndex = 0;
         this.deviceComputer = deviceComputer;
-        submittedRequests = new ArrayBlockingQueue<>(queueSize);
-        freeRequests = new ArrayBlockingQueue<>(queueSize);
-        int numIoThreads = ioDevices.size() * ioParallelism;
+        submittedRequests = new ArrayBlockingQueue<>(this.queueSize);
+        freeRequests = new ArrayBlockingQueue<>(this.queueSize);
+        int numIoThreads = ioDevices.size() * this.ioParallelism;
         executor = Executors.newFixedThreadPool(numIoThreads);
         for (int i = 0; i < numIoThreads; i++) {
             executor.execute(new IoRequestHandler(i, submittedRequests));
         }
     }
 
-    protected IOManager(IOManager ioManager, int queueSize, int ioParallelism) {
-        this.ioDevices = ioManager.ioDevices;
-        workspaces = ioManager.workspaces;
-        workspaceIndex = 0;
-        this.deviceComputer = ioManager.deviceComputer;
-        submittedRequests = new ArrayBlockingQueue<>(queueSize);
-        freeRequests = new ArrayBlockingQueue<>(queueSize);
-        int numIoThreads = ioDevices.size() * ioParallelism;
-        executor = Executors.newFixedThreadPool(numIoThreads);
-        for (int i = 0; i < numIoThreads; i++) {
-            executor.execute(new IoRequestHandler(i, submittedRequests));
-        }
+    public int getQueueSize() {
+        return queueSize;
+    }
+
+    public int getIoParallelism() {
+        return ioParallelism;
+    }
+
+    public List<IODeviceHandle> getIoDevices() {
+        return ioDevices;
+    }
+
+    public IFileDeviceResolver getDeviceComputer() {
+        return deviceComputer;
     }
 
     public IoRequest getOrAllocRequest() {
@@ -570,7 +576,12 @@ public class IOManager implements IIOManager {
     @Override
     public Collection<FileReference> getMatchingFiles(FileReference root, FilenameFilter filter)
             throws HyracksDataException {
-        Collection<File> files = IoUtil.getMatchingFiles(root.getFile().toPath(), filter);
+        File rootFile = root.getFile();
+        if (!rootFile.exists()) {
+            return Collections.emptyList();
+        }
+
+        Collection<File> files = IoUtil.getMatchingFiles(rootFile.toPath(), filter);
         Set<FileReference> fileReferences = new HashSet<>();
         for (File file : files) {
             fileReferences.add(resolveAbsolutePath(file.getAbsolutePath()));
@@ -596,5 +607,10 @@ public class IOManager implements IIOManager {
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    @Override
+    public void syncFiles(Set<Integer> activePartitions) throws HyracksDataException {
+        // do nothing
     }
 }

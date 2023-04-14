@@ -217,6 +217,10 @@
               </gavs>
               <noticeUrl>https://raw.githubusercontent.com/aws/aws-sdk-java-v2/2.10.83/NOTICE.txt</noticeUrl>
             </override>
+            <override>
+              <gav>software.amazon.awssdk.crt:aws-crt:0.21.10</gav>
+              <noticeUrl>https://raw.githubusercontent.com/awslabs/aws-crt-java/v0.21.10/NOTICE</noticeUrl>
+            </override>
             <!-- Hadoop AWS SDK -->
             <override>
               <gavs>
@@ -679,6 +683,7 @@
                 <aliasUrl>https://raw.githubusercontent.com/apache/orc/v1.8.0/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/RoaringBitmap/RoaringBitmap/0.9.39/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/JetBrains/java-annotations/master/LICENSE.txt</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/awslabs/aws-crt-java/v0.21.10/LICENSE</aliasUrl>
               </aliasUrls>
               <metric>1</metric>
             </license>

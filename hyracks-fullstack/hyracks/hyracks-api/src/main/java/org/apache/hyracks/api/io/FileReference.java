@@ -100,7 +100,7 @@ public class FileReference implements Serializable {
     public void register() {
         if (registrationTime != 0) {
             throw new IllegalStateException(
-                    "File " + toString() + " was already registered at " + new Date(registrationTime));
+                    "File " + this + " was already registered at " + new Date(registrationTime));
         }
         registrationTime = System.currentTimeMillis();
     }
@@ -111,12 +111,21 @@ public class FileReference implements Serializable {
 
     public void unregister() {
         if (registrationTime == 0) {
-            throw new IllegalStateException("File " + toString() + " wasn't registered before");
+            throw new IllegalStateException("File " + this + " wasn't registered before");
         }
         registrationTime = 0;
     }
 
     public boolean isCompressed() {
         return false;
+    }
+
+    public FileReference getParent() {
+        int parentIndex = path.lastIndexOf(File.separatorChar);
+        if (parentIndex < 0) {
+            return new FileReference(dev, "");
+        }
+        String parentPath = path.substring(parentIndex);
+        return new FileReference(dev, parentPath);
     }
 }

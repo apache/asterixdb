@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.cc;
 
+import static org.apache.hyracks.control.common.controllers.ControllerConfig.Option.CLOUD_DEPLOYMENT;
+
 import java.io.IOException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
@@ -365,5 +367,10 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IDataPartitioningProvider getDataPartitioningProvider() {
         return dataPartitioningProvider;
+    }
+
+    @Override
+    public boolean isCloudDeployment() {
+        return ccServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
     }
 }

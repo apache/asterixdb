@@ -398,7 +398,7 @@ public class AsterixHyracksIntegrationUtil {
     /**
      * @return the asterix-app absolute path if found, otherwise the default user path.
      */
-    private static Path getProjectPath() {
+    static Path getProjectPath() {
         final String targetDir = "asterix-app";
         final BiPredicate<Path, BasicFileAttributes> matcher =
                 (path, attributes) -> path.getFileName().toString().equals(targetDir) && path.toFile().isDirectory()

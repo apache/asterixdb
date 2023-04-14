@@ -77,7 +77,6 @@
     <jackson.version>2.14.1</jackson.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
     <netty.version>4.1.87.Final</netty.version>
-    <awsjavasdk.version>2.17.218</awsjavasdk.version>
 
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
@@ -480,38 +479,6 @@
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-util-ajax</artifactId>
         <version>9.4.48.v20220622</version>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>sdk-core</artifactId>
-        <version>${awsjavasdk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>s3</artifactId>
-        <version>${awsjavasdk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>regions</artifactId>
-        <version>${awsjavasdk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>auth</artifactId>
-        <version>${awsjavasdk.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>io.findify</groupId>
-        <artifactId>s3mock_2.12</artifactId>
-        <version>0.2.5</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>com.typesafe.akka</groupId>
-        <artifactId>akka-http-core_2.12</artifactId>
-        <version>10.1.0</version>
-        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
