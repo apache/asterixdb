@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -293,6 +294,63 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         return false;
     }
 
+    protected List<List<String>> findKeyFieldNames(Index index) throws CompilationException {
+        List<List<String>> keyFieldNames = new ArrayList<>();
+        DatasetConfig.IndexType indexType = index.getIndexType();
+        switch (Index.IndexCategory.of(indexType)) {
+            case ARRAY:
+                Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) index.getIndexDetails();
+                for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
+                    for (int i = 0; i < e.getProjectList().size(); i++) {
+                        List<String> project = e.getProjectList().get(i);
+                        keyFieldNames.add(ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project));
+                    }
+                }
+                break;
+            case VALUE:
+                Index.ValueIndexDetails valueIndexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+                keyFieldNames = valueIndexDetails.getKeyFieldNames();
+                break;
+            case TEXT:
+                Index.TextIndexDetails textIndexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+                keyFieldNames = textIndexDetails.getKeyFieldNames();
+                break;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, String.valueOf(indexType));
+        }
+
+        return keyFieldNames;
+    }
+
+    protected List<IAType> findKeyTypes(Index index) throws CompilationException {
+        List<IAType> keyFieldTypes = new ArrayList<>();
+        DatasetConfig.IndexType indexType = index.getIndexType();
+        switch (Index.IndexCategory.of(indexType)) {
+            case ARRAY:
+                Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) index.getIndexDetails();
+                for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
+                    for (int i = 0; i < e.getProjectList().size(); i++) {
+                        List<String> project = e.getProjectList().get(i);
+                        keyFieldTypes.add(e.getTypeList().get(i));
+                    }
+                }
+                break;
+            case VALUE:
+                Index.ValueIndexDetails valueIndexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+                keyFieldTypes = valueIndexDetails.getKeyFieldTypes();
+                break;
+            case TEXT:
+                Index.TextIndexDetails textIndexDetails = (Index.TextIndexDetails) index.getIndexDetails();
+                keyFieldTypes = textIndexDetails.getKeyFieldTypes();
+                break;
+            default:
+                throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, String.valueOf(indexType));
+        }
+
+        return keyFieldTypes;
+
+    }
+
     /**
      * Removes irrelevant access methods candidates, based on whether the
      * expressions in the query match those in the index. For example, some
@@ -318,34 +376,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 indexExprAndVarIt.remove();
                 continue;
             }
-            List<List<String>> keyFieldNames;
-            List<IAType> keyFieldTypes;
-            switch (Index.IndexCategory.of(indexType)) {
-                case ARRAY:
-                    Index.ArrayIndexDetails arrayIndexDetails = (Index.ArrayIndexDetails) index.getIndexDetails();
-                    keyFieldNames = new ArrayList<>();
-                    keyFieldTypes = new ArrayList<>();
-                    for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
-                        for (int i = 0; i < e.getProjectList().size(); i++) {
-                            List<String> project = e.getProjectList().get(i);
-                            keyFieldNames.add(ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project));
-                            keyFieldTypes.add(e.getTypeList().get(i));
-                        }
-                    }
-                    break;
-                case VALUE:
-                    Index.ValueIndexDetails valueIndexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
-                    keyFieldNames = valueIndexDetails.getKeyFieldNames();
-                    keyFieldTypes = valueIndexDetails.getKeyFieldTypes();
-                    break;
-                case TEXT:
-                    Index.TextIndexDetails textIndexDetails = (Index.TextIndexDetails) index.getIndexDetails();
-                    keyFieldNames = textIndexDetails.getKeyFieldNames();
-                    keyFieldTypes = textIndexDetails.getKeyFieldTypes();
-                    break;
-                default:
-                    throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_INDEX_TYPE, String.valueOf(indexType));
-            }
+            List<List<String>> keyFieldNames = findKeyFieldNames(index);
+            List<IAType> keyFieldTypes = findKeyTypes(index);
 
             boolean allUsed = true;
             int lastFieldMatched = -1;

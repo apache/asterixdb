@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -372,6 +373,76 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
         return lop;
     }
 
+    // list1 is <= list2 in terms of size; so check if everything in list1 is also in list2 in the same order
+    protected boolean prefix(List<List<String>> list1, List<List<String>> list2) {
+        int i, j;
+
+        for (i = 0; i < list1.size(); i++) {
+            List<String> l1 = list1.get(i);
+            List<String> l2 = list2.get(i);
+            if (l1.size() != l2.size()) {
+                return false;
+            }
+            for (j = 0; j < l1.size(); j++) {
+                String s1 = l1.get(j);
+                String s2 = l2.get(j);
+                if (!(s1.equals(s2))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    protected void removeSmallerPrefixIndexes(List<Pair<IAccessMethod, Index>> indexes) throws CompilationException {
+        int len = indexes.size();
+        int i, j;
+        Index indexI, indexJ;
+        boolean include[];
+        include = new boolean[len];
+        for (i = 0; i < len; i++) {
+            include[i] = true; // Initially every index is included.
+        }
+
+        List<List<String>> fieldNamesI, fieldNamesJ;
+
+        for (i = 0; i < len - 1; i++) {
+            if (include[i]) {
+                IAccessMethod ami = indexes.get(i).first;
+                indexI = indexes.get(i).second;
+                DatasetConfig.IndexType typeI = indexI.getIndexType();
+                fieldNamesI = findKeyFieldNames(indexI);
+
+                for (j = i + 1; j < len; j++) {
+                    if (include[j]) {
+                        IAccessMethod amj = indexes.get(j).first;
+                        if (ami == amj) { // should be the same accessMethods
+                            indexJ = indexes.get(j).second;
+                            DatasetConfig.IndexType typeJ = indexJ.getIndexType();
+                            if (typeI == typeJ) {
+                                fieldNamesJ = findKeyFieldNames(indexJ);
+                                if (fieldNamesI.size() <= fieldNamesJ.size()) {
+                                    if (prefix(fieldNamesI, fieldNamesJ)) {
+                                        include[i] = false;
+                                    }
+                                } else if (prefix(fieldNamesJ, fieldNamesI)) {
+                                    include[j] = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // remove the shorter indexes if any
+        for (i = len - 1; i >= 0; i--) { // removing from the end; seems safer that way
+            if (!include[i]) { // if this index can be removed it, do so;
+                indexes.remove(i);
+            }
+        }
+    }
+
     /**
      * Recursively traverse the given plan and check whether a SELECT operator exists.
      * If one is found, maintain the path from the root to SELECT operator and
@@ -486,6 +557,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
 
                 // Choose all indexes that will be applied.
                 chooseAllIndexes(analyzedAMs, chosenIndexes);
+                removeSmallerPrefixIndexes(chosenIndexes);
 
                 if (chosenIndexes == null || chosenIndexes.isEmpty()) {
                     // We can't apply any index for this SELECT operator
