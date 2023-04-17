@@ -60,8 +60,9 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
                 mergePolicyFactory, mergePolicyProperties);
         IIndexBuilderFactory indexBuilderFactory = new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
                 secondaryFileSplitProvider, resourceFactory, true);
+        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
         IndexCreateOperatorDescriptor secondaryIndexCreateOp =
-                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory);
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, partitionsMap);
         secondaryIndexCreateOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
@@ -83,8 +84,9 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
         IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
         // The index drop operation should be persistent regardless of temp datasets or permanent dataset.
+        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
         IndexDropOperatorDescriptor btreeDrop =
-                new IndexDropOperatorDescriptor(spec, dataflowHelperFactory, dropOptions);
+                new IndexDropOperatorDescriptor(spec, dataflowHelperFactory, dropOptions, partitionsMap);
         btreeDrop.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeDrop,
                 splitsAndConstraint.second);

@@ -26,10 +26,10 @@ import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.api.IIndexBuilder;
 
 public class IndexCreateOperatorNodePushable extends AbstractOperatorNodePushable {
-    private final IIndexBuilder indexBuilder;
+    private final IIndexBuilder[] indexBuilders;
 
-    public IndexCreateOperatorNodePushable(IIndexBuilder indexBuilder) throws HyracksDataException {
-        this.indexBuilder = indexBuilder;
+    public IndexCreateOperatorNodePushable(IIndexBuilder[] indexBuilders) {
+        this.indexBuilders = indexBuilders;
     }
 
     @Override
@@ -49,7 +49,9 @@ public class IndexCreateOperatorNodePushable extends AbstractOperatorNodePushabl
 
     @Override
     public void initialize() throws HyracksDataException {
-        indexBuilder.build();
+        for (IIndexBuilder indexBuilder : indexBuilders) {
+            indexBuilder.build();
+        }
     }
 
     @Override

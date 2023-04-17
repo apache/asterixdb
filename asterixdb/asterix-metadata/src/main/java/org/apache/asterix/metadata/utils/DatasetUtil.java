@@ -313,8 +313,9 @@ public class DatasetUtil {
                 metadataProvider.getSplitProviderAndConstraints(dataset);
         IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
+        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
         IndexDropOperatorDescriptor primaryBtreeDrop =
-                new IndexDropOperatorDescriptor(specPrimary, indexHelperFactory, options);
+                new IndexDropOperatorDescriptor(specPrimary, indexHelperFactory, options, partitionsMap);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
                 splitsAndConstraint.second);
         specPrimary.addRoot(primaryBtreeDrop);
@@ -350,7 +351,9 @@ public class DatasetUtil {
         IndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
                         splitsAndConstraint.first, resourceFactory, true);
-        IndexCreateOperatorDescriptor indexCreateOp = new IndexCreateOperatorDescriptor(spec, indexBuilderFactory);
+        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
+        IndexCreateOperatorDescriptor indexCreateOp =
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, partitionsMap);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 splitsAndConstraint.second);
         spec.addRoot(indexCreateOp);

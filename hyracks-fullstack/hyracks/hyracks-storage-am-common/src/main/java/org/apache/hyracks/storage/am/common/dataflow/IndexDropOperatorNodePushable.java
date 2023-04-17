@@ -42,13 +42,18 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long DROP_ATTEMPT_WAIT_TIME_MILLIS = TimeUnit.SECONDS.toMillis(1);
-    private final IIndexDataflowHelper indexHelper;
+    private final IIndexDataflowHelper[] indexHelpers;
     private final Set<DropOption> options;
     private long maxWaitTimeMillis = TimeUnit.SECONDS.toMillis(30);
 
     public IndexDropOperatorNodePushable(IIndexDataflowHelperFactory indexHelperFactory, Set<DropOption> options,
-            IHyracksTaskContext ctx, int partition) throws HyracksDataException {
-        this.indexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
+            IHyracksTaskContext ctx, int partition, int[][] partitionsMap) throws HyracksDataException {
+        int[] storagePartitions = partitionsMap[partition];
+        this.indexHelpers = new IIndexDataflowHelper[storagePartitions.length];
+        for (int i = 0; i < storagePartitions.length; i++) {
+            this.indexHelpers[i] =
+                    indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), storagePartitions[i]);
+        }
         this.options = options;
     }
 
@@ -69,7 +74,9 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
 
     @Override
     public void initialize() throws HyracksDataException {
-        dropIndex();
+        for (IIndexDataflowHelper indexHelper : indexHelpers) {
+            dropIndex(indexHelper);
+        }
     }
 
     @Override
@@ -77,7 +84,7 @@ public class IndexDropOperatorNodePushable extends AbstractOperatorNodePushable 
         // no op
     }
 
-    private void dropIndex() throws HyracksDataException {
+    private void dropIndex(IIndexDataflowHelper indexHelper) throws HyracksDataException {
         while (true) {
             try {
                 indexHelper.destroy();

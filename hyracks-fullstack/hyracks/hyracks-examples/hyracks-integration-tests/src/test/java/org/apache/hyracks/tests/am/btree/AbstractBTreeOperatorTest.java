@@ -119,7 +119,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         IResourceFactory primaryResourceFactory = createPrimaryResourceFactory();
         IIndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(storageManager, primarySplitProvider, primaryResourceFactory, false);
-        IndexCreateOperatorDescriptor primaryCreateOp = new IndexCreateOperatorDescriptor(spec, indexBuilderFactory);
+        IndexCreateOperatorDescriptor primaryCreateOp =
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryCreateOp, NC1_ID);
         spec.addRoot(primaryCreateOp);
         runTest(spec);
@@ -162,7 +163,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         IResourceFactory secondaryResourceFactory = createSecondaryResourceFactory();
         IIndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(storageManager, secondarySplitProvider, secondaryResourceFactory, false);
-        IndexCreateOperatorDescriptor secondaryCreateOp = new IndexCreateOperatorDescriptor(spec, indexBuilderFactory);
+        IndexCreateOperatorDescriptor secondaryCreateOp =
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryCreateOp, NC1_ID);
         spec.addRoot(secondaryCreateOp);
         runTest(spec);
@@ -269,7 +271,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
 
     protected void destroyPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
-        IndexDropOperatorDescriptor primaryDropOp = new IndexDropOperatorDescriptor(spec, primaryHelperFactory);
+        IndexDropOperatorDescriptor primaryDropOp =
+                new IndexDropOperatorDescriptor(spec, primaryHelperFactory, getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryDropOp, NC1_ID);
         spec.addRoot(primaryDropOp);
         runTest(spec);
@@ -277,7 +280,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
 
     protected void destroySecondaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
-        IndexDropOperatorDescriptor secondaryDropOp = new IndexDropOperatorDescriptor(spec, secondaryHelperFactory);
+        IndexDropOperatorDescriptor secondaryDropOp =
+                new IndexDropOperatorDescriptor(spec, secondaryHelperFactory, getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryDropOp, NC1_ID);
         spec.addRoot(secondaryDropOp);
         runTest(spec);

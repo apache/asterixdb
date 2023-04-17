@@ -36,25 +36,27 @@ public class IndexDropOperatorDescriptor extends AbstractSingleActivityOperatorD
         WAIT_ON_IN_USE
     }
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final IIndexDataflowHelperFactory dataflowHelperFactory;
     private final Set<DropOption> options;
+    private final int[][] partitionsMap;
 
     public IndexDropOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            IIndexDataflowHelperFactory dataflowHelperFactory) {
-        this(spec, dataflowHelperFactory, EnumSet.noneOf(DropOption.class));
+            IIndexDataflowHelperFactory dataflowHelperFactory, int[][] partitionsMap) {
+        this(spec, dataflowHelperFactory, EnumSet.noneOf(DropOption.class), partitionsMap);
     }
 
     public IndexDropOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            IIndexDataflowHelperFactory dataflowHelperFactory, Set<DropOption> options) {
+            IIndexDataflowHelperFactory dataflowHelperFactory, Set<DropOption> options, int[][] partitionsMap) {
         super(spec, 0, 0);
         this.dataflowHelperFactory = dataflowHelperFactory;
         this.options = options;
+        this.partitionsMap = partitionsMap;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new IndexDropOperatorNodePushable(dataflowHelperFactory, options, ctx, partition);
+        return new IndexDropOperatorNodePushable(dataflowHelperFactory, options, ctx, partition, partitionsMap);
     }
 }
