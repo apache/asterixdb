@@ -27,6 +27,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
@@ -38,29 +39,35 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMDiskComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
+import org.apache.hyracks.storage.common.IIndex;
 
 public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorNodePushable {
-    protected final BulkLoadUsage usage;
 
-    protected final IIndexDataflowHelper primaryIndexHelper;
+    protected final BulkLoadUsage usage;
+    protected final IIndexDataflowHelper[] primaryIndexHelpers;
     protected final IDatasetLifecycleManager datasetManager;
     protected final int datasetId;
     protected final int partition;
-    protected ILSMIndex primaryIndex;
+    protected ILSMIndex[] primaryIndexes;
 
     public LSMIndexBulkLoadOperatorNodePushable(IIndexDataflowHelperFactory indexDataflowHelperFactory,
             IIndexDataflowHelperFactory priamryIndexDataflowHelperFactory, IHyracksTaskContext ctx, int partition,
             int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex, RecordDescriptor recDesc, BulkLoadUsage usage, int datasetId,
-            ITupleFilterFactory tupleFilterFactory) throws HyracksDataException {
+            ITupleFilterFactory tupleFilterFactory, ITuplePartitionerFactory partitionerFactory, int[][] partitionsMap)
+            throws HyracksDataException {
         super(indexDataflowHelperFactory, ctx, partition, fieldPermutation, fillFactor, verifyInput, numElementsHint,
-                checkIfEmptyIndex, recDesc, tupleFilterFactory);
+                checkIfEmptyIndex, recDesc, tupleFilterFactory, partitionerFactory, partitionsMap);
 
         if (priamryIndexDataflowHelperFactory != null) {
-            this.primaryIndexHelper =
-                    priamryIndexDataflowHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
+            primaryIndexHelpers = new IIndexDataflowHelper[partitions.length];
+            primaryIndexes = new ILSMIndex[partitions.length];
+            for (int i = 0; i < partitions.length; i++) {
+                primaryIndexHelpers[i] = priamryIndexDataflowHelperFactory
+                        .create(ctx.getJobletContext().getServiceContext(), partitions[i]);
+            }
         } else {
-            this.primaryIndexHelper = null;
+            primaryIndexHelpers = null;
         }
         this.usage = usage;
         this.datasetId = datasetId;
@@ -71,17 +78,17 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
     }
 
     @Override
-    protected void initializeBulkLoader() throws HyracksDataException {
+    protected void initializeBulkLoader(IIndex index, int indexId) throws HyracksDataException {
         ILSMIndex targetIndex = (ILSMIndex) index;
         Map<String, Object> parameters = new HashMap<>();
         parameters.put(LSMIOOperationCallback.KEY_FLUSHED_COMPONENT_ID, LSMComponentId.DEFAULT_COMPONENT_ID);
         if (usage.equals(BulkLoadUsage.LOAD)) {
-            bulkLoader = targetIndex.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
-                    parameters);
+            bulkLoaders[indexId] = targetIndex.createBulkLoader(fillFactor, verifyInput, numElementsHint,
+                    checkIfEmptyIndex, parameters);
         } else {
-            primaryIndexHelper.open();
-            primaryIndex = (ILSMIndex) primaryIndexHelper.getIndexInstance();
-            List<ILSMDiskComponent> primaryComponents = primaryIndex.getDiskComponents();
+            primaryIndexHelpers[indexId].open();
+            primaryIndexes[indexId] = (ILSMIndex) primaryIndexHelpers[indexId].getIndexInstance();
+            List<ILSMDiskComponent> primaryComponents = primaryIndexes[indexId].getDiskComponents();
             if (!primaryComponents.isEmpty()) {
                 ILSMComponentId bulkloadId = LSMComponentIdUtils.union(primaryComponents.get(0).getId(),
                         primaryComponents.get(primaryComponents.size() - 1).getId());
@@ -90,8 +97,8 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
                 parameters.put(LSMIOOperationCallback.KEY_FLUSHED_COMPONENT_ID,
                         LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID);
             }
-            bulkLoader = targetIndex.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
-                    parameters);
+            bulkLoaders[indexId] = targetIndex.createBulkLoader(fillFactor, verifyInput, numElementsHint,
+                    checkIfEmptyIndex, parameters);
 
         }
     }
@@ -101,8 +108,8 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
         try {
             super.close();
         } finally {
-            if (primaryIndex != null) {
-                primaryIndexHelper.close();
+            if (primaryIndexHelpers != null) {
+                closeIndexes(primaryIndexes, primaryIndexHelpers);
             }
         }
     }

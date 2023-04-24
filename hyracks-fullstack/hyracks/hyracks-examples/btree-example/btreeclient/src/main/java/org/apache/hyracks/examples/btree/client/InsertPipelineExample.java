@@ -150,7 +150,7 @@ public class InsertPipelineExample {
         IIndexDataflowHelperFactory primaryHelperFactory =
                 new IndexDataflowHelperFactory(storageManager, primarySplitProvider);
 
-        int[][] partitionsMap = getPartitionsMap(splitNCs.length);
+        int[][] partitionsMap = JobHelper.getPartitionsMap(splitNCs.length);
         int[] pkFields = new int[] { primaryFieldPermutation[0] };
         IBinaryHashFunctionFactory[] pkHashFunFactories =
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) };
@@ -215,13 +215,5 @@ public class InsertPipelineExample {
         spec.addRoot(nullSink);
 
         return spec;
-    }
-
-    public static int[][] getPartitionsMap(int numPartitions) {
-        int[][] map = new int[numPartitions][1];
-        for (int i = 0; i < numPartitions; i++) {
-            map[i] = new int[] { i };
-        }
-        return map;
     }
 }

@@ -169,7 +169,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         enforcedRecDesc = new RecordDescriptor(enforcedRecFields, enforcedTypeTraits);
         // For tokenization, sorting and loading.
         // One token (+ optional partitioning field) + primary keys.
-        numTokenKeyPairFields = (!isPartitioned) ? 1 + numPrimaryKeys : 2 + numPrimaryKeys;
+        int pkOff = getNumTokens();
+        numTokenKeyPairFields = pkOff + numPrimaryKeys;
         ISerializerDeserializer[] tokenKeyPairFields =
                 new ISerializerDeserializer[numTokenKeyPairFields + numFilterFields];
         ITypeTraits[] tokenKeyPairTypeTraits = new ITypeTraits[numTokenKeyPairFields];
@@ -177,12 +178,10 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         tokenKeyPairFields[0] = serdeProvider.getSerializerDeserializer(secondaryKeyType);
         tokenKeyPairTypeTraits[0] = tokenTypeTraits[0];
         tokenKeyPairComparatorFactories[0] = NonTaggedFormatUtil.getTokenBinaryComparatorFactory(secondaryKeyType);
-        int pkOff = 1;
         if (isPartitioned) {
             tokenKeyPairFields[1] = ShortSerializerDeserializer.INSTANCE;
             tokenKeyPairTypeTraits[1] = tokenTypeTraits[1];
             tokenKeyPairComparatorFactories[1] = ShortBinaryComparatorFactory.INSTANCE;
-            pkOff = 2;
         }
         if (numPrimaryKeys > 0) {
             tokenKeyPairFields[pkOff] = primaryRecDesc.getFields()[0];
@@ -303,14 +302,25 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
         return sortOp;
     }
 
-    private AbstractSingleActivityOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec) {
+    private AbstractSingleActivityOperatorDescriptor createInvertedIndexBulkLoadOp(JobSpecification spec)
+            throws AlgebricksException {
         int[] fieldPermutation = new int[numTokenKeyPairFields + numFilterFields];
         for (int i = 0; i < fieldPermutation.length; i++) {
             fieldPermutation[i] = i;
         }
+        // how can numPrimaryKeys be 0?
+        int[] pkFields = new int[numPrimaryKeys];
+        int pkOffset = getNumTokens();
+        for (int i = 0; i < pkFields.length; i++) {
+            pkFields[i] = fieldPermutation[pkOffset + i];
+        }
         IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
         return createTreeIndexBulkLoadOp(spec, fieldPermutation, dataflowHelperFactory,
-                StorageConstants.DEFAULT_TREE_FILL_FACTOR);
+                StorageConstants.DEFAULT_TREE_FILL_FACTOR, pkFields);
+    }
+
+    private int getNumTokens() {
+        return isPartitioned ? 2 : 1;
     }
 }

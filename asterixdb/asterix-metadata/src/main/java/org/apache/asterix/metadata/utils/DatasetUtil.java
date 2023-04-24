@@ -412,10 +412,11 @@ public class DatasetUtil {
                 IRecoveryManager.ResourceType.LSM_BTREE);
         IndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), primaryFileSplitProvider);
+        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec,
                 dataset.getPrimaryRecordDescriptor(metadataProvider), lowKeyFields, highKeyFields, true, true,
                 indexHelperFactory, false, false, null, searchCallbackFactory, null, null, false, null, null, -1, false,
-                null, null, projectorFactory, null, null);
+                null, null, projectorFactory, null, partitionsMap);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primaryPartitionConstraint);
         return primarySearchOp;

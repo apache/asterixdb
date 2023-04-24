@@ -24,9 +24,11 @@ import static org.apache.hyracks.tests.am.btree.DataSetConstants.primaryKeyField
 
 import java.io.DataOutput;
 import java.io.File;
+import java.util.Arrays;
 
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.ILinearizeComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
@@ -77,9 +79,9 @@ import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.test.support.TestStorageManager;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
+import org.apache.hyracks.test.support.TestUtils;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.integration.AbstractIntegrationTest;
-import org.apache.hyracks.tests.integration.TestUtil;
 import org.junit.After;
 import org.junit.Before;
 
@@ -107,6 +109,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected final int primaryKeyFieldCount = 1;
     protected final IBinaryComparatorFactory[] primaryComparatorFactories =
             new IBinaryComparatorFactory[primaryKeyFieldCount];
+    protected final IBinaryHashFunctionFactory[] primaryHashFactories =
+            new IBinaryHashFunctionFactory[primaryKeyFieldCount];
 
     protected final RecordDescriptor primaryRecDesc = new RecordDescriptor(new ISerializerDeserializer[] {
             new UTF8StringSerializerDeserializer(), new UTF8StringSerializerDeserializer(),
@@ -178,6 +182,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         primaryTypeTraits[8] = UTF8StringPointable.TYPE_TRAITS;
         primaryTypeTraits[9] = UTF8StringPointable.TYPE_TRAITS;
         primaryComparatorFactories[0] = UTF8StringBinaryComparatorFactory.INSTANCE;
+        primaryHashFactories[0] = primaryHashFunFactories[0];
 
         // field, type and key declarations for secondary indexes
         secondaryTypeTraits[0] = DoublePointable.TYPE_TRAITS;
@@ -238,7 +243,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         IIndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(storageManager, primarySplitProvider, btreeFactory, false);
         IndexCreateOperatorDescriptor primaryCreateOp =
-                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, getPartitionsMap(1));
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, TestUtils.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryCreateOp, NC1_ID);
         spec.addRoot(primaryCreateOp);
         runTest(spec);
@@ -275,8 +280,12 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID);
 
         int[] fieldPermutation = { 0, 1, 2, 4, 5, 7, 9, 10, 11, 12 };
-        TreeIndexBulkLoadOperatorDescriptor primaryBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                primaryRecDesc, fieldPermutation, 0.7f, false, 1000L, true, primaryHelperFactory);
+        int[][] partitionsMap = TestUtils.getPartitionsMap(1);
+        ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(primaryKeyFieldPermutation,
+                primaryHashFunFactories, ordersSplits.length);
+        TreeIndexBulkLoadOperatorDescriptor primaryBulkLoad =
+                new TreeIndexBulkLoadOperatorDescriptor(spec, primaryRecDesc, fieldPermutation, 0.7f, false, 1000L,
+                        true, primaryHelperFactory, null, tuplePartitionerFactory, partitionsMap);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBulkLoad, NC1_ID);
 
         NullSinkOperatorDescriptor nsOpDesc = new NullSinkOperatorDescriptor(spec);
@@ -297,7 +306,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         IndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(storageManager, secondarySplitProvider, rtreeFactory, false);
         IndexCreateOperatorDescriptor secondaryCreateOp =
-                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, getPartitionsMap(1));
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, TestUtils.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryCreateOp, NC1_ID);
         spec.addRoot(secondaryCreateOp);
         runTest(spec);
@@ -333,8 +342,14 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
 
         // load secondary index
         int[] fieldPermutation = { 6, 7, 8, 9, 0 };
-        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                secondaryRecDesc, fieldPermutation, 0.7f, false, 1000L, true, secondaryHelperFactory);
+        int[] pkFields = { 4 };
+        int[][] partitionsMap = TestUtils.getPartitionsMap(1);
+        int numPartitions = (int) Arrays.stream(partitionsMap).map(partitions -> partitions.length).count();
+        ITuplePartitionerFactory partitionerFactory =
+                new FieldHashPartitionerFactory(pkFields, primaryHashFactories, numPartitions);
+        TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoad =
+                new TreeIndexBulkLoadOperatorDescriptor(spec, secondaryRecDesc, fieldPermutation, 0.7f, false, 1000L,
+                        true, secondaryHelperFactory, null, partitionerFactory, partitionsMap);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBulkLoad, NC1_ID);
 
         NullSinkOperatorDescriptor nsOpDesc = new NullSinkOperatorDescriptor(spec);
@@ -375,7 +390,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
                 ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
-        int[][] partitionsMap = TestUtil.getPartitionsMap(ordersSplits.length);
+        int[][] partitionsMap = TestUtils.getPartitionsMap(ordersSplits.length);
         // insert into primary index
         int[] primaryFieldPermutation = { 0, 1, 2, 4, 5, 7, 9, 10, 11, 12 };
         ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(primaryKeyFieldPermutation,
@@ -412,7 +427,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected void destroyPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         IndexDropOperatorDescriptor primaryDropOp =
-                new IndexDropOperatorDescriptor(spec, primaryHelperFactory, getPartitionsMap(1));
+                new IndexDropOperatorDescriptor(spec, primaryHelperFactory, TestUtils.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryDropOp, NC1_ID);
         spec.addRoot(primaryDropOp);
         runTest(spec);
@@ -421,7 +436,7 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
     protected void destroySecondaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         IndexDropOperatorDescriptor secondaryDropOp =
-                new IndexDropOperatorDescriptor(spec, secondaryHelperFactory, getPartitionsMap(1));
+                new IndexDropOperatorDescriptor(spec, secondaryHelperFactory, TestUtils.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryDropOp, NC1_ID);
         spec.addRoot(secondaryDropOp);
         runTest(spec);

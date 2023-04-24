@@ -62,14 +62,16 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
     @Override
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
-        int[] fieldPermutation = createFieldPermutationForBulkLoadOp(indexDetails.getKeyFieldNames().size());
-        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
-                metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
-        boolean excludeUnknown = excludeUnknownKeys(index, indexDetails, anySecondaryKeyIsNullable);
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             return spec;
         } else {
+            Index.ValueIndexDetails indexDetails = (Index.ValueIndexDetails) index.getIndexDetails();
+            int numSecondaryKeys = getNumSecondaryKeys();
+            int[] fieldPermutation = createFieldPermutationForBulkLoadOp(numSecondaryKeys);
+            int[] pkFields = createPkFieldPermutationForBulkLoadOp(fieldPermutation, numSecondaryKeys);
+            IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
+                    metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
+            boolean excludeUnknown = excludeUnknownKeys(index, indexDetails, anySecondaryKeyIsNullable);
             // job spec:
             // key provider -> primary idx scan -> cast assign -> (select)? -> (sort)? -> bulk load -> sink
             IndexUtil.bindJobEventListener(spec, metadataProvider);
@@ -86,15 +88,14 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
 
             sourceOp = targetOp;
             // primary index ----> cast assign op (produces the secondary index entry)
-            targetOp = createAssignOp(spec, indexDetails.getKeyFieldNames().size(), secondaryRecDesc);
+            targetOp = createAssignOp(spec, numSecondaryKeys, secondaryRecDesc);
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
             sourceOp = targetOp;
             if (excludeUnknown) {
                 // if any of the secondary fields are nullable, then add a select op that filters nulls.
                 // assign op ----> select op
-                targetOp =
-                        createFilterAllUnknownsSelectOp(spec, indexDetails.getKeyFieldNames().size(), secondaryRecDesc);
+                targetOp = createFilterAllUnknownsSelectOp(spec, numSecondaryKeys, secondaryRecDesc);
                 spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
                 sourceOp = targetOp;
             }
@@ -108,7 +109,7 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
 
             // cast assign op OR select op OR sort op ----> bulk load op
             targetOp = createTreeIndexBulkLoadOp(spec, fieldPermutation, dataflowHelperFactory,
-                    StorageConstants.DEFAULT_TREE_FILL_FACTOR);
+                    StorageConstants.DEFAULT_TREE_FILL_FACTOR, pkFields);
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
             // bulk load op ----> sink op

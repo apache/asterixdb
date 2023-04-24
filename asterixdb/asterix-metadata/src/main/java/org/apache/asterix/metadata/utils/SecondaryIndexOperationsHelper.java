@@ -19,6 +19,7 @@
 
 package org.apache.asterix.metadata.utils;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -67,11 +68,14 @@ import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperat
 import org.apache.hyracks.algebricks.runtime.operators.std.AssignRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.std.StreamSelectRuntimeFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionerFactory;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.sort.ExternalSortOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -439,13 +443,20 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
     }
 
     protected LSMIndexBulkLoadOperatorDescriptor createTreeIndexBulkLoadOp(JobSpecification spec,
-            int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor) {
+            int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor, int[] pkFields)
+            throws AlgebricksException {
         IndexDataflowHelperFactory primaryIndexDataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), primaryFileSplitProvider);
+        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
+        int numPartitions = (int) Arrays.stream(partitionsMap).map(partitions -> partitions.length).count();
+        IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(metadataProvider);
+        ITuplePartitionerFactory partitionerFactory =
+                new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
         // when an index is being created (not loaded) the filtration is introduced in the pipeline -> no tuple filter
-        LSMIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new LSMIndexBulkLoadOperatorDescriptor(spec,
-                secondaryRecDesc, fieldPermutation, fillFactor, false, numElementsHint, false, dataflowHelperFactory,
-                primaryIndexDataflowHelperFactory, BulkLoadUsage.CREATE_INDEX, dataset.getDatasetId(), null);
+        LSMIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp =
+                new LSMIndexBulkLoadOperatorDescriptor(spec, secondaryRecDesc, fieldPermutation, fillFactor, false,
+                        numElementsHint, false, dataflowHelperFactory, primaryIndexDataflowHelperFactory,
+                        BulkLoadUsage.CREATE_INDEX, dataset.getDatasetId(), null, partitionerFactory, partitionsMap);
         treeIndexBulkLoadOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 secondaryPartitionConstraint);
@@ -496,27 +507,6 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, asterixSelectOp,
                 primaryPartitionConstraint);
         return asterixSelectOp;
-    }
-
-    protected AlgebricksMetaOperatorDescriptor createExternalAssignOp(JobSpecification spec, int numSecondaryKeys,
-            RecordDescriptor secondaryRecDesc) {
-        int[] outColumns = new int[numSecondaryKeys];
-        int[] projectionList = new int[numSecondaryKeys + numPrimaryKeys];
-        for (int i = 0; i < numSecondaryKeys; i++) {
-            outColumns[i] = i + numPrimaryKeys + 1;
-            projectionList[i] = i + numPrimaryKeys + 1;
-        }
-
-        IScalarEvaluatorFactory[] sefs = new IScalarEvaluatorFactory[secondaryFieldAccessEvalFactories.length];
-        System.arraycopy(secondaryFieldAccessEvalFactories, 0, sefs, 0, secondaryFieldAccessEvalFactories.length);
-        //add External RIDs to the projection list
-        for (int i = 0; i < numPrimaryKeys; i++) {
-            projectionList[numSecondaryKeys + i] = i + 1;
-        }
-
-        AssignRuntimeFactory assign = new AssignRuntimeFactory(outColumns, sefs, projectionList);
-        return new AlgebricksMetaOperatorDescriptor(spec, 1, 1, new IPushRuntimeFactory[] { assign },
-                new RecordDescriptor[] { secondaryRecDesc });
     }
 
     @Override

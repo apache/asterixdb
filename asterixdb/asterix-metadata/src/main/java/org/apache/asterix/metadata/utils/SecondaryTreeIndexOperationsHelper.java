@@ -110,4 +110,12 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
         spec.setConnectorPolicyAssignmentPolicy(new ConnectorPolicyAssignmentPolicy());
         return spec;
     }
+
+    protected int[] createPkFieldPermutationForBulkLoadOp(int[] fieldsPermutation, int numSecondaryKeyFields) {
+        int[] pkFieldPermutation = new int[numPrimaryKeys];
+        for (int i = 0; i < pkFieldPermutation.length; i++) {
+            pkFieldPermutation[i] = fieldsPermutation[numSecondaryKeyFields + i];
+        }
+        return pkFieldPermutation;
+    }
 }

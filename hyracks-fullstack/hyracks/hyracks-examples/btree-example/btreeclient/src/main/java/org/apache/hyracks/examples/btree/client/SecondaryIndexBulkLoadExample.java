@@ -20,17 +20,21 @@ package org.apache.hyracks.examples.btree.client;
 
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
+import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.UTF8StringSerializerDeserializer;
+import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionerFactory;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.misc.NullSinkOperatorDescriptor;
@@ -143,8 +147,15 @@ public class SecondaryIndexBulkLoadExample {
         IFileSplitProvider btreeSplitProvider = JobHelper.createFileSplitProvider(splitNCs, options.secondaryBTreeName);
         IIndexDataflowHelperFactory secondaryHelperFactory =
                 new IndexDataflowHelperFactory(storageManager, btreeSplitProvider);
-        TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec, null,
-                fieldPermutation, 0.7f, false, 1000L, true, secondaryHelperFactory);
+        int[][] partitionsMap = JobHelper.getPartitionsMap(splitNCs.length);
+        int[] pkFields = new int[] { fieldPermutation[1] };
+        IBinaryHashFunctionFactory[] pkHashFunFactories =
+                new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) };
+        ITuplePartitionerFactory tuplePartitionerFactory =
+                new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, splitNCs.length);
+        TreeIndexBulkLoadOperatorDescriptor btreeBulkLoad =
+                new TreeIndexBulkLoadOperatorDescriptor(spec, null, fieldPermutation, 0.7f, false, 1000L, true,
+                        secondaryHelperFactory, null, tuplePartitionerFactory, partitionsMap);
         JobHelper.createPartitionConstraint(spec, btreeBulkLoad, splitNCs);
         NullSinkOperatorDescriptor nsOpDesc = new NullSinkOperatorDescriptor(spec);
         JobHelper.createPartitionConstraint(spec, nsOpDesc, splitNCs);

@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.common.dataflow;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -30,27 +31,23 @@ import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 
 public class TreeIndexBulkLoadOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     protected final int[] fieldPermutation;
     protected final float fillFactor;
     protected final boolean verifyInput;
     protected final long numElementsHint;
     protected final boolean checkIfEmptyIndex;
+    protected final int[][] partitionsMap;
+    protected final ITuplePartitionerFactory partitionerFactory;
     protected final IIndexDataflowHelperFactory indexHelperFactory;
-    private final ITupleFilterFactory tupleFilterFactory;
-
-    public TreeIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
-            int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
-            boolean checkIfEmptyIndex, IIndexDataflowHelperFactory indexHelperFactory) {
-        this(spec, outRecDesc, fieldPermutation, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
-                indexHelperFactory, null);
-    }
+    protected final ITupleFilterFactory tupleFilterFactory;
 
     public TreeIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex, IIndexDataflowHelperFactory indexHelperFactory,
-            ITupleFilterFactory tupleFilterFactory) {
+            ITupleFilterFactory tupleFilterFactory, ITuplePartitionerFactory partitionerFactory,
+            int[][] partitionsMap) {
         super(spec, 1, 1);
         this.indexHelperFactory = indexHelperFactory;
         this.fieldPermutation = fieldPermutation;
@@ -60,6 +57,8 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractSingleActivityO
         this.checkIfEmptyIndex = checkIfEmptyIndex;
         this.outRecDescs[0] = outRecDesc;
         this.tupleFilterFactory = tupleFilterFactory;
+        this.partitionerFactory = partitionerFactory;
+        this.partitionsMap = partitionsMap;
     }
 
     @Override
@@ -67,6 +66,7 @@ public class TreeIndexBulkLoadOperatorDescriptor extends AbstractSingleActivityO
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         return new IndexBulkLoadOperatorNodePushable(indexHelperFactory, ctx, partition, fieldPermutation, fillFactor,
                 verifyInput, numElementsHint, checkIfEmptyIndex,
-                recordDescProvider.getInputRecordDescriptor(this.getActivityId(), 0), tupleFilterFactory);
+                recordDescProvider.getInputRecordDescriptor(this.getActivityId(), 0), tupleFilterFactory,
+                partitionerFactory, partitionsMap);
     }
 }

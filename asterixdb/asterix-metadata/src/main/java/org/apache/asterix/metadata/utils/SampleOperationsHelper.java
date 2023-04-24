@@ -19,6 +19,7 @@
 
 package org.apache.asterix.metadata.utils;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,12 +66,15 @@ import org.apache.hyracks.algebricks.runtime.operators.std.StreamProjectRuntimeF
 import org.apache.hyracks.algebricks.runtime.operators.std.StreamSelectRuntimeFactory;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
 import org.apache.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionerFactory;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.dataflow.std.group.AbstractAggregatorDescriptorFactory;
@@ -313,10 +317,20 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
 
     protected LSMIndexBulkLoadOperatorDescriptor createTreeIndexBulkLoadOp(JobSpecification spec,
             int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor,
-            long numElementHint) {
+            long numElementHint) throws AlgebricksException {
+        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
+        int[] pkFields = new int[dataset.getPrimaryKeys().size()];
+        for (int i = 0; i < pkFields.length; i++) {
+            pkFields[i] = fieldPermutation[i];
+        }
+        int numPartitions = (int) Arrays.stream(partitionsMap).map(partitions -> partitions.length).count();
+        IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(metadataProvider);
+        ITuplePartitionerFactory partitionerFactory =
+                new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
         LSMIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new LSMIndexBulkLoadOperatorDescriptor(spec,
                 recordDesc, fieldPermutation, fillFactor, false, numElementHint, true, dataflowHelperFactory, null,
-                LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage.LOAD, dataset.getDatasetId(), null);
+                LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage.LOAD, dataset.getDatasetId(), null, partitionerFactory,
+                partitionsMap);
         treeIndexBulkLoadOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 partitionConstraint);

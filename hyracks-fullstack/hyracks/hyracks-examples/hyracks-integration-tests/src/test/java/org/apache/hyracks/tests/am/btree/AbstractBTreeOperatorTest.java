@@ -33,6 +33,7 @@ import static org.apache.hyracks.tests.am.btree.DataSetConstants.secondaryRecDes
 
 import java.io.DataOutput;
 import java.io.File;
+import java.util.Arrays;
 
 import org.apache.hyracks.api.constraints.PartitionConstraintHelper;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
@@ -71,10 +72,10 @@ import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.test.support.TestStorageManager;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
+import org.apache.hyracks.test.support.TestUtils;
 import org.apache.hyracks.tests.am.common.ITreeIndexOperatorTestHelper;
 import org.apache.hyracks.tests.am.common.TreeOperatorTestHelper;
 import org.apache.hyracks.tests.integration.AbstractIntegrationTest;
-import org.apache.hyracks.tests.integration.TestUtil;
 import org.junit.After;
 import org.junit.Before;
 
@@ -120,7 +121,7 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         IIndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(storageManager, primarySplitProvider, primaryResourceFactory, false);
         IndexCreateOperatorDescriptor primaryCreateOp =
-                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, getPartitionsMap(1));
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, TestUtils.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryCreateOp, NC1_ID);
         spec.addRoot(primaryCreateOp);
         runTest(spec);
@@ -143,8 +144,12 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, sorter, NC1_ID);
 
         int[] fieldPermutation = { 0, 1, 2, 4, 5, 7 };
-        TreeIndexBulkLoadOperatorDescriptor primaryBtreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                primaryRecDesc, fieldPermutation, 0.7f, true, 1000L, true, primaryHelperFactory);
+        int[][] partitionsMap = TestUtils.getPartitionsMap(1);
+        ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(primaryKeyFieldPermutation,
+                primaryHashFunFactories, ordersSplits.length);
+        TreeIndexBulkLoadOperatorDescriptor primaryBtreeBulkLoad =
+                new TreeIndexBulkLoadOperatorDescriptor(spec, primaryRecDesc, fieldPermutation, 0.7f, true, 1000L, true,
+                        primaryHelperFactory, null, tuplePartitionerFactory, partitionsMap);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryBtreeBulkLoad, NC1_ID);
 
         NullSinkOperatorDescriptor nsOpDesc = new NullSinkOperatorDescriptor(spec);
@@ -164,7 +169,7 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         IIndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(storageManager, secondarySplitProvider, secondaryResourceFactory, false);
         IndexCreateOperatorDescriptor secondaryCreateOp =
-                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, getPartitionsMap(1));
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, TestUtils.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryCreateOp, NC1_ID);
         spec.addRoot(secondaryCreateOp);
         runTest(spec);
@@ -205,8 +210,13 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
 
         // load secondary index
         int[] fieldPermutation = { 3, 0 };
-        TreeIndexBulkLoadOperatorDescriptor secondaryBtreeBulkLoad = new TreeIndexBulkLoadOperatorDescriptor(spec,
-                secondaryRecDesc, fieldPermutation, 0.7f, true, 1000L, true, secondaryHelperFactory);
+        int[][] partitionsMap = TestUtils.getPartitionsMap(1);
+        int numPartitions = (int) Arrays.stream(partitionsMap).map(partitions -> partitions.length).count();
+        ITuplePartitionerFactory tuplePartitionerFactory2 =
+                new FieldHashPartitionerFactory(secondaryPKFieldPermutationB, primaryHashFunFactories, numPartitions);
+        TreeIndexBulkLoadOperatorDescriptor secondaryBtreeBulkLoad =
+                new TreeIndexBulkLoadOperatorDescriptor(spec, secondaryRecDesc, fieldPermutation, 0.7f, true, 1000L,
+                        true, secondaryHelperFactory, null, tuplePartitionerFactory2, partitionsMap);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryBtreeBulkLoad, NC1_ID);
 
         NullSinkOperatorDescriptor nsOpDesc = new NullSinkOperatorDescriptor(spec);
@@ -234,7 +244,7 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
                 new DelimitedDataTupleParserFactory(inputParserFactories, '|'), ordersDesc);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, ordScanner, NC1_ID);
 
-        int[][] partitionsMap = TestUtil.getPartitionsMap(ordersSplits.length);
+        int[][] partitionsMap = TestUtils.getPartitionsMap(ordersSplits.length);
         ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(primaryKeyFieldPermutation,
                 primaryHashFunFactories, ordersSplits.length);
 
@@ -272,7 +282,7 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
     protected void destroyPrimaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         IndexDropOperatorDescriptor primaryDropOp =
-                new IndexDropOperatorDescriptor(spec, primaryHelperFactory, getPartitionsMap(1));
+                new IndexDropOperatorDescriptor(spec, primaryHelperFactory, TestUtils.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryDropOp, NC1_ID);
         spec.addRoot(primaryDropOp);
         runTest(spec);
@@ -281,7 +291,7 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
     protected void destroySecondaryIndex() throws Exception {
         JobSpecification spec = new JobSpecification();
         IndexDropOperatorDescriptor secondaryDropOp =
-                new IndexDropOperatorDescriptor(spec, secondaryHelperFactory, getPartitionsMap(1));
+                new IndexDropOperatorDescriptor(spec, secondaryHelperFactory, TestUtils.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryDropOp, NC1_ID);
         spec.addRoot(secondaryDropOp);
         runTest(spec);

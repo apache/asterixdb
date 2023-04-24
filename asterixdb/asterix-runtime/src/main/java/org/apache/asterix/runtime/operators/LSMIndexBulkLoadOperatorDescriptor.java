@@ -22,6 +22,7 @@ package org.apache.asterix.runtime.operators;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -31,7 +32,7 @@ import org.apache.hyracks.storage.am.common.dataflow.TreeIndexBulkLoadOperatorDe
 
 public class LSMIndexBulkLoadOperatorDescriptor extends TreeIndexBulkLoadOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     public enum BulkLoadUsage {
         LOAD,
@@ -44,19 +45,17 @@ public class LSMIndexBulkLoadOperatorDescriptor extends TreeIndexBulkLoadOperato
 
     protected final int datasetId;
 
-    protected final ITupleFilterFactory tupleFilterFactory;
-
     public LSMIndexBulkLoadOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
             boolean checkIfEmptyIndex, IIndexDataflowHelperFactory indexHelperFactory,
             IIndexDataflowHelperFactory primaryIndexHelperFactory, BulkLoadUsage usage, int datasetId,
-            ITupleFilterFactory tupleFilterFactory) {
+            ITupleFilterFactory tupleFilterFactory, ITuplePartitionerFactory partitionerFactory,
+            int[][] partitionsMap) {
         super(spec, outRecDesc, fieldPermutation, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
-                indexHelperFactory);
+                indexHelperFactory, tupleFilterFactory, partitionerFactory, partitionsMap);
         this.primaryIndexHelperFactory = primaryIndexHelperFactory;
         this.usage = usage;
         this.datasetId = datasetId;
-        this.tupleFilterFactory = tupleFilterFactory;
     }
 
     @Override
@@ -65,6 +64,6 @@ public class LSMIndexBulkLoadOperatorDescriptor extends TreeIndexBulkLoadOperato
         return new LSMIndexBulkLoadOperatorNodePushable(indexHelperFactory, primaryIndexHelperFactory, ctx, partition,
                 fieldPermutation, fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
                 recordDescProvider.getInputRecordDescriptor(this.getActivityId(), 0), usage, datasetId,
-                tupleFilterFactory);
+                tupleFilterFactory, partitionerFactory, partitionsMap);
     }
 }

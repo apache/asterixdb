@@ -213,10 +213,15 @@ public class TestNodeController {
             for (int i = 0; i < fieldPermutation.length; i++) {
                 fieldPermutation[i] = i;
             }
-            LSMIndexBulkLoadOperatorNodePushable op =
-                    new LSMIndexBulkLoadOperatorNodePushable(secondaryIndexHelperFactory, primaryIndexHelperFactory,
-                            ctx, 0, fieldPermutation, 1.0F, false, numElementsHint, true, secondaryIndexInfo.rDesc,
-                            BulkLoadUsage.CREATE_INDEX, dataset.getDatasetId(), null);
+            int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
+            int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
+            IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
+            ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(
+                    primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
+            LSMIndexBulkLoadOperatorNodePushable op = new LSMIndexBulkLoadOperatorNodePushable(
+                    secondaryIndexHelperFactory, primaryIndexHelperFactory, ctx, 0, fieldPermutation, 1.0F, false,
+                    numElementsHint, true, secondaryIndexInfo.rDesc, BulkLoadUsage.CREATE_INDEX, dataset.getDatasetId(),
+                    null, tuplePartitionerFactory, partitionsMap);
             op.setOutputFrameWriter(0, new SinkRuntimeFactory().createPushRuntime(ctx)[0], null);
             return Pair.of(secondaryIndexInfo, op);
         } catch (Throwable th) {

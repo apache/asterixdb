@@ -40,4 +40,12 @@ public class JobHelper {
     public static void createPartitionConstraint(JobSpecification spec, IOperatorDescriptor op, String[] splitNCs) {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, op, splitNCs);
     }
+
+    public static int[][] getPartitionsMap(int numPartitions) {
+        int[][] map = new int[numPartitions][1];
+        for (int i = 0; i < numPartitions; i++) {
+            map[i] = new int[] { i };
+        }
+        return map;
+    }
 }

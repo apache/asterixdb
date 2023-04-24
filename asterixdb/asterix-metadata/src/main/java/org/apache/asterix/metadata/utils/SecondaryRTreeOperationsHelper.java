@@ -192,6 +192,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
          ***************************************************/
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         int[] fieldPermutation = createFieldPermutationForBulkLoadOp(numNestedSecondaryKeyFields);
+        int[] pkFields = createPkFieldPermutationForBulkLoadOp(fieldPermutation, numNestedSecondaryKeyFields);
         int numNestedSecondaryKeFieldsConsideringPointMBR =
                 isPointMBR ? numNestedSecondaryKeyFields / 2 : numNestedSecondaryKeyFields;
         RecordDescriptor secondaryRecDescConsideringPointMBR =
@@ -230,7 +231,7 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
                     isPointMBR ? secondaryRecDescForPointMBR : secondaryRecDesc);
             // Create secondary RTree bulk load op.
             TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoadOp = createTreeIndexBulkLoadOp(spec, fieldPermutation,
-                    indexDataflowHelperFactory, StorageConstants.DEFAULT_TREE_FILL_FACTOR);
+                    indexDataflowHelperFactory, StorageConstants.DEFAULT_TREE_FILL_FACTOR, pkFields);
             SinkRuntimeFactory sinkRuntimeFactory = new SinkRuntimeFactory();
             sinkRuntimeFactory.setSourceLocation(sourceLoc);
             AlgebricksMetaOperatorDescriptor metaOp = new AlgebricksMetaOperatorDescriptor(spec, 1, 0,

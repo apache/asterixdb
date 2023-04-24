@@ -330,8 +330,10 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
             // Apply the bulk loading operator.
             IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
                     metadataProvider.getStorageComponentProvider().getStorageManager(), secondaryFileSplitProvider);
-            targetOp = createTreeIndexBulkLoadOp(spec, createFieldPermutationForBulkLoadOp(numTotalSecondaryKeys),
-                    dataflowHelperFactory, StorageConstants.DEFAULT_TREE_FILL_FACTOR);
+            int[] fieldPermutations = createFieldPermutationForBulkLoadOp(numTotalSecondaryKeys);
+            int[] pkFields = createPkFieldPermutationForBulkLoadOp(fieldPermutations, numTotalSecondaryKeys);
+            targetOp = createTreeIndexBulkLoadOp(spec, fieldPermutations, dataflowHelperFactory,
+                    StorageConstants.DEFAULT_TREE_FILL_FACTOR, pkFields);
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
             // Apply the sink.

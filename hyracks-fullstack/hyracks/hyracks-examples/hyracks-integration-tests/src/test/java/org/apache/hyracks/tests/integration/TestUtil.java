@@ -68,12 +68,4 @@ public class TestUtil {
     static ObjectNode httpGetAsObject(URI uri) throws URISyntaxException, IOException {
         return getResultAsJson(httpGetAsString(uri));
     }
-
-    public static int[][] getPartitionsMap(int numPartitions) {
-        int[][] map = new int[numPartitions][1];
-        for (int i = 0; i < numPartitions; i++) {
-            map[i] = new int[] { i };
-        }
-        return map;
-    }
 }

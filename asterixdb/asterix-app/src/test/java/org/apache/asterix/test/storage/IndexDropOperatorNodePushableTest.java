@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.asterix.app.bootstrap.TestNodeController;
-import org.apache.asterix.common.TestDataUtil;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
@@ -58,6 +57,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
+import org.apache.hyracks.test.support.TestUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -176,7 +176,7 @@ public class IndexDropOperatorNodePushableTest {
         dataflowHelper.open();
         // try to drop in-use index (should fail)
         IndexDropOperatorNodePushable dropInUseOp = new IndexDropOperatorNodePushable(helperFactory,
-                EnumSet.noneOf(DropOption.class), ctx, 0, TestDataUtil.getPartitionsMap(1));
+                EnumSet.noneOf(DropOption.class), ctx, 0, TestUtils.getPartitionsMap(1));
         try {
             dropInUseOp.initialize();
         } catch (HyracksDataException e) {
@@ -192,7 +192,7 @@ public class IndexDropOperatorNodePushableTest {
         dropFailed.set(false);
         // drop with option wait for in-use should be successful once the index is closed
         final IndexDropOperatorNodePushable dropWithWaitOp = new IndexDropOperatorNodePushable(helperFactory,
-                EnumSet.of(DropOption.IF_EXISTS, DropOption.WAIT_ON_IN_USE), ctx, 0, TestDataUtil.getPartitionsMap(1));
+                EnumSet.of(DropOption.IF_EXISTS, DropOption.WAIT_ON_IN_USE), ctx, 0, TestUtils.getPartitionsMap(1));
         Thread dropThread = new Thread(() -> {
             try {
                 dropWithWaitOp.initialize();
@@ -216,7 +216,7 @@ public class IndexDropOperatorNodePushableTest {
         dropFailed.set(false);
         // Dropping non-existing index
         IndexDropOperatorNodePushable dropNonExistingOp = new IndexDropOperatorNodePushable(helperFactory,
-                EnumSet.noneOf(DropOption.class), ctx, 0, TestDataUtil.getPartitionsMap(1));
+                EnumSet.noneOf(DropOption.class), ctx, 0, TestUtils.getPartitionsMap(1));
         try {
             dropNonExistingOp.initialize();
         } catch (HyracksDataException e) {
@@ -232,7 +232,7 @@ public class IndexDropOperatorNodePushableTest {
         // Dropping non-existing index with if exists option should be successful
         dropFailed.set(false);
         IndexDropOperatorNodePushable dropNonExistingWithIfExistsOp = new IndexDropOperatorNodePushable(helperFactory,
-                EnumSet.of(DropOption.IF_EXISTS), ctx, 0, TestDataUtil.getPartitionsMap(1));
+                EnumSet.of(DropOption.IF_EXISTS), ctx, 0, TestUtils.getPartitionsMap(1));
         try {
             dropNonExistingWithIfExistsOp.initialize();
         } catch (HyracksDataException e) {

@@ -236,12 +236,4 @@ public abstract class AbstractIntegrationTest {
         outputFiles.add(fileRef.getFile());
         return new ManagedFileSplit(ncs.getId(), fileName);
     }
-
-    public static int[][] getPartitionsMap(int numPartitions) {
-        int[][] map = new int[numPartitions][1];
-        for (int i = 0; i < numPartitions; i++) {
-            map[i] = new int[] { i };
-        }
-        return map;
-    }
 }

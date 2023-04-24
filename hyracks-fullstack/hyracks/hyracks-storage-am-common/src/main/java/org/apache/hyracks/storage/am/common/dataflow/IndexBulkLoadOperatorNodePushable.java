@@ -21,6 +21,8 @@ package org.apache.hyracks.storage.am.common.dataflow;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitioner;
+import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -31,32 +33,49 @@ import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputUnaryOutputOperato
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.api.ITupleFilter;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
+import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+
 public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOutputOperatorNodePushable {
+
     protected final IHyracksTaskContext ctx;
     protected final float fillFactor;
     protected final boolean verifyInput;
     protected final long numElementsHint;
     protected final boolean checkIfEmptyIndex;
-    protected final IIndexDataflowHelper indexHelper;
+    protected final IIndexDataflowHelper[] indexHelpers;
     protected final RecordDescriptor recDesc;
     protected final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
     protected final ITupleFilterFactory tupleFilterFactory;
+    protected final ITuplePartitioner tuplePartitioner;
+    protected final int[] partitions;
+    protected final Int2IntMap storagePartitionId2Index;
     protected FrameTupleAccessor accessor;
-    protected IIndex index;
-    protected IIndexBulkLoader bulkLoader;
+    protected final IIndex[] indexes;
+    protected final IIndexBulkLoader[] bulkLoaders;
     protected ITupleFilter tupleFilter;
     protected FrameTupleReference frameTuple;
 
-    public IndexBulkLoadOperatorNodePushable(IIndexDataflowHelperFactory indexDataflowHelperFactory,
-            IHyracksTaskContext ctx, int partition, int[] fieldPermutation, float fillFactor, boolean verifyInput,
-            long numElementsHint, boolean checkIfEmptyIndex, RecordDescriptor recDesc,
-            ITupleFilterFactory tupleFilterFactory) throws HyracksDataException {
+    public IndexBulkLoadOperatorNodePushable(IIndexDataflowHelperFactory indexHelperFactory, IHyracksTaskContext ctx,
+            int partition, int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
+            boolean checkIfEmptyIndex, RecordDescriptor recDesc, ITupleFilterFactory tupleFilterFactory,
+            ITuplePartitionerFactory partitionerFactory, int[][] partitionsMap) throws HyracksDataException {
         this.ctx = ctx;
-        this.indexHelper = indexDataflowHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
+        this.partitions = partitionsMap[partition];
+        this.tuplePartitioner = partitionerFactory.createPartitioner(ctx);
+        this.storagePartitionId2Index = new Int2IntOpenHashMap();
+        this.indexes = new IIndex[partitions.length];
+        this.indexHelpers = new IIndexDataflowHelper[partitions.length];
+        this.bulkLoaders = new IIndexBulkLoader[partitions.length];
+        for (int i = 0; i < partitions.length; i++) {
+            storagePartitionId2Index.put(partitions[i], i);
+            indexHelpers[i] = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partitions[i]);
+        }
         this.fillFactor = fillFactor;
         this.verifyInput = verifyInput;
         this.numElementsHint = numElementsHint;
@@ -69,15 +88,18 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
     @Override
     public void open() throws HyracksDataException {
         accessor = new FrameTupleAccessor(recDesc);
-        indexHelper.open();
-        index = indexHelper.getIndexInstance();
+        for (int i = 0; i < indexHelpers.length; i++) {
+            indexHelpers[i].open();
+            indexes[i] = indexHelpers[i].getIndexInstance();
+            initializeBulkLoader(indexes[i], i);
+        }
+
         try {
             writer.open();
             if (tupleFilterFactory != null) {
                 tupleFilter = tupleFilterFactory.createTupleFilter(ctx);
                 frameTuple = new FrameTupleReference();
             }
-            initializeBulkLoader();
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -94,8 +116,10 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
                     continue;
                 }
             }
+            int storagePartition = tuplePartitioner.partition(accessor, i);
+            int storageIdx = storagePartitionId2Index.get(storagePartition);
             tuple.reset(accessor, i);
-            bulkLoader.add(tuple);
+            bulkLoaders[storageIdx].add(tuple);
         }
 
         FrameUtils.flushFrame(buffer, writer);
@@ -104,20 +128,14 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
     @Override
     public void close() throws HyracksDataException {
         try {
-            // bulkloader can be null if an exception is thrown before it is initialized.
-            if (bulkLoader != null) {
-                bulkLoader.end();
-            }
+            closeBulkLoaders();
         } catch (Throwable th) {
             throw HyracksDataException.create(th);
         } finally {
-            if (index != null) {
-                // If index was opened!
-                try {
-                    indexHelper.close();
-                } finally {
-                    writer.close();
-                }
+            try {
+                closeIndexes(indexes, indexHelpers);
+            } finally {
+                writer.close();
             }
         }
     }
@@ -129,13 +147,33 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
 
     @Override
     public void fail() throws HyracksDataException {
-        if (index != null) {
-            writer.fail();
+        writer.fail();
+    }
+
+    protected void initializeBulkLoader(IIndex index, int indexId) throws HyracksDataException {
+        bulkLoaders[indexId] = index.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
+                NoOpPageWriteCallback.INSTANCE);
+    }
+
+    private void closeBulkLoaders() throws HyracksDataException {
+        for (IIndexBulkLoader bulkLoader : bulkLoaders) {
+            // bulkloader can be null if an exception is thrown before it is initialized.
+            if (bulkLoader != null) {
+                bulkLoader.end();
+            }
         }
     }
 
-    protected void initializeBulkLoader() throws HyracksDataException {
-        bulkLoader = index.createBulkLoader(fillFactor, verifyInput, numElementsHint, checkIfEmptyIndex,
-                NoOpPageWriteCallback.INSTANCE);
+    protected static void closeIndexes(IIndex[] indexes, IIndexDataflowHelper[] indexHelpers)
+            throws HyracksDataException {
+        Throwable failure = null;
+        for (int i = 0; i < indexes.length; i++) {
+            if (indexes[i] != null) {
+                failure = ResourceReleaseUtils.close(indexHelpers[i], failure);
+            }
+        }
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
+        }
     }
 }
