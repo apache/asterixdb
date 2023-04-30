@@ -69,6 +69,7 @@ import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CopyStatement;
 import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
@@ -540,6 +541,16 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
                 + revertStringToQuoted(stmtLoad.getAdapter()) + " ");
         printConfiguration(stmtLoad.getProperties());
         out.println(stmtLoad.dataIsAlreadySorted() ? " pre-sorted" + SEMICOLON : SEMICOLON);
+        out.println();
+        return null;
+    }
+
+    @Override
+    public Void visit(CopyStatement stmtCopy, Integer step) throws CompilationException {
+        out.print(skip(step) + "copy " + datasetSymbol
+                + generateFullName(stmtCopy.getDataverseName(), stmtCopy.getDatasetName()) + " using "
+                + revertStringToQuoted(stmtCopy.getExternalDetails().getAdapter()) + " ");
+        printConfiguration(stmtCopy.getExternalDetails().getProperties());
         out.println();
         return null;
     }

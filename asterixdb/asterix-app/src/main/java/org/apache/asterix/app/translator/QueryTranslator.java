@@ -112,6 +112,7 @@ import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
+import org.apache.asterix.lang.common.statement.CopyStatement;
 import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
@@ -209,6 +210,7 @@ import org.apache.asterix.runtime.operators.DatasetStreamStats;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.asterix.translator.AbstractLangTranslator;
 import org.apache.asterix.translator.ClientRequest;
+import org.apache.asterix.translator.CompiledStatements.CompiledCopyFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledDeleteStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
@@ -435,6 +437,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
                         }
                         handleLoadStatement(metadataProvider, stmt, hcc);
+                        break;
+                    case COPY:
+                        if (stats.getProfileType() == Stats.ProfileType.FULL) {
+                            this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
+                        }
+                        handleCopyStatement(metadataProvider, stmt, hcc);
                         break;
                     case INSERT:
                     case UPSERT:
@@ -3423,6 +3431,57 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ExternalDataUtils.validate(properties);
             CompiledLoadFromFileStatement cls = new CompiledLoadFromFileStatement(dataverseName,
                     loadStmt.getDatasetName(), loadStmt.getAdapter(), properties, loadStmt.dataIsAlreadySorted());
+            cls.setSourceLocation(stmt.getSourceLocation());
+            JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls,
+                    null, responsePrinter, warningCollector, null);
+            afterCompile();
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+            if (spec != null && !isCompileOnly()) {
+                runJob(hcc, spec);
+            }
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                abort(e, e, mdTxnCtx);
+            }
+            throw e;
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+    }
+
+    protected Map<String, String> createExternalDataPropertiesForCopyStmt(DataverseName dataverseName,
+            CopyStatement copyStatement, Datatype itemType, MetadataTransactionContext mdTxnCtx)
+            throws AlgebricksException {
+        return copyStatement.getExternalDetails().getProperties();
+    }
+
+    protected void handleCopyStatement(MetadataProvider metadataProvider, Statement stmt, IHyracksClientConnection hcc)
+            throws Exception {
+        CopyStatement copyStmt = (CopyStatement) stmt;
+        String datasetName = copyStmt.getDatasetName();
+        metadataProvider.validateDatabaseObjectName(copyStmt.getDataverseName(), datasetName,
+                copyStmt.getSourceLocation());
+        DataverseName dataverseName = getActiveDataverseName(copyStmt.getDataverseName());
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        try {
+            metadataProvider.setWriteTransaction(true);
+            Dataset dataset = metadataProvider.findDataset(dataverseName, copyStmt.getDatasetName());
+            Datatype itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(),
+                    dataset.getItemTypeName());
+
+            ExternalDetailsDecl externalDetails = copyStmt.getExternalDetails();
+            Map<String, String> properties =
+                    createExternalDataPropertiesForCopyStmt(dataverseName, copyStmt, itemType, mdTxnCtx);
+            ExternalDataUtils.normalize(properties);
+            ExternalDataUtils.validate(properties);
+            validateExternalDatasetProperties(externalDetails, properties, copyStmt.getSourceLocation(), mdTxnCtx,
+                    appCtx);
+            CompiledCopyFromFileStatement cls = new CompiledCopyFromFileStatement(dataverseName,
+                    copyStmt.getDatasetName(), externalDetails.getAdapter(), properties);
             cls.setSourceLocation(stmt.getSourceLocation());
             JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls,
                     null, responsePrinter, warningCollector, null);

@@ -159,6 +159,7 @@ import org.apache.asterix.lang.common.statement.FullTextConfigDropStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.InternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.LoadStatement;
+import org.apache.asterix.lang.common.statement.CopyStatement;
 import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.lang.common.statement.NodegroupDecl;
 import org.apache.asterix.lang.common.statement.Query;
@@ -929,6 +930,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = FunctionDeclaration()
     | stmt = CreateStatement()
     | stmt = LoadStatement()
+    | stmt = CopyStatement()
     | stmt = DropStatement()
     | stmt = SetStatement()
     | stmt = InsertStatement()
@@ -2714,6 +2716,36 @@ Statement SetStatement() throws ParseException:
     }
 }
 
+CopyStatement CopyStatement() throws ParseException:
+{
+  Token startToken = null;
+  DataverseName dataverseName = null;
+  Identifier datasetName = null;
+  boolean alreadySorted = false;
+  String adapterName;
+  Map<String,String> properties;
+  Pair<DataverseName,Identifier> nameComponents = null;
+}
+{
+  <COPY> (<INTO>)? { startToken = token; } nameComponents = QualifiedName()
+    {
+      dataverseName = nameComponents.first;
+      datasetName = nameComponents.second;
+    }
+  <USING> adapterName = AdapterName() properties = Configuration()
+    {
+       ExternalDetailsDecl edd = new ExternalDetailsDecl();
+       edd.setAdapter(adapterName);
+       edd.setProperties(properties);
+       try {
+         CopyStatement stmt = new CopyStatement(dataverseName, datasetName.getValue(), edd, null);
+         return addSourceLocation(stmt, startToken);
+       } catch (CompilationException e){
+           throw new SqlppParseException(getSourceLocation(startToken), e.getMessage());
+       }
+    }
+}
+
 LoadStatement LoadStatement() throws ParseException:
 {
   Token startToken = null;
@@ -2742,7 +2774,6 @@ LoadStatement LoadStatement() throws ParseException:
       return addSourceLocation(stmt, startToken);
     }
 }
-
 
 String AdapterName() throws ParseException :
 {
@@ -5709,6 +5740,7 @@ TOKEN [IGNORE_CASE]:
   | <WHERE : "where">
   | <WITH : "with">
   | <WRITE : "write">
+  | <COPY : "copy">
 }
 
 <DEFAULT,IN_DBL_BRACE>

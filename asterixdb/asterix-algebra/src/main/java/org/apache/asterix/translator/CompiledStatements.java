@@ -286,6 +286,50 @@ public class CompiledStatements {
         }
     }
 
+    public static class CompiledCopyFromFileStatement extends AbstractCompiledStatement
+            implements ICompiledDmlStatement {
+        private final DataverseName dataverseName;
+        private final String datasetName;
+        private final String adapter;
+        private final Map<String, String> properties;
+
+        public CompiledCopyFromFileStatement(DataverseName dataverseName, String datasetName, String adapter,
+                Map<String, String> properties) {
+            this.dataverseName = dataverseName;
+            this.datasetName = datasetName;
+            this.adapter = adapter;
+            this.properties = properties;
+        }
+
+        @Override
+        public DataverseName getDataverseName() {
+            return dataverseName;
+        }
+
+        @Override
+        public String getDatasetName() {
+            return datasetName;
+        }
+
+        public String getAdapter() {
+            return adapter;
+        }
+
+        public Map<String, String> getProperties() {
+            return properties;
+        }
+
+        @Override
+        public Statement.Kind getKind() {
+            return Statement.Kind.COPY;
+        }
+
+        @Override
+        public byte getCategory() {
+            return Statement.Category.UPDATE;
+        }
+    }
+
     public static class CompiledInsertStatement extends AbstractCompiledStatement implements ICompiledDmlStatement {
         private final DataverseName dataverseName;
         private final String datasetName;

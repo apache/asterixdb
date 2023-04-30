@@ -51,10 +51,10 @@ public interface ILangExpressionToPlanTranslator {
      *
      * @param stmt,
      *            the compiled load statement.
-     * @return a logical query plan for the load statement.
+     * @return a logical query plan for the Copy/Load statement.
      * @throws AlgebricksException
      */
-    public ILogicalPlan translateLoad(ICompiledDmlStatement stmt) throws AlgebricksException;
+    public ILogicalPlan translateCopyOrLoad(ICompiledDmlStatement stmt) throws AlgebricksException;
 
     /**
      * @return the current minimum available variable id.

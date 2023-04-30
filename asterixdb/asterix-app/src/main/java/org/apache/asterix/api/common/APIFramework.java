@@ -192,6 +192,7 @@ public class APIFramework {
         // establish facts
         final boolean isQuery = query != null;
         final boolean isLoad = statement != null && statement.getKind() == Statement.Kind.LOAD;
+        final boolean isCopy = statement != null && statement.getKind() == Statement.Kind.COPY;
         final SourceLocation sourceLoc =
                 query != null ? query.getSourceLocation() : statement != null ? statement.getSourceLocation() : null;
         final boolean isExplainOnly = isQuery && query.isExplain();
@@ -207,8 +208,8 @@ public class APIFramework {
         ILangExpressionToPlanTranslator t =
                 translatorFactory.createExpressionToPlanTranslator(metadataProvider, varCounter, externalVars);
         ResultMetadata resultMetadata = new ResultMetadata(output.config().fmt());
-        ILogicalPlan plan =
-                isLoad ? t.translateLoad(statement) : t.translate(query, outputDatasetName, statement, resultMetadata);
+        ILogicalPlan plan = isLoad || isCopy ? t.translateCopyOrLoad(statement)
+                : t.translate(query, outputDatasetName, statement, resultMetadata);
 
         ICcApplicationContext ccAppContext = metadataProvider.getApplicationContext();
         CompilerProperties compilerProperties = ccAppContext.getCompilerProperties();
@@ -233,7 +234,7 @@ public class APIFramework {
         builder.setWarningCollector(warningCollector);
         builder.setMaxWarnings(conf.getMaxWarnings());
 
-        if ((isQuery || isLoad) && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
+        if ((isQuery || isLoad || isCopy) && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
                 && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
             generateLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
         }
@@ -272,7 +273,7 @@ public class APIFramework {
                     PlanPrettyPrinter.printPhysicalOps(plan, buf, 0, true);
                     output.out().write(buf.toString());
                 } else {
-                    if (isQuery || isLoad) {
+                    if (isQuery || isLoad || isCopy) {
                         generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
                     }
                 }
@@ -299,7 +300,7 @@ public class APIFramework {
         }
 
         if (!conf.isGenerateJobSpec()) {
-            if (isQuery || isLoad) {
+            if (isQuery || isLoad || isCopy) {
                 generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
             }
             return null;
@@ -324,7 +325,7 @@ public class APIFramework {
         }
 
         if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
-            if (isQuery || isLoad) {
+            if (isQuery || isLoad || isCopy) {
                 generateOptimizedLogicalPlan(plan, spec.getLogical2PhysicalMap(), output.config().getPlanFormat(),
                         cboMode);
             }

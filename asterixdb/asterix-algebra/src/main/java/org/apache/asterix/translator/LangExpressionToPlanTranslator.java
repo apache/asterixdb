@@ -44,6 +44,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
+import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.clause.GroupbyClause;
 import org.apache.asterix.lang.common.clause.LetClause;
 import org.apache.asterix.lang.common.clause.LimitClause;
@@ -99,6 +100,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.translator.CompiledStatements.CompiledCopyFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledUpsertStatement;
@@ -194,15 +196,13 @@ abstract class LangExpressionToPlanTranslator
         return context.getVarCounter();
     }
 
-    @Override
-    public ILogicalPlan translateLoad(ICompiledDmlStatement stmt) throws AlgebricksException {
-        CompiledLoadFromFileStatement clffs = (CompiledLoadFromFileStatement) stmt;
+    public ILogicalPlan translateCopyOrLoad(ICompiledDmlStatement stmt) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
-        Dataset dataset = metadataProvider.findDataset(clffs.getDataverseName(), clffs.getDatasetName());
+        Dataset dataset = metadataProvider.findDataset(stmt.getDataverseName(), stmt.getDatasetName());
         if (dataset == null) {
             // This would never happen since we check for this in AqlTranslator
-            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, clffs.getDatasetName(),
-                    clffs.getDataverseName());
+            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, stmt.getDatasetName(),
+                    stmt.getDataverseName());
         }
         IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         IAType metaItemType =
@@ -219,7 +219,18 @@ abstract class LangExpressionToPlanTranslator
 
         LoadableDataSource lds;
         try {
-            lds = new LoadableDataSource(dataset, itemType, metaItemType, clffs.getAdapter(), clffs.getProperties());
+            if (stmt.getKind() == Statement.Kind.LOAD) {
+                lds = new LoadableDataSource(dataset, itemType, metaItemType,
+                        ((CompiledLoadFromFileStatement) stmt).getAdapter(),
+                        ((CompiledLoadFromFileStatement) stmt).getProperties());
+            } else if (stmt.getKind() == Statement.Kind.COPY) {
+                lds = new LoadableDataSource(dataset, itemType, metaItemType,
+                        ((CompiledCopyFromFileStatement) stmt).getAdapter(),
+                        ((CompiledCopyFromFileStatement) stmt).getProperties());
+            } else {
+                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Unrecognized Statement Type",
+                        stmt.getKind());
+            }
         } catch (IOException e) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, e.toString(), e);
         }
@@ -258,14 +269,16 @@ abstract class LangExpressionToPlanTranslator
         assign.getInputs().add(new MutableObject<>(dssOp));
         assign.setSourceLocation(sourceLoc);
 
-        // If the input is pre-sorted, we set the ordering property explicitly in the
-        // assign
-        if (clffs.alreadySorted()) {
-            List<OrderColumn> orderColumns = new ArrayList<>();
-            for (int i = 0; i < pkVars.size(); ++i) {
-                orderColumns.add(new OrderColumn(pkVars.get(i), OrderKind.ASC));
+        if (stmt.getKind() == Statement.Kind.LOAD) {
+            // If the input is pre-sorted, we set the ordering property explicitly in the
+            // assign
+            if (((CompiledLoadFromFileStatement) stmt).alreadySorted()) {
+                List<OrderColumn> orderColumns = new ArrayList<>();
+                for (int i = 0; i < pkVars.size(); ++i) {
+                    orderColumns.add(new OrderColumn(pkVars.get(i), OrderKind.ASC));
+                }
+                assign.setExplicitOrderingProperty(new LocalOrderProperty(orderColumns));
             }
-            assign.setExplicitOrderingProperty(new LocalOrderProperty(orderColumns));
         }
 
         // Load does not support meta record now.
@@ -285,22 +298,49 @@ abstract class LangExpressionToPlanTranslator
             additionalFilteringAssign.setSourceLocation(sourceLoc);
         }
 
-        InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, payloadRef,
-                varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, true);
-        insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
-        insertOp.setSourceLocation(sourceLoc);
+        if (stmt.getKind() == Statement.Kind.LOAD) {
+            InsertDeleteUpsertOperator insertOp = new InsertDeleteUpsertOperator(targetDatasource, payloadRef,
+                    varRefsForLoading, InsertDeleteUpsertOperator.Kind.INSERT, true);
+            insertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
+            insertOp.setSourceLocation(sourceLoc);
 
-        if (additionalFilteringAssign != null) {
-            additionalFilteringAssign.getInputs().add(new MutableObject<>(assign));
-            insertOp.getInputs().add(new MutableObject<>(additionalFilteringAssign));
+            if (additionalFilteringAssign != null) {
+                additionalFilteringAssign.getInputs().add(new MutableObject<>(assign));
+                insertOp.getInputs().add(new MutableObject<>(additionalFilteringAssign));
+            } else {
+                insertOp.getInputs().add(new MutableObject<>(assign));
+            }
+
+            SinkOperator leafOperator = new SinkOperator();
+            leafOperator.getInputs().add(new MutableObject<>(insertOp));
+            leafOperator.setSourceLocation(sourceLoc);
+            return new ALogicalPlanImpl(new MutableObject<>(leafOperator));
+        } else if (stmt.getKind() == Statement.Kind.COPY) {
+            InsertDeleteUpsertOperator upsertOp = new InsertDeleteUpsertOperator(targetDatasource, payloadRef,
+                    varRefsForLoading, InsertDeleteUpsertOperator.Kind.UPSERT, false);
+            upsertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);
+            upsertOp.setSourceLocation(sourceLoc);
+
+            if (additionalFilteringAssign != null) {
+                additionalFilteringAssign.getInputs().add(new MutableObject<>(assign));
+                upsertOp.getInputs().add(new MutableObject<>(additionalFilteringAssign));
+            } else {
+                upsertOp.getInputs().add(new MutableObject<>(assign));
+            }
+            upsertOp.setOperationVar(context.newVar());
+            upsertOp.setOperationVarType(BuiltinType.AINT8);
+            // Create and add a new variable used for representing the original record
+            upsertOp.setPrevRecordVar(context.newVar());
+            upsertOp.setPrevRecordType(itemType);
+
+            DelegateOperator delegateOperator = new DelegateOperator(new CommitOperator(true));
+            delegateOperator.getInputs().add(new MutableObject<>(upsertOp));
+            delegateOperator.setSourceLocation(sourceLoc);
+            return new ALogicalPlanImpl(new MutableObject<>(delegateOperator));
         } else {
-            insertOp.getInputs().add(new MutableObject<>(assign));
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Unrecognized Statement Type",
+                    stmt.getKind());
         }
-
-        SinkOperator leafOperator = new SinkOperator();
-        leafOperator.getInputs().add(new MutableObject<>(insertOp));
-        leafOperator.setSourceLocation(sourceLoc);
-        return new ALogicalPlanImpl(new MutableObject<>(leafOperator));
     }
 
     @Override

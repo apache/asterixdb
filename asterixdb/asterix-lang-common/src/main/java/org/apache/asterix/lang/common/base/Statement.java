@@ -111,5 +111,6 @@ public interface Statement extends ILangExpression {
         COMPACT,
         SUBSCRIBE_FEED,
         EXTENSION,
+        COPY
     }
 }

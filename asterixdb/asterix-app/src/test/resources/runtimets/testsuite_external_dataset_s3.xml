@@ -479,4 +479,11 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="copy">
+    <test-case FilePath="copy">
+      <compilation-unit name="copy-2">
+        <output-dir compare="Text">copy-2</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>
