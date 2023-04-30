@@ -210,7 +210,6 @@
               <usedDependency>io.netty:netty-resolver-dns</usedDependency>
               <usedDependency>io.netty:netty-codec-http2</usedDependency>
               <usedDependency>io.netty:netty-transport-native-unix-common</usedDependency>
-              <usedDependency>org.apache.tomcat:tomcat-annotations-api</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -469,10 +468,6 @@
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-storage</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-annotations-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.msgpack</groupId>

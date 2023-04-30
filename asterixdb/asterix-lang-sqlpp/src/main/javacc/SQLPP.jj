@@ -3704,7 +3704,10 @@ Expression RelExpr() throws ParseException:
           );
           while (hintToken != null) {
             annotation = parseExpressionAnnotation(hintToken);
-            annotationList.add(annotation);
+            if (annotation != null) {
+                // annotation may be null if hints are malformed
+                annotationList.add(annotation);
+            }
             hintToken = hintToken.specialToken;
             if (hintToken != null) {
                 SourceLocation sourceLoc = getSourceLocation(hintToken);
