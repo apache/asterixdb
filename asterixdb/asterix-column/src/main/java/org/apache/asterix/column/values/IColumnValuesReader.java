@@ -86,6 +86,15 @@ public interface IColumnValuesReader extends Comparable<IColumnValuesReader> {
     boolean isDelimiter();
 
     /**
+     * @return is the last delimiter (the end of all nested arrays)
+     */
+    boolean isLastDelimiter();
+
+    boolean isRepeatedValue();
+
+    int getNumberOfDelimiters();
+
+    /**
      * @return which delimiter was returned (nested arrays have different delimiter indexes)
      */
     int getDelimiterIndex();

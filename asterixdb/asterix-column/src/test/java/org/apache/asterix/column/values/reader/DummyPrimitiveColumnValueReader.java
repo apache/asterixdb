@@ -55,7 +55,22 @@ public class DummyPrimitiveColumnValueReader extends AbstractDummyColumnValuesRe
     }
 
     @Override
+    public boolean isLastDelimiter() {
+        return false;
+    }
+
+    @Override
+    public boolean isRepeatedValue() {
+        return false;
+    }
+
+    @Override
     public int getDelimiterIndex() {
         throw new IllegalStateException("Not a repeated reader");
+    }
+
+    @Override
+    public int getNumberOfDelimiters() {
+        return 0;
     }
 }

@@ -56,6 +56,7 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
 
     //Recursion info
     private final IntList delimiters;
+    private RepeatedPrimitiveValueAssembler delegateAssembler;
     private int level;
 
     public AssemblerBuilderVisitor(QueryColumnMetadata columnMetadata, IColumnValuesReaderFactory readerFactory,
@@ -67,13 +68,13 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         delimiters = new IntArrayList();
     }
 
-    public List<AbstractPrimitiveValueAssembler> createValueAssemblers(AbstractSchemaNode requestedSchema,
+    public AbstractPrimitiveValueAssembler[] createValueAssemblers(AbstractSchemaNode requestedSchema,
             ARecordType declaredType) throws HyracksDataException {
         EmptyAssembler root = new EmptyAssembler();
         AssemblerInfo info = new AssemblerInfo(declaredType, root);
         level = 0;
         rootAssembler = requestedSchema.accept(this, info);
-        return valueAssemblers;
+        return valueAssemblers.toArray(new AbstractPrimitiveValueAssembler[0]);
     }
 
     public AbstractValueAssembler getRootAssembler() {
@@ -147,17 +148,28 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         delimiters.add(level - 1);
         level++;
 
+        RepeatedPrimitiveValueAssembler previousDelegate = delegateAssembler;
+        delegateAssembler = null;
+
         IAType itemDeclaredType = getChildType(itemNode, declaredType.getItemType());
         AssemblerInfo itemInfo = new AssemblerInfo(itemDeclaredType, arrayAssembler, false);
         itemNode.accept(this, itemInfo);
 
-        //Add the array assembler to the last repeated value assembler
-        RepeatedPrimitiveValueAssembler repeatedAssembler =
-                (RepeatedPrimitiveValueAssembler) valueAssemblers.get(valueAssemblers.size() - 1);
-        repeatedAssembler.addArray(arrayAssembler);
+        // Set repeated assembler as a delegate (responsible for writing null values)
+        delegateAssembler.setAsDelegate();
+        IColumnValuesReader reader = delegateAssembler.getReader();
+        int numberOfDelimiters = reader.getNumberOfDelimiters();
+        // End of group assembler is responsible to finalize array/multiset builders
+        EndOfRepeatedGroupAssembler endOfGroupAssembler =
+                new EndOfRepeatedGroupAssembler(reader, arrayAssembler, numberOfDelimiters - delimiters.size());
+        valueAssemblers.add(endOfGroupAssembler);
 
         level--;
         delimiters.removeInt(delimiters.size() - 1);
+        if (previousDelegate != null && !delimiters.isEmpty()) {
+            // Return the delegate assembler to the previous one
+            delegateAssembler = previousDelegate;
+        }
         return arrayAssembler;
     }
 
@@ -186,7 +198,9 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         if (!delimiters.isEmpty()) {
             IColumnValuesReader reader = readerFactory.createValueReader(primitiveNode.getTypeTag(),
                     primitiveNode.getColumnIndex(), level, getDelimiters());
+
             assembler = new RepeatedPrimitiveValueAssembler(level, info, reader, valueGetter);
+            setDelegate(reader, (RepeatedPrimitiveValueAssembler) assembler);
 
         } else {
             IColumnValuesReader reader = readerFactory.createValueReader(primitiveNode.getTypeTag(),
@@ -218,6 +232,14 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
             return DefaultOpenFieldType.getDefaultOpenFieldType(childTypeTag);
         } else {
             return BuiltinType.getBuiltinType(childTypeTag);
+        }
+    }
+
+    private void setDelegate(IColumnValuesReader reader, RepeatedPrimitiveValueAssembler assembler) {
+        int delegateIndex =
+                delegateAssembler == null ? Integer.MAX_VALUE : delegateAssembler.getReader().getColumnIndex();
+        if (delegateIndex > reader.getColumnIndex()) {
+            delegateAssembler = assembler;
         }
     }
 }

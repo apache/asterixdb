@@ -18,36 +18,58 @@
  */
 package org.apache.asterix.column.assembler;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.asterix.column.assembler.value.IValueGetter;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
-    private final List<ArrayValueAssembler> arrays;
+    private boolean arrayDelegate;
 
     RepeatedPrimitiveValueAssembler(int level, AssemblerInfo info, IColumnValuesReader reader,
             IValueGetter primitiveValue) {
         super(level, info, reader, primitiveValue);
-        this.arrays = new ArrayList<>();
-    }
-
-    public void addArray(ArrayValueAssembler assembler) {
-        arrays.add(assembler);
+        this.arrayDelegate = false;
     }
 
     @Override
-    public int next() throws HyracksDataException {
+    public int next(AssemblerState state) throws HyracksDataException {
+        /*
+         * Move to the next value if one of the following is true
+         * - It is the first time we access this assembler (i.e., the first round)
+         * - We are in an array (i.e., the parent array assembler is active)
+         * - The value is a delimiter (i.e., the last round)
+         */
+        if (!state.isInGroup() || reader.isRepeatedValue() || reader.isDelimiter()) {
+            next();
+        }
+
+        if (isDelegate()) {
+            // Indicate to parent that it is the end
+            getParent().end();
+        }
+
+        //Go to next assembler
+        return NEXT_ASSEMBLER;
+    }
+
+    public IColumnValuesReader getReader() {
+        return reader;
+    }
+
+    public void setAsDelegate() {
+        // This assembler is responsible for adding null values
+        this.arrayDelegate = true;
+    }
+
+    private void next() throws HyracksDataException {
         if (!reader.next()) {
-            throw new IllegalAccessError("no more values, column index: " + getColumnIndex());
-        } else if (reader.isNull() && (!arrays.isEmpty() || reader.getLevel() + 1 == level)) {
+            throw new IllegalStateException("no more values, column index: " + getColumnIndex());
+        } else if (reader.isNull() && (arrayDelegate || reader.getLevel() + 1 == level)) {
             /*
              * There are two cases here for where the null belongs to:
              * 1- If the null is an array item, then add it
              * 2- If the null is an ancestor, then we only add null if this column is the array delegate
-             * (i.e., !arrays.isEmpty())
+             * (i.e., arrayDelegate is true)
              */
             addNullToAncestor(reader.getLevel());
         } else if (reader.isMissing() && reader.getLevel() + 1 == level) {
@@ -58,39 +80,5 @@ class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
         } else if (reader.isValue()) {
             addValueToParent();
         }
-
-        if (isDelegate()) {
-            getParent().end();
-        }
-
-        //Initially, go to the next primitive assembler
-        int nextIndex = NEXT_ASSEMBLER;
-        if (!arrays.isEmpty()) {
-            /*
-             * This assembler is a delegate of a repeated group
-             * The delimiter index tells us that this assembler is responsible for a finished group
-             */
-            int delimiterIndex = reader.getDelimiterIndex();
-            if (delimiterIndex < arrays.size() && reader.isDelimiter()) {
-                //Also finish the next group
-                delimiterIndex++;
-            }
-
-            int numberOfFinishedGroups = Math.min(delimiterIndex, arrays.size());
-            for (int i = 0; i < numberOfFinishedGroups; i++) {
-                //I'm the delegate for this group of repeated values and the group(s) is finished
-                ArrayValueAssembler assembler = arrays.get(i);
-                assembler.end();
-            }
-
-            //Is the repeated group (determined by the delimiter index) still unfinished?
-            if (delimiterIndex < arrays.size()) {
-                //Yes, go to the first value of the unfinished repeated group
-                nextIndex = arrays.get(delimiterIndex).getFirstValueIndex();
-            }
-        }
-
-        //Go to next value
-        return nextIndex;
     }
 }

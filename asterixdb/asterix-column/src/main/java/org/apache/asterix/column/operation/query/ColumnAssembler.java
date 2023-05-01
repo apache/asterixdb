@@ -18,10 +18,9 @@
  */
 package org.apache.asterix.column.operation.query;
 
-import java.util.List;
-
 import org.apache.asterix.column.assembler.AbstractPrimitiveValueAssembler;
 import org.apache.asterix.column.assembler.AssemblerBuilderVisitor;
+import org.apache.asterix.column.assembler.AssemblerState;
 import org.apache.asterix.column.assembler.ObjectValueAssembler;
 import org.apache.asterix.column.assembler.value.IValueGetterFactory;
 import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
@@ -32,8 +31,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 public final class ColumnAssembler {
-    private final List<AbstractPrimitiveValueAssembler> assemblers;
+    private final AbstractPrimitiveValueAssembler[] assemblers;
     private final ObjectValueAssembler rootAssembler;
+    private final AssemblerState state;
     private int numberOfTuples;
     private int tupleIndex;
 
@@ -44,6 +44,7 @@ public final class ColumnAssembler {
                 new AssemblerBuilderVisitor(columnMetadata, readerFactory, valueGetterFactory);
         assemblers = builderVisitor.createValueAssemblers(node, declaredType);
         rootAssembler = (ObjectValueAssembler) builderVisitor.getRootAssembler();
+        state = new AssemblerState();
     }
 
     public void reset(int numberOfTuples) {
@@ -52,11 +53,11 @@ public final class ColumnAssembler {
     }
 
     public void resetColumn(AbstractBytesInputStream stream, int ordinal) throws HyracksDataException {
-        assemblers.get(ordinal).reset(stream, numberOfTuples);
+        assemblers[ordinal].reset(stream, numberOfTuples);
     }
 
     public int getColumnIndex(int ordinal) {
-        return assemblers.get(ordinal).getColumnIndex();
+        return assemblers[ordinal].getColumnIndex();
     }
 
     public boolean hasNext() {
@@ -72,9 +73,9 @@ public final class ColumnAssembler {
         }
 
         int index = 0;
-        while (index < assemblers.size()) {
-            AbstractPrimitiveValueAssembler assembler = assemblers.get(index);
-            int groupIndex = assembler.next();
+        while (index < assemblers.length) {
+            AbstractPrimitiveValueAssembler assembler = assemblers[index];
+            int groupIndex = assembler.next(state);
             if (groupIndex != AbstractPrimitiveValueAssembler.NEXT_ASSEMBLER) {
                 index = groupIndex;
             } else {
@@ -88,13 +89,13 @@ public final class ColumnAssembler {
     }
 
     public int getNumberOfColumns() {
-        return assemblers.size();
+        return assemblers.length;
     }
 
     public void skip(int count) throws HyracksDataException {
         tupleIndex += count;
-        for (int i = 0; i < assemblers.size(); i++) {
-            assemblers.get(i).skip(count);
+        for (int i = 0; i < assemblers.length; i++) {
+            assemblers[i].skip(count);
         }
     }
 }

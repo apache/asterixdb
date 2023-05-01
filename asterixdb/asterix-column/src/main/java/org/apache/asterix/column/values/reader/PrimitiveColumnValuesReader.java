@@ -74,6 +74,21 @@ public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReade
     }
 
     @Override
+    public boolean isLastDelimiter() {
+        return false;
+    }
+
+    @Override
+    public boolean isRepeatedValue() {
+        return false;
+    }
+
+    @Override
+    public int getNumberOfDelimiters() {
+        return 0;
+    }
+
+    @Override
     public int getDelimiterIndex() {
         throw new IllegalStateException("Not a repeated reader");
     }

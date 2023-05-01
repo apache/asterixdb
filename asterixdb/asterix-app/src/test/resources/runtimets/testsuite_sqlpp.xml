@@ -16086,8 +16086,23 @@
   </test-group>
   <test-group name="column">
     <test-case FilePath="column">
-      <compilation-unit name="assembly">
-        <output-dir compare="Text">assembly</output-dir>
+      <compilation-unit name="assembly/001">
+        <output-dir compare="Text">assembly/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/002">
+        <output-dir compare="Text">assembly/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/003">
+        <output-dir compare="Text">assembly/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/004">
+        <output-dir compare="Text">assembly/004</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">

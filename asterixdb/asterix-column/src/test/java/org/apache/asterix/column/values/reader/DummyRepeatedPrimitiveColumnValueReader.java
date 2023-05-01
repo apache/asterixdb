@@ -73,8 +73,23 @@ public class DummyRepeatedPrimitiveColumnValueReader extends AbstractDummyColumn
     }
 
     @Override
+    public boolean isLastDelimiter() {
+        return isDelimiter() && delimiterIndex == delimiters.length - 1;
+    }
+
+    @Override
+    public boolean isRepeatedValue() {
+        return levelToDelimiterMap[level] < delimiters.length;
+    }
+
+    @Override
     public int getDelimiterIndex() {
         return delimiterIndex;
+    }
+
+    @Override
+    public int getNumberOfDelimiters() {
+        return delimiters.length;
     }
 
     private void consumeDelimiterIfAny() {

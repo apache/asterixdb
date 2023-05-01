@@ -81,8 +81,12 @@ public abstract class AbstractPrimitiveValueAssembler extends AbstractValueAssem
         return reader.getColumnIndex();
     }
 
-    public final void skip(int count) throws HyracksDataException {
+    public void skip(int count) throws HyracksDataException {
         reader.skip(count);
+    }
+
+    public boolean isEndOfGroupAssembler() {
+        return false;
     }
 
     /**
@@ -90,5 +94,5 @@ public abstract class AbstractPrimitiveValueAssembler extends AbstractValueAssem
      *
      * @return the index of the next value
      */
-    public abstract int next() throws HyracksDataException;
+    public abstract int next(AssemblerState state) throws HyracksDataException;
 }

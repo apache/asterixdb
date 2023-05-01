@@ -80,6 +80,11 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
     }
 
     @Override
+    public int getNumberOfDelimiters() {
+        return delimiters.length;
+    }
+
+    @Override
     public int getDelimiterIndex() {
         return delimiterIndex;
     }
@@ -108,11 +113,13 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
         writer.writeLevel(level);
     }
 
-    private boolean isRepeatedValue() {
+    @Override
+    public boolean isRepeatedValue() {
         return levelToDelimiterMap[level] < delimiters.length;
     }
 
-    private boolean isLastDelimiter() {
+    @Override
+    public boolean isLastDelimiter() {
         return isDelimiter() && delimiterIndex == delimiters.length - 1;
     }
 

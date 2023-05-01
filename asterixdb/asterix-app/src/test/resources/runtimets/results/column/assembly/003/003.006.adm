@@ -1,0 +1,8 @@
+{ "id": 1, "geo": { "coordinates": [ { "lon": 1 } ] } }
+{ "id": 2, "geo": { "coordinates": [ { "lon": 2 } ] } }
+{ "id": 3, "geo": { "coordinates": [ { "lon": 3 } ] } }
+{ "id": 4, "geo": { "coordinates": [ { "lon": 4 } ] } }
+{ "id": 5, "geo": { "coordinates": [ { "lon": [ 5.1 ], "lat": 1 } ] } }
+{ "id": 6, "geo": { "coordinates": [ { "lon": [ 6 ], "lat": 2 } ] } }
+{ "id": 7, "geo": { "coordinates": [ { "lon": 7, "lat": 3 } ] } }
+{ "id": 8, "geo": { "coordinates": [ { "lat": 4 } ] } }

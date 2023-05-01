@@ -1,0 +1,8 @@
+{ "id": 1, "geo": { "coordinates": [ 1, 2 ] } }
+{ "id": 2, "geo": { "coordinates": [ 1, 2 ] } }
+{ "id": 3, "geo": { "coordinates": [ 1, 2 ] } }
+{ "id": 4, "geo": { "coordinates": [ 1, 2 ] } }
+{ "id": 5, "geo": { "coordinates": [ 1, 2.1 ] } }
+{ "id": 6, "geo": { "coordinates": [ 1, 2 ] } }
+{ "id": 7, "geo": { "coordinates": [ 1, 2 ] } }
+{ "id": 8, "geo": { "coordinates": [ 1, 2 ] } }
