@@ -42,6 +42,7 @@ import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaBuilderFromIATypeVisitor;
 import org.apache.asterix.column.util.ColumnValuesUtil;
 import org.apache.asterix.column.util.RunLengthIntArray;
+import org.apache.asterix.column.util.SchemaStringBuilderVisitor;
 import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.asterix.column.values.IColumnValuesWriterFactory;
 import org.apache.asterix.column.values.writer.AbstractColumnValuesWriter;
@@ -54,6 +55,9 @@ import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
+import org.apache.hyracks.util.LogRedactionUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 
@@ -62,6 +66,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  * The schema here is mutable and can change according to the flushed records
  */
 public final class FlushColumnMetadata extends AbstractColumnMetadata {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels;
     private final Mutable<IColumnWriteMultiPageOp> multiPageOpRef;
     private final FieldNamesDictionary fieldNamesDictionary;
@@ -160,6 +165,7 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
         if (changed) {
             try {
                 serializeChanges();
+                logSchema(root, metaRoot, fieldNamesDictionary);
                 changed = false;
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
@@ -253,6 +259,7 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
 
         ArrayBackedValueStorage schemaStorage = new ArrayBackedValueStorage(serializedMetadata.getLength());
         schemaStorage.append(serializedMetadata);
+        logSchema(root, metaRoot, fieldNamesDictionary);
         return new FlushColumnMetadata(datasetType, metaType, primaryKeys, metaContainsKeys, columnWriterFactory,
                 multiPageOpRef, writers, fieldNamesDictionary, root, metaRoot, definitionLevels, schemaStorage);
     }
@@ -538,6 +545,22 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
     private AbstractSchemaNode addDefinitionLevelsAndGet(AbstractSchemaNestedNode nestedNode) {
         definitionLevels.put(nestedNode, new RunLengthIntArray());
         return nestedNode;
+    }
+
+    private static void logSchema(ObjectSchemaNode root, ObjectSchemaNode metaRoot,
+            FieldNamesDictionary fieldNamesDictionary) throws HyracksDataException {
+        if (!LOGGER.isDebugEnabled()) {
+            return;
+        }
+        // This should be a low frequency object creation
+        SchemaStringBuilderVisitor schemaBuilder = new SchemaStringBuilderVisitor(fieldNamesDictionary);
+        String recordSchema = LogRedactionUtil.userData(schemaBuilder.build(root));
+        LOGGER.debug("Schema for {} has changed: \n {}", SchemaStringBuilderVisitor.RECORD_SCHEMA, recordSchema);
+        if (metaRoot != null) {
+            String metaRecordSchema = LogRedactionUtil.userData(schemaBuilder.build(metaRoot));
+            LOGGER.debug("Schema for {} has changed: \n {}", SchemaStringBuilderVisitor.META_RECORD_SCHEMA,
+                    metaRecordSchema);
+        }
     }
 
     public static ATypeTag getNormalizedTypeTag(ATypeTag typeTag) {

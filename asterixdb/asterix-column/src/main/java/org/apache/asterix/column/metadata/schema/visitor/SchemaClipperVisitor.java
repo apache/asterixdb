@@ -65,6 +65,10 @@ public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, A
         try {
             for (int i = 0; i < fieldNames.length; i++) {
                 int fieldNameIndex = fieldNamesDictionary.getFieldNameIndex(fieldNames[i]);
+                if (fieldNameIndex == -1) {
+                    // Missing child
+                    continue;
+                }
                 AbstractSchemaNode child = objectNode.getChild(fieldNameIndex);
                 clippedObjectNode.addChild(fieldNameIndex, fieldTypes[i].accept(this, child));
             }

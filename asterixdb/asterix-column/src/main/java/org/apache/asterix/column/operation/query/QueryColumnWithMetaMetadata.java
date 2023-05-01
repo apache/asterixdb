@@ -30,6 +30,7 @@ import org.apache.asterix.column.metadata.FieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
+import org.apache.asterix.column.util.SchemaStringBuilderVisitor;
 import org.apache.asterix.column.values.IColumnValuesReaderFactory;
 import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
 import org.apache.asterix.column.values.reader.filter.FilterAccessorProvider;
@@ -143,6 +144,11 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
 
         PrimitiveColumnValuesReader[] primaryKeyReaders =
                 createPrimaryKeyReaders(input, readerFactory, numberOfPrimaryKeys);
+
+        // log requested schema for record
+        logSchema(clippedRoot, SchemaStringBuilderVisitor.RECORD_SCHEMA, fieldNamesDictionary);
+        // log requested schema for meta-record
+        logSchema(metaClippedRoot, SchemaStringBuilderVisitor.META_RECORD_SCHEMA, fieldNamesDictionary);
 
         return new QueryColumnWithMetaMetadata(datasetType, metaType, primaryKeyReaders, serializedMetadata,
                 fieldNamesDictionary, clippedRoot, metaClippedRoot, readerFactory, valueGetterFactory, filterEvaluator,

@@ -27,10 +27,13 @@ import org.apache.asterix.column.metadata.schema.primitive.MissingFieldSchemaNod
 import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+import it.unimi.dsi.fastutil.ints.IntList;
+
 public class PathExtractorVisitor implements ISchemaNodeVisitor<AbstractSchemaNode, Void> {
     @Override
     public AbstractSchemaNode visit(ObjectSchemaNode objectNode, Void arg) throws HyracksDataException {
-        int fieldNameIndex = objectNode.getChildrenFieldNameIndexes().getInt(0);
+        IntList fieldNameIndexes = objectNode.getChildrenFieldNameIndexes();
+        int fieldNameIndex = fieldNameIndexes.isEmpty() ? -1 : objectNode.getChildrenFieldNameIndexes().getInt(0);
         if (fieldNameIndex < 0) {
             return MissingFieldSchemaNode.INSTANCE;
         }
