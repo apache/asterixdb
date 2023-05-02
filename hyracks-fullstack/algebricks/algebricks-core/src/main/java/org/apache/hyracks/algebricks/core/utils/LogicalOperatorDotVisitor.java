@@ -71,7 +71,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
@@ -244,18 +243,6 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         stringBuilder.setLength(0);
         stringBuilder.append("distribute result ");
         printExprList(op.getExpressions());
-        appendSchema(op, showDetails);
-        appendAnnotations(op, showDetails);
-        appendPhysicalOperatorInfo(op, showDetails);
-        return stringBuilder.toString();
-    }
-
-    @Override
-    public String visitWriteResultOperator(WriteResultOperator op, Boolean showDetails) {
-        stringBuilder.setLength(0);
-        stringBuilder.append("load ").append(str(op.getDataSource())).append(" from ")
-                .append(op.getPayloadExpression().getValue().toString()).append(" partitioned by ");
-        printExprList(op.getKeyExpressions());
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);
         appendPhysicalOperatorInfo(op, showDetails);

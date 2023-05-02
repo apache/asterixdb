@@ -67,12 +67,11 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void> {
 
-    private Collection<LogicalVariable> schemaVariables;
+    private final Collection<LogicalVariable> schemaVariables;
 
     public SchemaVariableVisitor(Collection<LogicalVariable> schemaVariables) {
         this.schemaVariables = schemaVariables;
@@ -261,12 +260,6 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
 
     @Override
     public Void visitDistributeResultOperator(DistributeResultOperator op, Void arg) throws AlgebricksException {
-        standardLayout(op);
-        return null;
-    }
-
-    @Override
-    public Void visitWriteResultOperator(WriteResultOperator op, Void arg) throws AlgebricksException {
         standardLayout(op);
         return null;
     }

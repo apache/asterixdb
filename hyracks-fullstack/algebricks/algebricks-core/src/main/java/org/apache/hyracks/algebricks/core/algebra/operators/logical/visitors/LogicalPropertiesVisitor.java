@@ -64,7 +64,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILogicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.LogicalPropertiesVectorImpl;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
@@ -274,12 +273,6 @@ public class LogicalPropertiesVisitor implements ILogicalOperatorVisitor<Void, I
     @Override
     public Void visitDistributeResultOperator(DistributeResultOperator op, IOptimizationContext arg)
             throws AlgebricksException {
-        return null;
-    }
-
-    @Override
-    public Void visitWriteResultOperator(WriteResultOperator op, IOptimizationContext arg) throws AlgebricksException {
-        // TODO Auto-generated method stub
         return null;
     }
 

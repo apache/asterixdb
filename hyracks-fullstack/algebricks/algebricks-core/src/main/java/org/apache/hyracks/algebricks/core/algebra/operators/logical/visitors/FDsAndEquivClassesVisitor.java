@@ -81,7 +81,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.FunctionalDependency;
 import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalGroupingProperty;
@@ -540,13 +539,6 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitDistributeResultOperator(DistributeResultOperator op, IOptimizationContext ctx)
             throws AlgebricksException {
-        // propagateFDsAndEquivClasses(op, ctx);
-        setEmptyFDsEqClasses(op, ctx);
-        return null;
-    }
-
-    @Override
-    public Void visitWriteResultOperator(WriteResultOperator op, IOptimizationContext ctx) throws AlgebricksException {
         // propagateFDsAndEquivClasses(op, ctx);
         setEmptyFDsEqClasses(op, ctx);
         return null;

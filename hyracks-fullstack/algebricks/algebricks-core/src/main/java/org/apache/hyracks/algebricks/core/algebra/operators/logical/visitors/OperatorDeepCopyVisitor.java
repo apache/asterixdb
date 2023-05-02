@@ -72,7 +72,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
@@ -308,18 +307,6 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         ArrayList<Mutable<ILogicalExpression>> newExpressions = new ArrayList<>();
         deepCopyExpressionRefs(newExpressions, op.getExpressions());
         return new DistributeResultOperator(newExpressions, op.getDataSink(), op.getResultMetadata());
-    }
-
-    @Override
-    public ILogicalOperator visitWriteResultOperator(WriteResultOperator op, Void arg) throws AlgebricksException {
-        ArrayList<Mutable<ILogicalExpression>> newKeyExpressions = new ArrayList<>();
-        deepCopyExpressionRefs(newKeyExpressions, op.getKeyExpressions());
-        List<Mutable<ILogicalExpression>> newLSMComponentFilterExpressions = new ArrayList<>();
-        deepCopyExpressionRefs(newKeyExpressions, op.getAdditionalFilteringExpressions());
-        WriteResultOperator writeResultOp = new WriteResultOperator(op.getDataSource(),
-                deepCopyExpressionRef(op.getPayloadExpression()), newKeyExpressions);
-        writeResultOp.setAdditionalFilteringExpressions(newLSMComponentFilterExpressions);
-        return writeResultOp;
     }
 
     @Override

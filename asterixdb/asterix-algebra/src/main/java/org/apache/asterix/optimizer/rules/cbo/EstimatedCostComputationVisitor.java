@@ -61,7 +61,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 /**
@@ -280,12 +279,6 @@ public class EstimatedCostComputationVisitor implements ILogicalOperatorVisitor<
 
     @Override
     public Pair<Double, Double> visitDistributeResultOperator(DistributeResultOperator op, Double arg)
-            throws AlgebricksException {
-        return annotate(this, op, arg);
-    }
-
-    @Override
-    public Pair<Double, Double> visitWriteResultOperator(WriteResultOperator op, Double arg)
             throws AlgebricksException {
         return annotate(this, op, arg);
     }

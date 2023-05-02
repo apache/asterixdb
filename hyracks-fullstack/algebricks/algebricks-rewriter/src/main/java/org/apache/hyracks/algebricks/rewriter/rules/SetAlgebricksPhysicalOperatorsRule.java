@@ -80,7 +80,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractWindowPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AggregatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AssignPOperator;
@@ -118,7 +117,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.TokenizePOp
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.UnionAllPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.UnnestPOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.WindowPOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.physical.WriteResultPOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
@@ -378,18 +376,6 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
         @Override
         public IPhysicalOperator visitDistributeResultOperator(DistributeResultOperator op, Boolean topLevelOp) {
             return new DistributeResultPOperator();
-        }
-
-        @Override
-        public IPhysicalOperator visitWriteResultOperator(WriteResultOperator opLoad, Boolean topLevelOp) {
-            List<LogicalVariable> keys = new ArrayList<>();
-            List<LogicalVariable> additionalFilteringKeys = null;
-            LogicalVariable payload = getKeysAndLoad(opLoad.getPayloadExpression(), opLoad.getKeyExpressions(), keys);
-            if (opLoad.getAdditionalFilteringExpressions() != null) {
-                additionalFilteringKeys = new ArrayList<>();
-                getKeys(opLoad.getAdditionalFilteringExpressions(), additionalFilteringKeys);
-            }
-            return new WriteResultPOperator(opLoad.getDataSource(), payload, keys, additionalFilteringKeys);
         }
 
         @Override

@@ -71,7 +71,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalOrderProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.OrderColumn;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
@@ -385,15 +384,6 @@ public class SubstituteVariableVisitor
     public Void visitDistributeResultOperator(DistributeResultOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
         substUsedVariablesInExpr(op.getExpressions(), pair.first, pair.second);
-        return null;
-    }
-
-    @Override
-    public Void visitWriteResultOperator(WriteResultOperator op, Pair<LogicalVariable, LogicalVariable> pair)
-            throws AlgebricksException {
-        substUsedVariablesInExpr(op.getPayloadExpression(), pair.first, pair.second);
-        substUsedVariablesInExpr(op.getKeyExpressions(), pair.first, pair.second);
-        substUsedVariablesInExpr(op.getAdditionalFilteringExpressions(), pair.first, pair.second);
         return null;
     }
 

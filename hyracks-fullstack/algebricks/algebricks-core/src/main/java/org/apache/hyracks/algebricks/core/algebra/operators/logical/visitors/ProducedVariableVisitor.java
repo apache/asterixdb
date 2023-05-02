@@ -69,12 +69,11 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> {
 
-    private Collection<LogicalVariable> producedVariables;
+    private final Collection<LogicalVariable> producedVariables;
 
     public ProducedVariableVisitor(Collection<LogicalVariable> producedVariables) throws AlgebricksException {
         this.producedVariables = producedVariables;
@@ -253,11 +252,6 @@ public class ProducedVariableVisitor implements ILogicalOperatorVisitor<Void, Vo
 
     @Override
     public Void visitDistributeResultOperator(DistributeResultOperator op, Void arg) throws AlgebricksException {
-        return null;
-    }
-
-    @Override
-    public Void visitWriteResultOperator(WriteResultOperator op, Void arg) throws AlgebricksException {
         return null;
     }
 

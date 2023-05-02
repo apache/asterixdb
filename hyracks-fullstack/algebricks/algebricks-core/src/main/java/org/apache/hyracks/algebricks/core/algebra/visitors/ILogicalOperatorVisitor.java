@@ -55,7 +55,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 
 public interface ILogicalOperatorVisitor<R, T> {
 
@@ -120,8 +119,6 @@ public interface ILogicalOperatorVisitor<R, T> {
     public R visitWriteOperator(WriteOperator op, T arg) throws AlgebricksException;
 
     public R visitDistributeResultOperator(DistributeResultOperator op, T arg) throws AlgebricksException;
-
-    public R visitWriteResultOperator(WriteResultOperator op, T arg) throws AlgebricksException;
 
     public R visitInsertDeleteUpsertOperator(InsertDeleteUpsertOperator op, T arg) throws AlgebricksException;
 

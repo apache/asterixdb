@@ -23,7 +23,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertD
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 
 public interface IQueryOperatorVisitor<R, T> extends ILogicalOperatorVisitor<R, T> {
 
@@ -34,11 +33,6 @@ public interface IQueryOperatorVisitor<R, T> extends ILogicalOperatorVisitor<R, 
 
     @Override
     public default R visitDistributeResultOperator(DistributeResultOperator op, T arg) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public default R visitWriteResultOperator(WriteResultOperator op, T arg) {
         throw new UnsupportedOperationException();
     }
 

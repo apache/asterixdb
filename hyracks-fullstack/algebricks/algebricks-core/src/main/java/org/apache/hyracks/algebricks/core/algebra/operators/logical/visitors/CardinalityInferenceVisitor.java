@@ -65,7 +65,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 /**
@@ -270,11 +269,6 @@ public class CardinalityInferenceVisitor implements ILogicalOperatorVisitor<Long
 
     @Override
     public Long visitDistributeResultOperator(DistributeResultOperator op, Void arg) throws AlgebricksException {
-        return op.getInputs().get(0).getValue().accept(this, arg);
-    }
-
-    @Override
-    public Long visitWriteResultOperator(WriteResultOperator op, Void arg) throws AlgebricksException {
         return op.getInputs().get(0).getValue().accept(this, arg);
     }
 

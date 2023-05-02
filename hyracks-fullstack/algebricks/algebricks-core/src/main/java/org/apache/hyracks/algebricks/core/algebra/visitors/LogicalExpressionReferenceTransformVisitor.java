@@ -57,7 +57,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 
 /**
  * This visitor performs expression transformation on each operator by calling
@@ -258,12 +257,6 @@ public abstract class LogicalExpressionReferenceTransformVisitor
 
     @Override
     public Boolean visitDistributeResultOperator(DistributeResultOperator op, ILogicalExpressionReferenceTransform arg)
-            throws AlgebricksException {
-        return visitOperator(op, arg);
-    }
-
-    @Override
-    public Boolean visitWriteResultOperator(WriteResultOperator op, ILogicalExpressionReferenceTransform arg)
             throws AlgebricksException {
         return visitOperator(op, arg);
     }

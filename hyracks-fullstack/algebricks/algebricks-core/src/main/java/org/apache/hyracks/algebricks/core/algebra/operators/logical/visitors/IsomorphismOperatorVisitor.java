@@ -75,7 +75,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.UnorderedPartitionedProperty;
@@ -594,23 +593,6 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         }
         DistributeResultOperator writeOpArg = (DistributeResultOperator) copyAndSubstituteVar(op, arg);
         boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getSchema(), writeOpArg.getSchema());
-        return isomorphic;
-    }
-
-    @Override
-    public Boolean visitWriteResultOperator(WriteResultOperator op, ILogicalOperator arg) throws AlgebricksException {
-        AbstractLogicalOperator aop = (AbstractLogicalOperator) arg;
-        if (aop.getOperatorTag() != LogicalOperatorTag.WRITE_RESULT) {
-            return Boolean.FALSE;
-        }
-        WriteResultOperator writeOpArg = (WriteResultOperator) copyAndSubstituteVar(op, arg);
-        boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getSchema(), writeOpArg.getSchema());
-        if (!op.getDataSource().equals(writeOpArg.getDataSource())) {
-            isomorphic = false;
-        }
-        if (!op.getPayloadExpression().equals(writeOpArg.getPayloadExpression())) {
-            isomorphic = false;
-        }
         return isomorphic;
     }
 

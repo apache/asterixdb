@@ -72,7 +72,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.HashPartitionMergeExchangePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.PartialBroadcastRangeFollowingExchangePOperator;
@@ -364,20 +363,6 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
     public Void visitDistributeResultOperator(DistributeResultOperator op, Void arg) {
         for (Mutable<ILogicalExpression> expr : op.getExpressions()) {
             expr.getValue().getUsedVariables(usedVariables);
-        }
-        return null;
-    }
-
-    @Override
-    public Void visitWriteResultOperator(WriteResultOperator op, Void arg) {
-        op.getPayloadExpression().getValue().getUsedVariables(usedVariables);
-        for (Mutable<ILogicalExpression> e : op.getKeyExpressions()) {
-            e.getValue().getUsedVariables(usedVariables);
-        }
-        if (op.getAdditionalFilteringExpressions() != null) {
-            for (Mutable<ILogicalExpression> e : op.getAdditionalFilteringExpressions()) {
-                e.getValue().getUsedVariables(usedVariables);
-            }
         }
         return null;
     }

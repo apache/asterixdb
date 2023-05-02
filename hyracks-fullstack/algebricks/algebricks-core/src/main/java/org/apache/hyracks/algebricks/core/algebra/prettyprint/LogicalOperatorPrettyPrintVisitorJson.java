@@ -81,7 +81,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -427,19 +426,6 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             if (!expressions.isEmpty()) {
                 writeArrayFieldOfExpressions(EXPRESSIONS_FIELD, expressions, indent);
             }
-            return null;
-        } catch (IOException e) {
-            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
-        }
-    }
-
-    @Override
-    public Void visitWriteResultOperator(WriteResultOperator op, Void indent) throws AlgebricksException {
-        try {
-            jsonGenerator.writeStringField(OPERATOR_FIELD, "load");
-            jsonGenerator.writeStringField("data-source", String.valueOf(op.getDataSource()));
-            writeStringFieldExpression("from", op.getPayloadExpression(), indent);
-            writeObjectFieldWithExpressions("partitioned-by", op.getKeyExpressions(), indent);
             return null;
         } catch (IOException e) {
             throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));

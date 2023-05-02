@@ -74,7 +74,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
 
 public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPrettyPrintVisitor<Integer>
         implements IPlanPrettyPrinter {
@@ -267,14 +266,6 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     public Void visitDistributeResultOperator(DistributeResultOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("distribute result ");
         pprintExprList(op.getExpressions(), indent);
-        return null;
-    }
-
-    @Override
-    public Void visitWriteResultOperator(WriteResultOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("load ").append(str(op.getDataSource())).append(" from ")
-                .append(op.getPayloadExpression().getValue().accept(exprVisitor, indent)).append(" partitioned by ");
-        pprintExprList(op.getKeyExpressions(), indent);
         return null;
     }
 
