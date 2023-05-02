@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
+import org.apache.asterix.common.utils.PartitioningScheme;
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
@@ -64,7 +65,8 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_GLOBAL_CLEANUP_TIMEOUT(POSITIVE_INTEGER, (int) TimeUnit.MINUTES.toSeconds(10)),
         STORAGE_COLUMN_MAX_TUPLE_COUNT(NONNEGATIVE_INTEGER, 15000),
         STORAGE_COLUMN_FREE_SPACE_TOLERANCE(DOUBLE, 0.15),
-        STORAGE_FORMAT(STRING, "row");
+        STORAGE_FORMAT(STRING, "row"),
+        STORAGE_PARTITIONING(STRING, "dynamic");
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -81,6 +83,7 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE:
                 case STORAGE_GLOBAL_CLEANUP:
                 case STORAGE_GLOBAL_CLEANUP_TIMEOUT:
+                case STORAGE_PARTITIONING:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -139,6 +142,9 @@ public class StorageProperties extends AbstractProperties {
                             + " 0.15 means a physical page with 15% or less empty space is tolerable)";
                 case STORAGE_FORMAT:
                     return "The default storage format (either row or column)";
+                case STORAGE_PARTITIONING:
+                    return "The storage partitioning scheme (either dynamic or static). This value should not be changed"
+                            + " after any dataset have been created";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -286,5 +292,9 @@ public class StorageProperties extends AbstractProperties {
 
     public String getStorageFormat() {
         return accessor.getString(Option.STORAGE_FORMAT);
+    }
+
+    public PartitioningScheme getPartitioningScheme() {
+        return PartitioningScheme.fromName(accessor.getString(Option.STORAGE_PARTITIONING));
     }
 }

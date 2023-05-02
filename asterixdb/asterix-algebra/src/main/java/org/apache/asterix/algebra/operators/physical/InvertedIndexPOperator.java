@@ -20,6 +20,7 @@ package org.apache.asterix.algebra.operators.physical;
 
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
+import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSourceId;
@@ -58,7 +59,6 @@ import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
@@ -171,8 +171,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         }
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(unnestMap);
         RecordDescriptor outputRecDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset, indexName);
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset, indexName);
         // TODO: Here we assume there is only one search key field.
         int queryField = keyFields[0];
         // Get tokenizer and search modifier factories.
@@ -183,12 +182,9 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory =
                 FullTextUtil.fetchFilterAndCreateConfigEvaluator(metadataProvider, secondaryIndex.getDataverseName(),
                         ((Index.TextIndexDetails) secondaryIndex.getIndexDetails()).getFullTextConfigName());
-        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
-                metadataProvider.getStorageComponentProvider().getStorageManager(), secondarySplitsAndConstraint.first);
-
-        int numPartitions = MetadataProvider.getNumPartitions(secondarySplitsAndConstraint.second);
-        int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
-
+        IIndexDataflowHelperFactory dataflowHelperFactory =
+                new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
+                        partitioningProperties.getSpiltsProvider());
         LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp =
                 new LSMInvertedIndexSearchOperatorDescriptor(jobSpec, outputRecDesc, queryField, dataflowHelperFactory,
                         queryTokenizerFactory, fullTextConfigEvaluatorFactory, searchModifierFactory, retainInput,
@@ -196,7 +192,8 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                         dataset.getSearchCallbackFactory(metadataProvider.getStorageComponentProvider(), secondaryIndex,
                                 IndexOperation.SEARCH, null),
                         minFilterFieldIndexes, maxFilterFieldIndexes, isFullTextSearchQuery, numPrimaryKeys,
-                        propagateIndexFilter, nonFilterWriterFactory, frameLimit, partitionsMap);
-        return new Pair<>(invIndexSearchOp, secondarySplitsAndConstraint.second);
+                        propagateIndexFilter, nonFilterWriterFactory, frameLimit,
+                        partitioningProperties.getComputeStorageMap());
+        return new Pair<>(invIndexSearchOp, partitioningProperties.getConstraints());
     }
 }

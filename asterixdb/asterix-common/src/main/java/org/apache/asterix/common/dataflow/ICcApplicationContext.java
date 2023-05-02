@@ -158,4 +158,11 @@ public interface ICcApplicationContext extends IApplicationContext {
      * @return the cluster query compilation lock
      */
     ReentrantReadWriteLock getCompilationLock();
+
+    /**
+     * Gets the data partitioing provider
+     *
+     * @return the data partitioing provider
+     */
+    IDataPartitioningProvider getDataPartitioningProvider();
 }

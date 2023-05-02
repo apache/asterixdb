@@ -54,6 +54,7 @@
     "storage.compression.block" : "snappy",
     "storage.global.cleanup.timeout" : 600,
     "storage.lsm.bloomfilter.falsepositiverate" : 0.01,
+    "storage.partitioning" : "dynamic",
     "txn\.commitprofiler\.enabled" : false,
     "txn\.commitprofiler\.reportinterval" : 5,
     "txn\.dataset\.checkpoint\.interval" : 3600,

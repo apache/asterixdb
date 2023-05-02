@@ -344,7 +344,8 @@ public abstract class AbstractRTreeOperatorTest extends AbstractIntegrationTest 
         int[] fieldPermutation = { 6, 7, 8, 9, 0 };
         int[] pkFields = { 4 };
         int[][] partitionsMap = TestUtils.getPartitionsMap(1);
-        int numPartitions = (int) Arrays.stream(partitionsMap).map(partitions -> partitions.length).count();
+        int numPartitions =
+                Arrays.stream(partitionsMap).map(partitions -> partitions.length).mapToInt(Integer::intValue).sum();
         ITuplePartitionerFactory partitionerFactory =
                 new FieldHashPartitionerFactory(pkFields, primaryHashFactories, numPartitions);
         TreeIndexBulkLoadOperatorDescriptor secondaryBulkLoad =

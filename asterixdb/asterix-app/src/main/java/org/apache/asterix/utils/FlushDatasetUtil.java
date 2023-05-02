@@ -19,6 +19,7 @@
 
 package org.apache.asterix.utils;
 
+import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
@@ -29,7 +30,6 @@ import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.operators.std.FlushDatasetOperatorDescriptor;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
 import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import org.apache.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
@@ -38,7 +38,6 @@ import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.connectors.OneToOneConnectorDescriptor;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
 public class FlushDatasetUtil {
     private FlushDatasetUtil() {
@@ -66,9 +65,9 @@ public class FlushDatasetUtil {
 
         spec.connect(new OneToOneConnectorDescriptor(spec), emptySource, 0, flushOperator, 0);
 
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset, dataset.getDatasetName());
-        AlgebricksPartitionConstraint primaryPartitionConstraint = primarySplitsAndConstraint.second;
+        PartitioningProperties partitioningProperties =
+                metadataProvider.getPartitioningProperties(dataset, dataset.getDatasetName());
+        AlgebricksPartitionConstraint primaryPartitionConstraint = partitioningProperties.getConstraints();
 
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, emptySource,
                 primaryPartitionConstraint);

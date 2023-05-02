@@ -211,7 +211,8 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         // load secondary index
         int[] fieldPermutation = { 3, 0 };
         int[][] partitionsMap = TestUtils.getPartitionsMap(1);
-        int numPartitions = (int) Arrays.stream(partitionsMap).map(partitions -> partitions.length).count();
+        int numPartitions =
+                Arrays.stream(partitionsMap).map(partitions -> partitions.length).mapToInt(Integer::intValue).sum();
         ITuplePartitionerFactory tuplePartitionerFactory2 =
                 new FieldHashPartitionerFactory(secondaryPKFieldPermutationB, primaryHashFunFactories, numPartitions);
         TreeIndexBulkLoadOperatorDescriptor secondaryBtreeBulkLoad =

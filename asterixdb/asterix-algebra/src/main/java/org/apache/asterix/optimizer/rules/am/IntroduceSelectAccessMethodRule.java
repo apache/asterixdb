@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 import org.apache.asterix.algebra.operators.CommitOperator;
+import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -361,9 +362,9 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
             outputVars.add(outputVar);
             VariableUtilities.substituteVariables(lop, inputVar, outputVar, context);
         }
-
-        int[][] partitionsMap = metadataProvider.getPartitionsMap(idx);
-        IntersectOperator intersect = new IntersectOperator(outputVars, inputVars, partitionsMap);
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(idx);
+        IntersectOperator intersect =
+                new IntersectOperator(outputVars, inputVars, partitioningProperties.getComputeStorageMap());
         intersect.setSourceLocation(lop.getSourceLocation());
         for (ILogicalOperator secondarySearch : subRoots) {
             intersect.getInputs().add(secondarySearch.getInputs().get(0));

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
@@ -65,8 +66,10 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
                 String dsName = ((FeedDataSource) ds).getTargetDataset();
                 Dataset feedDs = ((MetadataProvider) ctx.getMetadataProvider())
                         .findDataset(ds.getId().getDataverseName(), dsName);
-                int[][] partitionsMap1 = ((MetadataProvider) ctx.getMetadataProvider()).getPartitionsMap(feedDs);
-                pp = getFeedDatasetPartitioningProperty(ds, domain, scanVariables, partitionsMap1);
+                PartitioningProperties partitioningProperties =
+                        ((MetadataProvider) ctx.getMetadataProvider()).getPartitioningProperties(feedDs);
+                pp = getFeedDatasetPartitioningProperty(ds, domain, scanVariables,
+                        partitioningProperties.getComputeStorageMap());
                 break;
             case DataSource.Type.INTERNAL_DATASET:
             case DataSource.Type.SAMPLE:
@@ -77,8 +80,9 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
                 } else {
                     dataset = ((SampleDataSource) ds).getDataset();
                 }
-                int[][] partitionsMap = ((MetadataProvider) ctx.getMetadataProvider()).getPartitionsMap(dataset);
-                pp = getInternalDatasetPartitioningProperty(ds, domain, scanVariables, pvars, partitionsMap);
+                int[][] computeStorageMap = ((MetadataProvider) ctx.getMetadataProvider())
+                        .getPartitioningProperties(dataset).getComputeStorageMap();
+                pp = getInternalDatasetPartitioningProperty(ds, domain, scanVariables, pvars, computeStorageMap);
                 propsLocal.add(new LocalOrderProperty(getOrderColumns(pvars)));
                 break;
             default:

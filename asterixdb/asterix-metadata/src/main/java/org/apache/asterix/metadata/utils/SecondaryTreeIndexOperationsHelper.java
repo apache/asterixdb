@@ -23,19 +23,17 @@ import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDes
 
 import java.util.Set;
 
+import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.jobgen.impl.ConnectorPolicyAssignmentPolicy;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.JobSpecification;
-import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 import org.apache.hyracks.storage.am.common.api.IIndexBuilderFactory;
 import org.apache.hyracks.storage.am.common.build.IndexBuilderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -60,9 +58,9 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
                 mergePolicyFactory, mergePolicyProperties);
         IIndexBuilderFactory indexBuilderFactory = new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
                 secondaryFileSplitProvider, resourceFactory, true);
-        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
-        IndexCreateOperatorDescriptor secondaryIndexCreateOp =
-                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, partitionsMap);
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+        IndexCreateOperatorDescriptor secondaryIndexCreateOp = new IndexCreateOperatorDescriptor(spec,
+                indexBuilderFactory, partitioningProperties.getComputeStorageMap());
         secondaryIndexCreateOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, secondaryIndexCreateOp,
                 secondaryPartitionConstraint);
@@ -79,17 +77,17 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
     static JobSpecification buildDropJobSpecImpl(Dataset dataset, Index index, Set<DropOption> dropOptions,
             MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
-        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
-                metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
+        PartitioningProperties partitioningProperties =
+                metadataProvider.getPartitioningProperties(dataset, index.getIndexName());
+        IIndexDataflowHelperFactory dataflowHelperFactory =
+                new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
+                        partitioningProperties.getSpiltsProvider());
         // The index drop operation should be persistent regardless of temp datasets or permanent dataset.
-        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
-        IndexDropOperatorDescriptor btreeDrop =
-                new IndexDropOperatorDescriptor(spec, dataflowHelperFactory, dropOptions, partitionsMap);
+        IndexDropOperatorDescriptor btreeDrop = new IndexDropOperatorDescriptor(spec, dataflowHelperFactory,
+                dropOptions, partitioningProperties.getComputeStorageMap());
         btreeDrop.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, btreeDrop,
-                splitsAndConstraint.second);
+                partitioningProperties.getConstraints());
         spec.addRoot(btreeDrop);
         return spec;
     }
@@ -97,10 +95,11 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
     @Override
     public JobSpecification buildCompactJobSpec() throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
-        IIndexDataflowHelperFactory dataflowHelperFactory = new IndexDataflowHelperFactory(
-                metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
+        PartitioningProperties partitioningProperties =
+                metadataProvider.getPartitioningProperties(dataset, index.getIndexName());
+        IIndexDataflowHelperFactory dataflowHelperFactory =
+                new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
+                        partitioningProperties.getSpiltsProvider());
         LSMTreeIndexCompactOperatorDescriptor compactOp =
                 new LSMTreeIndexCompactOperatorDescriptor(spec, dataflowHelperFactory);
         compactOp.setSourceLocation(sourceLoc);

@@ -47,6 +47,7 @@ import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.config.TransactionProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.dataflow.IDataPartitioningProvider;
 import org.apache.asterix.common.external.IAdapterFactoryService;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
@@ -54,6 +55,7 @@ import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
+import org.apache.asterix.metadata.utils.DataPartitioningProvider;
 import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.asterix.runtime.job.listener.NodeJobTracker;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
@@ -112,6 +114,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final IConfigValidator configValidator;
     private final IAdapterFactoryService adapterFactoryService;
     private final ReentrantReadWriteLock compilationLock = new ReentrantReadWriteLock(true);
+    private final IDataPartitioningProvider dataPartitioningProvider;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, HyracksConnection hcc,
             Supplier<IMetadataBootstrap> metadataBootstrapSupplier, IGlobalRecoveryManager globalRecoveryManager,
@@ -154,6 +157,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         requestTracker = new RequestTracker(this);
         configValidator = configValidatorFactory.create();
         this.adapterFactoryService = adapterFactoryService;
+        dataPartitioningProvider = new DataPartitioningProvider(this);
     }
 
     @Override
@@ -356,5 +360,10 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public ReentrantReadWriteLock getCompilationLock() {
         return compilationLock;
+    }
+
+    @Override
+    public IDataPartitioningProvider getDataPartitioningProvider() {
+        return dataPartitioningProvider;
     }
 }

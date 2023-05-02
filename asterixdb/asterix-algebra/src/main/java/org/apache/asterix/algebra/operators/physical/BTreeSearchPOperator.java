@@ -21,6 +21,7 @@ package org.apache.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -241,10 +242,9 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                     propsLocal.add(new LocalOrderProperty(orderColumns));
                     MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
                     Dataset dataset = mp.findDataset(searchIndex.getDataverseName(), searchIndex.getDatasetName());
-                    int[][] partitionsMap = mp.getPartitionsMap(dataset);
-                    pv[0] = new StructuralPropertiesVector(
-                            UnorderedPartitionedProperty.ofPartitionsMap(searchKeyVars, domain, partitionsMap),
-                            propsLocal);
+                    PartitioningProperties partitioningProperties = mp.getPartitioningProperties(dataset);
+                    pv[0] = new StructuralPropertiesVector(UnorderedPartitionedProperty.ofPartitionsMap(searchKeyVars,
+                            domain, partitioningProperties.getComputeStorageMap()), propsLocal);
                     return new PhysicalRequirements(pv, IPartitioningRequirementsCoordinator.NO_COORDINATION);
                 }
             }

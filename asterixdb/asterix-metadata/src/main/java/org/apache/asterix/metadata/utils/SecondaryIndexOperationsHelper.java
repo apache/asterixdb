@@ -19,13 +19,13 @@
 
 package org.apache.asterix.metadata.utils;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -211,10 +211,10 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         payloadSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
         metaSerde =
                 metaType == null ? null : SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
-        secondaryFileSplitProvider = secondarySplitsAndConstraint.first;
-        secondaryPartitionConstraint = secondarySplitsAndConstraint.second;
+        PartitioningProperties partitioningProperties =
+                metadataProvider.getPartitioningProperties(dataset, index.getIndexName());
+        secondaryFileSplitProvider = partitioningProperties.getSpiltsProvider();
+        secondaryPartitionConstraint = partitioningProperties.getConstraints();
         numPrimaryKeys = dataset.getPrimaryKeys().size();
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             filterFieldName = DatasetUtil.getFilterField(dataset);
@@ -223,10 +223,10 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
             } else {
                 numFilterFields = 0;
             }
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint =
-                    metadataProvider.getSplitProviderAndConstraints(dataset);
-            primaryFileSplitProvider = primarySplitsAndConstraint.first;
-            primaryPartitionConstraint = primarySplitsAndConstraint.second;
+
+            PartitioningProperties datasetPartitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+            primaryFileSplitProvider = datasetPartitioningProperties.getSpiltsProvider();
+            primaryPartitionConstraint = datasetPartitioningProperties.getConstraints();
             setPrimaryRecDescAndComparators();
         }
         setSecondaryRecDescAndComparators();
@@ -447,16 +447,15 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
             throws AlgebricksException {
         IndexDataflowHelperFactory primaryIndexDataflowHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), primaryFileSplitProvider);
-        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
-        int numPartitions = (int) Arrays.stream(partitionsMap).map(partitions -> partitions.length).count();
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
         IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(metadataProvider);
-        ITuplePartitionerFactory partitionerFactory =
-                new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
+        ITuplePartitionerFactory partitionerFactory = new FieldHashPartitionerFactory(pkFields, pkHashFunFactories,
+                partitioningProperties.getNumberOfPartitions());
         // when an index is being created (not loaded) the filtration is introduced in the pipeline -> no tuple filter
-        LSMIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp =
-                new LSMIndexBulkLoadOperatorDescriptor(spec, secondaryRecDesc, fieldPermutation, fillFactor, false,
-                        numElementsHint, false, dataflowHelperFactory, primaryIndexDataflowHelperFactory,
-                        BulkLoadUsage.CREATE_INDEX, dataset.getDatasetId(), null, partitionerFactory, partitionsMap);
+        LSMIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new LSMIndexBulkLoadOperatorDescriptor(spec,
+                secondaryRecDesc, fieldPermutation, fillFactor, false, numElementsHint, false, dataflowHelperFactory,
+                primaryIndexDataflowHelperFactory, BulkLoadUsage.CREATE_INDEX, dataset.getDatasetId(), null,
+                partitionerFactory, partitioningProperties.getComputeStorageMap());
         treeIndexBulkLoadOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 secondaryPartitionConstraint);

@@ -19,11 +19,11 @@
 
 package org.apache.asterix.metadata.utils;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.utils.StorageConstants;
@@ -114,6 +114,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
     private ILSMMergePolicyFactory mergePolicyFactory;
     private Map<String, String> mergePolicyProperties;
     private int groupbyNumFrames;
+    private int[][] computeStorageMap;
 
     protected SampleOperationsHelper(Dataset dataset, Index index, MetadataProvider metadataProvider,
             SourceLocation sourceLoc) {
@@ -134,11 +135,11 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         comparatorFactories = dataset.getPrimaryComparatorFactories(metadataProvider, itemType, metaType);
         groupbyNumFrames = getGroupByNumFrames(metadataProvider, sourceLoc);
 
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> secondarySplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset, index.getIndexName());
-        fileSplitProvider = secondarySplitsAndConstraint.first;
-        partitionConstraint = secondarySplitsAndConstraint.second;
-
+        PartitioningProperties partitioningProperties =
+                metadataProvider.getPartitioningProperties(dataset, index.getIndexName());
+        fileSplitProvider = partitioningProperties.getSpiltsProvider();
+        partitionConstraint = partitioningProperties.getConstraints();
+        computeStorageMap = partitioningProperties.getComputeStorageMap();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         mergePolicyFactory = compactionInfo.first;
@@ -153,9 +154,8 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
                 mergePolicyFactory, mergePolicyProperties);
         IIndexBuilderFactory indexBuilderFactory = new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
                 fileSplitProvider, resourceFactory, true);
-        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
         IndexCreateOperatorDescriptor indexCreateOp =
-                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, partitionsMap);
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, computeStorageMap);
         indexCreateOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp, partitionConstraint);
         spec.addRoot(indexCreateOp);
@@ -318,19 +318,18 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
     protected LSMIndexBulkLoadOperatorDescriptor createTreeIndexBulkLoadOp(JobSpecification spec,
             int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor,
             long numElementHint) throws AlgebricksException {
-        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
         int[] pkFields = new int[dataset.getPrimaryKeys().size()];
         for (int i = 0; i < pkFields.length; i++) {
             pkFields[i] = fieldPermutation[i];
         }
-        int numPartitions = (int) Arrays.stream(partitionsMap).map(partitions -> partitions.length).count();
         IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(metadataProvider);
-        ITuplePartitionerFactory partitionerFactory =
-                new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
+        ITuplePartitionerFactory partitionerFactory = new FieldHashPartitionerFactory(pkFields, pkHashFunFactories,
+                partitioningProperties.getNumberOfPartitions());
         LSMIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new LSMIndexBulkLoadOperatorDescriptor(spec,
                 recordDesc, fieldPermutation, fillFactor, false, numElementHint, true, dataflowHelperFactory, null,
                 LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage.LOAD, dataset.getDatasetId(), null, partitionerFactory,
-                partitionsMap);
+                partitioningProperties.getComputeStorageMap());
         treeIndexBulkLoadOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 partitionConstraint);

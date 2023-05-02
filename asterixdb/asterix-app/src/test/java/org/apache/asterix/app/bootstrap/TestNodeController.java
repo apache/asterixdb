@@ -214,7 +214,7 @@ public class TestNodeController {
                 fieldPermutation[i] = i;
             }
             int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
-            int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
+            int[][] partitionsMap = getPartitionsMap(numPartitions);
             IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
             ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(
                     primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
@@ -263,7 +263,7 @@ public class TestNodeController {
             }
 
             int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
-            int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
+            int[][] partitionsMap = getPartitionsMap(numPartitions);
             IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
             ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(
                     primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
@@ -372,7 +372,7 @@ public class TestNodeController {
             IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                     storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
             int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
-            int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
+            int[][] partitionsMap = getPartitionsMap(numPartitions);
             IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
             ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(
                     primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
@@ -838,7 +838,7 @@ public class TestNodeController {
         IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                 storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
         int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
-        int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
+        int[][] partitionsMap = getPartitionsMap(numPartitions);
         IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
         ITuplePartitionerFactory tuplePartitionerFactory =
                 new FieldHashPartitionerFactory(primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
@@ -911,5 +911,13 @@ public class TestNodeController {
             outputSerDes[j + f] = inputRecordDesc.getFields()[j];
         }
         return new RecordDescriptor(outputSerDes, outputTypeTraits);
+    }
+
+    private static int[][] getPartitionsMap(int numPartitions) {
+        int[][] map = new int[numPartitions][1];
+        for (int i = 0; i < numPartitions; i++) {
+            map[i] = new int[] { i };
+        }
+        return map;
     }
 }

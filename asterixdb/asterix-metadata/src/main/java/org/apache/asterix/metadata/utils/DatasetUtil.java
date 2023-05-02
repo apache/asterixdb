@@ -31,6 +31,7 @@ import java.util.UUID;
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.column.util.ColumnSecondaryIndexSchemaUtil;
+import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
@@ -309,15 +310,14 @@ public class DatasetUtil {
             return RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         }
         JobSpecification specPrimary = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset);
-        IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
-                metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
-        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
-        IndexDropOperatorDescriptor primaryBtreeDrop =
-                new IndexDropOperatorDescriptor(specPrimary, indexHelperFactory, options, partitionsMap);
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+        IIndexDataflowHelperFactory indexHelperFactory =
+                new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
+                        partitioningProperties.getSpiltsProvider());
+        IndexDropOperatorDescriptor primaryBtreeDrop = new IndexDropOperatorDescriptor(specPrimary, indexHelperFactory,
+                options, partitioningProperties.getComputeStorageMap());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
-                splitsAndConstraint.second);
+                partitioningProperties.getConstraints());
         specPrimary.addRoot(primaryBtreeDrop);
         return specPrimary;
     }
@@ -334,14 +334,13 @@ public class DatasetUtil {
         itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
 
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset);
-        FileSplit[] fs = splitsAndConstraint.first.getFileSplits();
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+        FileSplit[] fs = partitioningProperties.getSpiltsProvider().getFileSplits();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < fs.length; i++) {
             sb.append(fs[i] + " ");
         }
-        LOGGER.info("CREATING File Splits: " + sb);
+        LOGGER.info("CREATING File Splits: {}", sb);
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         // prepare a LocalResourceMetadata which will be stored in NC's local resource
@@ -350,12 +349,11 @@ public class DatasetUtil {
                 compactionInfo.first, compactionInfo.second);
         IndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
-                        splitsAndConstraint.first, resourceFactory, true);
-        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
-        IndexCreateOperatorDescriptor indexCreateOp =
-                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, partitionsMap);
+                        partitioningProperties.getSpiltsProvider(), resourceFactory, true);
+        IndexCreateOperatorDescriptor indexCreateOp = new IndexCreateOperatorDescriptor(spec, indexBuilderFactory,
+                partitioningProperties.getComputeStorageMap());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
-                splitsAndConstraint.second);
+                partitioningProperties.getConstraints());
         spec.addRoot(indexCreateOp);
         return spec;
     }
@@ -368,16 +366,16 @@ public class DatasetUtil {
             throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, datasetName, dataverseName);
         }
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset);
-        IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
-                metadataProvider.getStorageComponentProvider().getStorageManager(), splitsAndConstraint.first);
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+        IIndexDataflowHelperFactory indexHelperFactory =
+                new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
+                        partitioningProperties.getSpiltsProvider());
         LSMTreeIndexCompactOperatorDescriptor compactOp =
                 new LSMTreeIndexCompactOperatorDescriptor(spec, indexHelperFactory);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
-                splitsAndConstraint.second);
+                partitioningProperties.getConstraints());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
-                splitsAndConstraint.second);
+                partitioningProperties.getConstraints());
         spec.addRoot(compactOp);
         return spec;
     }
@@ -398,10 +396,9 @@ public class DatasetUtil {
 
     public static IOperatorDescriptor createPrimaryIndexScanOp(JobSpecification spec, MetadataProvider metadataProvider,
             Dataset dataset, ITupleProjectorFactory projectorFactory) throws AlgebricksException {
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset);
-        IFileSplitProvider primaryFileSplitProvider = primarySplitsAndConstraint.first;
-        AlgebricksPartitionConstraint primaryPartitionConstraint = primarySplitsAndConstraint.second;
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+        IFileSplitProvider primaryFileSplitProvider = partitioningProperties.getSpiltsProvider();
+        AlgebricksPartitionConstraint primaryPartitionConstraint = partitioningProperties.getConstraints();
         // -Infinity
         int[] lowKeyFields = null;
         // +Infinity
@@ -412,11 +409,10 @@ public class DatasetUtil {
                 IRecoveryManager.ResourceType.LSM_BTREE);
         IndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                 metadataProvider.getStorageComponentProvider().getStorageManager(), primaryFileSplitProvider);
-        int[][] partitionsMap = metadataProvider.getPartitionsMap(dataset);
         BTreeSearchOperatorDescriptor primarySearchOp = new BTreeSearchOperatorDescriptor(spec,
                 dataset.getPrimaryRecordDescriptor(metadataProvider), lowKeyFields, highKeyFields, true, true,
                 indexHelperFactory, false, false, null, searchCallbackFactory, null, null, false, null, null, -1, false,
-                null, null, projectorFactory, null, partitionsMap);
+                null, null, projectorFactory, null, partitioningProperties.getComputeStorageMap());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, primarySearchOp,
                 primaryPartitionConstraint);
         return primarySearchOp;
@@ -445,8 +441,7 @@ public class DatasetUtil {
 
         Index primaryIndex = metadataProvider.getIndex(dataset.getDataverseName(), dataset.getDatasetName(),
                 dataset.getDatasetName());
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset);
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
 
         // prepare callback
         int[] primaryKeyFields = new int[numKeys];
@@ -462,8 +457,8 @@ public class DatasetUtil {
                 storageComponentProvider, primaryIndex, IndexOperation.UPSERT, primaryKeyFields);
         ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
                 storageComponentProvider, primaryIndex, IndexOperation.UPSERT, primaryKeyFields);
-        IIndexDataflowHelperFactory idfh =
-                new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(), splitsAndConstraint.first);
+        IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(),
+                partitioningProperties.getSpiltsProvider());
         LSMPrimaryUpsertOperatorDescriptor op;
         ITypeTraits[] outputTypeTraits = new ITypeTraits[inputRecordDesc.getFieldCount() + 1
                 + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];
@@ -518,18 +513,15 @@ public class DatasetUtil {
         ARecordType requestedType = getPrevRecordType(metadataProvider, dataset, itemType);
         ITupleProjectorFactory projectorFactory = IndexUtil.createUpsertTupleProjectorFactory(
                 dataset.getDatasetFormatInfo(), requestedType, itemType, metaItemType, numKeys);
-
-        int numPartitions = MetadataProvider.getNumPartitions(splitsAndConstraint.second);
-        int[][] partitionsMap = MetadataProvider.getPartitionsMap(numPartitions);
         IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(metadataProvider);
-        ITuplePartitionerFactory tuplePartitionerFactory =
-                new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
-
+        ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(pkFields, pkHashFunFactories,
+                partitioningProperties.getNumberOfPartitions());
         op = new LSMPrimaryUpsertOperatorDescriptor(spec, outputRecordDesc, fieldPermutation, idfh,
                 missingWriterFactory, modificationCallbackFactory, searchCallbackFactory,
                 dataset.getFrameOpCallbackFactory(metadataProvider), numKeys, filterSourceIndicator, filterItemType,
-                fieldIdx, hasSecondaries, projectorFactory, tuplePartitionerFactory, partitionsMap);
-        return new Pair<>(op, splitsAndConstraint.second);
+                fieldIdx, hasSecondaries, projectorFactory, tuplePartitionerFactory,
+                partitioningProperties.getComputeStorageMap());
+        return new Pair<>(op, partitioningProperties.getConstraints());
     }
 
     /**
@@ -591,9 +583,8 @@ public class DatasetUtil {
      */
     public static IOperatorDescriptor createDummyKeyProviderOp(JobSpecification spec, Dataset dataset,
             MetadataProvider metadataProvider) throws AlgebricksException {
-        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> primarySplitsAndConstraint =
-                metadataProvider.getSplitProviderAndConstraints(dataset);
-        AlgebricksPartitionConstraint primaryPartitionConstraint = primarySplitsAndConstraint.second;
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+        AlgebricksPartitionConstraint primaryPartitionConstraint = partitioningProperties.getConstraints();
 
         // Build dummy tuple containing one field with a dummy value inside.
         ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
