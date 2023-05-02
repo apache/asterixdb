@@ -51,9 +51,7 @@ public class FrameOutputStream extends ByteArrayAccessibleOutputStream {
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("appendTuple(): tuple size: " + count);
         }
-        boolean appended = frameTupleAppender.append(buf, 0, count);
-        count = 0;
-        return appended;
+        return frameTupleAppender.append(buf, 0, count);
     }
 
     public void flush(IFrameWriter writer) throws HyracksDataException {
