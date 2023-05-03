@@ -1,26 +1,26 @@
-distribute result [$$18] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$18] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$18]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    project ([$$18]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$18] <- [{"display_url": $$22}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      assign [$$18] <- [{"display_url": $$22}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
-        project ([$$22]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        project ([$$22]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
-            order (ASC, $$20) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+            order (ASC, $$20) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
-              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$22, $$20]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                project ([$$22, $$20]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$22] <- [get-item($$p.getField("entities").getField("urls"), 0).getField("display_url")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                  assign [$$22] <- [get-item($$p.getField("entities").getField("urls"), 0).getField("display_url")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
-                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$20, $$p] <- test.ColumnDataset project ({entities:{urls:[{display_url:any}]}}) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                      data-scan []<-[$$20, $$p] <- test.ColumnDataset project ({entities:{urls:[{display_url:any}]}}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

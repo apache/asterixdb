@@ -1,40 +1,40 @@
-distribute result [$$47] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$47]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    project ([$$50]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$47] <- [{"deptId": $#1, "star_cost": $$50}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      assign [$$50] <- [{"deptId": $#1, "star_cost": $$53}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          group by ([$#1 := $$55]) decor ([]) {
-                    aggregate [$$50] <- [agg-global-sql-sum($$54)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          group by ([$#1 := $$58]) decor ([]) {
+                    aggregate [$$53] <- [agg-global-sql-sum($$57)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
-          -- SORT_GROUP_BY[$$55]  |PARTITIONED|
-            exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
-            -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|
-              group by ([$$55 := $$48]) decor ([]) {
-                        aggregate [$$54] <- [agg-local-sql-sum($$45)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                 } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- SORT_GROUP_BY[$$58]  |PARTITIONED|
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- HASH_PARTITION_EXCHANGE [$$58]  |PARTITIONED|
+              group by ([$$58 := $$51]) decor ([]) {
+                        aggregate [$$57] <- [agg-local-sql-sum($$48)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
-              -- SORT_GROUP_BY[$$48]  |PARTITIONED|
-                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                     } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- SORT_GROUP_BY[$$51]  |PARTITIONED|
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  project ([$$45, $$48]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                  project ([$$48, $$51]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    assign [$$48, $$45] <- [substring($$e.getField("dept").getField("department_id"), 0), $$e.getField("salary")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                    assign [$$51, $$48] <- [substring($$e.getField("dept").getField("department_id"), 0), $$e.getField("salary")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
-                      project ([$$e]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                      project ([$$e]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
-                        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$49, $$e] <- gby.Employee [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                          data-scan []<-[$$52, $$e] <- gby.Employee [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

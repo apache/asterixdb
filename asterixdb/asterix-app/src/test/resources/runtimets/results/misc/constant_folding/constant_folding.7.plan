@@ -1,8 +1,8 @@
-distribute result [$$16] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$17] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$16] <- [true] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$17] <- [true] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
       project ([]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |UNPARTITIONED|

@@ -1,10 +1,10 @@
-distribute result [$$20] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$21] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$20]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$21]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$20] <- [{"id": get-item($$t, 0), "v": get-item($$t, 1)}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$21] <- [{"id": get-item($$t, 0), "v": get-item($$t, 1)}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |UNPARTITIONED|
         unnest $$t <- scan-collection(ordered-list-constructor(ordered-list-constructor(29, cast({ "f1": "a", "f2": 3 })))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- UNNEST  |UNPARTITIONED|

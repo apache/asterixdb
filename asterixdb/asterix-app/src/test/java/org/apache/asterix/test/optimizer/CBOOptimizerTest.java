@@ -40,7 +40,7 @@ public class CBOOptimizerTest extends OptimizerTest {
 
     private static final String CBO_PATH_EXPECTED = PATH_BASE + "results_cbo" + SEPARATOR;
     static {
-        TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
+        TEST_CONFIG_FILE_NAME = "src/test/resources/cc-cbotest.conf";
         EXTENSION_RESULT = "plan";
         PATH_ACTUAL = "target" + SEPARATOR + "cbo_opttest" + SEPARATOR;
     }

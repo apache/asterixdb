@@ -12,7 +12,7 @@
     "cloud.deployment" : false,
     "compiler\.arrayindex" : true,
     "compiler.batch.lookup" : true,
-    "compiler.cbo" : false,
+    "compiler.cbo" : true,
     "compiler.column.filter" : false,
     "compiler\.external\.field\.pushdown" : true,
     "compiler.forcejoinorder" : false,

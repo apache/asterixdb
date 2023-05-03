@@ -1,48 +1,48 @@
-distribute result [$$48] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+distribute result [$$48] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$48]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+    project ([$$48]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$48] <- [{"$1": $$51}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+      assign [$$48] <- [{"$1": $$51}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$51] <- [agg-global-sql-sum($$53)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+        aggregate [$$51] <- [agg-global-sql-sum($$53)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- AGGREGATE  |UNPARTITIONED|
-          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$53] <- [agg-local-sql-sum($$46)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+            aggregate [$$53] <- [agg-local-sql-sum($$46)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- AGGREGATE  |PARTITIONED|
-              project ([$$46]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+              project ([$$46]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$46] <- [object-length($$p1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+                assign [$$46] <- [object-length($$p1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
-                  project ([$$p1]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+                  project ([$$p1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      join (eq($$49, $$50)) [cardinality: 1000000.0, op-cost: 2000000.0, total-cost: 6000000.0]
+                      join (eq($$49, $$50)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- HYBRID_HASH_JOIN [$$50][$$49]  |PARTITIONED|
-                        exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
-                          assign [$$50] <- [$$p1.getField("id")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                          assign [$$50] <- [$$p1.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ASSIGN  |PARTITIONED|
-                            exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$p1] <- test.ParquetDataset1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                              data-scan []<-[$$p1] <- test.ParquetDataset1 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- DATASOURCE_SCAN  |PARTITIONED|
                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                        exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
-                          project ([$$49]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                          project ([$$49]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_PROJECT  |PARTITIONED|
-                            assign [$$49] <- [$$p2.getField("id")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                            assign [$$49] <- [$$p2.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ASSIGN  |PARTITIONED|
-                              exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
+                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                data-scan []<-[$$p2] <- test.ParquetDataset2 project ({id:any}) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                data-scan []<-[$$p2] <- test.ParquetDataset2 project ({id:any}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

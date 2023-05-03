@@ -1,38 +1,38 @@
-distribute result [$$61] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+distribute result [$$61] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$61]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+    project ([$$61]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$61] <- [{"$1": $$66, "$2": $$67}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+      assign [$$61] <- [{"$1": $$66, "$2": $$67}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$66, $$67] <- [agg-global-sql-sum($$70), agg-global-sql-sum($$71)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+        aggregate [$$66, $$67] <- [agg-global-sql-sum($$70), agg-global-sql-sum($$71)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- AGGREGATE  |UNPARTITIONED|
-          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$70, $$71] <- [agg-local-sql-sum($$54), agg-local-sql-sum($$59)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+            aggregate [$$70, $$71] <- [agg-local-sql-sum($$54), agg-local-sql-sum($$59)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- AGGREGATE  |PARTITIONED|
-              project ([$$54, $$59]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+              project ([$$54, $$59]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$59, $$54] <- [object-length($$p2), object-length($$p1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+                assign [$$59, $$54] <- [object-length($$p2), object-length($$p1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
-                  project ([$$p1, $$p2]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+                  project ([$$p1, $$p2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      join (eq($$63, $$62)) [cardinality: 1000000.0, op-cost: 2000000.0, total-cost: 6000000.0]
+                      join (eq($$63, $$62)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- HYBRID_HASH_JOIN [$$62][$$63]  |PARTITIONED|
-                        exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- HASH_PARTITION_EXCHANGE [$$62]  |PARTITIONED|
-                          data-scan []<-[$$62, $$p1] <- test.ColumnDataset [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                          data-scan []<-[$$62, $$p1] <- test.ColumnDataset [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                        exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- HASH_PARTITION_EXCHANGE [$$63]  |PARTITIONED|
-                          data-scan []<-[$$63, $$p2] <- test.RowDataset [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                          data-scan []<-[$$63, $$p2] <- test.RowDataset [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

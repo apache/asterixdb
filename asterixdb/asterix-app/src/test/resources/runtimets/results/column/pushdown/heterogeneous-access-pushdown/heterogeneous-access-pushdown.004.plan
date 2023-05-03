@@ -1,24 +1,24 @@
-distribute result [$$21] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$21] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$21]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    project ([$$21]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$21] <- [switch-case(true, is-array($$23), array-star($$23).getField("text"), $$23.getField("text"))] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      assign [$$21] <- [switch-case(true, is-array($$23), array-star($$23).getField("text"), $$23.getField("text"))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
-        project ([$$23]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        project ([$$23]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          assign [$$23] <- [$$p.getField("arrayOrObject")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+          assign [$$23] <- [$$p.getField("arrayOrObject")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ASSIGN  |PARTITIONED|
-            project ([$$p]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+            project ([$$p]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_PROJECT  |PARTITIONED|
-              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
-                order (ASC, $$24) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                order (ASC, $$24) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STABLE_SORT [$$24(ASC)]  |PARTITIONED|
-                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$24, $$p] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                    data-scan []<-[$$24, $$p] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- DATASOURCE_SCAN  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -1,26 +1,26 @@
-distribute result [$$22] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$22] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 2 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    limit 2 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        limit 2 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        limit 2 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_LIMIT  |PARTITIONED|
-          project ([$$22]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+          project ([$$22]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STREAM_PROJECT  |PARTITIONED|
-            assign [$$22] <- [$$26.getField("lang")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+            assign [$$22] <- [$$26.getField("lang")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ASSIGN  |PARTITIONED|
-              project ([$$26]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+              project ([$$26]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$26] <- [$$t.getField("user")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                assign [$$26] <- [$$t.getField("user")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
-                  project ([$$t]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                  project ([$$t]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$25, $$t] <- test.TweetMessages condition (and(ge($$t.getField("user").getField("friends_count"), 0), le($$t.getField("user").getField("friends_count"), 150))) limit 2 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                      data-scan []<-[$$25, $$t] <- test.TweetMessages condition (and(ge($$t.getField("user").getField("friends_count"), 0), le($$t.getField("user").getField("friends_count"), 150))) limit 2 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

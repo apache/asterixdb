@@ -1,10 +1,10 @@
-distribute result [$$14] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$15] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$14]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$15]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$14] <- [or(null, le($$x, 2))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$15] <- [or(null, le($$x, 2))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |UNPARTITIONED|
         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|

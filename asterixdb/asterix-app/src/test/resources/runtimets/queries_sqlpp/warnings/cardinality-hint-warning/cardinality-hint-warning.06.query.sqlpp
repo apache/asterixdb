@@ -24,6 +24,8 @@
 // requesttype=application/json
 // param max-warnings:json=10
 
+set `compiler.cbo` 'false';
+set `compiler.cbotest` 'true';
 use tpch;
 
 SELECT count(*)

@@ -1,20 +1,20 @@
-distribute result [$$p1] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$p1] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    distinct ([$$p1]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    distinct ([$$p1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
-      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        order (ASC, $$p1) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        order (ASC, $$p1) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STABLE_SORT [$$p1(ASC)]  |PARTITIONED|
-          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- HASH_PARTITION_EXCHANGE [$$p1]  |PARTITIONED|
-            select (gt($$p1.getField("id"), 10)) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+            select (gt($$p1.getField("id"), 10)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_SELECT  |PARTITIONED|
-              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                data-scan []<-[$$p1] <- test.ParquetDataset1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                data-scan []<-[$$p1] <- test.ParquetDataset1 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- DATASOURCE_SCAN  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
