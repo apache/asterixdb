@@ -47,12 +47,12 @@ public class RTreeSearchOperatorNodePushable extends IndexSearchOperatorNodePush
             IMissingWriterFactory missingWriterFactory, ISearchOperationCallbackFactory searchCallbackFactory,
             boolean appendIndexFilter, IMissingWriterFactory nonFilterWriterFactory,
             boolean appendOpCallbackProceedResult, byte[] searchCallbackProceedResultFalseValue,
-            byte[] searchCallbackProceedResultTrueValue) throws HyracksDataException {
+            byte[] searchCallbackProceedResultTrueValue, int[][] partitionsMap) throws HyracksDataException {
         // TODO: predicate & limit pushdown not enabled for RTree yet
         super(ctx, inputRecDesc, partition, minFilterFieldIndexes, maxFilterFieldIndexes, indexHelperFactory,
                 retainInput, retainMissing, missingWriterFactory, searchCallbackFactory, appendIndexFilter,
                 nonFilterWriterFactory, null, -1, appendOpCallbackProceedResult, searchCallbackProceedResultFalseValue,
-                searchCallbackProceedResultTrueValue, DefaultTupleProjectorFactory.INSTANCE, null, null);
+                searchCallbackProceedResultTrueValue, DefaultTupleProjectorFactory.INSTANCE, null, partitionsMap);
         if (keyFields != null && keyFields.length > 0) {
             searchKey = new PermutingFrameTupleReference();
             searchKey.setFieldPermutation(keyFields);

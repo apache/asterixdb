@@ -26,11 +26,11 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
 public class ConstantTupleSourceOperatorNodePushable extends AbstractUnaryOutputSourceOperatorNodePushable {
-    private IHyracksTaskContext ctx;
 
-    private int[] fieldSlots;
-    private byte[] tupleData;
-    private int tupleSize;
+    private final IHyracksTaskContext ctx;
+    private final int[] fieldSlots;
+    private final byte[] tupleData;
+    private final int tupleSize;
 
     public ConstantTupleSourceOperatorNodePushable(IHyracksTaskContext ctx, int[] fieldSlots, byte[] tupleData,
             int tupleSize) {

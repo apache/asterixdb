@@ -30,9 +30,9 @@ public class ConstantTupleSourceOperatorDescriptor extends AbstractSingleActivit
 
     private static final long serialVersionUID = 1L;
 
-    private int[] fieldSlots;
-    private byte[] tupleData;
-    private int tupleSize;
+    private final int[] fieldSlots;
+    private final byte[] tupleData;
+    private final int tupleSize;
 
     public ConstantTupleSourceOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
             int[] fieldSlots, byte[] tupleData, int tupleSize) {

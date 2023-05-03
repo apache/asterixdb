@@ -683,10 +683,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         IIndexDataflowHelperFactory indexDataflowHelperFactory = new IndexDataflowHelperFactory(
                 storageComponentProvider.getStorageManager(), partitioningProperties.getSpiltsProvider());
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
+            int[][] partitionsMap = partitioningProperties.getComputeStorageMap();
             rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, keyFields, true, true,
                     indexDataflowHelperFactory, retainInput, retainMissing, nonMatchWriterFactory,
                     searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes, propagateFilter,
-                    nonFilterWriterFactory, isIndexOnlyPlan, failValueForIndexOnlyPlan, successValueForIndexOnlyPlan);
+                    nonFilterWriterFactory, isIndexOnlyPlan, failValueForIndexOnlyPlan, successValueForIndexOnlyPlan,
+                    partitionsMap);
         } else {
             // Create the operator
             rtreeSearchOp = null;
@@ -729,52 +731,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throw new AlgebricksException(e);
         }
         return new Pair<>(resultWriter, null);
-    }
-
-    @Override
-    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getWriteResultRuntime(
-            IDataSource<DataSourceId> dataSource, IOperatorSchema propagatedSchema, List<LogicalVariable> keys,
-            LogicalVariable payload, List<LogicalVariable> additionalNonKeyFields, JobGenContext context,
-            JobSpecification spec) throws AlgebricksException {
-        DataverseName dataverseName = dataSource.getId().getDataverseName();
-        String datasetName = dataSource.getId().getDatasourceName();
-        Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
-        int numKeys = keys.size();
-        int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
-
-        // move key fields to front
-        int[] fieldPermutation = new int[numKeys + 1 + numFilterFields];
-        int[] pkFields = new int[numKeys];
-        int i = 0;
-        for (LogicalVariable varKey : keys) {
-            int idx = propagatedSchema.findVariable(varKey);
-            fieldPermutation[i] = idx;
-            pkFields[i] = idx;
-            i++;
-        }
-        fieldPermutation[numKeys] = propagatedSchema.findVariable(payload);
-        if (numFilterFields > 0) {
-            int idx = propagatedSchema.findVariable(additionalNonKeyFields.get(0));
-            fieldPermutation[numKeys + 1] = idx;
-        }
-
-        PartitioningProperties partitioningProperties = getPartitioningProperties(dataset);
-        long numElementsHint = getCardinalityPerPartitionHint(dataset);
-        // TODO
-        // figure out the right behavior of the bulkload and then give the
-        // right callback
-        // (ex. what's the expected behavior when there is an error during
-        // bulkload?)
-        IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(this);
-        ITuplePartitionerFactory partitionerFactory = new FieldHashPartitionerFactory(pkFields, pkHashFunFactories,
-                partitioningProperties.getNumberOfPartitions());
-        IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
-                storageComponentProvider.getStorageManager(), partitioningProperties.getSpiltsProvider());
-        LSMIndexBulkLoadOperatorDescriptor btreeBulkLoad = new LSMIndexBulkLoadOperatorDescriptor(spec, null,
-                fieldPermutation, StorageConstants.DEFAULT_TREE_FILL_FACTOR, false, numElementsHint, true,
-                indexHelperFactory, null, BulkLoadUsage.LOAD, dataset.getDatasetId(), null, partitionerFactory,
-                partitioningProperties.getComputeStorageMap());
-        return new Pair<>(btreeBulkLoad, partitioningProperties.getConstraints());
     }
 
     @Override
@@ -972,7 +928,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public PartitioningProperties splitAndConstraints(DataverseName dataverseName) {
-        return dataPartitioningProvider.splitAndConstraints(dataverseName);
+        return dataPartitioningProvider.getPartitioningProperties(dataverseName);
     }
 
     public FileSplit[] splitsForIndex(MetadataTransactionContext mdTxnCtx, Dataset dataset, String indexName)
@@ -1835,6 +1791,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         //TODO(partitioning) pass splits rather than mdTxnCtx?
         //        FileSplit[] splits = splitsForIndex(mdTxnCtx, ds, indexName);
         return dataPartitioningProvider.getPartitioningProperties(mdTxnCtx, ds, indexName);
+    }
+
+    public PartitioningProperties getPartitioningProperties(Feed feed) throws AlgebricksException {
+        return dataPartitioningProvider.getPartitioningProperties(feed);
     }
 
     public List<Pair<IFileSplitProvider, String>> getSplitProviderOfAllIndexes(Dataset ds) throws AlgebricksException {

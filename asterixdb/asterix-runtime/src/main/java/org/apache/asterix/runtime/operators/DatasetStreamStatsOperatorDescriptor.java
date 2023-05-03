@@ -59,6 +59,7 @@ public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleAc
     public DatasetStreamStatsOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc,
             String operatorName, IIndexDataflowHelperFactory[] indexes, String[] indexesNames) {
         super(spec, 1, 1);
+        //TODO(partitioning)
         outRecDescs[0] = rDesc;
         this.operatorName = operatorName;
         this.indexes = indexes;

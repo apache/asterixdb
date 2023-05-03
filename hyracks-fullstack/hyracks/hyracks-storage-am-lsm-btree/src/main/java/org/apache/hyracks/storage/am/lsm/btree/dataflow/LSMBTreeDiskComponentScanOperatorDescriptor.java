@@ -38,6 +38,7 @@ public class LSMBTreeDiskComponentScanOperatorDescriptor extends AbstractSingleA
     public LSMBTreeDiskComponentScanOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             IIndexDataflowHelperFactory indexHelperFactory, ISearchOperationCallbackFactory searchCallbackFactory) {
         super(spec, 1, 1);
+        //TODO(partitioning) correlated
         this.indexHelperFactory = indexHelperFactory;
         this.searchCallbackFactory = searchCallbackFactory;
         this.outRecDescs[0] = outRecDesc;

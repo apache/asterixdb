@@ -100,8 +100,8 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
         IIndexDataflowHelperFactory dataflowHelperFactory =
                 new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
                         partitioningProperties.getSpiltsProvider());
-        LSMTreeIndexCompactOperatorDescriptor compactOp =
-                new LSMTreeIndexCompactOperatorDescriptor(spec, dataflowHelperFactory);
+        LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
+                dataflowHelperFactory, partitioningProperties.getComputeStorageMap());
         compactOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
                 secondaryPartitionConstraint);

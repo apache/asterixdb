@@ -48,6 +48,7 @@ public class LSMSecondaryIndexCreationTupleProcessorOperatorDescriptor
             int numSecondaryKeys, int numPrimaryKeys, boolean hasBuddyBTree, boolean excludeUnknownKeys,
             boolean forAnyUnknownKey) {
         super(spec, 1, 1);
+        //TODO(partitioning) correlated
         this.outRecDescs[0] = outRecDesc;
         this.missingWriterFactory = missingWriterFactory;
         this.numTagFields = numTagFields;

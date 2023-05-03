@@ -29,18 +29,20 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 
 public class LSMTreeIndexCompactOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final IIndexDataflowHelperFactory indexHelperFactory;
+    private final int[][] partitionsMap;
 
     public LSMTreeIndexCompactOperatorDescriptor(IOperatorDescriptorRegistry spec,
-            IIndexDataflowHelperFactory indexHelperFactory) {
+            IIndexDataflowHelperFactory indexHelperFactory, int[][] partitionsMap) {
         super(spec, 0, 0);
         this.indexHelperFactory = indexHelperFactory;
+        this.partitionsMap = partitionsMap;
     }
 
     @Override
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
-        return new LSMIndexCompactOperatorNodePushable(ctx, partition, indexHelperFactory);
+        return new LSMIndexCompactOperatorNodePushable(ctx, partition, indexHelperFactory, partitionsMap);
     }
 }

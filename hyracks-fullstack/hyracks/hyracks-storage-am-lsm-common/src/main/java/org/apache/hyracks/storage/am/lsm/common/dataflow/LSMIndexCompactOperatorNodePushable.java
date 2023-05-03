@@ -22,6 +22,7 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
@@ -30,16 +31,25 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 
 public class LSMIndexCompactOperatorNodePushable extends AbstractOperatorNodePushable {
-    private final IIndexDataflowHelper indexHelper;
+
+    private final IIndexDataflowHelper[] indexHelpers;
 
     public LSMIndexCompactOperatorNodePushable(IHyracksTaskContext ctx, int partition,
-            IIndexDataflowHelperFactory indexHelperFactory) throws HyracksDataException {
-        this.indexHelper = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partition);
+            IIndexDataflowHelperFactory indexHelperFactory, int[][] partitionsMap) throws HyracksDataException {
+        int[] partitions = partitionsMap[partition];
+        indexHelpers = new IIndexDataflowHelper[partitions.length];
+        for (int i = 0; i < partitions.length; i++) {
+            indexHelpers[i] = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partitions[i]);
+        }
+
     }
 
     @Override
     public void deinitialize() throws HyracksDataException {
-        indexHelper.close();
+        Throwable failure = CleanupUtils.close(indexHelpers, null);
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
+        }
     }
 
     @Override
@@ -54,10 +64,12 @@ public class LSMIndexCompactOperatorNodePushable extends AbstractOperatorNodePus
 
     @Override
     public void initialize() throws HyracksDataException {
-        indexHelper.open();
-        ILSMIndex index = (ILSMIndex) indexHelper.getIndexInstance();
-        ILSMIndexAccessor accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        accessor.scheduleFullMerge();
+        for (IIndexDataflowHelper indexHelper : indexHelpers) {
+            indexHelper.open();
+            ILSMIndex index = (ILSMIndex) indexHelper.getIndexInstance();
+            ILSMIndexAccessor accessor = index.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+            accessor.scheduleFullMerge();
+        }
     }
 
     @Override

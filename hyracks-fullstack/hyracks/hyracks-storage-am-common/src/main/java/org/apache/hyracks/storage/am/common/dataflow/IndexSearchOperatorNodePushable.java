@@ -131,6 +131,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) throws HyracksDataException {
         this.ctx = ctx;
         this.appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
+        //TODO(partitioning) partitionsMap should not be null
         this.partitions = partitionsMap != null ? partitionsMap[partition] : new int[] { partition };
         for (int i = 0; i < partitions.length; i++) {
             storagePartitionId2Index.put(partitions[i], i);

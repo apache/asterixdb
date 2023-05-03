@@ -43,6 +43,7 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.common.IResourceFactory;
+import org.apache.hyracks.test.support.TestUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -86,9 +87,9 @@ public class RTreeSecondaryIndexInsertOperatorTest extends AbstractRTreeOperator
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, keyProviderOp, NC1_ID);
         int[] keyFields = { 0, 1, 2, 3 };
-        RTreeSearchOperatorDescriptor secondarySearchOp =
-                new RTreeSearchOperatorDescriptor(spec, secondaryRecDesc, keyFields, true, true, secondaryHelperFactory,
-                        false, false, null, NoOpOperationCallbackFactory.INSTANCE, null, null, false, null);
+        RTreeSearchOperatorDescriptor secondarySearchOp = new RTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
+                keyFields, true, true, secondaryHelperFactory, false, false, null,
+                NoOpOperationCallbackFactory.INSTANCE, null, null, false, null, TestUtils.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondarySearchOp, NC1_ID);
         // fifth field from the tuples coming from secondary index
         int[] primaryLowKeyFields = { 4 };

@@ -21,14 +21,22 @@ package org.apache.asterix.metadata.utils;
 import static org.apache.asterix.common.utils.PartitioningScheme.DYNAMIC;
 import static org.apache.asterix.common.utils.PartitioningScheme.STATIC;
 
+import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.IDataPartitioningProvider;
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.utils.PartitioningScheme;
 import org.apache.asterix.common.utils.StoragePathUtil;
+import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.Feed;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -48,7 +56,7 @@ public class DataPartitioningProvider implements IDataPartitioningProvider {
         scheme = appCtx.getStorageProperties().getPartitioningScheme();
     }
 
-    public PartitioningProperties splitAndConstraints(DataverseName dataverseName) {
+    public PartitioningProperties getPartitioningProperties(DataverseName dataverseName) {
         if (scheme == DYNAMIC) {
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraints = SplitsAndConstraintsUtil
                     .getDataverseSplitProviderAndConstraints(appCtx.getClusterStateManager(), dataverseName);
@@ -69,6 +77,25 @@ public class DataPartitioningProvider implements IDataPartitioningProvider {
                     StoragePathUtil.splitProviderAndPartitionConstraints(splits);
             int[][] partitionsMap = getPartitionsMap(getNumPartitions(splitsAndConstraints.second));
             return PartitioningProperties.of(splitsAndConstraints.first, splitsAndConstraints.second, partitionsMap);
+        } else if (scheme == STATIC) {
+            throw new NotImplementedException();
+        }
+        throw new IllegalStateException();
+    }
+
+    public PartitioningProperties getPartitioningProperties(Feed feed) throws AsterixException {
+        if (scheme == DYNAMIC) {
+            IClusterStateManager csm = appCtx.getClusterStateManager();
+            AlgebricksAbsolutePartitionConstraint allCluster = csm.getClusterLocations();
+            Set<String> nodes = new TreeSet<>(Arrays.asList(allCluster.getLocations()));
+            AlgebricksAbsolutePartitionConstraint locations =
+                    new AlgebricksAbsolutePartitionConstraint(nodes.toArray(new String[0]));
+            FileSplit[] feedLogFileSplits =
+                    FeedUtils.splitsForAdapter(appCtx, feed.getDataverseName(), feed.getFeedName(), locations);
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spC =
+                    StoragePathUtil.splitProviderAndPartitionConstraints(feedLogFileSplits);
+            int[][] partitionsMap = getPartitionsMap(getNumPartitions(spC.second));
+            return PartitioningProperties.of(spC.first, spC.second, partitionsMap);
         } else if (scheme == STATIC) {
             throw new NotImplementedException();
         }

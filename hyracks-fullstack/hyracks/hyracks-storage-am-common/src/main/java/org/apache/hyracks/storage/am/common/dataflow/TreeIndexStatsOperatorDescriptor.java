@@ -40,6 +40,7 @@ public class TreeIndexStatsOperatorDescriptor extends AbstractSingleActivityOper
     public TreeIndexStatsOperatorDescriptor(IOperatorDescriptorRegistry spec, IStorageManager storageManager,
             IIndexDataflowHelperFactory indexHelperFactory) {
         super(spec, 0, 1);
+        //TODO(maybe don't fix)
         this.indexHelperFactory = indexHelperFactory;
         this.storageManager = storageManager;
         this.outRecDescs[0] = recDesc;

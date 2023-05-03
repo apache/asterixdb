@@ -82,8 +82,8 @@ public interface IOperatorDescriptor extends Serializable {
      *
      * @param constraintAcceptor
      *            - Constraint Acceptor
-     * @param plan
-     *            - Job Plan
+     * @param ccServiceCtx
+     *            - CC Service Context
      */
     void contributeSchedulingConstraints(IConstraintAcceptor constraintAcceptor, ICCServiceContext ccServiceCtx);
 
