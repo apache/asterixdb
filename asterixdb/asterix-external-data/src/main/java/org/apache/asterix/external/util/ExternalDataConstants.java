@@ -116,6 +116,9 @@ public class ExternalDataConstants {
     public static final String FORMAT_RECORD_WITH_METADATA = "record-with-metadata";
     // a string representing the format of the record (for adapters which produces records with additional information like pk or metadata)
     public static final String KEY_RECORD_FORMAT = "record-format";
+    public static final String TABLE_FORMAT = "table-format";
+    public static final String ICEBERG_METADATA_LOCATION = "metadata-path";
+    public static final int SUPPORTED_ICEBERG_FORMAT_VERSION = 1;
     public static final String KEY_META_TYPE_NAME = "meta-type-name";
     public static final String KEY_ADAPTER_NAME = "adapter-name";
     public static final String READER_STREAM = "stream";
@@ -196,6 +199,7 @@ public class ExternalDataConstants {
     public static final String FORMAT_CSV = "csv";
     public static final String FORMAT_TSV = "tsv";
     public static final String FORMAT_PARQUET = "parquet";
+    public static final String FORMAT_APACHE_ICEBERG = "apache-iceberg";
     public static final Set<String> ALL_FORMATS;
 
     static {

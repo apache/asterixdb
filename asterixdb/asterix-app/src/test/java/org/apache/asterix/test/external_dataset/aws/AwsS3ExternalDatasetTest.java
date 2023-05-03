@@ -23,6 +23,8 @@ import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setUploaders;
 import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.DEFAULT_PARQUET_SRC_PATH;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
+import static org.apache.iceberg.hadoop.HadoopOutputFile.fromPath;
+import static org.apache.iceberg.types.Types.NestedField.required;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -41,6 +43,8 @@ import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.external.util.aws.s3.S3Constants;
+import org.apache.asterix.test.common.TestConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils;
 import org.apache.asterix.test.runtime.ExecutionTestUtil;
@@ -50,7 +54,27 @@ import org.apache.asterix.testframework.context.TestFileContext;
 import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.iceberg.DataFile;
+import org.apache.iceberg.DataFiles;
+import org.apache.iceberg.FileFormat;
+import org.apache.iceberg.PartitionSpec;
+import org.apache.iceberg.Schema;
+import org.apache.iceberg.Table;
+import org.apache.iceberg.TableProperties;
+import org.apache.iceberg.Tables;
+import org.apache.iceberg.data.GenericAppenderFactory;
+import org.apache.iceberg.data.GenericRecord;
+import org.apache.iceberg.data.Record;
+import org.apache.iceberg.hadoop.HadoopInputFile;
+import org.apache.iceberg.hadoop.HadoopTables;
+import org.apache.iceberg.io.FileAppender;
+import org.apache.iceberg.relocated.com.google.common.base.Preconditions;
+import org.apache.iceberg.relocated.com.google.common.collect.ImmutableList;
+import org.apache.iceberg.relocated.com.google.common.collect.ImmutableMap;
+import org.apache.iceberg.types.Types;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
@@ -91,6 +115,8 @@ public class AwsS3ExternalDatasetTest {
     static Runnable PREPARE_MIXED_DATA_BUCKET;
     static Runnable PREPARE_BOM_FILE_BUCKET;
 
+    static Runnable PREPARE_ICEBERG_TABLE_BUCKET;
+
     // Base directory paths for data files
     private static final String JSON_DATA_PATH = joinPath("data", "json");
     private static final String CSV_DATA_PATH = joinPath("data", "csv");
@@ -117,6 +143,8 @@ public class AwsS3ExternalDatasetTest {
     public static final String FIXED_DATA_CONTAINER = "fixed-data"; // Do not use, has fixed data
     public static final String INCLUDE_EXCLUDE_CONTAINER = "include-exclude";
     public static final String BOM_FILE_CONTAINER = "bom-file-container";
+    public static final String ICEBERG_TABLE_CONTAINER = "iceberg-container";
+
     public static final PutObjectRequest.Builder playgroundBuilder =
             PutObjectRequest.builder().bucket(PLAYGROUND_CONTAINER);
     public static final PutObjectRequest.Builder fixedDataBuilder =
@@ -126,9 +154,32 @@ public class AwsS3ExternalDatasetTest {
     public static final PutObjectRequest.Builder bomFileContainerBuilder =
             PutObjectRequest.builder().bucket(BOM_FILE_CONTAINER);
 
+    public static final PutObjectRequest.Builder icebergContainerBuilder =
+            PutObjectRequest.builder().bucket(ICEBERG_TABLE_CONTAINER);
+
     public AwsS3ExternalDatasetTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
     }
+
+    // iceberg
+
+    private static final Schema SCHEMA =
+            new Schema(required(1, "id", Types.IntegerType.get()), required(2, "data", Types.StringType.get()));
+    private static final Configuration CONF = new Configuration();
+
+    private static final String ICEBERG_TABLE_PATH = "s3a://" + ICEBERG_TABLE_CONTAINER + "/my-table/";
+    private static final String ICEBERG_TABLE_PATH_FORMAT_VERSION_2 =
+            "s3a://" + ICEBERG_TABLE_CONTAINER + "/my-table-format-version-2/";
+    private static final String ICEBERG_TABLE_PATH_MIXED_DATA_FORMAT =
+            "s3a://" + ICEBERG_TABLE_CONTAINER + "/my-table-mixed-data-format/";
+
+    private static final String ICEBERG_TABLE_PATH_EMPTY = "s3a://" + ICEBERG_TABLE_CONTAINER + "/my-table-empty/";
+
+    private static final String ICEBERG_TABLE_PATH_MULTIPLE_DATA_FILES =
+            "s3a://" + ICEBERG_TABLE_CONTAINER + "/my-table-multiple-data-files/";
+
+    private static final String ICEBERG_TABLE_PATH_MODIFIED_DATA =
+            "s3a://" + ICEBERG_TABLE_CONTAINER + "/my-table-modified-data/";
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -154,6 +205,138 @@ public class AwsS3ExternalDatasetTest {
         LOGGER.info("S3 mock down and client shut down successfully");
     }
 
+    private static DataFile writeFile(String filename, List<Record> records, String location) throws IOException {
+        Path path = new Path(location, filename);
+        FileFormat fileFormat = FileFormat.fromFileName(filename);
+        Preconditions.checkNotNull(fileFormat, "Cannot determine format for file: %s", filename);
+
+        FileAppender<Record> fileAppender = new GenericAppenderFactory(AwsS3ExternalDatasetTest.SCHEMA)
+                .newAppender(fromPath(path, CONF), fileFormat);
+        try (FileAppender<Record> appender = fileAppender) {
+            appender.addAll(records);
+        }
+
+        return DataFiles.builder(PartitionSpec.unpartitioned()).withInputFile(HadoopInputFile.fromPath(path, CONF))
+                .withMetrics(fileAppender.metrics()).build();
+    }
+
+    private static void prepareIcebergConfiguration() {
+        CONF.set(S3Constants.HADOOP_SERVICE_END_POINT, MOCK_SERVER_HOSTNAME);
+        // switch to http
+        CONF.set("fs.s3a.connection.ssl.enabled", "false");
+        // forces URL style access which is required by the mock. Overwrites DNS based bucket access scheme.
+        CONF.set("fs.s3a.path.style.access", "true");
+        // Mock server doesn't support concurrency control
+        CONF.set("fs.s3a.change.detection.version.required", "false");
+        CONF.set(S3Constants.HADOOP_ACCESS_KEY_ID, TestConstants.S3_ACCESS_KEY_ID_DEFAULT);
+        CONF.set(S3Constants.HADOOP_SECRET_ACCESS_KEY, TestConstants.S3_SECRET_ACCESS_KEY_DEFAULT);
+    }
+
+    public static void prepareIcebergTableContainer() {
+        prepareIcebergConfiguration();
+        Tables tables = new HadoopTables(CONF);
+
+        // test data
+        Record genericRecord = GenericRecord.create(SCHEMA);
+
+        List<Record> fileFirstSnapshotRecords =
+                ImmutableList.of(genericRecord.copy(ImmutableMap.of("id", 0, "data", "vibrant_mclean")),
+                        genericRecord.copy(ImmutableMap.of("id", 1, "data", "frosty_wilson")),
+                        genericRecord.copy(ImmutableMap.of("id", 2, "data", "serene_kirby")));
+
+        List<Record> fileSecondSnapshotRecords =
+                ImmutableList.of(genericRecord.copy(ImmutableMap.of("id", 3, "data", "peaceful_pare")),
+                        genericRecord.copy(ImmutableMap.of("id", 4, "data", "laughing_mahavira")),
+                        genericRecord.copy(ImmutableMap.of("id", 5, "data", "vibrant_lamport")));
+
+        // create the table
+        Table table = tables.create(SCHEMA, PartitionSpec.unpartitioned(),
+                ImmutableMap.of(TableProperties.DEFAULT_FILE_FORMAT, FileFormat.PARQUET.name()), ICEBERG_TABLE_PATH);
+
+        // load test data
+        try {
+            DataFile file = writeFile(FileFormat.PARQUET.addExtension("file"), fileFirstSnapshotRecords,
+                    AwsS3ExternalDatasetTest.ICEBERG_TABLE_PATH);
+            table.newAppend().appendFile(file).commit();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // create a table with unsupported iceberg version
+        Table unsupportedTable = tables.create(SCHEMA,
+                PartitionSpec.unpartitioned(), ImmutableMap.of(TableProperties.DEFAULT_FILE_FORMAT,
+                        FileFormat.PARQUET.name(), TableProperties.FORMAT_VERSION, "2"),
+                ICEBERG_TABLE_PATH_FORMAT_VERSION_2);
+
+        // load test data
+        try {
+            DataFile file = writeFile(FileFormat.PARQUET.addExtension("file"), fileFirstSnapshotRecords,
+                    AwsS3ExternalDatasetTest.ICEBERG_TABLE_PATH_FORMAT_VERSION_2);
+            unsupportedTable.newAppend().appendFile(file).commit();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // create a table with mix of parquet and avro data files
+        Table mixedDataFormats = tables.create(SCHEMA, PartitionSpec.unpartitioned(),
+                ImmutableMap.of(TableProperties.DEFAULT_FILE_FORMAT, FileFormat.PARQUET.name()),
+                ICEBERG_TABLE_PATH_MIXED_DATA_FORMAT);
+
+        // load test data
+        try {
+            DataFile parquetFile = writeFile(FileFormat.PARQUET.addExtension("parquet-file"), fileFirstSnapshotRecords,
+                    AwsS3ExternalDatasetTest.ICEBERG_TABLE_PATH_MIXED_DATA_FORMAT);
+            DataFile avroFile = writeFile(FileFormat.AVRO.addExtension("avro-file"), fileSecondSnapshotRecords,
+                    AwsS3ExternalDatasetTest.ICEBERG_TABLE_PATH_MIXED_DATA_FORMAT);
+
+            mixedDataFormats.newAppend().appendFile(parquetFile).appendFile(avroFile).commit();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // empty table
+        tables.create(SCHEMA, PartitionSpec.unpartitioned(),
+                ImmutableMap.of(TableProperties.DEFAULT_FILE_FORMAT, FileFormat.PARQUET.name()),
+                ICEBERG_TABLE_PATH_EMPTY);
+
+        // multiple data files
+
+        Table multipleDataFiles = tables.create(SCHEMA, PartitionSpec.unpartitioned(),
+                ImmutableMap.of(TableProperties.DEFAULT_FILE_FORMAT, FileFormat.PARQUET.name()),
+                ICEBERG_TABLE_PATH_MULTIPLE_DATA_FILES);
+
+        // load test data
+        try {
+            DataFile file1 = writeFile(FileFormat.PARQUET.addExtension("file-1"), fileFirstSnapshotRecords,
+                    AwsS3ExternalDatasetTest.ICEBERG_TABLE_PATH_MULTIPLE_DATA_FILES);
+            DataFile file2 = writeFile(FileFormat.PARQUET.addExtension("file-2"), fileSecondSnapshotRecords,
+                    AwsS3ExternalDatasetTest.ICEBERG_TABLE_PATH_MULTIPLE_DATA_FILES);
+
+            multipleDataFiles.newAppend().appendFile(file1).appendFile(file2).commit();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // modify data
+        Table modifiedData = tables.create(SCHEMA, PartitionSpec.unpartitioned(),
+                ImmutableMap.of(TableProperties.DEFAULT_FILE_FORMAT, FileFormat.PARQUET.name()),
+                ICEBERG_TABLE_PATH_MODIFIED_DATA);
+
+        // load test data
+        try {
+            DataFile file1 = writeFile(FileFormat.PARQUET.addExtension("file-1"), fileFirstSnapshotRecords,
+                    AwsS3ExternalDatasetTest.ICEBERG_TABLE_PATH_MODIFIED_DATA);
+            DataFile file2 = writeFile(FileFormat.PARQUET.addExtension("file-2"), fileSecondSnapshotRecords,
+                    AwsS3ExternalDatasetTest.ICEBERG_TABLE_PATH_MODIFIED_DATA);
+
+            modifiedData.newAppend().appendFile(file1).appendFile(file2).commit();
+            modifiedData.newDelete().deleteFile(file1).commit();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Parameters(name = "AwsS3ExternalDatasetTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
         SUITE_TESTS = "testsuite_external_dataset_s3.xml";
@@ -163,6 +346,7 @@ public class AwsS3ExternalDatasetTest {
         PREPARE_FIXED_DATA_BUCKET = ExternalDatasetTestUtils::prepareFixedDataContainer;
         PREPARE_MIXED_DATA_BUCKET = ExternalDatasetTestUtils::prepareMixedDataContainer;
         PREPARE_BOM_FILE_BUCKET = ExternalDatasetTestUtils::prepareBomFileContainer;
+        PREPARE_ICEBERG_TABLE_BUCKET = AwsS3ExternalDatasetTest::prepareIcebergTableContainer;
 
         return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
@@ -206,6 +390,7 @@ public class AwsS3ExternalDatasetTest {
         client.createBucket(CreateBucketRequest.builder().bucket(FIXED_DATA_CONTAINER).build());
         client.createBucket(CreateBucketRequest.builder().bucket(INCLUDE_EXCLUDE_CONTAINER).build());
         client.createBucket(CreateBucketRequest.builder().bucket(BOM_FILE_CONTAINER).build());
+        client.createBucket(CreateBucketRequest.builder().bucket(ICEBERG_TABLE_CONTAINER).build());
         LOGGER.info("Client created successfully");
 
         // Create the bucket and upload some json files
@@ -216,6 +401,7 @@ public class AwsS3ExternalDatasetTest {
         PREPARE_FIXED_DATA_BUCKET.run();
         PREPARE_MIXED_DATA_BUCKET.run();
         PREPARE_BOM_FILE_BUCKET.run();
+        PREPARE_ICEBERG_TABLE_BUCKET.run();
     }
 
     private static void loadPlaygroundData(String key, String content, boolean fromFile, boolean gzipped) {

@@ -1022,6 +1022,10 @@
             <artifactId>commons-logging</artifactId>
           </exclusion>
           <exclusion>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>org.codehaus.woodstox</groupId>
             <artifactId>stax-api</artifactId>
           </exclusion>
@@ -1912,11 +1916,6 @@
           </exclusion>
         </exclusions>
       </dependency>
-      <dependency>
-        <groupId>org.kitesdk</groupId>
-        <artifactId>kite-data-core</artifactId>
-        <version>1.1.0</version>
-      </dependency>
       <!-- Hadoop AWS start -->
       <dependency>
         <!-- Pick a newer AWS SDK -->
@@ -2008,6 +2007,11 @@
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-util-ajax</artifactId>
         <version>9.4.48.v20220622</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro</artifactId>
+        <version>1.11.1</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

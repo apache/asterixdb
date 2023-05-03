@@ -64,6 +64,7 @@ import org.apache.asterix.external.input.record.reader.abstracts.AbstractExterna
 import org.apache.asterix.external.library.JavaLibrary;
 import org.apache.asterix.external.library.msgpack.MessagePackUtils;
 import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
+import org.apache.asterix.external.util.aws.s3.S3Constants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -74,6 +75,8 @@ import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -89,6 +92,11 @@ import org.apache.hyracks.dataflow.common.data.parsers.IntegerParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.LongParserFactory;
 import org.apache.hyracks.dataflow.common.data.parsers.UTF8StringParserFactory;
 import org.apache.hyracks.util.StorageUtil;
+import org.apache.iceberg.BaseTable;
+import org.apache.iceberg.FileScanTask;
+import org.apache.iceberg.Table;
+import org.apache.iceberg.hadoop.HadoopTables;
+import org.apache.iceberg.io.CloseableIterable;
 
 public class ExternalDataUtils {
     private static final Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = new EnumMap<>(ATypeTag.class);
@@ -414,7 +422,7 @@ public class ExternalDataUtils {
      * @param adapterName   adapter name
      * @param configuration external data configuration
      */
-    public static void prepare(String adapterName, Map<String, String> configuration) {
+    public static void prepare(String adapterName, Map<String, String> configuration) throws AlgebricksException {
         if (!configuration.containsKey(ExternalDataConstants.KEY_READER)) {
             configuration.put(ExternalDataConstants.KEY_READER, adapterName);
         }
@@ -427,6 +435,81 @@ public class ExternalDataUtils {
         if (!configuration.containsKey(ExternalDataConstants.KEY_PARSER)
                 && configuration.containsKey(ExternalDataConstants.KEY_FORMAT)) {
             configuration.put(ExternalDataConstants.KEY_PARSER, configuration.get(ExternalDataConstants.KEY_FORMAT));
+        }
+
+        if (configuration.containsKey(ExternalDataConstants.TABLE_FORMAT)) {
+            prepareTableFormat(configuration);
+        }
+    }
+
+    /**
+     * Prepares the configuration for data-lake table formats
+     *
+     * @param configuration
+     *            external data configuration
+     */
+    public static void prepareTableFormat(Map<String, String> configuration) throws AlgebricksException {
+        // Apache Iceberg table format
+        if (configuration.get(ExternalDataConstants.TABLE_FORMAT).equals(ExternalDataConstants.FORMAT_APACHE_ICEBERG)) {
+            Configuration conf = new Configuration();
+
+            String metadata_path = configuration.get(ExternalDataConstants.ICEBERG_METADATA_LOCATION);
+
+            // If the table is in S3
+            if (configuration.get(ExternalDataConstants.KEY_READER)
+                    .equals(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3)) {
+
+                conf.set(S3Constants.HADOOP_ACCESS_KEY_ID, configuration.get(S3Constants.ACCESS_KEY_ID_FIELD_NAME));
+                conf.set(S3Constants.HADOOP_SECRET_ACCESS_KEY,
+                        configuration.get(S3Constants.SECRET_ACCESS_KEY_FIELD_NAME));
+                metadata_path = S3Constants.HADOOP_S3_PROTOCOL + "://"
+                        + configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME) + '/'
+                        + configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
+            } else if (configuration.get(ExternalDataConstants.KEY_READER).equals(ExternalDataConstants.READER_HDFS)) {
+                conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_URI,
+                        configuration.get(ExternalDataConstants.KEY_HDFS_URL));
+                metadata_path = configuration.get(ExternalDataConstants.KEY_HDFS_URL) + '/' + metadata_path;
+            }
+
+            HadoopTables tables = new HadoopTables(conf);
+
+            Table icebergTable = tables.load(metadata_path);
+
+            if (icebergTable instanceof BaseTable) {
+                BaseTable baseTable = (BaseTable) icebergTable;
+
+                if (baseTable.operations().current()
+                        .formatVersion() != ExternalDataConstants.SUPPORTED_ICEBERG_FORMAT_VERSION) {
+                    throw new AsterixException(ErrorCode.UNSUPPORTED_ICEBERG_FORMAT_VERSION,
+                            "AsterixDB only supports Iceberg version up to "
+                                    + ExternalDataConstants.SUPPORTED_ICEBERG_FORMAT_VERSION);
+                }
+
+                try (CloseableIterable<FileScanTask> fileScanTasks = baseTable.newScan().planFiles()) {
+
+                    StringBuilder builder = new StringBuilder();
+
+                    for (FileScanTask task : fileScanTasks) {
+                        builder.append(",");
+                        String path = task.file().path().toString();
+                        builder.append(path);
+                    }
+
+                    if (builder.length() > 0) {
+                        builder.deleteCharAt(0);
+                    }
+
+                    configuration.put(ExternalDataConstants.KEY_PATH, builder.toString());
+
+                } catch (IOException e) {
+                    throw new AsterixException(ErrorCode.ERROR_READING_ICEBERG_METADATA, e);
+                }
+
+            } else {
+                throw new AsterixException(ErrorCode.UNSUPPORTED_ICEBERG_TABLE,
+                        "Invalid iceberg base table. Please remove metadata specifiers");
+            }
+
         }
     }
 

@@ -2472,4 +2472,115 @@
       </properties>
     </project>
   </supplement>
+  <!-- RoaringBitmap is ASLv2 and has no NOTICE or embedded LICENSE-->
+  <supplement>
+    <project>
+      <groupId>org.roaringbitmap</groupId>
+      <artifactId>RoaringBitmap</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>0.9.22</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.9.22</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>0.9.22</license.ignoreLicenseOverride>
+      </properties>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>org.roaringbitmap</groupId>
+      <artifactId>shims</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>0.9.22</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.9.22</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>0.9.22</license.ignoreLicenseOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- aircompressor is ASLv2 and has no NOTICE or embedded LICENSE-->
+  <supplement>
+    <project>
+      <groupId>io.airlift</groupId>
+      <artifactId>aircompressor</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>0.21</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.21</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>0.21</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>0.21</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- json2avro converter is ASLv2 and has no NOTICE or embedded LICENSE-->
+  <supplement>
+    <project>
+      <groupId>tech.allegro.schema.json2avro</groupId>
+      <artifactId>converter</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>0.2.15</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.2.15</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>0.2.15</license.ignoreLicenseOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- this reimplementation of findbugs-annotations is ASLv2 and has no NOTICE or embedded LICENSE-->
+  <supplement>
+    <project>
+      <groupId>com.github.stephenc.findbugs</groupId>
+      <artifactId>findbugs-annotations</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>1.3.9-1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.3.9-1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.3.9-1</license.ignoreLicenseOverride>
+      </properties>
+    </project>
+  </supplement>
+
+  <!--  caffeine is ASLv2 and has no NOTICE-->
+  <supplement>
+    <project>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedNotice>2.9.3</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+
+  <!-- threeten is BSD 3-clause so it has no NOTICE -->
+  <supplement>
+    <project>
+      <groupId>org.threeten</groupId>
+      <artifactId>threeten-extra</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedNotice>1.7.1</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
+  <!-- jetbrains annotations are ASLv2 and has no NOTICE or embedded LICENSE-->
+  <supplement>
+    <project>
+      <groupId>org.jetbrains</groupId>
+      <artifactId>annotations</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>17.0.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>17.0.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>17.0.0</license.ignoreLicenseOverride>
+      </properties>
+    </project>
+  </supplement>
+  <!-- this reimplementation of findbugs-annotations is ASLv2 and no embedded LICENSE or NOTICE-->
+  <supplement>
+    <project>
+      <groupId>org.apache.orc</groupId>
+      <artifactId>orc-core</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedLicense>1.8.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.8.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.8.0</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>1.8.0</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+
 </supplementalDataModels>

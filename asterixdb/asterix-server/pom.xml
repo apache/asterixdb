@@ -562,6 +562,45 @@
               </gavs>
               <url>https://raw.githubusercontent.com/bcgit/bc-java/r1rv60/LICENSE.html</url>
             </override>
+            <override>
+              <gavs>
+                <gav>org.jetbrains:annotations:17.0.0</gav>
+              </gavs>
+              <url>https://raw.githubusercontent.com/JetBrains/java-annotations/master/LICENSE.txt</url>
+            </override>
+            <override>
+              <gavs>
+                <gav>org.roaringbitmap:RoaringBitmap:0.9.22</gav>
+                <gav>org.roaringbitmap:shims:0.9.22</gav>
+              </gavs>
+              <url>https://raw.githubusercontent.com/RoaringBitmap/RoaringBitmap/0.9.39/LICENSE</url>
+            </override>
+            <override>
+              <gavs>
+                <gav>io.airlift:aircompressor:0.21</gav>
+              </gavs>
+              <url>https://raw.githubusercontent.com/airlift/aircompressor/0.21/license.txt</url>
+              <noticeUrl>https://raw.githubusercontent.com/airlift/aircompressor/0.21/notice.md</noticeUrl>
+            </override>
+            <override>
+              <gavs>
+                <gav>org.apache.orc:orc-core:1.8.0</gav>
+              </gavs>
+              <url>https://raw.githubusercontent.com/apache/orc/v1.8.0/LICENSE</url>
+              <noticeUrl>https://raw.githubusercontent.com/apache/orc/v1.8.0/NOTICE</noticeUrl>
+            </override>
+            <override>
+              <gavs>
+                <gav>tech.allegro.schema.json2avro:converter:0.2.15</gav>
+              </gavs>
+              <url>https://raw.githubusercontent.com/allegro/json-avro-converter/json-avro-converter-0.2.15/LICENSE.md</url>
+            </override>
+            <override>
+              <gavs>
+                <gav>com.github.stephenc.findbugs:findbugs-annotations:1.3.9-1</gav>
+              </gavs>
+              <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            </override>
           </overrides>
           <licenses>
             <license>
@@ -635,6 +674,11 @@
                 <aliasUrl>https://raw.githubusercontent.com/grpc/grpc-java/v1.52.1/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/googleapis/java-core/v2.8.0/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/google/gson/gson-parent-2.9.0/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/allegro/json-avro-converter/json-avro-converter-0.2.15/LICENSE.md</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/airlift/aircompressor/0.21/license.txt</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/apache/orc/v1.8.0/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/RoaringBitmap/RoaringBitmap/0.9.39/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/JetBrains/java-annotations/master/LICENSE.txt</aliasUrl>
               </aliasUrls>
               <metric>1</metric>
             </license>
@@ -1274,11 +1318,6 @@
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-1.2-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.kitesdk</groupId>
-      <artifactId>kite-data-core</artifactId>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>

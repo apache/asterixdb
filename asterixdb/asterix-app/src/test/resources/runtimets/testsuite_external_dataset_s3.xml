@@ -478,6 +478,51 @@
         <output-dir compare="Text">common/byte_order_mark/tsv</output-dir>
       </compilation-unit>
     </test-case>
+      <!-- Iceberg Tests Start -->
+    <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="iceberg">
+        <output-dir compare="Text">iceberg</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/s3">
+      <compilation-unit name="iceberg-unsupported-version">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1179: Unsupported iceberg format version</expected-error>
+      </compilation-unit>
+    </test-case>
+      <test-case FilePath="external-dataset/s3">
+          <compilation-unit name="iceberg-metadata-invalid-location">
+              <output-dir compare="Text">none</output-dir>
+              <expected-error>Unable to create adapter</expected-error>
+          </compilation-unit>
+      </test-case>
+      <test-case FilePath="external-dataset/s3">
+          <compilation-unit name="iceberg-metadata-specific-location">
+              <output-dir compare="Text">none</output-dir>
+              <expected-error>ASX1178: Unsupported iceberg table</expected-error>
+          </compilation-unit>
+      </test-case>
+      <test-case FilePath="external-dataset/s3">
+          <compilation-unit name="iceberg-mixed-data-format">
+              <output-dir compare="Text">none</output-dir>
+              <expected-error>avro-file.avro. Reason: not a Parquet file</expected-error>
+          </compilation-unit>
+      </test-case>
+      <test-case FilePath="external-dataset/s3">
+        <compilation-unit name="iceberg-empty">
+          <output-dir compare="Text">iceberg-empty</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="external-dataset/s3">
+          <compilation-unit name="iceberg-multiple-data-files">
+              <output-dir compare="Text">iceberg-multiple-data-files</output-dir>
+          </compilation-unit>
+      </test-case>
+      <test-case FilePath="external-dataset/s3">
+          <compilation-unit name="iceberg-modified-data">
+              <output-dir compare="Text">iceberg-modified-data</output-dir>
+          </compilation-unit>
+      </test-case>
   </test-group>
   <test-group name="copy">
     <test-case FilePath="copy">

@@ -44,6 +44,7 @@ public class S3Constants {
     public static final String HADOOP_SESSION_TOKEN = "fs.s3a.session.token";
     public static final String HADOOP_REGION = "fs.s3a.region";
     public static final String HADOOP_SERVICE_END_POINT = "fs.s3a.endpoint";
+    public static final String HADOOP_S3_FILESYSTEM_IMPLEMENTATION = "fs.s3a.impl";
 
     /*
      * Internal configurations

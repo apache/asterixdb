@@ -58,5 +58,10 @@
         <output-dir compare="Text">parquet</output-dir>
       </compilation-unit>
     </test-case>
+      <test-case FilePath="hdfs">
+          <compilation-unit name="iceberg">
+              <output-dir compare="Text">iceberg</output-dir>
+          </compilation-unit>
+      </test-case>
   </test-group>
 </test-suite>

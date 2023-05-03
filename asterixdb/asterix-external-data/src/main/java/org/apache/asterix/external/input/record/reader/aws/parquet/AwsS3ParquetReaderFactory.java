@@ -55,7 +55,8 @@ public class AwsS3ParquetReaderFactory extends HDFSDataSourceFactory {
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
             IWarningCollector warningCollector) throws AlgebricksException, HyracksDataException {
         //Get path
-        String path = buildPathURIs(configuration, warningCollector);
+        String path = configuration.containsKey(ExternalDataConstants.KEY_PATH)
+                ? configuration.get(ExternalDataConstants.KEY_PATH) : buildPathURIs(configuration, warningCollector);
         //Put S3 configurations to AsterixDB's Hadoop configuration
         putS3ConfToHadoopConf(configuration, path);
 
