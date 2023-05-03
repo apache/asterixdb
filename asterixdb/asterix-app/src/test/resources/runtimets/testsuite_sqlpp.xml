@@ -4153,6 +4153,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-3">
+        <output-dir compare="Clean-JSON">create-dataset-3</output-dir>
+        <expected-error>ASX1077: Cannot find dataset non_existent in dataverse test nor an alias with name non_existent (in line 23, at column 21)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
       <compilation-unit name="analyze-dataset-1">
         <output-dir compare="Text">analyze-dataset-1</output-dir>
       </compilation-unit>

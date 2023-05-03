@@ -151,6 +151,7 @@ import org.apache.asterix.lang.common.statement.StopFeedStatement;
 import org.apache.asterix.lang.common.statement.SynonymDropStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
+import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.statement.ViewDropStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -730,9 +731,22 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             doCreateDatasetStatement(metadataProvider, dd, dataverseName, datasetName, itemTypeDataverseName,
                     itemTypeExpr, itemTypeName, metaItemTypeExpr, metaItemTypeDataverseName, metaItemTypeName, hcc,
                     requestParameters);
+            if (dd.getQuery() != null) {
+                final IResultSet resultSet = requestParameters.getResultSet();
+                final ResultDelivery resultDelivery = requestParameters.getResultProperties().getDelivery();
+                final Stats stats = requestParameters.getStats();
+                IStatementRewriter stmtRewriter = rewriterFactory.createStatementRewriter();
+                final ResultMetadata outMetadata = requestParameters.getOutMetadata();
+                final Map<String, IAObject> stmtParams = requestParameters.getStatementParameters();
+                UpsertStatement upsertStmt =
+                        new UpsertStatement(dataverseName, datasetName, dd.getQuery(), -1, null, null);
+                handleInsertUpsertStatement(metadataProvider, upsertStmt, hcc, resultSet, resultDelivery, outMetadata,
+                        stats, requestParameters, stmtParams, stmtRewriter);
+            }
         } finally {
             metadataProvider.getLocks().unlock();
         }
+
     }
 
     protected Optional<? extends Dataset> doCreateDatasetStatement(MetadataProvider metadataProvider, DatasetDecl dd,

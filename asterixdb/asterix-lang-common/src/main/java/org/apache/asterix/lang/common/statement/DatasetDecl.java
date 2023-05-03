@@ -47,10 +47,17 @@ public class DatasetDecl extends AbstractStatement {
     protected final Map<String, String> hints;
     private final AdmObjectNode withObjectNode;
     protected final boolean ifNotExists;
+    protected final Query query;
 
     public DatasetDecl(DataverseName dataverse, Identifier name, TypeExpression itemType, TypeExpression metaItemType,
             Map<String, String> hints, DatasetType datasetType, IDatasetDetailsDecl idd, RecordConstructor withRecord,
             boolean ifNotExists) throws CompilationException {
+        this(dataverse, name, itemType, metaItemType, hints, datasetType, idd, withRecord, ifNotExists, null);
+    }
+
+    public DatasetDecl(DataverseName dataverse, Identifier name, TypeExpression itemType, TypeExpression metaItemType,
+            Map<String, String> hints, DatasetType datasetType, IDatasetDetailsDecl idd, RecordConstructor withRecord,
+            boolean ifNotExists, Query query) throws CompilationException {
         this.dataverse = dataverse;
         this.name = name;
         this.itemType = itemType;
@@ -60,6 +67,7 @@ public class DatasetDecl extends AbstractStatement {
         this.ifNotExists = ifNotExists;
         this.datasetType = datasetType;
         this.datasetDetailsDecl = idd;
+        this.query = query;
     }
 
     public boolean getIfNotExists() {
@@ -84,6 +92,10 @@ public class DatasetDecl extends AbstractStatement {
 
     public TypeExpression getMetaItemType() {
         return metaItemType;
+    }
+
+    public Query getQuery() {
+        return query;
     }
 
     public String getNodegroupName() {
