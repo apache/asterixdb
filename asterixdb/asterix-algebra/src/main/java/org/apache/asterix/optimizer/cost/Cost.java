@@ -22,7 +22,7 @@ package org.apache.asterix.optimizer.cost;
 public class Cost implements ICost {
 
     public static final double MAX_CARD = 1.0e200;
-    protected static final int COST_EQ = 0;
+    private static final int COST_EQ = 0;
 
     private final double cost;
 

@@ -1,18 +1,18 @@
-distribute result [$$51] [cardinality: 2.1, op-cost: 0.0, total-cost: 1.1E7]
+distribute result [$$51] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.1E7]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 1.1E7]
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.1E7]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$51]) [cardinality: 2.1, op-cost: 0.0, total-cost: 1.1E7]
+    project ([$$51]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.1E7]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$51] <- [{"n_nationkey": $$58, "s_nationkey": $$56, "c_nationkey": $$55}] [cardinality: 2.1, op-cost: 0.0, total-cost: 1.1E7]
+      assign [$$51] <- [{"n_nationkey": $$58, "s_nationkey": $$56, "c_nationkey": $$55}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.1E7]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 1.1E7]
+        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.1E7]
         -- SORT_MERGE_EXCHANGE [$$58(ASC), $$56(ASC), $$55(ASC) ]  |PARTITIONED|
-          order (ASC, $$58) (ASC, $$56) (ASC, $$55) [cardinality: 2.1, op-cost: 0.0, total-cost: 1.1E7]
+          order (ASC, $$58) (ASC, $$56) (ASC, $$55) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.1E7]
           -- STABLE_SORT [$$58(ASC), $$56(ASC), $$55(ASC)]  |PARTITIONED|
-            exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 1.1E7]
+            exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1.1E7]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              join (eq($$55, $$58)) [cardinality: 2.1, op-cost: 2000000.0, total-cost: 1.1E7]
+              join (eq($$55, $$58)) [cardinality: 1000000.0, op-cost: 2000000.0, total-cost: 1.1E7]
               -- HYBRID_HASH_JOIN [$$58][$$55]  |PARTITIONED|
                 exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 7000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

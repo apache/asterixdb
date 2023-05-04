@@ -29,33 +29,33 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSo
 
 public class PlanNode {
 
-    public static int NO_PLAN = -1;
+    protected static int NO_PLAN = -1;
 
     private final JoinEnum joinEnum;
-    int allPlansIndex;
-    int[] planIndexes;
-    int[] jnIndexes;
-    JoinNode jn;
-    String datasetName;
-    ICost opCost;
-    ICost totalCost;
-    ICost leftExchangeCost;
-    ICost rightExchangeCost;
-    JoinMethod joinOp;
-    IExpressionAnnotation joinHint;
+    protected int allPlansIndex;
+    protected int[] planIndexes;
+    protected int[] jnIndexes;
+    protected JoinNode jn;
+    protected String datasetName;
+    protected ICost opCost;
+    protected ICost totalCost;
+    protected ICost leftExchangeCost;
+    protected ICost rightExchangeCost;
+    protected JoinMethod joinOp;
+    protected IExpressionAnnotation joinHint;
     // Used to indicate which side to build for HJ and which side to broadcast for BHJ.
-    HashJoinExpressionAnnotation.BuildSide side;
-    ScanMethod scanOp;
-    ILogicalExpression joinExpr;
-    DataSourceScanOperator correspondingDataSourceScanOp;
-    EmptyTupleSourceOperator correspondingEmptyTupleSourceOp;
+    protected HashJoinExpressionAnnotation.BuildSide side;
+    protected ScanMethod scanOp;
+    protected ILogicalExpression joinExpr;
+    private DataSourceScanOperator correspondingDataSourceScanOp;
+    protected EmptyTupleSourceOperator correspondingEmptyTupleSourceOp;
 
     public enum ScanMethod {
         INDEX_SCAN,
         TABLE_SCAN
     }
 
-    public enum JoinMethod {
+    protected enum JoinMethod {
         HYBRID_HASH_JOIN,
         BROADCAST_HASH_JOIN,
         INDEX_NESTED_LOOP_JOIN,
@@ -73,12 +73,8 @@ public class PlanNode {
         return allPlansIndex;
     }
 
-    public int[] getPlanIndexes() {
+    private int[] getPlanIndexes() {
         return planIndexes;
-    }
-
-    public int getLeftPlanIndex() {
-        return planIndexes[0];
     }
 
     public PlanNode getLeftPlanNode() {
@@ -95,47 +91,51 @@ public class PlanNode {
         return joinEnum.allPlans.get(planIndexes[1]);
     }
 
-    public JoinNode getJoinNode() {
+    protected JoinNode getJoinNode() {
         return jn;
     }
 
-    public void setJoinNode(JoinNode jn) {
+    protected void setJoinNode(JoinNode jn) {
         this.jn = jn;
-    }
-
-    public int getRightPlanIndex() {
-        return planIndexes[1];
-    }
-
-    public void setRightPlanIndex(int index) {
-        this.planIndexes[1] = index;
     }
 
     public int getLeftJoinIndex() {
         return jnIndexes[0];
     }
 
-    public void setLeftPlanIndex(int index) {
-        this.planIndexes[0] = index;
-    }
-
-    public void setLeftJoinIndex(int index) {
+    protected void setLeftJoinIndex(int index) {
         this.jnIndexes[0] = index;
-    }
-
-    public void setRightJoinIndex(int index) {
-        this.jnIndexes[1] = index;
     }
 
     public int getRightJoinIndex() {
         return jnIndexes[1];
     }
 
+    protected void setRightJoinIndex(int index) {
+        this.jnIndexes[1] = index;
+    }
+
+    protected int getLeftPlanIndex() {
+        return planIndexes[0];
+    }
+
+    protected void setLeftPlanIndex(int index) {
+        this.planIndexes[0] = index;
+    }
+
+    protected int getRightPlanIndex() {
+        return planIndexes[1];
+    }
+
+    protected void setRightPlanIndex(int index) {
+        this.planIndexes[1] = index;
+    }
+
     public boolean IsScanNode() {
         return getLeftPlanIndex() == NO_PLAN && getRightPlanIndex() == NO_PLAN;
     }
 
-    public boolean IsJoinNode() {
+    protected boolean IsJoinNode() {
         return getLeftPlanIndex() != NO_PLAN && getRightPlanIndex() != NO_PLAN;
     }
 
@@ -152,23 +152,23 @@ public class PlanNode {
         return new Pair<>("", "");
     }
 
-    public String getDatasetName() {
+    private String getDatasetName() {
         return datasetName;
     }
 
-    public void setDatasetName(String dsName) {
+    protected void setDatasetName(String dsName) {
         this.datasetName = dsName;
     }
 
-    public DataSourceScanOperator getDataSourceScanOp() {
+    private DataSourceScanOperator getDataSourceScanOp() {
         return correspondingDataSourceScanOp; // This applies only to singleDataSetPlans
     }
 
-    public EmptyTupleSourceOperator getEmptyTupleSourceOp() {
+    protected EmptyTupleSourceOperator getEmptyTupleSourceOp() {
         return correspondingEmptyTupleSourceOp; // This applies only to singleDataSetPlans
     }
 
-    public void setEmptyTupleSourceOp(EmptyTupleSourceOperator emptyTupleSourceOp) {
+    protected void setEmptyTupleSourceOp(EmptyTupleSourceOperator emptyTupleSourceOp) {
         this.correspondingEmptyTupleSourceOp = emptyTupleSourceOp; // This applies only to singleDataSetPlans
     }
 
@@ -176,11 +176,11 @@ public class PlanNode {
         return opCost;
     }
 
-    public void setOpCost(ICost cost) {
+    protected void setOpCost(ICost cost) {
         this.opCost = cost;
     }
 
-    public double computeOpCost() {
+    protected double computeOpCost() {
         return opCost.computeTotalCost();
     }
 
@@ -188,7 +188,7 @@ public class PlanNode {
         return totalCost;
     }
 
-    public void setTotalCost(ICost tc) {
+    protected void setTotalCost(ICost tc) {
         this.totalCost = tc;
     }
 
@@ -200,7 +200,7 @@ public class PlanNode {
         return rightExchangeCost;
     }
 
-    public double computeTotalCost() {
+    protected double computeTotalCost() {
         return totalCost.computeTotalCost();
     }
 
@@ -208,11 +208,11 @@ public class PlanNode {
         return scanOp;
     }
 
-    public void setScanMethod(ScanMethod sm) {
+    protected void setScanMethod(ScanMethod sm) {
         this.scanOp = sm;
     }
 
-    public JoinMethod getJoinOp() {
+    protected JoinMethod getJoinOp() {
         return joinOp;
     }
 

@@ -30,9 +30,15 @@ import java.util.Set;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
+import org.apache.asterix.metadata.declared.DatasetDataSource;
+import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.declared.SampleDataSource;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -57,6 +63,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressio
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.HashJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
+import org.apache.hyracks.algebricks.core.algebra.expressions.PredicateCardinalityAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.UnnestingFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
@@ -66,11 +73,13 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -84,19 +93,19 @@ public class JoinEnum {
     protected List<PlanNode> allPlans; // list of all plans
     protected JoinNode[] jnArray; // array of all join nodes
     protected int jnArraySize;
-    protected List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps;
+    private List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps;
     protected Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap;
     protected List<ILogicalExpression> singleDatasetPreds;
-    protected List<AssignOperator> assignOps;
-    protected List<ILogicalOperator> joinOps;
+    private List<AssignOperator> assignOps;
+    private List<ILogicalOperator> joinOps;
     protected ILogicalOperator localJoinOp; // used in nestedLoopsApplicable code.
     protected IOptimizationContext optCtx;
+
     protected Stats stats;
-    protected PhysicalOptimizationConfig physOptConfig;
-    protected boolean cboMode;
-    protected boolean cboTestMode;
+    private boolean cboMode;
+    private boolean cboTestMode;
     protected int numberOfTerms;
-    protected AbstractLogicalOperator op;
+    private AbstractLogicalOperator op;
     protected boolean connectedJoinGraph;
     protected boolean forceJoinOrderMode;
     protected String queryPlanShape;
@@ -106,13 +115,12 @@ public class JoinEnum {
     public JoinEnum() {
     }
 
-    public void initEnum(AbstractLogicalOperator op, boolean cboMode, boolean cboTestMode, int numberOfFromTerms,
+    protected void initEnum(AbstractLogicalOperator op, boolean cboMode, boolean cboTestMode, int numberOfFromTerms,
             List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps,
             Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap, List<ILogicalOperator> joinOps,
             List<AssignOperator> assignOps, IOptimizationContext context) {
         this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
-        this.assignOps = new ArrayList<>();
         this.joinHints = new HashMap<>();
         this.allPlans = new ArrayList<>();
         this.numberOfTerms = numberOfFromTerms;
@@ -120,7 +128,6 @@ public class JoinEnum {
         this.cboTestMode = cboTestMode;
         this.connectedJoinGraph = true;
         this.optCtx = context;
-        this.physOptConfig = context.getPhysicalOptimizationConfig();
         this.emptyTupleAndDataSourceOps = emptyTupleAndDataSourceOps;
         this.joinLeafInputsHashMap = joinLeafInputsHashMap;
         this.assignOps = assignOps;
@@ -143,7 +150,7 @@ public class JoinEnum {
         }
     }
 
-    public List<JoinCondition> getJoinConditions() {
+    protected List<JoinCondition> getJoinConditions() {
         return joinConditions;
     }
 
@@ -151,27 +158,23 @@ public class JoinEnum {
         return allPlans;
     }
 
-    public JoinNode[] getJnArray() {
+    protected JoinNode[] getJnArray() {
         return jnArray;
     }
 
-    public Cost getCostHandle() {
+    protected Cost getCostHandle() {
         return (Cost) cost;
     }
 
-    public CostMethods getCostMethodsHandle() {
+    protected CostMethods getCostMethodsHandle() {
         return (CostMethods) costMethods;
     }
 
-    public Stats getStatsHandle() {
+    protected Stats getStatsHandle() {
         return stats;
     }
 
-    public Map<EmptyTupleSourceOperator, ILogicalOperator> getJoinLeafInputsHashMap() {
-        return joinLeafInputsHashMap;
-    }
-
-    public ILogicalOperator findLeafInput(List<LogicalVariable> logicalVars) throws AlgebricksException {
+    protected ILogicalOperator findLeafInput(List<LogicalVariable> logicalVars) throws AlgebricksException {
         Set<LogicalVariable> vars = new HashSet<>();
         for (Pair<EmptyTupleSourceOperator, DataSourceScanOperator> emptyTupleAndDataSourceOp : emptyTupleAndDataSourceOps) {
             EmptyTupleSourceOperator emptyOp = emptyTupleAndDataSourceOp.getFirst();
@@ -187,7 +190,7 @@ public class JoinEnum {
         return null;
     }
 
-    public ILogicalExpression combineAllConditions(List<Integer> newJoinConditions) {
+    protected ILogicalExpression combineAllConditions(List<Integer> newJoinConditions) {
         if (newJoinConditions.size() == 0) {
             // this is a cartesian product
             return ConstantExpression.TRUE;
@@ -207,7 +210,7 @@ public class JoinEnum {
         return andExpr;
     }
 
-    public ILogicalExpression getNestedLoopJoinExpr(List<Integer> newJoinConditions) {
+    protected ILogicalExpression getNestedLoopJoinExpr(List<Integer> newJoinConditions) {
         if (newJoinConditions.size() != 1) {
             // may remove this restriction later if possible
             return null;
@@ -216,7 +219,7 @@ public class JoinEnum {
         return jc.joinCondition;
     }
 
-    public ILogicalExpression getHashJoinExpr(List<Integer> newJoinConditions) {
+    protected ILogicalExpression getHashJoinExpr(List<Integer> newJoinConditions) {
         if (newJoinConditions.size() == 0) {
             // this is a cartesian product
             return ConstantExpression.TRUE;
@@ -245,7 +248,7 @@ public class JoinEnum {
         return eqPredFound ? andExpr : null;
     }
 
-    public HashJoinExpressionAnnotation findHashJoinHint(List<Integer> newJoinConditions) {
+    protected HashJoinExpressionAnnotation findHashJoinHint(List<Integer> newJoinConditions) {
         for (int i : newJoinConditions) {
             JoinCondition jc = joinConditions.get(i);
             if (jc.comparisonType != JoinCondition.comparisonOp.OP_EQ) {
@@ -263,7 +266,7 @@ public class JoinEnum {
         return null;
     }
 
-    public BroadcastExpressionAnnotation findBroadcastHashJoinHint(List<Integer> newJoinConditions) {
+    protected BroadcastExpressionAnnotation findBroadcastHashJoinHint(List<Integer> newJoinConditions) {
         for (int i : newJoinConditions) {
             JoinCondition jc = joinConditions.get(i);
             if (jc.comparisonType != JoinCondition.comparisonOp.OP_EQ) {
@@ -281,7 +284,7 @@ public class JoinEnum {
         return null;
     }
 
-    public IndexedNLJoinExpressionAnnotation findNLJoinHint(List<Integer> newJoinConditions) {
+    protected IndexedNLJoinExpressionAnnotation findNLJoinHint(List<Integer> newJoinConditions) {
         for (int i : newJoinConditions) {
             JoinCondition jc = joinConditions.get(i);
             ILogicalExpression expr = jc.joinCondition;
@@ -316,7 +319,7 @@ public class JoinEnum {
         return false;
     }
 
-    public int findJoinNodeIndexByName(String name) {
+    protected int findJoinNodeIndexByName(String name) {
         for (int i = 1; i <= this.numberOfTerms; i++) {
             if (name.equals(jnArray[i].datasetNames.get(0))) {
                 return i;
@@ -328,7 +331,7 @@ public class JoinEnum {
         return JoinNode.NO_JN;
     }
 
-    public int findJoinNodeIndex(LogicalVariable lv) throws AlgebricksException {
+    protected int findJoinNodeIndex(LogicalVariable lv) throws AlgebricksException {
         List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps =
                 this.emptyTupleAndDataSourceOps;
         Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap = this.joinLeafInputsHashMap;
@@ -372,7 +375,7 @@ public class JoinEnum {
 
     // This finds all the join Conditions in the whole query. This is a global list of all join predicates.
     // It also fills in the dataset Bits for each join predicate.
-    protected void findJoinConditions() throws AlgebricksException {
+    private void findJoinConditionsAndAssignSels() throws AlgebricksException {
         List<Mutable<ILogicalExpression>> conjs = new ArrayList<>();
         for (ILogicalOperator jOp : joinOps) {
             AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) jOp;
@@ -418,15 +421,6 @@ public class JoinEnum {
         // now fill the datasetBits for each join condition.
         for (JoinCondition jc : joinConditions) {
             ILogicalExpression joinExpr = jc.joinCondition;
-            /*
-            if (joinExpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
-                AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) joinExpr;
-                // remove all the join method type annotations.
-                afce.removeAnnotation(BroadcastExpressionAnnotation.class);
-                afce.removeAnnotation(IndexedNLJoinExpressionAnnotation.class);
-                afce.removeAnnotation(HashJoinExpressionAnnotation.class);
-            }
-             */
             usedVars.clear();
             joinExpr.getUsedVariables(usedVars);
             // We only set these for join predicates that have exactly two tables
@@ -646,27 +640,7 @@ public class JoinEnum {
         return jnNumber;
     }
 
-    protected int enumerateBaseLevelJoinNodes() throws AlgebricksException {
-        int lastBaseLevelJnNum = initializeBaseLevelJoinNodes();
-        if (lastBaseLevelJnNum == PlanNode.NO_PLAN) {
-            return PlanNode.NO_PLAN;
-        }
-        int dataScanPlan = PlanNode.NO_PLAN;
-        for (int i = 1; i <= numberOfTerms; i++) {
-            JoinNode jn = jnArray[i];
-            EmptyTupleSourceOperator ets = emptyTupleAndDataSourceOps.get(i - 1).getFirst();
-            ILogicalOperator leafInput = joinLeafInputsHashMap.get(ets);
-            dataScanPlan = jn.addSingleDatasetPlans();
-            if (dataScanPlan == PlanNode.NO_PLAN) {
-                return PlanNode.NO_PLAN;
-            }
-            // We may not add any index plans, so need to check for NO_PLAN
-            jn.addIndexAccessPlans(leafInput);
-        }
-        return numberOfTerms;
-    }
-
-    protected int initializeBaseLevelJoinNodes() throws AlgebricksException {
+    private int initializeBaseLevelJoinNodes() throws AlgebricksException {
         // join nodes have been allocated in the JoinEnum
         // add a dummy Plan Node; we do not want planNode at position 0 to be a valid plan
         PlanNode pn = new PlanNode(0, this);
@@ -738,8 +712,212 @@ public class JoinEnum {
         return numberOfTerms;
     }
 
+    // Most of this work is done in the very first line by calling initializeBaseLevelJoinNodes().
+    // the remaining work here is to find the selectivities of the predicates using sampling.
+    // By the time execution reaches this point, samples are guaranteed to exist on all datasets,
+    // so some of the checks can be removed.
+    private int enumerateBaseLevelJoinNodes() throws AlgebricksException {
+        int lastBaseLevelJnNum = initializeBaseLevelJoinNodes(); // initialize the level 1 join nodes
+        if (lastBaseLevelJnNum == PlanNode.NO_PLAN) {
+            return PlanNode.NO_PLAN;
+        }
+
+        int dataScanPlan;
+        JoinNode[] jnArray = this.getJnArray();
+        for (int i = 1; i <= this.numberOfTerms; i++) {
+            JoinNode jn = jnArray[i];
+            Index.SampleIndexDetails idxDetails = jn.getIdxDetails();
+            EmptyTupleSourceOperator ets = this.emptyTupleAndDataSourceOps.get(i - 1).getFirst();
+            ILogicalOperator leafInput = this.joinLeafInputsHashMap.get(ets);
+            if (!cboTestMode) {
+                if (idxDetails == null) {
+                    continue;
+                }
+                double origDatasetCard, finalDatasetCard, sampleCard;
+
+                ILogicalOperator parent = findDataSourceScanOperatorParent(leafInput);
+                DataSourceScanOperator scanOp = this.emptyTupleAndDataSourceOps.get(i - 1).getSecond();
+                if (scanOp == null) {
+                    continue; // what happens to the cards and sizes then? this may happen in case of in lists
+                }
+
+                finalDatasetCard = origDatasetCard = idxDetails.getSourceCardinality();
+
+                List<List<IAObject>> result;
+                SelectOperator selop = (SelectOperator) findASelectOp(leafInput);
+
+                if (jn.getCardinality() == jn.getOrigCardinality() && selop != null) { // this means there was no selectivity hint provided
+                    SampleDataSource sampledatasource = getSampleDataSource(scanOp);
+                    DataSourceScanOperator deepCopyofScan =
+                            (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
+                    deepCopyofScan.setDataSource(sampledatasource);
+
+                    // if there is only one conjunct, I do not have to call the sampling query during index selection!
+                    // insert this in place of the scandatasourceOp.
+                    parent.getInputs().get(0).setValue(deepCopyofScan);
+                    // There are predicates here. So skip the predicates and get the original dataset card.
+                    // Now apply all the predicates and get the card after all predicates are applied.
+                    result = stats.runSamplingQuery(this.optCtx, leafInput);
+                    double predicateCardinality = ((double) ((AInt64) result.get(0).get(0)).getLongValue());
+                    if (predicateCardinality == 0.0) {
+                        predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
+                    }
+                    // now scale up
+                    sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
+                    if (sampleCard == 0) { // should not happen unless the original dataset is empty
+                        sampleCard = 1; // we may have to make some adjustments to costs when the sample returns very rows.
+
+                        IWarningCollector warningCollector = optCtx.getWarningCollector();
+                        if (warningCollector.shouldWarn()) {
+                            warningCollector
+                                    .warn(Warning.of(scanOp.getSourceLocation(), ErrorCode.SAMPLE_HAS_ZERO_ROWS));
+                        }
+                    }
+
+                    finalDatasetCard *= predicateCardinality / sampleCard;
+                    // now switch the input back.
+                    parent.getInputs().get(0).setValue(scanOp);
+                    jn.setCardinality(finalDatasetCard);
+                }
+            }
+            dataScanPlan = jn.addSingleDatasetPlans();
+            if (dataScanPlan == PlanNode.NO_PLAN) {
+                return PlanNode.NO_PLAN;
+            }
+            // We may not add any index plans, so need to check for NO_PLAN
+            jn.addIndexAccessPlans(leafInput);
+        }
+        return this.numberOfTerms;
+    }
+
+    private boolean isPredicateCardinalityAnnotationPresent(ILogicalExpression leExpr) {
+        if (leExpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
+            AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) leExpr;
+            PredicateCardinalityAnnotation pca = afcExpr.getAnnotation(PredicateCardinalityAnnotation.class);
+            if (pca != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Since we need to switch the datasource to the sample, we need the parent, so we can do the necessary
+    // linked list manipulation.
+    protected ILogicalOperator findDataSourceScanOperatorParent(ILogicalOperator op) {
+        ILogicalOperator parent = op;
+        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (op.getOperatorTag().equals(LogicalOperatorTag.DATASOURCESCAN)) {
+                return parent;
+            }
+            parent = op;
+            op = op.getInputs().get(0).getValue();
+        }
+        return null;
+    }
+
+    // we need to switch the datascource from the dataset source to the corresponding sample datasource.
+    // Little tricky how this is done!
+    protected SampleDataSource getSampleDataSource(DataSourceScanOperator scanOp) throws AlgebricksException {
+        DataverseName dataverseName = stats.findDataverseName(scanOp);
+        DataSource ds = (DataSource) scanOp.getDataSource();
+        DataSourceId dsid = ds.getId();
+        MetadataProvider mdp = (MetadataProvider) this.optCtx.getMetadataProvider();
+        Index index = mdp.findSampleIndex(dataverseName, dsid.getDatasourceName());
+        DatasetDataSource dds = (DatasetDataSource) ds;
+        SampleDataSource sds = new SampleDataSource(dds.getDataset(), index.getIndexName(), ds.getItemType(),
+                ds.getMetaItemType(), ds.getDomain());
+        return sds;
+    }
+
+    private ILogicalOperator findASelectOp(ILogicalOperator op) {
+
+        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+
+            if (op.getOperatorTag() == LogicalOperatorTag.SELECT) {
+                return op;
+            }
+
+            op = op.getInputs().get(0).getValue();
+        }
+        return null;
+    }
+
+    // Find the join conditions. Assign selectivities to the join conditions from any user provided annotation hints.
+    // If there are no annotation hints, use samples to find the selectivities of the single table predicates
+    // found inside of complex join predicates (as in q7). A lot of extra code has gone into making q7 work.
+    private void findJoinConditions() throws AlgebricksException {
+        findJoinConditionsAndAssignSels();
+        List<List<IAObject>> result;
+        double predicateCardinality;
+        // for all the singleVarExprs, we need to issue a sample query. These exprs did not get assigned a selectivity.
+        for (ILogicalExpression exp : this.singleDatasetPreds) {
+            if (isPredicateCardinalityAnnotationPresent(exp)) {
+                continue; // no need to get selectivity from sample in case of user provided hints.
+            }
+            List<LogicalVariable> vars = new ArrayList<>();
+            exp.getUsedVariables(vars);
+            if (vars.size() == 1) { // just being really safe. If samples have size 0, there are issues.
+                double origDatasetCard, finalDatasetCard, sampleCard, predicateCard;
+                ILogicalOperator leafInput = findLeafInput(vars);
+                ILogicalOperator parent = findDataSourceScanOperatorParent(leafInput);
+                DataSourceScanOperator scanOp = (DataSourceScanOperator) parent.getInputs().get(0).getValue();
+
+                if (scanOp == null) {
+                    continue; // what happens to the cards and sizes then? this may happen in case of in lists
+                }
+
+                Index index = getStatsHandle().findSampleIndex(scanOp, this.optCtx);
+                if (index == null) {
+                    continue; // no sample found
+                }
+                Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
+                origDatasetCard = idxDetails.getSourceCardinality();
+                sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard); // handle datasets whose card is small
+                if (sampleCard == 0) {
+                    sampleCard = 1;
+                    IWarningCollector warningCollector = optCtx.getWarningCollector();
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(scanOp.getSourceLocation(), ErrorCode.SAMPLE_HAS_ZERO_ROWS));
+                    }
+                }
+
+                // replace the dataScanSourceOperator with the sampling source
+                SampleDataSource sampledatasource = getSampleDataSource(scanOp);
+                DataSourceScanOperator deepCopyofScan =
+                        (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
+                deepCopyofScan.setDataSource(sampledatasource);
+
+                // insert this in place of the scandatasourceOp.
+                parent.getInputs().get(0).setValue(deepCopyofScan);
+
+                // Need to add a selectOperator on top of leafInput.
+                SelectOperator selOp = new SelectOperator(new MutableObject<>(exp));
+                selOp.getInputs().add(new MutableObject<>(leafInput));
+                result = stats.runSamplingQuery(this.optCtx, selOp);
+                predicateCardinality = ((double) ((AInt64) result.get(0).get(0)).getLongValue());
+                if (predicateCardinality == 0.0) {
+                    predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
+                }
+
+                PredicateCardinalityAnnotation anno =
+                        new PredicateCardinalityAnnotation(predicateCardinality / sampleCard);
+                AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) exp;
+                afce.putAnnotation(anno);
+                // now switch the input back.
+                parent.getInputs().get(0).setValue(scanOp);
+            }
+        }
+
+        if (this.singleDatasetPreds.size() > 0) { // We did not have selectivities for these before. Now we do.
+            for (JoinCondition jc : joinConditions) {
+                jc.selectivity = stats.getSelectivityFromAnnotationMain(jc.getJoinCondition(), false);
+                // we may be repeating some work here, but that is ok. This will rarely happen (happens in q7 tpch)
+            }
+        }
+    }
+
     // main entry point in this file
-    public int enumerateJoins() throws AlgebricksException {
+    protected int enumerateJoins() throws AlgebricksException {
         // create a localJoinOp for use in calling existing nested loops code.
         InnerJoinOperator dummyInput = new InnerJoinOperator(null, null, null);
         localJoinOp = new InnerJoinOperator(new MutableObject<>(ConstantExpression.TRUE),
@@ -792,12 +970,12 @@ public class JoinEnum {
         return sb.toString();
     }
 
-    public static boolean getForceJoinOrderMode(IOptimizationContext context) {
+    private static boolean getForceJoinOrderMode(IOptimizationContext context) {
         PhysicalOptimizationConfig physOptConfig = context.getPhysicalOptimizationConfig();
         return physOptConfig.getForceJoinOrderMode();
     }
 
-    public static String getQueryPlanShape(IOptimizationContext context) {
+    private static String getQueryPlanShape(IOptimizationContext context) {
         PhysicalOptimizationConfig physOptConfig = context.getPhysicalOptimizationConfig();
         return physOptConfig.getQueryPlanShapeMode();
     }

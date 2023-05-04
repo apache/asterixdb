@@ -1,24 +1,24 @@
-distribute result [$$37] [cardinality: 100.0, op-cost: 0.0, total-cost: 600.0]
+distribute result [$$37] [cardinality: 2.1, op-cost: 0.0, total-cost: 205.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 600.0]
+  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 205.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 2 [cardinality: 100.0, op-cost: 0.0, total-cost: 600.0]
+    limit 2 [cardinality: 2.1, op-cost: 0.0, total-cost: 205.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 600.0]
+      exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 205.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        project ([$$37]) [cardinality: 100.0, op-cost: 0.0, total-cost: 600.0]
+        project ([$$37]) [cardinality: 2.1, op-cost: 0.0, total-cost: 205.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          assign [$$37] <- [{"dblpid": $$38}] [cardinality: 100.0, op-cost: 0.0, total-cost: 600.0]
+          assign [$$37] <- [{"dblpid": $$38}] [cardinality: 2.1, op-cost: 0.0, total-cost: 205.0]
           -- ASSIGN  |PARTITIONED|
-            limit 2 [cardinality: 100.0, op-cost: 0.0, total-cost: 600.0]
+            limit 2 [cardinality: 2.1, op-cost: 0.0, total-cost: 205.0]
             -- STREAM_LIMIT  |PARTITIONED|
-              project ([$$38]) [cardinality: 100.0, op-cost: 0.0, total-cost: 600.0]
+              project ([$$38]) [cardinality: 2.1, op-cost: 0.0, total-cost: 205.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 600.0]
+                exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 205.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  join (eq($$38, $$41)) [cardinality: 100.0, op-cost: 200.0, total-cost: 600.0]
+                  join (eq($$38, $$41)) [cardinality: 2.1, op-cost: 100.0, total-cost: 205.0]
                   -- HYBRID_HASH_JOIN [$$38][$$41]  |PARTITIONED|
-                    exchange [cardinality: 100.0, op-cost: 100.0, total-cost: 200.0]
+                    exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
                     -- HASH_PARTITION_EXCHANGE [$$38]  |PARTITIONED|
                       project ([$$38]) [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
                       -- STREAM_PROJECT  |PARTITIONED|
@@ -26,7 +26,7 @@ distribute result [$$37] [cardinality: 100.0, op-cost: 0.0, total-cost: 600.0]
                         -- ASSIGN  |PARTITIONED|
                           project ([$$d]) [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
                           -- STREAM_PROJECT  |PARTITIONED|
-                            exchange [cardinality: 100.0, op-cost: 100.0, total-cost: 200.0]
+                            exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               data-scan []<-[$$39, $$d] <- test.DBLP1 [cardinality: 100.0, op-cost: 100.0, total-cost: 100.0]
                               -- DATASOURCE_SCAN  |PARTITIONED|
@@ -34,29 +34,29 @@ distribute result [$$37] [cardinality: 100.0, op-cost: 0.0, total-cost: 600.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                    exchange [cardinality: 100.0, op-cost: 100.0, total-cost: 200.0]
+                    exchange [cardinality: 100.0, op-cost: 4.0, total-cost: 5.0]
                     -- HASH_PARTITION_EXCHANGE [$$41]  |PARTITIONED|
-                      project ([$$41]) [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                      project ([$$41]) [cardinality: 100.0, op-cost: 0.0, total-cost: 1.0]
                       -- STREAM_PROJECT  |UNPARTITIONED|
-                        assign [$$41] <- [get-item($$30, 0).getField(0).getField(1)] [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                        assign [$$41] <- [get-item($$30, 0).getField(0).getField(1)] [cardinality: 100.0, op-cost: 0.0, total-cost: 1.0]
                         -- ASSIGN  |UNPARTITIONED|
-                          aggregate [$$30] <- [listify($$29)] [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                          aggregate [$$30] <- [listify($$29)] [cardinality: 100.0, op-cost: 0.0, total-cost: 1.0]
                           -- AGGREGATE  |UNPARTITIONED|
-                            limit 1 [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                            limit 1 [cardinality: 100.0, op-cost: 0.0, total-cost: 1.0]
                             -- STREAM_LIMIT  |UNPARTITIONED|
-                              exchange [cardinality: 100.0, op-cost: 100.0, total-cost: 200.0]
+                              exchange [cardinality: 100.0, op-cost: 4.0, total-cost: 5.0]
                               -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-                                project ([$$29]) [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                                project ([$$29]) [cardinality: 100.0, op-cost: 0.0, total-cost: 1.0]
                                 -- STREAM_PROJECT  |PARTITIONED|
-                                  assign [$$29] <- [{"d": $$d}] [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                                  assign [$$29] <- [{"d": $$d}] [cardinality: 100.0, op-cost: 0.0, total-cost: 1.0]
                                   -- ASSIGN  |PARTITIONED|
-                                    limit 1 [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                                    limit 1 [cardinality: 100.0, op-cost: 0.0, total-cost: 1.0]
                                     -- STREAM_LIMIT  |PARTITIONED|
-                                      project ([$$d]) [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+                                      project ([$$d]) [cardinality: 100.0, op-cost: 0.0, total-cost: 1.0]
                                       -- STREAM_PROJECT  |PARTITIONED|
-                                        exchange [cardinality: 100.0, op-cost: 100.0, total-cost: 200.0]
+                                        exchange [cardinality: 100.0, op-cost: 4.0, total-cost: 5.0]
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          data-scan []<-[$$40, $$d] <- test.DBLP1 condition (ends-with($$d.getField(1), "Blakeley95")) limit 1 [cardinality: 100.0, op-cost: 100.0, total-cost: 100.0]
+                                          data-scan []<-[$$40, $$d] <- test.DBLP1 condition (ends-with($$d.getField(1), "Blakeley95")) limit 1 [cardinality: 100.0, op-cost: 1.0, total-cost: 1.0]
                                           -- DATASOURCE_SCAN  |PARTITIONED|
                                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

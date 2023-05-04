@@ -40,12 +40,12 @@ public class CostMethods implements ICostMethods {
         maxMemorySize = getMaxMemorySize();
     }
 
-    public long getBufferCacheSize() {
+    private long getBufferCacheSize() {
         MetadataProvider metadataProvider = (MetadataProvider) optCtx.getMetadataProvider();
         return metadataProvider.getStorageProperties().getBufferCacheSize();
     }
 
-    public long getBufferCachePageSize() {
+    private long getBufferCachePageSize() {
         MetadataProvider metadataProvider = (MetadataProvider) optCtx.getMetadataProvider();
         return metadataProvider.getStorageProperties().getBufferCachePageSize();
     }
@@ -63,7 +63,11 @@ public class CostMethods implements ICostMethods {
         return new Cost(jn.computeJoinCardinality());
     }
 
-    public Cost costIndexScan(JoinNode jn) {
+    public Cost costIndexScan(JoinNode jn, double indexSel) {
+        return new Cost(jn.computeJoinCardinality());
+    }
+
+    public Cost costIndexDataScan(JoinNode jn, double indexSel) {
         return new Cost(jn.computeJoinCardinality());
     }
 

@@ -67,7 +67,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected final JoinEnum joinEnum;
+    private final JoinEnum joinEnum;
 
     public EnumerateJoinsRule(JoinEnum joinEnum) {
         this.joinEnum = joinEnum;
@@ -602,7 +602,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         return root;
     }
 
-    public static void printPlan(IPlanPrettyPrinter pp, AbstractLogicalOperator op, String text)
+    protected static void printPlan(IPlanPrettyPrinter pp, AbstractLogicalOperator op, String text)
             throws AlgebricksException {
         if (LOGGER.isTraceEnabled()) {
             pp.reset();

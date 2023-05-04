@@ -68,6 +68,7 @@ public class AnalyzingTestExecutor extends TestExecutor {
                 analyzeStmt.append(dv);
             }
             analyzeStmt.append(ds);
+            analyzeStmt.append(" WITH {\"sample-seed\": \"1000\"}");
             analyzeStmt.append(";");
             InputStream resultStream = executeQueryService(analyzeStmt.toString(), getQueryServiceUri(SQLPP),
                     TestCaseContext.OutputFormat.CLEAN_JSON);

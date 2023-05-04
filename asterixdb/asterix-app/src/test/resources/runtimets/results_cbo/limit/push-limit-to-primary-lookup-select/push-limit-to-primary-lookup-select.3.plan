@@ -1,18 +1,18 @@
-distribute result [$$c] [cardinality: 6005.0, op-cost: 0.0, total-cost: 6005.0]
+distribute result [$$c] [cardinality: 6005.0, op-cost: 0.0, total-cost: 1152.42]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 6005.0, op-cost: 0.0, total-cost: 6005.0]
+  exchange [cardinality: 6005.0, op-cost: 0.0, total-cost: 1152.42]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 5 offset 5 [cardinality: 6005.0, op-cost: 0.0, total-cost: 6005.0]
+    limit 5 offset 5 [cardinality: 6005.0, op-cost: 0.0, total-cost: 1152.42]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      exchange [cardinality: 6005.0, op-cost: 0.0, total-cost: 6005.0]
+      exchange [cardinality: 6005.0, op-cost: 0.0, total-cost: 1152.42]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        limit 10 [cardinality: 6005.0, op-cost: 0.0, total-cost: 6005.0]
+        limit 10 [cardinality: 6005.0, op-cost: 0.0, total-cost: 1152.42]
         -- STREAM_LIMIT  |PARTITIONED|
-          project ([$$c]) [cardinality: 6005.0, op-cost: 0.0, total-cost: 6005.0]
+          project ([$$c]) [cardinality: 6005.0, op-cost: 0.0, total-cost: 1152.42]
           -- STREAM_PROJECT  |PARTITIONED|
-            exchange [cardinality: 6005.0, op-cost: 0.0, total-cost: 6005.0]
+            exchange [cardinality: 6005.0, op-cost: 0.0, total-cost: 1152.42]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              data-scan []<-[$$18, $$19, $$c] <- test.LineItem condition (and(lt($$c.getField(2), 150), lt($$c.getField(5), 10000))) limit 10 [cardinality: 6005.0, op-cost: 6005.0, total-cost: 6005.0]
+              data-scan []<-[$$18, $$19, $$c] <- test.LineItem condition (and(lt($$c.getField(2), 150), lt($$c.getField(5), 10000))) limit 10 [cardinality: 6005.0, op-cost: 1152.42, total-cost: 1152.42]
               -- DATASOURCE_SCAN  |PARTITIONED|
                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

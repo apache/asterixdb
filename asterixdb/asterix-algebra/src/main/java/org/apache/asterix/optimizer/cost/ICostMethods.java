@@ -24,7 +24,7 @@ import org.apache.asterix.optimizer.rules.cbo.JoinNode;
 public interface ICostMethods {
     Cost costFullScan(JoinNode jn);
 
-    Cost costIndexScan(JoinNode jn);
+    Cost costIndexScan(JoinNode jn, double indexSel);
 
     Cost costHashJoin(JoinNode currentJn);
 

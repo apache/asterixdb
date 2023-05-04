@@ -23,27 +23,27 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 
 public class JoinCondition {
 
-    public static final int NO_JC = -1;
+    protected static final int NO_JC = -1;
 
-    public ILogicalExpression joinCondition;
-    public boolean derived = false;
-    public boolean partOfComposite = false;
-    public int numberOfVars = 0; // how many variables
-    public int componentNumber = 0; // for identifying if join graph is connected
-    public int datasetBits;
+    protected ILogicalExpression joinCondition;
+    private boolean derived = false;
+    protected boolean partOfComposite = false;
+    protected int numberOfVars = 0; // how many variables
+    protected int componentNumber = 0; // for identifying if join graph is connected
+    protected int datasetBits;
     // used for triangle detection; we strictly do not mean left and right here.
     // first and second sides would be more appropriate
-    public int leftSideBits;
-    public int rightSideBits;
-    public double selectivity;
-    public comparisonOp comparisonType;
+    protected int leftSideBits;
+    protected int rightSideBits;
+    protected double selectivity;
+    protected comparisonOp comparisonType;
 
-    public enum comparisonOp {
+    protected enum comparisonOp {
         OP_EQ,
         OP_OTHER
     }
 
-    public ILogicalExpression getJoinCondition() {
+    protected ILogicalExpression getJoinCondition() {
         return joinCondition;
     }
 }
