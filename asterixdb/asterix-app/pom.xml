@@ -658,6 +658,12 @@
       <artifactId>hyracks-util</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-util</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>args4j</groupId>
       <artifactId>args4j</artifactId>
     </dependency>

@@ -116,6 +116,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.test.support.TestUtils;
+import org.apache.hyracks.util.TestUtil;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -214,7 +215,7 @@ public class TestNodeController {
                 fieldPermutation[i] = i;
             }
             int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
-            int[][] partitionsMap = getPartitionsMap(numPartitions);
+            int[][] partitionsMap = TestUtil.getPartitionsMap(numPartitions);
             IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
             ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(
                     primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
@@ -263,7 +264,7 @@ public class TestNodeController {
             }
 
             int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
-            int[][] partitionsMap = getPartitionsMap(numPartitions);
+            int[][] partitionsMap = TestUtil.getPartitionsMap(numPartitions);
             IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
             ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(
                     primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
@@ -372,7 +373,7 @@ public class TestNodeController {
             IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                     storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
             int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
-            int[][] partitionsMap = getPartitionsMap(numPartitions);
+            int[][] partitionsMap = TestUtil.getPartitionsMap(numPartitions);
             IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
             ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(
                     primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
@@ -838,7 +839,7 @@ public class TestNodeController {
         IIndexDataflowHelperFactory indexHelperFactory = new IndexDataflowHelperFactory(
                 storageComponentProvider.getStorageManager(), primaryIndexInfo.getFileSplitProvider());
         int numPartitions = primaryIndexInfo.getFileSplitProvider().getFileSplits().length;
-        int[][] partitionsMap = getPartitionsMap(numPartitions);
+        int[][] partitionsMap = TestUtil.getPartitionsMap(numPartitions);
         IBinaryHashFunctionFactory[] pkHashFunFactories = primaryIndexInfo.hashFuncFactories;
         ITuplePartitionerFactory tuplePartitionerFactory =
                 new FieldHashPartitionerFactory(primaryIndexInfo.primaryKeyIndexes, pkHashFunFactories, numPartitions);
@@ -911,13 +912,5 @@ public class TestNodeController {
             outputSerDes[j + f] = inputRecordDesc.getFields()[j];
         }
         return new RecordDescriptor(outputSerDes, outputTypeTraits);
-    }
-
-    private static int[][] getPartitionsMap(int numPartitions) {
-        int[][] map = new int[numPartitions][1];
-        for (int i = 0; i < numPartitions; i++) {
-            map[i] = new int[] { i };
-        }
-        return map;
     }
 }

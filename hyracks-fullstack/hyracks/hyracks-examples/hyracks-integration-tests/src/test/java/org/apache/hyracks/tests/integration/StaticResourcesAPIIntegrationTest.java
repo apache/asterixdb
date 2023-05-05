@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.tests.integration;
 
-import static org.apache.hyracks.tests.integration.TestUtil.httpGetAsString;
+import static org.apache.hyracks.util.TestUtil.httpGetAsString;
 
 import org.junit.Assert;
 import org.junit.Test;

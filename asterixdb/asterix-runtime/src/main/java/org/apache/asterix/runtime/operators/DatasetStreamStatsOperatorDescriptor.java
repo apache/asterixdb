@@ -50,20 +50,21 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
  */
 public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final String operatorName;
     private final IIndexDataflowHelperFactory[] indexes;
     private final String[] indexesNames;
+    private final int[][] partitionsMap;
 
     public DatasetStreamStatsOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc,
-            String operatorName, IIndexDataflowHelperFactory[] indexes, String[] indexesNames) {
+            String operatorName, IIndexDataflowHelperFactory[] indexes, String[] indexesNames, int[][] partitionsMap) {
         super(spec, 1, 1);
-        //TODO(partitioning)
         outRecDescs[0] = rDesc;
         this.operatorName = operatorName;
         this.indexes = indexes;
         this.indexesNames = indexesNames;
+        this.partitionsMap = partitionsMap;
     }
 
     @Override
@@ -75,7 +76,7 @@ public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleAc
             private FrameTupleAccessor fta;
             private long totalTupleCount;
             private long totalTupleLength;
-            private Map<String, IndexStats> indexStats;
+            private Map<String, IndexStats> indexesStats;
 
             @Override
             public void open() throws HyracksDataException {
@@ -87,27 +88,9 @@ public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleAc
                     coll.add(new OperatorStats(operatorName));
                 }
                 INCServiceContext serviceCtx = ctx.getJobletContext().getServiceContext();
-                indexStats = new HashMap<>();
-                for (int i = 0; i < indexes.length; i++) {
-                    IIndexDataflowHelper idxFlowHelper = indexes[i].create(serviceCtx, partition);
-                    try {
-                        idxFlowHelper.open();
-                        ILSMIndex indexInstance = (ILSMIndex) idxFlowHelper.getIndexInstance();
-                        long numPages = 0;
-                        synchronized (indexInstance.getOperationTracker()) {
-                            for (ILSMDiskComponent component : indexInstance.getDiskComponents()) {
-                                long componentSize = component.getComponentSize();
-                                if (component instanceof AbstractLSMWithBloomFilterDiskComponent) {
-                                    componentSize -= ((AbstractLSMWithBloomFilterDiskComponent) component)
-                                            .getBloomFilter().getFileReference().getFile().length();
-                                }
-                                numPages += componentSize / indexInstance.getBufferCache().getPageSize();
-                            }
-                        }
-                        indexStats.put(indexesNames[i], new IndexStats(indexesNames[i], numPages));
-                    } finally {
-                        idxFlowHelper.close();
-                    }
+                indexesStats = new HashMap<>();
+                if (indexes.length > 0) {
+                    gatherIndexesStats(serviceCtx, partitionsMap[partition]);
                 }
             }
 
@@ -136,7 +119,7 @@ public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleAc
                 IStatsCollector statsCollector = ctx.getStatsCollector();
                 if (statsCollector != null) {
                     IOperatorStats stats = statsCollector.getOperatorStats(operatorName);
-                    DatasetStreamStats.update(stats, totalTupleCount, totalTupleLength, indexStats);
+                    DatasetStreamStats.update(stats, totalTupleCount, totalTupleLength, indexesStats);
                 }
                 writer.close();
             }
@@ -149,6 +132,34 @@ public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleAc
             @Override
             public String getDisplayName() {
                 return operatorName;
+            }
+
+            private void gatherIndexesStats(INCServiceContext srcCtx, int[] partitions) throws HyracksDataException {
+                for (int p : partitions) {
+                    for (int i = 0; i < indexes.length; i++) {
+                        IIndexDataflowHelper idxFlowHelper = indexes[i].create(srcCtx, p);
+                        try {
+                            idxFlowHelper.open();
+                            ILSMIndex indexInstance = (ILSMIndex) idxFlowHelper.getIndexInstance();
+                            long numPages = 0;
+                            synchronized (indexInstance.getOperationTracker()) {
+                                for (ILSMDiskComponent component : indexInstance.getDiskComponents()) {
+                                    long componentSize = component.getComponentSize();
+                                    if (component instanceof AbstractLSMWithBloomFilterDiskComponent) {
+                                        componentSize -= ((AbstractLSMWithBloomFilterDiskComponent) component)
+                                                .getBloomFilter().getFileReference().getFile().length();
+                                    }
+                                    numPages += componentSize / indexInstance.getBufferCache().getPageSize();
+                                }
+                            }
+                            IndexStats indexStats = indexesStats.computeIfAbsent(indexesNames[i],
+                                    idxName -> new IndexStats(idxName, 0));
+                            indexStats.updateNumPages(numPages);
+                        } finally {
+                            idxFlowHelper.close();
+                        }
+                    }
+                }
             }
         };
     }

@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.tests.integration;
 
-import static org.apache.hyracks.tests.integration.TestUtil.uri;
+import static org.apache.hyracks.util.TestUtil.uri;
 
 import java.io.IOException;
 import java.io.InputStream;

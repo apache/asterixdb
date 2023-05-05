@@ -102,7 +102,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
 
     private final MetadataProvider metadataProvider;
     private final Dataset dataset;
-    private final Index index;
+    private final Index sampleIdx;
     private final SourceLocation sourceLoc;
 
     private ARecordType itemType;
@@ -115,11 +115,12 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
     private Map<String, String> mergePolicyProperties;
     private int groupbyNumFrames;
     private int[][] computeStorageMap;
+    private int numPartitions;
 
-    protected SampleOperationsHelper(Dataset dataset, Index index, MetadataProvider metadataProvider,
+    protected SampleOperationsHelper(Dataset dataset, Index sampleIdx, MetadataProvider metadataProvider,
             SourceLocation sourceLoc) {
         this.dataset = dataset;
-        this.index = index;
+        this.sampleIdx = sampleIdx;
         this.metadataProvider = metadataProvider;
         this.sourceLoc = sourceLoc;
     }
@@ -135,11 +136,16 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         comparatorFactories = dataset.getPrimaryComparatorFactories(metadataProvider, itemType, metaType);
         groupbyNumFrames = getGroupByNumFrames(metadataProvider, sourceLoc);
 
-        PartitioningProperties partitioningProperties =
-                metadataProvider.getPartitioningProperties(dataset, index.getIndexName());
-        fileSplitProvider = partitioningProperties.getSpiltsProvider();
-        partitionConstraint = partitioningProperties.getConstraints();
-        computeStorageMap = partitioningProperties.getComputeStorageMap();
+        // make sure to always use the dataset + index to get the partitioning properties
+        // this is because in some situations the nodegroup of the passed dataset is different from the index
+        // this can happen during a rebalance for example where the dataset represents the new target dataset while
+        // the index object information is fetched from the old source dataset
+        PartitioningProperties samplePartitioningProperties =
+                metadataProvider.getPartitioningProperties(dataset, sampleIdx.getIndexName());
+        fileSplitProvider = samplePartitioningProperties.getSpiltsProvider();
+        partitionConstraint = samplePartitioningProperties.getConstraints();
+        computeStorageMap = samplePartitioningProperties.getComputeStorageMap();
+        numPartitions = samplePartitioningProperties.getNumberOfPartitions();
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         mergePolicyFactory = compactionInfo.first;
@@ -150,7 +156,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
     public JobSpecification buildCreationJobSpec() throws AlgebricksException {
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
-        IResourceFactory resourceFactory = dataset.getResourceFactory(metadataProvider, index, itemType, metaType,
+        IResourceFactory resourceFactory = dataset.getResourceFactory(metadataProvider, sampleIdx, itemType, metaType,
                 mergePolicyFactory, mergePolicyProperties);
         IIndexBuilderFactory indexBuilderFactory = new IndexBuilderFactory(storageComponentProvider.getStorageManager(),
                 fileSplitProvider, resourceFactory, true);
@@ -165,7 +171,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
 
     @Override
     public JobSpecification buildLoadingJobSpec() throws AlgebricksException {
-        Index.SampleIndexDetails indexDetails = (Index.SampleIndexDetails) index.getIndexDetails();
+        Index.SampleIndexDetails indexDetails = (Index.SampleIndexDetails) sampleIdx.getIndexDetails();
         int sampleCardinalityTarget = indexDetails.getSampleCardinalityTarget();
         long sampleSeed = indexDetails.getSampleSeed();
         IDataFormat format = metadataProvider.getDataFormat();
@@ -189,16 +195,18 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         sourceOp = targetOp;
 
         // primary index scan ----> stream stats op
-        List<Pair<IFileSplitProvider, String>> indexesInfo = metadataProvider.getSplitProviderOfAllIndexes(dataset);
-        IndexDataflowHelperFactory[] indexes = new IndexDataflowHelperFactory[indexesInfo.size()];
-        String[] names = new String[indexesInfo.size()];
+        List<Index> dsIndexes = metadataProvider.getSecondaryIndexes(dataset);
+        IndexDataflowHelperFactory[] indexes = new IndexDataflowHelperFactory[dsIndexes.size()];
+        String[] names = new String[dsIndexes.size()];
         for (int i = 0; i < indexes.length; i++) {
-            Pair<IFileSplitProvider, String> indexInfo = indexesInfo.get(i);
-            indexes[i] = new IndexDataflowHelperFactory(storageMgr, indexInfo.first);
-            names[i] = indexInfo.second;
+            Index idx = dsIndexes.get(i);
+            PartitioningProperties idxPartitioningProps =
+                    metadataProvider.getPartitioningProperties(dataset, idx.getIndexName());
+            indexes[i] = new IndexDataflowHelperFactory(storageMgr, idxPartitioningProps.getSpiltsProvider());
+            names[i] = idx.getIndexName();
         }
-        targetOp =
-                new DatasetStreamStatsOperatorDescriptor(spec, recordDesc, DATASET_STATS_OPERATOR_NAME, indexes, names);
+        targetOp = new DatasetStreamStatsOperatorDescriptor(spec, recordDesc, DATASET_STATS_OPERATOR_NAME, indexes,
+                names, computeStorageMap);
         spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
         sourceOp = targetOp;
 
@@ -318,18 +326,17 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
     protected LSMIndexBulkLoadOperatorDescriptor createTreeIndexBulkLoadOp(JobSpecification spec,
             int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor,
             long numElementHint) throws AlgebricksException {
-        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
         int[] pkFields = new int[dataset.getPrimaryKeys().size()];
         for (int i = 0; i < pkFields.length; i++) {
             pkFields[i] = fieldPermutation[i];
         }
         IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(metadataProvider);
-        ITuplePartitionerFactory partitionerFactory = new FieldHashPartitionerFactory(pkFields, pkHashFunFactories,
-                partitioningProperties.getNumberOfPartitions());
+        ITuplePartitionerFactory partitionerFactory =
+                new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);
         LSMIndexBulkLoadOperatorDescriptor treeIndexBulkLoadOp = new LSMIndexBulkLoadOperatorDescriptor(spec,
                 recordDesc, fieldPermutation, fillFactor, false, numElementHint, true, dataflowHelperFactory, null,
                 LSMIndexBulkLoadOperatorDescriptor.BulkLoadUsage.LOAD, dataset.getDatasetId(), null, partitionerFactory,
-                partitioningProperties.getComputeStorageMap());
+                computeStorageMap);
         treeIndexBulkLoadOp.setSourceLocation(sourceLoc);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, treeIndexBulkLoadOp,
                 partitionConstraint);
@@ -339,7 +346,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
     @Override
     public JobSpecification buildDropJobSpec(Set<IndexDropOperatorDescriptor.DropOption> options)
             throws AlgebricksException {
-        return SecondaryTreeIndexOperationsHelper.buildDropJobSpecImpl(dataset, index, options, metadataProvider,
+        return SecondaryTreeIndexOperationsHelper.buildDropJobSpecImpl(dataset, sampleIdx, options, metadataProvider,
                 sourceLoc);
     }
 

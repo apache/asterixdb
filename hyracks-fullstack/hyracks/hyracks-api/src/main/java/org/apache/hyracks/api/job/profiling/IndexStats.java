@@ -27,6 +27,9 @@ import org.apache.hyracks.api.com.job.profiling.counters.Counter;
 import org.apache.hyracks.api.io.IWritable;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
+/**
+ * Currently, this class represents the stats of an index across all the partitions. The stats are not per partition.
+ */
 public class IndexStats implements IWritable, Serializable {
 
     private static final long serialVersionUID = 1L;

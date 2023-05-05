@@ -53,10 +53,12 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexSearchOperatorNodePushable;
+import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
 import org.apache.hyracks.storage.common.MultiComparator;
+import org.apache.hyracks.util.TestUtil;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -277,7 +279,6 @@ public class FramewriterTest {
     /**
      * @return a list of writers to test. these writers can be of the same type but behave differently based on included mocks
      * @throws HyracksDataException
-     * @throws IndexException
      */
     public IFrameWriter[] createWriters() throws HyracksDataException {
         ArrayList<BTreeSearchOperatorNodePushable> writers = new ArrayList<>();
@@ -285,6 +286,7 @@ public class FramewriterTest {
         IRecordDescriptorProvider[] recordDescProviders = mockRecDescProviders();
         int partition = 0;
         IHyracksTaskContext[] ctxs = mockIHyracksTaskContext();
+        int[][] partitionsMap = TestUtil.getPartitionsMap(ctxs.length);
         int[] keys = { 0 };
         boolean lowKeyInclusive = true;
         boolean highKeyInclusive = true;
@@ -295,7 +297,8 @@ public class FramewriterTest {
                             recordDescProvider.getInputRecordDescriptor(new ActivityId(new OperatorDescriptorId(0), 0),
                                     0),
                             keys, keys, lowKeyInclusive, highKeyInclusive, keys, keys, pair.getLeft(), false, false,
-                            null, pair.getRight(), false, null);
+                            null, pair.getRight(), false, null, null, -1, false, null, null,
+                            DefaultTupleProjectorFactory.INSTANCE, null, partitionsMap);
                     writers.add(writer);
                 }
             }

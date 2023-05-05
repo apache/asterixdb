@@ -42,7 +42,7 @@ import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallbackFactory;
 import org.apache.hyracks.storage.am.rtree.dataflow.RTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.rtree.frames.RTreePolicyType;
 import org.apache.hyracks.storage.common.IResourceFactory;
-import org.apache.hyracks.test.support.TestUtils;
+import org.apache.hyracks.util.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -87,7 +87,7 @@ public class RTreeSecondaryIndexScanOperatorTest extends AbstractRTreeOperatorTe
         int[] keyFields = null;
         RTreeSearchOperatorDescriptor secondarySearchOp = new RTreeSearchOperatorDescriptor(spec, secondaryRecDesc,
                 keyFields, true, true, secondaryHelperFactory, false, false, null,
-                NoOpOperationCallbackFactory.INSTANCE, null, null, false, null, TestUtils.getPartitionsMap(1));
+                NoOpOperationCallbackFactory.INSTANCE, null, null, false, null, TestUtil.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondarySearchOp, NC1_ID);
         IFileSplitProvider outSplits = new ConstantFileSplitProvider(new FileSplit[] { createFile(nc1) });
         IOperatorDescriptor printer = new PlainFileWriterOperatorDescriptor(spec, outSplits, ",");

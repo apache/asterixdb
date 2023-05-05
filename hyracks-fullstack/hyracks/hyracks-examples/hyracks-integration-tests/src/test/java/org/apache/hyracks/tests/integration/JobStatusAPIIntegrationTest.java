@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.tests.integration;
 
-import static org.apache.hyracks.tests.integration.TestUtil.httpGetAsObject;
+import static org.apache.hyracks.util.TestUtil.httpGetAsObject;
 
 import java.io.IOException;
 import java.net.URI;

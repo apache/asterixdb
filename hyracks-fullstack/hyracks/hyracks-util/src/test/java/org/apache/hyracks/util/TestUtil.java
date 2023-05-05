@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.tests.integration;
+package org.apache.hyracks.util;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,34 +38,42 @@ public class TestUtil {
     private static final String HOST = "127.0.0.1";
     private static final int PORT = 16001;
 
-    static URI uri(String path) throws URISyntaxException {
+    public static URI uri(String path) throws URISyntaxException {
         return new URI("http", null, HOST, PORT, path, null, null);
     }
 
-    static InputStream httpGetAsInputStream(URI uri) throws URISyntaxException, IOException {
+    public static InputStream httpGetAsInputStream(URI uri) throws URISyntaxException, IOException {
         HttpClient client = HttpClients.createMinimal();
         HttpResponse response = client.execute(new HttpGet(uri));
         return response.getEntity().getContent();
     }
 
-    static String httpGetAsString(String path) throws URISyntaxException, IOException {
+    public static String httpGetAsString(String path) throws URISyntaxException, IOException {
         return httpGetAsString(uri(path));
     }
 
-    static String httpGetAsString(URI uri) throws URISyntaxException, IOException {
+    public static String httpGetAsString(URI uri) throws URISyntaxException, IOException {
         InputStream resultStream = httpGetAsInputStream(uri);
         return IOUtils.toString(resultStream, Charset.defaultCharset());
     }
 
-    static ObjectNode getResultAsJson(String resultStr) throws IOException {
+    public static ObjectNode getResultAsJson(String resultStr) throws IOException {
         return new ObjectMapper().readValue(resultStr, ObjectNode.class);
     }
 
-    static ObjectNode httpGetAsObject(String path) throws URISyntaxException, IOException {
+    public static ObjectNode httpGetAsObject(String path) throws URISyntaxException, IOException {
         return getResultAsJson(httpGetAsString(path));
     }
 
-    static ObjectNode httpGetAsObject(URI uri) throws URISyntaxException, IOException {
+    public static ObjectNode httpGetAsObject(URI uri) throws URISyntaxException, IOException {
         return getResultAsJson(httpGetAsString(uri));
+    }
+
+    public static int[][] getPartitionsMap(int numPartitions) {
+        int[][] map = new int[numPartitions][1];
+        for (int i = 0; i < numPartitions; i++) {
+            map[i] = new int[] { i };
+        }
+        return map;
     }
 }

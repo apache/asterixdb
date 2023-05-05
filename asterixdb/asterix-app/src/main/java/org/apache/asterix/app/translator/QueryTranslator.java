@@ -4459,7 +4459,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 for (Index index : indexes) {
-                    if (index.isSecondaryIndex()) {
+                    if (index.isSecondaryIndex() && !index.isSampleIndex()) {
                         jobsToExecute.add(
                                 IndexUtil.buildSecondaryIndexCompactJobSpec(ds, index, metadataProvider, sourceLoc));
                     }
