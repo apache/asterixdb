@@ -933,7 +933,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public FileSplit[] splitsForIndex(MetadataTransactionContext mdTxnCtx, Dataset dataset, String indexName)
             throws AlgebricksException {
-        return SplitsAndConstraintsUtil.getIndexSplits(dataset, indexName, mdTxnCtx, appCtx.getClusterStateManager());
+        return dataPartitioningProvider.getPartitioningProperties(mdTxnCtx, dataset, indexName).getSpiltsProvider()
+                .getFileSplits();
     }
 
     public DatasourceAdapter getAdapter(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
@@ -1788,8 +1789,6 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public PartitioningProperties getPartitioningProperties(Dataset ds, String indexName) throws AlgebricksException {
-        //TODO(partitioning) pass splits rather than mdTxnCtx?
-        //        FileSplit[] splits = splitsForIndex(mdTxnCtx, ds, indexName);
         return dataPartitioningProvider.getPartitioningProperties(mdTxnCtx, ds, indexName);
     }
 

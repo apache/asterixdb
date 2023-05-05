@@ -34,12 +34,15 @@ import java.util.function.Predicate;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
+import org.apache.asterix.common.cluster.StorageComputePartitionsMap;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.asterix.common.utils.NcLocalCounters;
+import org.apache.asterix.common.utils.PartitioningScheme;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.config.IOption;
@@ -79,6 +82,7 @@ public class ClusterStateManager implements IClusterStateManager {
     private ICcApplicationContext appCtx;
     private ClusterPartition metadataPartition;
     private boolean rebalanceRequired;
+    private StorageComputePartitionsMap storageComputePartitionsMap;
 
     @Override
     public void setCcAppCtx(ICcApplicationContext appCtx) {
@@ -86,7 +90,14 @@ public class ClusterStateManager implements IClusterStateManager {
         node2PartitionsMap = appCtx.getMetadataProperties().getNodePartitions();
         clusterPartitions = appCtx.getMetadataProperties().getClusterPartitions();
         currentMetadataNode = appCtx.getMetadataProperties().getMetadataNodeName();
-        metadataPartition = node2PartitionsMap.get(currentMetadataNode)[0];
+        PartitioningScheme partitioningScheme = appCtx.getStorageProperties().getPartitioningScheme();
+        if (partitioningScheme == PartitioningScheme.DYNAMIC) {
+            metadataPartition = node2PartitionsMap.get(currentMetadataNode)[0];
+        } else {
+            final ClusterPartition fixedMetadataPartition = new ClusterPartition(StorageConstants.METADATA_PARTITION,
+                    appCtx.getMetadataProperties().getMetadataNodeName(), 0);
+            metadataPartition = fixedMetadataPartition;
+        }
         lifecycleCoordinator = appCtx.getNcLifecycleCoordinator();
         lifecycleCoordinator.bindTo(this);
     }
@@ -299,6 +310,9 @@ public class ClusterStateManager implements IClusterStateManager {
         clusterActiveLocations.removeAll(pendingRemoval);
         clusterPartitionConstraint =
                 new AlgebricksAbsolutePartitionConstraint(clusterActiveLocations.toArray(new String[] {}));
+        if (appCtx.getStorageProperties().getPartitioningScheme() == PartitioningScheme.STATIC) {
+            storageComputePartitionsMap = StorageComputePartitionsMap.computePartitionsMap(this);
+        }
     }
 
     @Override
@@ -487,6 +501,10 @@ public class ClusterStateManager implements IClusterStateManager {
     @Override
     public synchronized boolean nodesFailed(Set<String> nodeIds) {
         return nodeIds.stream().anyMatch(failedNodes::contains);
+    }
+
+    public synchronized StorageComputePartitionsMap getStorageComputeMap() {
+        return storageComputePartitionsMap;
     }
 
     private void updateClusterCounters(String nodeId, NcLocalCounters localCounters) {

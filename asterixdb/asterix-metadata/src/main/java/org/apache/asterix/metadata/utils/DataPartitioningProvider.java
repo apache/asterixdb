@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.metadata.utils;
 
-import static org.apache.asterix.common.utils.PartitioningScheme.DYNAMIC;
-import static org.apache.asterix.common.utils.PartitioningScheme.STATIC;
-
 import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
@@ -31,78 +28,71 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.IDataPartitioningProvider;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.utils.PartitioningScheme;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Feed;
+import org.apache.asterix.runtime.utils.ClusterStateManager;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 
-public class DataPartitioningProvider implements IDataPartitioningProvider {
+public abstract class DataPartitioningProvider implements IDataPartitioningProvider {
 
-    private final ICcApplicationContext appCtx;
-    private final PartitioningScheme scheme;
+    protected final ICcApplicationContext appCtx;
+    protected final ClusterStateManager clusterStateManager;
 
-    public DataPartitioningProvider(ICcApplicationContext appCtx) {
+    DataPartitioningProvider(ICcApplicationContext appCtx) {
         this.appCtx = appCtx;
-        scheme = appCtx.getStorageProperties().getPartitioningScheme();
+        this.clusterStateManager = (ClusterStateManager) appCtx.getClusterStateManager();
     }
 
-    public PartitioningProperties getPartitioningProperties(DataverseName dataverseName) {
-        if (scheme == DYNAMIC) {
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraints = SplitsAndConstraintsUtil
-                    .getDataverseSplitProviderAndConstraints(appCtx.getClusterStateManager(), dataverseName);
-            int[][] partitionsMap = getPartitionsMap(getNumPartitions(splitsAndConstraints.second));
-            return PartitioningProperties.of(splitsAndConstraints.first, splitsAndConstraints.second, partitionsMap);
-        } else if (scheme == STATIC) {
-            throw new NotImplementedException();
+    public static DataPartitioningProvider create(ICcApplicationContext appCtx) {
+        PartitioningScheme partitioningScheme = appCtx.getStorageProperties().getPartitioningScheme();
+        switch (partitioningScheme) {
+            case DYNAMIC:
+                return new DynamicDataPartitioningProvider(appCtx);
+            case STATIC:
+                return new StaticDataPartitioningProvider(appCtx);
+            default:
+                throw new IllegalStateException("unknown partitioning scheme: " + partitioningScheme);
         }
-        throw new IllegalStateException();
     }
 
-    public PartitioningProperties getPartitioningProperties(MetadataTransactionContext mdTxnCtx, Dataset ds,
-            String indexName) throws AlgebricksException {
-        if (scheme == DYNAMIC) {
-            FileSplit[] splits =
-                    SplitsAndConstraintsUtil.getIndexSplits(ds, indexName, mdTxnCtx, appCtx.getClusterStateManager());
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraints =
-                    StoragePathUtil.splitProviderAndPartitionConstraints(splits);
-            int[][] partitionsMap = getPartitionsMap(getNumPartitions(splitsAndConstraints.second));
-            return PartitioningProperties.of(splitsAndConstraints.first, splitsAndConstraints.second, partitionsMap);
-        } else if (scheme == STATIC) {
-            throw new NotImplementedException();
-        }
-        throw new IllegalStateException();
-    }
+    public abstract PartitioningProperties getPartitioningProperties(DataverseName dataverseName);
+
+    public abstract PartitioningProperties getPartitioningProperties(MetadataTransactionContext mdTxnCtx, Dataset ds,
+            String indexName) throws AlgebricksException;
 
     public PartitioningProperties getPartitioningProperties(Feed feed) throws AsterixException {
-        if (scheme == DYNAMIC) {
-            IClusterStateManager csm = appCtx.getClusterStateManager();
-            AlgebricksAbsolutePartitionConstraint allCluster = csm.getClusterLocations();
-            Set<String> nodes = new TreeSet<>(Arrays.asList(allCluster.getLocations()));
-            AlgebricksAbsolutePartitionConstraint locations =
-                    new AlgebricksAbsolutePartitionConstraint(nodes.toArray(new String[0]));
-            FileSplit[] feedLogFileSplits =
-                    FeedUtils.splitsForAdapter(appCtx, feed.getDataverseName(), feed.getFeedName(), locations);
-            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spC =
-                    StoragePathUtil.splitProviderAndPartitionConstraints(feedLogFileSplits);
-            int[][] partitionsMap = getPartitionsMap(getNumPartitions(spC.second));
-            return PartitioningProperties.of(spC.first, spC.second, partitionsMap);
-        } else if (scheme == STATIC) {
-            throw new NotImplementedException();
-        }
-        throw new IllegalStateException();
+        IClusterStateManager csm = appCtx.getClusterStateManager();
+        AlgebricksAbsolutePartitionConstraint allCluster = csm.getClusterLocations();
+        Set<String> nodes = new TreeSet<>(Arrays.asList(allCluster.getLocations()));
+        AlgebricksAbsolutePartitionConstraint locations =
+                new AlgebricksAbsolutePartitionConstraint(nodes.toArray(new String[0]));
+        FileSplit[] feedLogFileSplits =
+                FeedUtils.splitsForAdapter(appCtx, feed.getDataverseName(), feed.getFeedName(), locations);
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spC =
+                StoragePathUtil.splitProviderAndPartitionConstraints(feedLogFileSplits);
+        int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(spC.second));
+        return PartitioningProperties.of(spC.first, spC.second, partitionsMap);
     }
 
-    private static int getNumPartitions(AlgebricksPartitionConstraint constraint) {
+    protected static int getNumberOfPartitions(Dataset ds) {
+        return MetadataIndexImmutableProperties.isMetadataDataset(ds.getDatasetId())
+                ? MetadataIndexImmutableProperties.METADATA_DATASETS_PARTITIONS
+                : StorageConstants.NUM_STORAGE_PARTITIONS;
+    }
+
+    protected static int getLocationsCount(AlgebricksPartitionConstraint constraint) {
         if (constraint.getPartitionConstraintType() == AlgebricksPartitionConstraint.PartitionConstraintType.COUNT) {
             return ((AlgebricksCountPartitionConstraint) constraint).getCount();
         } else {
@@ -110,7 +100,7 @@ public class DataPartitioningProvider implements IDataPartitioningProvider {
         }
     }
 
-    private static int[][] getPartitionsMap(int numPartitions) {
+    protected static int[][] getOneToOnePartitionsMap(int numPartitions) {
         int[][] map = new int[numPartitions][1];
         for (int i = 0; i < numPartitions; i++) {
             map[i] = new int[] { i };

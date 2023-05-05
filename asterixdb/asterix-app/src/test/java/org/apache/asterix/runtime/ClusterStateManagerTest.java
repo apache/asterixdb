@@ -33,8 +33,10 @@ import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.MetadataProperties;
+import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.utils.NcLocalCounters;
+import org.apache.asterix.common.utils.PartitioningScheme;
 import org.apache.asterix.hyracks.bootstrap.CCApplication;
 import org.apache.asterix.runtime.transaction.ResourceIdManager;
 import org.apache.asterix.runtime.utils.BulkTxnIdFactory;
@@ -231,6 +233,9 @@ public class ClusterStateManagerTest {
         MetadataProperties metadataProperties = mockMetadataProperties();
         Mockito.when(ccApplicationContext.getMetadataProperties()).thenReturn(metadataProperties);
 
+        StorageProperties storageProperties = mockStorageProperties();
+        Mockito.when(ccApplicationContext.getStorageProperties()).thenReturn(storageProperties);
+
         ResourceIdManager resourceIdManager = new ResourceIdManager(csm);
         Mockito.when(ccApplicationContext.getResourceIdManager()).thenReturn(resourceIdManager);
 
@@ -256,6 +261,12 @@ public class ClusterStateManagerTest {
         Mockito.when(metadataProperties.getClusterPartitions()).thenReturn(clusterPartitions);
         Mockito.when(metadataProperties.getNodePartitions()).thenReturn(nodePartitionsMap);
         return metadataProperties;
+    }
+
+    private StorageProperties mockStorageProperties() {
+        StorageProperties storageProperties = Mockito.mock(StorageProperties.class);
+        Mockito.when(storageProperties.getPartitioningScheme()).thenReturn(PartitioningScheme.DYNAMIC);
+        return storageProperties;
     }
 
     private NcLocalCounters mockLocalCounters() {

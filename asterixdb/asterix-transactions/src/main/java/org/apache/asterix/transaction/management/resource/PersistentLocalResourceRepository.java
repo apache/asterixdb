@@ -211,7 +211,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     public void delete(String relativePath) throws HyracksDataException {
         FileReference resourceFile = getLocalResourceFileByName(ioManager, relativePath);
         boolean resourceExists = resourceFile.getFile().exists();
-        if (resourceExists) {
+        if (isReplicationEnabled && resourceExists) {
             try {
                 createReplicationJob(ReplicationOperation.DELETE, resourceFile);
             } catch (Exception e) {

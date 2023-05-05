@@ -65,6 +65,8 @@ import org.apache.hyracks.storage.common.MultiComparator;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 
@@ -82,11 +84,10 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
 
     private final IFrameOperationCallback[] frameOpCallbacks;
     private boolean flushedPartialTuples;
-    private int currentTupleIdx;
-    private int lastFlushedTupleIdx;
-
     private final PermutingFrameTupleReference keyTuple;
     private final Int2ObjectMap<IntSet> partition2TuplesMap = new Int2ObjectOpenHashMap<>();
+    private final IntSet processedTuples = new IntOpenHashSet();
+    private final IntSet flushedTuples = new IntOpenHashSet();
     private final SourceLocation sourceLoc;
 
     public LSMPrimaryInsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
@@ -142,7 +143,7 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 @Override
                 public void process(FrameTupleAccessor accessor, ITupleReference tuple, int index)
                         throws HyracksDataException {
-                    if (index < currentTupleIdx) {
+                    if (processedTuples.contains(index)) {
                         // already processed; skip
                         return;
                     }
@@ -174,7 +175,7 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                         throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE,
                                 HyracksDataException.create(ErrorCode.DUPLICATE_KEY), sourceLoc, index);
                     }
-                    currentTupleIdx = index + 1;
+                    processedTuples.add(index);
                 }
 
                 @Override
@@ -197,15 +198,14 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
 
     @Override
     public void open() throws HyracksDataException {
-        currentTupleIdx = 0;
-        lastFlushedTupleIdx = 0;
         flushedPartialTuples = false;
         accessor = new FrameTupleAccessor(inputRecDesc);
         writeBuffer = new VSizeFrame(ctx);
         try {
             INcApplicationContext appCtx =
                     (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
-
+            writer.open();
+            writerOpen = true;
             for (int i = 0; i < partitions.length; i++) {
                 IIndexDataflowHelper indexHelper = indexHelpers[i];
                 indexHelper.open();
@@ -224,8 +224,6 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                             new PrimaryIndexLogMarkerCallback((AbstractLSMIndex) indexes[0]);
                     TaskUtil.put(ILogMarkerCallback.KEY_MARKER_CALLBACK, callback, ctx);
                 }
-                writer.open();
-                writerOpen = true;
                 modCallbacks[i] =
                         modOpCallbackFactory.createModificationOperationCallback(indexHelper.getResource(), ctx, this);
                 searchCallbacks[i] = (LockThenSearchOperationCallback) searchCallbackFactory
@@ -283,9 +281,9 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             FrameUtils.copyAndFlip(buffer, writeBuffer.getBuffer());
             FrameUtils.flushFrame(writeBuffer.getBuffer(), writer);
         }
-        currentTupleIdx = 0;
-        lastFlushedTupleIdx = 0;
         flushedPartialTuples = false;
+        processedTuples.clear();
+        flushedTuples.clear();
     }
 
     /**
@@ -293,15 +291,17 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
      */
     @Override
     public void flushPartialFrame() throws HyracksDataException {
-        if (lastFlushedTupleIdx == currentTupleIdx) {
-            //nothing to flush
-            return;
-        }
-        for (int i = lastFlushedTupleIdx; i < currentTupleIdx; i++) {
-            FrameUtils.appendToWriter(writer, appender, accessor, i);
+        IntList tuplesToFlush = new IntArrayList();
+        processedTuples.iterator().forEachRemaining(tIdx -> {
+            if (!flushedTuples.contains(tIdx)) {
+                tuplesToFlush.add(tIdx);
+                flushedTuples.add(tIdx);
+            }
+        });
+        for (int i = 0; i < tuplesToFlush.size(); i++) {
+            FrameUtils.appendToWriter(writer, appender, accessor, tuplesToFlush.getInt(i));
         }
         appender.write(writer, true);
-        lastFlushedTupleIdx = currentTupleIdx;
         flushedPartialTuples = true;
     }
 

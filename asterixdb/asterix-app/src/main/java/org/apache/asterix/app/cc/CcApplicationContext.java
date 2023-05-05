@@ -157,7 +157,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         requestTracker = new RequestTracker(this);
         configValidator = configValidatorFactory.create();
         this.adapterFactoryService = adapterFactoryService;
-        dataPartitioningProvider = new DataPartitioningProvider(this);
+        dataPartitioningProvider = DataPartitioningProvider.create(this);
     }
 
     @Override

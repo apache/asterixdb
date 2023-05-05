@@ -145,6 +145,7 @@ public class GenericAdapterFactory implements ITypedAdapterFactory {
             throws HyracksDataException, AlgebricksException {
         this.isFeed = ExternalDataUtils.isFeed(configuration);
         if (isFeed) {
+            //TODO(partitioning) make this code reuse DataPartitioningProvider
             feedLogFileSplits = FeedUtils.splitsForAdapter(appCtx, ExternalDataUtils.getDatasetDataverse(configuration),
                     ExternalDataUtils.getFeedName(configuration), dataSourceFactory.getPartitionConstraint());
         }
