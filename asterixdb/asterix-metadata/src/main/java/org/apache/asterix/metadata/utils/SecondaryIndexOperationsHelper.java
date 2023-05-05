@@ -30,6 +30,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
 import org.apache.asterix.formats.nontagged.BinaryComparatorFactoryProvider;
@@ -74,6 +75,7 @@ import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionerFactory;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
@@ -211,8 +213,9 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         payloadSerde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
         metaSerde =
                 metaType == null ? null : SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(metaType);
-        PartitioningProperties partitioningProperties =
-                metadataProvider.getPartitioningProperties(dataset, index.getIndexName());
+        PartitioningProperties partitioningProperties;
+        partitioningProperties =
+                getSecondaryIndexBulkloadPartitioningProperties(metadataProvider, dataset, index.getIndexName());
         secondaryFileSplitProvider = partitioningProperties.getSpiltsProvider();
         secondaryPartitionConstraint = partitioningProperties.getConstraints();
         numPrimaryKeys = dataset.getPrimaryKeys().size();
@@ -223,8 +226,8 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
             } else {
                 numFilterFields = 0;
             }
-
-            PartitioningProperties datasetPartitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+            PartitioningProperties datasetPartitioningProperties = getSecondaryIndexBulkloadPartitioningProperties(
+                    metadataProvider, dataset, dataset.getDatasetName());
             primaryFileSplitProvider = datasetPartitioningProperties.getSpiltsProvider();
             primaryPartitionConstraint = datasetPartitioningProperties.getConstraints();
             setPrimaryRecDescAndComparators();
@@ -526,5 +529,21 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
     @Override
     public AlgebricksPartitionConstraint getSecondaryPartitionConstraint() {
         return secondaryPartitionConstraint;
+    }
+
+    private PartitioningProperties getSecondaryIndexBulkloadPartitioningProperties(MetadataProvider mp, Dataset dataset,
+            String indexName) throws AlgebricksException {
+        PartitioningProperties partitioningProperties = mp.getPartitioningProperties(dataset, indexName);
+        // special case for bulkloading secondary indexes for datasets with correldated merge policy
+        // to ensure correctness, we will run in as many locations as storage partitions
+        // this will not be needed once ASTERIXDB-3176 is implemented
+        if (this instanceof SecondaryCorrelatedTreeIndexOperationsHelper) {
+            FileSplit[] fileSplits = partitioningProperties.getSpiltsProvider().getFileSplits();
+            Pair<IFileSplitProvider, AlgebricksPartitionConstraint> sp =
+                    StoragePathUtil.splitProviderAndPartitionConstraints(fileSplits);
+            return PartitioningProperties.of(sp.getFirst(), sp.getSecond(),
+                    DataPartitioningProvider.getOneToOnePartitionsMap(fileSplits.length));
+        }
+        return partitioningProperties;
     }
 }

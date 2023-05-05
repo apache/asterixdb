@@ -188,7 +188,8 @@ public class SecondaryCorrelatedRTreeOperationsHelper extends SecondaryCorrelate
         assert dataset.getDatasetType() == DatasetType.INTERNAL;
 
         // Create dummy key provider for feeding the primary index scan.
-        IOperatorDescriptor keyProviderOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);
+        IOperatorDescriptor keyProviderOp =
+                DatasetUtil.createCorrelatedDummyKeyProviderOp(spec, primaryPartitionConstraint);
         IndexUtil.bindJobEventListener(spec, metadataProvider);
 
         // Create primary index scan op.

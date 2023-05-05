@@ -216,7 +216,8 @@ public class SecondaryCorrelatedInvertedIndexOperationsHelper extends SecondaryC
         IndexUtil.bindJobEventListener(spec, metadataProvider);
 
         // Create dummy key provider for feeding the primary index scan.
-        IOperatorDescriptor keyProviderOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);
+        IOperatorDescriptor keyProviderOp =
+                DatasetUtil.createCorrelatedDummyKeyProviderOp(spec, primaryPartitionConstraint);
 
         // Create primary index scan op.
         IOperatorDescriptor primaryScanOp = createPrimaryIndexScanDiskComponentsOp(spec, metadataProvider,

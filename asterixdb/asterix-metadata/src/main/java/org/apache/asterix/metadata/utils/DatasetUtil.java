@@ -585,7 +585,20 @@ public class DatasetUtil {
             MetadataProvider metadataProvider) throws AlgebricksException {
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
         AlgebricksPartitionConstraint primaryPartitionConstraint = partitioningProperties.getConstraints();
+        IOperatorDescriptor dummyKeyProviderOp = createDummyKeyProviderOp(spec);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, dummyKeyProviderOp,
+                primaryPartitionConstraint);
+        return dummyKeyProviderOp;
+    }
 
+    public static IOperatorDescriptor createCorrelatedDummyKeyProviderOp(JobSpecification spec,
+            AlgebricksPartitionConstraint apc) throws AlgebricksException {
+        IOperatorDescriptor dummyKeyProviderOp = createDummyKeyProviderOp(spec);
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, dummyKeyProviderOp, apc);
+        return dummyKeyProviderOp;
+    }
+
+    private static IOperatorDescriptor createDummyKeyProviderOp(JobSpecification spec) throws AlgebricksException {
         // Build dummy tuple containing one field with a dummy value inside.
         ArrayTupleBuilder tb = new ArrayTupleBuilder(1);
         DataOutput dos = tb.getDataOutput();
@@ -602,8 +615,6 @@ public class DatasetUtil {
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,
                 keyRecDesc, tb.getFieldEndOffsets(), tb.getByteArray(), tb.getSize());
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, keyProviderOp,
-                primaryPartitionConstraint);
         return keyProviderOp;
     }
 
