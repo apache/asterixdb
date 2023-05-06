@@ -16,11 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-use GeoJSON1;
+use GeoJSON;
 
-SELECT VALUE {"Distance":st_distance(geo.myGeometry1, geo.myGeometry2), "Intersects":st_intersects(geo.myGeometry1,
-geo.myGeometry2), "Contains":st_contains(geo.myGeometry1, geo.myGeometry2), "Crosses":st_crosses(geo.myGeometry1,
-geo.myGeometry2), "Disjoint":st_disjoint(geo.myGeometry1, geo.myGeometry2), "Equals":st_equals(geo.myGeometry1,
-geo.myGeometry2), "Overlaps":st_overlaps(geo.myGeometry1, geo.myGeometry2), "Relate":st_relate(geo.myGeometry1,
-geo.myGeometry2, "FF1FF0102"), "Touches":st_touches(geo.myGeometry1, geo.myGeometry2), "Within":st_within(
-geo.myGeometry1, geo.myGeometry2)} FROM Geometries geo;
+SELECT VALUE {"X":st_x(geo.myGeometry),"Y":st_y(geo.myGeometry),"Z":st_z(geo.myGeometry), "M":st_m(geo.myGeometry)}
+FROM Geometries geo
+WHERE geometry_type(geo.myGeometry)="Point"
+ORDER BY geo.id;

@@ -17,5 +17,8 @@
  * under the License.
  */
 use GeoJSON;
-
-SELECT VALUE {"PointN": st_point_n(geo.myGeometry,1), "StartPoint":st_start_point(geo.myGeometry),"Envelope":st_envelope(geo.myGeometry)} FROM Geometries geo WHERE geometry_type(geo.myGeometry)="LineString";
+SET `compiler.sort.parallel` "false";
+SELECT VALUE {"PointN": st_point_n(geo.myGeometry,1), "StartPoint":st_start_point(geo.myGeometry),"Envelope":st_envelope(geo.myGeometry)}
+FROM Geometries geo
+WHERE geometry_type(geo.myGeometry)="LineString"
+ORDER BY geo.id;

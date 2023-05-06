@@ -16,17 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Upsert into a dataset which has a correlated b-tree secondary index
- * Expected Res : Success
- * Date         : June 8 2017
- */
+use GeoJSON;
 
-
- // So far this one doesn't use the btree index, need another query
-use test;
-
-select value x
-from UpsertTo x
-where x.age > 5
-order by x.id;
+SELECT VALUE {"IsClosed":st_is_closed(geo.myGeometry), "IsCollection":st_is_collection(geo.myGeometry),"IsEmpty":st_is_empty(geo.myGeometry), "IsSimple":st_is_simple(geo.myGeometry)}
+FROM Geometries geo
+ORDER BY geo.id;

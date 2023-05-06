@@ -16,7 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-use GeoJSON1;
+/*
+ * Description  : Upsert into a dataset which has a correlated b-tree secondary index
+ * Expected Res : Success
+ * Date         : June 8 2017
+ */
 
-SELECT VALUE {"Union": st_union(geo.myGeometry1, geo.myGeometry2),"Intersection":st_intersection(geo.myGeometry1,
-geo.myGeometry2),"SymDifference":st_sym_difference(geo.myGeometry1,geo.myGeometry2)} FROM Geometries geo;
+drop dataverse test if exists;

@@ -25,5 +25,5 @@ GROUP BY e.deptno AS deptno GROUP AS g(e AS e)
 SELECT ELEMENT {
   'deptno': deptno,
   'avgpay': strict_avg( (FROM g AS i SELECT ELEMENT i.e.salary) ),
-  'workers': (FROM g AS i SELECT ELEMENT  {'name': i.e.name, 'salary': i.e.salary})
+  'workers': (FROM g AS i SELECT ELEMENT  {'name': i.e.name, 'salary': i.e.salary} ORDER BY i.e.name)
 };

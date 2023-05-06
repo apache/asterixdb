@@ -16,6 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-use GeoJSON;
 
-SELECT VALUE {"IsClosed":st_is_closed(geo.myGeometry), "IsCollection":st_is_collection(geo.myGeometry),"IsEmpty":st_is_empty(geo.myGeometry), "IsSimple":st_is_simple(geo.myGeometry)} FROM Geometries geo;
+drop  dataverse GeoJSON1 if exists;

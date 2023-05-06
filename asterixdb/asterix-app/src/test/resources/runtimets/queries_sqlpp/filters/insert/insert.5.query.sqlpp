@@ -23,4 +23,4 @@ use test;
 select element m
 from  FacebookMessages2 as m
 where (m.`send-time` > test.datetime('2012-08-20T10:10:00'))
-;
+order by m.`message-id`;

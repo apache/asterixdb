@@ -19,7 +19,6 @@
 
 use DMLTest;
 
-
 select element t
 from  FacebookUsers2 as t
-;
+order by t.id;

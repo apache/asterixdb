@@ -26,4 +26,5 @@ select element {
   "gday": i.day,
   "timebin": i.time,
   "avg_RR_clipped": array_avg(i.RR)
-} from HRM i;
+} from HRM i
+order by i.row_id;

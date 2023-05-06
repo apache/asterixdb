@@ -25,4 +25,5 @@
 use test;
 
 select value x
-from UpsertTo x;
+from UpsertTo x
+order by x.id;

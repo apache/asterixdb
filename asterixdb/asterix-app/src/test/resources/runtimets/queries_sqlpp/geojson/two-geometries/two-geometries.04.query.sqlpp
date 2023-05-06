@@ -16,17 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Upsert into a dataset which has a correlated b-tree secondary index
- * Expected Res : Success
- * Date         : June 8 2017
- */
+use GeoJSON1;
 
-
- // So far this one doesn't use the btree index, need another query
-use test;
-
-select value x
-from UpsertTo x
-where x.age > 5
-order by x.id;
+SELECT VALUE {"Union": st_union(geo.myGeometry1, geo.myGeometry2),"Intersection":st_intersection(geo.myGeometry1,
+geo.myGeometry2),"SymDifference":st_sym_difference(geo.myGeometry1,geo.myGeometry2)}
+FROM Geometries geo
+ORDER BY geo.id;

@@ -17,16 +17,9 @@
  * under the License.
  */
 /*
- * Description  : Upsert into a dataset which has a correlated b-tree secondary index
+ * Description  : Test filters with loading
  * Expected Res : Success
- * Date         : June 8 2017
+ * Date         : 25th Jun 2014
  */
 
-
- // So far this one doesn't use the btree index, need another query
-use test;
-
-select value x
-from UpsertTo x
-where x.age > 5
-order by x.id;
+drop  dataverse test if exists;

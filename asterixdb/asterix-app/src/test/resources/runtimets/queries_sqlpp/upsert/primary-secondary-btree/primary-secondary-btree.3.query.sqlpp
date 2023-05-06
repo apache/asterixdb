@@ -27,4 +27,5 @@ use test;
 
 select value x
 from UpsertTo x
-where x.age > 5;
+where x.age > 5
+order by x.id;

@@ -16,6 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-use GeoJSON;
 
-SELECT VALUE {"NumInteriorRings":st_num_interior_rings(geo.myGeometry), "ExteriorRing":st_exterior_ring(geo.myGeometry)}  FROM Geometries geo WHERE geometry_type(geo.myGeometry)="Polygon";
+drop dataverse test if exists;

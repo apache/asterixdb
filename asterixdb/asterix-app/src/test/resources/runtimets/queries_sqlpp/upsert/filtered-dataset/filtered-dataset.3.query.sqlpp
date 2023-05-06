@@ -21,4 +21,5 @@ USE test;
 
 FROM FilteredFacebookMessages m
 WHERE m.`send-time` > datetime("2012-08-20T10:10:00")
-SELECT VALUE m;
+SELECT VALUE m
+ORDER BY m.`message-id`;

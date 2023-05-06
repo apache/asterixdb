@@ -16,6 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-use GeoJSON;
+/*
+ * Description  : Test filters with insert pipeline
+ * Expected Res : Success
+ * Date         : 25th Jun 2014
+ */
 
-SELECT VALUE {"X":st_x(geo.myGeometry),"Y":st_y(geo.myGeometry),"Z":st_z(geo.myGeometry), "M":st_m(geo.myGeometry)}  FROM Geometries geo WHERE geometry_type(geo.myGeometry)="Point" ;
+drop  dataverse test if exists;

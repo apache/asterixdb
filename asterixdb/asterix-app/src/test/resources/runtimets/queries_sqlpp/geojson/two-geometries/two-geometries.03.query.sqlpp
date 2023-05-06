@@ -16,17 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Upsert into a dataset which has a correlated b-tree secondary index
- * Expected Res : Success
- * Date         : June 8 2017
- */
+use GeoJSON1;
 
-
- // So far this one doesn't use the btree index, need another query
-use test;
-
-select value x
-from UpsertTo x
-where x.age > 5
-order by x.id;
+SELECT VALUE {"Distance":st_distance(geo.myGeometry1, geo.myGeometry2), "Intersects":st_intersects(geo.myGeometry1,
+geo.myGeometry2), "Contains":st_contains(geo.myGeometry1, geo.myGeometry2), "Crosses":st_crosses(geo.myGeometry1,
+geo.myGeometry2), "Disjoint":st_disjoint(geo.myGeometry1, geo.myGeometry2), "Equals":st_equals(geo.myGeometry1,
+geo.myGeometry2), "Overlaps":st_overlaps(geo.myGeometry1, geo.myGeometry2), "Relate":st_relate(geo.myGeometry1,
+geo.myGeometry2, "FF1FF0102"), "Touches":st_touches(geo.myGeometry1, geo.myGeometry2), "Within":st_within(
+geo.myGeometry1, geo.myGeometry2)} FROM Geometries geo ORDER BY id;

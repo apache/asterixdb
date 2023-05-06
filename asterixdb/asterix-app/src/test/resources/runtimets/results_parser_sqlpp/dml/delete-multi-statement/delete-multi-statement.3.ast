@@ -8,3 +8,10 @@ FROM [  FunctionCall asterix.dataset@1[
   ]
   AS Variable [ Name=$c ]
 ]
+Orderby
+  FieldAccessor [
+    Variable [ Name=$c ]
+    Field=c_custkey
+  ]
+  ASC
+

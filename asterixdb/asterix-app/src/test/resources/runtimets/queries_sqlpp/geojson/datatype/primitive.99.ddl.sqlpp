@@ -16,17 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Upsert into a dataset which has a correlated b-tree secondary index
- * Expected Res : Success
- * Date         : June 8 2017
- */
 
-
- // So far this one doesn't use the btree index, need another query
-use test;
-
-select value x
-from UpsertTo x
-where x.age > 5
-order by x.id;
+drop  dataverse GeoJSON if exists;

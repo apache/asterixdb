@@ -19,7 +19,6 @@
 
 use TestVerse;
 
-
 select element i
 from  Int64Test as i
-;
+order by i.myint64;

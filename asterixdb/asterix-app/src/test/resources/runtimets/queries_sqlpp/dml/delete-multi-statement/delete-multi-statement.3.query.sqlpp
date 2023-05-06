@@ -19,7 +19,6 @@
 
 use tpch;
 
-
 select element c
 from  Customer as c
-;
+order by c.c_custkey;
