@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.app.function;
 
+import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
@@ -66,13 +67,15 @@ public class DumpIndexRewriter extends FunctionRewriter {
         }
         ISecondaryIndexOperationsHelper secondaryIndexHelper =
                 SecondaryIndexOperationsHelper.createIndexOperationsHelper(dataset, index, metadataProvider, loc);
+        PartitioningProperties partitioningProperties =
+                metadataProvider.getPartitioningProperties(dataset, index.getIndexName());
         IndexDataflowHelperFactory indexDataflowHelperFactory =
                 new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
-                        secondaryIndexHelper.getSecondaryFileSplitProvider());
+                        partitioningProperties.getSpiltsProvider());
         AlgebricksAbsolutePartitionConstraint secondaryPartitionConstraint =
-                (AlgebricksAbsolutePartitionConstraint) secondaryIndexHelper.getSecondaryPartitionConstraint();
+                (AlgebricksAbsolutePartitionConstraint) partitioningProperties.getConstraints();
         return new DumpIndexDatasource(context.getComputationNodeDomain(), indexDataflowHelperFactory,
                 secondaryIndexHelper.getSecondaryRecDesc(), secondaryIndexHelper.getSecondaryComparatorFactories(),
-                secondaryPartitionConstraint);
+                secondaryPartitionConstraint, partitioningProperties.getComputeStorageMap());
     }
 }

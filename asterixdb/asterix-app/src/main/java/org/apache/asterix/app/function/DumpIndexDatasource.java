@@ -39,27 +39,30 @@ public class DumpIndexDatasource extends FunctionDataSource {
     private final IndexDataflowHelperFactory indexDataflowHelperFactory;
     private final RecordDescriptor recDesc;
     private final IBinaryComparatorFactory[] comparatorFactories;
-    private final AlgebricksAbsolutePartitionConstraint storageLocations;
+    private final AlgebricksAbsolutePartitionConstraint constraint;
+    private final int[][] partitionsMap;
 
     public DumpIndexDatasource(INodeDomain domain, IndexDataflowHelperFactory indexDataflowHelperFactory,
             RecordDescriptor recDesc, IBinaryComparatorFactory[] comparatorFactories,
-            AlgebricksAbsolutePartitionConstraint storageLocations) throws AlgebricksException {
+            AlgebricksAbsolutePartitionConstraint constraint, int[][] partitionsMap) throws AlgebricksException {
         super(DUMP_INDEX_DATASOURCE_ID, DumpIndexRewriter.DUMP_INDEX, domain);
         this.indexDataflowHelperFactory = indexDataflowHelperFactory;
         this.recDesc = recDesc;
         this.comparatorFactories = comparatorFactories;
-        this.storageLocations = storageLocations;
+        this.constraint = constraint;
+        this.partitionsMap = partitionsMap;
     }
 
     @Override
     protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm) {
-        return storageLocations;
+        return constraint;
     }
 
     @Override
     protected IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations) {
-        return new DumpIndexFunction(locations, indexDataflowHelperFactory, recDesc, comparatorFactories);
+        return new DumpIndexFunction(locations, indexDataflowHelperFactory, recDesc, comparatorFactories,
+                partitionsMap);
     }
 
     @Override

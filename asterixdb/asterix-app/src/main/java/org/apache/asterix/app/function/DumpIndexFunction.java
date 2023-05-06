@@ -31,25 +31,31 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 
 public class DumpIndexFunction extends AbstractDatasourceFunction {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final IndexDataflowHelperFactory indexDataflowHelperFactory;
     private final RecordDescriptor recDesc;
     private final IBinaryComparatorFactory[] comparatorFactories;
+    private final int[][] partitionsMap;
 
     public DumpIndexFunction(AlgebricksAbsolutePartitionConstraint locations,
             IndexDataflowHelperFactory indexDataflowHelperFactory, RecordDescriptor recDesc,
-            IBinaryComparatorFactory[] comparatorFactories) {
+            IBinaryComparatorFactory[] comparatorFactories, int[][] partitionsMap) {
         super(locations);
         this.indexDataflowHelperFactory = indexDataflowHelperFactory;
         this.recDesc = recDesc;
         this.comparatorFactories = comparatorFactories;
+        this.partitionsMap = partitionsMap;
     }
 
     @Override
     public IRecordReader<char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         INCServiceContext serviceCtx = ctx.getJobletContext().getServiceContext();
-        final IIndexDataflowHelper indexDataflowHelper = indexDataflowHelperFactory.create(serviceCtx, partition);
-        return new DumpIndexReader(indexDataflowHelper, recDesc, comparatorFactories);
+        int[] partitions = partitionsMap[partition];
+        final IIndexDataflowHelper[] indexDataflowHelpers = new IIndexDataflowHelper[partitions.length];
+        for (int i = 0; i < partitions.length; i++) {
+            indexDataflowHelpers[i] = indexDataflowHelperFactory.create(serviceCtx, partitions[i]);
+        }
+        return new DumpIndexReader(indexDataflowHelpers, recDesc, comparatorFactories);
     }
 }

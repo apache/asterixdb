@@ -34,12 +34,13 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.comm.util.ByteBufferInputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.IIndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
-import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
 import org.apache.hyracks.storage.common.IIndexAccessor;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.MultiComparator;
@@ -48,38 +49,50 @@ import org.apache.hyracks.util.JSONUtil;
 public class DumpIndexReader extends FunctionReader {
 
     private final CharArrayRecord record;
-    private final IIndexCursor searchCursor;
+    private final IIndexCursor[] searchCursors;
     private final RecordDescriptor secondaryRecDesc;
     private final StringBuilder recordBuilder = new StringBuilder();
     private final ByteBufferInputStream bbis = new ByteBufferInputStream();
     private final DataInputStream dis = new DataInputStream(bbis);
-    private final IIndexDataflowHelper indexDataflowHelper;
-    private final IIndexAccessor accessor;
+    private final IIndexDataflowHelper[] indexDataflowHelpers;
+    private final IIndexAccessor[] accessors;
+    private int currentSearchIdx;
 
-    public DumpIndexReader(IIndexDataflowHelper indexDataflowHelper, RecordDescriptor secondaryRecDesc,
+    public DumpIndexReader(IIndexDataflowHelper[] indexDataflowHelpers, RecordDescriptor secondaryRecDesc,
             IBinaryComparatorFactory[] comparatorFactories) throws HyracksDataException {
-        this.indexDataflowHelper = indexDataflowHelper;
+        this.indexDataflowHelpers = indexDataflowHelpers;
         this.secondaryRecDesc = secondaryRecDesc;
-        indexDataflowHelper.open();
-        IIndex indexInstance = indexDataflowHelper.getIndexInstance();
-        accessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        searchCursor = accessor.createSearchCursor(false);
         MultiComparator searchMultiComparator = MultiComparator.create(comparatorFactories);
         RangePredicate rangePredicate =
                 new RangePredicate(null, null, true, true, searchMultiComparator, searchMultiComparator, null, null);
-        accessor.search(searchCursor, rangePredicate);
+        this.accessors = new IIndexAccessor[indexDataflowHelpers.length];
+        this.searchCursors = new IIndexCursor[indexDataflowHelpers.length];
+        for (int i = 0; i < indexDataflowHelpers.length; i++) {
+            IIndexDataflowHelper indexDataflowHelper = indexDataflowHelpers[i];
+            indexDataflowHelper.open();
+            accessors[i] = indexDataflowHelper.getIndexInstance().createAccessor(NoOpIndexAccessParameters.INSTANCE);
+            searchCursors[i] = accessors[i].createSearchCursor(false);
+            accessors[i].search(searchCursors[i], rangePredicate);
+        }
+        currentSearchIdx = 0;
         record = new CharArrayRecord();
     }
 
     @Override
     public boolean hasNext() throws Exception {
-        return searchCursor.hasNext();
+        while (currentSearchIdx < searchCursors.length) {
+            if (searchCursors[currentSearchIdx].hasNext()) {
+                return true;
+            }
+            currentSearchIdx++;
+        }
+        return false;
     }
 
     @Override
     public IRawRecord<char[]> next() throws IOException, InterruptedException {
-        searchCursor.next();
-        ITupleReference tuple = searchCursor.getTuple();
+        searchCursors[currentSearchIdx].next();
+        ITupleReference tuple = searchCursors[currentSearchIdx].getTuple();
         buildJsonRecord(tuple);
         record.reset();
         record.append(recordBuilder.toString().toCharArray());
@@ -89,16 +102,21 @@ public class DumpIndexReader extends FunctionReader {
 
     @Override
     public void close() throws IOException {
-        bbis.close();
-        dis.close();
-        if (searchCursor != null) {
-            searchCursor.close();
-            searchCursor.destroy();
+        Throwable failure = releaseResources();
+        if (failure != null) {
+            throw HyracksDataException.create(failure);
         }
-        if (accessor != null) {
-            accessor.destroy();
+    }
+
+    private Throwable releaseResources() {
+        Throwable failure = CleanupUtils.close(bbis, null);
+        failure = CleanupUtils.close(dis, failure);
+        for (int i = 0; i < indexDataflowHelpers.length; i++) {
+            failure = ResourceReleaseUtils.close(searchCursors[i], failure);
+            failure = CleanupUtils.destroy(failure, searchCursors[i], accessors[i]);
+            failure = ResourceReleaseUtils.close(indexDataflowHelpers[i], failure);
         }
-        indexDataflowHelper.close();
+        return failure;
     }
 
     private void buildJsonRecord(ITupleReference tuple) throws HyracksDataException {
