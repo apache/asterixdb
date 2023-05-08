@@ -279,15 +279,13 @@ public class TestExecutor {
     protected String deltaPath = null;
 
     public TestExecutor() {
-        this(Inet4Address.getLoopbackAddress().getHostAddress(), 19002);
+        this(Collections.singletonList(
+                InetSocketAddress.createUnresolved(Inet4Address.getLoopbackAddress().getHostAddress(), 19002)));
     }
 
-    public TestExecutor(String host, int port) {
-        this(InetSocketAddress.createUnresolved(host, port));
-    }
-
-    public TestExecutor(InetSocketAddress endpoint) {
-        this(Collections.singletonList(endpoint));
+    public TestExecutor(String resultDeltaPath) {
+        this();
+        this.deltaPath = resultDeltaPath;
     }
 
     public TestExecutor(List<InetSocketAddress> endpoints) {

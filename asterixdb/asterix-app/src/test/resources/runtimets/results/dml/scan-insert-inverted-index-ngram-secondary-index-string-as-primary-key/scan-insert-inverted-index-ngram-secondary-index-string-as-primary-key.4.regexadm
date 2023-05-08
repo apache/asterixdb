@@ -1,0 +1,1 @@
+\Q{"keys":"id","type":{"type":"org.apache.asterix.om.types.ARecordType","name":"DBLPType","open":false,"fields":[{"id":{"type":"AString"}},{"dblpid":{"type":"AString"}},{"title":{"type":"AString"}},{"authors":{"type":"AString"}},{"misc":{"type":"AString"}}]},"splits":[\E.*\Q]}\E

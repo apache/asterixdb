@@ -23,4 +23,4 @@ USE gby;
 FROM Employee e
 GROUP BY e.deptno GROUP AS g
 SELECT e.deptno AS deptno, AVG(e.salary) AS avgpay,
-       (SELECT i.e.name AS name, i.e.salary AS salary FROM g AS i) AS workers;
+       (SELECT i.e.name AS name, i.e.salary AS salary FROM g AS i ORDER BY i.e.name) AS workers;

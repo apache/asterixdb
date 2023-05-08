@@ -40,8 +40,7 @@ public class AnalyzingTestExecutor extends TestExecutor {
             Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
 
     public AnalyzingTestExecutor() {
-        super();
-        super.deltaPath = "results_cbo";
+        super("results_cbo");
     }
 
     @Override
