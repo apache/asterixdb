@@ -94,7 +94,8 @@ public class GenericAdapterFactory implements ITypedAdapterFactory {
         }
         if (isFeed) {
             if (feedLogManager == null) {
-                feedLogManager = FeedUtils.getFeedLogManager(ctx, partition, feedLogFileSplits);
+                feedLogManager =
+                        new FeedLogManager(feedLogFileSplits[partition].getFileReference(ctx.getIoManager()).getFile());
             }
             feedLogManager.touch();
         }
@@ -146,7 +147,7 @@ public class GenericAdapterFactory implements ITypedAdapterFactory {
         this.isFeed = ExternalDataUtils.isFeed(configuration);
         if (isFeed) {
             //TODO(partitioning) make this code reuse DataPartitioningProvider
-            feedLogFileSplits = FeedUtils.splitsForAdapter(appCtx, ExternalDataUtils.getDatasetDataverse(configuration),
+            feedLogFileSplits = FeedUtils.splitsForAdapter(ExternalDataUtils.getDatasetDataverse(configuration),
                     ExternalDataUtils.getFeedName(configuration), dataSourceFactory.getPartitionConstraint());
         }
     }

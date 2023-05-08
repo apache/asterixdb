@@ -79,7 +79,7 @@ public abstract class DataPartitioningProvider implements IDataPartitioningProvi
         AlgebricksAbsolutePartitionConstraint locations =
                 new AlgebricksAbsolutePartitionConstraint(nodes.toArray(new String[0]));
         FileSplit[] feedLogFileSplits =
-                FeedUtils.splitsForAdapter(appCtx, feed.getDataverseName(), feed.getFeedName(), locations);
+                FeedUtils.splitsForAdapter(feed.getDataverseName(), feed.getFeedName(), locations);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spC =
                 StoragePathUtil.splitProviderAndPartitionConstraints(feedLogFileSplits);
         int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(spC.second));

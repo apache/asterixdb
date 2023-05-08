@@ -30,6 +30,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.DefaultIoDeviceFileSplit;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.MappedFileSplit;
@@ -65,9 +66,17 @@ public class StoragePathUtil {
         return new MappedFileSplit(partition.getActiveNodeId(), relativePath, partition.getIODeviceNum());
     }
 
+    public static FileSplit getDefaultIoDeviceFileSpiltForNode(String nodeId, String relativePath) {
+        return new DefaultIoDeviceFileSplit(nodeId, relativePath);
+    }
+
     public static String prepareStoragePartitionPath(int partitonId) {
         return Paths.get(StorageConstants.STORAGE_ROOT_DIR_NAME, StorageConstants.PARTITION_DIR_PREFIX + partitonId)
                 .toString();
+    }
+
+    public static String prepareIngestionLogPath() {
+        return Paths.get(StorageConstants.INGESTION_LOGS_DIR_NAME).toString();
     }
 
     public static String prepareDataverseIndexName(DataverseName dataverseName, String datasetName, String idxName,

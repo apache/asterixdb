@@ -99,5 +99,10 @@ ERROR_BODY: {"results":"to rebalance a particular dataset, the parameter dataver
         <output-dir compare="Text">all_datasets</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="rebalance">
+        <output-dir compare="Text">rebalance</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
